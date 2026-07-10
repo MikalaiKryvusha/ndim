@@ -1,0 +1,32 @@
+{
+  "$comment": [
+    "Node 24 исполняет TypeScript нативно (стирание типов), поэтому сборка не нужна:",
+    "ни tsc, ни бандлера, ни тест-раннера в зависимостях. Этот конфиг существует",
+    "только для редактора и для проверки типов командой `npm run typecheck`.",
+    "Импорты пишутся с расширением .ts — так требует ESM-загрузчик Node."
+  ],
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023"],
+    "types": ["node"],
+
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
+    "noEmit": true,
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*.ts", "tools/**/*.mjs"]
+}

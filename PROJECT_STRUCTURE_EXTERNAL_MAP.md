@@ -39,13 +39,23 @@ D:\work\ai_sandbox\ndim\
 ├── interviews/    # вопросы A/B/C/D владельцу по решениям его уровня
 ├── homeworks/     # задачи от агента человеку (то, что может сделать только человек)
 │
+│  ── КОД NDim Space 2.0 ──
+├── src/
+│   └── lib/similarity/          # ★ математическое ядро — то, ради чего проект существует
+│       ├── similarity.ts        # computeRelation: близость × общность = похожесть
+│       ├── similarity.test.ts   # инварианты ядра (проверены мутациями)
+│       ├── legacy.ts            # декодер полей a…t версии 1.x — нужен для миграции
+│       └── legacy.test.ts       # матрица соответствия и числовой паритет с 1.x
+│
 │  ── ОБВЯЗКА ──
 ├── .kaif/kaif.json     # маркер развёртывания: версия · дата · origin · tracking · сфера · агент
 ├── .claude/skills/     # 22 слэш-скилла KAIF (ритуалы работы)
 ├── CLAUDE.md           # автозагружаемый контекст Claude Code → указывает на AGENT_GUIDE.md
 ├── AGENTS.md           # универсальный фолбэк для других агентских систем
 ├── LICENSE             # GNU AGPL-3.0
-├── package.json        # kaif:* хендлы, лицензия, репозиторий
+├── package.json        # скрипты test/typecheck/kaif:*, лицензия, репозиторий
+├── package-lock.json
+├── tsconfig.json       # только для редактора и `npm run typecheck` — Node 24 читает .ts сам
 ├── README.md           # лицо проекта для человека
 ├── .gitignore
 │
@@ -63,8 +73,8 @@ D:\work\ai_sandbox\ndim\
     └── README.md                  # что здесь лежит и почему
 ```
 
-**Здесь вырастет NDim Space 2.0:** `src/` (SvelteKit + TypeScript), `src/lib/similarity/` (ядро
-похожести), `tests/`, `worker/` (Docker-вычислитель связей), `firebase.json`, `firestore.rules`.
+**Здесь вырастет остальное:** `src/routes/` (SvelteKit), `worker/` (Docker-вычислитель связей),
+`firebase.json`, `firestore.rules`.
 
 ## Где старый проект
 
