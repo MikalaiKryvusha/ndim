@@ -1,0 +1,22 @@
+{
+  "name": "ndim-space",
+  "version": "0.0.0",
+  "private": true,
+  "description": "NDim Space — честный поиск похожих людей в многомерном пространстве самооценок",
+  "license": "AGPL-3.0-only",
+  "author": "Mikalai Kryvusha (KOT KRINIK)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MikalaiKryvusha/ndim.git"
+  },
+  "type": "module",
+  "scripts": {
+    "kaif:version": "node tools/kaif.mjs version",
+    "kaif:check": "node tools/kaif.mjs check",
+    "kaif:update": "node tools/kaif.mjs update",
+    "kaif:fork": "node tools/kaif.mjs fork",
+    "kaif:switch-origin": "node tools/kaif.mjs switch-origin",
+    "kaif:remove": "node tools/kaif.mjs remove",
+    "kaif:remove-all": "node tools/kaif.mjs remove-all"
+  }
+}

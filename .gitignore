@@ -1,0 +1,31 @@
+# ── СЕКРЕТЫ И ПЕРСОНАЛЬНЫЕ ДАННЫЕ — НИКОГДА НЕ КОММИТИТЬ ──
+# Локальный архив: ПДн участников беты, ключ подписи, полная git-история 1.x.
+# Подробности — .private/README.md, bugs/01, bugs/02, bugs/03.
+.private/
+
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+*.pem
+
+# ── Зависимости ──
+node_modules/
+
+# ── Логи ──
+*.log
+logs/
+
+# ── Сборка и кеши ──
+dist/
+build/
+.svelte-kit/
+.cache/
+.firebase/
+
+# ── ОС и редакторы ──
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
