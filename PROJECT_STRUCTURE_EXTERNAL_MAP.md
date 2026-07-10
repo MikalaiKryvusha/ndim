@@ -39,7 +39,16 @@ D:\work\ai_sandbox\ndim\
 ├── interviews/    # вопросы A/B/C/D владельцу по решениям его уровня
 ├── homeworks/     # задачи от агента человеку (то, что может сделать только человек)
 │
-│  ── КОД NDim Space 2.0 ──
+│  ── КОД NDim Space 2.0 (SvelteKit: Kit 2.69 · Svelte 5 · Vite 8) ──
+├── src/routes/                  # страницы приложения
+│   ├── +layout.ts               # prerender = true: весь сайт — статический HTML (SEO)
+│   ├── +layout.svelte           # глобальные стили: палитра «синий киберпанк-неон»
+│   └── +page.svelte             # ★ ЛЕНДИНГ — утверждённый макет «Колонна», тексты владельца
+├── src/app.html                 # HTML-оболочка (lang=ru, theme-color)
+├── src/app.d.ts
+├── static/                      # favicon.svg (кластер трёх точек), robots.txt
+├── vite.config.ts               # SvelteKit + adapter-static (svelte.config.js больше не нужен)
+├── design/landing-mockups.html  # утверждённые макеты (история 3 раундов правок владельца)
 ├── src/lib/
 │   ├── similarity/              # ★ математическое ядро — то, ради чего проект существует
 │   │   ├── similarity.ts        # computeRelation: близость × общность = похожесть
