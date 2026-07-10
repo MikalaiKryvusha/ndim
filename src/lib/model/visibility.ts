@@ -27,16 +27,16 @@ export const PRIVATE = 'private';
 export const FRIENDS = 'friends';
 
 /** Сколько своих кругов может завести пользователь (сверх дефолтного «Друзья»). */
-export const MAX_CUSTOM_CIRCLES = 10;
+export const MAX_CUSTOM_GROUPS = 10;
 
 /** Идентификаторы, зарезервированные под служебные бакеты. Кругом так назваться нельзя. */
 const RESERVED_IDS: readonly string[] = [EVERYONE, PRIVATE];
 
 /** Идентификатор круга: `friends` либо непрозрачный id круга владельца. */
-export type CircleId = string;
+export type GroupId = string;
 
 /** Идентификатор документа-бакета в `users/{uid}/profile/{bucketId}`. */
-export type BucketId = typeof EVERYONE | typeof PRIVATE | CircleId;
+export type BucketId = typeof EVERYONE | typeof PRIVATE | GroupId;
 
 /**
  * Аудитория свойства.
@@ -44,7 +44,7 @@ export type BucketId = typeof EVERYONE | typeof PRIVATE | CircleId;
  * - массив кругов — видят те, кто входит **хотя бы в один** из них (логическое ИЛИ);
  * - пустой массив — не видит никто, кроме владельца.
  */
-export type Audience = typeof EVERYONE | readonly CircleId[];
+export type Audience = typeof EVERYONE | readonly GroupId[];
 
 /** Свойства профиля, у каждого своя настройка видимости. Оценки по осям сюда НЕ входят. */
 export type ProfileProperty = 'name' | 'born' | 'about' | 'avatar' | 'gender';
@@ -60,7 +60,7 @@ export interface Viewer {
   /** Дружба подтверждена обеими сторонами (`friendships/{pair}.status == 'accepted'`). */
   readonly isFriend: boolean;
   /** Круги владельца, в которые он положил этого зрителя. Без `friends`. */
-  readonly circles: readonly CircleId[];
+  readonly groups: readonly GroupId[];
 }
 
 /**
@@ -109,10 +109,10 @@ function deepEqual(a: unknown, b: unknown): boolean {
 }
 
 /** Проверяет, что идентификатором круга можно пользоваться. Бросает, если нет. */
-export function assertValidCircleId(circleId: CircleId): void {
-  if (circleId.length === 0) throw new InvalidAudienceError('пустой идентификатор круга');
-  if (RESERVED_IDS.includes(circleId)) {
-    throw new InvalidAudienceError(`«${circleId}» — служебный бакет, кругом так назваться нельзя`);
+export function assertValidGroupId(groupId: GroupId): void {
+  if (groupId.length === 0) throw new InvalidAudienceError('пустой идентификатор круга');
+  if (RESERVED_IDS.includes(groupId)) {
+    throw new InvalidAudienceError(`«${groupId}» — служебный бакет, кругом так назваться нельзя`);
   }
 }
 
@@ -120,16 +120,16 @@ export function assertValidCircleId(circleId: CircleId): void {
 export function assertValidAudience(audience: Audience): void {
   if (audience === EVERYONE) return;
 
-  const seen = new Set<CircleId>();
-  for (const circleId of audience) {
-    assertValidCircleId(circleId);
-    if (seen.has(circleId)) throw new InvalidAudienceError(`круг «${circleId}» указан дважды`);
-    seen.add(circleId);
+  const seen = new Set<GroupId>();
+  for (const groupId of audience) {
+    assertValidGroupId(groupId);
+    if (seen.has(groupId)) throw new InvalidAudienceError(`круг «${groupId}» указан дважды`);
+    seen.add(groupId);
   }
 
   const customCount = audience.filter((id) => id !== FRIENDS).length;
-  if (customCount > MAX_CUSTOM_CIRCLES) {
-    throw new InvalidAudienceError(`кругов больше ${MAX_CUSTOM_CIRCLES}: ${customCount}`);
+  if (customCount > MAX_CUSTOM_GROUPS) {
+    throw new InvalidAudienceError(`кругов больше ${MAX_CUSTOM_GROUPS}: ${customCount}`);
   }
 }
 
@@ -208,9 +208,9 @@ export function mergeBuckets(buckets: readonly Record<string, unknown>[]): Recor
 export function extraBucketsFor(viewer: Viewer): BucketId[] {
   const buckets: BucketId[] = [];
   if (viewer.isFriend) buckets.push(FRIENDS);
-  for (const circleId of viewer.circles) {
-    assertValidCircleId(circleId);
-    if (circleId !== FRIENDS) buckets.push(circleId);
+  for (const groupId of viewer.groups) {
+    assertValidGroupId(groupId);
+    if (groupId !== FRIENDS) buckets.push(groupId);
   }
   return buckets;
 }
