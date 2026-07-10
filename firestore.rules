@@ -1,0 +1,238 @@
+rules_version = '2';
+
+// Правила безопасности NDim Space 2.0.
+//
+// ЧТО ЗДЕСЬ ЕСТЬ, А ЧЕГО НЕТ.
+// Правила проверяют ПРАВА ДОСТУПА и ГРАНИЦЫ значений. Форма данных (схема) живёт в TypeScript:
+// src/lib/model/schema.ts. В версии 1.x правила были схемой, валидацией и авторизацией
+// одновременно, и выражение `allow update` для профиля состояло из сорока с лишним условий.
+//
+// ПОЧЕМУ ПРОФИЛЬ РАЗБИТ НА ДОКУМЕНТЫ.
+// Firestore читает документ целиком: скрыть отдельное поле правилами невозможно. А сервера,
+// который отфильтровал бы поля на лету, у нас нет — бэкенд работает без входящих портов.
+// Поэтому свойства профиля физически разложены по документам-бакетам, по одному на группу.
+// Раскладка — src/lib/model/visibility.ts. Правила стерегут документы, но НЕ проверяют, что
+// в них положили: за это отвечает тот модуль и его тесты.
+//
+// Условия дружбы повторяют canAcceptFriendship() из schema.ts. Источник истины — там.
+//
+// Подробности: researches/04_data_model_2x_proposal.md
+// Тесты: tests/rules/rules.test.ts (запуск: npm run test:rules)
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Общие предикаты ────────────────────────────────────────────────────
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Подтверждённая почта — минимальный порог для чтения чего-либо о других людях.
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Админ — через custom claim, а не через список email в тексте правил (как было в 1.x).
+    function isAdmin() {
+      return signedIn() && request.auth.token.get('admin', false) == true;
+    }
+
+    // Идентификатор документа дружбы: min(a,b) + '_' + max(a,b).
+    // Детерминирован, поэтому путь вычисляется прямо здесь, без обращения к базе.
+    function friendshipPath(x, y) {
+      return /databases/$(database)/documents/friendships/$(x < y ? x + '_' + y : y + '_' + x);
+    }
+
+    // Дружба подтверждена ОБЕИМИ сторонами. Одного запроса недостаточно.
+    function areFriends(ownerId) {
+      let path = friendshipPath(ownerId, request.auth.uid);
+      return exists(path) && get(path).data.status == 'accepted';
+    }
+
+    // Владелец положил этого человека в свою группу. Группа односторонняя: согласия не требуется.
+    function inGroup(ownerId, groupId) {
+      return exists(
+        /databases/$(database)/documents/users/$(ownerId)/groups/$(groupId)/members/$(request.auth.uid)
+      );
+    }
+
+    // ── users/{uid} — корень пользователя ──────────────────────────────────
+    // Карта видимости и настройки. Ни одного свойства профиля здесь нет.
+    // Никто, кроме владельца, не читает даже сам факт существования документа.
+
+    match /users/{userId} {
+      allow read, write: if isSelf(userId);
+      allow read: if isAdmin();
+    }
+
+    // ── users/{uid}/profile/{bucketId} — свойства, открытые одной аудитории ──
+
+    match /users/{ownerId}/profile/{bucketId} {
+
+      // Владелец видит и правит всё. Раскладку по бакетам делает клиент; правила её не проверяют.
+      allow read, write: if isSelf(ownerId);
+
+      // Публичный бакет: любой подтверждённый пользователь. Без обращений к базе — это самое
+      // частое чтение в продукте (карточки 250 связей), и оно обязано быть дешёвым.
+      allow read: if verified() && bucketId == 'everyone';
+
+      // Дефолтная группа «Друзья»: только при подтверждённой дружбе.
+      allow read: if verified() && bucketId == 'friends' && areFriends(ownerId);
+
+      // Своя группа владельца. 'private' сюда не попадает: он не является группой,
+      // и членства в нём быть не может — но проверяем явно, чтобы правило нельзя было обойти
+      // созданием группы с таким id.
+      allow read: if verified()
+                  && bucketId != 'everyone'
+                  && bucketId != 'private'
+                  && bucketId != 'friends'
+                  && inGroup(ownerId, bucketId);
+
+      allow read: if isAdmin();
+    }
+
+    // ── users/{uid}/groups/** — приватные группы владельца ──────────────────
+    // Ни названий, ни состава не видит никто, кроме владельца. Человек не знает,
+    // в какую категорию его положили, — и это осознанно.
+
+    match /users/{ownerId}/groups/{groupId} {
+      allow read, write: if isSelf(ownerId);
+
+      match /members/{memberUid} {
+        allow read, write: if isSelf(ownerId);
+      }
+    }
+
+    // ── users/{uid}/audience/{viewerUid} — подсказка зрителю ────────────────
+    // Какие бакеты ему запрашивать. НЕ источник прав: доступ всё равно проверяется
+    // правилами выше. Читает только тот, о ком документ, — и только про себя.
+
+    match /users/{ownerId}/audience/{viewerUid} {
+      allow read: if isSelf(ownerId) || isSelf(viewerUid);
+      allow write: if isSelf(ownerId);
+    }
+
+    // ── friendships/{pairId} — дружба ───────────────────────────────────────
+    // Симметрична, поэтому живёт вне односторонних групп.
+    // Повторяет canAcceptFriendship() из schema.ts.
+
+    match /friendships/{pairId} {
+
+      function participant() {
+        return signedIn() && (request.auth.uid == resource.data.a || request.auth.uid == resource.data.b);
+      }
+
+      allow read: if participant() || isAdmin();
+
+      // Запрос создаёт один из двоих. Идентификатор документа обязан совпадать с парой:
+      // иначе можно было бы подсунуть документ по чужому пути.
+      allow create: if verified()
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.acceptedAt == null
+                    && request.resource.data.requestedBy == request.auth.uid
+                    && request.resource.data.a < request.resource.data.b
+                    && pairId == request.resource.data.a + '_' + request.resource.data.b
+                    && (request.auth.uid == request.resource.data.a || request.auth.uid == request.resource.data.b);
+
+      // Принять может ТОЛЬКО адресат, ТОЛЬКО из статуса pending, и никогда — отправитель.
+      // Стороны и отправитель неизменны: иначе принявший мог бы переписать историю.
+      allow update: if verified()
+                    && participant()
+                    && resource.data.status == 'pending'
+                    && request.auth.uid != resource.data.requestedBy
+                    && request.resource.data.status == 'accepted'
+                    && request.resource.data.a == resource.data.a
+                    && request.resource.data.b == resource.data.b
+                    && request.resource.data.requestedBy == resource.data.requestedBy;
+
+      // Расторгнуть или отозвать запрос может любой из двоих.
+      allow delete: if participant();
+    }
+
+    // ── points/{uid} — точка человека в пространстве измерений ──────────────
+    // Оценки не видит никто, кроме владельца и вычислителя. Вычислитель работает через
+    // Admin SDK, а он правила не применяет, — поэтому здесь его упоминать не нужно.
+
+    match /points/{ownerId} {
+      allow read: if isSelf(ownerId) || isAdmin();
+
+      // Клиент помечает свою точку «грязной», чтобы вычислитель пересчитал связи.
+      // Снять флаг клиент не может: это делает вычислитель.
+      allow create: if isSelf(ownerId) && request.resource.data.dirty == true;
+      allow update: if isSelf(ownerId) && request.resource.data.dirty == true;
+      allow delete: if isSelf(ownerId);
+
+      match /dims/{dimId} {
+        allow read: if isSelf(ownerId) || isAdmin();
+
+        // Единственная валидация значения. Целое 0…10 — как в schema.ts.
+        // Ось = отдельный документ именно поэтому: правила не умеют перебирать значения map,
+        // и в 1.x приходилось разрешать менять ровно одну ось за обновление.
+        allow write: if isSelf(ownerId)
+                     && (request.method == 'delete'
+                         || (request.resource.data.value is int
+                             && request.resource.data.value >= 0
+                             && request.resource.data.value <= 10
+                             && request.resource.data.keys().hasOnly(['value'])));
+      }
+    }
+
+    // ── relations/{uid} — посчитанные связи ─────────────────────────────────
+    // Похожесть — величина приватная. Читает только владелец.
+    // Пишет только вычислитель через Admin SDK: клиенту запись запрещена полностью,
+    // иначе человек мог бы объявить себя похожим на кого угодно.
+
+    match /relations/{ownerId} {
+      allow read: if isSelf(ownerId) || isAdmin();
+      allow write: if false;
+    }
+
+    // ── dims/{dimId} — оси измерений ────────────────────────────────────────
+    // Читают подтверждённые пользователи, пишет админ.
+
+    match /dims/{dimId} {
+      allow read: if verified();
+      allow write: if isAdmin();
+    }
+
+    // ── space/** — метрики платформы ────────────────────────────────────────
+
+    match /space/public_metrics {
+      allow read: if true;        // витрина на лендинге, без авторизации
+      allow write: if isAdmin();
+    }
+
+    match /space/{document} {
+      allow read: if verified();
+      allow write: if isAdmin();
+    }
+
+    // ── suggestions/{id} — заявки на новые оси ──────────────────────────────
+    // Так пространство измерений растёт снизу: оси предлагают люди, админ модерирует.
+
+    match /suggestions/{suggestionId} {
+      allow read: if isAdmin();
+
+      allow create: if verified()
+                    && request.resource.data.authorUid == request.auth.uid
+                    && request.resource.data.description is string
+                    && request.resource.data.description.size() >= 5
+                    && request.resource.data.description.size() <= 300
+                    && request.resource.data.keys().hasOnly(['authorUid', 'description', 'created']);
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Всё остальное запрещено ─────────────────────────────────────────────
+    // Явное умолчание. Новая коллекция недоступна, пока для неё не написано правило.
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

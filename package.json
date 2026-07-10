@@ -13,6 +13,7 @@
   "scripts": {
     "test": "node --test \"src/**/*.test.ts\"",
     "test:watch": "node --test --watch \"src/**/*.test.ts\"",
+    "test:rules": "firebase emulators:exec --only firestore --project ndim-rules-test \"node --test tests/rules/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "kaif:version": "node tools/kaif.mjs version",
     "kaif:check": "node tools/kaif.mjs check",
@@ -23,7 +24,9 @@
     "kaif:remove-all": "node tools/kaif.mjs remove-all"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@types/node": "^24.0.0",
+    "firebase": "^12.16.0",
     "typescript": "^5.7.0"
   },
   "engines": {
