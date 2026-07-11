@@ -10,11 +10,14 @@
      Первый слой стратегии «пощупать до аккаунта»: человек двигает свои оценки
      и живьём видит, как настоящий алгоритм считает похожесть с персонажами.
 
-     4 ВАРИАНТА (кнопки сверху, или #v1…#v4 в адресе):
+     ВАРИАНТЫ (кнопки сверху, или #v1…#v5 в адресе):
        · V1 «Соседи»      — я и три персонажа, у каждого живой бар похожести;
        · V2 «Дуэль»       — крупная механика: похожесть = близость × общность;
        · V3 «Пространство»— мини-карта: моя точка среди чужих, яркость = сила связи;
        · V4 «Диалог»      — ось за осью, как будущий онбординг: беседа, не допрос.
+       · V5 «СИНТЕЗ» (решение владельца 2026-07-11: «всё взять из V1 и органично
+         встроить карту из V3») — открывается по умолчанию. Поток: оценил себя →
+         увидел себя на карте → прочитал детали в карточках.
 
      ЧЕСТНОСТЬ МАКЕТА: расчёт — точная копия ядра src/lib/similarity/similarity.ts
      (в проде компонент ИМПОРТИРУЕТ ядро, копия — только для этого сырого макета).
@@ -154,6 +157,7 @@
 
 <div class="picker">
   <b>Демо похожести:</b>
+  <button data-v="v5">V5 · Синтез ★</button>
   <button data-v="v1">V1 · Соседи</button>
   <button data-v="v2">V2 · Дуэль</button>
   <button data-v="v3">V3 · Пространство</button>
@@ -222,6 +226,21 @@
       <div class="dlg-feed" id="v4-feed"></div>
       <div class="cta"><a href="#">Продолжить со своим пространством →</a></div>
       <p class="trust">Твои ответы живут только на этой странице.</p>
+    </section>
+
+    <!-- ════════ V5 «Синтез» = база V1 + карта V3 (решение владельца) ════════ -->
+    <section id="sec-v5" class="vhide">
+      <h2 class="demo-title">Попробуй прямо здесь</h2>
+      <p class="demo-sub">Оцени себя по пяти осям — твоя точка сдвинется, а соседи
+        пересчитаются. Алгоритм настоящий, тот же, что в продукте.</p>
+      <div class="card"><div id="v5-me"></div></div>
+      <div class="card">
+        <svg class="space-svg" id="v5-svg" viewBox="0 0 520 300" role="img" aria-label="Мини-карта пространства"></svg>
+        <p class="space-note">Расстояния настоящие. Чем ярче линия — тем сильнее связь.</p>
+      </div>
+      <div id="v5-personas"></div>
+      <div class="cta"><a href="#">Создать своё пространство →</a></div>
+      <p class="trust">Ничего не сохраняется и не отправляется — всё считается в твоём браузере.</p>
     </section>
   </div>
 </div>
@@ -319,13 +338,11 @@ function setBar(el, pct) {
   el.querySelector('.pct').textContent = pct + '%';
 }
 
-/* ════════ V1 «Соседи» ════════ */
-const v1Repaint = axesEditor(document.getElementById('v1-me'), renderAll);
-const v1P = document.getElementById('v1-personas');
-function renderV1() {
+/* ════════ Карточки персонажей (V1 и V5) ════════ */
+function renderPersonasInto(container) {
   const rels = PERSONAS.map(p => ({ p, r: computeRelation(me, p.dims) }))
     .sort((a, b) => (b.r?.similarity ?? -1) - (a.r?.similarity ?? -1));
-  v1P.innerHTML = '';
+  container.innerHTML = '';
   rels.forEach(({ p, r }, idx) => {
     const c = document.createElement('div'); c.className = 'card';
     c.innerHTML = `
@@ -338,9 +355,13 @@ function renderV1() {
       ${bar('похожесть', true)}${bar('близость')}${bar('общность')}`;
     const bars = c.querySelectorAll('.bar');
     if (r) { setBar(bars[0], r.similarity); setBar(bars[1], r.proximity); setBar(bars[2], r.commonality); }
-    v1P.appendChild(c);
+    container.appendChild(c);
   });
 }
+
+/* ════════ V1 «Соседи» ════════ */
+const v1Repaint = axesEditor(document.getElementById('v1-me'), renderAll);
+function renderV1() { renderPersonasInto(document.getElementById('v1-personas')); }
 
 /* ════════ V2 «Дуэль» (против Алисы) ════════ */
 const v2Repaint = axesEditor(document.getElementById('v2-me'), renderAll);
@@ -353,10 +374,8 @@ function renderV2() {
     `${(r.proximity / 100).toFixed(2)} × ${(r.commonality / 100).toFixed(2)} = ${(r.similarity / 100).toFixed(2)}`;
 }
 
-/* ════════ V3 «Пространство» ════════ */
-const v3Repaint = axesEditor(document.getElementById('v3-me'), renderAll);
-function renderV3() {
-  const svg = document.getElementById('v3-svg');
+/* ════════ Мини-карта пространства (V3 и V5) ════════ */
+function renderSpaceInto(svg) {
   const cx = 260, cy = 150, MAXR = 118;
   const angles = { alice: -90, boris: 25, vera: 155 };
   let out = `
@@ -380,6 +399,17 @@ function renderV3() {
     <circle cx="${cx}" cy="${cy}" r="15" fill="var(--primary)"/>
     <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Я</text>`;
   svg.innerHTML = out;
+}
+
+/* ════════ V3 «Пространство» ════════ */
+const v3Repaint = axesEditor(document.getElementById('v3-me'), renderAll);
+function renderV3() { renderSpaceInto(document.getElementById('v3-svg')); }
+
+/* ════════ V5 «Синтез» = база V1 + карта V3 (решение владельца 2026-07-11) ════════ */
+const v5Repaint = axesEditor(document.getElementById('v5-me'), renderAll);
+function renderV5() {
+  renderSpaceInto(document.getElementById('v5-svg'));
+  renderPersonasInto(document.getElementById('v5-personas'));
 }
 
 /* ════════ V4 «Диалог» ════════ */
@@ -435,12 +465,12 @@ document.getElementById('v4-next').addEventListener('click', () => {
 
 /* ── Оркестровка: общий пересчёт, пикер вариантов, тема, хеш ── */
 function renderAll() {
-  v1Repaint(); v2Repaint(); v3Repaint();
-  renderV1(); renderV2(); renderV3(); renderV4();
+  v1Repaint(); v2Repaint(); v3Repaint(); v5Repaint();
+  renderV1(); renderV2(); renderV3(); renderV4(); renderV5();
 }
 const screen = document.getElementById('screen');
 function show(v) {
-  ['v1', 'v2', 'v3', 'v4'].forEach(id =>
+  ['v1', 'v2', 'v3', 'v4', 'v5'].forEach(id =>
     document.getElementById('sec-' + id).classList.toggle('vhide', id !== v));
   document.querySelectorAll('.picker [data-v]').forEach(b =>
     b.classList.toggle('active', b.dataset.v === v));
@@ -451,9 +481,9 @@ document.getElementById('themeBtn').addEventListener('click', () =>
   screen.dataset.theme = screen.dataset.theme === 'dark' ? '' : 'dark');
 /* Хеш #v2 / #v3-dark — чтобы открывать нужный вариант скриншотером и по ссылке */
 (function initFromHash() {
-  const h = (location.hash || '#v1').slice(1);
+  const h = (location.hash || '#v5').slice(1);
   const [v, theme] = h.split('-');
-  if (['v1', 'v2', 'v3', 'v4'].includes(v)) show(v); else show('v1');
+  if (['v1', 'v2', 'v3', 'v4', 'v5'].includes(v)) show(v); else show('v5');
   if (theme === 'dark') screen.dataset.theme = 'dark';
 })();
 renderAll();
