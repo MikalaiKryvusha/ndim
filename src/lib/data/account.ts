@@ -1,0 +1,175 @@
+/**
+ * Аккаунт без пароля — апгрейд гостя (plans/03, этап 3; интервью №004, В2 = A+).
+ *
+ * Способы входа: Google (одно нажатие) и ссылка на почту (passwordless).
+ * Паролей в продукте нет.
+ *
+ * ГЛАВНОЕ ПРАВИЛО: строго `link*`, а не `signIn*`. linkWithCredential/linkWithPopup
+ * привязывают новый способ входа к УЖЕ СУЩЕСТВУЮЩЕМУ анонимному пользователю — UID
+ * не меняется, поэтому весь труд гостя (оценки, точка, найденные связи) остаётся на
+ * месте. Любой `signIn*` создал бы нового пользователя и осиротил бы данные гостя.
+ *
+ * ⚠️ ТОЧКУ НАДО РАСКЛЕИТЬ. Пока человек был гостем, его точка `points/{uid}` помечена
+ * `guest: true` — по этому флагу вычислитель прячет её от всех (В3), а автоочистка
+ * удаляет заброшенные гостевые точки через 30 дней. Если после апгрейда флаг не снять,
+ * человек с настоящим аккаунтом останется невидимым, а через месяц лишится данных.
+ * Поэтому {@link promoteGuestPoint} — обязательная часть апгрейда, а не украшение.
+ * Правила это и требуют: `honestGuestFlag` не даст не-анониму писать `guest: true`.
+ */
+
+import {
+  EmailAuthProvider,
+  GoogleAuthProvider,
+  isSignInWithEmailLink,
+  linkWithCredential,
+  linkWithPopup,
+  onAuthStateChanged,
+  sendSignInLinkToEmail,
+  type User,
+} from 'firebase/auth';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db, devAuth } from '../firebase.ts';
+import type { Uid } from '../model/schema.ts';
+
+/** Куда почтовая ссылка возвращает человека. Тот же origin — иначе Firebase её отвергнет. */
+const LINK_RETURN_PATH = '/profile';
+
+/** Ключ, под которым помним почту между отправкой письма и переходом по ссылке. */
+const PENDING_EMAIL_KEY = 'ndim-pending-email';
+
+/** Чем закончился апгрейд. Ошибки — не исключения: экран обязан показать их человеку. */
+export type UpgradeResult =
+  | { readonly ok: true; readonly uid: Uid }
+  | { readonly ok: false; readonly reason: UpgradeFailure };
+
+/**
+ * Причины отказа, которые экран показывает человеку своими словами.
+ * · `already-in-use` — этот Google-аккаунт или почта уже принадлежат другому профилю
+ *   NDim. Молча слить два профиля нельзя: чьи-то оценки пришлось бы выбросить.
+ * · `cancelled` — человек закрыл окно Google.
+ * · `expired-link` — почтовая ссылка протухла (час) или уже использована.
+ * · `unknown` — всё остальное; текст ошибки уходит в консоль, человеку — общая фраза.
+ */
+export type UpgradeFailure = 'already-in-use' | 'cancelled' | 'expired-link' | 'unknown';
+
+function classify(error: unknown): UpgradeFailure {
+  const code = (error as { code?: string })?.code ?? '';
+  if (code === 'auth/credential-already-in-use' || code === 'auth/email-already-in-use') {
+    return 'already-in-use';
+  }
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+    return 'cancelled';
+  }
+  if (code === 'auth/invalid-action-code' || code === 'auth/expired-action-code') {
+    return 'expired-link';
+  }
+  console.error('Апгрейд гостя не удался:', error);
+  return 'unknown';
+}
+
+/**
+ * Снимает с точки гостевой флаг и помечает её грязной, чтобы вычислитель немедленно
+ * пересчитал связи уже как для полноценного человека. Без этого шага апгрейд —
+ * косметика: в Firestore человек остаётся гостем со всеми последствиями.
+ *
+ * Точки может не быть вовсе (гость не поставил ни одной оценки) — это не ошибка.
+ */
+async function promoteGuestPoint(uid: Uid): Promise<void> {
+  const point = doc(db(), 'points', uid);
+  const snapshot = await getDoc(point);
+  if (!snapshot.exists()) return;
+
+  await updateDoc(point, { guest: false, dirty: true, updated: Date.now() });
+}
+
+/**
+ * Токен обязан «забыть», что вход был анонимным: правила смотрят на клейм
+ * `firebase.sign_in_provider`, а не на клиентский флаг isAnonymous. Пока токен старый,
+ * Firestore продолжает считать человека гостем и отвергнет запись `guest: false`.
+ */
+async function refreshToken(): Promise<Uid> {
+  const user = devAuth().currentUser;
+  if (!user) throw new Error('Апгрейд без активной сессии — этого не должно случаться');
+  await user.getIdToken(true);
+  return user.uid;
+}
+
+/** Общий хвост обоих способов: обновить токен, расклеить точку, вернуть тот же UID. */
+async function finishUpgrade(): Promise<UpgradeResult> {
+  const uid = await refreshToken();
+  await promoteGuestPoint(uid);
+  return { ok: true, uid };
+}
+
+/** Google в одно нажатие: привязывает аккаунт Google к текущему гостю. */
+export async function linkGoogle(): Promise<UpgradeResult> {
+  const user = devAuth().currentUser;
+  if (!user) return { ok: false, reason: 'unknown' };
+
+  try {
+    await linkWithPopup(user, new GoogleAuthProvider());
+    return await finishUpgrade();
+  } catch (error) {
+    return { ok: false, reason: classify(error) };
+  }
+}
+
+/**
+ * Шаг 1 почтового входа: отправляет письмо со ссылкой. Почту запоминаем локально —
+ * при переходе по ссылке Firebase обязан сверить её, иначе ссылку можно было бы
+ * перехватить и войти в чужой профиль.
+ */
+export async function sendLoginLink(email: string): Promise<UpgradeResult> {
+  try {
+    await sendSignInLinkToEmail(devAuth(), email, {
+      url: `${location.origin}${LINK_RETURN_PATH}`,
+      handleCodeInApp: true,
+    });
+    localStorage.setItem(PENDING_EMAIL_KEY, email);
+    return { ok: true, uid: devAuth().currentUser?.uid ?? '' };
+  } catch (error) {
+    return { ok: false, reason: classify(error) };
+  }
+}
+
+/** Открыт ли сейчас адрес, по которому человек пришёл из письма. */
+export function isLoginLink(href: string = location.href): boolean {
+  return isSignInWithEmailLink(devAuth(), href);
+}
+
+/**
+ * Ждёт, пока Firebase восстановит сессию из хранилища браузера.
+ *
+ * Сразу после загрузки страницы `currentUser` ещё null — восстановление асинхронное.
+ * Человек, вернувшийся по ссылке из письма, ДОЛЖЕН попасть в свою же гостевую сессию,
+ * иначе привязывать будет некого и труд гостя осиротеет. Поэтому перед апгрейдом
+ * дожидаемся первого события состояния, а не читаем `currentUser` наугад.
+ */
+export function waitForSession(): Promise<User | null> {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(devAuth(), (user) => {
+      unsubscribe();
+      resolve(user);
+    });
+  });
+}
+
+/**
+ * Шаг 2 почтового входа: человек вернулся по ссылке из письма. Привязываем почту к
+ * тому же анонимному пользователю — UID и весь его труд остаются прежними.
+ */
+export async function completeLoginLink(href: string = location.href): Promise<UpgradeResult> {
+  const email = localStorage.getItem(PENDING_EMAIL_KEY);
+  if (!email) return { ok: false, reason: 'expired-link' };
+
+  const user = devAuth().currentUser;
+  if (!user) return { ok: false, reason: 'unknown' };
+
+  try {
+    await linkWithCredential(user, EmailAuthProvider.credentialWithLink(email, href));
+    localStorage.removeItem(PENDING_EMAIL_KEY);
+    return await finishUpgrade();
+  } catch (error) {
+    return { ok: false, reason: classify(error) };
+  }
+}

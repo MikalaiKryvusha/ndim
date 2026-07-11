@@ -25,6 +25,13 @@
     submitSuggestion,
     type ProfileScreenData,
   } from '$lib/data/profile';
+  import {
+    completeLoginLink,
+    isLoginLink,
+    linkGoogle,
+    sendLoginLink,
+    waitForSession,
+  } from '$lib/data/account';
   import { EVERYONE, FRIENDS } from '$lib/model/visibility';
   import type { Audience, ProfileProperty } from '$lib/model/visibility';
   import { isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
@@ -50,7 +57,19 @@
   const GUEST_CARD_KEY = 'ndim-guest-card';
   let guest = $state(false);
   let guestCard = $state(false);
-  let guestSoonHint = $state(false);
+
+  // Аккаунт без пароля (plans/03 этап 3, макет V4 «Врезка»): гостевая карточка
+  // разворачивается в вход прямо на месте, ничего не перекрывая.
+  //   facts   — три честных факта про гостя и кнопка [Сохранить результаты];
+  //   choose  — Google или почта;
+  //   sending — письмо отправляется;
+  //   sent    — «Мы отправили Вам письмо»;
+  //   linking — человек вернулся по ссылке, привязываем;
+  //   done    — «Профиль сохранён».
+  type SignupStep = 'facts' | 'choose' | 'sending' | 'sent' | 'linking' | 'done';
+  let signupStep = $state<SignupStep>('facts');
+  let signupEmail = $state('');
+  let signupError = $state('');
 
   // Вкладка «Измерения»
   let search = $state('');
@@ -91,7 +110,12 @@
     }
     try {
       let uid: string;
-      if (new URLSearchParams(location.search).has('guest')) {
+      // Человек вернулся по ссылке из письма. Входить заново НЕЛЬЗЯ: его гостевая
+      // сессия жива в хранилище, и привязать почту нужно именно к ней — иначе
+      // родится новый пользователь, а весь труд гостя останется сиротой.
+      if (isLoginLink()) {
+        uid = await finishEmailLink();
+      } else if (new URLSearchParams(location.search).has('guest')) {
         uid = await signInGuest();
         await ensureSpaceExists(uid, lang);
         guest = true;
@@ -107,10 +131,79 @@
     }
   });
 
+  /**
+   * Возврат по почтовой ссылке. Показывает карточку в состоянии «подтверждаем»,
+   * привязывает почту к текущей (гостевой) сессии и чистит адрес: коды из ссылки
+   * одноразовые, при перезагрузке страницы они дали бы ложную ошибку.
+   */
+  async function finishEmailLink(): Promise<string> {
+    guest = true;
+    guestCard = true;
+    signupStep = 'linking';
+
+    const session = await waitForSession();
+    const result = await completeLoginLink();
+    history.replaceState(null, '', '/profile');
+
+    if (result.ok) {
+      guest = false; // аккаунт создан: пилюля гостя и запреты уходят
+      signupStep = 'done';
+      return result.uid;
+    }
+
+    signupError = t.account.errors[result.reason][lang];
+    signupStep = 'choose';
+    // Ссылка не сработала, но человек всё ещё в своей гостевой сессии — показываем
+    // ему его же профиль, а не выкидываем на пустой экран.
+    if (session) return session.uid;
+    const uid = await signInGuest();
+    await ensureSpaceExists(uid, lang);
+    return uid;
+  }
+
   function guestLater() {
     guestCard = false;
-    guestSoonHint = false;
     localStorage.setItem(GUEST_CARD_KEY, 'later');
+  }
+
+  /**
+   * «В Пространстве с <месяц год>» — из настоящей даты создания профиля.
+   * Раньше здесь стояла жёстко вписанная строка «с мая 2025»: свежесозданному
+   * гостю продукт врал про его же возраст. Месяц берём из локали браузера.
+   */
+  function sinceMonth(created: number): string {
+    return new Date(created).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  async function startGoogle() {
+    signupError = '';
+    const result = await linkGoogle();
+    if (result.ok) {
+      guest = false;
+      signupStep = 'done';
+      return;
+    }
+    signupError = t.account.errors[result.reason][lang];
+  }
+
+  async function requestLink() {
+    const email = signupEmail.trim();
+    if (!email.includes('@')) {
+      signupError = t.account.emailInvalid[lang];
+      return;
+    }
+    signupError = '';
+    signupStep = 'sending';
+    const result = await sendLoginLink(email);
+    if (result.ok) {
+      signupStep = 'sent';
+      return;
+    }
+    signupError = t.account.errors[result.reason][lang];
+    signupStep = 'choose';
   }
 
   // ── Двуязычные строки интерфейса ──
@@ -155,16 +248,74 @@
       },
       save: { ru: 'Сохранить результаты', en: 'Save my results' },
       later: { ru: 'позже', en: 'later' },
-      soon: {
-        ru: 'Создание аккаунта появится на следующем этапе — Ваши оценки и связи он сохранит.',
-        en: 'Account creation arrives in the next stage — it will keep your ratings and relations.',
-      },
       audienceLocked: {
         ru: 'Пока Вы гость, Вас не видит никто, поэтому открывать свойство некому. Настройки аудитории появятся после создания аккаунта.',
         en: 'While you are a guest nobody sees you, so there is nobody to open the property to. Audience settings arrive after you create an account.',
       },
     },
-    inSpaceSince: { ru: 'В Пространстве с мая 2025', en: 'In the Space since May 2025' },
+    // Аккаунт без пароля — утверждённый макет V4 «Врезка» (design/login-mockups.html).
+    // Тексты — по правилам владельца от 2026-07-12: «Вы», без слова «навсегда»,
+    // без внутреннего жаргона. Менять их — только вместе с макетом.
+    account: {
+      lead: {
+        ru: 'Ваши результаты пока не сохранены. Создайте аккаунт — оценки и найденные связи останутся с Вами, ничего не придётся начинать заново.',
+        en: 'Your results are not saved yet. Create an account and your ratings and relations stay with you — nothing has to be started over.',
+      },
+      google: { ru: 'Продолжить с Google', en: 'Continue with Google' },
+      emailPlaceholder: { ru: 'Ваш адрес электронной почты', en: 'Your email address' },
+      sendLink: { ru: 'Получить ссылку для входа', en: 'Get a sign-in link' },
+      emailNote: {
+        ru: 'Почта нужна только для входа в Ваш профиль.',
+        en: 'The email is used only to sign in to your profile.',
+      },
+      emailInvalid: {
+        ru: 'Пожалуйста, введите адрес электронной почты.',
+        en: 'Please enter an email address.',
+      },
+      sending: { ru: 'Отправляем письмо…', en: 'Sending the email…' },
+      sentTitle: { ru: 'Мы отправили Вам письмо', en: 'We have sent you an email' },
+      sentBody: {
+        ru: 'Пожалуйста, откройте его в своей почте {email} и нажмите кнопку «Подтвердить вход». После этого Ваш профиль будет сохранён, а все оценки останутся на месте.',
+        en: 'Please open it in your mailbox {email} and press the “Confirm sign-in” button. After that your profile is saved and all your ratings stay in place.',
+      },
+      sentNote: {
+        ru: 'Ссылка действует один час. Эту страницу можно не закрывать — она откроет Ваш профиль сама.',
+        en: 'The link is valid for one hour. You may keep this page open — it will open your profile itself.',
+      },
+      otherEmail: { ru: 'Указать другую почту', en: 'Use a different email' },
+      linking: { ru: 'Подтверждаем вход…', en: 'Confirming your sign-in…' },
+      doneBadge: { ru: 'Профиль сохранён', en: 'Profile saved' },
+      doneTitle: {
+        ru: 'Добро пожаловать в Пространство NDim',
+        en: 'Welcome to NDim Space',
+      },
+      doneBody: {
+        ru: 'Аккаунт создан. Ваши оценки и найденные связи на месте — Вы продолжаете с того же места, где остановились.',
+        en: 'Your account is created. Your ratings and relations are in place — you continue exactly where you stopped.',
+      },
+      doneNote: {
+        ru: 'Вас по-прежнему не видит никто. Что и кому показать — решаете Вы сами, в разделе «Видимость».',
+        en: 'Nobody sees you yet. What to show and to whom is entirely your decision, in the “Visibility” tab.',
+      },
+      close: { ru: 'Продолжить', en: 'Continue' },
+      retry: { ru: 'Попробовать снова', en: 'Try again' },
+      errors: {
+        'already-in-use': {
+          ru: 'Этот способ входа уже связан с другим профилем NDim. Чтобы сохранить текущие результаты, создайте аккаунт на другую почту.',
+          en: 'This sign-in method already belongs to another NDim profile. To keep your current results, create an account with a different email.',
+        },
+        cancelled: { ru: 'Вход отменён.', en: 'Sign-in cancelled.' },
+        'expired-link': {
+          ru: 'Ссылка больше не действует. Пожалуйста, запросите новую.',
+          en: 'The link is no longer valid. Please request a new one.',
+        },
+        unknown: {
+          ru: 'Не удалось создать аккаунт. Пожалуйста, попробуйте ещё раз.',
+          en: 'The account could not be created. Please try again.',
+        },
+      },
+    },
+    inSpaceSince: { ru: 'В Пространстве с', en: 'In the Space since' },
     personalInfo: { ru: 'Личная информация', en: 'Personal information' },
     defaultHidden: {
       ru: 'Новое свойство скрыто от всех, пока Вы сами его не откроете.',
@@ -514,27 +665,72 @@
         <p class="hint mono">{standError}</p>
       </div>
     {:else if data}
-      {#if guest && guestCard}
-        <!-- Честная карточка гостя — утверждённый макет V1 с правками владельца -->
-        <div class="card guest-card">
-          <span class="guest-ava"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
-          <h2>{t.guest.title[lang]}</h2>
-          <ul class="guest-facts">
-            <li>🫥 {t.guest.fact1[lang]}</li>
-            <li>💾 {t.guest.fact2[lang]}</li>
-            <li>🍂 {t.guest.fact3[lang]}</li>
-          </ul>
-          <div class="guest-cta">
-            <button type="button" class="btn" onclick={() => (guestSoonHint = true)}>{t.guest.save[lang]}</button>
-            <button type="button" class="guest-later" onclick={guestLater}>{t.guest.later[lang]}</button>
-          </div>
-          {#if guestSoonHint}<p class="hint guest-soon">{t.guest.soon[lang]}</p>{/if}
+      {#if guestCard && (guest || signupStep === 'done')}
+        <!-- Карточка гостя (утверждённый V1 «Тихий бейдж») разворачивается в вход
+             прямо на месте — утверждённый макет V4 «Врезка». Ничего не перекрывается
+             и никуда не уводит: человек остаётся в своём профиле. -->
+        <div class="card guest-card" class:saved={signupStep === 'done'}>
+          {#if signupStep === 'done'}
+            <span class="guest-ava solid"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
+            <p class="saved-badge">✓ {t.account.doneBadge[lang]}</p>
+            <h2>{t.account.doneTitle[lang]}</h2>
+            <p class="acc-lead">{t.account.doneBody[lang]}</p>
+            <p class="hint">{t.account.doneNote[lang]}</p>
+            <div class="guest-cta">
+              <button type="button" class="btn" onclick={() => (guestCard = false)}>{t.account.close[lang]}</button>
+            </div>
+          {:else if signupStep === 'linking'}
+            <span class="guest-ava"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
+            <p class="acc-lead">{t.account.linking[lang]}</p>
+          {:else if signupStep === 'sent'}
+            <span class="guest-ava"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
+            <h2>{t.account.sentTitle[lang]}</h2>
+            <p class="acc-lead">{t.account.sentBody[lang].replace('{email}', signupEmail)}</p>
+            <p class="hint">{t.account.sentNote[lang]}</p>
+            <div class="guest-cta">
+              <button type="button" class="btn ghost" onclick={() => (signupStep = 'choose')}>{t.account.otherEmail[lang]}</button>
+            </div>
+          {:else}
+            <span class="guest-ava"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
+            <h2>{t.guest.title[lang]}</h2>
+
+            {#if signupStep === 'facts'}
+              <ul class="guest-facts">
+                <li>🫥 {t.guest.fact1[lang]}</li>
+                <li>💾 {t.guest.fact2[lang]}</li>
+                <li>🍂 {t.guest.fact3[lang]}</li>
+              </ul>
+              <div class="guest-cta">
+                <button type="button" class="btn" onclick={() => (signupStep = 'choose')}>{t.guest.save[lang]}</button>
+                <button type="button" class="guest-later" onclick={guestLater}>{t.guest.later[lang]}</button>
+              </div>
+            {:else}
+              <p class="acc-lead">{t.account.lead[lang]}</p>
+              <button type="button" class="btn google" disabled={signupStep === 'sending'} onclick={startGoogle}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2z" /><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" /><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z" /><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z" /></svg>
+                {t.account.google[lang]}
+              </button>
+              <input
+                class="inp acc-email"
+                type="email"
+                autocomplete="email"
+                placeholder={t.account.emailPlaceholder[lang]}
+                bind:value={signupEmail}
+                disabled={signupStep === 'sending'}
+              />
+              <button type="button" class="btn ghost" disabled={signupStep === 'sending'} onclick={requestLink}>
+                {signupStep === 'sending' ? t.account.sending[lang] : t.account.sendLink[lang]}
+              </button>
+              {#if signupError}<p class="err">{signupError}</p>{/if}
+              <p class="hint">{t.account.emailNote[lang]}</p>
+            {/if}
+          {/if}
         </div>
       {/if}
       {#if tab === 'personal'}
         <div class="card head-card">
           <span class="ava">{formatValue('name', data.values.name).slice(0, 1)}</span>
-          <span><b>{formatValue('name', data.values.name)}</b><small>{t.inSpaceSince[lang]}</small></span>
+          <span><b>{formatValue('name', data.values.name)}</b><small>{t.inSpaceSince[lang]} {sinceMonth(data.root.time.created)}</small></span>
         </div>
         {#if editing}
           <div class="card">
@@ -877,7 +1073,25 @@
     font: inherit; font-size: 13px; color: var(--dim); background: transparent; border: 0;
     cursor: pointer; text-decoration: underline dotted; padding: 0;
   }
-  .guest-soon { text-align: center; }
+  /* ── Аккаунт без пароля (макет V4 «Врезка»): карточка гостя разворачивается ── */
+  /* Аккаунт создан — контур становится сплошным (та же метафора, но молча: на лице
+     приложения о ней не говорят, см. правила текста в design/login-mockups.html). */
+  .guest-card.saved { border-style: solid; border-color: var(--primary); }
+  .guest-ava.solid { border-style: solid; border-color: var(--primary); }
+  .guest-ava.solid :global(svg) { fill: var(--primary); opacity: 1; }
+  .saved-badge {
+    display: inline-block; margin: 10px auto 0; padding: 4px 12px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 650;
+    color: #0ea578; background: color-mix(in srgb, #0ea578 12%, transparent);
+  }
+  .acc-lead { font-size: 13.5px; line-height: 1.55; color: var(--text); margin: 6px 0 12px; }
+  .acc-email { margin-top: 8px; }
+  .guest-card .btn { width: 100%; }
+  .guest-card .acc-email + .btn { margin-top: 8px; }
+  /* Кнопка Google: знак провайдера белым на фирменной кнопке продукта */
+  .btn.google { display: flex; align-items: center; justify-content: center; gap: 9px; }
+  .btn.google :global(svg) { width: 18px; height: 18px; flex: none; fill: currentColor; }
+  .guest-card .err { margin-top: 8px; }
 
   /* ── Десктоп: макет V2 «Рабочий стол» (утверждён владельцем 2026-07-11) ──
      Блок стоит В КОНЦЕ файла намеренно: он переопределяет базовые (мобильные)

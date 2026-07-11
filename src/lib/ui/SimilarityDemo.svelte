@@ -12,7 +12,9 @@
   type Lang = 'ru' | 'en';
   let { lang, appUrl }: { lang: Lang; appUrl: string } = $props();
 
-  // ── Оси демо: понятные, нечувствительные качества ──
+  // ── Измерения демо: понятные, нечувствительные качества ──
+  //    ТЕРМИН: «измерение», не «ось» — пространство состоит из измерений (канон 1.x,
+  //    AGENT_GUIDE → «Словарь продукта»). «Ось» — наш рабочий жаргон, наружу не выходит.
   const AXES = [
     { id: 'quiet', name: { ru: 'Люблю тишину', en: 'Quiet time' } },
     { id: 'travel', name: { ru: 'Путешествия', en: 'Travel' } },
@@ -28,7 +30,7 @@
       id: 'alice',
       name: { ru: 'Алиса', en: 'Emma' },
       color: '#7c5cff',
-      note: { ru: 'заполнила все 5 осей', en: 'filled all 5 axes' },
+      note: { ru: 'заполнила все 5 измерений', en: 'filled all 5 dimensions' },
       angle: -90,
       dims: { quiet: 8, travel: 6, sport: 3, books: 9, humor: 7 },
     },
@@ -36,7 +38,7 @@
       id: 'max',
       name: { ru: 'Макс', en: 'Liam' },
       color: '#0ea578',
-      note: { ru: 'заполнил только 3 оси', en: 'filled only 3 axes' },
+      note: { ru: 'заполнил только 3 измерения', en: 'filled only 3 dimensions' },
       angle: 25,
       dims: { travel: 9, sport: 8, humor: 6 },
     },
@@ -44,7 +46,7 @@
       id: 'nastya',
       name: { ru: 'Настя', en: 'Mia' },
       color: '#d6544f',
-      note: { ru: 'заполнила все 5 осей', en: 'filled all 5 axes' },
+      note: { ru: 'заполнила все 5 измерений', en: 'filled all 5 dimensions' },
       angle: 155,
       dims: { quiet: 2, travel: 3, sport: 9, books: 1, humor: 4 },
     },
@@ -53,8 +55,8 @@
   const t = {
     title: { ru: 'Попробуйте прямо здесь', en: 'Try it right here' },
     sub: {
-      ru: 'Оцените себя по пяти осям — Ваша точка сдвинется, а соседи пересчитаются. Алгоритм настоящий, тот же, что в продукте.',
-      en: 'Rate yourself on five axes — your point will move and the neighbors will recalculate. The algorithm is real, the same one the product runs.',
+      ru: 'Оцените себя по пяти измерениям — Ваша точка сдвинется, а соседи пересчитаются. Алгоритм настоящий, тот же, что в продукте.',
+      en: 'Rate yourself on five dimensions — your point will move and the neighbors will recalculate. The algorithm is real, the same one the product runs.',
     },
     mapNote: {
       ru: 'Расстояния настоящие. Чем ярче линия — тем сильнее связь.',
@@ -135,7 +137,7 @@
   <h2>{t.title[lang]}</h2>
   <p class="sub">{t.sub[lang]}</p>
 
-  <!-- Мои оси: звёзды 0…10 с цифрой (жест оценки из 1.x) -->
+  <!-- Мои измерения: звёзды 0…10 с цифрой (жест оценки из 1.x) -->
   <div class="panel axes-panel">
     {#each AXES as axis}
       <div class="axis">
