@@ -20,14 +20,20 @@
   type Lang = 'ru' | 'en';
 
   let lang = $state<Lang>('ru');
-  let stand = $state<'connecting' | 'ready' | 'down'>('connecting');
+  // 'prod' — публичный домен: экраны 2.0 ещё не открыты, показываем заглушку со ссылкой на 1.x.
+  let stand = $state<'connecting' | 'ready' | 'down' | 'prod'>('connecting');
   let standError = $state('');
   let data = $state<RelationsScreenData | null>(null);
   let expanded = $state<string | null>(null);
+  const LIVE_APP_URL = 'https://ndim-space.web.app';
 
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');
     if (saved === 'en' || saved === 'ru') lang = saved;
+    if (!['localhost', '127.0.0.1'].includes(location.hostname)) {
+      stand = 'prod';
+      return;
+    }
     try {
       const uid = await signInDev();
       data = await loadRelations(uid);
@@ -51,6 +57,11 @@
       ru: 'Стенд не поднят. Запусти: npm run stand (эмуляторы + сид + dev-сервер).',
       en: 'The stand is not running. Start it: npm run stand (emulators + seed + dev server).',
     },
+    prodStub: {
+      ru: 'Экраны NDim Space 2.0 ещё строятся. Живое приложение работает по кнопке ниже — там настоящие люди и связи.',
+      en: 'The NDim Space 2.0 screens are still under construction. The live app works via the button below — with real people and relations.',
+    },
+    openLive: { ru: 'Открыть NDim Space (текущая версия)', en: 'Open NDim Space (current version)' },
     empty: {
       ru: 'Связей пока нет: вычислитель ещё не считал. На стенде: node calculator/index.mjs --once',
       en: 'No relations yet: the calculator has not run. On the stand: node calculator/index.mjs --once',
@@ -121,6 +132,11 @@
 
     {#if stand === 'connecting'}
       <p class="state">{t.connecting[lang]}</p>
+    {:else if stand === 'prod'}
+      <div class="card">
+        <p class="state">{t.prodStub[lang]}</p>
+        <a class="btn" href={LIVE_APP_URL}>{t.openLive[lang]}</a>
+      </div>
     {:else if stand === 'down'}
       <div class="card">
         <p class="state">{t.standDown[lang]}</p>
@@ -231,7 +247,7 @@
   .btn {
     display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px;
     border-radius: 12px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
-    background: var(--primary); color: var(--primary-ink); border: 0;
+    background: var(--primary); color: var(--primary-ink); border: 0; text-decoration: none;
   }
   .btn:disabled { opacity: 0.55; cursor: default; }
   .linkish {

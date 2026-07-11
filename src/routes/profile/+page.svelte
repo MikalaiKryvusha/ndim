@@ -33,10 +33,13 @@
   let lang = $state<Lang>('ru');
   let tab = $state<Tab>('personal');
 
-  // Состояние стенда — честное: подключаемся / готово / стенда нет.
-  let stand = $state<'connecting' | 'ready' | 'down'>('connecting');
+  // Состояние стенда — честное: подключаемся / готово / стенда нет / публичный хост.
+  // На публичном домене экраны 2.0 ещё не открыты (данные 2.0 появятся с миграцией) —
+  // показываем честную заглушку со ссылкой на живое приложение, а не дев-сообщение.
+  let stand = $state<'connecting' | 'ready' | 'down' | 'prod'>('connecting');
   let standError = $state('');
   let data = $state<ProfileScreenData | null>(null);
+  const LIVE_APP_URL = 'https://ndim-space.web.app';
 
   // Вкладка «Измерения»
   let search = $state('');
@@ -71,6 +74,10 @@
   let suggestState = $state<'idle' | 'sending' | 'sent'>('idle');
 
   onMount(async () => {
+    if (!['localhost', '127.0.0.1'].includes(location.hostname)) {
+      stand = 'prod';
+      return;
+    }
     try {
       const uid = await signInDev();
       data = await loadProfileScreen(uid);
@@ -94,6 +101,11 @@
       ru: 'Стенд не поднят. Запусти: npm run stand (эмуляторы + сид + dev-сервер).',
       en: 'The stand is not running. Start it: npm run stand (emulators + seed + dev server).',
     },
+    prodStub: {
+      ru: 'Экраны NDim Space 2.0 ещё строятся. Живое приложение работает по кнопке ниже — там настоящие люди и связи.',
+      en: 'The NDim Space 2.0 screens are still under construction. The live app works via the button below — with real people and relations.',
+    },
+    openLive: { ru: 'Открыть NDim Space (текущая версия)', en: 'Open NDim Space (current version)' },
     inSpaceSince: { ru: 'В Пространстве с мая 2025', en: 'In the Space since May 2025' },
     personalInfo: { ru: 'Личная информация', en: 'Personal information' },
     defaultHidden: {
@@ -426,6 +438,11 @@
   <main class="body">
     {#if stand === 'connecting'}
       <p class="state">{t.connecting[lang]}</p>
+    {:else if stand === 'prod'}
+      <div class="card">
+        <p class="state">{t.prodStub[lang]}</p>
+        <a class="btn" href={LIVE_APP_URL}>{t.openLive[lang]}</a>
+      </div>
     {:else if stand === 'down'}
       <div class="card">
         <p class="state">{t.standDown[lang]}</p>
@@ -692,7 +709,7 @@
   .btn {
     display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px;
     border-radius: 12px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
-    background: var(--primary); color: var(--primary-ink); border: 0;
+    background: var(--primary); color: var(--primary-ink); border: 0; text-decoration: none;
   }
   .btn.ghost { background: transparent; border: 1px solid var(--ghost-brd); color: var(--ghost-ink); }
   .btn:disabled { opacity: 0.55; cursor: default; }
