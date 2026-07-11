@@ -123,6 +123,26 @@ const VISIBILITY = {
 
 const MY_RATINGS = { cats: 10, travel: 9, silence: 7, math: 8 };
 
+/**
+ * Гости стенда: соседи по Пространству со своими точками — пища для вычислителя связей.
+ * Auth-пользователи им не нужны: вычислитель ходит по points/, экран связей читает
+ * relations владельца и profile/everyone гостей.
+ */
+const GUESTS = {
+  'stand-guest-anna': {
+    name: { ru: 'Анна', en: 'Anna' },
+    ratings: { cats: 9, silence: 8, theatre: 6, travel: 7 },
+  },
+  'stand-guest-viktor': {
+    name: { ru: 'Виктор', en: 'Viktor' },
+    ratings: { travel: 10, math: 7, cats: 3, running: 5 },
+  },
+  'stand-guest-maria': {
+    name: { ru: 'Мария', en: 'Maria' },
+    ratings: { silence: 2, cats: 10, travel: 8, math: 9, theatre: 4 },
+  },
+};
+
 // ── 3. Запись в Firestore (правила отключены: сид — это роль вычислителя) ──
 
 const env = await initializeTestEnvironment({
@@ -154,13 +174,38 @@ try {
 
     await db.doc(`users/${uid}/groups/g-club`).set({ name: 'Клуб', memberCount: 0, created: now });
 
-    await db.doc(`points/${uid}`).set({ dirty: false, updated: now, lastSync: null });
+    // Точка владельца стенда — «грязная»: вычислителю есть что пересчитать сразу.
+    await db.doc(`points/${uid}`).set({ dirty: true, updated: now, lastSync: null });
     for (const [dimId, value] of Object.entries(MY_RATINGS)) {
       await db.doc(`points/${uid}/dims/${dimId}`).set({ value });
     }
+
+    // Гости: публичная карточка (profile/everyone) + точка с оценками.
+    for (const [guestUid, guest] of Object.entries(GUESTS)) {
+      await db.doc(`users/${guestUid}`).set({
+        visibility: { name: 'everyone' },
+        settings: { language: 'ru' },
+        time: { created: now, updated: now, lastSignIn: now },
+        groupCount: 0,
+      });
+      await db.doc(`users/${guestUid}/profile/everyone`).set({
+        name: {
+          first: guest.name,
+          middle: { ru: null, en: null },
+          last: { ru: null, en: null },
+          nick: { ru: null, en: null },
+        },
+      });
+      await db.doc(`points/${guestUid}`).set({ dirty: false, updated: now, lastSync: null });
+      for (const [dimId, value] of Object.entries(guest.ratings)) {
+        await db.doc(`points/${guestUid}/dims/${dimId}`).set({ value });
+      }
+    }
   });
 
-  console.log(`✔ Стенд засеян: пользователь ${DEV_USER.email} (${uid}), осей: ${Object.keys(DIMS).length}, оценок: ${Object.keys(MY_RATINGS).length}`);
+  console.log(
+    `✔ Стенд засеян: ${DEV_USER.email} (${uid}) + ${Object.keys(GUESTS).length} гостя, осей: ${Object.keys(DIMS).length}`,
+  );
 } finally {
   await env.cleanup();
 }

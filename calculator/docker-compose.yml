@@ -1,0 +1,28 @@
+# Вычислитель связей NDim Space 2.0 — постоянная служба на серверном ПК владельца
+# (этот компьютер и есть сервер — уточнение владельца, чат 2026-07-11).
+#
+# Дев-режим (сейчас, против локальных эмуляторов; стенд должен быть поднят: npm run stand):
+#   docker compose -f calculator/docker-compose.yml up -d --build
+#
+# Боевой режим — ТОЛЬКО вместе с миграцией данных 2.0 (plans/02): до неё контейнер писал бы
+# документы формата 2.0 в живую базу, где работает 1.x. Для боя: положить ключ сервисного
+# аккаунта в calculator/secrets/sa.json (папка в .gitignore) и запустить с override-переменными:
+#   FIREBASE_PROJECT_ID=ndim-space GOOGLE_APPLICATION_CREDENTIALS=/secrets/sa.json \
+#     docker compose -f calculator/docker-compose.yml up -d --build
+#
+# Входящих портов у службы нет — только исходящие соединения (интервью №001, В3).
+
+services:
+  calculator:
+    build:
+      context: ..
+      dockerfile: calculator/Dockerfile
+    image: ndim-calculator
+    restart: unless-stopped
+    environment:
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-demo-ndim-dev}
+      FIRESTORE_EMULATOR_HOST: ${FIRESTORE_EMULATOR_HOST:-host.docker.internal:8181}
+      CALC_INTERVAL_SECONDS: ${CALC_INTERVAL_SECONDS:-60}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    volumes:
+      - ./secrets:/secrets:ro
