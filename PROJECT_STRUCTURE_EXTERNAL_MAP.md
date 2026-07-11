@@ -49,6 +49,9 @@ D:\work\ai_sandbox\ndim\
 ├── static/                      # favicon.svg (кластер трёх точек), robots.txt
 ├── vite.config.ts               # SvelteKit + adapter-static (svelte.config.js больше не нужен)
 ├── design/landing-mockups.html  # утверждённые макеты (история 3 раундов правок владельца)
+├── design/light-theme-mockups.html # 4 варианта светлой темы; утверждена V1 «Бумага» (2026-07-11)
+├── playwright.config.ts         # e2e-стенд: собирает продакшен-артефакт и гоняет браузер по нему
+├── e2e/landing.spec.ts          # 10 проверок лендинга: пререндер, темы, языки, кнопки, консоль
 ├── src/lib/
 │   ├── similarity/              # ★ математическое ядро — то, ради чего проект существует
 │   │   ├── similarity.ts        # computeRelation: близость × общность = похожесть

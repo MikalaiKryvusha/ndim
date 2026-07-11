@@ -1,21 +1,32 @@
-<div align="center">
+<p align="center">
+  <img src="static/favicon.svg" alt="NDim Space" width="96">
+</p>
+
+<a id="russian"></a>
 
 # NDim Space
 
-**Честный поиск похожих людей в многомерном пространстве самооценок.**
-
-[Русский](#ru) · [English](#en)
+<p align="center">
+  <a href="#russian"><img src="https://img.shields.io/badge/Русский-C0392B?style=for-the-badge" alt="Русский"></a>
+  &nbsp;
+  <a href="#english"><img src="https://img.shields.io/badge/English-2C7BE5?style=for-the-badge" alt="English"></a>
+</p>
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-2.0%20в%20разработке-orange.svg)](STATUS.md)
+[![Status](https://img.shields.io/badge/Status-2.0%20в%20разработке-orange.svg)](STATUS.md)
+[![Framework](https://img.shields.io/badge/Framework-KAIF-7F52FF.svg)](https://github.com/MikalaiKryvusha/KAIF)
+[![Stack](https://img.shields.io/badge/Stack-SvelteKit%20%2B%20TypeScript-FF3E00.svg)](#сборка-и-стенд)
+[![Live 1.x](https://img.shields.io/badge/Live%201.x-ndim--space.web.app-00C853.svg)](https://ndim-space.web.app)
 
-</div>
+**Честный поиск похожих людей в многомерном пространстве самооценок.**
+Платформа знакомств, которая ищет вам человека, а не удерживает вас ради подписки.
+
+> 🇷🇺 Русский (основной) ниже. · 🇬🇧 [English below](#english)
+> 🧮 Вся идея — в ста строках математики: [`researches/03`](researches/03_similarity_core_1x_source.md).
 
 ---
 
-<a name="ru"></a>
-
-## 🇷🇺 Русский
+## Русский
 
 ### Что это
 
@@ -53,33 +64,66 @@
 - **Никакой монетизации внимания.** Ни подписки, ни платного «буста», ни механик удержания.
 - **Успех — это когда вы нашли человека и ушли.** Не «провели в приложении 40 минут».
 - **Оси придумывают люди, а не платформа.** Никто, кроме людей, не знает, чем люди отличаются.
+- **Ваш внутренний мир под защитой.** Оценки по осям не видит никто, кроме вас: другие видят лишь
+  итоговую похожесть, а не то, из чего она сложилась. Умолчание видимости — «скрыть».
 - **Открытый код под AGPL-3.0.** Взять эту идею и сделать из неё закрытый платный сервис — нельзя.
 
-### Статус
+### Что внутри
 
-Проект переписывается заново. Версия 1.x — работающая, но кустарная реализация идеи, написанная
-автором вручную, без опыта программирования, — свою задачу выполнила: доказала, что математика
-работает. Версия 2.0 строится по-настоящему.
+| Компонент | Где | Проверено |
+|-----------|-----|-----------|
+| Ядро похожести | [`src/lib/similarity/`](src/lib/similarity/similarity.ts) — чистый TS-модуль, настоящие имена метрик | 29 тестов; числовой паритет с 1.x; мутации ловятся |
+| Декодер наследия `a…t` | [`legacy.ts`](src/lib/similarity/legacy.ts) — читает обфусцированные связи 1.x для миграции | обратимость `encode(decode(x)) === x` |
+| Видимость профиля | [`src/lib/model/visibility.ts`](src/lib/model/visibility.ts) — раскладка свойств по кругам владельца | 30 тестов; четыре сценария утечки — мутациями |
+| Схема документов | [`src/lib/model/schema.ts`](src/lib/model/schema.ts) — типы Firestore, логика дружбы, границы значений | 29 тестов |
+| Правила безопасности | [`firestore.rules`](firestore.rules) — единственный сторож между клиентом и чужими данными | 56 тестов на эмуляторе, проверяют **отказы** |
+| Лендинг | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, статический пререндер, светлая/тёмная темы, RU/EN | 10 e2e-проверок в настоящем браузере |
+| План миграции 1.x → 2.0 | [`plans/02_migration.md`](plans/02_migration.md) — уважительная: труд людей не теряется | — |
 
-| Фаза | Статус |
-|------|--------|
-| Фундамент, решения, санация | ✅ |
-| Ядро похожести: чистый модуль + тесты | 🔲 следующее |
-| Фронтенд на SvelteKit + TypeScript | 🔲 |
-| Бэкенд: фоновый вычислитель связей | 🔲 |
-| Домен, индексация, публикация | 🔲 |
+### Дорожная карта
 
-Подробности — в [`STATUS.md`](STATUS.md) и [`MASTER_PLAN.md`](MASTER_PLAN.md).
-Видение автора — в [`GOAL.md`](GOAL.md).
+| Фаза | Что | Статус |
+|------|-----|--------|
+| Фундамент | наследие 1.x в архив, KAIF, аудит и отзыв секретов, чистая история | ✅ |
+| Решения владельца | стек, хостинг, бэкенд, лицензия — интервью №001–002 | ✅ |
+| Ядро 2.0 | математика + модель данных + правила + тесты + план миграции | ✅ |
+| Фронтенд 2.0 | SvelteKit: лендинг готов (темы, RU/EN, пререндер, e2e); дальше — экраны продукта | 🔧 |
+| Бэкенд | фоновый вычислитель связей в Docker, расчёт уходит с телефона автора | 🔲 |
+| Публикация | собственный домен, SEO, индексация, перенос пользователей | 🔲 |
 
-### Как устроен репозиторий
+Живой статус — [`STATUS.md`](STATUS.md) · дорожная карта — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
+видение автора — [`GOAL.md`](GOAL.md).
 
-Проект ведётся по фреймворку **[KAIF](KAIF_FRAMEWORK.md)**: память и дисциплина работы человека с
-ИИ-агентом вынесены в файлы репозитория. Начните с [`AGENT_GUIDE.md`](AGENT_GUIDE.md) — это канон.
+### Сборка и стенд
 
-Версия 1.x целиком сохранена в приватном архиве. Её ключевое знание выжато сюда:
+Node ≥ 24 (исполняет TypeScript нативно), npm. Для тестов правил — Java (эмулятор Firestore).
+
+```bash
+npm install
+npm run dev        # разработка: http://localhost:5173
+npm test           # 88 юнит-тестов ядра и модели данных
+npm run test:rules # 56 тестов правил Firestore на эмуляторе
+npm run e2e        # 10 браузерных e2e-проверок лендинга (Playwright, продакшен-сборка)
+npm run build      # статическая сборка в build/ — весь сайт пререндерится
+```
+
+Каждый набор тестов проверен **мутациями**: на намеренно сломанном коде он падает. Тест, который
+не умеет краснеть, — не тест, а украшение.
+
+### Наследие 1.x
+
+Версия 1.x — работающая, но кустарная реализация идеи, написанная автором вручную, без опыта
+программирования, — свою задачу выполнила: доказала, что математика работает и люди действительно
+находят друг друга. Она целиком сохранена в приватном архиве, а её ключевое знание выжато сюда:
 [модель данных](researches/02_firestore_data_model_1x.md) ·
 [математическое ядро](researches/03_similarity_core_1x_source.md).
+
+### Ведётся по KAIF
+
+Разработка идёт тандемом «человек-визионер + ИИ-агент» по фреймворку
+**[KAIF](https://github.com/MikalaiKryvusha/KAIF)**: память, дисциплина и знания агента вынесены в
+файлы репозитория (`STATUS.md`, `bugs/`, `researches/`, `interviews/`…), поэтому любая свежая сессия
+продолжает работу без потери контекста. Канон проекта — [`AGENT_GUIDE.md`](AGENT_GUIDE.md).
 
 ### Автор
 
@@ -91,22 +135,23 @@
 
 ---
 
-<a name="en"></a>
+<a id="english"></a>
 
-## 🇬🇧 English
+## English
 
 ### What this is
 
-The dating industry is built so that you keep **searching**, not finding. Subscriptions, endless feeds,
-the illusion of infinite choice — it monetises the human need for connection without satisfying it.
+The dating industry is built so that you keep **searching**, not finding. Subscriptions, endless
+feeds, the illusion of infinite choice — it monetises the human need for connection without
+satisfying it.
 
 **NDim Space** works differently. It finds people similar to you — mathematically.
 
 ### How it works
 
 The community invents **dimensions** — axes of human qualities: "I love silence", "I wake up early",
-"I read at night". You mark where you stand on the axes that matter to you, from 0 to 10. You become a
-**point in your own subspace of dimensions**.
+"I read at night". You mark where you stand on the axes that matter to you, from 0 to 10. You become
+a **point in your own subspace of dimensions**.
 
 Similarity between two people is computed **only over their shared axes**:
 
@@ -122,21 +167,76 @@ Two consequences:
 - **Both closeness and breadth of overlap are required.** A zero in either factor zeroes the result.
   This is a deliberate refusal of compromise "averages".
 
-The platform periodically finds up to 250 people most similar to you. Similarity is private: only you
-see it.
+The platform periodically finds up to 250 people most similar to you. Similarity is private: only
+you see it.
 
 ### Principles
 
 - **No attention monetisation.** No subscriptions, no paid boosts, no retention mechanics.
 - **Success is when you find someone and leave.** Not "spent 40 minutes in the app".
 - **Axes are invented by people, not by the platform.** Nobody but people knows how people differ.
-- **Open source under AGPL-3.0.** Taking this idea and turning it into a closed paid service is not allowed.
+- **Your inner world is protected.** Nobody but you sees your per-axis ratings: others see only the
+  resulting similarity, not what it is made of. The visibility default is "hidden".
+- **Open source under AGPL-3.0.** Taking this idea and turning it into a closed paid service is not
+  allowed.
 
-### Status
+### What is inside
 
-The project is being rewritten. Version 1.x — a working but homemade implementation, written by the
-author by hand with no programming experience — did its job: it proved the maths works. Version 2.0 is
-being built properly. See [`STATUS.md`](STATUS.md) and [`MASTER_PLAN.md`](MASTER_PLAN.md).
+| Component | Where | Verified |
+|-----------|-------|----------|
+| Similarity core | [`src/lib/similarity/`](src/lib/similarity/similarity.ts) — pure TS module, real metric names | 29 tests; numeric parity with 1.x; mutations get caught |
+| Legacy `a…t` decoder | [`legacy.ts`](src/lib/similarity/legacy.ts) — reads obfuscated 1.x relations for migration | round-trip `encode(decode(x)) === x` |
+| Profile visibility | [`src/lib/model/visibility.ts`](src/lib/model/visibility.ts) — properties laid out by the owner's circles | 30 tests; four leak scenarios checked by mutations |
+| Document schema | [`src/lib/model/schema.ts`](src/lib/model/schema.ts) — Firestore types, friendship logic, value bounds | 29 tests |
+| Security rules | [`firestore.rules`](firestore.rules) — the only guard between a client and other people's data | 56 emulator tests asserting **denials** |
+| Landing page | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, static prerender, light/dark themes, RU/EN | 10 e2e checks in a real browser |
+| 1.x → 2.0 migration plan | [`plans/02_migration.md`](plans/02_migration.md) — respectful: people's work is never lost | — |
+
+### Roadmap
+
+| Phase | What | Status |
+|-------|------|--------|
+| Foundation | 1.x legacy archived, KAIF deployed, secrets audited and revoked, clean history | ✅ |
+| Owner decisions | stack, hosting, backend, license — interviews #001–002 | ✅ |
+| Core 2.0 | maths + data model + rules + tests + migration plan | ✅ |
+| Frontend 2.0 | SvelteKit: landing done (themes, RU/EN, prerender, e2e); product screens next | 🔧 |
+| Backend | background relation calculator in Docker, computation leaves the author's phone | 🔲 |
+| Publication | own domain, SEO, indexing, user migration | 🔲 |
+
+Live status — [`STATUS.md`](STATUS.md) · roadmap — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
+the author's vision — [`GOAL.md`](GOAL.md).
+
+### Build and test harness
+
+Node ≥ 24 (runs TypeScript natively), npm. Rules tests additionally need Java (Firestore emulator).
+
+```bash
+npm install
+npm run dev        # development: http://localhost:5173
+npm test           # 88 unit tests: core and data model
+npm run test:rules # 56 Firestore rules tests on the emulator
+npm run e2e        # 10 browser e2e checks of the landing (Playwright, production build)
+npm run build      # static build into build/ — the whole site is prerendered
+```
+
+Every test suite is verified by **mutations**: it fails on deliberately broken code. A test that
+cannot turn red is not a test but a decoration.
+
+### The 1.x legacy
+
+Version 1.x — a working but homemade implementation, written by the author by hand with no
+programming experience — did its job: it proved the maths works and people actually find each other.
+It is fully preserved in a private archive; its key knowledge is distilled here:
+[data model](researches/02_firestore_data_model_1x.md) ·
+[similarity core](researches/03_similarity_core_1x_source.md).
+
+### Managed by KAIF
+
+Development runs as a human-visionary + AI-agent tandem on the
+**[KAIF](https://github.com/MikalaiKryvusha/KAIF)** framework: the agent's memory, discipline and
+knowledge are externalized into repository files (`STATUS.md`, `bugs/`, `researches/`,
+`interviews/`…), so any fresh session resumes with full context. The project canon is
+[`AGENT_GUIDE.md`](AGENT_GUIDE.md).
 
 ### Author
 
