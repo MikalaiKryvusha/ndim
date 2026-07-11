@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — экран профиля (NDim ID), 4 варианта макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — ПЕРВЫЙ ЭКРАН ПРОДУКТА 2.0: ПРОФИЛЬ С ИЗМЕРЕНИЯМИ (NDim ID).
+     Решение владельца: интервью №003, В1 = A (2026-07-11).
+
+     Состав экрана — из модели данных 2.0 (researches/04):
+       · личные свойства (имя, дата рождения, пол, «о себе», аватар), у КАЖДОГО —
+         своя аудитория: Все · Друзья · круги владельца · Никому (умолчание — Никому);
+       · измерения (оси) с оценками 0…10 — их не видит никто, кроме владельца
+         (интервью №002, В4), поэтому у осей нет настройки видимости;
+       · знак — утверждённое лого V3 «Диагональ».
+
+     Четыре варианта — четыре РАЗНЫЕ философии экрана (не перестановка блоков):
+       V1 «Колонна»      — всё одним свитком, как лендинг; видимость чипом у свойства.
+       V2 «Табы»         — Личное | Измерения | Видимость как отдельные комнаты.
+       V3 «Глазами гостя» — профиль показан так, как его видит выбранная аудитория.
+       V4 «Мастер оценок» — заполнение NDim ID как поток: одна ось на экран, крупно.
+
+     Тема — светлая «Бумага» (дефолт прода); тёмная получится из тех же токенов.
+     Тексты RU («на Вы» — голос владельца). Смотреть можно в любом окне: телефоны
+     стоят в ряд и переносятся.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #0f1826; color: #cfe0ef; padding: 28px 20px 60px;
+  }
+  .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+  h1 { font-size: 22px; color: #fff; margin-bottom: 6px; }
+  .note { max-width: 860px; font-size: 14px; line-height: 1.55; color: #8fa9c0; margin-bottom: 26px; }
+
+  .row { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; }
+  .variant { width: 400px; }
+  .variant h2 { font-size: 16px; color: #fff; margin-bottom: 4px; }
+  .variant .why { font-size: 12.5px; line-height: 1.5; color: #8fa9c0; margin-bottom: 12px; min-height: 76px; }
+
+  /* ── Телефон и токены «Бумаги» ── */
+  .phone {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7;
+    --primary: #1467d6; --heading: #12263c; --text: #33506e; --dim: #6a819a;
+    --chip: #eef4fa; --acc: #1fa8c9;
+    width: 400px; border-radius: 30px; border: 1px solid #2d4a66;
+    background: var(--bg); color: var(--text); overflow: hidden;
+  }
+  .bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 16px 12px; background: var(--panel); border-bottom: 1px solid var(--edge);
+  }
+  .bar .wm { font-size: 14.5px; font-weight: 650; color: var(--heading); }
+  .bar .me {
+    margin-left: auto; width: 30px; height: 30px; border-radius: 50%;
+    background: #dbe7f5; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: var(--primary); font-weight: 700;
+  }
+  .body { padding: 14px 14px 22px; display: flex; flex-direction: column; gap: 12px; }
+
+  .card { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 14px; }
+  .card h3 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+
+  /* строка свойства */
+  .prop { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--edge); }
+  .prop:last-child { border-bottom: 0; }
+  .prop .k { font-size: 12px; color: var(--dim); width: 96px; flex: none; }
+  .prop .v { font-size: 14px; color: var(--heading); flex: 1; min-width: 0; }
+  .aud {
+    flex: none; font-size: 11px; padding: 4px 9px; border-radius: 999px;
+    background: var(--chip); color: var(--primary); white-space: nowrap;
+  }
+  .aud.lock { color: var(--dim); }
+  .aud.circ { color: var(--acc); }
+
+  /* строка измерения */
+  .dim-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--edge); }
+  .dim-row:last-child { border-bottom: 0; }
+  .dim-row .n { font-size: 14px; color: var(--heading); flex: 1; }
+  .scale { flex: none; width: 130px; height: 6px; border-radius: 3px; background: var(--chip); position: relative; }
+  .scale i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: linear-gradient(90deg, #1467d6, #1fa8c9); }
+  .val { flex: none; width: 26px; text-align: right; font-size: 13.5px; font-weight: 700; color: var(--primary); }
+
+  .search {
+    display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+    border: 1px solid var(--edge); border-radius: 10px; background: var(--panel);
+    font-size: 13px; color: var(--dim);
+  }
+  .btn {
+    display: block; text-align: center; padding: 12px; border-radius: 12px;
+    background: var(--primary); color: #fff; font-size: 14px; font-weight: 600;
+  }
+  .btn.ghost { background: transparent; border: 1px solid rgba(20,103,214,.35); color: var(--primary); }
+  .hint { font-size: 11.5px; color: var(--dim); line-height: 1.45; }
+
+  /* табы (V2) */
+  .tabs { display: flex; background: var(--panel); border-bottom: 1px solid var(--edge); }
+  .tabs span { flex: 1; text-align: center; font-size: 13px; padding: 10px 0; color: var(--dim); }
+  .tabs .on { color: var(--primary); font-weight: 650; box-shadow: inset 0 -2px 0 var(--primary); }
+
+  /* сегмент аудитории (V3) */
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg span { font-size: 12px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--edge); color: var(--dim); background: var(--panel); }
+  .seg .on { background: var(--primary); border-color: transparent; color: #fff; font-weight: 600; }
+  .ghosted { opacity: .38; }
+  .visit-head { display: flex; align-items: center; gap: 12px; }
+  .visit-head .ava { width: 54px; height: 54px; border-radius: 50%; background: #dbe7f5; flex: none; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary); font-size: 20px; }
+  .visit-head b { font-size: 17px; color: var(--heading); display: block; }
+  .visit-head small { font-size: 12px; color: var(--dim); }
+
+  /* мастер (V4) */
+  .progress { display: flex; align-items: center; gap: 10px; }
+  .pbar { flex: 1; height: 8px; border-radius: 4px; background: var(--chip); position: relative; }
+  .pbar i { position: absolute; inset: 0 auto 0 0; width: 40%; border-radius: 4px; background: linear-gradient(90deg, #1467d6, #1fa8c9); }
+  .big-dim { text-align: center; padding: 22px 14px; }
+  .big-dim .emo { font-size: 40px; }
+  .big-dim b { display: block; font-size: 21px; color: var(--heading); margin: 8px 0 4px; }
+  .big-dim p { font-size: 12.5px; color: var(--dim); }
+  .stars { display: flex; justify-content: center; gap: 5px; margin: 16px 0 6px; font-size: 19px; }
+  .stars span { color: #c9d9ea; }
+  .stars .lit { color: var(--primary); }
+  .stars-cap { text-align: center; font-size: 12px; color: var(--dim); }
+  .duo { display: flex; gap: 10px; }
+  .duo .btn { flex: 1; }
+</style>
+</head>
+<body>
+
+<!-- Утверждённый знак V3 для шапок телефонов -->
+<svg class="defs" aria-hidden="true">
+  <defs>
+    <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70">
+      <stop offset="0" stop-color="#4d9fff"/><stop offset="1" stop-color="#3fd9ff"/>
+    </linearGradient>
+    <symbol id="mark" viewBox="0 0 96 96">
+      <rect width="96" height="96" rx="22" fill="#060b14"/>
+      <g stroke="url(#g)" stroke-width="6.7" fill="none">
+        <line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/>
+      </g>
+      <g fill="url(#g)">
+        <circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<h1>Экран профиля (NDim ID) · 4 варианта макета</h1>
+<p class="note">Решение интервью №003 (В1): первый экран 2.0 — <b>профиль с измерениями</b>.
+Состав — из модели данных 2.0: личные свойства с аудиторией по кругам (умолчание — «Никому»)
+и оценки по осям 0–10, которые не видит никто, кроме Вас. Четыре варианта — четыре философии
+экрана; данные в макетах условные. Тема — светлая «Бумага»; тёмная строится из тех же токенов.</p>
+
+<div class="row">
+
+<!-- ═══ V1 «Колонна» ═══ -->
+<section class="variant">
+  <h2>V1 — «Колонна»: всё одним свитком</h2>
+  <p class="why">Продолжение языка лендинга: одна колонна, две секции. Видимость — чип прямо у
+     свойства (тап по чипу → выбор аудитории). Измерения тут же, ниже, с поиском. Минимум навигации,
+     максимум обзора; экран длинный, но привычно скроллится.</p>
+  <div class="phone">
+    <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">NDim Space</span><span class="me">Н</span></div>
+    <div class="body">
+      <div class="card">
+        <h3>Личное</h3>
+        <div class="prop"><span class="k">Имя</span><span class="v">Николай</span><span class="aud">🌐 Все</span></div>
+        <div class="prop"><span class="k">О себе</span><span class="v">Ищу похожих на меня людей…</span><span class="aud">👥 Друзья</span></div>
+        <div class="prop"><span class="k">Дата рождения</span><span class="v">14 марта</span><span class="aud circ">◎ Круг «Клуб»</span></div>
+        <div class="prop"><span class="k">Пол</span><span class="v">Мужской</span><span class="aud">🌐 Все</span></div>
+        <div class="prop"><span class="k">Фото</span><span class="v">аватар.jpg</span><span class="aud lock">🔒 Никому</span></div>
+        <p class="hint" style="margin-top:8px">Новое свойство скрыто от всех, пока Вы сами не откроете его.</p>
+      </div>
+      <div class="card">
+        <h3>Измерения · 14 оценено</h3>
+        <div class="search">🔎 Найти измерение…</div>
+        <div class="dim-row"><span class="n">Путешествия</span><span class="scale"><i style="width:90%"></i></span><span class="val">9</span></div>
+        <div class="dim-row"><span class="n">Кошки</span><span class="scale"><i style="width:100%"></i></span><span class="val">10</span></div>
+        <div class="dim-row"><span class="n">Тишина</span><span class="scale"><i style="width:70%"></i></span><span class="val">7</span></div>
+        <div class="dim-row"><span class="n">Математика</span><span class="scale"><i style="width:80%"></i></span><span class="val">8</span></div>
+        <div class="dim-row"><span class="n">Готовка</span><span class="scale"><i style="width:30%"></i></span><span class="val">3</span></div>
+      </div>
+      <a class="btn ghost">Предложить новое измерение</a>
+      <p class="hint">Оценки по осям не видит никто, кроме Вас: другие видят только похожесть.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ V2 «Табы» ═══ -->
+<section class="variant">
+  <h2>V2 — «Табы»: три комнаты</h2>
+  <p class="why">Личное, Измерения и Видимость — отдельные вкладки. Каждая задача получает целый
+     экран: измерениям достаётся полноценный поиск и длинный список, видимости — обзор «что кому
+     открыто» одним взглядом. Цена — лишний уровень навигации. Показана вкладка «Измерения».</p>
+  <div class="phone">
+    <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">NDim Space</span><span class="me">Н</span></div>
+    <div class="tabs"><span>Личное</span><span class="on">Измерения</span><span>Видимость</span></div>
+    <div class="body">
+      <div class="search">🔎 Найти среди 214 измерений…</div>
+      <div class="card">
+        <h3>Ваши оценки · 14</h3>
+        <div class="dim-row"><span class="n">Кошки</span><span class="scale"><i style="width:100%"></i></span><span class="val">10</span></div>
+        <div class="dim-row"><span class="n">Путешествия</span><span class="scale"><i style="width:90%"></i></span><span class="val">9</span></div>
+        <div class="dim-row"><span class="n">Математика</span><span class="scale"><i style="width:80%"></i></span><span class="val">8</span></div>
+        <div class="dim-row"><span class="n">Тишина</span><span class="scale"><i style="width:70%"></i></span><span class="val">7</span></div>
+      </div>
+      <div class="card">
+        <h3>Ещё не оценено</h3>
+        <div class="dim-row"><span class="n">Театр</span><span class="scale"></span><span class="val">—</span></div>
+        <div class="dim-row"><span class="n">Бег</span><span class="scale"></span><span class="val">—</span></div>
+      </div>
+      <a class="btn">Оценить следующее</a>
+      <p class="hint">Вкладка «Видимость» — таблица: свойство × аудитория, всё на одном экране.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ V3 «Глазами гостя» ═══ -->
+<section class="variant">
+  <h2>V3 — «Глазами гостя»: предпросмотр аудитории</h2>
+  <p class="why">Экран показывает профиль так, как его видит выбранная аудитория: переключатель
+     «Я · Все · Друзья · круг» сверху. Скрытое от аудитории гаснет. Приватность перестаёт быть
+     абстракцией — Вы буквально видите, что увидит гость. Редактирование — тап по строке.</p>
+  <div class="phone">
+    <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">NDim Space</span><span class="me">Н</span></div>
+    <div class="body">
+      <div class="seg"><span>Я</span><span class="on">🌐 Все</span><span>👥 Друзья</span><span>◎ Клуб</span></div>
+      <div class="card">
+        <div class="visit-head">
+          <span class="ava">Н</span>
+          <span><b>Николай</b><small>Мужской · Похожесть посчитается при встрече</small></span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Видно аудитории «Все»</h3>
+        <div class="prop"><span class="k">Имя</span><span class="v">Николай</span><span class="aud">🌐</span></div>
+        <div class="prop"><span class="k">Пол</span><span class="v">Мужской</span><span class="aud">🌐</span></div>
+        <div class="prop ghosted"><span class="k">О себе</span><span class="v">— скрыто (Друзья)</span><span class="aud">👥</span></div>
+        <div class="prop ghosted"><span class="k">Дата рождения</span><span class="v">— скрыто (Круг «Клуб»)</span><span class="aud circ">◎</span></div>
+        <div class="prop ghosted"><span class="k">Фото</span><span class="v">— скрыто (Никому)</span><span class="aud lock">🔒</span></div>
+      </div>
+      <div class="card">
+        <h3>Измерения</h3>
+        <p class="hint">Не видны никому ни в одном режиме — гость видит только итоговую похожесть.
+        Ваши 14 оценок доступны только в режиме «Я».</p>
+      </div>
+      <a class="btn ghost">Редактировать профиль</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ V4 «Мастер оценок» ═══ -->
+<section class="variant">
+  <h2>V4 — «Мастер оценок»: одна ось на экран</h2>
+  <p class="why">Философия: главное на этом экране — заполнить NDim ID, потому что от этого зависит
+     качество поиска. Одна ось крупно, оценка звёздами 0–10 (эмоционально, как учит руководство 1.x),
+     прогресс сверху. Личное — свёрнутой карточкой внизу. Быстро наполняет профиль; хуже как
+     «посмотреть всё сразу».</p>
+  <div class="phone">
+    <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">NDim Space</span><span class="me">Н</span></div>
+    <div class="body">
+      <div class="card">
+        <div class="progress"><span class="hint">NDim ID</span><span class="pbar"><i></i></span><span class="hint"><b>12 / 30</b></span></div>
+      </div>
+      <div class="card big-dim">
+        <span class="emo">✈️</span>
+        <b>Путешествия</b>
+        <p>Оценивайте эмоционально, а не рационально: что чувствуете — то и ставьте.</p>
+        <div class="stars">
+          <span class="lit">★</span><span class="lit">★</span><span class="lit">★</span><span class="lit">★</span><span class="lit">★</span>
+          <span class="lit">★</span><span class="lit">★</span><span class="lit">★</span><span class="lit">★</span><span>★</span><span>★</span>
+        </div>
+        <p class="stars-cap">9 — люблю почти как ничто другое</p>
+      </div>
+      <div class="duo"><a class="btn ghost">Пропустить</a><a class="btn">Оценить</a></div>
+      <div class="card">
+        <div class="prop"><span class="k">Личное</span><span class="v">Имя, о себе, фото…</span><span class="aud">развернуть ▾</span></div>
+      </div>
+      <p class="hint">Оценки видите только Вы. Чем больше осей заполнено, тем точнее Пространство
+      найдёт Ваших людей.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<p class="note" style="margin-top:26px"><b style="color:#fff">Как утверждаем.</b> Выбери один вариант
+(можно с правками и гибридами — например, V1 как основа + предпросмотр «глазами гостя» из V3 кнопкой).
+Утверждённый макет станет SvelteKit-маршрутом на модели 2.0 с тестовыми данными на эмуляторе
+(решения В1–В2 интервью №003) и получит e2e-проверки на стенде.</p>
+
+</body>
+</html>
