@@ -129,6 +129,27 @@
   .kv { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: 12.5px; }
   .kv .k3 { color: var(--dim); }
   .kv .v3 { color: var(--heading); font-weight: 600; text-align: right; }
+
+  /* тройка метрик в СВЁРНУТОЙ карточке связи — как в 1.x, все три видны сразу */
+  .trio { display: flex; gap: 8px; margin-top: 10px; }
+  .trio .cell { flex: 1; text-align: center; }
+  .trio small { display: block; font-size: 10.5px; color: var(--dim); margin-bottom: 2px; }
+  .trio b { display: block; font-size: 16px; }
+  .trio .mini { height: 4px; border-radius: 2px; background: var(--chip); position: relative; margin-top: 4px; }
+  .trio .mini i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
+
+  /* Сила метрики = яркость связи (замена красно-зелёного светофора 1.x в цветах 2.0):
+     слабая (<30) гаснет в серо-синий · средняя (30–59) — фирменный синий ·
+     сильная (≥60) — циан и СВЕТИТСЯ. Чем ближе человек, тем ярче связь. */
+  .lv1 b { color: #90a4bb; }
+  .lv1 .mini i, .lv1.mbar i { background: #b4c3d4; }
+  .lv2 b { color: #1467d6; }
+  .lv2 .mini i, .lv2.mbar i { background: linear-gradient(90deg, #1467d6, #3f8fe0); }
+  .lv3 b { color: #1298bd; text-shadow: 0 0 14px rgba(31, 168, 201, 0.45); }
+  .lv3 .mini i, .lv3.mbar i {
+    background: linear-gradient(90deg, #1467d6, #1fa8c9);
+    box-shadow: 0 0 8px rgba(31, 168, 201, 0.55);
+  }
 </style>
 </head>
 <body>
@@ -229,7 +250,8 @@
       </div>
       <div class="card">
         <h3>Мой NDim ID</h3>
-        <div class="mrow"><span class="k2">Заполнено осей</span><span class="mbar"><i style="width:47%"></i></span><span class="mval">14/30</span></div>
+        <!-- Без дроби «X из N всех осей»: осей тысячи, дробь демотивирует (правка владельца) -->
+        <div class="mrow"><span class="k2">Оценено измерений</span><span class="mval" style="margin-left:auto;font-size:19px">14</span></div>
         <a class="btn ghost" style="margin-top:8px">К измерениям →</a>
       </div>
     </div>
@@ -274,18 +296,22 @@
 
 <!-- ═══ S4: Связи (превью по живому 1.x) ═══ -->
 <section class="variant">
-  <h2>S4 — Связи · карточка раскрыта (превью следующего экрана)</h2>
-  <p class="why">По мотивам раскрытой карточки живого 1.x: математика на витрине — Общность,
-     Близость, Похожесть и наше общее пространство. Просмотр — барами (принцип). «Написать» —
-     задел под чаты (`ideas/04`). Утверждается позже, здесь — для целостности картины.</p>
+  <h2>S4 — Связи · свёрнуто и раскрыто</h2>
+  <p class="why"><b style="color:#fff">Правки владельца (2026-07-11):</b> (1) в свёрнутой карточке
+     видны сразу все три метрики — как в старом NDim; (2) уровни силы обозначены цветом. Вместо
+     светофора 1.x — <b>яркость связи</b> в цветах 2.0: слабая (&lt;30) гаснет в серо-синий,
+     средняя (30–59) — фирменный синий, сильная (≥60) — циан и светится. Чем ближе человек, тем
+     ярче связь. (Вариант Б — классический красный/жёлтый/зелёный: скажи, если он ближе.)</p>
   <div class="phone">
     <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">Пространство NDim</span><span class="lang">RU</span><span class="me">Н</span></div>
     <div class="body">
       <div class="card">
         <div class="visit-head"><span class="ava">В</span><span><b>Виктор</b><small>Был онлайн 4 марта 2026</small></span></div>
-        <div class="mrow" style="margin-top:10px"><span class="k2">Похожесть</span><span class="mbar"><i style="width:25%"></i></span><span class="mval">25%</span></div>
-        <div class="mrow"><span class="k2">Близость</span><span class="mbar"><i style="width:61%"></i></span><span class="mval">61%</span></div>
-        <div class="mrow"><span class="k2">Общность</span><span class="mbar"><i style="width:40%"></i></span><span class="mval">40%</span></div>
+        <div class="trio">
+          <span class="cell lv1"><small>Похожесть</small><b>25%</b><span class="mini"><i style="width:25%"></i></span></span>
+          <span class="cell lv3"><small>Близость</small><b>61%</b><span class="mini"><i style="width:61%"></i></span></span>
+          <span class="cell lv2"><small>Общность</small><b>40%</b><span class="mini"><i style="width:40%"></i></span></span>
+        </div>
         <div class="meta">
           <h4>Наше общее пространство</h4>
           <div class="kv"><span class="k3">Размерность</span><span class="v3">176 измерений</span></div>
@@ -297,9 +323,23 @@
         <p class="fold">Свернуть ▴</p>
       </div>
       <div class="card">
-        <div class="visit-head"><span class="ava">А</span><span><b>АКМ</b><small>Похожесть 15%</small></span></div>
+        <div class="visit-head"><span class="ava">А</span><span><b>АКМ</b><small>Был онлайн 1 декабря 2025</small></span></div>
+        <div class="trio">
+          <span class="cell lv1"><small>Похожесть</small><b>15%</b><span class="mini"><i style="width:15%"></i></span></span>
+          <span class="cell lv3"><small>Близость</small><b>63%</b><span class="mini"><i style="width:63%"></i></span></span>
+          <span class="cell lv1"><small>Общность</small><b>24%</b><span class="mini"><i style="width:24%"></i></span></span>
+        </div>
       </div>
-      <p class="hint">Гость видит похожесть, но не оценки: из чего сложилась близость — приватно.</p>
+      <div class="card">
+        <div class="visit-head"><span class="ava">М</span><span><b>Мксм</b><small>Был онлайн 1 июня 2025</small></span></div>
+        <div class="trio">
+          <span class="cell lv1"><small>Похожесть</small><b>15%</b><span class="mini"><i style="width:15%"></i></span></span>
+          <span class="cell lv3"><small>Близость</small><b>67%</b><span class="mini"><i style="width:67%"></i></span></span>
+          <span class="cell lv1"><small>Общность</small><b>23%</b><span class="mini"><i style="width:23%"></i></span></span>
+        </div>
+      </div>
+      <p class="hint">Свёрнуто — все три метрики сразу (как в 1.x); раскрыто — общее пространство.
+      Гость видит похожесть, но не оценки: из чего сложилась близость — приватно.</p>
     </div>
     <div class="bnav">
       <span><span class="ico">⌂</span>Профиль</span><span class="on"><span class="ico">◎</span>Связи</span>
