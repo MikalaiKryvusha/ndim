@@ -131,34 +131,37 @@
       en: 'The NDim Space 2.0 screens are still under construction. The live app works via the button below — with real people and relations.',
     },
     openLive: { ru: 'Открыть NDim Space (текущая версия)', en: 'Open NDim Space (current version)' },
-    // Гость: тексты утверждённого макета V1 (design/guest-flow-mockups.html)
+    // Гость: тексты утверждённого макета V1 «Тихий бейдж».
+    // Правила текста (владелец, 2026-07-12): обращение — «Вы» во всём продукте;
+    // слово «навсегда» не используем (человек может удалить свои данные);
+    // никакого внутреннего жаргона на лице приложения. См. design/login-mockups.html.
     guest: {
       pill: { ru: 'гость', en: 'guest' },
       title: {
-        ru: 'Пока что ты гость, твои результаты не сохранены',
+        ru: 'Сейчас Вы гость — Ваши результаты не сохранены',
         en: 'You are a guest for now — your results are not saved',
       },
       fact1: {
-        ru: 'Тебя никто не видит: в Пространстве ты невидимка.',
+        ru: 'Вас никто не видит: в Пространстве Вы невидимы.',
         en: 'Nobody sees you: in the Space you are invisible.',
       },
       fact2: {
-        ru: 'Всё, что заполнишь, — твоё. Создашь аккаунт — сохранится как есть.',
-        en: 'Everything you fill in is yours. Create an account and it is kept as is.',
+        ru: 'Всё, что Вы заполните, останется Вашим: при создании аккаунта сохранится как есть.',
+        en: 'Everything you fill in stays yours: create an account and it is kept as is.',
       },
       fact3: {
-        ru: 'Не вернёшься 30 дней — сотрём всё без следа.',
-        en: 'If you do not come back for 30 days, we erase everything without a trace.',
+        ru: 'Если Вы не вернётесь в течение 30 дней, мы удалим эти данные без следа.',
+        en: 'If you do not come back within 30 days, we erase this data without a trace.',
       },
       save: { ru: 'Сохранить результаты', en: 'Save my results' },
       later: { ru: 'позже', en: 'later' },
       soon: {
-        ru: 'Вход без пароля (Google, волшебная ссылка) появится на следующем этапе — труд гостя он сохранит.',
-        en: 'Passwordless sign-in (Google, magic link) arrives in the next stage — it will keep your work.',
+        ru: 'Создание аккаунта появится на следующем этапе — Ваши оценки и связи он сохранит.',
+        en: 'Account creation arrives in the next stage — it will keep your ratings and relations.',
       },
       audienceLocked: {
-        ru: 'Гость невидим для других, поэтому открыть свойство некому. Аудитории появятся после создания аккаунта.',
-        en: 'A guest is invisible to others, so there is nobody to open the property to. Audiences arrive after you create an account.',
+        ru: 'Пока Вы гость, Вас не видит никто, поэтому открывать свойство некому. Настройки аудитории появятся после создания аккаунта.',
+        en: 'While you are a guest nobody sees you, so there is nobody to open the property to. Audience settings arrive after you create an account.',
       },
     },
     inSpaceSince: { ru: 'В Пространстве с мая 2025', en: 'In the Space since May 2025' },
