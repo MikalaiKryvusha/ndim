@@ -33,6 +33,25 @@ service cloud.firestore {
       return signedIn() && request.auth.token.email_verified == true;
     }
 
+    // Гость — анонимный вход Firebase (plans/03, интервью №004: В3 = гость невидим другим).
+    // Гостю можно: свою точку, свои оценки, каталог осей, свои relations. Нельзя: любую
+    // публикацию себя (бакеты everyone/friends, группы, audience) и дружбу — это гарантия
+    // невидимости на уровне правил, а не только клиента. `.get` с умолчаниями — потому что
+    // у кастомных токенов (тесты) вложенной карты `firebase` может не быть вовсе.
+    function isGuest() {
+      return signedIn()
+             && request.auth.token.get('firebase', {}).get('sign_in_provider', '') == 'anonymous';
+    }
+
+    // Точка обязана честно называть себя гостевой: гость не может скрыть флаг `guest`,
+    // а полноценный пользователь — прикинуться гостем. На этом флаге держится фильтр
+    // вычислителя (гость не попадает в чужие relations).
+    function honestGuestFlag() {
+      return isGuest()
+        ? request.resource.data.get('guest', false) == true
+        : request.resource.data.get('guest', false) == false;
+    }
+
     function isSelf(uid) {
       return signedIn() && request.auth.uid == uid;
     }
@@ -74,8 +93,14 @@ service cloud.firestore {
 
     match /users/{ownerId}/profile/{bucketId} {
 
-      // Владелец видит и правит всё. Раскладку по бакетам делает клиент; правила её не проверяют.
-      allow read, write: if isSelf(ownerId);
+      // Владелец видит всё своё. Раскладку по бакетам делает клиент; правила её не проверяют.
+      allow read: if isSelf(ownerId);
+
+      // Правит тоже владелец, но гость не может опубликовать НИ ОДНОГО бакета, который читают
+      // другие ('everyone', 'friends'): невидимость гостя (В3) гарантируется правилами.
+      // Свой 'private' и прочие бакеты гостю можно — их не видит никто.
+      allow write: if isSelf(ownerId)
+                   && (!isGuest() || (bucketId != 'everyone' && bucketId != 'friends'));
 
       // Публичный бакет: любой подтверждённый пользователь. Без обращений к базе — это самое
       // частое чтение в продукте (карточки 250 связей), и оно обязано быть дешёвым.
@@ -101,10 +126,14 @@ service cloud.firestore {
     // в какую категорию его положили, — и это осознанно.
 
     match /users/{ownerId}/groups/{groupId} {
-      allow read, write: if isSelf(ownerId);
+      // Гость групп не создаёт: положив кого-то в группу, он открыл бы этому человеку
+      // свой групповой бакет — дыра в невидимости (В3).
+      allow read: if isSelf(ownerId);
+      allow write: if isSelf(ownerId) && !isGuest();
 
       match /members/{memberUid} {
-        allow read, write: if isSelf(ownerId);
+        allow read: if isSelf(ownerId);
+        allow write: if isSelf(ownerId) && !isGuest();
       }
     }
 
@@ -114,7 +143,8 @@ service cloud.firestore {
 
     match /users/{ownerId}/audience/{viewerUid} {
       allow read: if isSelf(ownerId) || isSelf(viewerUid);
-      allow write: if isSelf(ownerId);
+      // Гость подсказок не пишет: подсказка приглашает зрителя читать бакеты гостя (В3).
+      allow write: if isSelf(ownerId) && !isGuest();
     }
 
     // ── friendships/{pairId} — дружба ───────────────────────────────────────
@@ -162,9 +192,10 @@ service cloud.firestore {
       allow read: if isSelf(ownerId) || isAdmin();
 
       // Клиент помечает свою точку «грязной», чтобы вычислитель пересчитал связи.
-      // Снять флаг клиент не может: это делает вычислитель.
-      allow create: if isSelf(ownerId) && request.resource.data.dirty == true;
-      allow update: if isSelf(ownerId) && request.resource.data.dirty == true;
+      // Снять флаг клиент не может: это делает вычислитель. Флаг `guest` — честный
+      // (honestGuestFlag): по нему вычислитель не пускает гостя в чужие relations (В3).
+      allow create: if isSelf(ownerId) && request.resource.data.dirty == true && honestGuestFlag();
+      allow update: if isSelf(ownerId) && request.resource.data.dirty == true && honestGuestFlag();
       allow delete: if isSelf(ownerId);
 
       match /dims/{dimId} {
@@ -193,10 +224,14 @@ service cloud.firestore {
     }
 
     // ── dims/{dimId} — оси измерений ────────────────────────────────────────
-    // Читают подтверждённые пользователи, пишет админ.
+    // Читают подтверждённые пользователи И гости (без каталога осей гостю нечего
+    // оценивать — plans/03 этап 2), пишет админ.
 
     match /dims/{dimId} {
-      allow read: if verified();
+      // isGuest() — первым: он безопасен при любом токене (.get с умолчаниями), тогда как
+      // verified() читает token.email_verified напрямую и на анонимном токене без этого
+      // claim выбрасывает ошибку вычисления.
+      allow read: if isGuest() || verified();
       allow write: if isAdmin();
     }
 

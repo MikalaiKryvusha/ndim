@@ -45,6 +45,7 @@ function emulatorAddress(): { host: string; port: number } {
 const ALICE = 'alice';
 const BOB = 'bob';
 const EVE = 'eve';
+const GHOST = 'ghost'; // гость — анонимный вход (plans/03, этап 2)
 const GROUP_WORK = 'g_work';
 
 let testEnv: RulesTestEnvironment;
@@ -56,6 +57,9 @@ const unverified = (uid: string) => testEnv.authenticatedContext(uid, { email_ve
 const anonymous = () => testEnv.unauthenticatedContext();
 const admin = (uid: string) =>
   testEnv.authenticatedContext(uid, { email_verified: true, admin: true });
+/** Гость — Firebase Anonymous Auth: у токена firebase.sign_in_provider == 'anonymous'. */
+const guest = (uid: string) =>
+  testEnv.authenticatedContext(uid, { firebase: { sign_in_provider: 'anonymous' } });
 
 before(async () => {
   const { host, port } = emulatorAddress();
@@ -512,6 +516,12 @@ describe('Оси и заявки на них', () => {
     await assertSucceeds(getDoc(doc(db, 'dims/calm')));
   });
 
+  test('🔒 не вошедший и неподтверждённый оси не читают — каталог не публичен', async () => {
+    // Порог остался прежним; гость — единственное добавленное исключение (plans/03).
+    await assertFails(getDoc(doc(anonymous().firestore(), 'dims/calm')));
+    await assertFails(getDoc(doc(unverified(BOB).firestore(), 'dims/calm')));
+  });
+
   test('🔒 обычный пользователь не правит оси', async () => {
     const db = verified(BOB).firestore();
     await assertFails(setDoc(doc(db, 'dims/calm'), { title: { ru: 'взлом' }, stars: 0, rates: 0, rating: 0 }));
@@ -551,6 +561,140 @@ describe('Оси и заявки на них', () => {
 
     const db = verified(BOB).firestore();
     await assertFails(getDoc(doc(db, 'suggestions/s1')));
+  });
+});
+
+describe('Гость (анонимный вход) — может трудиться над своим, невидим для других', () => {
+  // Решения интервью №004: В1 = гостю дать «пощупать» по-настоящему, В3 = гость невидим другим.
+  // Правила гарантируют невидимость сами, не полагаясь на дисциплину клиента.
+
+  test('гость читает каталог осей — без него нечего оценивать', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'dims/calm'), { title: { ru: 'Спокойствие' }, stars: 10, rates: 2, rating: 5 });
+    });
+
+    const db = guest(GHOST).firestore();
+    await assertSucceeds(getDoc(doc(db, 'dims/calm')));
+  });
+
+  test('гость создаёт свою точку с честным флагом guest и ставит оценки', async () => {
+    const db = guest(GHOST).firestore();
+    await assertSucceeds(
+      setDoc(doc(db, `points/${GHOST}`), { dirty: true, guest: true, updated: 1, lastSync: 0 }),
+    );
+    await assertSucceeds(setDoc(doc(db, `points/${GHOST}/dims/calm`), { value: 7 }));
+  });
+
+  test('🔒 гость не может скрыть флаг guest — на нём держится фильтр вычислителя', async () => {
+    const db = guest(GHOST).firestore();
+    await assertFails(setDoc(doc(db, `points/${GHOST}`), { dirty: true, updated: 1, lastSync: 0 }));
+    await assertFails(
+      setDoc(doc(db, `points/${GHOST}`), { dirty: true, guest: false, updated: 1, lastSync: 0 }),
+    );
+  });
+
+  test('🔒 полноценный пользователь не может прикинуться гостем', async () => {
+    // Иначе можно было бы прятаться от чужих relations, продолжая видеть свои.
+    const db = verified(BOB).firestore();
+    await assertFails(
+      setDoc(doc(db, 'points/bob'), { dirty: true, guest: true, updated: 1, lastSync: 0 }),
+    );
+  });
+
+  test('обычная точка без флага guest по-прежнему принимается', async () => {
+    const db = verified(BOB).firestore();
+    await assertSucceeds(setDoc(doc(db, 'points/bob'), { dirty: true, updated: 1, lastSync: 0 }));
+  });
+
+  test('🔒 гость не читает ЧУЖОЙ публичный бакет — порог «подтверждённая почта» остаётся', async () => {
+    await seedAliceProfile();
+    const db = guest(GHOST).firestore();
+    await assertFails(getDoc(doc(db, 'users/alice/profile/everyone')));
+  });
+
+  test('🔒 гость не публикует бакеты everyone и friends — невидимость на уровне правил', async () => {
+    const db = guest(GHOST).firestore();
+    await assertFails(setDoc(doc(db, `users/${GHOST}/profile/everyone`), { avatar: true }));
+    await assertFails(setDoc(doc(db, `users/${GHOST}/profile/friends`), { born: { year: 1990 } }));
+  });
+
+  test('приватный бакет гостю можно — его не видит никто', async () => {
+    const db = guest(GHOST).firestore();
+    await assertSucceeds(setDoc(doc(db, `users/${GHOST}/profile/private`), { gender: 'm' }));
+  });
+
+  test('🔒 гость не создаёт группы и не кладёт в них людей — это открыло бы его бакеты', async () => {
+    const db = guest(GHOST).firestore();
+    await assertFails(setDoc(doc(db, `users/${GHOST}/groups/g1`), { name: 'x', memberCount: 1, created: 1 }));
+    await assertFails(setDoc(doc(db, `users/${GHOST}/groups/g1/members/bob`), { added: 1 }));
+  });
+
+  test('🔒 гость не пишет audience-подсказки — подсказка приглашает читать его бакеты', async () => {
+    const db = guest(GHOST).firestore();
+    await assertFails(setDoc(doc(db, `users/${GHOST}/audience/bob`), { buckets: ['everyone'] }));
+  });
+
+  test('🔒 гость не создаёт запрос дружбы', async () => {
+    const db = guest(GHOST).firestore();
+    await assertFails(
+      setDoc(doc(db, `friendships/${ALICE}_${GHOST}`), {
+        a: ALICE,
+        b: GHOST,
+        requestedBy: GHOST,
+        status: 'pending',
+        created: 1,
+        acceptedAt: null,
+      }),
+    );
+  });
+
+  test('🔒 гость не может принять дружбу, даже если запрос ему прислали', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, `friendships/${ALICE}_${GHOST}`), {
+        a: ALICE,
+        b: GHOST,
+        requestedBy: ALICE,
+        status: 'pending',
+        created: 1,
+        acceptedAt: null,
+      });
+    });
+
+    const db = guest(GHOST).firestore();
+    await assertFails(
+      updateDoc(doc(db, `friendships/${ALICE}_${GHOST}`), { status: 'accepted', acceptedAt: 2 }),
+    );
+  });
+
+  test('🔒 гость не предлагает новые оси — только подтверждённые пользователи', async () => {
+    const db = guest(GHOST).firestore();
+    await assertFails(
+      setDoc(doc(db, 'suggestions/s1'), { authorUid: GHOST, description: 'Люблю тишину', created: 1 }),
+    );
+  });
+
+  test('гость читает СВОИ связи — похожесть с публичными точками считается для него', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, `relations/${GHOST}`), { computedAt: 1, version: 1, top: [] });
+    });
+
+    const db = guest(GHOST).firestore();
+    await assertSucceeds(getDoc(doc(db, `relations/${GHOST}`)));
+  });
+
+  test('🔒 гость не читает чужие связи', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'relations/alice'), { computedAt: 1, version: 1, top: [] });
+    });
+
+    const db = guest(GHOST).firestore();
+    await assertFails(getDoc(doc(db, 'relations/alice')));
+  });
+
+  test('гость правит свой корень users/{uid}, чужой — нет', async () => {
+    const db = guest(GHOST).firestore();
+    await assertSucceeds(setDoc(doc(db, `users/${GHOST}`), { settings: { language: 'ru' } }));
+    await assertFails(getDoc(doc(db, 'users/alice')));
   });
 });
 
