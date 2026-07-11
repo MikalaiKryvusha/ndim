@@ -14,6 +14,9 @@
   import { onMount } from 'svelte';
 
   const APP_URL = 'https://ndim-space.web.app';
+  // Постоянный адрес лендинга: домен куплен 2026-07-11 (homeworks/03, оплачен до 2031).
+  // Абсолютный canonical гасит дубли трёх хостов (researches/08 §2, §5).
+  const CANONICAL_URL = 'https://ndimspace.app/';
 
   type Lang = 'ru' | 'en';
   type Theme = 'light' | 'dark';
@@ -110,10 +113,12 @@
 
 <svelte:head>
   <title>{t.metaTitle[lang]}</title>
+  <link rel="canonical" href={CANONICAL_URL} />
   <meta name="description" content={t.metaDesc[lang]} />
   <meta property="og:title" content={t.metaTitle[lang]} />
   <meta property="og:description" content={t.sub[lang]} />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content={CANONICAL_URL} />
   <meta property="og:locale" content={lang === 'en' ? 'en_US' : 'ru_RU'} />
 </svelte:head>
 
