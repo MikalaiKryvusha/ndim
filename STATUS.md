@@ -200,17 +200,11 @@ Porkbun) и привязан: DNS внесён, лендинг на `ndimspace.w
 
 > Конкретный чеклист, чтобы следующая сессия (пустой контекст) могла стартовать немедленно.
 
-1. **ПЕРВЫМ ДЕЛОМ — статус домена** (фоновый монитор прошлой сессии умер вместе с ней).
-   Проверка (PowerShell; заголовок `x-goog-user-project` обязателен, без него 403):
-   ```powershell
-   $token = (gcloud auth print-access-token | Out-String).Trim()
-   $h = @{ Authorization = "Bearer $token"; 'x-goog-user-project' = 'ndim-space' }
-   (Invoke-RestMethod -Uri "https://firebasehosting.googleapis.com/v1beta1/projects/ndim-space/sites/ndimspace/customDomains/ndimspace.app" -Headers $h) | Select-Object hostState, ownershipState -ExpandProperty cert
-   ```
-   Ждём `ownershipState=OWNERSHIP_ACTIVE` и `cert.state=CERT_ACTIVE` → открыть
-   https://ndimspace.app и доложить владельцу. На паузе было: HOST_ACTIVE / OWNERSHIP_MISSING /
-   CERT_VALIDATING (штатно до часа-двух). Если сутки без прогресса — сверить TXT-записи через
-   `https://dns.google/resolve?name=ndimspace.app&type=TXT` (порт 53 наружу закрыт, только DoH).
+1. ✅ **Домен жив: https://ndimspace.app отдаёт лендинг** (проверено HTTP 200 перед самой паузой,
+   2026-07-11; владение OWNERSHIP_ACTIVE, сертификат раскатан). Если понадобится перепроверить
+   статус привязки — API-команда с заголовком `x-goog-user-project: ndim-space` (без него 403):
+   `GET https://firebasehosting.googleapis.com/v1beta1/projects/ndim-space/sites/ndimspace/customDomains/ndimspace.app`.
+   DNS проверять только через DoH (`https://dns.google/resolve?...`) — порт 53 наружу закрыт.
 2. **После активации домена** — хвост чеклиста `researches/08` §9: `www.ndimspace.app`
    (customDomain с `redirectTarget`) · `sitemap.xml` (пререндеренный эндпоинт) + строка в
    robots.txt · Google Search Console (Domain property, TXT в Porkbun) · Яндекс.Вебмастер ·
