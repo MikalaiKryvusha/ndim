@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — лого: классическая N-сеть в свежих цветах, 4 варианта</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — ЛОГО 2.0. Правка владельца (чат, 2026-07-11):
+       «Классическая сеть в форме буквы N уже является бренд-символом. Можем
+        освежить её твоими цветами, но чтобы в Ч/Б всё равно получался старый
+        узнаваемый классический логотип — сеть в виде N».
+
+     Геометрия знака КАНОНИЧНА и во всех вариантах одна: 4 узла + 3 ребра,
+     снята с working_docs/NDim_LOGO_v11.png архива ndim-old (масштаб 96/1500).
+     Варианты различаются ТОЛЬКО раскраской (цвета — с текущего лендинга 2.0:
+     синий #4d9fff, циан #3fd9ff, глубокий космос #060b14; светлая тема —
+     #1467d6 по токенам «Бумаги»). Залей любой вариант одной краской — получишь
+     классический знак 1.x. Это и есть Ч/Б-инвариант, он показан в шапке.
+
+     Колонки каждого варианта: тёмная плашка · светлая плашка («Бумага») ·
+     тест grayscale · фавиконы 32/16 · лкап шапки на светлом и тёмном.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #0f1826; color: #cfe0ef; padding: 28px 20px 60px;
+  }
+  .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+  h1 { font-size: 22px; color: #fff; margin-bottom: 6px; }
+  .intro > p { max-width: 760px; font-size: 14px; line-height: 1.55; color: #8fa9c0; }
+
+  /* Ч/Б-инвариант в шапке */
+  .invariant {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    margin: 18px 0 30px; padding: 14px 16px; border: 1px dashed #2d4a66; border-radius: 14px;
+    max-width: 760px;
+  }
+  .invariant p { font-size: 13px; line-height: 1.5; color: #8fa9c0; flex: 1; min-width: 240px; }
+  .invariant b { color: #fff; }
+
+  /* Карточка варианта */
+  .variant {
+    max-width: 1060px; margin: 0 0 26px; padding: 18px 18px 20px;
+    background: #14293d; border-radius: 16px;
+  }
+  .variant h2 { font-size: 17px; color: #fff; margin-bottom: 4px; }
+  .variant .why { font-size: 13px; line-height: 1.5; color: #8fa9c0; max-width: 900px; margin-bottom: 16px; }
+  .cells { display: flex; gap: 14px; flex-wrap: wrap; align-items: stretch; }
+
+  figure { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  figcaption { font-size: 11px; color: #6a819a; text-align: center; }
+  .chip {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    border-radius: 18px; padding: 10px;
+  }
+  .chip.dark  { background: #060b14; }
+  .chip.light { background: #f6f8fb; }
+  .gray { filter: grayscale(1); }
+
+  /* Лкап шапки: знак + водмарк */
+  .lockup {
+    display: flex; align-items: center; gap: 9px;
+    border-radius: 12px; padding: 12px 18px; height: 64px;
+  }
+  .lockup.light { background: #f6f8fb; color: #12263c; }
+  .lockup.dark  { background: #060b14; color: #eaf3ff; }
+  .lockup span { font-size: 16px; font-weight: 650; letter-spacing: .01em; }
+
+  /* ── Палитры вариантов (меняется ТОЛЬКО раскраска знака) ── */
+  /* V1 — один синий */
+  .v1d { --m-plate: #060b14; --m-edge: #2c5f9e; --m-node: #4d9fff; }
+  .v1l { --m-plate: #ffffff; --m-brd: #dfe9f4; --m-edge: #8ab4e4; --m-node: #1467d6; }
+  /* V2 — узел-акцент (циановый верхний правый) */
+  .v2d { --m-plate: #060b14; --m-edge: #2c5f9e; --m-node: #4d9fff; --m-acc: #3fd9ff; }
+  .v2l { --m-plate: #ffffff; --m-brd: #dfe9f4; --m-edge: #8ab4e4; --m-node: #1467d6; --m-acc: #1fa8c9; }
+  /* V3 — градиент вдоль диагонали */
+  .v3d { --m-plate: #060b14; --m-edge: url(#gNeon); --m-node: url(#gNeon); }
+  .v3l { --m-plate: #ffffff; --m-brd: #dfe9f4; --m-edge: url(#gDeep); --m-node: url(#gDeep); }
+  /* V4 — «живая сеть»: узлы разного размера, тонкие рёбра, свечение */
+  .v4d { --m-plate: #060b14; --m-edge: #2c5f9e; --m-node: #4d9fff; --m-acc: #3fd9ff; --m-ew: 4.6; }
+  .v4l { --m-plate: #ffffff; --m-brd: #dfe9f4; --m-edge: #8ab4e4; --m-node: #1467d6; --m-acc: #1fa8c9; --m-ew: 4.6; }
+  /* Ч/Б-инвариант */
+  .bw  { --m-plate: #000000; --m-edge: #ffffff; --m-node: #ffffff; }
+  .bwi { --m-plate: #ffffff; --m-brd: #000000; --m-edge: #000000; --m-node: #000000; }
+
+  footer { max-width: 1060px; font-size: 13px; line-height: 1.6; color: #8fa9c0; margin-top: 8px; }
+  footer b { color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- Общие определения: канонический знак (символ), градиенты, свечение -->
+<svg class="defs" aria-hidden="true">
+  <defs>
+    <!-- Свежие цвета лендинга: синий → циан вдоль диагонали буквы -->
+    <linearGradient id="gNeon" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70">
+      <stop offset="0" stop-color="#4d9fff"/><stop offset="1" stop-color="#3fd9ff"/>
+    </linearGradient>
+    <!-- Тот же градиент в глубоких тонах — для светлой «Бумаги» -->
+    <linearGradient id="gDeep" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70">
+      <stop offset="0" stop-color="#1467d6"/><stop offset="1" stop-color="#1fa8c9"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- КАНОН: N-сеть 1.x — 4 узла, 3 ребра (координаты сняты с NDim_LOGO_v11) -->
+    <symbol id="nmark" viewBox="0 0 96 96">
+      <rect width="96" height="96" rx="22" style="fill:var(--m-plate);stroke:var(--m-brd,none);stroke-width:1"/>
+      <g fill="none" style="stroke:var(--m-edge);stroke-width:var(--m-ew,6.7)">
+        <line x1="36.5" y1="29" x2="30" y2="66"/>
+        <line x1="36.5" y1="29" x2="59.5" y2="66"/>
+        <line x1="59.5" y1="66" x2="66" y2="29"/>
+      </g>
+      <circle cx="36.5" cy="29" r="9.3" style="fill:var(--m-node)"/>
+      <circle cx="30"   cy="66" r="9.3" style="fill:var(--m-node)"/>
+      <circle cx="59.5" cy="66" r="9.3" style="fill:var(--m-node)"/>
+      <circle cx="66"   cy="29" r="9.3" style="fill:var(--m-acc,var(--m-node))"/>
+    </symbol>
+
+    <!-- Тот же канон «вживую»: узлы слегка разные (как люди), рёбра тоньше, свечение -->
+    <symbol id="nmark-live" viewBox="0 0 96 96">
+      <rect width="96" height="96" rx="22" style="fill:var(--m-plate);stroke:var(--m-brd,none);stroke-width:1"/>
+      <g fill="none" style="stroke:var(--m-edge);stroke-width:var(--m-ew,4.6)">
+        <line x1="36.5" y1="29" x2="30" y2="66"/>
+        <line x1="36.5" y1="29" x2="59.5" y2="66"/>
+        <line x1="59.5" y1="66" x2="66" y2="29"/>
+      </g>
+      <g filter="url(#glow)">
+        <circle cx="36.5" cy="29" r="10.2" style="fill:var(--m-node)"/>
+        <circle cx="30"   cy="66" r="7"    style="fill:var(--m-node)"/>
+        <circle cx="59.5" cy="66" r="9"    style="fill:var(--m-node)"/>
+        <circle cx="66"   cy="29" r="7.6"  style="fill:var(--m-acc,var(--m-node))"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="intro">
+  <h1>Лого NDim Space — классическая N-сеть в свежих цветах · 4 варианта</h1>
+  <p>Форма знака во всех вариантах — твоя классическая: буква N из четырёх узлов и трёх рёбер
+     (геометрия снята с NDim_LOGO_v11 из архива). Меняется только раскраска — цвета взяты с
+     текущего лендинга 2.0. </p>
+  <div class="invariant">
+    <svg width="72" height="72"><use href="#nmark" class="bw"/></svg>
+    <svg width="72" height="72"><use href="#nmark" class="bwi"/></svg>
+    <p><b>Ч/Б-инвариант.</b> Залей любой из вариантов ниже одной краской — получится ровно этот
+       классический знак 1.x, белым по чёрному или чёрным по белому. Цвет — только слой поверх
+       канона; форма не тронута.</p>
+  </div>
+</header>
+
+<!-- ═══ V1 ═══ -->
+<section class="variant v1">
+  <h2>V1 — «Один синий»</h2>
+  <p class="why">Самый строгий: узлы — фирменный синий лендинга, рёбра — глубже (как связи на фоне
+     лендинга). Никаких акцентов и градиентов: спокойный, инженерный, дольше всех не устареет.</p>
+  <div class="cells">
+    <figure><div class="chip dark v1d"><svg width="128" height="128"><use href="#nmark"/></svg></div><figcaption>тёмная</figcaption></figure>
+    <figure><div class="chip light v1l"><svg width="128" height="128"><use href="#nmark"/></svg></div><figcaption>светлая «Бумага»</figcaption></figure>
+    <figure><div class="chip dark v1d gray"><svg width="128" height="128"><use href="#nmark"/></svg></div><figcaption>тест: grayscale</figcaption></figure>
+    <figure><div class="chip dark v1d"><svg width="32" height="32"><use href="#nmark"/></svg><svg width="16" height="16"><use href="#nmark"/></svg></div><figcaption>фавикон 32 / 16</figcaption></figure>
+    <figure><div class="lockup light v1l"><svg width="28" height="28"><use href="#nmark"/></svg><span>NDim Space</span></div><figcaption>шапка, светлая</figcaption></figure>
+    <figure><div class="lockup dark v1d"><svg width="28" height="28"><use href="#nmark"/></svg><span>NDim Space</span></div><figcaption>шапка, тёмная</figcaption></figure>
+  </div>
+</section>
+
+<!-- ═══ V2 ═══ -->
+<section class="variant v2">
+  <h2>V2 — «Найденный человек» (узел-акцент)</h2>
+  <p class="why">То же, что V1, но один узел — циановый. В знаке появляется маленькая история:
+     сеть нашла человека. Перекликается с циановым акцентом текущего фавикона и точками-акцентами
+     на фоне лендинга. В Ч/Б акцент исчезает без потерь.</p>
+  <div class="cells">
+    <figure><div class="chip dark v2d"><svg width="128" height="128"><use href="#nmark"/></svg></div><figcaption>тёмная</figcaption></figure>
+    <figure><div class="chip light v2l"><svg width="128" height="128"><use href="#nmark"/></svg></div><figcaption>светлая «Бумага»</figcaption></figure>
+    <figure><div class="chip dark v2d gray"><svg width="128" height="128"><use href="#nmark"/></svg></div><figcaption>тест: grayscale</figcaption></figure>
+    <figure><div class="chip dark v2d"><svg width="32" height="32"><use href="#nmark"/></svg><svg width="16" height="16"><use href="#nmark"/></svg></div><figcaption>фавикон 32 / 16</figcaption></figure>
+    <figure><div class="lockup light v2l"><svg width="28" height="28"><use href="#nmark"/></svg><span>NDim Space</span></div><figcaption>шапка, светлая</figcaption></figure>
+    <figure><div class="lockup dark v2d"><svg width="28" height="28"><use href="#nmark"/></svg><span>NDim Space</span></div><figcaption>шапка, тёмная</figcaption></figure>
+  </div>
+</section>
+
+<!-- ═══ V3 ═══ -->
+<section class="variant v3">
+  <h2>V3 — «Диагональ» (градиент синий → циан)</h2>
+  <p class="why">Вся буква залита градиентом вдоль диагонали N — от синего к циану, ровно теми же
+     двумя цветами лендинга. Самый современный и «цифровой»; на светлой теме градиент уходит в
+     глубокие тона. В Ч/Б градиент схлопывается в одну краску — канон.</p>
+  <div class="cells">
+    <figure><div class="chip dark v3d"><svg width="128" height="128"><use href="#nmark"/></svg></div><figcaption>тёмная</figcaption></figure>
+    <figure><div class="chip light v3l"><svg width="128" height="128"><use href="#nmark"/></svg></div><figcaption>светлая «Бумага»</figcaption></figure>
+    <figure><div class="chip dark v3d gray"><svg width="128" height="128"><use href="#nmark"/></svg></div><figcaption>тест: grayscale</figcaption></figure>
+    <figure><div class="chip dark v3d"><svg width="32" height="32"><use href="#nmark"/></svg><svg width="16" height="16"><use href="#nmark"/></svg></div><figcaption>фавикон 32 / 16</figcaption></figure>
+    <figure><div class="lockup light v3l"><svg width="28" height="28"><use href="#nmark"/></svg><span>NDim Space</span></div><figcaption>шапка, светлая</figcaption></figure>
+    <figure><div class="lockup dark v3d"><svg width="28" height="28"><use href="#nmark"/></svg><span>NDim Space</span></div><figcaption>шапка, тёмная</figcaption></figure>
+  </div>
+</section>
+
+<!-- ═══ V4 ═══ -->
+<section class="variant v4">
+  <h2>V4 — «Живая сеть» (узлы-люди, свечение)</h2>
+  <p class="why">Тот же канон, но узлы слегка разного размера — как люди, — рёбра тоньше, вокруг
+     узлов мягкое свечение. Ближе всего к полю точек на лендинге. Самый декоративный; в мелком
+     фавиконе свечение размывается — для 16 px пришлось бы использовать упрощённую версию.</p>
+  <div class="cells">
+    <figure><div class="chip dark v4d"><svg width="128" height="128"><use href="#nmark-live"/></svg></div><figcaption>тёмная</figcaption></figure>
+    <figure><div class="chip light v4l"><svg width="128" height="128"><use href="#nmark-live"/></svg></div><figcaption>светлая «Бумага»</figcaption></figure>
+    <figure><div class="chip dark v4d gray"><svg width="128" height="128"><use href="#nmark-live"/></svg></div><figcaption>тест: grayscale</figcaption></figure>
+    <figure><div class="chip dark v4d"><svg width="32" height="32"><use href="#nmark-live"/></svg><svg width="16" height="16"><use href="#nmark-live"/></svg></div><figcaption>фавикон 32 / 16</figcaption></figure>
+    <figure><div class="lockup light v4l"><svg width="28" height="28"><use href="#nmark-live"/></svg><span>NDim Space</span></div><figcaption>шапка, светлая</figcaption></figure>
+    <figure><div class="lockup dark v4d"><svg width="28" height="28"><use href="#nmark-live"/></svg><span>NDim Space</span></div><figcaption>шапка, тёмная</figcaption></figure>
+  </div>
+</section>
+
+<footer>
+  <b>Как утверждаем.</b> Выбери один вариант (можно с правками: другой узел-акцент, плашка/без
+  плашки, радиус углов, толщина рёбер). Утверждённый знак ляжет в <code>static/favicon.svg</code>,
+  OG-картинку и шапку будущих экранов 2.0; исходник останется здесь, в
+  <code>design/logo-mockups.html</code>.
+</footer>
+
+</body>
+</html>
