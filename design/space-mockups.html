@@ -26,10 +26,25 @@
      приборной панелью? картой? лентой новостей? пультом инженера?
 
      ВАРИАНТЫ (кнопки сверху; или #v1…#v4 в адресе):
-       · V1 «Приборная панель» — плитки метрик + спарклайны + тренды.
+       · V1 «Приборная панель» — ✅ УТВЕРЖДЁН владельцем 2026-07-12 С ПРАВКАМИ:
+         в него перенесены три виджета из V3 — «Сегодня», «Сейчас в Пространстве», «Версии».
        · V2 «Созвездие»        — герой-карта всего Пространства, метрики вокруг неё.
        · V3 «Пульс»            — лента событий: что изменилось со вчера, словами и цифрами.
-       · V4 «Машинный зал»     — плотный моно-пульт: цифры, состояние вычислителя, версии.
+       · V4 «Машинный зал»     — плотный моно-пульт: цифры, состояние сервера, версии.
+
+     ═══ РЕШЕНИЯ ВЛАДЕЛЬЦА 2026-07-12 (нарушать нельзя) ═══
+       1. ДАШБОРД ИЗ ВИДЖЕТОВ — принятая форма. Позже — наборы виджетов и настройка вида
+          пользователем; но ДЕФОЛТНОЕ КАНОНИЧЕСКОЕ состояние одно для всех.
+          Канон — AGENT_GUIDE → «Дизайн».
+       2. ТЕРМИНЫ (источник истины — 1.x, design/reference-1x/app-03-пространство.png):
+          · «Сервер синхронизации» — сохраняем термин 1.x. Не «вычислитель»: это наше
+            внутреннее имя папки calculator/, наружу оно не выходит.
+          · «измерений в Пространстве», а не «в каталоге».
+          · «Связей рассчитано» — а не «пересчитано топов» (жаргон агента).
+          · Состояние сервера: блок «Статус» → «Текущее состояние: Работает».
+            Не «жив» — сервер не может быть мёртв. ЗЕЛЁНАЯ ЛАМПОЧКА ГОРИТ РЯДОМ СО СЛОВОМ
+            СОСТОЯНИЯ, а не рядом с названием свойства.
+          · Вернуть метрику 1.x «Диаметр Пространства NDim».
 
      ЧЕСТНОСТЬ МАКЕТА: цифры выдуманные, но правдоподобные; набор метрик — кандидаты
      из ideas/06 (открытый вопрос №1 — что владельцу важнее видеть). Раскладка —
@@ -122,11 +137,23 @@
   .spark path { fill: none; stroke: var(--accent); stroke-width: 2; }
   .spark .area { fill: color-mix(in srgb, var(--accent) 12%, transparent); stroke: none; }
 
-  /* Статус вычислителя */
+  /* Статус сервера синхронизации.
+     ЛАМПОЧКА ГОРИТ РЯДОМ СО СЛОВОМ СОСТОЯНИЯ («Работает»), а не рядом с названием
+     свойства — прямая правка владельца 2026-07-12. Так это и было в 1.x. */
   .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--up); display: inline-block; box-shadow: 0 0 0 3px color-mix(in srgb, var(--up) 20%, transparent); }
   .kv { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; font-size: 13px; }
   .kv .k { color: var(--dim); flex: 1; }
   .kv .v { font-family: var(--mono); color: var(--heading); font-weight: 600; }
+  .kv .v.ok { display: inline-flex; align-items: center; gap: 7px; color: var(--up); }
+  /* Подзаголовок внутри карточки: «Статус», «Полная синхронизация» — структура 1.x */
+  .sub-h { margin: 12px 0 4px; font-size: 13px; font-weight: 700; color: var(--heading); }
+  .card h3 + .sub-h { margin-top: 0; }
+  /* Версии: три отдельные плашки, а не слипшаяся строка */
+  .ver {
+    padding: 10px 12px; border-radius: 10px; background: var(--edge-soft); border: 1px solid var(--edge);
+  }
+  .ver .k { display: block; font-size: 11.5px; color: var(--dim); }
+  .ver b { display: block; margin-top: 3px; font-family: var(--mono); font-size: 13.5px; color: var(--heading); }
 
   .bar { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
   .bar .lb { flex: 0 0 120px; font-size: 12.5px; color: var(--dim); }
@@ -171,19 +198,27 @@
   <button id="theme">☾ тёмная</button>
 </div>
 
-<!-- ═══════════════════ V1 · ПРИБОРНАЯ ПАНЕЛЬ ═══════════════════ -->
+<!-- ═══════════════════ V1 · ПРИБОРНАЯ ПАНЕЛЬ (УТВЕРЖДЁН) ═══════════════════ -->
 <section class="variant show" id="v1">
   <div class="intro">
-    <h2>V1 · «Приборная панель»</h2>
-    <p>Классический дашборд: сверху крупные плитки-метрики с трендом и спарклайном («что выросло,
-      что упало» — прямая просьба владельца), ниже — распределение похожести по Пространству и
-      карточка вычислителя с расписанием и версиями.</p>
+    <h2>V1 · «Приборная панель» · ✅ УТВЕРЖДЁН с правками</h2>
+    <p>Утверждён владельцем 2026-07-12. В V1 добавлены три виджета из V3 — <b>«Сегодня»</b>,
+      <b>«Сейчас в Пространстве»</b> и <b>«Версии»</b>. Тексты приведены к формулировкам 1.x
+      (скриншот: <code>design/reference-1x/app-03-пространство.png</code>) — их и надо было брать
+      с самого начала.</p>
+    <p style="margin-top:10px;color:#7fe0b0"><b>Правки владельца, внесённые сюда:</b>
+      «Вычислитель» → <b>«Сервер синхронизации»</b> (термин 1.x, сохраняем) ·
+      «измерений в каталоге» → <b>«измерений в Пространстве»</b> ·
+      «пересчитано топов» (жаргон агента, никто такого не поймёт) → <b>«Связей рассчитано»</b> ·
+      «жив» (словно он может быть мёртв) → блок <b>«Статус» → «Текущее состояние: Работает»</b>,
+      и зелёная лампочка горит рядом со <b>словом состояния</b>, а не рядом с названием свойства.
+      Вернулась потерянная метрика 1.x — <b>диаметр Пространства NDim</b>.</p>
     <ul>
-      <li class="plus">+ ровно то, что просил владелец: цифры, цвета, тренды, графики — без выдумок;</li>
-      <li class="plus">+ дёшево: все данные вычислитель пишет одним проходом, снапшоты дают историю;</li>
-      <li class="plus">+ хорошо ложится на утверждённый десктоп V2 и честно сжимается в телефон;</li>
-      <li class="minus">− форма «как у всех»: дашборд не рассказывает, что NDim — про людей, а не про метрики;</li>
-      <li class="minus">− легко разрастись до свалки цифр, если не держать набор метрик коротким.</li>
+      <li class="plus">+ ровно то, что просил владелец: цифры, цвета, тренды, графики;</li>
+      <li class="plus">+ дёшево: все данные сервер синхронизации пишет одним проходом, снапшоты дают историю;</li>
+      <li class="plus">+ ложится на утверждённый десктоп V2 «Рабочий стол» и честно сжимается в телефон;</li>
+      <li class="plus">+ виджетная сетка — задел под наборы виджетов и настройку вида (AGENT_GUIDE → «Дизайн»);</li>
+      <li class="minus">− легко разрастись до свалки цифр, если не держать набор виджетов коротким.</li>
     </ul>
   </div>
 
@@ -200,8 +235,9 @@
       </nav>
       <div class="body">
         <h1 class="st">Пространство</h1>
-        <p class="lede">Живая сводка. Обновляется вместе с синхронизацией — последняя была 14 минут назад.</p>
+        <p class="lede">Ниже представлены текущие метрики и статистика Пространства NDim.</p>
 
+        <!-- ── Виджет: плитки с трендами ── -->
         <div class="grid g4">
           <div class="card tile">
             <b>1 284</b><div class="k">человек в Пространстве</div>
@@ -212,7 +248,7 @@
             </svg>
           </div>
           <div class="card tile">
-            <b>312</b><div class="k">измерений в каталоге</div>
+            <b>312</b><div class="k">измерений в Пространстве</div>
             <span class="trend up">▲ +4 за неделю</span>
             <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">
               <path class="area" d="M0 26 L20 26 L40 22 L60 22 L80 18 L100 18 L120 12 L120 34 L0 34 Z"/>
@@ -237,29 +273,88 @@
           </div>
         </div>
 
+        <!-- ── Виджеты «Сегодня» и «Сейчас в Пространстве» (перенесены из V3) ── -->
+        <div class="grid" style="grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);margin-top:12px">
+          <div class="card">
+            <h3>Сегодня</h3>
+            <div class="ev">
+              <span class="ic">👤</span>
+              <div><div class="tx">Пришли <b>+6 человек</b>. В Пространстве стало <b>1 284</b>.</div>
+                <div class="tm">за сутки · ▲ +37 за неделю</div></div>
+            </div>
+            <div class="ev">
+              <span class="ic">★</span>
+              <div><div class="tx">Поставлено <b>168 оценок</b> — больше всего по измерению <b>«Тишина»</b>.</div>
+                <div class="tm">за сутки · всего 41 902</div></div>
+            </div>
+            <div class="ev">
+              <span class="ic">✳</span>
+              <div><div class="tx">Появилось <b>2 новых измерения</b>: «Ранние подъёмы», «Настольные игры».</div>
+                <div class="tm">приняты из заявок · в Пространстве 312</div></div>
+            </div>
+            <div class="ev">
+              <span class="ic">↯</span>
+              <div><div class="tx">Средняя похожесть <b>снизилась на 2 п.п.</b> — Пространство стало разнообразнее.</div>
+                <div class="tm">58% · неделю назад было 60%</div></div>
+            </div>
+            <div class="ev">
+              <span class="ic">⟳</span>
+              <div><div class="tx">Сервер синхронизации рассчитал <b>318 204 связи</b>.</div>
+                <div class="tm">последняя синхронизация — 14 минут назад</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Сейчас в Пространстве</h3>
+            <div class="kv"><span class="k">Всего людей</span><span class="v">1 284</span></div>
+            <div class="kv"><span class="k">Новых за последние 30 дней</span><span class="v">148</span></div>
+            <div class="kv"><span class="k">Активных за последние 7 дней</span><span class="v">214</span></div>
+            <div class="kv"><span class="k">Количество измерений</span><span class="v">312</span></div>
+            <div class="kv"><span class="k">Диаметр Пространства NDim</span><span class="v">714,9 звезды</span></div>
+            <div class="kv"><span class="k">Оценок поставлено</span><span class="v">41 902</span></div>
+            <div class="kv"><span class="k">Связей рассчитано</span><span class="v">318 204</span></div>
+          </div>
+        </div>
+
+        <!-- ── Виджеты «Распределение похожести» и «Сервер синхронизации» ── -->
         <div class="grid g2" style="margin-top:12px">
           <div class="card">
             <h3>Как распределена похожесть</h3>
-            <div class="bar"><span class="lb">80–100% · родня</span><span class="tk"><span class="fl" style="width:6%"></span></span><span class="pc">6%</span></div>
-            <div class="bar"><span class="lb">60–79% · близкие</span><span class="tk"><span class="fl" style="width:21%"></span></span><span class="pc">21%</span></div>
-            <div class="bar"><span class="lb">40–59% · соседи</span><span class="tk"><span class="fl" style="width:44%"></span></span><span class="pc">44%</span></div>
-            <div class="bar"><span class="lb">0–39% · далёкие</span><span class="tk"><span class="fl" style="width:29%"></span></span><span class="pc">29%</span></div>
-            <p style="font-size:11.5px;color:var(--faint);margin-top:8px">Считается по всем найденным связям. 100% — огромная редкость.</p>
+            <div class="bar"><span class="lb">80–100%</span><span class="tk"><span class="fl" style="width:6%"></span></span><span class="pc">6%</span></div>
+            <div class="bar"><span class="lb">60–79%</span><span class="tk"><span class="fl" style="width:21%"></span></span><span class="pc">21%</span></div>
+            <div class="bar"><span class="lb">40–59%</span><span class="tk"><span class="fl" style="width:44%"></span></span><span class="pc">44%</span></div>
+            <div class="bar"><span class="lb">0–39%</span><span class="tk"><span class="fl" style="width:29%"></span></span><span class="pc">29%</span></div>
+            <p style="font-size:11.5px;color:var(--faint);margin-top:8px">Считается по всем рассчитанным связям. Похожесть 100% — огромная редкость.</p>
           </div>
+
           <div class="card">
-            <h3>Вычислитель связей</h3>
-            <div class="kv"><span class="k"><span class="dot"></span> состояние</span><span class="v">жив</span></div>
-            <div class="kv"><span class="k">последняя синхронизация</span><span class="v">14 мин назад</span></div>
-            <div class="kv"><span class="k">следующая</span><span class="v">через 46 мин</span></div>
-            <div class="kv"><span class="k">пересчитано топов</span><span class="v">1 284</span></div>
-            <div class="kv"><span class="k">версия сервера</span><span class="v">2.0.1 · билд 118</span></div>
-            <div class="kv"><span class="k">версия приложения</span><span class="v">2.0.4</span></div>
+            <h3>Сервер синхронизации</h3>
+            <p class="sub-h">Статус</p>
+            <div class="kv"><span class="k">Текущее состояние</span><span class="v ok"><span class="dot"></span> Работает</span></div>
+            <div class="kv"><span class="k">Последний запуск</span><span class="v">12 июля 2026 г. в 03:00</span></div>
+
+            <p class="sub-h">Полная синхронизация</p>
+            <div class="kv"><span class="k">Последняя успешная</span><span class="v">12 июля 2026 г. в 03:00</span></div>
+            <div class="kv"><span class="k">Выполнена за</span><span class="v">8,4 секунды</span></div>
+            <div class="kv"><span class="k">Пользователей синхронизировано</span><span class="v">1 284</span></div>
+            <div class="kv"><span class="k">Связей рассчитано</span><span class="v">318 204</span></div>
+            <div class="kv"><span class="k">Запланированная</span><span class="v">13 июля 2026 г. в 03:00</span></div>
+          </div>
+        </div>
+
+        <!-- ── Виджет «Версии» (перенесён из V3) ── -->
+        <div class="card" style="margin-top:12px">
+          <h3>Версии</h3>
+          <div class="grid g3">
+            <div class="ver"><span class="k">Приложение</span><b>2.0.4</b></div>
+            <div class="ver"><span class="k">Сервер синхронизации</span><b>2.0.1 · билд 118</b></div>
+            <div class="ver"><span class="k">Собран</span><b>10 июля 2026 г.</b></div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="ruler">4 плитки со спарклайнами · распределение похожести · карточка вычислителя и версий</div>
+  <div class="ruler">плитки с трендами · «Сегодня» + «Сейчас в Пространстве» · похожесть + сервер синхронизации · версии</div>
 </section>
 
 <!-- ═══════════════════ V2 · СОЗВЕЗДИЕ ═══════════════════ -->
@@ -310,10 +405,10 @@
             <span class="trend down">▼ −2 п.п.</span>
           </div>
           <div class="card">
-            <h3>Вычислитель</h3>
-            <div class="kv"><span class="k"><span class="dot"></span> жив</span><span class="v">14 мин назад</span></div>
+            <h3>Сервер синхронизации</h3>
+            <div class="kv"><span class="k">Текущее состояние</span><span class="v ok"><span class="dot"></span> Работает</span></div>
             <div class="kv"><span class="k">следующая</span><span class="v">через 46 мин</span></div>
-            <div class="kv"><span class="k">сервер</span><span class="v">2.0.1 · 118</span></div>
+            <div class="kv"><span class="k">Сервер синхронизации</span><span class="v">2.0.1 · 118</span></div>
           </div>
         </div>
       </div>
@@ -369,7 +464,7 @@
           <div class="ev">
             <span class="ic">✳</span>
             <div><div class="tx">Появилось <b>2 новых измерения</b>: «Ранние подъёмы», «Настольные игры».</div>
-              <div class="tm">приняты из заявок · в каталоге 312</div></div>
+              <div class="tm">приняты из заявок · в Пространстве 312</div></div>
           </div>
           <div class="ev">
             <span class="ic">↯</span>
@@ -378,7 +473,7 @@
           </div>
           <div class="ev">
             <span class="ic">⟳</span>
-            <div><div class="tx">Вычислитель пересчитал <b>1 284 топа</b> и снова заснул.</div>
+            <div><div class="tx">Сервер синхронизации рассчитал <b>318 204 связи</b>.</div>
               <div class="tm">14 мин назад · следующая через 46 мин</div></div>
           </div>
         </div>
@@ -387,14 +482,14 @@
           <div class="card">
             <h3>Сейчас в Пространстве</h3>
             <div class="kv"><span class="k">людей</span><span class="v">1 284</span></div>
-            <div class="kv"><span class="k">измерений</span><span class="v">312</span></div>
+            <div class="kv"><span class="k">Количество измерений</span><span class="v">312</span></div>
             <div class="kv"><span class="k">оценок</span><span class="v">41 902</span></div>
             <div class="kv"><span class="k">средняя похожесть</span><span class="v">58%</span></div>
           </div>
           <div class="card">
             <h3>Версии</h3>
             <div class="kv"><span class="k">приложение</span><span class="v">2.0.4</span></div>
-            <div class="kv"><span class="k">сервер</span><span class="v">2.0.1 · билд 118</span></div>
+            <div class="kv"><span class="k">Сервер синхронизации</span><span class="v">2.0.1 · билд 118</span></div>
             <div class="kv"><span class="k">собран</span><span class="v">10.07.2026</span></div>
           </div>
         </div>
@@ -441,7 +536,7 @@
           <table class="mono-t">
             <tr><td>людей</td><td>1 284</td></tr>
             <tr><td>из них гостей</td><td>96</td></tr>
-            <tr><td>измерений</td><td>312</td></tr>
+            <tr><td>измерений в Пространстве</td><td>312</td></tr>
             <tr><td>оценок</td><td>41 902</td></tr>
             <tr><td>связей посчитано</td><td>318 204</td></tr>
             <tr><td>средняя похожесть</td><td>58%</td></tr>
@@ -449,12 +544,12 @@
         </div>
 
         <div class="card">
-          <h3>Вычислитель связей</h3>
+          <h3>Сервер синхронизации</h3>
           <table class="mono-t">
-            <tr><td>состояние</td><td><span class="dot"></span> жив</td></tr>
+            <tr><td>текущее состояние</td><td><span class="dot"></span> Работает</td></tr>
             <tr><td>последний цикл</td><td>14 мин назад</td></tr>
             <tr><td>длительность</td><td>8,4 с</td></tr>
-            <tr><td>пересчитано топов</td><td>1 284</td></tr>
+            <tr><td>связей рассчитано</td><td>1 284</td></tr>
             <tr><td>интервал</td><td>60 мин</td></tr>
             <tr><td>следующий цикл</td><td>через 46 мин</td></tr>
           </table>
