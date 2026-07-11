@@ -56,6 +56,9 @@
 
 1. Открой **https://www.bing.com/webmasters** → войди тем же Google-аккаунтом.
 2. Выбери **«Импортировать из Google Search Console»** — верификация и sitemap подтянутся сами.
+3. Не смущайся «Sitemaps Count: 0» в диалоге импорта — это значит лишь, что Google ещё не
+   успел обработать только что поданный sitemap. Жми **Import** (главное — верификация),
+   а sitemap добавь вручную: **Sitemaps → Submit sitemap** → `https://ndimspace.app/sitemap.xml`.
 
 ---
 
