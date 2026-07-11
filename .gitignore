@@ -3,6 +3,11 @@
 # Подробности — .private/README.md, bugs/01, bugs/02, bugs/03.
 .private/
 
+# Референс-скриншоты живого 1.x (могут содержать имена настоящих пользователей).
+# Репозиторий публичный — сами скриншоты не коммитим, только README.
+design/reference-1x/*
+!design/reference-1x/README.md
+
 .env
 .env.*
 !.env.example
