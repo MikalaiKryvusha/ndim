@@ -56,6 +56,28 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    // ── Воронка онбординга: только четыре счётчика и только шаг +1 ───────────
+    // Пишет кто угодно (первый шаг случается до входа), поэтому здесь всё явно и
+    // без обобщений: имена полей перечислены, шаг разрешён ровно один.
+
+    function funnelCounters() {
+      return ['landing_view', 'demo_touch', 'guest_start', 'account_created'];
+    }
+
+    function onlyFunnelCounters() {
+      return request.resource.data.keys().hasOnly(funnelCounters());
+    }
+
+    /** Счётчик вырос ровно на единицу (отсутствующий считаем нулём). */
+    function stepsUp(key) {
+      return request.resource.data.get(key, 0) == resource.data.get(key, 0) + 1;
+    }
+
+    /** Счётчик не тронут — ни вверх, ни вниз. */
+    function holds(key) {
+      return request.resource.data.get(key, 0) == resource.data.get(key, 0);
+    }
+
     // Админ — через custom claim, а не через список email в тексте правил (как было в 1.x).
     function isAdmin() {
       return signedIn() && request.auth.token.get('admin', false) == true;
@@ -245,6 +267,43 @@ service cloud.firestore {
     match /space/{document} {
       allow read: if verified();
       allow write: if isAdmin();
+    }
+
+    // ── space/funnel/days/{date} — воронка онбординга (plans/03, этап 4; В4 = A) ──
+    //
+    // Своя воронка вместо сторонних трекеров: четыре счётчика на день, чтобы увидеть,
+    // ГДЕ рвётся путь «лендинг → потрогал демо → стал гостем → создал аккаунт».
+    // Здесь НЕТ и не может быть ничего персонального — только четыре числа.
+    //
+    // Писать может КТО УГОДНО, включая неавторизованного гостя лендинга: первый шаг
+    // воронки случается до всякого входа. Поэтому правило обязано быть тесным:
+    //   · разрешены ТОЛЬКО эти четыре имени полей — ничего нельзя подложить;
+    //   · за одну запись меняется РОВНО ОДИН счётчик и РОВНО на +1;
+    //   · остальные три обязаны остаться нетронутыми (иначе можно было бы обнулить
+    //     чужой счётчик или «переписать историю» одним махом);
+    //   · читать может только админ: воронка — приборная панель владельца, а не витрина.
+    //
+    // Накрутить счётчик всё равно можно (это цена клиентских счётчиков — она принята
+    // в интервью №004). От массовой накрутки защищает App Check — отдельной задачей
+    // перед публичным запуском 2.0.
+    match /space/funnel/days/{date} {
+      allow read: if isAdmin();
+
+      // Создание дня: ровно один счётчик, ровно со значением 1.
+      allow create: if onlyFunnelCounters()
+                    && request.resource.data.keys().size() == 1
+                    && request.resource.data.values()[0] == 1;
+
+      // Обновление: один счётчик +1, три остальных не изменились.
+      allow update: if onlyFunnelCounters()
+                    && (
+                      stepsUp('landing_view') && holds('demo_touch') && holds('guest_start') && holds('account_created') ||
+                      holds('landing_view') && stepsUp('demo_touch') && holds('guest_start') && holds('account_created') ||
+                      holds('landing_view') && holds('demo_touch') && stepsUp('guest_start') && holds('account_created') ||
+                      holds('landing_view') && holds('demo_touch') && holds('guest_start') && stepsUp('account_created')
+                    );
+
+      allow delete: if isAdmin();
     }
 
     // ── suggestions/{id} — заявки на новые оси ──────────────────────────────

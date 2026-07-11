@@ -32,6 +32,7 @@
     sendLoginLink,
     waitForSession,
   } from '$lib/data/account';
+  import { track } from '$lib/data/funnel';
   import { EVERYONE, FRIENDS } from '$lib/model/visibility';
   import type { Audience, ProfileProperty } from '$lib/model/visibility';
   import { isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
@@ -120,6 +121,7 @@
         await ensureSpaceExists(uid, lang);
         guest = true;
         guestCard = localStorage.getItem(GUEST_CARD_KEY) !== 'later';
+        void track('guest_start'); // третий шаг воронки (plans/03 этап 4)
       } else {
         uid = await signInDev();
       }
@@ -148,6 +150,7 @@
     if (result.ok) {
       guest = false; // аккаунт создан: пилюля гостя и запреты уходят
       signupStep = 'done';
+      void track('account_created'); // четвёртый шаг воронки — путь пройден
       return result.uid;
     }
 
@@ -184,6 +187,7 @@
     if (result.ok) {
       guest = false;
       signupStep = 'done';
+      void track('account_created'); // четвёртый шаг воронки — путь пройден
       return;
     }
     signupError = t.account.errors[result.reason][lang];

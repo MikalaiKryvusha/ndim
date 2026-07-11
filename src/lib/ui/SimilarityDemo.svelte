@@ -8,6 +8,7 @@
   // (интервью №002, В4). Реальные точки появятся в гостевом режиме (plans/03, этап 2).
   // Ничего не сохраняется и не отправляется: состояние живёт в памяти страницы.
   import { computeRelation, MAX_RATING } from '$lib/similarity/similarity';
+  import { track } from '$lib/data/funnel';
 
   type Lang = 'ru' | 'en';
   let { lang, appUrl }: { lang: Lang; appUrl: string } = $props();
@@ -87,9 +88,11 @@
   // Стартовые оценки — осмысленный «я», от которого интересно двигать звёзды
   let mine = $state<Record<string, number>>({ quiet: 7, travel: 5, sport: 4, books: 8, humor: 6 });
 
-  function rate(axisId: string, value: number) {
-    // Повторный клик по текущей оценке сбрасывает ось в 0 (как в макете)
-    mine[axisId] = mine[axisId] === value ? 0 : value;
+  function rate(dimId: string, value: number) {
+    // Повторный клик по текущей оценке сбрасывает измерение в 0 (как в макете)
+    mine[dimId] = mine[dimId] === value ? 0 : value;
+    // Второй шаг воронки: человек ПОТРОГАЛ демо. Считается один раз за визит.
+    void track('demo_touch');
   }
 
   // Связи со всеми персонажами; для карточек — отсортированы по похожести

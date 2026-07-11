@@ -20,7 +20,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, increment, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 const PROJECT_ID = 'ndim-rules-test';
 
@@ -707,5 +707,75 @@ describe('Умолчание — запрещено', () => {
     const db = verified(ALICE).firestore();
     await assertFails(getDoc(doc(db, 'secrets/x')));
     await assertFails(setDoc(doc(db, 'secrets/y'), { value: 1 }));
+  });
+});
+
+describe('Воронка онбординга — только +1 и ничего больше (plans/03 этап 4)', () => {
+  const DAY = 'space/funnel/days/2026-07-12';
+
+  /** День с уже накопленными числами — исходное состояние мира. */
+  async function seedDay(): Promise<void> {
+    await seed(async (db) => {
+      await setDoc(doc(db, DAY), {
+        landing_view: 10,
+        demo_touch: 4,
+        guest_start: 2,
+        account_created: 1,
+      });
+    });
+  }
+
+  test('посетитель лендинга (даже не вошедший) может отметить свой шаг: +1', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertSucceeds(updateDoc(doc(db, DAY), { landing_view: increment(1) }));
+  });
+
+  test('первый за день создаёт документ одним счётчиком со значением 1', async () => {
+    const db = anonymous().firestore();
+    await assertSucceeds(setDoc(doc(db, DAY), { landing_view: increment(1) }, { merge: true }));
+  });
+
+  test('🔒 накрутка: +2 за одну запись запрещена', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertFails(updateDoc(doc(db, DAY), { landing_view: increment(2) }));
+  });
+
+  test('🔒 счётчик нельзя уменьшить — историю не переписывают', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertFails(updateDoc(doc(db, DAY), { landing_view: increment(-1) }));
+    await assertFails(updateDoc(doc(db, DAY), { account_created: 0 }));
+  });
+
+  test('🔒 два счётчика за одну запись — нельзя (шаг воронки ровно один)', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertFails(
+      updateDoc(doc(db, DAY), { landing_view: increment(1), demo_touch: increment(1) }),
+    );
+  });
+
+  test('🔒 подложить постороннее поле нельзя — в воронке только четыре числа', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    // Ни ПДн, ни чего угодно ещё: набор имён закрыт правилом.
+    await assertFails(updateDoc(doc(db, DAY), { landing_view: increment(1), email: 'kot@x.ru' }));
+    await assertFails(setDoc(doc(db, 'space/funnel/days/2026-07-13'), { uid: 'alice' }));
+  });
+
+  test('🔒 воронку не читает никто, кроме админа — это приборная панель владельца', async () => {
+    await seedDay();
+    await assertFails(getDoc(doc(anonymous().firestore(), DAY)));
+    await assertFails(getDoc(doc(verified(ALICE).firestore(), DAY)));
+    await assertFails(getDoc(doc(guest(GHOST).firestore(), DAY)));
+    await assertSucceeds(getDoc(doc(admin(ALICE).firestore(), DAY)));
+  });
+
+  test('🔒 удалить день может только админ', async () => {
+    await seedDay();
+    await assertFails(deleteDoc(doc(anonymous().firestore(), DAY)));
+    await assertFails(deleteDoc(doc(verified(ALICE).firestore(), DAY)));
   });
 });

@@ -14,6 +14,7 @@
   import { onMount } from 'svelte';
   import { SITE_ORIGIN } from '$lib/site';
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
+  import { track } from '$lib/data/funnel';
 
   const APP_URL = 'https://ndim-space.web.app';
   // Абсолютный canonical гасит дубли трёх хостов (researches/08 §2, §5).
@@ -40,6 +41,9 @@
     const savedLang = localStorage.getItem('ndim-lang');
     if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
     if (['localhost', '127.0.0.1'].includes(location.hostname)) demoUrl = '/profile?guest=1';
+    // Первый шаг воронки (plans/03 этап 4). Ничего персонального не пишет и
+    // ничего не ждёт: аналитика не имеет права тормозить лендинг.
+    void track('landing_view');
   });
 
   function toggleTheme() {
