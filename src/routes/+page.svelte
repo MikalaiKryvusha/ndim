@@ -1,30 +1,120 @@
 <script lang="ts">
-  // Лендинг NDim Space — утверждённый макет «Колонна» (design/landing-mockups.html, V1)
-  // в утверждённом стиле: синий киберпанк, неон, лёгкие цифровые технологии,
-  // кнопки без градиентов. Mobile-first: узкая колонна, вокруг открытое пространство.
+  // Лендинг NDim Space — утверждённый макет «Колонна» (design/landing-mockups.html, V1),
+  // светлая тема «Бумага» по умолчанию + тёмная (синий киберпанк) по переключателю.
+  // Переключатель языка RU/EN — как в оригинальном ndim 1.x (клиентский свап текста).
   //
-  // Тексты — владельца, из онбординга 1.x (researches/05_onboarding_texts_1x.md).
+  // Тексты — владельца, RU+EN из researches/05_onboarding_texts_1x.md.
+  // Тема и палитра — CSS-переменные из +layout.svelte; здесь всё берётся из них.
   //
   // Кнопки пока ведут в живое приложение 1.x (ndim-space.web.app): лендинг честный —
   // за ним стоит работающий продукт. TODO(фаза 3+): заменить на экраны 2.0.
   // TODO(фаза 3+): счётчик людей — живая метрика из space/public_metrics.
+  // TODO(SEO): полноценный per-URL i18n (RU/EN как отдельные адреса) — решение на потом;
+  //            сейчас RU пререндерится, EN переключается на клиенте (паритет с 1.x).
+  import { onMount } from 'svelte';
+
   const APP_URL = 'https://ndim-space.web.app';
-  const PEOPLE_COUNT = '2 184';
+
+  type Lang = 'ru' | 'en';
+  type Theme = 'light' | 'dark';
+
+  // Стартовые значения совпадают с пререндером (RU + светлая), поэтому гидрация не рвётся.
+  // Реальный сохранённый выбор подхватываем в onMount (только в браузере).
+  let lang = $state<Lang>('ru');
+  let theme = $state<Theme>('light');
+
+  onMount(() => {
+    // Источник истины темы — атрибут, выставленный инлайн-скриптом app.html.
+    const attr = document.documentElement.getAttribute('data-theme');
+    theme = attr === 'dark' ? 'dark' : 'light';
+    const savedLang = localStorage.getItem('ndim-lang');
+    if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
+  });
+
+  function toggleTheme() {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('ndim-theme', theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#060b14' : '#f6f8fb');
+  }
+
+  function setLang(next: Lang) {
+    lang = next;
+    document.documentElement.setAttribute('lang', next);
+    localStorage.setItem('ndim-lang', next);
+  }
+
+  // ── Двуязычные строки (RU — основной, из онбординга владельца) ──
+  const t = {
+    metaTitle: {
+      ru: 'NDim Space — Знакомства нового измерения',
+      en: 'NDim Space — New Dimension Friendships',
+    },
+    metaDesc: {
+      ru: 'Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — Пространство NDim подберёт тех, с кем у Вас настоящая совместимость.',
+      en: 'Here you will find people who are really like you. Forget about endless swiping — NDim Space selects those with whom you are truly compatible.',
+    },
+    eyebrow: { ru: 'Знакомства нового измерения', en: 'New Dimension Friendships' },
+    title: { ru: 'Добро пожаловать в Пространство NDim', en: 'Welcome to the NDim Space' },
+    sub: {
+      ru: 'Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — мы подберём тех, с кем у Вас настоящая совместимость.',
+      en: "Here you will find people who are really like you. Forget about endless swiping — we'll select those with whom you are truly compatible.",
+    },
+    create: { ru: 'Создать Аккаунт', en: 'Create Account' },
+    login: { ru: 'Войти в Аккаунт', en: 'Log In' },
+    joinedPre: { ru: 'С нами уже ', en: 'We already have ' },
+    joinedCount: { ru: '2 184 человека', en: '2,184 people' },
+    joinedPost: { ru: ' — и каждый день приходят новые', en: ' — and new ones come every day' },
+    foot: {
+      ru: 'Пространство NDim · открытая платформа, сделанная с заботой о людях',
+      en: 'NDim Space · an open platform built with care for people',
+    },
+    // Подпись переключателя темы: показываем, КУДА переключит нажатие
+    themeLabel: {
+      light: { ru: 'тёмная', en: 'dark' },
+      dark: { ru: 'светлая', en: 'light' },
+    },
+  };
+
+  const feats = [
+    {
+      tag: { ru: '01 · NDim ID', en: '01 · NDim ID' },
+      h2: { ru: 'Ваш уникальный многомерный профиль', en: 'Your unique multi-dimensional profile' },
+      p: {
+        ru: 'Заполните измерения, отражающие Вашу личность, — и позвольте алгоритму найти тех, кто разделяет Ваши ценности и интересы.',
+        en: 'Fill in the dimensions that reflect your personality, and let the algorithm find those who share your values and interests.',
+      },
+    },
+    {
+      tag: { ru: '02 · Настоящие связи', en: '02 · Real Connections' },
+      h2: {
+        ru: 'Люди, с которыми у Вас настоящая совместимость',
+        en: 'People with whom you are truly compatible',
+      },
+      p: {
+        ru: 'Мы бережно анализируем Ваш профиль и находим самых похожих на Вас людей. Начните общение с теми, кто действительно Вам подходит.',
+        en: 'We carefully analyze your profile and find the people most similar to you. Start communicating with those who are really right for you.',
+      },
+    },
+    {
+      tag: { ru: '03 · С заботой', en: '03 · With Care' },
+      h2: { ru: 'Ваш внутренний мир под защитой', en: 'Your inner world is protected' },
+      p: {
+        ru: 'Ваши оценки остаются только Вашими. Другие видят лишь то, насколько вы близки, — не то, из чего эта близость сложилась.',
+        en: 'Your ratings stay yours alone. Others see only how close you are — not what that closeness is made of.',
+      },
+    },
+  ];
 </script>
 
 <svelte:head>
-  <title>NDim Space — Знакомства нового измерения</title>
-  <meta
-    name="description"
-    content="Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — Пространство NDim подберёт тех, с кем у Вас настоящая совместимость."
-  />
-  <meta property="og:title" content="NDim Space — Знакомства нового измерения" />
-  <meta
-    property="og:description"
-    content="Здесь Вы найдёте людей, действительно похожих на Вас. Настоящая совместимость вместо бесконечных свайпов."
-  />
+  <title>{t.metaTitle[lang]}</title>
+  <meta name="description" content={t.metaDesc[lang]} />
+  <meta property="og:title" content={t.metaTitle[lang]} />
+  <meta property="og:description" content={t.sub[lang]} />
   <meta property="og:type" content="website" />
-  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:locale" content={lang === 'en' ? 'en_US' : 'ru_RU'} />
 </svelte:head>
 
 <!-- Открытое цифровое пространство: едва видные неоновые узлы и связи.
@@ -55,56 +145,53 @@
     </g>
   </svg>
 </div>
-<!-- Синяя виньетка: края экрана уходят в глубину пространства -->
+<!-- Виньетка: края экрана уходят в глубину пространства -->
 <div class="vig" aria-hidden="true"></div>
+
+<!-- Переключатели языка (RU|EN) и темы (☀/☾) — фиксированы в верхнем углу -->
+<div class="controls">
+  <div class="lang" role="group" aria-label="Язык / Language">
+    <button type="button" class:on={lang === 'ru'} aria-pressed={lang === 'ru'} onclick={() => setLang('ru')}>RU</button>
+    <button type="button" class:on={lang === 'en'} aria-pressed={lang === 'en'} onclick={() => setLang('en')}>EN</button>
+  </div>
+  <button
+    type="button"
+    class="toggle"
+    onclick={toggleTheme}
+    aria-label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+  >
+    <span class="ico" aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
+    <span class="lbl">{t.themeLabel[theme][lang]}</span>
+  </button>
+</div>
 
 <main class="content">
   <section class="card">
     <span class="pulse" aria-hidden="true"></span>
-    <p class="eyebrow">Знакомства нового измерения</p>
-    <h1>Добро пожаловать в Пространство&nbsp;NDim</h1>
-    <p class="sub">
-      Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах —
-      мы подберём тех, с кем у Вас настоящая совместимость.
-    </p>
+    <p class="eyebrow">{t.eyebrow[lang]}</p>
+    <h1>{t.title[lang]}</h1>
+    <p class="sub">{t.sub[lang]}</p>
     <div class="cta">
-      <a class="btn primary" href={APP_URL}>Создать Аккаунт</a>
-      <a class="btn ghost" href={APP_URL}>Войти в Аккаунт</a>
+      <a class="btn primary" href={APP_URL}>{t.create[lang]}</a>
+      <a class="btn ghost" href={APP_URL}>{t.login[lang]}</a>
     </div>
     <p class="joined">
-      С нами уже <b>{PEOPLE_COUNT} человека</b> — и каждый день приходят новые
+      {t.joinedPre[lang]}<b>{t.joinedCount[lang]}</b>{t.joinedPost[lang]}
     </p>
   </section>
 
   <section class="feats" aria-label="Как устроено Пространство NDim">
-    <article class="feat">
-      <p class="tag">01 · NDim ID</p>
-      <h2>Ваш уникальный многомерный профиль</h2>
-      <p>
-        Заполните измерения, отражающие Вашу личность, — и позвольте алгоритму найти тех,
-        кто разделяет Ваши ценности и интересы.
-      </p>
-    </article>
-    <article class="feat">
-      <p class="tag">02 · Настоящие связи</p>
-      <h2>Люди, с которыми у Вас настоящая совместимость</h2>
-      <p>
-        Мы бережно анализируем Ваш профиль и находим самых похожих на Вас людей.
-        Начните общение с теми, кто действительно Вам подходит.
-      </p>
-    </article>
-    <article class="feat">
-      <p class="tag">03 · С заботой</p>
-      <h2>Ваш внутренний мир под защитой</h2>
-      <p>
-        Ваши оценки остаются только Вашими. Другие видят лишь то, насколько вы близки, —
-        не то, из чего эта близость сложилась.
-      </p>
-    </article>
+    {#each feats as feat}
+      <article class="feat">
+        <p class="tag">{feat.tag[lang]}</p>
+        <h2>{feat.h2[lang]}</h2>
+        <p>{feat.p[lang]}</p>
+      </article>
+    {/each}
   </section>
 
   <footer class="foot">
-    <span>Пространство NDim · открытая платформа, сделанная с заботой о людях</span>
+    <span>{t.foot[lang]}</span>
   </footer>
 </main>
 
@@ -121,14 +208,14 @@
     height: 100%;
   }
   .field .links line {
-    stroke: rgba(77, 159, 255, 0.16);
+    stroke: var(--link-stroke);
     stroke-width: 1;
   }
   .field .nodes circle {
-    fill: rgba(99, 176, 255, 0.4);
+    fill: var(--node-fill);
   }
   .field .accents circle {
-    fill: rgba(63, 217, 255, 0.55);
+    fill: var(--accent-node);
   }
 
   .vig {
@@ -136,11 +223,7 @@
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: radial-gradient(
-      120% 105% at 50% 42%,
-      transparent 52%,
-      rgba(8, 28, 58, 0.55) 100%
-    );
+    background: radial-gradient(120% 105% at 50% 42%, transparent 52%, var(--vig) 100%);
   }
 
   .content {
@@ -151,6 +234,66 @@
     padding: 9vh 20px 56px;
   }
 
+  /* ── Переключатели темы и языка ── */
+  .controls {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 5;
+    display: inline-flex;
+    gap: 8px;
+  }
+  .lang {
+    display: inline-flex;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--toggle-bg);
+    border: 1px solid var(--toggle-brd);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .lang button {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--dim);
+    padding: 7px 11px;
+    transition: background 0.18s, color 0.18s;
+  }
+  .lang button.on {
+    background: var(--primary);
+    color: var(--primary-ink);
+  }
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: var(--toggle-bg);
+    border: 1px solid var(--toggle-brd);
+    color: var(--accent);
+    cursor: pointer;
+    font: inherit;
+    font-size: 15px;
+    line-height: 1;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: border-color 0.2s;
+  }
+  .toggle:hover {
+    border-color: var(--accent);
+  }
+  .toggle .lbl {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dim);
+  }
+
   /* ── Карточка-колонна ── */
   .card {
     background: var(--panel);
@@ -158,11 +301,10 @@
     border-radius: 18px;
     padding: 36px 26px 28px;
     text-align: center;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow:
-      0 0 0 1px rgba(63, 217, 255, 0.06),
-      0 24px 60px rgba(2, 8, 20, 0.6);
+    backdrop-filter: blur(var(--panel-blur));
+    -webkit-backdrop-filter: blur(var(--panel-blur));
+    box-shadow: var(--card-shadow);
+    transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
   }
 
   .pulse {
@@ -171,18 +313,29 @@
     height: 10px;
     border-radius: 50%;
     margin: 0 auto 20px;
-    background: var(--neon);
+    background: var(--accent);
     box-shadow:
-      0 0 0 5px rgba(63, 217, 255, 0.12),
-      0 0 18px rgba(63, 217, 255, 0.75);
+      0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent),
+      0 0 18px color-mix(in srgb, var(--accent) 70%, transparent);
     animation: pulse 2.6s ease-in-out infinite;
   }
   @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 5px rgba(63, 217, 255, 0.12), 0 0 18px rgba(63, 217, 255, 0.75); }
-    50% { box-shadow: 0 0 0 9px rgba(63, 217, 255, 0.05), 0 0 26px rgba(63, 217, 255, 0.45); }
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent),
+        0 0 18px color-mix(in srgb, var(--accent) 70%, transparent);
+    }
+    50% {
+      box-shadow:
+        0 0 0 9px color-mix(in srgb, var(--accent) 5%, transparent),
+        0 0 26px color-mix(in srgb, var(--accent) 45%, transparent);
+    }
   }
   @media (prefers-reduced-motion: reduce) {
-    .pulse { animation: none; }
+    .pulse {
+      animation: none;
+    }
   }
 
   .eyebrow {
@@ -190,7 +343,7 @@
     font-size: 11.5px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: var(--neon);
+    color: var(--accent);
   }
 
   h1 {
@@ -199,7 +352,7 @@
     line-height: 1.22;
     font-weight: 800;
     letter-spacing: -0.015em;
-    color: #eef6ff;
+    color: var(--heading);
   }
 
   .sub {
@@ -226,30 +379,29 @@
     transition: filter 0.15s, background 0.15s, box-shadow 0.15s;
   }
   .btn.primary {
-    background: #1467d6;
-    color: #fff;
-    box-shadow: 0 0 22px rgba(20, 103, 214, 0.35);
+    background: var(--primary);
+    color: var(--primary-ink);
+    box-shadow: 0 0 22px color-mix(in srgb, var(--primary) 35%, transparent);
   }
   .btn.primary:hover {
-    filter: brightness(1.12);
+    filter: brightness(1.1);
   }
   .btn.ghost {
     background: transparent;
-    border: 1px solid rgba(63, 217, 255, 0.45);
-    color: #a8e2ff;
+    border: 1px solid var(--ghost-brd);
+    color: var(--ghost-ink);
   }
   .btn.ghost:hover {
-    background: rgba(63, 217, 255, 0.08);
-    box-shadow: 0 0 16px rgba(63, 217, 255, 0.2);
+    background: var(--ghost-bg-hover);
   }
 
   .joined {
     margin-top: 18px;
     font-size: 13px;
-    color: #6d84a0;
+    color: var(--faint);
   }
   .joined b {
-    color: #8fd0ff;
+    color: var(--accent);
     font-weight: 600;
   }
 
@@ -260,26 +412,27 @@
     gap: 12px;
   }
   .feat {
-    background: rgba(9, 18, 33, 0.66);
-    border: 1px solid rgba(77, 159, 255, 0.14);
+    background: var(--panel-2);
+    border: 1px solid var(--edge-soft);
     border-radius: 14px;
     padding: 20px 22px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(calc(var(--panel-blur) * 0.8));
+    -webkit-backdrop-filter: blur(calc(var(--panel-blur) * 0.8));
+    transition: background 0.3s, border-color 0.3s;
   }
   .feat .tag {
     font-family: var(--mono);
     font-size: 10.5px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(63, 217, 255, 0.75);
+    color: var(--accent);
   }
   .feat h2 {
     margin-top: 8px;
     font-size: 16px;
     line-height: 1.35;
     font-weight: 700;
-    color: #d7e9fb;
+    color: var(--heading);
   }
   .feat p:last-child {
     margin-top: 7px;
@@ -292,7 +445,7 @@
     margin-top: 34px;
     text-align: center;
     font-size: 12px;
-    color: #4d647e;
+    color: var(--faint);
   }
 
   /* Десктоп: колонна остаётся узкой — вокруг ещё больше пространства */

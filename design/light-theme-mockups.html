@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — светлая тема + переключатели темы и языка, 4 варианта</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — СВЕТЛАЯ ТЕМА (дефолт) + ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ + ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКА.
+
+     Задачи владельца:
+       · «то, что получилось — тёмная тема; нужна дефолтная светлая, белые с синим,
+          и переключатель тем»;
+       · «нужен переключатель языка EN/RU, как в оригинальном ndim; два языка».
+
+     Здесь — утверждённый макет «Колонна» (тот же, что в проде, src/routes/+page.svelte).
+     ТРИ независимые оси, ровно как ляжет в код:
+       · ВАРИАНТ светлой темы  — набор CSS-переменных (кнопки сверху: 1…4);
+       · ТЕМА                  — атрибут data-theme (кнопка ☀/☾ в углу);
+       · ЯЗЫК                  — своп текста RU⇄EN (сегмент RU|EN в углу).
+     Тёмная тема — одна, каноническая (1:1 из прода). Тексты — владельца, RU+EN из
+     researches/05_onboarding_texts_1x.md.
+
+     Смотри в узком окне или на телефоне (mobile-first).
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  /* ── Верхняя панель выбора светлого варианта ── */
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker .hint { color: #8fa9c0; margin-left: auto; font-size: 11px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     ТОКЕНЫ. Компоненты используют ТОЛЬКО переменные. Светлые значения —
+     по вариантам (.screen.V1…​.V4). Тёмные — общий блок [data-theme="dark"].
+  ═══════════════════════════════════════════════════════════════════════ */
+  .screen {
+    /* дефолт = V1 «Бумага» — намеренно ПЛОСКОЕ чистое белое, без цветного фона */
+    --bg: #f6f8fb; --panel: #ffffff; --panel-2: #ffffff;
+    --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff;
+    --accent: #1f7fc9;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --ghost-brd: rgba(20,103,214,.35); --ghost-ink: #1a63c4; --ghost-bg-hover: rgba(20,103,214,.06);
+    --link-stroke: rgba(63,143,216,.16); --node-fill: rgba(63,143,216,.28); --accent-node: rgba(56,180,197,.42);
+    --vig: rgba(150,185,220,.12);
+    --panel-blur: 0px; --card-shadow: 0 16px 40px rgba(29,50,71,.08);
+    --toggle-bg: rgba(255,255,255,.9); --toggle-brd: #dbe7f3;
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+    position: relative; min-height: 100vh; margin-top: 46px;
+    background: var(--bg); color: var(--text); overflow: hidden;
+    transition: background .3s, color .3s;
+  }
+
+  /* ── V2 · «Небо» — ЯВНАЯ голубая заливка неба, держится глубоко вниз ── */
+  .screen.V2 {
+    --bg: linear-gradient(180deg, #a9d3f7 0%, #c2e1fa 34%, #dceffc 66%, #eef7fe 100%);
+    --panel: rgba(255,255,255,.88); --edge: #cfe4f7; --accent: #2b8fd6;
+    --vig: rgba(90,160,225,.32); --card-shadow: 0 22px 54px rgba(50,120,190,.2); --panel-blur: 10px;
+    --link-stroke: rgba(40,110,195,.28); --node-fill: rgba(40,110,195,.42); --accent-node: rgba(56,180,197,.6);
+  }
+  /* ── V3 · «Стекло-свет» — насыщенный сине-бирюзовый фон, чтобы читалось матовое стекло ── */
+  .screen.V3 {
+    --bg: linear-gradient(155deg, #8fc4f2 0%, #a9d5ee 42%, #a6e6e6 100%);
+    --panel: rgba(255,255,255,.42); --edge: rgba(255,255,255,.95); --accent: #10809f;
+    --card-shadow: 0 24px 64px rgba(30,95,160,.28), inset 0 1px 0 #fff; --panel-blur: 20px; --vig: rgba(70,160,195,.34);
+    --heading: #103a52; --text: #234b62;
+    --link-stroke: rgba(30,100,170,.3); --node-fill: rgba(30,100,170,.4); --accent-node: rgba(30,190,195,.6);
+  }
+  .screen.V3 .card, .screen.V3 .feat { outline: 1px solid rgba(120,190,225,.34); }
+  /* ── V4 · «Чертёж» — ХОРОШО ВИДИМАЯ синяя координатная сетка, инженерная точность ── */
+  .screen.V4 {
+    --bg: #eef4fb; --panel: #ffffff; --edge: #bfd6ee; --accent: #1467d6; --primary: #0f5ec4;
+    --card-shadow: 0 14px 38px rgba(29,50,71,.10);
+    --link-stroke: rgba(20,103,214,.2); --node-fill: rgba(20,103,214,.32); --accent-node: rgba(20,103,214,.4);
+  }
+  .screen.V4::before {
+    content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(20,103,214,.13) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20,103,214,.13) 1px, transparent 1px);
+    background-size: 32px 32px;
+    -webkit-mask-image: radial-gradient(135% 100% at 50% 35%, #000 55%, transparent 88%);
+    mask-image: radial-gradient(135% 100% at 50% 35%, #000 55%, transparent 88%);
+  }
+  .screen.V4 .card { border-radius: 10px; border-color: #c3d8ef; }
+  .screen.V4 .feat { border-radius: 10px; }
+
+  /* ═══════════════════ КАНОНИЧЕСКАЯ ТЁМНАЯ ТЕМА (общая, 1:1 из прода) ═══════════════════ */
+  .screen[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.78); --panel-2: rgba(9,18,33,.66);
+    --edge: rgba(77,159,255,.22); --edge-soft: rgba(77,159,255,.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #3fd9ff;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --ghost-brd: rgba(63,217,255,.45); --ghost-ink: #a8e2ff; --ghost-bg-hover: rgba(63,217,255,.08);
+    --link-stroke: rgba(77,159,255,.16); --node-fill: rgba(99,176,255,.4); --accent-node: rgba(63,217,255,.55);
+    --vig: rgba(8,28,58,.55); --panel-blur: 10px;
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
+    --toggle-bg: rgba(13,26,45,.8); --toggle-brd: rgba(63,217,255,.3);
+  }
+  .screen.V4[data-theme="dark"]::before { display: none; }
+  .screen.V3[data-theme="dark"] .card, .screen.V3[data-theme="dark"] .feat { outline: none; }
+
+  /* ═══════════════════════════ КОМПОНЕНТЫ (один код, обе темы) ═══════════════════════════ */
+  .field { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .field svg { width: 100%; height: 100%; }
+  .field .links line { stroke: var(--link-stroke); stroke-width: 1; }
+  .field .nodes circle { fill: var(--node-fill); }
+  .field .accents circle { fill: var(--accent-node); }
+  .vig { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+         background: radial-gradient(120% 105% at 50% 42%, transparent 52%, var(--vig) 100%); }
+
+  .content { position: relative; z-index: 2; max-width: 440px; margin: 0 auto; padding: 8vh 20px 56px; }
+
+  /* Кластер управления: язык RU|EN + тема ☀/☾ — фиксирован в верхнем углу экрана */
+  .controls { position: absolute; top: 16px; right: 16px; z-index: 5; display: inline-flex; gap: 8px; }
+  .lang {
+    display: inline-flex; border-radius: 999px; overflow: hidden;
+    background: var(--toggle-bg); border: 1px solid var(--toggle-brd);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  .lang button { font: inherit; font-size: 12px; font-weight: 600; letter-spacing: .02em; cursor: pointer;
+                 border: none; background: transparent; color: var(--dim); padding: 7px 11px; transition: all .18s; }
+  .lang button.on { background: var(--primary); color: var(--primary-ink); }
+  .toggle {
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 999px;
+    background: var(--toggle-bg); border: 1px solid var(--toggle-brd); color: var(--accent); cursor: pointer;
+    font: inherit; font-size: 15px; line-height: 1;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: all .2s;
+  }
+  .toggle:hover { border-color: var(--accent); }
+  .toggle .lbl { font-size: 12px; font-weight: 600; color: var(--dim); }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 18px;
+    padding: 36px 26px 28px; text-align: center; box-shadow: var(--card-shadow);
+    backdrop-filter: blur(var(--panel-blur)); -webkit-backdrop-filter: blur(var(--panel-blur));
+    transition: background .3s, border-color .3s, box-shadow .3s;
+  }
+  .pulse {
+    display: block; width: 10px; height: 10px; border-radius: 50%; margin: 0 auto 20px; background: var(--accent);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent), 0 0 18px color-mix(in srgb, var(--accent) 70%, transparent);
+    animation: pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent), 0 0 18px color-mix(in srgb, var(--accent) 70%, transparent); }
+    50%     { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 5%, transparent),  0 0 26px color-mix(in srgb, var(--accent) 45%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+
+  .eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); }
+  h1 { margin-top: 14px; font-size: 27px; line-height: 1.22; font-weight: 800; letter-spacing: -.015em; color: var(--heading); }
+  .sub { margin-top: 14px; font-size: 15.5px; line-height: 1.65; color: var(--dim); }
+
+  .cta { margin-top: 26px; display: grid; gap: 10px; }
+  .btn { display: block; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; text-decoration: none; text-align: center; transition: filter .15s, background .15s, box-shadow .15s; }
+  .btn.primary { background: var(--primary); color: var(--primary-ink); box-shadow: 0 0 22px color-mix(in srgb, var(--primary) 35%, transparent); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; border: 1px solid var(--ghost-brd); color: var(--ghost-ink); }
+  .btn.ghost:hover { background: var(--ghost-bg-hover); }
+
+  .joined { margin-top: 18px; font-size: 13px; color: var(--faint); }
+  .joined b { color: var(--accent); font-weight: 600; }
+
+  .feats { margin-top: 22px; display: grid; gap: 12px; }
+  .feat {
+    background: var(--panel-2, var(--panel)); border: 1px solid var(--edge-soft);
+    border-radius: 14px; padding: 20px 22px; text-align: left;
+    backdrop-filter: blur(calc(var(--panel-blur) * .8)); -webkit-backdrop-filter: blur(calc(var(--panel-blur) * .8));
+    transition: background .3s, border-color .3s;
+  }
+  .feat .tag { font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+  .feat h2 { margin-top: 8px; font-size: 16px; line-height: 1.35; font-weight: 700; color: var(--heading); }
+  .feat p:last-child { margin-top: 7px; font-size: 14px; line-height: 1.6; color: var(--dim); }
+
+  .foot { margin-top: 34px; text-align: center; font-size: 12px; color: var(--faint); }
+  .caption { position: relative; z-index: 3; text-align: center; padding: 14px 16px 26px; font-size: 12px; color: #8fa9c0; background: #0f1826; }
+
+  @media (min-width: 760px) { .content { padding-top: 11vh; } }
+</style>
+</head>
+<body>
+
+<nav class="picker">
+  <b>NDim Space · светлая тема</b>
+  <button data-v="V1" class="active">1 · Бумага</button>
+  <button data-v="V2">2 · Небо</button>
+  <button data-v="V3">3 · Стекло-свет</button>
+  <button data-v="V4">4 · Чертёж</button>
+  <span class="hint">RU|EN и ☀/☾ в углу экрана · сузь окно = телефон</span>
+</nav>
+
+<!-- Единственный экран: вариант = класс, тема = data-theme, язык = свап текста.
+     Тексты в data-ru / data-en (innerHTML — из-за <b> в строке метрики). -->
+<div class="screen V1" data-theme="light" id="screen">
+  <div class="field" aria-hidden="true">
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+      <g class="links">
+        <line x1="120" y1="180" x2="320" y2="120"/><line x1="320" y1="120" x2="470" y2="260"/>
+        <line x1="1180" y1="140" x2="1330" y2="240"/><line x1="1180" y1="140" x2="1040" y2="90"/>
+        <line x1="180" y1="640" x2="360" y2="740"/><line x1="1240" y1="660" x2="1100" y2="780"/>
+        <line x1="90" y1="420" x2="230" y2="470"/><line x1="1350" y1="430" x2="1230" y2="500"/>
+        <line x1="700" y1="60" x2="850" y2="110"/><line x1="620" y1="820" x2="780" y2="850"/>
+      </g>
+      <g class="nodes">
+        <circle cx="120" cy="180" r="3.5"/><circle cx="320" cy="120" r="5"/><circle cx="470" cy="260" r="3"/>
+        <circle cx="1180" cy="140" r="4.5"/><circle cx="1330" cy="240" r="3"/><circle cx="1040" cy="90" r="2.5"/>
+        <circle cx="180" cy="640" r="4"/><circle cx="360" cy="740" r="3"/>
+        <circle cx="1240" cy="660" r="4.5"/><circle cx="1100" cy="780" r="3"/>
+        <circle cx="90" cy="420" r="3"/><circle cx="230" cy="470" r="4"/>
+        <circle cx="1350" cy="430" r="3.5"/><circle cx="1230" cy="500" r="2.5"/>
+        <circle cx="700" cy="60" r="3"/><circle cx="850" cy="110" r="3.5"/>
+        <circle cx="620" cy="820" r="3.5"/><circle cx="780" cy="850" r="2.5"/>
+      </g>
+      <g class="accents">
+        <circle cx="540" cy="150" r="2.5"/><circle cx="930" cy="700" r="3"/>
+        <circle cx="1300" cy="90" r="2"/><circle cx="70" cy="760" r="2.5"/>
+      </g>
+    </svg>
+  </div>
+  <div class="vig" aria-hidden="true"></div>
+
+  <div class="controls">
+    <div class="lang" role="group" aria-label="Язык">
+      <button data-lang="ru" class="on">RU</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <button class="toggle" id="themeBtn" aria-label="Переключить тему">
+      <span class="ico">☾</span><span class="lbl" data-ru="тёмная" data-en="dark">тёмная</span>
+    </button>
+  </div>
+
+  <div class="content">
+    <section class="card">
+      <span class="pulse" aria-hidden="true"></span>
+      <p class="eyebrow" data-ru="Знакомства нового измерения" data-en="New Dimension Friendships">Знакомства нового измерения</p>
+      <h1 data-ru="Добро пожаловать в Пространство&nbsp;NDim" data-en="Welcome to the NDim&nbsp;Space">Добро пожаловать в Пространство&nbsp;NDim</h1>
+      <p class="sub"
+         data-ru="Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — мы подберём тех, с кем у Вас настоящая совместимость."
+         data-en="Here you will find people who are really like you. Forget about endless swiping — we'll select those with whom you are truly compatible.">Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — мы подберём тех, с кем у Вас настоящая совместимость.</p>
+      <div class="cta">
+        <a class="btn primary" href="#" data-ru="Создать Аккаунт" data-en="Create Account">Создать Аккаунт</a>
+        <a class="btn ghost" href="#" data-ru="Войти в Аккаунт" data-en="Log In">Войти в Аккаунт</a>
+      </div>
+      <p class="joined"
+         data-ru="С нами уже <b>2 184 человека</b> — и каждый день приходят новые"
+         data-en="We already have <b>2,184 people</b> — and new ones come every day">С нами уже <b>2 184 человека</b> — и каждый день приходят новые</p>
+    </section>
+
+    <section class="feats">
+      <article class="feat">
+        <p class="tag" data-ru="01 · NDim ID" data-en="01 · NDim ID">01 · NDim ID</p>
+        <h2 data-ru="Ваш уникальный многомерный профиль" data-en="Your unique multi-dimensional profile">Ваш уникальный многомерный профиль</h2>
+        <p data-ru="Заполните измерения, отражающие Вашу личность, — и позвольте алгоритму найти тех, кто разделяет Ваши ценности и интересы."
+           data-en="Fill in the dimensions that reflect your personality, and let the algorithm find those who share your values and interests.">Заполните измерения, отражающие Вашу личность, — и позвольте алгоритму найти тех, кто разделяет Ваши ценности и интересы.</p>
+      </article>
+      <article class="feat">
+        <p class="tag" data-ru="02 · Настоящие связи" data-en="02 · Real Connections">02 · Настоящие связи</p>
+        <h2 data-ru="Люди, с которыми у Вас настоящая совместимость" data-en="People with whom you are truly compatible">Люди, с которыми у Вас настоящая совместимость</h2>
+        <p data-ru="Мы бережно анализируем Ваш профиль и находим самых похожих на Вас людей. Начните общение с теми, кто действительно Вам подходит."
+           data-en="We carefully analyze your profile and find the people most similar to you. Start communicating with those who are really right for you.">Мы бережно анализируем Ваш профиль и находим самых похожих на Вас людей. Начните общение с теми, кто действительно Вам подходит.</p>
+      </article>
+      <article class="feat">
+        <p class="tag" data-ru="03 · С заботой" data-en="03 · With Care">03 · С заботой</p>
+        <h2 data-ru="Ваш внутренний мир под защитой" data-en="Your inner world is protected">Ваш внутренний мир под защитой</h2>
+        <p data-ru="Ваши оценки остаются только Вашими. Другие видят лишь то, насколько вы близки, — не то, из чего эта близость сложилась."
+           data-en="Your ratings stay yours alone. Others see only how close you are — not what that closeness is made of.">Ваши оценки остаются только Вашими. Другие видят лишь то, насколько вы близки, — не то, из чего эта близость сложилась.</p>
+      </article>
+    </section>
+
+    <footer class="foot">
+      <span data-ru="Пространство NDim · открытая платформа, сделанная с заботой о людях"
+            data-en="NDim Space · an open platform built with care for people">Пространство NDim · открытая платформа, сделанная с заботой о людях</span>
+    </footer>
+  </div>
+</div>
+
+<div class="caption" id="caption">Вариант 1 · «Бумага» — чистое белое, мягкие тени, дух раннего ВК/ФБ. Максимально спокойно и профессионально.</div>
+
+<script>
+  const screen  = document.getElementById('screen');
+  const caption = document.getElementById('caption');
+  const captions = {
+    V1: 'Вариант 1 · «Бумага» — чистое белое, мягкие тени, дух раннего ВК/ФБ. Максимально спокойно и профессионально.',
+    V2: 'Вариант 2 · «Небо» — мягкая голубая заливка фона, полупрозрачные панели. Больше цвета и лёгкости.',
+    V3: 'Вариант 3 · «Стекло-свет» — светлый glassmorphism: матовые панели, тонкая голубая обводка. Зеркало тёмной темы.',
+    V4: 'Вариант 4 · «Чертёж» — белое с тонкой синей координатной сеткой. Инженерная точность, техно-акцент, но светло.',
+  };
+
+  // Ось 1 — вариант светлой темы (верхняя панель)
+  document.querySelectorAll('.picker button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.picker button').forEach(x => x.classList.toggle('active', x === b));
+    const theme = screen.getAttribute('data-theme');
+    screen.className = 'screen ' + b.dataset.v;
+    screen.setAttribute('data-theme', theme); // вариант меняем, тему сохраняем
+    caption.textContent = captions[b.dataset.v];
+    window.scrollTo({ top: 0 });
+  }));
+
+  // Ось 2 — тема (☀/☾)
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn.addEventListener('click', () => {
+    const dark = screen.getAttribute('data-theme') === 'dark';
+    screen.setAttribute('data-theme', dark ? 'light' : 'dark');
+    themeBtn.querySelector('.ico').textContent = dark ? '☾' : '☀';
+    applyLang(); // обновить подпись кнопки на текущем языке
+  });
+
+  // Ось 3 — язык (RU|EN)
+  let lang = 'ru';
+  function applyLang() {
+    document.querySelectorAll('[data-ru]').forEach(el => { el.innerHTML = el.dataset[lang]; });
+  }
+  document.querySelectorAll('.lang button').forEach(b => b.addEventListener('click', () => {
+    lang = b.dataset.lang;
+    document.querySelectorAll('.lang button').forEach(x => x.classList.toggle('on', x === b));
+    applyLang();
+  }));
+</script>
+</body>
+</html>
