@@ -70,7 +70,17 @@
       ru: 'Персонажи вымышленные. Ничего не сохраняется и не отправляется — всё считается прямо в Вашем браузере.',
       en: 'The characters are fictional. Nothing is saved or sent — everything is computed right in your browser.',
     },
+    zoom: { ru: 'увеличить портрет', en: 'zoom the portrait' },
+    close: { ru: 'Закрыть портрет', en: 'Close the portrait' },
   };
+
+  // ── Аватарки (homeworks/05, иллюстрации владельца через ChatGPT):
+  //    кроп лица — в кружках и на карте, полная иллюстрация — в оверлее по тапу ──
+  const avatarFace = (id: string) => `/img/personas/${id}_face.png`;
+  const avatarFull = (id: string) => `/img/personas/${id}.png`;
+
+  // Какой персонаж увеличен по тапу (null — оверлей закрыт)
+  let zoomed = $state<(typeof PERSONAS)[number] | null>(null);
 
   // Стартовые оценки — осмысленный «я», от которого интересно двигать звёзды
   let mine = $state<Record<string, number>>({ quiet: 7, travel: 5, sport: 4, books: 8, humor: 6 });
@@ -128,9 +138,13 @@
     {/each}
   </div>
 
-  <!-- Карта пространства: я в центре, персонажи на настоящих расстояниях -->
+  <!-- Карта пространства: я в центре, персонажи на настоящих расстояниях.
+       Узлы — лица (кроп), по тапу открывается полный портрет. -->
   <div class="panel">
     <svg viewBox="0 0 520 300" role="img" aria-label={t.mapNote[lang]}>
+      <defs>
+        <clipPath id="demo-face-clip"><circle cx="0" cy="0" r="13" /></clipPath>
+      </defs>
       <circle cx={CX} cy={CY} r={MAX_R + 14} fill="none" stroke="var(--edge)" stroke-dasharray="3 5" />
       {#each mapPoints as pt}
         <line
@@ -138,9 +152,20 @@
           stroke="var(--accent)"
           stroke-opacity={Math.max(0.12, pt.glow)}
           stroke-width={1 + 3 * pt.glow} />
-        <circle cx={pt.x} cy={pt.y} r="13" fill={pt.p.color} />
-        <text class="initial" x={pt.x} y={pt.y + 4}>{pt.p.name[lang][0]}</text>
         <text class="tag" x={pt.x} y={pt.labelY}>{pt.p.name[lang]} · {pt.r ? pt.r.similarity + '%' : '—'}</text>
+        <g
+          class="node"
+          transform="translate({pt.x} {pt.y})"
+          role="button"
+          tabindex="0"
+          aria-label="{pt.p.name[lang]} — {t.zoom[lang]}"
+          onclick={() => (zoomed = pt.p)}
+          onkeydown={(e) => e.key === 'Enter' && (zoomed = pt.p)}>
+          <g class="grow">
+            <circle r="14.5" fill="var(--panel)" stroke={pt.p.color} stroke-width="2.5" />
+            <image href={avatarFace(pt.p.id)} x="-13" y="-13" width="26" height="26" clip-path="url(#demo-face-clip)" />
+          </g>
+        </g>
       {/each}
       <circle cx={CX} cy={CY} r="15" fill="var(--primary)" />
       <text class="initial" x={CX} y={CY + 4}>{t.me[lang]}</text>
@@ -152,7 +177,14 @@
   {#each sorted as { p, r }, idx (p.id)}
     <div class="panel persona">
       <div class="head">
-        <div class="ava" style="background:{p.color}">{p.name[lang][0]}</div>
+        <button
+          type="button"
+          class="ava"
+          style="--ring:{p.color}"
+          aria-label="{p.name[lang]} — {t.zoom[lang]}"
+          onclick={() => (zoomed = p)}>
+          <img src={avatarFace(p.id)} alt={p.name[lang]} loading="lazy" />
+        </button>
         <div class="titles">
           <div class="who">{p.name[lang]}{idx === 0 ? t.closest[lang] : ''}</div>
           <div class="meta">{p.note[lang]}</div>
@@ -175,7 +207,28 @@
 
   <div class="cta"><a href={appUrl}>{t.cta[lang]} →</a></div>
   <p class="trust">{t.trust[lang]}</p>
+
+  <!-- Оверлей: полный портрет по тапу на аватар (закрывается кликом и Esc) -->
+  {#if zoomed}
+    <div
+      class="overlay"
+      role="button"
+      tabindex="0"
+      aria-label={t.close[lang]}
+      onclick={() => (zoomed = null)}
+      onkeydown={(e) => (e.key === 'Enter' || e.key === 'Escape') && (zoomed = null)}>
+      <figure class="sheet" style="--ring:{zoomed.color}">
+        <img src={avatarFull(zoomed.id)} alt={zoomed.name[lang]} />
+        <figcaption>
+          <b>{zoomed.name[lang]}</b>
+          <span>{zoomed.note[lang]}</span>
+        </figcaption>
+      </figure>
+    </div>
+  {/if}
 </section>
+
+<svelte:window onkeydown={(e) => e.key === 'Escape' && (zoomed = null)} />
 
 <style>
   .demo {
@@ -274,6 +327,21 @@
     color: var(--faint);
   }
 
+  /* ── Узлы карты: лицо в кольце цвета персонажа, растёт под курсором ── */
+  svg .node {
+    cursor: pointer;
+    outline: none;
+  }
+  svg .grow {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 0.18s;
+  }
+  svg .node:hover .grow,
+  svg .node:focus-visible .grow {
+    transform: scale(2.1);
+  }
+
   /* ── Карточки персонажей ── */
   .persona .head {
     display: flex;
@@ -281,16 +349,58 @@
     gap: 10px;
     margin-bottom: 8px;
   }
+  /* Аватар-кнопка: кроп лица в кольце цвета персонажа; мягко пульсирует,
+     под курсором вырастает, по тапу открывает полный портрет */
   .ava {
-    width: 34px;
-    height: 34px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    flex: 0 0 34px;
-    display: grid;
-    place-items: center;
-    font-weight: 700;
-    color: #fff;
-    font-size: 15px;
+    flex: 0 0 40px;
+    padding: 0;
+    border: 2px solid var(--ring);
+    background: var(--panel);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    animation: ava-pulse 3.2s ease-in-out infinite;
+    transition: transform 0.18s;
+  }
+  .ava img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .ava:hover,
+  .ava:focus-visible {
+    animation: none;
+    transform: scale(2.2);
+    z-index: 3;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  }
+  @keyframes ava-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--ring) 45%, transparent);
+    }
+    50% {
+      transform: scale(1.07);
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--ring) 0%, transparent);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ava {
+      animation: none;
+    }
+    .ava:hover,
+    .ava:focus-visible {
+      transform: none;
+    }
+    svg .node:hover .grow {
+      transform: none;
+    }
   }
   .who {
     font-weight: 600;
@@ -370,5 +480,69 @@
     text-align: center;
     font-size: 12px;
     color: var(--faint);
+  }
+
+  /* ── Оверлей полного портрета ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    border: none;
+    background: color-mix(in srgb, var(--bg) 45%, rgba(4, 10, 20, 0.55));
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    cursor: zoom-out;
+    animation: overlay-in 0.18s ease-out;
+  }
+  .sheet {
+    margin: 0;
+    max-width: min(84vw, 360px);
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 18px;
+    padding: 12px;
+    box-shadow: var(--card-shadow);
+    animation: sheet-in 0.2s ease-out;
+  }
+  .sheet img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 2px solid var(--ring);
+  }
+  .sheet figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 10px 4px 2px;
+  }
+  .sheet b {
+    color: var(--heading);
+    font-size: 16px;
+  }
+  .sheet span {
+    color: var(--faint);
+    font-size: 12.5px;
+  }
+  @keyframes overlay-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .overlay,
+    .sheet {
+      animation: none;
+    }
   }
 </style>
