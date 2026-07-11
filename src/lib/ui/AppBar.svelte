@@ -1,7 +1,12 @@
 <script lang="ts">
-  // Шапка продукта: утверждённый знак V3 «Диагональ» + водмарк + переключатель языка.
+  // Шапка продукта: знак (Brand) + водмарк + переключатель языка.
   // Один на все экраны 2.0; цвета — только из переменных темы.
   // badge — опциональная пунктирная пилюля (гостевой режим, plans/03: макет V1 «Тихий бейдж»).
+  //
+  // На десктопе (от 1024px) слева стоит рельс SideRail и он тоже показывает знак и
+  // водмарк — здесь мы их прячем, чтобы бренд не двоился (макет V2 «Рабочий стол»).
+  import Brand from '$lib/ui/Brand.svelte';
+
   let {
     lang,
     onToggleLang,
@@ -18,20 +23,7 @@
 </script>
 
 <header class="bar">
-  <svg width="26" height="26" viewBox="0 0 96 96" aria-hidden="true">
-    <defs>
-      <linearGradient id="appbar-g" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70">
-        <stop offset="0" stop-color="#4d9fff" /><stop offset="1" stop-color="#3fd9ff" />
-      </linearGradient>
-    </defs>
-    <rect width="96" height="96" rx="22" fill="#060b14" />
-    <g stroke="url(#appbar-g)" stroke-width="6.7" fill="none">
-      <line x1="36.5" y1="29" x2="30" y2="66" /><line x1="36.5" y1="29" x2="59.5" y2="66" /><line x1="59.5" y1="66" x2="66" y2="29" />
-    </g>
-    <g fill="url(#appbar-g)">
-      <circle cx="36.5" cy="29" r="9.3" /><circle cx="30" cy="66" r="9.3" /><circle cx="59.5" cy="66" r="9.3" /><circle cx="66" cy="29" r="9.3" />
-    </g>
-  </svg>
+  <span class="mark"><Brand size={26} /></span>
   <span class="wm">{lang === 'ru' ? 'Пространство NDim' : 'NDim Space'}</span>
   {#if badge}
     <button type="button" class="badge" onclick={onBadge}>◌ {badge}</button>
@@ -56,4 +48,12 @@
     border: 1px dashed var(--accent); border-radius: 999px; padding: 4px 11px;
   }
   .badge + .lang { margin-left: 0; }
+
+  /* Десктоп: бренд живёт в рельсе слева — в шапке он лишний.
+     Сама шапка остаётся: в ней гостевой бейдж и переключатель языка. */
+  @media (min-width: 1024px) {
+    .mark, .wm { display: none; }
+    .bar { justify-content: flex-end; padding: 12px 26px; min-height: 52px; }
+    .badge, .lang { margin-left: 0; }
+  }
 </style>

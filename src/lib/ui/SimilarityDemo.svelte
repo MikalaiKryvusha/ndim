@@ -136,7 +136,7 @@
   <p class="sub">{t.sub[lang]}</p>
 
   <!-- Мои оси: звёзды 0…10 с цифрой (жест оценки из 1.x) -->
-  <div class="panel">
+  <div class="panel axes-panel">
     {#each AXES as axis}
       <div class="axis">
         <span class="name">{axis.name[lang]}</span>
@@ -193,7 +193,8 @@
     <p class="map-note">{t.mapNote[lang]}</p>
   </div>
 
-  <!-- Карточки персонажей: ближе всех — выше -->
+  <!-- Карточки персонажей: ближе всех — выше (на десктопе — левее) -->
+  <div class="personas">
   {#each sorted as { p, r }, idx (p.id)}
     <div class="panel persona">
       <div class="head">
@@ -224,6 +225,7 @@
       {/each}
     </div>
   {/each}
+  </div>
 
   <div class="cta"><a href={appUrl}>{t.cta[lang]} →</a></div>
   <p class="trust">{t.trust[lang]}</p>
@@ -566,6 +568,47 @@
     .overlay,
     .sheet {
       animation: none;
+    }
+  }
+
+  /* ── Десктоп: демо расходится вширь (правка владельца 2026-07-11) ──
+     Слева — звёзды и под ними карточки соседей, справа — большая карта во всю
+     высоту обеих строк: двигаешь оценку и сразу видишь, как соседи перемещаются.
+     Карточки уходят влево (а не в ряд под картой) намеренно: иначе под коротким
+     блоком звёзд остаётся пустая колонка — ровно то, от чего мы уходим.
+     На телефоне всё остаётся вертикальной лентой, как было. Оверлей портрета —
+     position: fixed, из потока сетки выпадает и на раскладку не влияет. */
+  @media (min-width: 760px) {
+    .demo {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+      align-items: start;
+      gap: 14px;
+    }
+    h2,
+    .sub,
+    .cta,
+    .trust {
+      grid-column: 1 / -1;
+    }
+    .sub {
+      margin-bottom: 4px;
+    }
+    .panel {
+      margin-bottom: 0;
+    }
+    .axes-panel {
+      grid-column: 1;
+    }
+    /* Карта занимает вторую колонку и обе строки — звёзды и карточки соседей */
+    .map-panel {
+      grid-column: 2;
+      grid-row: 3 / span 2;
+    }
+    .personas {
+      grid-column: 1;
+      display: grid;
+      gap: 12px;
     }
   }
 </style>

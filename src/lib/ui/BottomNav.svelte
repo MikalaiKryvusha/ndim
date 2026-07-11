@@ -31,4 +31,10 @@
   }
   .ico { font-size: 17px; line-height: 1; }
   .on { color: var(--primary); font-weight: 650; }
+
+  /* Десктоп (макет V2 «Рабочий стол»): навигация переезжает в боковой рельс
+     SideRail — нижняя панель прячется. Порог 1024px общий для обоих компонентов. */
+  @media (min-width: 1024px) {
+    .bnav { display: none; }
+  }
 </style>

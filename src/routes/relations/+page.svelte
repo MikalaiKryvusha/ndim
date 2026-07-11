@@ -13,6 +13,7 @@
   import { onMount } from 'svelte';
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import SideRail from '$lib/ui/SideRail.svelte';
   import { signInDev } from '$lib/data/profile';
   import { loadRelations, strengthLevel, type RelationsScreenData } from '$lib/data/relations';
   import type { Localized } from '$lib/model/schema';
@@ -125,6 +126,8 @@
 </svelte:head>
 
 <div class="screen">
+  <SideRail active="relations" {lang} />
+
   <AppBar {lang} onToggleLang={toggleLang} />
 
   <main class="body">
@@ -194,6 +197,39 @@
   }
   .body { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
   .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); }
+
+  /* ── Десктоп: макет V2 «Рабочий стол» (утверждён владельцем 2026-07-11) ──
+     Рельс слева во всю высоту, справа шапка и контент. Связи — сетка карточек:
+     две колонки, на широком мониторе три. Раскрытая карточка растёт на месте. */
+  @media (min-width: 1024px) {
+    .screen {
+      max-width: none;
+      display: grid;
+      grid-template-columns: 232px minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+    }
+    .body {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 26px 34px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      /* .body — строка 1fr в сетке экрана: без align-content лишняя высота
+         растеклась бы по зазорам между рядами карточек. */
+      align-content: start;
+      gap: 14px;
+    }
+    .body > .screen-title,
+    .body > .state,
+    .body > .hint {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (min-width: 1560px) {
+    .body { max-width: 1560px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
   .state { font-size: 14px; color: var(--dim); text-align: center; padding: 14px 6px; }
   .mono { font-family: var(--mono); font-size: 11px; word-break: break-word; }
   .hint { font-size: 11.5px; color: var(--dim); line-height: 1.45; }

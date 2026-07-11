@@ -13,6 +13,7 @@
   import { onMount } from 'svelte';
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import SideRail from '$lib/ui/SideRail.svelte';
   import {
     ensureSpaceExists,
     loadProfileScreen,
@@ -481,6 +482,8 @@
 </svelte:head>
 
 <div class="screen">
+  <SideRail active="profile" {lang} />
+
   <AppBar
     {lang}
     onToggleLang={toggleLang}
@@ -609,7 +612,7 @@
           <button type="button" class:on={dimFilter === 'unrated'} onclick={() => (dimFilter = 'unrated')}>{t.filters.unrated[lang]}</button>
           <button type="button" class:on={dimFilter === 'all'} onclick={() => (dimFilter = 'all')}>{t.filters.all[lang]} · {data.dims.length}</button>
         </div>
-        <div class="card">
+        <div class="card dims-card">
           {#each dimsFiltered as dim (dim.id)}
             {@const myRating = data.ratings.get(dim.id)}
             {#if expandedDim === dim.id}
@@ -716,6 +719,7 @@
     flex-direction: column;
     background: var(--bg);
   }
+
 
   .tabs { display: flex; background: var(--panel); border-bottom: 1px solid var(--edge); }
   .tabs button {
@@ -872,4 +876,56 @@
   }
   .guest-soon { text-align: center; }
 
+  /* ── Десктоп: макет V2 «Рабочий стол» (утверждён владельцем 2026-07-11) ──
+     Блок стоит В КОНЦЕ файла намеренно: он переопределяет базовые (мобильные)
+     правила .tabs и .body, а при равной специфичности выигрывает последний.
+     Экран становится сеткой: слева рельс во всю высоту (SideRail сам занимает
+     первую колонку через grid-row: 1 / -1), справа шапка, вкладки и контент.
+     Узкой колонны 430px на широком экране больше нет — лента идёт в две колонки. */
+  @media (min-width: 1024px) {
+    .screen {
+      max-width: none;
+      display: grid;
+      grid-template-columns: 232px minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr;
+    }
+
+    .tabs { justify-content: flex-start; gap: 4px; padding: 0 26px; }
+    .tabs button { flex: 0 0 auto; padding: 12px 18px; }
+
+    .body {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 26px 34px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      align-items: start;
+      /* .body — строка 1fr в сетке экрана, поэтому она выше содержимого.
+         Без align-content лишняя высота растеклась бы по зазорам между строками. */
+      align-content: start;
+      gap: 14px;
+    }
+    /* Во всю ширину — то, что не делится на колонки: шапка профиля, гостевая
+       карточка, поиск, сегменты, состояния стенда и подписи. */
+    .body > .head-card,
+    .body > .guest-card,
+    .body > .search,
+    .body > .seg,
+    .body > .state,
+    .body > .hint,
+    .body > .btn {
+      grid-column: 1 / -1;
+    }
+    /* Лента измерений — длинный список: карточка во всю ширину, а строки внутри
+       неё в две колонки. Раскрытое измерение забирает обе (в нём звёзды и описание). */
+    .dims-card {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 26px;
+      align-content: start;
+    }
+    .dims-card .dim-open { grid-column: 1 / -1; }
+  }
 </style>
