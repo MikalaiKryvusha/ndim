@@ -74,7 +74,9 @@
       en: 'A new property is hidden from everyone until you open it yourself.',
     },
     myNdimId: { ru: 'Мой NDim ID', en: 'My NDim ID' },
-    axesFilled: { ru: 'Заполнено осей', en: 'Axes filled' },
+    // Осей в Пространстве тысячи: дробь «X из N» бессмысленна и демотивирует (правка
+    // владельца, 2026-07-11). Показываем только абсолютное число оценённого.
+    ratedDims: { ru: 'Оценено измерений', en: 'Dimensions rated' },
     toDims: { ru: 'К измерениям →', en: 'To dimensions →' },
     searchDims: { ru: 'Найти среди {n} измерений…', en: 'Search {n} dimensions…' },
     filters: {
@@ -293,9 +295,8 @@
         <div class="card">
           <h3>{t.myNdimId[lang]}</h3>
           <div class="mrow">
-            <span class="k2">{t.axesFilled[lang]}</span>
-            <span class="mbar"><i style="width:{data.dims.length ? (ratedCount / data.dims.length) * 100 : 0}%"></i></span>
-            <span class="mval">{ratedCount}/{data.dims.length}</span>
+            <span class="k2">{t.ratedDims[lang]}</span>
+            <span class="mval big">{ratedCount}</span>
           </div>
           <button type="button" class="btn ghost" onclick={() => (tab = 'dims')}>{t.toDims[lang]}</button>
         </div>
@@ -450,9 +451,8 @@
 
   .mrow { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
   .mrow .k2 { font-size: 12px; color: var(--dim); flex: none; }
-  .mbar { flex: 1; height: 7px; border-radius: 4px; background: var(--edge-soft); position: relative; }
-  .mbar i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: linear-gradient(90deg, var(--primary), var(--accent)); }
   .mval { flex: none; font-size: 13.5px; font-weight: 700; color: var(--primary); }
+  .mval.big { font-size: 19px; margin-left: auto; }
 
   .btn {
     display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px;
