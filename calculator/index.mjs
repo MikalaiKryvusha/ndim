@@ -32,6 +32,12 @@ import { computeRelation } from '../src/lib/similarity/similarity.ts';
 const TOP_LIMIT = 250;
 /** Версия формата relations-документа. */
 const RELATIONS_VERSION = 2;
+/**
+ * Через сколько дней бездействия данные анонимного гостя считаются осиротевшими.
+ * Совпадает со сроком автоудаления брошенных анонимных аккаунтов в Firebase
+ * (researches/10 §2.4): сам аккаунт умирает без нас, а его Firestore-данные — наша работа.
+ */
+const GUEST_TTL_DAYS = 30;
 
 const projectId = process.env.FIREBASE_PROJECT_ID ?? 'demo-ndim-dev';
 
@@ -87,8 +93,42 @@ function topFor(ownerUid, points) {
   return top.slice(0, TOP_LIMIT);
 }
 
+/**
+ * Удаляет данные осиротевших гостей: guest-точки, которых вычислитель не трогал
+ * GUEST_TTL_DAYS (lastSync — поле вычислителя, любое действие гостя обновляет его
+ * через dirty-цикл). Уважительная асимметрия: труд ПОЛНОЦЕННЫХ людей не удаляется
+ * никогда, гость же сам выбрал не сохраняться. Возвращает число вычищенных гостей.
+ *
+ * Запрос нарочно один и простой (guest == true, гостей мало) — dirty и срок
+ * проверяются в коде, чтобы не требовать составного индекса на боевом Firestore.
+ */
+export async function cleanupStaleGuests(now = Date.now()) {
+  const cutoff = now - GUEST_TTL_DAYS * 24 * 60 * 60 * 1000;
+  const guests = await db.collection('points').where('guest', '==', true).get();
+
+  let removed = 0;
+  for (const point of guests.docs) {
+    const { dirty, lastSync } = point.data();
+    if (dirty === true) continue; // ждёт пересчёта — точно не сирота
+    if (typeof lastSync !== 'number' || lastSync >= cutoff) continue;
+
+    // Всё, что гость успел накопить: точка с оценками, его топ, его users-дерево
+    // (приватные бакеты, настройки). recursiveDelete добирает подколлекции.
+    await db.recursiveDelete(point.ref);
+    await db.doc(`relations/${point.id}`).delete();
+    await db.recursiveDelete(db.doc(`users/${point.id}`));
+    removed += 1;
+    log(`гость ${point.id} осиротел (> ${GUEST_TTL_DAYS} дн.) — данные вычищены`);
+  }
+
+  return removed;
+}
+
 /** Один цикл пересчёта. Возвращает число пересчитанных владельцев. */
 export async function runCycle() {
+  // Сначала гигиена: осиротевшие гости не должны попасть в пересчёт.
+  await cleanupStaleGuests();
+
   const dirtySnap = await db.collection('points').where('dirty', '==', true).get();
   if (dirtySnap.empty) {
     log('грязных точек нет — пересчитывать нечего');
