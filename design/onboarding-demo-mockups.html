@@ -283,12 +283,14 @@ const AXES = [
   { id: 'books',  name: 'Книги' },
   { id: 'humor',  name: 'Чувство юмора' }
 ];
+/* Имена — популярные (решение владельца 2026-07-11): RU Алиса/Макс/Настя,
+   в EN-версии продукта — Emma/Liam/Mia. Персонажи вымышленные. */
 const PERSONAS = [
   { id: 'alice', name: 'Алиса', color: '#7c5cff', note: 'заполнила все 5 осей',
     dims: { quiet: 8, travel: 6, sport: 3, books: 9, humor: 7 } },
-  { id: 'boris', name: 'Борис', color: '#0ea578', note: 'заполнил только 3 оси',
+  { id: 'max',   name: 'Макс',  color: '#0ea578', note: 'заполнил только 3 оси',
     dims: { travel: 9, sport: 8, humor: 6 } },
-  { id: 'vera',  name: 'Вера',  color: '#d6544f', note: 'заполнила все 5 осей',
+  { id: 'nastya', name: 'Настя', color: '#d6544f', note: 'заполнила все 5 осей',
     dims: { quiet: 2, travel: 3, sport: 9, books: 1, humor: 4 } }
 ];
 /* Стартовые оценки пользователя — общие для всех вариантов */
@@ -377,7 +379,7 @@ function renderV2() {
 /* ════════ Мини-карта пространства (V3 и V5) ════════ */
 function renderSpaceInto(svg) {
   const cx = 260, cy = 150, MAXR = 118;
-  const angles = { alice: -90, boris: 25, vera: 155 };
+  const angles = { alice: -90, max: 25, nastya: 155 };
   let out = `
     <circle cx="${cx}" cy="${cy}" r="${MAXR + 14}" fill="none" stroke="var(--edge)" stroke-dasharray="3 5"/>
   `;

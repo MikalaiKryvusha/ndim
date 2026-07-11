@@ -13,6 +13,7 @@
   //            сейчас RU пререндерится, EN переключается на клиенте (паритет с 1.x).
   import { onMount } from 'svelte';
   import { SITE_ORIGIN } from '$lib/site';
+  import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
 
   const APP_URL = 'https://ndim-space.web.app';
   // Абсолютный canonical гасит дубли трёх хостов (researches/08 §2, §5).
@@ -195,6 +196,9 @@
       </article>
     {/each}
   </section>
+
+  <!-- Демо похожести: «пощупать до аккаунта» (ideas/10, макет V5 «Синтез») -->
+  <SimilarityDemo {lang} appUrl={APP_URL} />
 
   <footer class="foot">
     <span>{t.foot[lang]}</span>

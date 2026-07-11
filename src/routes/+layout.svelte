@@ -29,6 +29,7 @@
     --primary: #1467d6;
     --primary-ink: #ffffff;
     --accent: #1f7fc9;
+    --star: #e8a516;
     --heading: #12263c;
     --text: #33506e;
     --dim: #6a819a;
@@ -58,6 +59,7 @@
     --primary: #1467d6;
     --primary-ink: #ffffff;
     --accent: #3fd9ff;
+    --star: #ffc93d;
     --heading: #eef6ff;
     --text: #dce9f7;
     --dim: #8299b1;
