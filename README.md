@@ -17,7 +17,7 @@
 [![Framework](https://img.shields.io/badge/Framework-KAIF-7F52FF.svg)](https://github.com/MikalaiKryvusha/KAIF)
 [![Stack](https://img.shields.io/badge/Stack-SvelteKit%20%2B%20TypeScript-FF3E00.svg)](#сборка-и-стенд)
 [![Live 1.x](https://img.shields.io/badge/Live%201.x-ndim--space.web.app-00C853.svg)](https://ndim-space.web.app)
-[![Landing 2.0](https://img.shields.io/badge/Landing%202.0-ndimspace.app-1467D6.svg)](https://ndimspace.web.app)
+[![Landing 2.0](https://img.shields.io/badge/Landing%202.0-ndimspace.app-1467D6.svg)](https://ndimspace.app)
 
 **Честный поиск похожих людей в многомерном пространстве самооценок.**
 Платформа знакомств, которая ищет вам человека, а не удерживает вас ради подписки.
@@ -93,7 +93,7 @@
 | Ядро 2.0 | математика + модель данных + правила + тесты + план миграции | ✅ |
 | Фронтенд 2.0 | SvelteKit: лендинг + экраны «Профиль» и «Связи» работают на модели 2.0 (дев-стенд эмуляторов); дальше — вход/онбординг | 🔧 |
 | Бэкенд | вычислитель связей работает в Docker; боевое включение — вместе с миграцией данных | 🔧 |
-| Публикация | домен `ndimspace.app` куплен (до 2031), лендинг на постоянном сайте, привязка домена в процессе; дальше — sitemap и поисковики | 🔧 |
+| Публикация | **https://ndimspace.app живёт**: домен куплен до 2031, привязан, сертификат раскатан, canonical на месте; дальше — sitemap и поисковики | 🔧 |
 
 Живой статус — [`STATUS.md`](STATUS.md) · дорожная карта — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 видение автора — [`GOAL.md`](GOAL.md).
@@ -209,7 +209,7 @@ you see it.
 | Core 2.0 | maths + data model + rules + tests + migration plan | ✅ |
 | Frontend 2.0 | SvelteKit: landing + Profile and Relations screens run on the 2.0 model (emulator dev stand); sign-in/onboarding next | 🔧 |
 | Backend | the relation calculator runs in Docker; production switch-on comes with the data migration | 🔧 |
-| Publication | `ndimspace.app` bought (until 2031), landing on its permanent site, domain binding in progress; sitemap and search engines next | 🔧 |
+| Publication | **https://ndimspace.app is live**: domain bought until 2031, bound, certificate deployed, canonical in place; sitemap and search engines next | 🔧 |
 
 Live status — [`STATUS.md`](STATUS.md) · roadmap — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 the author's vision — [`GOAL.md`](GOAL.md).
