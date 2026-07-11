@@ -10,11 +10,22 @@
  */
 
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { collection, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { DEV_USER, db, devAuth } from '../firebase.ts';
-import { mergeBuckets, visibleTo, type Viewer } from '../model/visibility.ts';
 import {
+  bucketsForAudience,
+  distribute,
+  mergeBuckets,
+  visibleTo,
+  type BucketId,
+  type Viewer,
+  type VisibilityMap,
+} from '../model/visibility.ts';
+import {
+  assertValidProfile,
   assertValidRating,
+  assertValidSuggestion,
+  assertValidVisibilityMap,
   type DimDoc,
   type GroupDoc,
   type ProfileData,
@@ -107,4 +118,67 @@ export async function removeRating(uid: Uid, dimId: string): Promise<void> {
  */
 export function previewAs(data: ProfileScreenData, viewer: Viewer): Record<string, unknown> {
   return visibleTo(data.values, data.root.visibility, viewer);
+}
+
+/** Все бакеты, в которых карта видимости размещает хоть одно свойство. */
+function bucketsOf(visibility: VisibilityMap, properties: readonly string[]): Set<BucketId> {
+  const buckets = new Set<BucketId>();
+  for (const property of properties) {
+    const audience = visibility[property as keyof VisibilityMap] ?? [];
+    for (const bucketId of bucketsForAudience(audience)) buckets.add(bucketId);
+  }
+  return buckets;
+}
+
+/**
+ * Сохраняет значения профиля и карту видимости: атомарная перераскладка по бакетам.
+ *
+ * Смена аудитории свойства обязана быть атомарной (researches/04, §3.5): иначе свойство
+ * останется видимым тем, у кого доступ отобрали. Поэтому всё одним `WriteBatch`:
+ *   корень (карта видимости) + полная перезапись каждого нужного бакета +
+ *   удаление бакетов, опустевших после перераскладки.
+ */
+export async function saveProfile(
+  uid: Uid,
+  values: Partial<ProfileData>,
+  visibility: VisibilityMap,
+  previousVisibility: VisibilityMap,
+): Promise<void> {
+  assertValidProfile(values);
+  assertValidVisibilityMap(visibility);
+
+  const store = db();
+  const batch = writeBatch(store);
+
+  // merge углубляется в map: created/lastSignIn внутри time переживают обновление.
+  batch.set(
+    doc(store, 'users', uid),
+    { visibility, time: { updated: Date.now() } },
+    { merge: true },
+  );
+
+  const nextBuckets = distribute(values, visibility);
+  for (const [bucketId, bucketValues] of nextBuckets) {
+    // Полная перезапись (без merge): в бакете не должно остаться свойств, ушедших из него.
+    batch.set(doc(store, 'users', uid, 'profile', bucketId), bucketValues);
+  }
+
+  // Бакеты, где свойства были по старой карте, но не остались по новой, — удаляем.
+  const properties = Object.keys(values);
+  for (const staleId of bucketsOf(previousVisibility, properties)) {
+    if (!nextBuckets.has(staleId)) batch.delete(doc(store, 'users', uid, 'profile', staleId));
+  }
+
+  await batch.commit();
+}
+
+/** Отправляет заявку на новую ось. Правила требуют authorUid == auth.uid и длину 5…300. */
+export async function submitSuggestion(uid: Uid, description: string): Promise<void> {
+  const trimmed = description.trim();
+  assertValidSuggestion(trimmed);
+  await addDoc(collection(db(), 'suggestions'), {
+    authorUid: uid,
+    description: trimmed,
+    created: Date.now(),
+  });
 }

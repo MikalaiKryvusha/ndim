@@ -14,13 +14,15 @@
   import {
     loadProfileScreen,
     previewAs,
+    saveProfile,
     saveRating,
     signInDev,
+    submitSuggestion,
     type ProfileScreenData,
   } from '$lib/data/profile';
   import { EVERYONE, FRIENDS } from '$lib/model/visibility';
-  import type { Audience } from '$lib/model/visibility';
-  import type { Localized } from '$lib/model/schema';
+  import type { Audience, ProfileProperty } from '$lib/model/visibility';
+  import { isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
 
   type Lang = 'ru' | 'en';
   type Tab = 'personal' | 'dims' | 'visibility';
@@ -42,6 +44,29 @@
 
   // Вкладка «Видимость»: выбранная аудитория предпросмотра
   let previewKey = $state('me');
+
+  // Редактирование личной информации: плоская форма ('' = не заполнено → null в модели)
+  let editing = $state(false);
+  let saving = $state(false);
+  let editError = $state('');
+  let f = $state({
+    firstRu: '', firstEn: '', nickRu: '', nickEn: '',
+    middleRu: '', middleEn: '', lastRu: '', lastEn: '',
+    aboutRu: '', aboutEn: '',
+    year: '', month: '', day: '',
+    gender: '' as '' | 'm' | 'w' | 'nb',
+  });
+
+  // Редактор аудитории свойства (открывается тапом по чипу)
+  let audFor = $state<ProfileProperty | null>(null);
+  let audEveryone = $state(false);
+  let audFriends = $state(false);
+  let audGroups = $state<Record<string, boolean>>({});
+
+  // Заявка на новую ось
+  let suggestOpen = $state(false);
+  let suggestText = $state('');
+  let suggestState = $state<'idle' | 'sending' | 'sent'>('idle');
 
   onMount(async () => {
     try {
@@ -120,7 +145,43 @@
       space: { ru: 'Пространство', en: 'Space' },
       menu: { ru: 'Меню', en: 'Menu' },
     },
+    edit: { ru: 'Редактировать', en: 'Edit' },
+    save: { ru: 'Сохранить', en: 'Save' },
+    cancel: { ru: 'Отмена', en: 'Cancel' },
+    notSpecified: { ru: 'не указан', en: 'not specified' },
+    whoSees: { ru: 'Кто видит это свойство', en: 'Who sees this property' },
+    nobodyHint: {
+      ru: 'Ничего не отмечено — свойство не видит никто, кроме Вас.',
+      en: 'Nothing checked — nobody sees the property except you.',
+    },
+    applyAudience: { ru: 'Сохранить аудиторию', en: 'Save audience' },
+    fields: {
+      firstRu: { ru: 'Имя · рус', en: 'First name · ru' },
+      firstEn: { ru: 'Имя · англ', en: 'First name · en' },
+      nickRu: { ru: 'Ник · рус', en: 'Nickname · ru' },
+      nickEn: { ru: 'Ник · англ', en: 'Nickname · en' },
+      middleRu: { ru: 'Отчество · рус', en: 'Middle name · ru' },
+      middleEn: { ru: 'Отчество · англ', en: 'Middle name · en' },
+      lastRu: { ru: 'Фамилия · рус', en: 'Last name · ru' },
+      lastEn: { ru: 'Фамилия · англ', en: 'Last name · en' },
+      aboutRu: { ru: 'О себе · рус', en: 'About · ru' },
+      aboutEn: { ru: 'О себе · англ', en: 'About · en' },
+      year: { ru: 'Год', en: 'Year' },
+      month: { ru: 'Месяц', en: 'Month' },
+      day: { ru: 'День', en: 'Day' },
+    },
+    suggestTitle: { ru: 'Предложить новое измерение', en: 'Suggest a new dimension' },
+    suggestHint: {
+      ru: 'Опишите ось: что это и зачем (5–300 символов). Заявку рассмотрит админ.',
+      en: 'Describe the axis: what it is and why (5–300 chars). An admin will review it.',
+    },
+    suggestSend: { ru: 'Отправить', en: 'Send' },
+    suggestSent: { ru: 'Спасибо! Заявка отправлена — так Пространство растёт снизу.', en: 'Thank you! Suggestion sent — this is how the Space grows bottom-up.' },
+    suggestMore: { ru: 'Предложить ещё', en: 'Suggest another' },
   } as const;
+
+  const NAME_FIELD_KEYS = ['firstRu', 'firstEn', 'nickRu', 'nickEn', 'middleRu', 'middleEn', 'lastRu', 'lastEn'] as const;
+  const BORN_FIELD_KEYS = ['year', 'month', 'day'] as const;
 
   onMount(() => {
     const saved = localStorage.getItem('ndim-lang');
@@ -233,6 +294,117 @@
   const PROPERTIES = ['name', 'gender', 'about', 'born', 'avatar'] as const;
   const TABS = ['personal', 'dims', 'visibility'] as const;
   const STARS = Array.from({ length: 11 }, (_, index) => index);
+
+  // ── Редактирование личного ──
+  const orEmpty = (value: string | null | undefined): string => value ?? '';
+
+  function startEdit() {
+    if (!data) return;
+    const v = data.values;
+    f = {
+      firstRu: orEmpty(v.name?.first.ru), firstEn: orEmpty(v.name?.first.en),
+      nickRu: orEmpty(v.name?.nick.ru), nickEn: orEmpty(v.name?.nick.en),
+      middleRu: orEmpty(v.name?.middle.ru), middleEn: orEmpty(v.name?.middle.en),
+      lastRu: orEmpty(v.name?.last.ru), lastEn: orEmpty(v.name?.last.en),
+      aboutRu: orEmpty(v.about?.ru), aboutEn: orEmpty(v.about?.en),
+      year: v.born?.year === null || v.born?.year === undefined ? '' : String(v.born.year),
+      month: v.born?.month === null || v.born?.month === undefined ? '' : String(v.born.month),
+      day: v.born?.day === null || v.born?.day === undefined ? '' : String(v.born.day),
+      gender: v.gender ?? '',
+    };
+    editError = '';
+    editing = true;
+  }
+
+  const text = (value: string): string | null => (value.trim() === '' ? null : value.trim());
+  const num = (value: string): number | null => (value.trim() === '' ? null : Number(value));
+
+  function buildValues(): Partial<ProfileData> {
+    return {
+      name: {
+        first: { ru: text(f.firstRu), en: text(f.firstEn) },
+        middle: { ru: text(f.middleRu), en: text(f.middleEn) },
+        last: { ru: text(f.lastRu), en: text(f.lastEn) },
+        nick: { ru: text(f.nickRu), en: text(f.nickEn) },
+      },
+      about: { ru: text(f.aboutRu), en: text(f.aboutEn) },
+      born: { year: num(f.year), month: num(f.month), day: num(f.day) },
+      gender: f.gender === '' ? null : f.gender,
+      avatar: data?.values.avatar ?? false,
+    };
+  }
+
+  async function saveEdit() {
+    if (!data || saving) return;
+    editError = '';
+    try {
+      const values = buildValues();
+      if (values.born && !isRealDate(values.born)) {
+        throw new Error(lang === 'ru' ? 'Такой календарной даты не существует' : 'No such calendar date exists');
+      }
+      saving = true;
+      await saveProfile(data.uid, values, data.root.visibility, data.root.visibility);
+      data = await loadProfileScreen(data.uid);
+      editing = false;
+    } catch (error) {
+      editError = error instanceof Error ? error.message : String(error);
+    } finally {
+      saving = false;
+    }
+  }
+
+  // ── Смена аудитории свойства ──
+  function openAudience(property: ProfileProperty) {
+    if (!data) return;
+    const audience = data.root.visibility[property] ?? [];
+    audEveryone = audience === EVERYONE;
+    audFriends = audience !== EVERYONE && audience.includes(FRIENDS);
+    const groups: Record<string, boolean> = {};
+    for (const groupId of data.groups.keys()) {
+      groups[groupId] = audience !== EVERYONE && audience.includes(groupId);
+    }
+    audGroups = groups;
+    audFor = audFor === property ? null : property;
+  }
+
+  function draftAudience(): Audience {
+    if (audEveryone) return EVERYONE;
+    const picked: string[] = [];
+    if (audFriends) picked.push(FRIENDS);
+    for (const [groupId, checked] of Object.entries(audGroups)) if (checked) picked.push(groupId);
+    return picked;
+  }
+
+  async function saveAudience() {
+    if (!data || audFor === null || saving) return;
+    saving = true;
+    editError = '';
+    try {
+      const visibility = { ...data.root.visibility, [audFor]: draftAudience() };
+      await saveProfile(data.uid, data.values, visibility, data.root.visibility);
+      data = await loadProfileScreen(data.uid);
+      audFor = null;
+    } catch (error) {
+      editError = error instanceof Error ? error.message : String(error);
+    } finally {
+      saving = false;
+    }
+  }
+
+  // ── Заявка на новую ось ──
+  async function sendSuggestion() {
+    if (!data || suggestState === 'sending') return;
+    suggestState = 'sending';
+    editError = '';
+    try {
+      await submitSuggestion(data.uid, suggestText);
+      suggestState = 'sent';
+      suggestText = '';
+    } catch (error) {
+      editError = error instanceof Error ? error.message : String(error);
+      suggestState = 'idle';
+    }
+  }
 </script>
 
 <svelte:head>
@@ -280,26 +452,73 @@
           <span class="ava">{formatValue('name', data.values.name).slice(0, 1)}</span>
           <span><b>{formatValue('name', data.values.name)}</b><small>{t.inSpaceSince[lang]}</small></span>
         </div>
-        <div class="card">
-          <h3>{t.personalInfo[lang]}</h3>
-          {#each PROPERTIES as property (property)}
-            {@const chip = audienceChip(data.root.visibility[property])}
-            <div class="prop">
-              <span class="k">{t.props[property][lang]}</span>
-              <span class="v">{formatValue(property, data.values[property])}</span>
-              <span class="aud {chip.kind}">{chip.icon} {chip.label}</span>
+        {#if editing}
+          <div class="card">
+            <h3>{t.personalInfo[lang]}</h3>
+            <div class="grid2">
+              {#each NAME_FIELD_KEYS as key (key)}
+                <label class="field"><span>{t.fields[key][lang]}</span><input class="inp" bind:value={f[key]} maxlength="100" /></label>
+              {/each}
             </div>
-          {/each}
-          <p class="hint">{t.defaultHidden[lang]}</p>
-        </div>
-        <div class="card">
-          <h3>{t.myNdimId[lang]}</h3>
-          <div class="mrow">
-            <span class="k2">{t.ratedDims[lang]}</span>
-            <span class="mval big">{ratedCount}</span>
+            <label class="field"><span>{t.fields.aboutRu[lang]}</span><textarea class="ta" bind:value={f.aboutRu} maxlength="5000"></textarea></label>
+            <label class="field"><span>{t.fields.aboutEn[lang]}</span><textarea class="ta" bind:value={f.aboutEn} maxlength="5000"></textarea></label>
+            <div class="grid3">
+              {#each BORN_FIELD_KEYS as key (key)}
+                <label class="field"><span>{t.fields[key][lang]}</span><input class="inp" bind:value={f[key]} inputmode="numeric" /></label>
+              {/each}
+            </div>
+            <label class="field"><span>{t.props.gender[lang]}</span>
+              <select class="inp" bind:value={f.gender}>
+                <option value="">{t.notSpecified[lang]}</option>
+                <option value="m">{t.genders.m[lang]}</option>
+                <option value="w">{t.genders.w[lang]}</option>
+                <option value="nb">{t.genders.nb[lang]}</option>
+              </select>
+            </label>
+            {#if editError}<p class="err">{editError}</p>{/if}
+            <div class="duo">
+              <button type="button" class="btn ghost" onclick={() => (editing = false)}>{t.cancel[lang]}</button>
+              <button type="button" class="btn" disabled={saving} onclick={saveEdit}>{t.save[lang]}</button>
+            </div>
           </div>
-          <button type="button" class="btn ghost" onclick={() => (tab = 'dims')}>{t.toDims[lang]}</button>
-        </div>
+        {:else}
+          <div class="card">
+            <h3>{t.personalInfo[lang]}</h3>
+            {#each PROPERTIES as property (property)}
+              {@const chip = audienceChip(data.root.visibility[property])}
+              <div class="prop">
+                <span class="k">{t.props[property][lang]}</span>
+                <span class="v">{formatValue(property, data.values[property])}</span>
+                <button type="button" class="aud {chip.kind}" onclick={() => openAudience(property)}>{chip.icon} {chip.label}</button>
+              </div>
+              {#if audFor === property}
+                <div class="aud-panel">
+                  <p class="hint" style="margin-top:0">{t.whoSees[lang]}</p>
+                  <label class="chk"><input type="checkbox" bind:checked={audEveryone} /> 🌐 {t.everyone[lang]}</label>
+                  {#if !audEveryone}
+                    <label class="chk"><input type="checkbox" bind:checked={audFriends} /> 👥 {t.friends[lang]}</label>
+                    {#each [...data.groups] as [groupId, group] (groupId)}
+                      <label class="chk"><input type="checkbox" bind:checked={audGroups[groupId]} /> ◎ {group.name}</label>
+                    {/each}
+                    <p class="hint">{t.nobodyHint[lang]}</p>
+                  {/if}
+                  {#if editError}<p class="err">{editError}</p>{/if}
+                  <button type="button" class="btn" disabled={saving} onclick={saveAudience}>{t.applyAudience[lang]}</button>
+                </div>
+              {/if}
+            {/each}
+            <p class="hint">{t.defaultHidden[lang]}</p>
+            <button type="button" class="btn ghost" onclick={startEdit}>{t.edit[lang]}</button>
+          </div>
+          <div class="card">
+            <h3>{t.myNdimId[lang]}</h3>
+            <div class="mrow">
+              <span class="k2">{t.ratedDims[lang]}</span>
+              <span class="mval big">{ratedCount}</span>
+            </div>
+            <button type="button" class="btn ghost" onclick={() => (tab = 'dims')}>{t.toDims[lang]}</button>
+          </div>
+        {/if}
       {:else if tab === 'dims'}
         <input class="search" type="search" placeholder={t.searchDims[lang].replace('{n}', String(data.dims.length))} bind:value={search} />
         <div class="seg" role="group">
@@ -347,7 +566,30 @@
             {/if}
           {/each}
         </div>
-        <button type="button" class="btn ghost" disabled title={t.soon[lang]}>{t.suggestDim[lang]} · {t.soon[lang]}</button>
+        {#if suggestState === 'sent'}
+          <div class="card">
+            <p class="hint ok" style="margin-top:0">{t.suggestSent[lang]}</p>
+            <button type="button" class="btn ghost" onclick={() => { suggestState = 'idle'; suggestOpen = true; }}>{t.suggestMore[lang]}</button>
+          </div>
+        {:else if suggestOpen}
+          <div class="card">
+            <h3>{t.suggestTitle[lang]}</h3>
+            <textarea class="ta" bind:value={suggestText} placeholder={t.suggestHint[lang]} maxlength="300"></textarea>
+            <p class="hint">{suggestText.trim().length} / 300</p>
+            {#if editError}<p class="err">{editError}</p>{/if}
+            <div class="duo">
+              <button type="button" class="btn ghost" onclick={() => (suggestOpen = false)}>{t.cancel[lang]}</button>
+              <button
+                type="button"
+                class="btn"
+                disabled={suggestState === 'sending' || suggestText.trim().length < 5}
+                onclick={sendSuggestion}
+              >{t.suggestSend[lang]}</button>
+            </div>
+          </div>
+        {:else}
+          <button type="button" class="btn ghost" onclick={() => (suggestOpen = true)}>{t.suggestDim[lang]}</button>
+        {/if}
         <p class="hint">{t.barsHint[lang]}</p>
       {:else}
         <div class="seg" role="group">
@@ -444,10 +686,33 @@
   .aud {
     flex: none; font-size: 11px; padding: 4px 9px; border-radius: 999px;
     background: var(--edge-soft); color: var(--primary); white-space: nowrap;
+    border: 0; font-family: inherit; cursor: pointer;
   }
   .aud.lock { color: var(--dim); }
   .aud.circ { color: var(--accent); }
+  span.aud { cursor: default; }
   .ghosted { opacity: 0.38; }
+
+  /* редактор аудитории и формы */
+  .aud-panel {
+    margin: 4px 0 8px; padding: 10px 12px; border-radius: 10px;
+    background: var(--edge-soft); display: flex; flex-direction: column; gap: 7px;
+  }
+  .chk { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--heading); cursor: pointer; }
+  .chk input { accent-color: var(--primary); width: 15px; height: 15px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 8px 0; }
+  .field { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+  .field span { font-size: 10.5px; color: var(--dim); }
+  .inp, .ta {
+    font: inherit; font-size: 13.5px; color: var(--text); width: 100%;
+    padding: 8px 10px; border: 1px solid var(--edge); border-radius: 9px; background: var(--panel);
+  }
+  .ta { min-height: 64px; resize: vertical; }
+  .err { font-size: 12px; color: #c0392b; margin-top: 8px; }
+  .duo { display: flex; gap: 10px; }
+  .duo .btn { flex: 1; }
+  .hint.ok { color: #1c9e4f; font-size: 12.5px; }
 
   .mrow { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
   .mrow .k2 { font-size: 12px; color: var(--dim); flex: none; }
