@@ -9,8 +9,8 @@
  * Схема коллекций: researches/04 · src/lib/model/schema.ts.
  */
 
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { addDoc, collection, doc, getDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { signInAnonymously, signInWithEmailAndPassword } from 'firebase/auth';
+import { addDoc, collection, doc, getDoc, getDocs, setDoc, writeBatch } from 'firebase/firestore';
 import { DEV_USER, db, devAuth } from '../firebase.ts';
 import {
   bucketsForAudience,
@@ -58,6 +58,49 @@ export async function signInDev(): Promise<Uid> {
   return credentials.user.uid;
 }
 
+/**
+ * Входит гостем — анонимный вход Firebase (plans/03, этап 2; интервью №004).
+ * Мгновенно и без единой формы; при создании аккаунта UID сохранится (linkWith*).
+ */
+export async function signInGuest(): Promise<Uid> {
+  const credentials = await signInAnonymously(devAuth());
+  return credentials.user.uid;
+}
+
+/** Гость ли текущая сессия (анонимный вход). */
+export function isGuestSession(): boolean {
+  return devAuth().currentUser?.isAnonymous === true;
+}
+
+/**
+ * Первый вход гостя: создаёт `users/{uid}`, если его ещё нет, — гостю никто не сеет
+ * данные, его пространство рождается пустым. Повторный вызов ничего не трогает.
+ */
+export async function ensureSpaceExists(uid: Uid, language: 'ru' | 'en' = 'ru'): Promise<void> {
+  const store = db();
+  const root = await getDoc(doc(store, 'users', uid));
+  if (root.exists()) return;
+
+  const now = Date.now();
+  const emptyRoot: UserRootDoc = {
+    visibility: {},
+    settings: { language },
+    time: { created: now, updated: now, lastSignIn: now },
+    groupCount: 0,
+  };
+  await setDoc(doc(store, 'users', uid), emptyRoot);
+}
+
+/**
+ * Штамп «грязной» точки. Гость обязан честно называть свою точку гостевой —
+ * правила (`honestGuestFlag` в firestore.rules) отвергнут запись без `guest: true`,
+ * а вычислитель по этому флагу не пускает гостя в чужие relations.
+ */
+function dirtyStamp(): Record<string, unknown> {
+  const stamp = { dirty: true, updated: Date.now(), lastSync: null };
+  return isGuestSession() ? { ...stamp, guest: true } : stamp;
+}
+
 /** Загружает всё содержимое экрана профиля за четыре чтения-коллекции. */
 export async function loadProfileScreen(uid: Uid): Promise<ProfileScreenData> {
   const store = db();
@@ -99,7 +142,7 @@ export async function saveRating(uid: Uid, dimId: string, value: number): Promis
 
   const batch = writeBatch(store);
   batch.set(doc(store, 'points', uid, 'dims', dimId), { value });
-  batch.set(doc(store, 'points', uid), { dirty: true, updated: Date.now(), lastSync: null }, { merge: true });
+  batch.set(doc(store, 'points', uid), dirtyStamp(), { merge: true });
   await batch.commit();
 }
 
@@ -108,7 +151,7 @@ export async function removeRating(uid: Uid, dimId: string): Promise<void> {
   const store = db();
   const batch = writeBatch(store);
   batch.delete(doc(store, 'points', uid, 'dims', dimId));
-  batch.set(doc(store, 'points', uid), { dirty: true, updated: Date.now(), lastSync: null }, { merge: true });
+  batch.set(doc(store, 'points', uid), dirtyStamp(), { merge: true });
   await batch.commit();
 }
 

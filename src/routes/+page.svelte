@@ -20,6 +20,11 @@
   // Домен — единая константа src/lib/site.ts (её же использует sitemap.xml).
   const CANONICAL_URL = `${SITE_ORIGIN}/`;
 
+  // Мост из демо в гостя (plans/03 этап 2): на стенде CTA демо ведёт в гостевой режим
+  // (мгновенный анонимный вход). На публичном хосте — пока в живое 1.x, как весь лендинг:
+  // прод-гость откроется с публикацией 2.0 (данных 2.0 на проде ещё нет).
+  let demoUrl = $state(APP_URL);
+
   type Lang = 'ru' | 'en';
   type Theme = 'light' | 'dark';
 
@@ -34,6 +39,7 @@
     theme = attr === 'dark' ? 'dark' : 'light';
     const savedLang = localStorage.getItem('ndim-lang');
     if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
+    if (['localhost', '127.0.0.1'].includes(location.hostname)) demoUrl = '/profile?guest=1';
   });
 
   function toggleTheme() {
@@ -198,7 +204,7 @@
   </section>
 
   <!-- Демо похожести: «пощупать до аккаунта» (ideas/10, макет V5 «Синтез») -->
-  <SimilarityDemo {lang} appUrl={APP_URL} />
+  <SimilarityDemo {lang} appUrl={demoUrl} />
 
   <footer class="foot">
     <span>{t.foot[lang]}</span>

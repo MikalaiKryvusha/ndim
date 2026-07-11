@@ -95,12 +95,16 @@
   .logo { font-weight: 800; color: var(--heading); font-size: 16px; letter-spacing: .3px; }
   .logo span { color: var(--accent); }
 
-  /* Гость = пунктирный аватар (не сохранён, невидим). Аккаунт был бы сплошным. */
+  /* Гость = пунктирный аватар (не сохранён, невидим). Аккаунт был бы сплошным.
+     Внутри — силуэт человека, как дефолтные аватарки соцсетей (правка владельца
+     2026-07-11: «как в раннем VK»). Рисуется инлайн-SVG классом .silh. */
   .ava-ghost {
     width: 34px; height: 34px; border-radius: 50%;
     border: 2px dashed var(--ghost-brd); color: var(--ghost-ink);
     display: grid; place-items: center; font-size: 15px; background: var(--ghost-bg);
+    overflow: hidden;
   }
+  .ava-ghost .silh { width: 72%; height: 72%; margin-top: 22%; fill: var(--ghost-brd); }
   .pill {
     display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
     border: 1px dashed var(--ghost-brd); color: var(--ghost-ink); background: var(--ghost-bg);
@@ -196,7 +200,7 @@
       </div>
 
       <div class="card ghost-card threshold">
-        <span class="ava-ghost">◌</span>
+        <span class="ava-ghost"><svg class="silh" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
         <h2>Пока что ты гость, твои результаты не сохранены</h2>
         <ul class="facts">
           <li><span class="ico">🫥</span> Тебя никто не видит: в Пространстве ты невидимка.</li>

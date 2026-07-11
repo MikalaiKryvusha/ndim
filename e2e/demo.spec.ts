@@ -57,3 +57,11 @@ test('язык: EN переименовывает персонажей и тек
 	await expect(demo.getByText('Emma · closest')).toBeVisible();
 	await expect(demo.getByText('The characters are fictional', { exact: false })).toBeVisible();
 });
+
+test('мост в гостя: на localhost CTA демо ведёт в /profile?guest=1', async ({ page }) => {
+	// Пререндер хранит ссылку на живое 1.x (прод-поведение до публикации 2.0),
+	// а после гидрации на localhost мост переключается в гостевой режим (plans/03 этап 2).
+	await page.goto('/');
+	const cta = page.getByRole('region', { name: 'Попробуйте прямо здесь' }).getByRole('link', { name: /Создать своё пространство/ });
+	await expect(cta).toHaveAttribute('href', '/profile?guest=1');
+});

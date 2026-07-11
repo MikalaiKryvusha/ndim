@@ -1,7 +1,20 @@
 <script lang="ts">
   // Шапка продукта: утверждённый знак V3 «Диагональ» + водмарк + переключатель языка.
   // Один на все экраны 2.0; цвета — только из переменных темы.
-  let { lang, onToggleLang }: { lang: 'ru' | 'en'; onToggleLang: () => void } = $props();
+  // badge — опциональная пунктирная пилюля (гостевой режим, plans/03: макет V1 «Тихий бейдж»).
+  let {
+    lang,
+    onToggleLang,
+    badge,
+    onBadge,
+  }: {
+    lang: 'ru' | 'en';
+    onToggleLang: () => void;
+    // `| undefined` явно: у проекта exactOptionalPropertyTypes, а экраны передают
+    // badge={guest ? ... : undefined}
+    badge?: string | undefined;
+    onBadge?: (() => void) | undefined;
+  } = $props();
 </script>
 
 <header class="bar">
@@ -20,6 +33,9 @@
     </g>
   </svg>
   <span class="wm">{lang === 'ru' ? 'Пространство NDim' : 'NDim Space'}</span>
+  {#if badge}
+    <button type="button" class="badge" onclick={onBadge}>◌ {badge}</button>
+  {/if}
   <button type="button" class="lang" onclick={onToggleLang}>{lang === 'ru' ? 'RU' : 'EN'}</button>
 </header>
 
@@ -33,4 +49,11 @@
     margin-left: auto; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer;
     color: var(--dim); background: transparent; border: 1px solid var(--edge); border-radius: 8px; padding: 4px 9px;
   }
+  /* Гость = пунктир (не сохранён, невидим другим) — метафора утверждённого макета V1. */
+  .badge {
+    margin-left: auto; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+    color: var(--accent); background: transparent;
+    border: 1px dashed var(--accent); border-radius: 999px; padding: 4px 11px;
+  }
+  .badge + .lang { margin-left: 0; }
 </style>

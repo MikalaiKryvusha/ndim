@@ -14,11 +14,13 @@
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import {
+    ensureSpaceExists,
     loadProfileScreen,
     previewAs,
     saveProfile,
     saveRating,
     signInDev,
+    signInGuest,
     submitSuggestion,
     type ProfileScreenData,
   } from '$lib/data/profile';
@@ -40,6 +42,14 @@
   let standError = $state('');
   let data = $state<ProfileScreenData | null>(null);
   const LIVE_APP_URL = 'https://ndim-space.web.app';
+
+  // Гостевой режим (plans/03 этап 2, макет V1 «Тихий бейдж» утверждён 2026-07-11):
+  // ?guest в адресе → мгновенный анонимный вход. Карточка гостя показана при первом
+  // входе; «позже» прячет её до следующего визита (пилюля в шапке открывает снова).
+  const GUEST_CARD_KEY = 'ndim-guest-card';
+  let guest = $state(false);
+  let guestCard = $state(false);
+  let guestSoonHint = $state(false);
 
   // Вкладка «Измерения»
   let search = $state('');
@@ -79,7 +89,15 @@
       return;
     }
     try {
-      const uid = await signInDev();
+      let uid: string;
+      if (new URLSearchParams(location.search).has('guest')) {
+        uid = await signInGuest();
+        await ensureSpaceExists(uid, lang);
+        guest = true;
+        guestCard = localStorage.getItem(GUEST_CARD_KEY) !== 'later';
+      } else {
+        uid = await signInDev();
+      }
       data = await loadProfileScreen(uid);
       stand = 'ready';
     } catch (error) {
@@ -87,6 +105,12 @@
       stand = 'down';
     }
   });
+
+  function guestLater() {
+    guestCard = false;
+    guestSoonHint = false;
+    localStorage.setItem(GUEST_CARD_KEY, 'later');
+  }
 
   // ── Двуязычные строки интерфейса ──
   const t = {
@@ -106,6 +130,36 @@
       en: 'The NDim Space 2.0 screens are still under construction. The live app works via the button below — with real people and relations.',
     },
     openLive: { ru: 'Открыть NDim Space (текущая версия)', en: 'Open NDim Space (current version)' },
+    // Гость: тексты утверждённого макета V1 (design/guest-flow-mockups.html)
+    guest: {
+      pill: { ru: 'гость', en: 'guest' },
+      title: {
+        ru: 'Пока что ты гость, твои результаты не сохранены',
+        en: 'You are a guest for now — your results are not saved',
+      },
+      fact1: {
+        ru: 'Тебя никто не видит: в Пространстве ты невидимка.',
+        en: 'Nobody sees you: in the Space you are invisible.',
+      },
+      fact2: {
+        ru: 'Всё, что заполнишь, — твоё. Создашь аккаунт — сохранится как есть.',
+        en: 'Everything you fill in is yours. Create an account and it is kept as is.',
+      },
+      fact3: {
+        ru: 'Не вернёшься 30 дней — сотрём всё без следа.',
+        en: 'If you do not come back for 30 days, we erase everything without a trace.',
+      },
+      save: { ru: 'Сохранить результаты', en: 'Save my results' },
+      later: { ru: 'позже', en: 'later' },
+      soon: {
+        ru: 'Вход без пароля (Google, волшебная ссылка) появится на следующем этапе — труд гостя он сохранит.',
+        en: 'Passwordless sign-in (Google, magic link) arrives in the next stage — it will keep your work.',
+      },
+      audienceLocked: {
+        ru: 'Гость невидим для других, поэтому открыть свойство некому. Аудитории появятся после создания аккаунта.',
+        en: 'A guest is invisible to others, so there is nobody to open the property to. Audiences arrive after you create an account.',
+      },
+    },
     inSpaceSince: { ru: 'В Пространстве с мая 2025', en: 'In the Space since May 2025' },
     personalInfo: { ru: 'Личная информация', en: 'Personal information' },
     defaultHidden: {
@@ -427,7 +481,12 @@
 </svelte:head>
 
 <div class="screen">
-  <AppBar {lang} onToggleLang={toggleLang} />
+  <AppBar
+    {lang}
+    onToggleLang={toggleLang}
+    badge={guest ? t.guest.pill[lang] : undefined}
+    onBadge={() => (guestCard = !guestCard)}
+  />
 
   <nav class="tabs" aria-label={t.title[lang]}>
     {#each TABS as key (key)}
@@ -449,6 +508,23 @@
         <p class="hint mono">{standError}</p>
       </div>
     {:else if data}
+      {#if guest && guestCard}
+        <!-- Честная карточка гостя — утверждённый макет V1 с правками владельца -->
+        <div class="card guest-card">
+          <span class="guest-ava"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
+          <h2>{t.guest.title[lang]}</h2>
+          <ul class="guest-facts">
+            <li>🫥 {t.guest.fact1[lang]}</li>
+            <li>💾 {t.guest.fact2[lang]}</li>
+            <li>🍂 {t.guest.fact3[lang]}</li>
+          </ul>
+          <div class="guest-cta">
+            <button type="button" class="btn" onclick={() => (guestSoonHint = true)}>{t.guest.save[lang]}</button>
+            <button type="button" class="guest-later" onclick={guestLater}>{t.guest.later[lang]}</button>
+          </div>
+          {#if guestSoonHint}<p class="hint guest-soon">{t.guest.soon[lang]}</p>{/if}
+        </div>
+      {/if}
       {#if tab === 'personal'}
         <div class="card head-card">
           <span class="ava">{formatValue('name', data.values.name).slice(0, 1)}</span>
@@ -495,17 +571,22 @@
               </div>
               {#if audFor === property}
                 <div class="aud-panel">
-                  <p class="hint" style="margin-top:0">{t.whoSees[lang]}</p>
-                  <label class="chk"><input type="checkbox" bind:checked={audEveryone} /> 🌐 {t.everyone[lang]}</label>
-                  {#if !audEveryone}
-                    <label class="chk"><input type="checkbox" bind:checked={audFriends} /> 👥 {t.friends[lang]}</label>
-                    {#each [...data.groups] as [groupId, group] (groupId)}
-                      <label class="chk"><input type="checkbox" bind:checked={audGroups[groupId]} /> ◎ {group.name}</label>
-                    {/each}
-                    <p class="hint">{t.nobodyHint[lang]}</p>
+                  {#if guest}
+                    <!-- Гость невидим (В3): правила отвергнут публикацию — честно говорим об этом -->
+                    <p class="hint" style="margin-top:0">◌ {t.guest.audienceLocked[lang]}</p>
+                  {:else}
+                    <p class="hint" style="margin-top:0">{t.whoSees[lang]}</p>
+                    <label class="chk"><input type="checkbox" bind:checked={audEveryone} /> 🌐 {t.everyone[lang]}</label>
+                    {#if !audEveryone}
+                      <label class="chk"><input type="checkbox" bind:checked={audFriends} /> 👥 {t.friends[lang]}</label>
+                      {#each [...data.groups] as [groupId, group] (groupId)}
+                        <label class="chk"><input type="checkbox" bind:checked={audGroups[groupId]} /> ◎ {group.name}</label>
+                      {/each}
+                      <p class="hint">{t.nobodyHint[lang]}</p>
+                    {/if}
+                    {#if editError}<p class="err">{editError}</p>{/if}
+                    <button type="button" class="btn" disabled={saving} onclick={saveAudience}>{t.applyAudience[lang]}</button>
                   {/if}
-                  {#if editError}<p class="err">{editError}</p>{/if}
-                  <button type="button" class="btn" disabled={saving} onclick={saveAudience}>{t.applyAudience[lang]}</button>
                 </div>
               {/if}
             {/each}
@@ -770,5 +851,25 @@
     font: inherit; font-size: 11px; color: var(--primary); background: transparent; border: 0;
     cursor: pointer; padding: 0;
   }
+
+  /* ── Гостевой режим (утверждённый макет V1 «Тихий бейдж», plans/03 этап 2) ──
+     Метафора: гость = пунктирный контур (не сохранён, невидим), аккаунт = сплошной.
+     Аватар — силуэт человека, как дефолтные аватарки соцсетей (правка владельца). */
+  .guest-card { border-style: dashed; border-color: var(--accent); text-align: center; }
+  .guest-card h2 { font-size: 18px; color: var(--heading); margin: 10px 0 8px; }
+  .guest-ava {
+    width: 56px; height: 56px; border-radius: 50%; margin: 4px auto 0;
+    border: 2px dashed var(--accent); background: var(--edge-soft);
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .guest-ava :global(svg) { width: 72%; height: 72%; margin-top: 22%; fill: var(--accent); opacity: 0.7; }
+  .guest-facts { list-style: none; margin: 0 0 4px; padding: 0; text-align: left; }
+  .guest-facts li { font-size: 13.5px; line-height: 1.5; color: var(--text); padding: 3px 0; }
+  .guest-cta { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 10px; }
+  .guest-later {
+    font: inherit; font-size: 13px; color: var(--dim); background: transparent; border: 0;
+    cursor: pointer; text-decoration: underline dotted; padding: 0;
+  }
+  .guest-soon { text-align: center; }
 
 </style>
