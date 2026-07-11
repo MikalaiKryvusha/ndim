@@ -19,6 +19,7 @@
     "test": "node --test \"src/**/*.test.ts\"",
     "test:watch": "node --test --watch \"src/**/*.test.ts\"",
     "test:rules": "firebase emulators:exec --only firestore --project ndim-rules-test \"node --test tests/rules/*.test.ts\"",
+    "e2e": "playwright test",
     "typecheck": "svelte-kit sync && tsc --noEmit",
     "kaif:version": "node tools/kaif.mjs version",
     "kaif:check": "node tools/kaif.mjs check",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.1",
+    "@playwright/test": "^1.61.1",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.63.0",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",

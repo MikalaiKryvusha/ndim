@@ -24,6 +24,10 @@ build/
 .cache/
 .firebase/
 
+# ── Playwright (артефакты прогонов e2e: трейсы, скриншоты) ──
+test-results/
+playwright-report/
+
 # ── ОС и редакторы ──
 Thumbs.db
 Desktop.ini
