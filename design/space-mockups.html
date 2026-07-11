@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — экран «Пространство», 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — ЭКРАН «ПРОСТРАНСТВО» (раздел навигации, сейчас «скоро»).
+     Источник требований: ideas/06 (идея владельца, принята к планированию) +
+     researches/07 §8 (в 1.x здесь была статистика и статус сервера синхронизации).
+
+     ЧТО ДОЛЖНО ЖИТЬ НА ЭКРАНЕ (слова владельца, структурно):
+       · статистика Пространства — не «свойство-цифра», как в 1.x, а живая:
+         графики, бары, цвета, ТРЕНДЫ (что выросло, что упало);
+       · статус и расписание вычислителя связей (когда последняя синхронизация,
+         когда следующая, жив ли он вообще);
+       · ВЕРСИИ на виду: версия веб-приложения и версия сервера (билд, дата).
+
+     ОТКУДА ЦИФРЫ. Продюсер — вычислитель (calculator/): он и так обходит все точки,
+     ему дёшево писать агрегаты в space/*. Тренды = снапшоты space/stats/daily/{date}.
+     Ничего персонального в агрегатах нет — приватность модели 2.0 не задевается,
+     а space/public_metrics читается вообще без входа (живой счётчик для лендинга).
+
+     ЧТО РЕШАЮТ ЭТИ МАКЕТЫ: ЧЕМ является «Пространство» для человека —
+     приборной панелью? картой? лентой новостей? пультом инженера?
+
+     ВАРИАНТЫ (кнопки сверху; или #v1…#v4 в адресе):
+       · V1 «Приборная панель» — плитки метрик + спарклайны + тренды.
+       · V2 «Созвездие»        — герой-карта всего Пространства, метрики вокруг неё.
+       · V3 «Пульс»            — лента событий: что изменилось со вчера, словами и цифрами.
+       · V4 «Машинный зал»     — плотный моно-пульт: цифры, состояние вычислителя, версии.
+
+     ЧЕСТНОСТЬ МАКЕТА: цифры выдуманные, но правдоподобные; набор метрик — кандидаты
+     из ideas/06 (открытый вопрос №1 — что владельцу важнее видеть). Раскладка —
+     утверждённый десктоп V2 «Рабочий стол» (рельс слева). Тема: ☀/☾ в панели.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  .intro { max-width: 1200px; margin: 0 auto; padding: 24px 20px 6px; }
+  .intro h2 { font-size: 21px; color: #fff; margin-bottom: 8px; }
+  .intro p { font-size: 14px; line-height: 1.65; color: #9fc0dd; max-width: 900px; }
+  .intro ul { margin: 10px 0 0 18px; font-size: 13.5px; line-height: 1.7; color: #9fc0dd; }
+  .plus { color: #7fe0b0; } .minus { color: #ffab8f; }
+  .ruler { max-width: 1200px; margin: 8px auto 0; padding: 0 20px 40px; font-size: 12px; color: #6f93b4; font-family: var(--mono, monospace); }
+
+  .variant { display: none; } .variant.show { display: block; }
+
+  /* ── Рамка окна + оболочка V2 ── */
+  .frame {
+    max-width: 1200px; margin: 14px auto 0; border-radius: 12px; overflow: hidden;
+    border: 1px solid #2b4d6d; box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  }
+  .chrome { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #1b3752; }
+  .chrome i { width: 10px; height: 10px; border-radius: 50%; background: #35617f; display: block; }
+  .chrome span { margin-left: 10px; font-size: 11px; color: #7fa6c9; font-family: var(--mono); }
+
+  .screen {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #fff; --accent: #1f7fc9; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --up: #0ea578; --down: #d6544f; --warn: #e8a516;
+    --card-shadow: 0 16px 40px rgba(29,50,71,.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    display: flex; min-height: 560px; background: var(--bg); color: var(--text);
+    transition: background .3s, color .3s;
+  }
+  .screen[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.85); --edge: rgba(77,159,255,.22); --edge-soft: rgba(77,159,255,.14);
+    --accent: #3fd9ff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --up: #34d399; --down: #f87171;
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
+  }
+
+  .rail {
+    width: 220px; flex: 0 0 220px; background: var(--panel); border-right: 1px solid var(--edge);
+    padding: 16px 12px; display: flex; flex-direction: column; gap: 3px;
+  }
+  .rail .brand { display: flex; align-items: center; gap: 9px; padding: 6px 10px 18px; font-weight: 650; color: var(--heading); font-size: 15px; }
+  .rail .mark { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; background: linear-gradient(135deg,#1467d6,#3fd9ff); color: #fff; font-weight: 800; font-size: 13px; }
+  .rail a { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--dim); font-size: 14px; }
+  .rail a .ic { width: 20px; text-align: center; }
+  .rail a.on { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font-weight: 650; }
+  .rail .foot { margin-top: auto; padding: 10px 12px; font-size: 11.5px; color: var(--faint); font-family: var(--mono); line-height: 1.6; }
+
+  .body { flex: 1; min-width: 0; padding: 20px 24px 30px; }
+  h1.st { font-size: 20px; color: var(--heading); font-weight: 700; margin-bottom: 4px; }
+  .lede { font-size: 13px; color: var(--dim); margin-bottom: 16px; }
+
+  .card { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 14px 16px; box-shadow: var(--card-shadow); }
+  .card h3 { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); font-weight: 600; margin-bottom: 10px; }
+
+  .grid { display: grid; gap: 12px; }
+  .g4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .g3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .g2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+
+  /* Плитка метрики */
+  .tile b { display: block; font: 700 27px var(--mono); color: var(--heading); letter-spacing: -.02em; }
+  .tile .k { font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 650; margin-top: 6px; }
+  .trend.up { color: var(--up); } .trend.down { color: var(--down); } .trend.flat { color: var(--faint); }
+  .spark { display: block; width: 100%; height: 34px; margin-top: 8px; }
+  .spark path { fill: none; stroke: var(--accent); stroke-width: 2; }
+  .spark .area { fill: color-mix(in srgb, var(--accent) 12%, transparent); stroke: none; }
+
+  /* Статус вычислителя */
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--up); display: inline-block; box-shadow: 0 0 0 3px color-mix(in srgb, var(--up) 20%, transparent); }
+  .kv { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; font-size: 13px; }
+  .kv .k { color: var(--dim); flex: 1; }
+  .kv .v { font-family: var(--mono); color: var(--heading); font-weight: 600; }
+
+  .bar { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .bar .lb { flex: 0 0 120px; font-size: 12.5px; color: var(--dim); }
+  .bar .tk { flex: 1; height: 8px; border-radius: 99px; background: var(--edge-soft); overflow: hidden; }
+  .bar .fl { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), var(--accent)); }
+  .bar .pc { font: 600 12px var(--mono); color: var(--heading); width: 44px; text-align: right; }
+
+  /* V2: карта-созвездие */
+  .sky { width: 100%; height: auto; display: block; border-radius: 12px; }
+  .sky .lnk { stroke: color-mix(in srgb, var(--accent) 30%, transparent); stroke-width: 1; }
+  .sky .pt { fill: color-mix(in srgb, var(--primary) 55%, transparent); }
+  .sky .me { fill: var(--primary); }
+  .sky .halo { fill: none; stroke: var(--edge); stroke-dasharray: 3 5; }
+  .sky .meT { fill: #fff; font: 700 11px system-ui; text-anchor: middle; }
+
+  /* V3: лента событий */
+  .ev { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--edge-soft); }
+  .ev:last-child { border-bottom: 0; }
+  .ev .ic { width: 34px; height: 34px; flex: none; border-radius: 10px; display: grid; place-items: center; background: var(--edge-soft); font-size: 15px; }
+  .ev .tx { font-size: 13.5px; color: var(--text); line-height: 1.5; }
+  .ev .tx b { color: var(--heading); }
+  .ev .tm { font-size: 11.5px; color: var(--faint); margin-top: 2px; font-family: var(--mono); }
+
+  /* V4: моно-пульт */
+  .mono-t { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12.5px; }
+  .mono-t td { padding: 7px 6px; border-bottom: 1px solid var(--edge-soft); }
+  .mono-t td:first-child { color: var(--dim); }
+  .mono-t td:last-child { text-align: right; color: var(--heading); font-weight: 600; }
+  .mono-t tr:last-child td { border-bottom: 0; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Экран «Пространство»</b>
+  <button data-v="v1" class="active">V1 · Приборная панель</button>
+  <button data-v="v2">V2 · Созвездие</button>
+  <button data-v="v3">V3 · Пульс</button>
+  <button data-v="v4">V4 · Машинный зал</button>
+  <span class="sp"></span>
+  <span class="hint">цифры выдуманы · набор метрик — открытый вопрос ideas/06</span>
+  <button id="theme">☾ тёмная</button>
+</div>
+
+<!-- ═══════════════════ V1 · ПРИБОРНАЯ ПАНЕЛЬ ═══════════════════ -->
+<section class="variant show" id="v1">
+  <div class="intro">
+    <h2>V1 · «Приборная панель»</h2>
+    <p>Классический дашборд: сверху крупные плитки-метрики с трендом и спарклайном («что выросло,
+      что упало» — прямая просьба владельца), ниже — распределение похожести по Пространству и
+      карточка вычислителя с расписанием и версиями.</p>
+    <ul>
+      <li class="plus">+ ровно то, что просил владелец: цифры, цвета, тренды, графики — без выдумок;</li>
+      <li class="plus">+ дёшево: все данные вычислитель пишет одним проходом, снапшоты дают историю;</li>
+      <li class="plus">+ хорошо ложится на утверждённый десктоп V2 и честно сжимается в телефон;</li>
+      <li class="minus">− форма «как у всех»: дашборд не рассказывает, что NDim — про людей, а не про метрики;</li>
+      <li class="minus">− легко разрастись до свалки цифр, если не держать набор метрик коротким.</li>
+    </ul>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/space</span></div>
+    <div class="screen">
+      <nav class="rail">
+        <div class="brand"><span class="mark">N</span> Пространство NDim</div>
+        <a href="#v1"><span class="ic">⌂</span> Профиль</a>
+        <a href="#v1"><span class="ic">◎</span> Связи</a>
+        <a href="#v1" class="on"><span class="ic">✳</span> Пространство</a>
+        <a href="#v1"><span class="ic">☰</span> Меню</a>
+        <div class="foot">приложение 2.0.4<br>сервер 2.0.1 · билд 118</div>
+      </nav>
+      <div class="body">
+        <h1 class="st">Пространство</h1>
+        <p class="lede">Живая сводка. Обновляется вместе с синхронизацией — последняя была 14 минут назад.</p>
+
+        <div class="grid g4">
+          <div class="card tile">
+            <b>1 284</b><div class="k">человек в Пространстве</div>
+            <span class="trend up">▲ +37 за неделю</span>
+            <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">
+              <path class="area" d="M0 28 L20 26 L40 24 L60 20 L80 17 L100 12 L120 8 L120 34 L0 34 Z"/>
+              <path d="M0 28 L20 26 L40 24 L60 20 L80 17 L100 12 L120 8"/>
+            </svg>
+          </div>
+          <div class="card tile">
+            <b>312</b><div class="k">измерений в каталоге</div>
+            <span class="trend up">▲ +4 за неделю</span>
+            <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">
+              <path class="area" d="M0 26 L20 26 L40 22 L60 22 L80 18 L100 18 L120 12 L120 34 L0 34 Z"/>
+              <path d="M0 26 L20 26 L40 22 L60 22 L80 18 L100 18 L120 12"/>
+            </svg>
+          </div>
+          <div class="card tile">
+            <b>41 902</b><div class="k">оценок поставлено</div>
+            <span class="trend up">▲ +1 118 за неделю</span>
+            <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">
+              <path class="area" d="M0 30 L20 27 L40 25 L60 19 L80 16 L100 10 L120 6 L120 34 L0 34 Z"/>
+              <path d="M0 30 L20 27 L40 25 L60 19 L80 16 L100 10 L120 6"/>
+            </svg>
+          </div>
+          <div class="card tile">
+            <b>58%</b><div class="k">средняя похожесть</div>
+            <span class="trend down">▼ −2 п.п. за неделю</span>
+            <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none">
+              <path class="area" d="M0 10 L20 12 L40 11 L60 15 L80 14 L100 18 L120 20 L120 34 L0 34 Z"/>
+              <path d="M0 10 L20 12 L40 11 L60 15 L80 14 L100 18 L120 20"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="grid g2" style="margin-top:12px">
+          <div class="card">
+            <h3>Как распределена похожесть</h3>
+            <div class="bar"><span class="lb">80–100% · родня</span><span class="tk"><span class="fl" style="width:6%"></span></span><span class="pc">6%</span></div>
+            <div class="bar"><span class="lb">60–79% · близкие</span><span class="tk"><span class="fl" style="width:21%"></span></span><span class="pc">21%</span></div>
+            <div class="bar"><span class="lb">40–59% · соседи</span><span class="tk"><span class="fl" style="width:44%"></span></span><span class="pc">44%</span></div>
+            <div class="bar"><span class="lb">0–39% · далёкие</span><span class="tk"><span class="fl" style="width:29%"></span></span><span class="pc">29%</span></div>
+            <p style="font-size:11.5px;color:var(--faint);margin-top:8px">Считается по всем найденным связям. 100% — огромная редкость.</p>
+          </div>
+          <div class="card">
+            <h3>Вычислитель связей</h3>
+            <div class="kv"><span class="k"><span class="dot"></span> состояние</span><span class="v">жив</span></div>
+            <div class="kv"><span class="k">последняя синхронизация</span><span class="v">14 мин назад</span></div>
+            <div class="kv"><span class="k">следующая</span><span class="v">через 46 мин</span></div>
+            <div class="kv"><span class="k">пересчитано топов</span><span class="v">1 284</span></div>
+            <div class="kv"><span class="k">версия сервера</span><span class="v">2.0.1 · билд 118</span></div>
+            <div class="kv"><span class="k">версия приложения</span><span class="v">2.0.4</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">4 плитки со спарклайнами · распределение похожести · карточка вычислителя и версий</div>
+</section>
+
+<!-- ═══════════════════ V2 · СОЗВЕЗДИЕ ═══════════════════ -->
+<section class="variant" id="v2">
+  <div class="intro">
+    <h2>V2 · «Созвездие» — Пространство как небо</h2>
+    <p>Герой экрана — не цифры, а само Пространство: точки людей, связи между ними, Вы в центре.
+      Метрики стоят по краю и служат подписями к картине. Это тот приём, который в десктопной
+      раскладке остался за бортом (V3 «карта — герой»), — здесь он на своём месте.</p>
+    <ul>
+      <li class="plus">+ единственный вариант, который показывает суть проекта, а не бухгалтерию;</li>
+      <li class="plus">+ «Пространство» наконец буквально становится пространством — имя перестаёт быть метафорой;</li>
+      <li class="plus">+ живая картинка — то, чем делятся и что запоминают;</li>
+      <li class="minus">− дороже: нужна честная проекция многомерности в плоскость (и её нельзя врать);</li>
+      <li class="minus">− тренды и версии всё равно нужны — они ютятся по краям;</li>
+      <li class="minus">− при 1000+ точках картина рискует стать «звёздным шумом» без смысла.</li>
+    </ul>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/space</span></div>
+    <div class="screen">
+      <nav class="rail">
+        <div class="brand"><span class="mark">N</span> Пространство NDim</div>
+        <a href="#v2"><span class="ic">⌂</span> Профиль</a>
+        <a href="#v2"><span class="ic">◎</span> Связи</a>
+        <a href="#v2" class="on"><span class="ic">✳</span> Пространство</a>
+        <a href="#v2"><span class="ic">☰</span> Меню</a>
+        <div class="foot">приложение 2.0.4<br>сервер 2.0.1 · билд 118</div>
+      </nav>
+      <div class="body" style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;align-content:start">
+        <div style="grid-column:1/-1">
+          <h1 class="st">Пространство</h1>
+          <p class="lede">1 284 человека · Вы где-то здесь. Чем ближе точка, тем более она похожа на Вас.</p>
+        </div>
+
+        <div class="card" style="padding:8px">
+          <svg class="sky" viewBox="0 0 520 420" id="sky"></svg>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card tile">
+            <b>1 284</b><div class="k">человек в Пространстве</div>
+            <span class="trend up">▲ +37 за неделю</span>
+          </div>
+          <div class="card tile">
+            <b>58%</b><div class="k">средняя похожесть</div>
+            <span class="trend down">▼ −2 п.п.</span>
+          </div>
+          <div class="card">
+            <h3>Вычислитель</h3>
+            <div class="kv"><span class="k"><span class="dot"></span> жив</span><span class="v">14 мин назад</span></div>
+            <div class="kv"><span class="k">следующая</span><span class="v">через 46 мин</span></div>
+            <div class="kv"><span class="k">сервер</span><span class="v">2.0.1 · 118</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">карта-герой · метрики как подписи · вычислитель и версии — сбоку</div>
+</section>
+
+<!-- ═══════════════════ V3 · ПУЛЬС ═══════════════════ -->
+<section class="variant" id="v3">
+  <div class="intro">
+    <h2>V3 · «Пульс» — что изменилось со вчера</h2>
+    <p>Не состояние, а <b>изменение</b>: лента коротких событий Пространства, каждое — с числом и
+      знаком. Владелец просил тренды — здесь тренд и есть содержание экрана, а не украшение цифры.</p>
+    <ul>
+      <li class="plus">+ повод возвращаться: экран каждый день другой, и это честная новизна, а не приманка;</li>
+      <li class="plus">+ читается за 5 секунд и с телефона — никаких графиков, которые надо разглядывать;</li>
+      <li class="plus">+ прямо ложится на снапшоты space/stats/daily — сравнение двух дней и есть событие;</li>
+      <li class="minus">− состояние «сейчас» приходится искать: лента говорит про дельты, а не про абсолют;</li>
+      <li class="minus">− в тихий день лента пустеет — нужен честный ответ «сегодня ничего не изменилось».</li>
+    </ul>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/space</span></div>
+    <div class="screen">
+      <nav class="rail">
+        <div class="brand"><span class="mark">N</span> Пространство NDim</div>
+        <a href="#v3"><span class="ic">⌂</span> Профиль</a>
+        <a href="#v3"><span class="ic">◎</span> Связи</a>
+        <a href="#v3" class="on"><span class="ic">✳</span> Пространство</a>
+        <a href="#v3"><span class="ic">☰</span> Меню</a>
+        <div class="foot">приложение 2.0.4<br>сервер 2.0.1 · билд 118</div>
+      </nav>
+      <div class="body" style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-content:start">
+        <div style="grid-column:1/-1">
+          <h1 class="st">Пространство</h1>
+          <p class="lede">Пульс за сутки. Последняя синхронизация — 14 минут назад.</p>
+        </div>
+
+        <div class="card">
+          <h3>Сегодня</h3>
+          <div class="ev">
+            <span class="ic">👤</span>
+            <div><div class="tx">Пришли <b>+6 человек</b>. Пространство выросло до <b>1 284</b>.</div>
+              <div class="tm">за сутки · ▲ +37 за неделю</div></div>
+          </div>
+          <div class="ev">
+            <span class="ic">★</span>
+            <div><div class="tx">Поставлено <b>168 оценок</b> — больше всего по оси <b>«Тишина»</b>.</div>
+              <div class="tm">за сутки · всего 41 902</div></div>
+          </div>
+          <div class="ev">
+            <span class="ic">✳</span>
+            <div><div class="tx">Появилось <b>2 новых измерения</b>: «Ранние подъёмы», «Настольные игры».</div>
+              <div class="tm">приняты из заявок · в каталоге 312</div></div>
+          </div>
+          <div class="ev">
+            <span class="ic">↯</span>
+            <div><div class="tx">Средняя похожесть <b>снизилась на 2 п.п.</b> — Пространство стало разнообразнее.</div>
+              <div class="tm">58% · неделю назад было 60%</div></div>
+          </div>
+          <div class="ev">
+            <span class="ic">⟳</span>
+            <div><div class="tx">Вычислитель пересчитал <b>1 284 топа</b> и снова заснул.</div>
+              <div class="tm">14 мин назад · следующая через 46 мин</div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card">
+            <h3>Сейчас в Пространстве</h3>
+            <div class="kv"><span class="k">людей</span><span class="v">1 284</span></div>
+            <div class="kv"><span class="k">измерений</span><span class="v">312</span></div>
+            <div class="kv"><span class="k">оценок</span><span class="v">41 902</span></div>
+            <div class="kv"><span class="k">средняя похожесть</span><span class="v">58%</span></div>
+          </div>
+          <div class="card">
+            <h3>Версии</h3>
+            <div class="kv"><span class="k">приложение</span><span class="v">2.0.4</span></div>
+            <div class="kv"><span class="k">сервер</span><span class="v">2.0.1 · билд 118</span></div>
+            <div class="kv"><span class="k">собран</span><span class="v">10.07.2026</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">лента дельт слева · абсолютные цифры и версии справа</div>
+</section>
+
+<!-- ═══════════════════ V4 · МАШИННЫЙ ЗАЛ ═══════════════════ -->
+<section class="variant" id="v4">
+  <div class="intro">
+    <h2>V4 · «Машинный зал» — честный пульт</h2>
+    <p>Никаких украшений: моноширинные цифры, состояние вычислителя, расписание, версии, билды.
+      Экран для того, кто хочет знать, что машина работает, а не любоваться графиками.
+      Это буквально то, чем «Пространство» было в 1.x, — только внятно.</p>
+    <ul>
+      <li class="plus">+ самый дешёвый и самый честный: показывает ровно то, что есть, без интерпретаций;</li>
+      <li class="plus">+ незаменим владельцу и при отладке: видно, жив ли сервер и какой на нём билд;</li>
+      <li class="minus">− обычному человеку он говорит мало: цифры без смысла, трендов почти нет;</li>
+      <li class="minus">− прямо противоречит просьбе владельца «красиво, живо, с графиками» — тут он как антитеза.</li>
+    </ul>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/space</span></div>
+    <div class="screen">
+      <nav class="rail">
+        <div class="brand"><span class="mark">N</span> Пространство NDim</div>
+        <a href="#v4"><span class="ic">⌂</span> Профиль</a>
+        <a href="#v4"><span class="ic">◎</span> Связи</a>
+        <a href="#v4" class="on"><span class="ic">✳</span> Пространство</a>
+        <a href="#v4"><span class="ic">☰</span> Меню</a>
+        <div class="foot">приложение 2.0.4<br>сервер 2.0.1 · билд 118</div>
+      </nav>
+      <div class="body" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-content:start">
+        <div style="grid-column:1/-1">
+          <h1 class="st">Пространство</h1>
+          <p class="lede">Состояние системы. Всё, что известно, — на одном экране.</p>
+        </div>
+
+        <div class="card">
+          <h3>Пространство</h3>
+          <table class="mono-t">
+            <tr><td>людей</td><td>1 284</td></tr>
+            <tr><td>из них гостей</td><td>96</td></tr>
+            <tr><td>измерений</td><td>312</td></tr>
+            <tr><td>оценок</td><td>41 902</td></tr>
+            <tr><td>связей посчитано</td><td>318 204</td></tr>
+            <tr><td>средняя похожесть</td><td>58%</td></tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>Вычислитель связей</h3>
+          <table class="mono-t">
+            <tr><td>состояние</td><td><span class="dot"></span> жив</td></tr>
+            <tr><td>последний цикл</td><td>14 мин назад</td></tr>
+            <tr><td>длительность</td><td>8,4 с</td></tr>
+            <tr><td>пересчитано топов</td><td>1 284</td></tr>
+            <tr><td>интервал</td><td>60 мин</td></tr>
+            <tr><td>следующий цикл</td><td>через 46 мин</td></tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>Версии</h3>
+          <table class="mono-t">
+            <tr><td>приложение</td><td>2.0.4</td></tr>
+            <tr><td>сборка</td><td>a1c93f7</td></tr>
+            <tr><td>сервер</td><td>2.0.1</td></tr>
+            <tr><td>билд сервера</td><td>118</td></tr>
+            <tr><td>собран</td><td>10.07.2026</td></tr>
+            <tr><td>ядро похожести</td><td>паритет 1.x ✓</td></tr>
+          </table>
+        </div>
+
+        <div class="card" style="grid-column:1/-1">
+          <h3>Динамика за 14 дней</h3>
+          <svg class="spark" viewBox="0 0 480 60" preserveAspectRatio="none" style="height:60px">
+            <path class="area" d="M0 50 L37 48 L74 47 L111 44 L148 42 L185 40 L222 36 L259 34 L296 30 L333 26 L370 22 L407 16 L444 12 L480 8 L480 60 L0 60 Z"/>
+            <path d="M0 50 L37 48 L74 47 L111 44 L148 42 L185 40 L222 36 L259 34 L296 30 L333 26 L370 22 L407 16 L444 12 L480 8"/>
+          </svg>
+          <p style="font-size:11.5px;color:var(--faint);margin-top:6px;font-family:var(--mono)">люди · 1 247 → 1 284 (▲ +37)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">три моно-таблицы: Пространство · вычислитель · версии + одна линия динамики</div>
+</section>
+
+<script>
+  const btns = document.querySelectorAll('.picker button[data-v]');
+  const show = (id) => {
+    document.querySelectorAll('.variant').forEach((s) => s.classList.toggle('show', s.id === id));
+    btns.forEach((b) => b.classList.toggle('active', b.dataset.v === id));
+  };
+  btns.forEach((b) => b.addEventListener('click', () => { location.hash = b.dataset.v; show(b.dataset.v); }));
+  const fromHash = () => { if (['#v1','#v2','#v3','#v4'].includes(location.hash)) show(location.hash.slice(1)); };
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+
+  const tbtn = document.getElementById('theme');
+  tbtn.addEventListener('click', () => {
+    const dark = document.querySelector('.screen').dataset.theme === 'dark';
+    document.querySelectorAll('.screen').forEach((s) => (s.dataset.theme = dark ? 'light' : 'dark'));
+    tbtn.textContent = dark ? '☾ тёмная' : '☀ светлая';
+  });
+
+  // ── V2: созвездие. Точки расставлены детерминированно (без Math.random,
+  //    чтобы макет выглядел одинаково при каждом открытии и его можно было обсуждать). ──
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const sky = document.getElementById('sky');
+  if (sky) {
+    const CX = 260, CY = 210;
+    sky.appendChild(el('circle', { class: 'halo', cx: CX, cy: CY, r: 185 }));
+    sky.appendChild(el('circle', { class: 'halo', cx: CX, cy: CY, r: 120 }));
+    // псевдослучайная, но воспроизводимая раскладка
+    const pts = [];
+    for (let i = 0; i < 140; i++) {
+      const a = (i * 137.508 * Math.PI) / 180;      // золотой угол — равномерно, без комков
+      const r = 26 + Math.sqrt((i + 1) / 141) * 172; // ближе к краю — плотнее
+      pts.push({ x: CX + Math.cos(a) * r, y: CY + Math.sin(a) * r, r: 2 + ((i * 7) % 3) });
+    }
+    // связи: ближние точки соединены с центром — «мои» люди
+    for (const p of pts.slice(0, 14)) {
+      sky.appendChild(el('line', { class: 'lnk', x1: CX, y1: CY, x2: p.x, y2: p.y }));
+    }
+    for (const p of pts) sky.appendChild(el('circle', { class: 'pt', cx: p.x, cy: p.y, r: p.r }));
+    sky.appendChild(el('circle', { class: 'me', cx: CX, cy: CY, r: 13 }));
+    const t = el('text', { class: 'meT', x: CX, y: CY + 4 });
+    t.textContent = 'Я';
+    sky.appendChild(t);
+  }
+</script>
+</body>
+</html>

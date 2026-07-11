@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — экран «Меню», 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — ЭКРАН «МЕНЮ» (раздел навигации, сейчас «скоро»).
+
+     ЧТО ЗДЕСЬ ДОЛЖНО БЫТЬ (researches/07 §9 — дословный состав 1.x):
+       · поделиться ссылкой на Пространство с друзьями;
+       · документы: Руководство пользователя · Условия использования ·
+         Политика конфиденциальности · Отказ от ответственности;
+       · поддержка (вопросы, замечания, предложения, проблемы с сервером);
+       · пожертвование Автору;
+       · об Авторе и о самом Пространстве NDim.
+     Тексты всех документов уже извлечены дословно: researches/06 и researches/07.
+
+     ЧТО ДОБАВЛЯЕТ 2.0 (и чего в 1.x не было):
+       · аккаунт: кто я, выход — а для ГОСТЯ здесь же честное «сохранить результаты»
+         (гость = пунктир, аккаунт = сплошной — утверждённая метафора);
+       · язык RU/EN и тема ☀/☾ — сейчас они живут только на лендинге;
+       · версии приложения и сервера (ideas/06) — если их не показать в «Пространстве».
+
+     ЧУВСТВИТЕЛЬНОЕ МЕСТО. GOAL.md прямо отвергает механики удержания и подписки.
+     Поэтому пожертвование в макетах — СПОКОЙНАЯ строка, а не баннер с призывом;
+     нигде нет «премиума», «плюса» и счётчиков-крючков. Если какой-то вариант
+     покажется давящим — это брак макета, а не задумка.
+
+     ЧТО РЕШАЮТ ЭТИ МАКЕТЫ: чем «Меню» является — списком настроек? витриной
+     разделов? местом, где живёт смысл проекта?
+
+     ВАРИАНТЫ (кнопки сверху; или #v1…#v4 в адресе):
+       · V1 «Список»    — классические сгруппированные строки. Скучно и надёжно.
+       · V2 «Плитки»    — крупные карточки-разделы, ничего не спрятано.
+       · V3 «Аккаунт сверху» — карточка «кто я» + свёрнутые группы (аккордеон).
+       · V4 «Манифест»  — меню как страница о проекте: сначала зачем это всё, потом утилиты.
+
+     Раскладка — утверждённый десктоп V2 «Рабочий стол» (рельс слева). Тема: ☀/☾.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  .intro { max-width: 1200px; margin: 0 auto; padding: 24px 20px 6px; }
+  .intro h2 { font-size: 21px; color: #fff; margin-bottom: 8px; }
+  .intro p { font-size: 14px; line-height: 1.65; color: #9fc0dd; max-width: 900px; }
+  .intro ul { margin: 10px 0 0 18px; font-size: 13.5px; line-height: 1.7; color: #9fc0dd; }
+  .plus { color: #7fe0b0; } .minus { color: #ffab8f; }
+  .ruler { max-width: 1200px; margin: 8px auto 0; padding: 0 20px 40px; font-size: 12px; color: #6f93b4; font-family: ui-monospace, monospace; }
+
+  .variant { display: none; } .variant.show { display: block; }
+
+  .frame {
+    max-width: 1200px; margin: 14px auto 0; border-radius: 12px; overflow: hidden;
+    border: 1px solid #2b4d6d; box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  }
+  .chrome { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #1b3752; }
+  .chrome i { width: 10px; height: 10px; border-radius: 50%; background: #35617f; display: block; }
+  .chrome span { margin-left: 10px; font-size: 11px; color: #7fa6c9; font-family: var(--mono); }
+
+  .screen {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #fff; --accent: #1f7fc9;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --ghost-brd: rgba(20,103,214,.45); --ghost-ink: #1a63c4; --ghost-bg: rgba(20,103,214,.06);
+    --card-shadow: 0 16px 40px rgba(29,50,71,.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    display: flex; min-height: 560px; background: var(--bg); color: var(--text);
+    transition: background .3s, color .3s;
+  }
+  .screen[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.85); --edge: rgba(77,159,255,.22); --edge-soft: rgba(77,159,255,.14);
+    --accent: #3fd9ff; --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --ghost-brd: rgba(63,217,255,.55); --ghost-ink: #a8e2ff; --ghost-bg: rgba(63,217,255,.07);
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
+  }
+
+  .rail {
+    width: 220px; flex: 0 0 220px; background: var(--panel); border-right: 1px solid var(--edge);
+    padding: 16px 12px; display: flex; flex-direction: column; gap: 3px;
+  }
+  .rail .brand { display: flex; align-items: center; gap: 9px; padding: 6px 10px 18px; font-weight: 650; color: var(--heading); font-size: 15px; }
+  .rail .mark { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; background: linear-gradient(135deg,#1467d6,#3fd9ff); color: #fff; font-weight: 800; font-size: 13px; }
+  .rail a { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: var(--dim); font-size: 14px; }
+  .rail a .ic { width: 20px; text-align: center; }
+  .rail a.on { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font-weight: 650; }
+  .rail .foot { margin-top: auto; padding: 10px 12px; font-size: 11.5px; color: var(--faint); font-family: var(--mono); line-height: 1.6; }
+
+  .body { flex: 1; min-width: 0; padding: 20px 24px 30px; }
+  h1.st { font-size: 20px; color: var(--heading); font-weight: 700; margin-bottom: 4px; }
+  .lede { font-size: 13px; color: var(--dim); margin-bottom: 16px; }
+
+  .card { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--card-shadow); }
+  .card.pad { padding: 14px 16px; }
+  .card h3 { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); font-weight: 600; padding: 14px 16px 8px; }
+
+  .grid { display: grid; gap: 12px; }
+  .g2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .g3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+
+  /* строка-ссылка */
+  .row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px; text-decoration: none;
+    border-top: 1px solid var(--edge-soft); color: var(--text); font-size: 14px; cursor: pointer;
+  }
+  .row:first-of-type { border-top: 0; }
+  .row .ic { width: 26px; text-align: center; font-size: 16px; color: var(--accent); }
+  .row .lb { flex: 1; }
+  .row .val { font-size: 12.5px; color: var(--faint); font-family: var(--mono); }
+  .row .chev { color: var(--faint); font-size: 15px; }
+  .row:hover { background: var(--edge-soft); }
+
+  /* переключатели */
+  .seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; }
+  .seg button { font: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border: 0; cursor: pointer; background: transparent; color: var(--dim); }
+  .seg button.on { background: var(--primary); color: var(--primary-ink); }
+
+  /* аккаунт */
+  .ava { width: 46px; height: 46px; border-radius: 50%; flex: none; display: grid; place-items: center; overflow: hidden;
+         border: 2px solid var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent); }
+  .ava.ghost { border-style: dashed; border-color: var(--ghost-brd); background: var(--ghost-bg); }
+  .ava svg { width: 70%; height: 70%; margin-top: 22%; fill: var(--primary); }
+  .ava.ghost svg { fill: var(--ghost-brd); }
+  .who { font-weight: 700; color: var(--heading); font-size: 16px; }
+  .meta { font-size: 12.5px; color: var(--faint); }
+  .pill { display: inline-flex; gap: 6px; border-radius: 999px; padding: 3px 10px; font-size: 11.5px; font-weight: 650;
+          border: 1px dashed var(--ghost-brd); color: var(--ghost-ink); background: var(--ghost-bg); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 18px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--edge); background: var(--panel); color: var(--heading); text-decoration: none;
+  }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+
+  /* плитки V2 */
+  .tile { padding: 18px 16px; text-decoration: none; display: block; }
+  .tile .ic { font-size: 22px; color: var(--accent); }
+  .tile b { display: block; margin-top: 8px; font-size: 15px; color: var(--heading); }
+  .tile span { display: block; margin-top: 4px; font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+  .tile:hover { border-color: var(--accent); }
+
+  /* аккордеон V3 */
+  .acc summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 13px 16px; font-size: 14px; color: var(--heading); font-weight: 600; }
+  .acc summary::-webkit-details-marker { display: none; }
+  .acc summary .ic { color: var(--accent); width: 24px; text-align: center; }
+  .acc summary .chev { margin-left: auto; color: var(--faint); font-size: 12px; }
+  .acc[open] summary .chev { transform: rotate(90deg); }
+  .acc + .acc { border-top: 1px solid var(--edge-soft); }
+
+  /* манифест V4 */
+  .manifest { font-size: 15px; line-height: 1.7; color: var(--text); }
+  .manifest b { color: var(--heading); }
+  .quiet { font-size: 12.5px; color: var(--faint); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Экран «Меню»</b>
+  <button data-v="v1" class="active">V1 · Список</button>
+  <button data-v="v2">V2 · Плитки</button>
+  <button data-v="v3">V3 · Аккаунт сверху</button>
+  <button data-v="v4">V4 · Манифест</button>
+  <span class="sp"></span>
+  <span class="hint">состав — из руководства 1.x · пожертвование без давления (GOAL.md)</span>
+  <button id="theme">☾ тёмная</button>
+</div>
+
+<!-- ═══════════════════ V1 · СПИСОК ═══════════════════ -->
+<section class="variant show" id="v1">
+  <div class="intro">
+    <h2>V1 · «Список» — сгруппированные строки</h2>
+    <p>Самый обычный экран настроек: строки, собранные в группы. Ничего не изобретаем — человек
+      находит нужное, не думая.</p>
+    <ul>
+      <li class="plus">+ предсказуемо: любой человек умеет пользоваться таким меню с закрытыми глазами;</li>
+      <li class="plus">+ дёшево, отлично сжимается в телефон, легко расширять новыми пунктами;</li>
+      <li class="minus">− безлико: за списком не видно, что это за проект и зачем он;</li>
+      <li class="minus">− «Об авторе» и «Манифест» тонут среди утилит, хотя это душа NDim.</li>
+    </ul>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/menu</span></div>
+    <div class="screen">
+      <nav class="rail">
+        <div class="brand"><span class="mark">N</span> Пространство NDim</div>
+        <a href="#v1"><span class="ic">⌂</span> Профиль</a>
+        <a href="#v1"><span class="ic">◎</span> Связи</a>
+        <a href="#v1"><span class="ic">✳</span> Пространство</a>
+        <a href="#v1" class="on"><span class="ic">☰</span> Меню</a>
+        <div class="foot">приложение 2.0.4<br>сервер 2.0.1 · билд 118</div>
+      </nav>
+      <div class="body" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-content:start">
+        <div style="grid-column:1/-1"><h1 class="st">Меню</h1><p class="lede">Всё, что не про Ваши измерения.</p></div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card">
+            <h3>Аккаунт</h3>
+            <div class="row" style="cursor:default">
+              <span class="ava"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+              <span class="lb"><span class="who">Николай</span><br><span class="meta">kot@example.com · с мая 2025</span></span>
+            </div>
+            <div class="row"><span class="ic">↪</span><span class="lb">Выйти</span><span class="chev">›</span></div>
+          </div>
+
+          <div class="card">
+            <h3>Вид</h3>
+            <div class="row" style="cursor:default"><span class="ic">🌐</span><span class="lb">Язык</span>
+              <span class="seg"><button class="on">RU</button><button>EN</button></span></div>
+            <div class="row" style="cursor:default"><span class="ic">☾</span><span class="lb">Тема</span>
+              <span class="seg"><button class="on">Светлая</button><button>Тёмная</button></span></div>
+          </div>
+
+          <div class="card">
+            <h3>Поделиться</h3>
+            <div class="row"><span class="ic">↗</span><span class="lb">Пригласить друга в Пространство</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">⧉</span><span class="lb">Скопировать ссылку</span><span class="val">ndimspace.app</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card">
+            <h3>Документы</h3>
+            <div class="row"><span class="ic">📖</span><span class="lb">Руководство пользователя</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">§</span><span class="lb">Условия использования</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">🔒</span><span class="lb">Политика конфиденциальности</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">⚠</span><span class="lb">Отказ от ответственности</span><span class="chev">›</span></div>
+          </div>
+
+          <div class="card">
+            <h3>Проект</h3>
+            <div class="row"><span class="ic">✉</span><span class="lb">Написать в поддержку</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">♡</span><span class="lb">Поддержать проект</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">N</span><span class="lb">Об Авторе и о Пространстве</span><span class="chev">›</span></div>
+            <div class="row" style="cursor:default"><span class="ic">⌗</span><span class="lb">Версии</span>
+              <span class="val">2.0.4 · сервер 2.0.1</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">4 группы: аккаунт · вид · поделиться | документы · проект</div>
+</section>
+
+<!-- ═══════════════════ V2 · ПЛИТКИ ═══════════════════ -->
+<section class="variant" id="v2">
+  <div class="intro">
+    <h2>V2 · «Плитки» — витрина разделов</h2>
+    <p>Меню не прячет ничего в строках: каждый раздел — крупная карточка с иконкой и одной
+      поясняющей фразой. Человек видит всё сразу и понимает, что за чем стоит.</p>
+    <ul>
+      <li class="plus">+ разделы объяснены: «поддержка» — это не просто слово, а «напишите, если что-то сломалось»;</li>
+      <li class="plus">+ красиво и просторно на десктопе, который мы только что раскрыли;</li>
+      <li class="minus">− на телефоне плитки вытягиваются в длинную колонку — прокрутка дольше, чем у списка;</li>
+      <li class="minus">− утилиты (язык, тема) в виде плиток выглядят тяжеловесно.</li>
+    </ul>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/menu</span></div>
+    <div class="screen">
+      <nav class="rail">
+        <div class="brand"><span class="mark">N</span> Пространство NDim</div>
+        <a href="#v2"><span class="ic">⌂</span> Профиль</a>
+        <a href="#v2"><span class="ic">◎</span> Связи</a>
+        <a href="#v2"><span class="ic">✳</span> Пространство</a>
+        <a href="#v2" class="on"><span class="ic">☰</span> Меню</a>
+        <div class="foot">приложение 2.0.4<br>сервер 2.0.1 · билд 118</div>
+      </nav>
+      <div class="body">
+        <h1 class="st">Меню</h1>
+        <p class="lede">Всё, что не про Ваши измерения.</p>
+
+        <div class="card pad" style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+          <span class="ava"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+          <span><span class="who">Николай</span><br><span class="meta">kot@example.com · в Пространстве с мая 2025</span></span>
+          <span style="flex:1"></span>
+          <span class="seg"><button class="on">RU</button><button>EN</button></span>
+          <span class="seg"><button class="on">☀</button><button>☾</button></span>
+          <button class="btn">Выйти</button>
+        </div>
+
+        <div class="grid g3">
+          <a class="card tile" href="#v2"><span class="ic">📖</span><b>Руководство</b>
+            <span>Что такое измерения, звёзды, общее пространство — и как этим пользоваться.</span></a>
+          <a class="card tile" href="#v2"><span class="ic">↗</span><b>Пригласить друга</b>
+            <span>Чем больше людей — тем точнее находятся похожие. Ссылка на Пространство.</span></a>
+          <a class="card tile" href="#v2"><span class="ic">✉</span><b>Поддержка</b>
+            <span>Что-то сломалось или есть замечание? Напишите — прочитаю лично.</span></a>
+          <a class="card tile" href="#v2"><span class="ic">N</span><b>Об Авторе и Пространстве</b>
+            <span>Зачем это сделано, кем и на какие деньги. История версий.</span></a>
+          <a class="card tile" href="#v2"><span class="ic">♡</span><b>Поддержать проект</b>
+            <span>Добровольно и без всяких «премиумов»: платных функций в NDim нет и не будет.</span></a>
+          <a class="card tile" href="#v2"><span class="ic">§</span><b>Документы</b>
+            <span>Условия использования · Политика конфиденциальности · Отказ от ответственности.</span></a>
+        </div>
+
+        <p class="quiet" style="margin-top:14px;font-family:var(--mono)">приложение 2.0.4 · сервер 2.0.1 · билд 118 · собран 10.07.2026</p>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">шапка-аккаунт с языком и темой · 6 плиток-разделов · версии в подвале</div>
+</section>
+
+<!-- ═══════════════════ V3 · АККАУНТ СВЕРХУ ═══════════════════ -->
+<section class="variant" id="v3">
+  <div class="intro">
+    <h2>V3 · «Аккаунт сверху» — карточка «кто я» + аккордеон</h2>
+    <p>Наверху — кто Вы в Пространстве (и, если Вы гость, честное предложение сохранить труд:
+      меню становится вторым входом в аккаунт). Ниже — свёрнутые группы: экран короткий,
+      разворачивается только то, что нужно.</p>
+    <ul>
+      <li class="plus">+ гость получает второй естественный шанс сохраниться — прямо там, где ищет «выход»;</li>
+      <li class="plus">+ экран не длинный: всё свёрнуто, прокрутки почти нет даже на телефоне;</li>
+      <li class="plus">+ статус «кто я» на виду — видно, гость Вы или нет, без раскопок;</li>
+      <li class="minus">− спрятанное за аккордеоном ищут дольше: документы и поддержка не на виду;</li>
+      <li class="minus">− два состояния карточки (гость / аккаунт) — больше кода и больше шансов ошибиться.</li>
+    </ul>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/menu · состояние ГОСТЬ</span></div>
+    <div class="screen">
+      <nav class="rail">
+        <div class="brand"><span class="mark">N</span> Пространство NDim</div>
+        <a href="#v3"><span class="ic">⌂</span> Профиль</a>
+        <a href="#v3"><span class="ic">◎</span> Связи</a>
+        <a href="#v3"><span class="ic">✳</span> Пространство</a>
+        <a href="#v3" class="on"><span class="ic">☰</span> Меню</a>
+        <div class="foot">приложение 2.0.4<br>сервер 2.0.1 · билд 118</div>
+      </nav>
+      <div class="body" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-content:start">
+        <div style="grid-column:1/-1"><h1 class="st">Меню</h1><p class="lede">Всё, что не про Ваши измерения.</p></div>
+
+        <div class="card pad" style="grid-column:1/-1;border-style:dashed;border-color:var(--ghost-brd);display:flex;align-items:center;gap:14px">
+          <span class="ava ghost"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+          <span>
+            <span class="pill">◌ гость</span><br>
+            <span class="meta" style="display:inline-block;margin-top:6px">Ваши 3 оси и 12 связей пока не сохранены. Забросите на 30 дней — сотрутся без следа.</span>
+          </span>
+          <span style="flex:1"></span>
+          <button class="btn primary">Сохранить результаты</button>
+        </div>
+
+        <div class="card">
+          <details class="acc" open>
+            <summary><span class="ic">⚙</span> Вид <span class="chev">›</span></summary>
+            <div class="row" style="cursor:default"><span class="ic">🌐</span><span class="lb">Язык</span>
+              <span class="seg"><button class="on">RU</button><button>EN</button></span></div>
+            <div class="row" style="cursor:default"><span class="ic">☾</span><span class="lb">Тема</span>
+              <span class="seg"><button class="on">Светлая</button><button>Тёмная</button></span></div>
+          </details>
+          <details class="acc">
+            <summary><span class="ic">📖</span> Документы <span class="chev">›</span></summary>
+            <div class="row"><span class="ic">·</span><span class="lb">Руководство пользователя</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">·</span><span class="lb">Условия использования</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">·</span><span class="lb">Политика конфиденциальности</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">·</span><span class="lb">Отказ от ответственности</span><span class="chev">›</span></div>
+          </details>
+        </div>
+
+        <div class="card">
+          <details class="acc" open>
+            <summary><span class="ic">↗</span> Поделиться <span class="chev">›</span></summary>
+            <div class="row"><span class="ic">·</span><span class="lb">Пригласить друга</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">·</span><span class="lb">Скопировать ссылку</span><span class="val">ndimspace.app</span></div>
+          </details>
+          <details class="acc">
+            <summary><span class="ic">N</span> Проект <span class="chev">›</span></summary>
+            <div class="row"><span class="ic">·</span><span class="lb">Написать в поддержку</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">·</span><span class="lb">Об Авторе и о Пространстве</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">·</span><span class="lb">Поддержать проект</span><span class="chev">›</span></div>
+            <div class="row" style="cursor:default"><span class="ic">·</span><span class="lb">Версии</span><span class="val">2.0.4 · 2.0.1</span></div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">показано состояние ГОСТЬ · у полноценного аккаунта та же карточка сплошная, с «Выйти»</div>
+</section>
+
+<!-- ═══════════════════ V4 · МАНИФЕСТ ═══════════════════ -->
+<section class="variant" id="v4">
+  <div class="intro">
+    <h2>V4 · «Манифест» — меню как страница о проекте</h2>
+    <p>Сначала — зачем это всё (слова автора из руководства 1.x), потом уже утилиты. «Меню»
+      перестаёт быть чуланом настроек и становится местом, где человек вспоминает, куда попал.
+      Пожертвование стоит здесь спокойной строкой: без баннера, без «премиума».</p>
+    <ul>
+      <li class="plus">+ единственный вариант, где живёт смысл проекта — а он у NDim не декоративный;</li>
+      <li class="plus">+ честный тон: «платных функций нет и не будет» — прямо в тексте, а не в мелком шрифте;</li>
+      <li class="plus">+ тексты уже написаны автором и извлечены дословно (researches/06, 07) — не надо сочинять;</li>
+      <li class="minus">− утилиты уезжают вниз: чтобы сменить язык, надо проскроллить манифест;</li>
+      <li class="minus">− читать манифест каждый раз при заходе в меню никто не будет — он быстро станет фоном.</li>
+    </ul>
+  </div>
+
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/menu</span></div>
+    <div class="screen">
+      <nav class="rail">
+        <div class="brand"><span class="mark">N</span> Пространство NDim</div>
+        <a href="#v4"><span class="ic">⌂</span> Профиль</a>
+        <a href="#v4"><span class="ic">◎</span> Связи</a>
+        <a href="#v4"><span class="ic">✳</span> Пространство</a>
+        <a href="#v4" class="on"><span class="ic">☰</span> Меню</a>
+        <div class="foot">приложение 2.0.4<br>сервер 2.0.1 · билд 118</div>
+      </nav>
+      <div class="body" style="display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-content:start">
+        <div style="grid-column:1/-1"><h1 class="st">Меню</h1></div>
+
+        <div class="card pad">
+          <h3 style="padding:0 0 10px">Зачем это всё</h3>
+          <p class="manifest">Пространство NDim ищет людей, <b>похожих на Вас</b>, — не по анкете и не по
+            фотографии, а по тому, как Вы сами оценили важные для себя вещи. Математика честная:
+            общность × близость = похожесть, и никакая из величин не компенсирует другую.</p>
+          <p class="manifest" style="margin-top:12px">Здесь нет ленты, которая не кончается, и нет подписки,
+            которая держит. <b>Платных функций в NDim нет и не будет.</b> Задача Пространства — чтобы Вы
+            нашли своих людей и ушли к ним, а не остались здесь.</p>
+          <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+            <a class="btn" href="#v4">📖 Руководство</a>
+            <a class="btn" href="#v4">N Об Авторе</a>
+            <a class="btn" href="#v4">♡ Поддержать</a>
+          </div>
+          <p class="quiet" style="margin-top:12px">Поддержка — добровольная и ни на что не влияет:
+            все возможности одинаковы для всех.</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card pad" style="display:flex;align-items:center;gap:12px">
+            <span class="ava"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+            <span><span class="who">Николай</span><br><span class="meta">kot@example.com</span></span>
+            <span style="flex:1"></span>
+            <button class="btn">Выйти</button>
+          </div>
+          <div class="card">
+            <div class="row" style="cursor:default"><span class="ic">🌐</span><span class="lb">Язык</span>
+              <span class="seg"><button class="on">RU</button><button>EN</button></span></div>
+            <div class="row" style="cursor:default"><span class="ic">☾</span><span class="lb">Тема</span>
+              <span class="seg"><button class="on">Светлая</button><button>Тёмная</button></span></div>
+            <div class="row"><span class="ic">↗</span><span class="lb">Пригласить друга</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">✉</span><span class="lb">Поддержка</span><span class="chev">›</span></div>
+          </div>
+          <div class="card">
+            <div class="row"><span class="ic">§</span><span class="lb">Условия использования</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">🔒</span><span class="lb">Политика конфиденциальности</span><span class="chev">›</span></div>
+            <div class="row"><span class="ic">⚠</span><span class="lb">Отказ от ответственности</span><span class="chev">›</span></div>
+            <div class="row" style="cursor:default"><span class="ic">⌗</span><span class="lb">Версии</span><span class="val">2.0.4 · 2.0.1</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">манифест слева (тексты автора) · аккаунт, настройки и документы справа</div>
+</section>
+
+<script>
+  const btns = document.querySelectorAll('.picker button[data-v]');
+  const show = (id) => {
+    document.querySelectorAll('.variant').forEach((s) => s.classList.toggle('show', s.id === id));
+    btns.forEach((b) => b.classList.toggle('active', b.dataset.v === id));
+  };
+  btns.forEach((b) => b.addEventListener('click', () => { location.hash = b.dataset.v; show(b.dataset.v); }));
+  const fromHash = () => { if (['#v1','#v2','#v3','#v4'].includes(location.hash)) show(location.hash.slice(1)); };
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+
+  const tbtn = document.getElementById('theme');
+  tbtn.addEventListener('click', () => {
+    const dark = document.querySelector('.screen').dataset.theme === 'dark';
+    document.querySelectorAll('.screen').forEach((s) => (s.dataset.theme = dark ? 'light' : 'dark'));
+    tbtn.textContent = dark ? '☾ тёмная' : '☀ светлая';
+  });
+</script>
+</body>
+</html>

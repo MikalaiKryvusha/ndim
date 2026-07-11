@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — аккаунт без пароля, 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — АККАУНТ БЕЗ ПАРОЛЯ (plans/03, этап 3).
+     Решения владельца уже приняты (интервью №004): В2 = A+ — Google + волшебная
+     ссылка на почту, известные OAuth по мере надобности. ПАРОЛЕЙ В ПРОДУКТЕ НЕТ
+     ВООБЩЕ. В3 = A — гость невидим другим.
+
+     ЧТО РЕШАЮТ ЭТИ МАКЕТЫ: как выглядит момент «гость → аккаунт».
+     Технически это linkWithCredential/linkWithPopup: UID тот же, ВЕСЬ труд гостя
+     остаётся. Значит главное обещание экрана — «ничего не потеряется», и оно
+     должно быть видно раньше кнопок.
+
+     ТРИГГЕР (уже реализован): гость жмёт [Сохранить результаты] в утверждённой
+     карточке V1 «Тихий бейдж». Метафора бренда, тоже утверждённая:
+       гость = ПУНКТИРНЫЙ контур (не сохранён, невидим), аккаунт = СПЛОШНОЙ.
+     Все четыре варианта её продолжают: на успехе пунктир становится сплошным.
+
+     ТРИ СОСТОЯНИЯ, которые обязан покрыть любой вариант (показаны в каждом):
+       1. выбор способа  2. «письмо ушло»  3. успех (пунктир → сплошной)
+
+     ВАРИАНТЫ (кнопки сверху; или #v1…#v4 в адресе):
+       · V1 «Модал»    — карточка поверх профиля, контекст не теряется.
+       · V2 «Порог»    — отдельный полноэкранный шаг: крупное обещание и итог труда.
+       · V3 «Шторка»   — лист снизу (на десктопе — центрированный диалог).
+       · V4 «Врезка»   — ничего не перекрывает: гостевая карточка сама раскрывается в ленте.
+
+     ЧЕСТНОСТЬ МАКЕТА: экран профиля за спиной схематичен (он уже утверждён).
+     Смотрим ТОЛЬКО на подачу входа. Тема: ☀/☾ в панели. Тексты RU; EN — словарём.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  /* ── Токены тем — 1:1 с продом ── */
+  .stage {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #fff; --accent: #1f7fc9; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --ghost-brd: rgba(20,103,214,.45); --ghost-ink: #1a63c4; --ghost-bg: rgba(20,103,214,.06);
+    --ok: #0ea578;
+    --card-shadow: 0 16px 40px rgba(29,50,71,.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    background: var(--bg); color: var(--text); padding: 26px 16px 50px;
+    transition: background .3s, color .3s;
+  }
+  .stage[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.9); --edge: rgba(77,159,255,.22); --edge-soft: rgba(77,159,255,.14);
+    --accent: #3fd9ff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --ghost-brd: rgba(63,217,255,.55); --ghost-ink: #a8e2ff; --ghost-bg: rgba(63,217,255,.07);
+    --ok: #34d399;
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
+  }
+
+  .variant { display: none; }
+  .variant.show { display: block; }
+
+  .intro { max-width: 1100px; margin: 0 auto; padding: 24px 20px 4px; }
+  .intro h2 { font-size: 21px; color: #fff; margin-bottom: 8px; }
+  .intro p { font-size: 14px; line-height: 1.65; color: #9fc0dd; max-width: 860px; }
+  .intro ul { margin: 10px 0 0 18px; font-size: 13.5px; line-height: 1.7; color: #9fc0dd; }
+  .plus { color: #7fe0b0; } .minus { color: #ffab8f; }
+
+  .states { max-width: 1100px; margin: 0 auto; display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .states { grid-template-columns: repeat(3, 1fr); } }
+  .state-t {
+    font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #8fb2d4;
+    margin: 18px 0 8px;
+  }
+
+  /* ── Общие элементы продукта ── */
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    box-shadow: var(--card-shadow); padding: 18px;
+  }
+  .card + .card { margin-top: 12px; }
+  h3.t { font-size: 18px; color: var(--heading); font-weight: 700; }
+  .sub { font-size: 13.5px; color: var(--dim); line-height: 1.55; margin-top: 6px; }
+  .fine { font-size: 12px; color: var(--faint); line-height: 1.5; }
+
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%;
+    padding: 12px 16px; border-radius: 11px; font: inherit; font-size: 14.5px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--edge); background: var(--panel); color: var(--heading);
+    margin-top: 10px;
+  }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+  .btn.ghost { color: var(--dim); font-weight: 500; }
+  .btn .g { width: 18px; height: 18px; }
+  .linkish {
+    background: none; border: 0; font: inherit; font-size: 13px; color: var(--dim);
+    text-decoration: underline dotted; cursor: pointer; padding: 0;
+  }
+  .inp {
+    width: 100%; padding: 12px 14px; border-radius: 11px; margin-top: 10px;
+    border: 1px solid var(--edge); background: var(--bg); color: var(--heading);
+    font: inherit; font-size: 14px;
+  }
+
+  /* Гость = пунктир · аккаунт = сплошной */
+  .ava {
+    width: 44px; height: 44px; border-radius: 50%; flex: none; overflow: hidden;
+    display: grid; place-items: center; background: var(--ghost-bg);
+    border: 2px dashed var(--ghost-brd);
+  }
+  .ava.solid { border: 2px solid var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent); }
+  .ava svg { width: 72%; height: 72%; margin-top: 22%; fill: var(--ghost-brd); }
+  .ava.solid svg { fill: var(--primary); }
+
+  .morph { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 6px 0 12px; }
+  .morph .arr { color: var(--faint); font-size: 18px; }
+
+  /* Итог труда гостя — то, что нельзя потерять */
+  .work { display: flex; gap: 8px; margin-top: 12px; }
+  .work div {
+    flex: 1; text-align: center; padding: 10px 6px; border-radius: 11px;
+    background: var(--edge-soft); border: 1px solid var(--edge);
+  }
+  .work b { display: block; font: 700 19px var(--mono); color: var(--accent); }
+  .work small { font-size: 11px; color: var(--dim); }
+
+  .ok-badge {
+    display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px;
+    background: color-mix(in srgb, var(--ok) 12%, transparent); color: var(--ok);
+    font-size: 12.5px; font-weight: 650;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 11px;
+    font-size: 12px; font-weight: 600; border: 1px dashed var(--ghost-brd);
+    color: var(--ghost-ink); background: var(--ghost-bg);
+  }
+  .pill.solid { border-style: solid; border-color: var(--primary); color: var(--primary); }
+
+  /* Схема экрана за спиной */
+  .behind { border-radius: 16px; border: 1px solid var(--edge); background: var(--panel); overflow: hidden; }
+  .bhead { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-bottom: 1px solid var(--edge); }
+  .bhead .wm { font-size: 13.5px; font-weight: 650; color: var(--heading); }
+  .bhead .sp { flex: 1; }
+  .brow { display: flex; align-items: center; gap: 10px; padding: 9px 14px; }
+  .brow .n { flex: 1; font-size: 13px; color: var(--text); }
+  .brow .s { color: var(--star); font-size: 13px; letter-spacing: 1px; }
+  .brow .s i { color: var(--edge); font-style: normal; }
+  .dim-bg { position: relative; }
+  .dim-bg::after {
+    content: ''; position: absolute; inset: 0; background: rgba(9,20,36,.42); backdrop-filter: blur(1.5px);
+  }
+
+  /* V3: шторка снизу */
+  .sheetwrap { position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--edge); }
+  .sheet {
+    position: relative; z-index: 2; margin-top: -10px;
+    border-radius: 18px 18px 0 0; background: var(--panel);
+    border: 1px solid var(--edge); border-bottom: 0; padding: 16px 18px 20px;
+    box-shadow: 0 -14px 40px rgba(9,20,36,.18);
+  }
+  .grip { width: 40px; height: 4px; border-radius: 99px; background: var(--edge); margin: 0 auto 12px; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Аккаунт без пароля</b>
+  <button data-v="v1" class="active">V1 · Модал</button>
+  <button data-v="v2">V2 · Порог</button>
+  <button data-v="v3">V3 · Шторка</button>
+  <button data-v="v4">V4 · Врезка</button>
+  <span class="sp"></span>
+  <span class="hint">паролей нет вообще · UID тот же · труд гостя не теряется</span>
+  <button id="theme">☾ тёмная</button>
+</div>
+
+<!-- ══════════════════════════════ V1 · МОДАЛ ══════════════════════════════ -->
+<section class="variant show" id="v1">
+  <div class="intro">
+    <h2>V1 · «Модал» — карточка поверх профиля</h2>
+    <p>Гость нажал [Сохранить результаты] — поверх его же профиля всплывает карточка. Экран за
+      спиной приглушён, но виден: человек не «ушёл куда-то», он в шаге от своего.</p>
+    <ul>
+      <li class="plus">+ контекст не теряется: труд видно прямо за карточкой — обещание «не потеряется» доказано глазами;</li>
+      <li class="plus">+ отмена дёшева: закрыл — вернулся ровно туда, где был;</li>
+      <li class="minus">− на маленьком экране модал почти закрывает всё — преимущество «видно контекст» тает;</li>
+      <li class="minus">− модалы приучают закрывать не глядя.</li>
+    </ul>
+  </div>
+
+  <div class="stage">
+    <div class="state-t" style="max-width:1100px;margin:0 auto 8px">Состояния: выбор · письмо ушло · успех</div>
+    <div class="states">
+
+      <!-- 1. выбор -->
+      <div class="behind dim-bg">
+        <div class="bhead"><span class="pill">◌ гость</span><span class="sp"></span><span class="fine">RU</span></div>
+        <div class="brow"><span class="n">Тишина</span><span class="s">★★★★★★★<i>★★★</i></span></div>
+        <div class="brow"><span class="n">Кошки</span><span class="s">★★★★★★★★★★</span></div>
+        <div class="brow"><span class="n">Математика</span><span class="s">★★★★★★★★<i>★★</i></span></div>
+        <div style="position:relative;z-index:3;padding:14px">
+          <div class="card">
+            <h3 class="t">Сохранить навсегда</h3>
+            <p class="sub">Ваши оценки уже здесь — вход просто закрепит их за Вами. Ничего не потеряется
+              и не начнётся заново.</p>
+            <div class="work">
+              <div><b>3</b><small>оси оценено</small></div>
+              <div><b>12</b><small>связей найдено</small></div>
+            </div>
+            <button class="btn primary">
+              <svg class="g" viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#fff" opacity=".9" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z"/></svg>
+              Продолжить с Google
+            </button>
+            <input class="inp" placeholder="или почта — пришлём ссылку для входа">
+            <button class="btn">Прислать ссылку на почту</button>
+            <p class="fine" style="margin-top:12px">Пароля не будет. Никогда: в NDim их нет вообще.</p>
+            <div style="text-align:center;margin-top:10px"><button class="linkish">Позже</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. письмо ушло -->
+      <div class="behind dim-bg">
+        <div class="bhead"><span class="pill">◌ гость</span><span class="sp"></span><span class="fine">RU</span></div>
+        <div class="brow"><span class="n">Тишина</span><span class="s">★★★★★★★<i>★★★</i></span></div>
+        <div class="brow"><span class="n">Кошки</span><span class="s">★★★★★★★★★★</span></div>
+        <div class="brow"><span class="n">Математика</span><span class="s">★★★★★★★★<i>★★</i></span></div>
+        <div style="position:relative;z-index:3;padding:14px">
+          <div class="card" style="text-align:center">
+            <div style="font-size:34px;line-height:1;margin-bottom:8px">✉</div>
+            <h3 class="t">Письмо ушло</h3>
+            <p class="sub">Отправили ссылку на <b style="color:var(--heading)">kot@example.com</b>.
+              Откройте её — и Вы внутри. Ссылка живёт час.</p>
+            <p class="fine" style="margin-top:12px">Вкладку можно не закрывать: она сама подхватит вход.</p>
+            <button class="btn ghost">Другая почта</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. успех -->
+      <div class="behind dim-bg">
+        <div class="bhead"><span class="pill solid">✓ аккаунт</span><span class="sp"></span><span class="fine">RU</span></div>
+        <div class="brow"><span class="n">Тишина</span><span class="s">★★★★★★★<i>★★★</i></span></div>
+        <div class="brow"><span class="n">Кошки</span><span class="s">★★★★★★★★★★</span></div>
+        <div class="brow"><span class="n">Математика</span><span class="s">★★★★★★★★<i>★★</i></span></div>
+        <div style="position:relative;z-index:3;padding:14px">
+          <div class="card" style="text-align:center">
+            <div class="morph">
+              <span class="ava"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+              <span class="arr">→</span>
+              <span class="ava solid"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+            </div>
+            <span class="ok-badge">✓ Сохранено навсегда</span>
+            <p class="sub" style="margin-top:10px">Все 3 оценки и 12 связей остались Вашими — это тот же профиль,
+              просто теперь он Ваш насовсем.</p>
+            <p class="fine" style="margin-top:10px">Пока Вас по-прежнему никто не видит. Показаться людям — решение
+              отдельное, и его принимаете Вы.</p>
+            <button class="btn primary">Хорошо</button>
+            <button class="btn ghost">Настроить видимость</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ V2 · ПОРОГ ══════════════════════════════ -->
+<section class="variant" id="v2">
+  <div class="intro">
+    <h2>V2 · «Порог» — отдельный полноэкранный шаг</h2>
+    <p>Вход — не всплывашка, а честный порог: отдельный экран, где крупно показано, что именно
+      сохраняется, и метафора «пунктир → сплошной» работает во весь рост. Момент осознанный.</p>
+    <ul>
+      <li class="plus">+ самое сильное обещание: труд гостя показан цифрами, а не обещан словами;</li>
+      <li class="plus">+ одинаково хорош на телефоне и на десктопе — это просто страница;</li>
+      <li class="plus">+ на нём есть место для честности про приватность (В3), не мельча;</li>
+      <li class="minus">− человека уводят с его экрана — психологически «дороже», часть отвалится;</li>
+      <li class="minus">− вернуться назад нужно явной кнопкой, иначе это ловушка.</li>
+    </ul>
+  </div>
+
+  <div class="stage">
+    <div class="state-t" style="max-width:1100px;margin:0 auto 8px">Состояния: выбор · письмо ушло · успех</div>
+    <div class="states">
+
+      <div class="card" style="text-align:center">
+        <button class="linkish" style="float:left">← Назад</button>
+        <div class="morph" style="margin-top:16px">
+          <span class="ava"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+          <span class="arr">→</span>
+          <span class="ava solid"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+        </div>
+        <h3 class="t">Ваш труд останется Вашим</h3>
+        <p class="sub">Это тот же профиль — вход ничего не обнуляет и не начинает заново.</p>
+        <div class="work">
+          <div><b>3</b><small>оси оценено</small></div>
+          <div><b>12</b><small>связей</small></div>
+          <div><b>80%</b><small>ближайший</small></div>
+        </div>
+        <button class="btn primary" style="margin-top:16px">
+          <svg class="g" viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#fff" opacity=".9" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z"/></svg>
+          Продолжить с Google
+        </button>
+        <input class="inp" placeholder="почта — пришлём ссылку для входа">
+        <button class="btn">Прислать ссылку</button>
+        <p class="fine" style="margin-top:14px">Паролей в NDim нет вообще — ни здесь, ни дальше.<br>
+          Пока Вы гость, Вас никто не видит; аккаунт этого сам по себе не меняет.</p>
+      </div>
+
+      <div class="card" style="text-align:center">
+        <div style="font-size:40px;line-height:1;margin:14px 0 10px">✉</div>
+        <h3 class="t">Проверьте почту</h3>
+        <p class="sub">Ссылка ушла на <b style="color:var(--heading)">kot@example.com</b> — откройте её,
+          и профиль станет Вашим. Ссылка действует час.</p>
+        <div class="work" style="margin-top:16px">
+          <div><b>3</b><small>оси ждут</small></div>
+          <div><b>12</b><small>связей ждут</small></div>
+        </div>
+        <p class="fine" style="margin-top:14px">Эту вкладку можно не закрывать — она подхватит вход сама.</p>
+        <button class="btn ghost">Указать другую почту</button>
+        <button class="linkish" style="margin-top:12px">Вернуться к профилю</button>
+      </div>
+
+      <div class="card" style="text-align:center">
+        <div class="morph" style="margin-top:14px">
+          <span class="ava solid" style="width:64px;height:64px"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+        </div>
+        <span class="ok-badge">✓ Профиль сохранён</span>
+        <h3 class="t" style="margin-top:10px">Добро пожаловать, Николай</h3>
+        <p class="sub">Тот же профиль, та же точка в Пространстве. Пунктир стал сплошным.</p>
+        <div class="work">
+          <div><b>3</b><small>оси на месте</small></div>
+          <div><b>12</b><small>связей на месте</small></div>
+        </div>
+        <p class="fine" style="margin-top:14px">Вас всё ещё не видит никто. Захотите показаться —
+          откроете нужные поля сами, в «Видимости».</p>
+        <button class="btn primary">К своему пространству →</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ V3 · ШТОРКА ══════════════════════════════ -->
+<section class="variant" id="v3">
+  <div class="intro">
+    <h2>V3 · «Шторка» — лист снизу</h2>
+    <p>Вход выезжает снизу, как в мобильных приложениях: большая палец-дружелюбная зона, экран
+      остаётся на месте, шторку можно смахнуть. На десктопе та же карточка показывается
+      центрированным диалогом.</p>
+    <ul>
+      <li class="plus">+ самый привычный жест на телефоне — а телефон у нас основной экран;</li>
+      <li class="plus">+ кнопки внизу, под большим пальцем; смахнуть = отменить, без поиска крестика;</li>
+      <li class="plus">+ контекст сверху виден целиком, ничего не приглушается;</li>
+      <li class="minus">− места мало: обещание «труд не потеряется» приходится сжимать в строку;</li>
+      <li class="minus">− на десктопе шторка неуместна — придётся вести две раскладки одного шага.</li>
+    </ul>
+  </div>
+
+  <div class="stage">
+    <div class="state-t" style="max-width:1100px;margin:0 auto 8px">Состояния: выбор · письмо ушло · успех</div>
+    <div class="states">
+
+      <div class="sheetwrap">
+        <div class="bhead"><span class="pill">◌ гость</span><span class="sp"></span><span class="fine">RU</span></div>
+        <div class="brow"><span class="n">Тишина</span><span class="s">★★★★★★★<i>★★★</i></span></div>
+        <div class="brow"><span class="n">Кошки</span><span class="s">★★★★★★★★★★</span></div>
+        <div class="sheet">
+          <div class="grip"></div>
+          <h3 class="t">Сохранить результаты</h3>
+          <p class="sub">3 оси и 12 связей останутся Вашими — это тот же профиль.</p>
+          <button class="btn primary">
+            <svg class="g" viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#fff" opacity=".9" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z"/></svg>
+            Продолжить с Google
+          </button>
+          <input class="inp" placeholder="или почта — пришлём ссылку">
+          <button class="btn">Прислать ссылку</button>
+          <p class="fine" style="margin-top:10px;text-align:center">Без пароля. Их в NDim нет.</p>
+        </div>
+      </div>
+
+      <div class="sheetwrap">
+        <div class="bhead"><span class="pill">◌ гость</span><span class="sp"></span><span class="fine">RU</span></div>
+        <div class="brow"><span class="n">Тишина</span><span class="s">★★★★★★★<i>★★★</i></span></div>
+        <div class="brow"><span class="n">Кошки</span><span class="s">★★★★★★★★★★</span></div>
+        <div class="sheet" style="text-align:center">
+          <div class="grip"></div>
+          <div style="font-size:30px;line-height:1;margin-bottom:6px">✉</div>
+          <h3 class="t">Письмо ушло</h3>
+          <p class="sub">Ссылка на <b style="color:var(--heading)">kot@example.com</b>.
+            Откройте — и профиль Ваш. Час на переход.</p>
+          <p class="fine" style="margin-top:10px">Вкладку можно не закрывать.</p>
+          <button class="btn ghost">Другая почта</button>
+        </div>
+      </div>
+
+      <div class="sheetwrap">
+        <div class="bhead"><span class="pill solid">✓ аккаунт</span><span class="sp"></span><span class="fine">RU</span></div>
+        <div class="brow"><span class="n">Тишина</span><span class="s">★★★★★★★<i>★★★</i></span></div>
+        <div class="brow"><span class="n">Кошки</span><span class="s">★★★★★★★★★★</span></div>
+        <div class="sheet" style="text-align:center">
+          <div class="grip"></div>
+          <div class="morph">
+            <span class="ava"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+            <span class="arr">→</span>
+            <span class="ava solid"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+          </div>
+          <span class="ok-badge">✓ Сохранено навсегда</span>
+          <p class="sub" style="margin-top:8px">Всё на месте: 3 оси, 12 связей. Вас по-прежнему никто не видит.</p>
+          <button class="btn primary">Хорошо</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ V4 · ВРЕЗКА ══════════════════════════════ -->
+<section class="variant" id="v4">
+  <div class="intro">
+    <h2>V4 · «Врезка» — гостевая карточка раскрывается в ленте</h2>
+    <p>Ничего не всплывает и никуда не уводит: уже существующая карточка «Пока что ты гость…»
+      просто разворачивается на месте и показывает две кнопки. Вход перестаёт быть «событием» и
+      становится продолжением того, что человек и так читал.</p>
+    <ul>
+      <li class="plus">+ ноль перекрытий и ноль переходов — самое низкое трение из четырёх;</li>
+      <li class="plus">+ прямое продолжение уже утверждённого «Тихого бейджа» — цельная история;</li>
+      <li class="plus">+ одинаково работает на телефоне и в двухколоночном десктопе;</li>
+      <li class="minus">− не фокусирует: человек может проскроллить мимо своего же сохранения;</li>
+      <li class="minus">− «письмо ушло» и «успех» приходится показывать в той же карточке — она мигает состояниями.</li>
+    </ul>
+  </div>
+
+  <div class="stage">
+    <div class="state-t" style="max-width:1100px;margin:0 auto 8px">Состояния: выбор · письмо ушло · успех</div>
+    <div class="states">
+
+      <div class="behind">
+        <div class="bhead"><span class="pill">◌ гость</span><span class="sp"></span><span class="fine">RU</span></div>
+        <div style="padding:14px">
+          <div class="card" style="border-style:dashed;border-color:var(--ghost-brd);text-align:center">
+            <span class="ava" style="margin:0 auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+            <h3 class="t" style="margin-top:10px">Пока что ты гость</h3>
+            <p class="sub">Твои результаты не сохранены. Закрепим их за тобой — ничего не потеряется.</p>
+            <div class="work"><div><b>3</b><small>оси</small></div><div><b>12</b><small>связей</small></div></div>
+            <button class="btn primary">
+              <svg class="g" viewBox="0 0 24 24"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#fff" opacity=".9" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z"/></svg>
+              Сохранить через Google
+            </button>
+            <input class="inp" placeholder="или почта — пришлём ссылку">
+            <button class="btn">Прислать ссылку</button>
+            <p class="fine" style="margin-top:10px">Пароля не будет. Их в NDim нет вообще.</p>
+          </div>
+          <div class="brow"><span class="n">Тишина</span><span class="s">★★★★★★★<i>★★★</i></span></div>
+          <div class="brow"><span class="n">Кошки</span><span class="s">★★★★★★★★★★</span></div>
+        </div>
+      </div>
+
+      <div class="behind">
+        <div class="bhead"><span class="pill">◌ гость</span><span class="sp"></span><span class="fine">RU</span></div>
+        <div style="padding:14px">
+          <div class="card" style="border-style:dashed;border-color:var(--ghost-brd);text-align:center">
+            <div style="font-size:30px;line-height:1;margin-bottom:6px">✉</div>
+            <h3 class="t">Письмо ушло</h3>
+            <p class="sub">Ссылка на <b style="color:var(--heading)">kot@example.com</b> — откройте её.
+              Пока не открыли, Вы по-прежнему гость, и оценки живут здесь.</p>
+            <p class="fine" style="margin-top:10px">Ссылка действует час. Вкладку можно не закрывать.</p>
+            <button class="btn ghost">Другая почта</button>
+          </div>
+          <div class="brow"><span class="n">Тишина</span><span class="s">★★★★★★★<i>★★★</i></span></div>
+          <div class="brow"><span class="n">Кошки</span><span class="s">★★★★★★★★★★</span></div>
+        </div>
+      </div>
+
+      <div class="behind">
+        <div class="bhead"><span class="pill solid">✓ аккаунт</span><span class="sp"></span><span class="fine">RU</span></div>
+        <div style="padding:14px">
+          <div class="card" style="text-align:center">
+            <span class="ava solid" style="margin:0 auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></span>
+            <span class="ok-badge" style="margin-top:10px">✓ Сохранено навсегда</span>
+            <p class="sub" style="margin-top:8px">Карточка гостя исчезает — вместо пунктира сплошной контур.
+              3 оси и 12 связей на месте.</p>
+            <p class="fine" style="margin-top:8px">Вас всё ещё никто не видит: показаться — отдельное решение.</p>
+          </div>
+          <div class="brow"><span class="n">Тишина</span><span class="s">★★★★★★★<i>★★★</i></span></div>
+          <div class="brow"><span class="n">Кошки</span><span class="s">★★★★★★★★★★</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  const btns = document.querySelectorAll('.picker button[data-v]');
+  const show = (id) => {
+    document.querySelectorAll('.variant').forEach((s) => s.classList.toggle('show', s.id === id));
+    btns.forEach((b) => b.classList.toggle('active', b.dataset.v === id));
+  };
+  btns.forEach((b) => b.addEventListener('click', () => { location.hash = b.dataset.v; show(b.dataset.v); }));
+  const fromHash = () => { if (['#v1','#v2','#v3','#v4'].includes(location.hash)) show(location.hash.slice(1)); };
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+
+  const tbtn = document.getElementById('theme');
+  tbtn.addEventListener('click', () => {
+    const dark = document.querySelector('.stage').dataset.theme === 'dark';
+    document.querySelectorAll('.stage').forEach((s) => (s.dataset.theme = dark ? 'light' : 'dark'));
+    tbtn.textContent = dark ? '☾ тёмная' : '☀ светлая';
+  });
+</script>
+</body>
+</html>
