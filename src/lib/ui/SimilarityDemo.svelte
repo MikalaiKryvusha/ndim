@@ -98,19 +98,35 @@
     [...relations].sort((a, b) => (b.r?.similarity ?? -1) - (a.r?.similarity ?? -1)),
   );
 
-  // ── Мини-карта: радиус = настоящая доля расстояния от диаметра общего пространства ──
-  const CX = 260;
-  const CY = 150;
-  const MAX_R = 118;
+  // ── Карта пространства ──────────────────────────────────────────────────
+  // Радиус узла = настоящая доля расстояния от диаметра общего пространства.
+  // Шкала честная и линейная: пунктирный горизонт = 100 % (максимально далеко),
+  // центр = 0 % (тот же человек). MIN_DIST — единственное отступление: это
+  // сумма радиусов «меня» и узла, чтобы при высокой похожести лица не залезали
+  // на центр. Ядро на демо-персонажах даёт долю 0…78 % — то есть после этой
+  // правки узлы ходят почти по всему радиусу, а не по его трети, как раньше.
+  const VIEW_W = 480;
+  const VIEW_H = 450;
+  const CX = VIEW_W / 2;
+  const CY = 220;
+  const NODE_R = 26; // радиус узла-лица (было 14.5 — владелец просил крупнее)
+  const ME_R = 20;
+  const MIN_DIST = ME_R + NODE_R; // 0 % расстояния → узел вплотную к «мне»
+  const HORIZON = 185; // 100 % расстояния → пунктирный круг у самых краёв карты
+  const SPAN = HORIZON - MIN_DIST; // на что растягивается доля 0…1
   const mapPoints = $derived.by(() =>
     relations.map(({ p, r }) => {
       const rate01 = r ? Math.min(1, r.distanceRateOfCommonSpaceDiameter / 100) : 1;
       const rad = (p.angle * Math.PI) / 180;
-      const dist = rate01 * MAX_R + 26;
+      const dist = MIN_DIST + rate01 * SPAN;
       const x = CX + Math.cos(rad) * dist;
       const y = CY + Math.sin(rad) * dist;
       const glow = (r?.similarity ?? 0) / 100;
-      return { p, r, x, y, glow, labelY: y < CY ? y - 22 : y + 30 };
+      // Подпись — снаружи узла: вверх для верхней половины, вниз для нижней.
+      // Зажимаем в границы карты: у горизонта подпись иначе уехала бы за край.
+      const raw = y < CY ? y - (NODE_R + 12) : y + (NODE_R + 22);
+      const labelY = Math.min(VIEW_H - 8, Math.max(18, raw));
+      return { p, r, x, y, glow, labelY };
     }),
   );
 </script>
@@ -140,18 +156,18 @@
 
   <!-- Карта пространства: я в центре, персонажи на настоящих расстояниях.
        Узлы — лица (кроп), по тапу открывается полный портрет. -->
-  <div class="panel">
-    <svg viewBox="0 0 520 300" role="img" aria-label={t.mapNote[lang]}>
+  <div class="panel map-panel">
+    <svg viewBox="0 0 {VIEW_W} {VIEW_H}" role="img" aria-label={t.mapNote[lang]}>
       <defs>
-        <clipPath id="demo-face-clip"><circle cx="0" cy="0" r="13" /></clipPath>
+        <clipPath id="demo-face-clip"><circle cx="0" cy="0" r={NODE_R - 2.5} /></clipPath>
       </defs>
-      <circle cx={CX} cy={CY} r={MAX_R + 14} fill="none" stroke="var(--edge)" stroke-dasharray="3 5" />
+      <circle cx={CX} cy={CY} r={HORIZON} fill="none" stroke="var(--edge)" stroke-dasharray="3 5" />
       {#each mapPoints as pt}
         <line
           x1={CX} y1={CY} x2={pt.x} y2={pt.y}
           stroke="var(--accent)"
           stroke-opacity={Math.max(0.12, pt.glow)}
-          stroke-width={1 + 3 * pt.glow} />
+          stroke-width={1.5 + 4 * pt.glow} />
         <text class="tag" x={pt.x} y={pt.labelY}>{pt.p.name[lang]} · {pt.r ? pt.r.similarity + '%' : '—'}</text>
         <g
           class="node"
@@ -162,13 +178,17 @@
           onclick={() => (zoomed = pt.p)}
           onkeydown={(e) => e.key === 'Enter' && (zoomed = pt.p)}>
           <g class="grow">
-            <circle r="14.5" fill="var(--panel)" stroke={pt.p.color} stroke-width="2.5" />
-            <image href={avatarFace(pt.p.id)} x="-13" y="-13" width="26" height="26" clip-path="url(#demo-face-clip)" />
+            <circle r={NODE_R} fill="var(--panel)" stroke={pt.p.color} stroke-width="3" />
+            <image
+              href={avatarFace(pt.p.id)}
+              x={-(NODE_R - 2.5)} y={-(NODE_R - 2.5)}
+              width={(NODE_R - 2.5) * 2} height={(NODE_R - 2.5) * 2}
+              clip-path="url(#demo-face-clip)" />
           </g>
         </g>
       {/each}
-      <circle cx={CX} cy={CY} r="15" fill="var(--primary)" />
-      <text class="initial" x={CX} y={CY + 4}>{t.me[lang]}</text>
+      <circle cx={CX} cy={CY} r={ME_R} fill="var(--primary)" />
+      <text class="initial" x={CX} y={CY + 5}>{t.me[lang]}</text>
     </svg>
     <p class="map-note">{t.mapNote[lang]}</p>
   </div>
@@ -303,7 +323,10 @@
     text-align: right;
   }
 
-  /* ── Карта ── */
+  /* ── Карта: минимум отступов, максимум пространства (правка владельца) ── */
+  .map-panel {
+    padding: 8px 8px 10px;
+  }
   svg {
     display: block;
     width: 100%;
@@ -311,13 +334,13 @@
   }
   svg .initial {
     fill: #fff;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
     text-anchor: middle;
   }
   svg .tag {
     fill: var(--dim);
-    font-size: 12px;
+    font-size: 15px;
     text-anchor: middle;
   }
   .map-note {
@@ -339,7 +362,7 @@
   }
   svg .node:hover .grow,
   svg .node:focus-visible .grow {
-    transform: scale(2.1);
+    transform: scale(1.6);
   }
 
   /* ── Карточки персонажей ── */

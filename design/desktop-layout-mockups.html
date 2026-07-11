@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — десктопная раскладка, 4 варианта</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — ДЕСКТОПНАЯ РАСКЛАДКА, 4 макета на утверждение.
+
+     ЗАЧЕМ. Сегодня всё приложение — одна колонка 430–440 px по центру: и лендинг,
+     и /profile, и /relations. На телефоне это правильно, на десктопе — узкая
+     полоска в пустоте. Правка владельца (2026-07-11): «для десктопа формат
+     маленький, узко в центре — хотелось бы шире, эффективнее занять место».
+
+     ЧТО РЕШАЕМ ЭТИМИ МАКЕТАМИ (одно решение, не четыре):
+       какую ФОРМУ принимает продукт на широком экране —
+       где навигация, сколько колонок, что становится героем экрана.
+     Мобильная раскладка НЕ меняется ни в одном варианте: всё это @media (min-width: …).
+
+     ВАРИАНТЫ (кнопки сверху; или #v1…#v4 в адресе):
+       · V1 «Широкая колонна»  — та же лента, колонка до 1000 px, панели внутри в 2 колонки.
+       · V2 «Рабочий стол»     — постоянный рельс навигации слева + контент в 2 колонки.
+       · V3 «Пространство»     — карта во всю правую половину, слева колонка-инспектор.
+       · V4 «Витрина»          — три зоны: рельс + контент + правый спутник (связи всегда на виду).
+
+     ЧЕСТНОСТЬ МАКЕТА: содержимое карточек схематично — оно уже утверждено
+     (синтез S1–S3 для профиля, S4 для связей, V5 для демо). Смотрим ТОЛЬКО на
+     РАСКЛАДКУ: ширина, колонки, место навигации, размер карты.
+     Карта в макетах — уже с новой геометрией (крупные лица, широкий диапазон).
+     Тема: ☀/☾ в панели сверху. Мерить лучше в окне пошире 1280 px.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Токены светлой темы «Бумага» (дефолт продукта) ── */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #fff; --accent: #1f7fc9; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --rail: #ffffff; --card-shadow: 0 16px 40px rgba(29, 50, 71, .08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  }
+  :root[data-theme='dark'] {
+    --bg: #060b14; --panel: rgba(10, 21, 38, .78); --edge: rgba(77, 159, 255, .22);
+    --edge-soft: rgba(77, 159, 255, .14);
+    --primary: #1467d6; --primary-ink: #fff; --accent: #3fd9ff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --rail: rgba(9, 18, 33, .8);
+    --card-shadow: 0 0 0 1px rgba(63, 217, 255, .06), 0 24px 60px rgba(2, 8, 20, .6);
+  }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #0f1826; color: var(--text);
+  }
+
+  /* ── Панель выбора варианта ── */
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { font-size: 14px; margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; border: 1px solid #2f5372; background: #1b3752;
+    color: #cfe3f7; padding: 7px 13px; border-radius: 8px; transition: .15s;
+  }
+  .picker button:hover { background: #24486a; }
+  .picker button.on { background: #1467d6; border-color: #1467d6; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fb2d4; font-size: 12px; }
+
+  /* ── Обёртка варианта ── */
+  .variant { display: none; padding: 0 0 60px; }
+  .variant.show { display: block; }
+
+  .intro { max-width: 1200px; margin: 0 auto; padding: 26px 20px 6px; color: #cfe3f7; }
+  .intro h2 { font-size: 22px; color: #fff; margin-bottom: 8px; }
+  .intro p { font-size: 14px; line-height: 1.65; color: #9fc0dd; max-width: 900px; }
+  .intro ul { margin: 10px 0 0 18px; font-size: 13.5px; line-height: 1.75; color: #9fc0dd; }
+  .intro .plus { color: #7fe0b0; }
+  .intro .minus { color: #ffab8f; }
+
+  .caption {
+    max-width: 1200px; margin: 22px auto 8px; padding: 0 20px;
+    font-size: 13px; color: #8fb2d4; letter-spacing: .02em; text-transform: uppercase;
+  }
+
+  /* ── «Окно браузера»: рамка вокруг макета экрана ── */
+  .frame {
+    max-width: 1200px; margin: 0 auto; border-radius: 12px; overflow: hidden;
+    border: 1px solid #2b4d6d; box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
+  }
+  .chrome {
+    display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+    background: #1b3752;
+  }
+  .chrome i { width: 10px; height: 10px; border-radius: 50%; background: #35617f; display: block; }
+  .chrome span { margin-left: 10px; font-size: 11px; color: #7fa6c9; font-family: var(--mono); }
+  .screen { background: var(--bg); color: var(--text); min-height: 520px; }
+
+  /* ═════════ ОБЩИЕ ЭЛЕМЕНТЫ ПРОДУКТА (схематично, но в токенах) ═════════ */
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    padding: 14px 16px; box-shadow: var(--card-shadow);
+  }
+  .card h3 { font-size: 13px; color: var(--dim); font-weight: 600; margin-bottom: 10px; letter-spacing: .02em; }
+
+  /* Верхняя шапка приложения */
+  .appbar {
+    display: flex; align-items: center; gap: 12px; padding: 12px 22px;
+    border-bottom: 1px solid var(--edge); background: var(--panel);
+  }
+  .logo { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--heading); font-size: 15px; }
+  .logo .mark {
+    width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #1467d6, #3fd9ff); color: #fff; font-size: 13px; font-weight: 800;
+  }
+  .appbar .sp { flex: 1; }
+  .chip {
+    border: 1px solid var(--edge); border-radius: 999px; padding: 5px 11px;
+    font-size: 12px; color: var(--dim); background: var(--panel);
+  }
+  .me-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); }
+
+  /* Горизонтальные вкладки */
+  .tabs { display: flex; gap: 4px; }
+  .tabs a {
+    padding: 7px 14px; border-radius: 999px; font-size: 13px; color: var(--dim);
+    text-decoration: none; border: 1px solid transparent;
+  }
+  .tabs a.on { background: var(--primary); color: var(--primary-ink); font-weight: 600; }
+
+  /* Вертикальный рельс навигации (V2/V4) */
+  .rail {
+    width: 232px; flex: 0 0 232px; background: var(--rail); border-right: 1px solid var(--edge);
+    padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; min-height: 100%;
+  }
+  .rail .logo { padding: 6px 10px 16px; }
+  .rail a {
+    display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px;
+    text-decoration: none; color: var(--dim); font-size: 14px;
+  }
+  .rail a .ic { width: 20px; text-align: center; font-size: 15px; }
+  .rail a.on { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font-weight: 600; }
+  .rail .foot { margin-top: auto; padding: 10px 12px; font-size: 12px; color: var(--faint); }
+
+  /* Оси со звёздами */
+  .axis { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+  .axis .nm { flex: 1; font-size: 13.5px; color: var(--text); }
+  .axis .st { color: var(--star); letter-spacing: 1px; font-size: 13px; }
+  .axis .st i { color: var(--edge); font-style: normal; }
+  .axis .vl { font-family: var(--mono); font-size: 12.5px; color: var(--accent); font-weight: 600; width: 18px; text-align: right; }
+
+  /* Бары метрик */
+  .bar { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+  .bar .lb { flex: 0 0 78px; font-size: 12px; color: var(--dim); }
+  .bar .tk { flex: 1; height: 8px; border-radius: 99px; background: var(--edge-soft); overflow: hidden; }
+  .bar .fl { display: block; height: 100%; border-radius: 99px; background: var(--primary); }
+  .bar.hero .fl { background: linear-gradient(90deg, var(--primary), var(--accent)); }
+  .bar .pc { font-family: var(--mono); font-size: 12px; color: var(--heading); font-weight: 600; width: 36px; text-align: right; }
+
+  /* Карточка человека */
+  .person .top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .person .ava { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--ring, #7c5cff); overflow: hidden; flex: 0 0 40px; }
+  .person .ava img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .person .who { font-weight: 600; color: var(--heading); font-size: 15px; }
+  .person .meta { font-size: 12px; color: var(--faint); }
+  .person .big { margin-left: auto; font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--accent); }
+
+  /* Кнопка */
+  .btn {
+    display: inline-block; padding: 11px 20px; border-radius: 10px; background: var(--primary);
+    color: var(--primary-ink); font-size: 14px; font-weight: 600; text-decoration: none; border: none; cursor: pointer;
+  }
+  .btn.ghost { background: transparent; border: 1px solid var(--edge); color: var(--dim); }
+
+  /* Карта пространства (общая для всех вариантов; NEW-геометрия) */
+  .map { width: 100%; display: block; }
+  .map .horizon { fill: none; stroke: var(--edge); stroke-dasharray: 3 5; }
+  .map .link { stroke: var(--accent); }
+  .map .tag { fill: var(--dim); font-size: 15px; text-anchor: middle; }
+  .map .me { fill: var(--primary); }
+  .map .meT { fill: #fff; font-size: 14px; font-weight: 700; text-anchor: middle; }
+  .map-note { text-align: center; font-size: 12px; color: var(--faint); margin-top: 4px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+
+  .ruler {
+    max-width: 1200px; margin: 10px auto 0; padding: 0 20px;
+    font-size: 12px; color: #6f93b4; font-family: var(--mono);
+  }
+  .old-note {
+    max-width: 1200px; margin: 0 auto 18px; padding: 12px 16px; border-radius: 10px;
+    background: #16283a; border: 1px dashed #34597b; color: #9fc0dd; font-size: 13px; line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Десктопная раскладка</b>
+  <button data-v="v1" class="on">V1 · Широкая колонна</button>
+  <button data-v="v2">V2 · Рабочий стол</button>
+  <button data-v="v3">V3 · Пространство</button>
+  <button data-v="v4">V4 · Витрина</button>
+  <span class="sp"></span>
+  <span class="hint">мобильная раскладка не меняется ни в одном варианте</span>
+  <button id="theme">☾ тёмная</button>
+</div>
+
+<!-- ═══════════════════════════ V1 · ШИРОКАЯ КОЛОННА ═══════════════════════════ -->
+<section class="variant show" id="v1">
+  <div class="intro">
+    <h2>V1 · «Широкая колонна»</h2>
+    <p>Самый бережный вариант: форма продукта не меняется — та же вертикальная лента карточек,
+      просто колонка на десктопе раскрывается с 430 до ~1000 px, а внутри карточек содержимое
+      раскладывается в две колонки. Навигация (сейчас нижняя панель) на десктопе переезжает в шапку.</p>
+    <ul>
+      <li class="plus">+ дёшево и безопасно: это @media-правила поверх готовых экранов, ничего не переписываем;</li>
+      <li class="plus">+ один поток чтения — сверху вниз, как на телефоне: ничему не надо переучиваться;</li>
+      <li class="minus">− по-прежнему колонна: на 1920 px по краям остаётся воздух;</li>
+      <li class="minus">− карта пространства не становится героем — она просто одна из карточек.</li>
+    </ul>
+  </div>
+
+  <div class="caption">Профиль · десктоп</div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/profile</span></div>
+    <div class="screen">
+      <div class="appbar">
+        <div class="logo"><span class="mark">N</span> NDim Space</div>
+        <div class="tabs" style="margin-left:26px">
+          <a href="#v1" class="on">Профиль</a><a href="#v1">Связи</a><a href="#v1">Пространство</a><a href="#v1">Меню</a>
+        </div>
+        <span class="sp"></span>
+        <span class="chip">RU</span><span class="chip">☾</span><span class="me-dot"></span>
+      </div>
+      <div style="max-width:1000px;margin:0 auto;padding:22px 20px 30px">
+        <div class="stack">
+          <div class="card" style="display:flex;align-items:center;gap:14px">
+            <span class="me-dot" style="width:52px;height:52px"></span>
+            <div><div style="font-weight:700;color:var(--heading);font-size:17px">Николай</div>
+              <div style="font-size:12.5px;color:var(--faint)">Минск · 1985 · оценил 24 измерения</div></div>
+            <span class="sp" style="flex:1"></span>
+            <button class="btn ghost">Править</button>
+          </div>
+
+          <div class="grid2">
+            <div class="card">
+              <h3>ЛИЧНОЕ</h3>
+              <div class="axis"><span class="nm">Имя</span><span class="vl" style="width:auto">Николай</span></div>
+              <div class="axis"><span class="nm">Город</span><span class="vl" style="width:auto">Минск</span></div>
+              <div class="axis"><span class="nm">Год рождения</span><span class="vl" style="width:auto">1985</span></div>
+              <div class="axis"><span class="nm">Пол</span><span class="vl" style="width:auto">М</span></div>
+            </div>
+            <div class="card">
+              <h3>ВИДИМОСТЬ</h3>
+              <div class="axis"><span class="nm">Имя</span><span class="chip">🌐 всем</span></div>
+              <div class="axis"><span class="nm">Город</span><span class="chip">👥 друзьям</span></div>
+              <div class="axis"><span class="nm">Год рождения</span><span class="chip">◌ никому</span></div>
+              <div class="axis"><span class="nm">Пол</span><span class="chip">🌐 всем</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>ИЗМЕРЕНИЯ · 24 из 312</h3>
+            <div class="grid2">
+              <div>
+                <div class="axis"><span class="nm">Люблю тишину</span><span class="st">★★★★★★★<i>★★★</i></span><span class="vl">7</span></div>
+                <div class="axis"><span class="nm">Путешествия</span><span class="st">★★★★★<i>★★★★★</i></span><span class="vl">5</span></div>
+                <div class="axis"><span class="nm">Спорт</span><span class="st">★★★★<i>★★★★★★</i></span><span class="vl">4</span></div>
+                <div class="axis"><span class="nm">Книги</span><span class="st">★★★★★★★★<i>★★</i></span><span class="vl">8</span></div>
+              </div>
+              <div>
+                <div class="axis"><span class="nm">Чувство юмора</span><span class="st">★★★★★★<i>★★★★</i></span><span class="vl">6</span></div>
+                <div class="axis"><span class="nm">Музыка</span><span class="st">★★★★★★★★★<i>★</i></span><span class="vl">9</span></div>
+                <div class="axis"><span class="nm">Готовка</span><span class="st">★★★<i>★★★★★★★</i></span><span class="vl">3</span></div>
+                <div class="axis"><span class="nm">Ранние подъёмы</span><span class="st">★★<i>★★★★★★★★</i></span><span class="vl">2</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">колонка ≈ 1000 px · карточки внутри в 2 колонки · навигация в шапке</div>
+
+  <div class="caption">Лендинг · демо похожести · десктоп</div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app</span></div>
+    <div class="screen" style="min-height:auto">
+      <div style="max-width:1000px;margin:0 auto;padding:26px 20px 32px">
+        <h2 style="text-align:center;font-size:22px;font-weight:800;color:var(--heading)">Попробуйте прямо здесь</h2>
+        <p style="text-align:center;font-size:14px;color:var(--dim);margin:8px 0 18px">Оцените себя по пяти осям — Ваша точка сдвинется, а соседи пересчитаются.</p>
+        <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:14px;align-items:start">
+          <div class="card">
+            <h3>МОИ ОСИ</h3>
+            <div class="axis"><span class="nm">Люблю тишину</span><span class="st">★★★★★★★<i>★★★</i></span><span class="vl">7</span></div>
+            <div class="axis"><span class="nm">Путешествия</span><span class="st">★★★★★<i>★★★★★</i></span><span class="vl">5</span></div>
+            <div class="axis"><span class="nm">Спорт</span><span class="st">★★★★<i>★★★★★★</i></span><span class="vl">4</span></div>
+            <div class="axis"><span class="nm">Книги</span><span class="st">★★★★★★★★<i>★★</i></span><span class="vl">8</span></div>
+            <div class="axis"><span class="nm">Чувство юмора</span><span class="st">★★★★★★<i>★★★★</i></span><span class="vl">6</span></div>
+          </div>
+          <div class="card" style="padding:8px 8px 10px">
+            <svg class="map" viewBox="0 0 480 450" data-map></svg>
+            <p class="map-note">Расстояния настоящие. Чем ярче линия — тем сильнее связь.</p>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:14px">
+          <div class="card person" style="--ring:#7c5cff">
+            <div class="top"><span class="ava"><img src="../static/img/personas/alice_face.png" alt=""></span>
+              <div><div class="who">Алиса · ближе всех</div><div class="meta">заполнила все 5 осей</div></div><span class="big">80%</span></div>
+            <div class="bar hero"><span class="lb">похожесть</span><span class="tk"><span class="fl" style="width:80%"></span></span><span class="pc">80%</span></div>
+            <div class="bar"><span class="lb">близость</span><span class="tk"><span class="fl" style="width:80%"></span></span><span class="pc">80%</span></div>
+            <div class="bar"><span class="lb">общность</span><span class="tk"><span class="fl" style="width:100%"></span></span><span class="pc">100%</span></div>
+          </div>
+          <div class="card person" style="--ring:#d6544f">
+            <div class="top"><span class="ava"><img src="../static/img/personas/nastya_face.png" alt=""></span>
+              <div><div class="who">Настя</div><div class="meta">заполнила все 5 осей</div></div><span class="big">42%</span></div>
+            <div class="bar hero"><span class="lb">похожесть</span><span class="tk"><span class="fl" style="width:42%"></span></span><span class="pc">42%</span></div>
+            <div class="bar"><span class="lb">близость</span><span class="tk"><span class="fl" style="width:42%"></span></span><span class="pc">42%</span></div>
+            <div class="bar"><span class="lb">общность</span><span class="tk"><span class="fl" style="width:100%"></span></span><span class="pc">100%</span></div>
+          </div>
+          <div class="card person" style="--ring:#0ea578">
+            <div class="top"><span class="ava"><img src="../static/img/personas/max_face.png" alt=""></span>
+              <div><div class="who">Макс</div><div class="meta">заполнил только 3 оси</div></div><span class="big">41%</span></div>
+            <div class="bar hero"><span class="lb">похожесть</span><span class="tk"><span class="fl" style="width:41%"></span></span><span class="pc">41%</span></div>
+            <div class="bar"><span class="lb">близость</span><span class="tk"><span class="fl" style="width:54%"></span></span><span class="pc">54%</span></div>
+            <div class="bar"><span class="lb">общность</span><span class="tk"><span class="fl" style="width:75%"></span></span><span class="pc">75%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">демо: звёзды слева, карта справа, три персонажа в ряд</div>
+</section>
+
+<!-- ═══════════════════════════ V2 · РАБОЧИЙ СТОЛ ═══════════════════════════ -->
+<section class="variant" id="v2">
+  <div class="intro">
+    <h2>V2 · «Рабочий стол» (рельс слева)</h2>
+    <p>Классическая форма веб-приложения: слева постоянный вертикальный рельс навигации,
+      справа — контент во всю оставшуюся ширину, разложенный в две колонки.
+      Нижняя панель навигации остаётся только на телефоне.</p>
+    <ul>
+      <li class="plus">+ навигация всегда на виду и не съедает вертикаль — контенту достаётся вся высота;</li>
+      <li class="plus">+ ширина используется целиком, до 1920 px включительно;</li>
+      <li class="plus">+ привычно: так устроено большинство веб-сервисов, объяснять не надо;</li>
+      <li class="minus">− форма «как у всех» — не подчёркивает, что NDim про пространство и математику.</li>
+    </ul>
+  </div>
+
+  <div class="caption">Профиль · десктоп</div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/profile</span></div>
+    <div class="screen" style="display:flex">
+      <nav class="rail">
+        <div class="logo"><span class="mark">N</span> NDim Space</div>
+        <a href="#v2" class="on"><span class="ic">◉</span> Профиль</a>
+        <a href="#v2"><span class="ic">⇄</span> Связи</a>
+        <a href="#v2"><span class="ic">✳</span> Пространство</a>
+        <a href="#v2"><span class="ic">☰</span> Меню</a>
+        <div class="foot">RU · ☾ тёмная</div>
+      </nav>
+      <div style="flex:1;padding:22px 26px 30px;min-width:0">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <span class="me-dot" style="width:46px;height:46px"></span>
+          <div><div style="font-weight:700;color:var(--heading);font-size:19px">Николай</div>
+            <div style="font-size:12.5px;color:var(--faint)">Минск · 1985 · оценил 24 измерения</div></div>
+          <span style="flex:1"></span>
+          <button class="btn ghost">Править</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:14px;align-items:start">
+          <div class="stack">
+            <div class="card">
+              <h3>ИЗМЕРЕНИЯ · 24 из 312</h3>
+              <div class="axis"><span class="nm">Люблю тишину</span><span class="st">★★★★★★★<i>★★★</i></span><span class="vl">7</span></div>
+              <div class="axis"><span class="nm">Путешествия</span><span class="st">★★★★★<i>★★★★★</i></span><span class="vl">5</span></div>
+              <div class="axis"><span class="nm">Спорт</span><span class="st">★★★★<i>★★★★★★</i></span><span class="vl">4</span></div>
+              <div class="axis"><span class="nm">Книги</span><span class="st">★★★★★★★★<i>★★</i></span><span class="vl">8</span></div>
+              <div class="axis"><span class="nm">Чувство юмора</span><span class="st">★★★★★★<i>★★★★</i></span><span class="vl">6</span></div>
+              <div class="axis"><span class="nm">Музыка</span><span class="st">★★★★★★★★★<i>★</i></span><span class="vl">9</span></div>
+              <div class="axis"><span class="nm">Готовка</span><span class="st">★★★<i>★★★★★★★</i></span><span class="vl">3</span></div>
+            </div>
+            <div class="card">
+              <h3>ЛИЧНОЕ И ВИДИМОСТЬ</h3>
+              <div class="axis"><span class="nm">Имя · Николай</span><span class="chip">🌐 всем</span></div>
+              <div class="axis"><span class="nm">Город · Минск</span><span class="chip">👥 друзьям</span></div>
+              <div class="axis"><span class="nm">Год рождения · 1985</span><span class="chip">◌ никому</span></div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="card" style="padding:8px 8px 10px">
+              <svg class="map" viewBox="0 0 480 450" data-map></svg>
+              <p class="map-note">Ваше пространство сейчас</p>
+            </div>
+            <div class="card person" style="--ring:#7c5cff">
+              <div class="top"><span class="ava"><img src="../static/img/personas/alice_face.png" alt=""></span>
+                <div><div class="who">Алиса · ближе всех</div><div class="meta">80% похожести</div></div><span class="big">80%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">рельс 232 px · контент во всю ширину · 2 колонки (лента + карта)</div>
+
+  <div class="caption">Связи · десктоп (та же оболочка)</div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/relations</span></div>
+    <div class="screen" style="display:flex;min-height:380px">
+      <nav class="rail">
+        <div class="logo"><span class="mark">N</span> NDim Space</div>
+        <a href="#v2"><span class="ic">◉</span> Профиль</a>
+        <a href="#v2" class="on"><span class="ic">⇄</span> Связи</a>
+        <a href="#v2"><span class="ic">✳</span> Пространство</a>
+        <a href="#v2"><span class="ic">☰</span> Меню</a>
+        <div class="foot">RU · ☾ тёмная</div>
+      </nav>
+      <div style="flex:1;padding:22px 26px 30px;min-width:0">
+        <h2 style="font-size:19px;color:var(--heading);margin-bottom:14px">Связи · 250 ближайших</h2>
+        <div class="grid2">
+          <div class="card person" style="--ring:#7c5cff">
+            <div class="top"><span class="ava"><img src="../static/img/personas/alice_face.png" alt=""></span>
+              <div><div class="who">Алиса</div><div class="meta">Минск · 12 общих осей</div></div><span class="big">80%</span></div>
+            <div class="bar hero"><span class="lb">похожесть</span><span class="tk"><span class="fl" style="width:80%"></span></span><span class="pc">80%</span></div>
+            <div class="bar"><span class="lb">близость</span><span class="tk"><span class="fl" style="width:80%"></span></span><span class="pc">80%</span></div>
+            <div class="bar"><span class="lb">общность</span><span class="tk"><span class="fl" style="width:100%"></span></span><span class="pc">100%</span></div>
+          </div>
+          <div class="card person" style="--ring:#d6544f">
+            <div class="top"><span class="ava"><img src="../static/img/personas/nastya_face.png" alt=""></span>
+              <div><div class="who">Настя</div><div class="meta">Гомель · 9 общих осей</div></div><span class="big">42%</span></div>
+            <div class="bar hero"><span class="lb">похожесть</span><span class="tk"><span class="fl" style="width:42%"></span></span><span class="pc">42%</span></div>
+            <div class="bar"><span class="lb">близость</span><span class="tk"><span class="fl" style="width:42%"></span></span><span class="pc">42%</span></div>
+            <div class="bar"><span class="lb">общность</span><span class="tk"><span class="fl" style="width:100%"></span></span><span class="pc">100%</span></div>
+          </div>
+          <div class="card person" style="--ring:#0ea578">
+            <div class="top"><span class="ava"><img src="../static/img/personas/max_face.png" alt=""></span>
+              <div><div class="who">Макс</div><div class="meta">Брест · 3 общие оси</div></div><span class="big">41%</span></div>
+            <div class="bar hero"><span class="lb">похожесть</span><span class="tk"><span class="fl" style="width:41%"></span></span><span class="pc">41%</span></div>
+            <div class="bar"><span class="lb">близость</span><span class="tk"><span class="fl" style="width:54%"></span></span><span class="pc">54%</span></div>
+            <div class="bar"><span class="lb">общность</span><span class="tk"><span class="fl" style="width:75%"></span></span><span class="pc">75%</span></div>
+          </div>
+          <div class="card" style="display:grid;place-items:center;color:var(--faint);font-size:13px">…ещё 247</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">связи: сетка 2 колонки (на 1920 — 3)</div>
+</section>
+
+<!-- ═══════════════════════════ V3 · ПРОСТРАНСТВО ═══════════════════════════ -->
+<section class="variant" id="v3">
+  <div class="intro">
+    <h2>V3 · «Пространство» (карта — герой)</h2>
+    <p>Самый смелый: на десктопе главный объект экрана — <b>карта пространства</b>. Она занимает
+      всю правую половину и живёт постоянно: двигаешь звёзды слева — люди на карте перемещаются
+      прямо на глазах. Слева — узкая колонка-инспектор (оси, профиль, выбранный человек).
+      Это ровно та идея, ради которой проект и существует: увидеть себя среди людей.</p>
+    <ul>
+      <li class="plus">+ единственный вариант, который на десктопе показывает суть NDim, а не список карточек;</li>
+      <li class="plus">+ карта получает 700–1000 px — диапазон перемещения виден по-настоящему;</li>
+      <li class="plus">+ ниоткуда не «списан» — своя форма, свой бренд;</li>
+      <li class="minus">− дороже: карту надо делать по-настоящему (масштаб, наведение, выбор человека);</li>
+      <li class="minus">− тексты и правка полей живут в узкой колонке — им там тесновато.</li>
+    </ul>
+  </div>
+
+  <div class="caption">Профиль · десктоп · карта всегда справа</div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/profile</span></div>
+    <div class="screen" style="display:flex;min-height:600px">
+      <nav class="rail" style="width:200px;flex:0 0 200px">
+        <div class="logo"><span class="mark">N</span> NDim</div>
+        <a href="#v3" class="on"><span class="ic">◉</span> Профиль</a>
+        <a href="#v3"><span class="ic">⇄</span> Связи</a>
+        <a href="#v3"><span class="ic">☰</span> Меню</a>
+        <div class="foot">RU · ☾</div>
+      </nav>
+
+      <div style="flex:0 0 360px;padding:18px;overflow:auto;border-right:1px solid var(--edge)">
+        <div class="stack">
+          <div class="card" style="display:flex;align-items:center;gap:12px">
+            <span class="me-dot" style="width:44px;height:44px"></span>
+            <div><div style="font-weight:700;color:var(--heading);font-size:16px">Николай</div>
+              <div style="font-size:12px;color:var(--faint)">24 измерения</div></div>
+          </div>
+          <div class="card">
+            <h3>ДВИГАЙТЕ — ПРОСТРАНСТВО ОТВЕЧАЕТ</h3>
+            <div class="axis"><span class="nm">Люблю тишину</span><span class="st">★★★★★★★<i>★★★</i></span><span class="vl">7</span></div>
+            <div class="axis"><span class="nm">Путешествия</span><span class="st">★★★★★<i>★★★★★</i></span><span class="vl">5</span></div>
+            <div class="axis"><span class="nm">Спорт</span><span class="st">★★★★<i>★★★★★★</i></span><span class="vl">4</span></div>
+            <div class="axis"><span class="nm">Книги</span><span class="st">★★★★★★★★<i>★★</i></span><span class="vl">8</span></div>
+            <div class="axis"><span class="nm">Чувство юмора</span><span class="st">★★★★★★<i>★★★★</i></span><span class="vl">6</span></div>
+            <div class="axis"><span class="nm">Музыка</span><span class="st">★★★★★★★★★<i>★</i></span><span class="vl">9</span></div>
+          </div>
+          <div class="card person" style="--ring:#7c5cff">
+            <h3>ВЫБРАН НА КАРТЕ</h3>
+            <div class="top"><span class="ava"><img src="../static/img/personas/alice_face.png" alt=""></span>
+              <div><div class="who">Алиса</div><div class="meta">заполнила все 5 осей</div></div><span class="big">80%</span></div>
+            <div class="bar hero"><span class="lb">похожесть</span><span class="tk"><span class="fl" style="width:80%"></span></span><span class="pc">80%</span></div>
+            <div class="bar"><span class="lb">близость</span><span class="tk"><span class="fl" style="width:80%"></span></span><span class="pc">80%</span></div>
+            <div class="bar"><span class="lb">общность</span><span class="tk"><span class="fl" style="width:100%"></span></span><span class="pc">100%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:0;position:relative;display:flex;flex-direction:column;padding:18px">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
+          <h2 style="font-size:17px;color:var(--heading)">Ваше пространство</h2>
+          <span style="font-size:12.5px;color:var(--faint)">расстояния настоящие · чем ярче линия, тем сильнее связь</span>
+        </div>
+        <div class="card" style="flex:1;padding:6px;display:grid;place-items:center">
+          <svg class="map" viewBox="0 0 480 450" data-map style="max-height:520px"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">карта ≈ 700–1000 px в ширину · оси и карточки — в колонке-инспекторе слева</div>
+
+  <div class="caption">Лендинг · демо · тот же приём (звёзды слева, живая карта справа)</div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app</span></div>
+    <div class="screen" style="min-height:auto">
+      <div style="max-width:1200px;margin:0 auto;padding:24px 24px 30px;display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start">
+        <div class="stack">
+          <div>
+            <h2 style="font-size:22px;font-weight:800;color:var(--heading)">Попробуйте прямо здесь</h2>
+            <p style="font-size:14px;color:var(--dim);margin-top:8px;line-height:1.6">Оцените себя по пяти осям — Ваша точка сдвинется, а соседи пересчитаются. Алгоритм настоящий.</p>
+          </div>
+          <div class="card">
+            <div class="axis"><span class="nm">Люблю тишину</span><span class="st">★★★★★★★<i>★★★</i></span><span class="vl">7</span></div>
+            <div class="axis"><span class="nm">Путешествия</span><span class="st">★★★★★<i>★★★★★</i></span><span class="vl">5</span></div>
+            <div class="axis"><span class="nm">Спорт</span><span class="st">★★★★<i>★★★★★★</i></span><span class="vl">4</span></div>
+            <div class="axis"><span class="nm">Книги</span><span class="st">★★★★★★★★<i>★★</i></span><span class="vl">8</span></div>
+            <div class="axis"><span class="nm">Чувство юмора</span><span class="st">★★★★★★<i>★★★★</i></span><span class="vl">6</span></div>
+          </div>
+          <a class="btn" href="#v3" style="text-align:center">Создать своё пространство →</a>
+        </div>
+        <div class="card" style="padding:8px">
+          <svg class="map" viewBox="0 0 480 450" data-map style="max-height:520px"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ruler">карточки персонажей открываются по клику на лицо — карта остаётся главной</div>
+</section>
+
+<!-- ═══════════════════════════ V4 · ВИТРИНА ═══════════════════════════ -->
+<section class="variant" id="v4">
+  <div class="intro">
+    <h2>V4 · «Витрина» (три зоны)</h2>
+    <p>Плотная информационная раскладка: рельс навигации слева, контент по центру,
+      справа — колонка-спутник, где всегда на виду карта и ближайшие люди. Ничего не прячется:
+      на одном экране и то, чем ты занят, и то, ради чего пришёл.</p>
+    <ul>
+      <li class="plus">+ ширина занята полностью и с пользой; связи всегда перед глазами;</li>
+      <li class="plus">+ карта живёт постоянно, но не мешает работе с полями и осями;</li>
+      <li class="minus">− плотно: на 1280 px три зоны уже тесноваты, нужна аккуратная работа с брейкпойнтами;</li>
+      <li class="minus">− риск «панели ради панелей» — надо следить, чтобы спутник был нужен, а не занимал место.</li>
+    </ul>
+  </div>
+
+  <div class="caption">Профиль · десктоп · три зоны</div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>ndimspace.app/profile</span></div>
+    <div class="screen" style="display:flex;min-height:600px">
+      <nav class="rail" style="width:210px;flex:0 0 210px">
+        <div class="logo"><span class="mark">N</span> NDim Space</div>
+        <a href="#v4" class="on"><span class="ic">◉</span> Профиль</a>
+        <a href="#v4"><span class="ic">⇄</span> Связи</a>
+        <a href="#v4"><span class="ic">✳</span> Пространство</a>
+        <a href="#v4"><span class="ic">☰</span> Меню</a>
+        <div class="foot">RU · ☾</div>
+      </nav>
+
+      <div style="flex:1;min-width:0;padding:20px 22px">
+        <div class="tabs" style="margin-bottom:14px">
+          <a href="#v4" class="on">Обо мне</a><a href="#v4">Измерения</a><a href="#v4">Видимость</a>
+        </div>
+        <div class="stack">
+          <div class="card" style="display:flex;align-items:center;gap:12px">
+            <span class="me-dot" style="width:46px;height:46px"></span>
+            <div><div style="font-weight:700;color:var(--heading);font-size:17px">Николай</div>
+              <div style="font-size:12.5px;color:var(--faint)">Минск · 1985 · оценил 24 измерения</div></div>
+            <span style="flex:1"></span><button class="btn ghost">Править</button>
+          </div>
+          <div class="card">
+            <h3>ИЗМЕРЕНИЯ · 24 из 312</h3>
+            <div class="grid2">
+              <div>
+                <div class="axis"><span class="nm">Люблю тишину</span><span class="st">★★★★★★★<i>★★★</i></span><span class="vl">7</span></div>
+                <div class="axis"><span class="nm">Путешествия</span><span class="st">★★★★★<i>★★★★★</i></span><span class="vl">5</span></div>
+                <div class="axis"><span class="nm">Спорт</span><span class="st">★★★★<i>★★★★★★</i></span><span class="vl">4</span></div>
+              </div>
+              <div>
+                <div class="axis"><span class="nm">Книги</span><span class="st">★★★★★★★★<i>★★</i></span><span class="vl">8</span></div>
+                <div class="axis"><span class="nm">Чувство юмора</span><span class="st">★★★★★★<i>★★★★</i></span><span class="vl">6</span></div>
+                <div class="axis"><span class="nm">Музыка</span><span class="st">★★★★★★★★★<i>★</i></span><span class="vl">9</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>ЛИЧНОЕ И ВИДИМОСТЬ</h3>
+            <div class="grid2">
+              <div class="axis"><span class="nm">Имя · Николай</span><span class="chip">🌐 всем</span></div>
+              <div class="axis"><span class="nm">Город · Минск</span><span class="chip">👥 друзьям</span></div>
+              <div class="axis"><span class="nm">Год · 1985</span><span class="chip">◌ никому</span></div>
+              <div class="axis"><span class="nm">Пол · М</span><span class="chip">🌐 всем</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside style="flex:0 0 330px;border-left:1px solid var(--edge);padding:20px 16px;background:color-mix(in srgb, var(--panel) 55%, transparent)">
+        <div class="stack">
+          <div class="card" style="padding:6px 6px 8px">
+            <svg class="map" viewBox="0 0 480 450" data-map></svg>
+            <p class="map-note">Ваше пространство</p>
+          </div>
+          <div class="card person" style="--ring:#7c5cff">
+            <div class="top"><span class="ava"><img src="../static/img/personas/alice_face.png" alt=""></span>
+              <div><div class="who">Алиса</div><div class="meta">12 общих осей</div></div><span class="big">80%</span></div>
+          </div>
+          <div class="card person" style="--ring:#d6544f">
+            <div class="top"><span class="ava"><img src="../static/img/personas/nastya_face.png" alt=""></span>
+              <div><div class="who">Настя</div><div class="meta">9 общих осей</div></div><span class="big">42%</span></div>
+          </div>
+          <div class="card person" style="--ring:#0ea578">
+            <div class="top"><span class="ava"><img src="../static/img/personas/max_face.png" alt=""></span>
+              <div><div class="who">Макс</div><div class="meta">3 общие оси</div></div><span class="big">41%</span></div>
+          </div>
+          <a class="btn ghost" href="#v4" style="text-align:center">Все 250 связей →</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <div class="ruler">рельс 210 px · контент · спутник 330 px (карта + ближайшие)</div>
+</section>
+
+<script>
+  // ── Переключение вариантов ──
+  const btns = document.querySelectorAll('.picker button[data-v]');
+  const show = (id) => {
+    document.querySelectorAll('.variant').forEach((s) => s.classList.toggle('show', s.id === id));
+    btns.forEach((b) => b.classList.toggle('on', b.dataset.v === id));
+    window.scrollTo({ top: 0 });
+  };
+  const fromHash = () => {
+    if (['#v1', '#v2', '#v3', '#v4'].includes(location.hash)) show(location.hash.slice(1));
+  };
+  btns.forEach((b) => b.addEventListener('click', () => { location.hash = b.dataset.v; show(b.dataset.v); }));
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+
+  // ── Тема ──
+  const tbtn = document.getElementById('theme');
+  tbtn.addEventListener('click', () => {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    tbtn.textContent = dark ? '☾ тёмная' : '☀ светлая';
+  });
+
+  // ── Карта пространства: та же геометрия и та же математика, что в коде демо
+  //    (SimilarityDemo.svelte). Рисуем скриптом, чтобы во всех четырёх макетах
+  //    карта была одна и та же и её можно было честно сравнивать по размеру. ──
+  const CX = 240, CY = 220, NODE_R = 26, ME_R = 20;
+  const MIN_DIST = ME_R + NODE_R, HORIZON = 185, SPAN = HORIZON - MIN_DIST;
+  const NS = 'http://www.w3.org/2000/svg';
+  const PEOPLE = [
+    { id: 'alice', name: 'Алиса', color: '#7c5cff', angle: -90, rate: 10, sim: 80 },
+    { id: 'max', name: 'Макс', color: '#0ea578', angle: 25, rate: 33, sim: 41 },
+    { id: 'nastya', name: 'Настя', color: '#d6544f', angle: 155, rate: 46, sim: 42 },
+  ];
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+  document.querySelectorAll('svg[data-map]').forEach((svg, i) => {
+    const clipId = `face-clip-${i}`;
+    const defs = el('defs');
+    const cp = el('clipPath', { id: clipId });
+    cp.appendChild(el('circle', { cx: 0, cy: 0, r: NODE_R - 2.5 }));
+    defs.appendChild(cp); svg.appendChild(defs);
+    svg.appendChild(el('circle', { class: 'horizon', cx: CX, cy: CY, r: HORIZON }));
+
+    for (const p of PEOPLE) {
+      const dist = MIN_DIST + (p.rate / 100) * SPAN;
+      const rad = (p.angle * Math.PI) / 180;
+      const x = CX + Math.cos(rad) * dist, y = CY + Math.sin(rad) * dist;
+      const glow = p.sim / 100;
+      svg.appendChild(el('line', {
+        class: 'link', x1: CX, y1: CY, x2: x, y2: y,
+        'stroke-opacity': Math.max(0.12, glow), 'stroke-width': 1.5 + 4 * glow,
+      }));
+      const t = el('text', { class: 'tag', x, y: y < CY ? y - (NODE_R + 12) : y + (NODE_R + 22) });
+      t.textContent = `${p.name} · ${p.sim}%`;
+      svg.appendChild(t);
+      const g = el('g', { transform: `translate(${x} ${y})` });
+      g.appendChild(el('circle', { r: NODE_R, fill: 'var(--panel)', stroke: p.color, 'stroke-width': 3 }));
+      g.appendChild(el('image', {
+        href: `../static/img/personas/${p.id}_face.png`,
+        x: -(NODE_R - 2.5), y: -(NODE_R - 2.5),
+        width: (NODE_R - 2.5) * 2, height: (NODE_R - 2.5) * 2,
+        'clip-path': `url(#${clipId})`,
+      }));
+      svg.appendChild(g);
+    }
+    svg.appendChild(el('circle', { class: 'me', cx: CX, cy: CY, r: ME_R }));
+    const me = el('text', { class: 'meT', x: CX, y: CY + 5 });
+    me.textContent = 'Я';
+    svg.appendChild(me);
+  });
+</script>
+</body>
+</html>
