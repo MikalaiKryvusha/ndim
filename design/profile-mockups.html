@@ -125,6 +125,54 @@
   .stars-cap { text-align: center; font-size: 12px; color: var(--dim); }
   .duo { display: flex; gap: 10px; }
   .duo .btn { flex: 1; }
+
+  /* ── Вторая серия (V5–V8): фирменные элементы реального сайта 1.x ── */
+  .bnav { display: flex; background: var(--panel); border-top: 1px solid var(--edge); }
+  .bnav span { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 11px; font-size: 10.5px; color: var(--dim); }
+  .bnav .ico { font-size: 17px; line-height: 1; }
+  .bnav .on { color: var(--primary); font-weight: 650; }
+  .lang { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--dim); border: 1px solid var(--edge); border-radius: 8px; padding: 4px 8px; }
+  .lang + .me { margin-left: 8px; }
+  .hintbox { background: var(--chip); border-radius: 10px; padding: 10px 12px; font-size: 11.5px; color: var(--dim); line-height: 1.45; text-align: center; }
+  .seg2 { display: flex; background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; overflow: hidden; }
+  .seg2 span { flex: 1; text-align: center; padding: 9px 0; font-size: 13px; color: var(--dim); }
+  .seg2 .on { background: #e3efff; color: var(--primary); font-weight: 650; }
+  .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); padding: 2px 2px 0; }
+
+  /* карточка измерения в духе 1.x */
+  .dhead { display: flex; align-items: baseline; gap: 7px; }
+  .dhead .dtype { font-size: 12px; color: var(--dim); flex: none; }
+  .dhead b { font-size: 15.5px; color: var(--heading); flex: 1; }
+  .dhead .dots3 { flex: none; color: var(--dim); font-size: 16px; letter-spacing: 1px; }
+  .avg { display: flex; align-items: center; gap: 7px; margin-top: 7px; }
+  .avg b { font-size: 19px; color: #1c9e4f; }
+  .avg .star { color: #f0b429; font-size: 16px; }
+  .avg small { font-size: 12px; color: var(--dim); }
+  .strow { display: flex; justify-content: space-between; margin-top: 12px; }
+  .st { position: relative; font-size: 25px; line-height: 1; color: #cfdded; }
+  .st b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--panel); padding-top: 3px; }
+  .st.pick { color: var(--primary); }
+  .strow-cap { font-size: 11px; color: var(--dim); text-align: center; margin-top: 6px; }
+  .st-mini { font-size: 15px; }
+  .st-mini b { font-size: 6.5px; padding-top: 2px; }
+  .dim2 { padding: 9px 0; border-bottom: 1px solid var(--edge); }
+  .dim2:last-child { border-bottom: 0; }
+  .dim2 .l1 { display: flex; align-items: baseline; gap: 8px; }
+  .dim2 .l1 b { font-size: 14px; color: var(--heading); flex: 1; }
+  .dim2 .l1 small { font-size: 11px; color: var(--dim); }
+  .dim2 .strow { margin-top: 6px; }
+
+  /* тёмный герой (V8) */
+  .hero {
+    position: relative; padding: 20px 16px 18px; color: #eaf3ff; overflow: hidden;
+    background: #0b1526 radial-gradient(circle at 18% 30%, rgba(77,159,255,.24), transparent 34%),
+                #0b1526 radial-gradient(circle at 82% 65%, rgba(63,217,255,.16), transparent 40%);
+    background-color: #0b1526;
+  }
+  .hero .visit-head b { color: #fff; }
+  .hero .visit-head small { color: #8fa9c0; }
+  .hero .pbar { background: rgba(255,255,255,.12); }
+  .hero .hint { color: #8fa9c0; }
 </style>
 </head>
 <body>
@@ -286,10 +334,185 @@
 
 </div>
 
-<p class="note" style="margin-top:26px"><b style="color:#fff">Как утверждаем.</b> Выбери один вариант
-(можно с правками и гибридами — например, V1 как основа + предпросмотр «глазами гостя» из V3 кнопкой).
-Утверждённый макет станет SvelteKit-маршрутом на модели 2.0 с тестовыми данными на эмуляторе
-(решения В1–В2 интервью №003) и получит e2e-проверки на стенде.</p>
+<h1 style="margin-top:34px">Ещё 4 варианта — от реального сайта 1.x</h1>
+<p class="note">По просьбе владельца (чат, 2026-07-11): вторая серия отталкивается от того, как
+продукт устроен сейчас (живой `ndim-space.web.app` + архив). Взяты фирменные вещи 1.x: нижняя
+навигация «Дом · Связи · Пространство · Измерения · Меню», сегмент «Все | Мой NDim ID»,
+карточки измерений со <b>звёздами 0–10 с цифрами</b> и <b>рейтингом сообщества</b> («10 ★, 2 голоса»),
+подсказки-плашки. Всё переодето в «Бумагу» 2.0 и дополнено новым: чипы видимости, приватность оценок.</p>
+
+<div class="row">
+
+<!-- ═══ V5 «Дом, как дома» ═══ -->
+<section class="variant">
+  <h2>V5 — «Дом, как дома»: архитектура 1.x целиком</h2>
+  <p class="why">Знакомая владельцу и людям 1.x структура: нижняя навигация из пяти разделов,
+     «Дом» — личное и аккаунт, измерения — в своём разделе. Минимум переучивания: люди после
+     миграции окажутся «дома». Новое — чипы видимости у свойств и прогресс NDim ID.</p>
+  <div class="phone">
+    <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">Пространство NDim</span><span class="lang">RU</span><span class="me">Н</span></div>
+    <div class="body">
+      <p class="screen-title">Дом</p>
+      <div class="card">
+        <h3>Личная информация</h3>
+        <div class="prop"><span class="k">Имя</span><span class="v">Николай</span><span class="aud">🌐 Все</span></div>
+        <div class="prop"><span class="k">О себе</span><span class="v">Ищу похожих людей…</span><span class="aud">👥 Друзья</span></div>
+        <div class="prop"><span class="k">Фото</span><span class="v">аватар.jpg</span><span class="aud lock">🔒 Никому</span></div>
+      </div>
+      <div class="card">
+        <h3>Мой NDim ID</h3>
+        <div class="progress"><span class="pbar"><i style="width:47%"></i></span><span class="hint"><b>14 / 30</b></span></div>
+        <a class="btn ghost" style="margin-top:10px">К измерениям →</a>
+      </div>
+      <div class="card">
+        <h3>Аккаунт</h3>
+        <div class="prop"><span class="k">Управление</span><span class="v">почта · пароль</span><span class="aud">›</span></div>
+        <div class="prop"><span class="k">Сессия</span><span class="v">Выйти</span><span class="aud">›</span></div>
+      </div>
+    </div>
+    <div class="bnav">
+      <span class="on"><span class="ico">⌂</span>Дом</span><span><span class="ico">◎</span>Связи</span>
+      <span><span class="ico">✳</span>Пространство</span><span><span class="ico">✦</span>Измерения</span>
+      <span><span class="ico">☰</span>Меню</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ V6 «Карточки со звёздами» ═══ -->
+<section class="variant">
+  <h2>V6 — «Карточки со звёздами»: фирменная механика 1.x</h2>
+  <p class="why">Прямой наследник живого экрана «Измерения»: сегмент «Все | Мой NDim ID»,
+     карточка с типом и названием, рейтинг сообщества (зелёная цифра + голоса) и ряд звёзд
+     0–10 с цифрами — тап по звезде ставит оценку. Звёзды перекрашены в синий бренда;
+     подсказка 1.x сжата до одной строки.</p>
+  <div class="phone">
+    <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">Пространство NDim</span><span class="lang">RU</span><span class="me">Н</span></div>
+    <div class="body">
+      <div class="seg2"><span>Все</span><span class="on">Мой NDim ID</span></div>
+      <div class="hintbox">Тап по звезде — Ваша оценка. Оценки видите только Вы.</div>
+      <div class="card">
+        <div class="dhead"><span class="dtype">Фильм:</span><b>«Бегущий по лезвию 2049» (2017)</b><span class="dots3">⋮</span></div>
+        <div class="avg"><b>10</b><span class="star">★</span><small>2 голоса</small></div>
+        <div class="strow">
+          <span class="st"><b>0</b>★</span><span class="st"><b>1</b>★</span><span class="st"><b>2</b>★</span><span class="st"><b>3</b>★</span>
+          <span class="st"><b>4</b>★</span><span class="st"><b>5</b>★</span><span class="st"><b>6</b>★</span><span class="st"><b>7</b>★</span>
+          <span class="st"><b>8</b>★</span><span class="st pick"><b>9</b>★</span><span class="st"><b>10</b>★</span>
+        </div>
+        <p class="strow-cap">Ваша оценка: 9</p>
+      </div>
+      <div class="card">
+        <div class="dhead"><span class="dtype">Фильм:</span><b>«Судья Дредд 3D» (2012)</b><span class="dots3">⋮</span></div>
+        <div class="avg"><b>8</b><span class="star">★</span><small>4 голоса</small></div>
+      </div>
+      <a class="btn">Оценить ещё измерения</a>
+    </div>
+    <div class="bnav">
+      <span><span class="ico">⌂</span>Дом</span><span><span class="ico">◎</span>Связи</span>
+      <span><span class="ico">✳</span>Пространство</span><span class="on"><span class="ico">✦</span>Измерения</span>
+      <span><span class="ico">☰</span>Меню</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ V7 «Быстрые звёзды» ═══ -->
+<section class="variant">
+  <h2>V7 — «Быстрые звёзды»: оценка прямо в списке</h2>
+  <p class="why">Механика звёзд 1.x, но без раскрытия карточек: компактный ряд 0–10 прямо в
+     строке списка, оценка в один тап, среднее сообщества — мелко у названия. Максимальная
+     скорость наполнения NDim ID; платой — плотность (мелкие цели для пальца).</p>
+  <div class="phone">
+    <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">Пространство NDim</span><span class="lang">RU</span><span class="me">Н</span></div>
+    <div class="body">
+      <div class="seg2"><span class="on">Все</span><span>Мой NDim ID</span></div>
+      <div class="search">🔎 Найти среди 214 измерений…</div>
+      <div class="card">
+        <div class="dim2">
+          <div class="l1"><b>Путешествия</b><small>ср. 7 ★ · 31 голос</small></div>
+          <div class="strow">
+            <span class="st st-mini"><b>0</b>★</span><span class="st st-mini"><b>1</b>★</span><span class="st st-mini"><b>2</b>★</span>
+            <span class="st st-mini"><b>3</b>★</span><span class="st st-mini"><b>4</b>★</span><span class="st st-mini"><b>5</b>★</span>
+            <span class="st st-mini"><b>6</b>★</span><span class="st st-mini"><b>7</b>★</span><span class="st st-mini"><b>8</b>★</span>
+            <span class="st st-mini pick"><b>9</b>★</span><span class="st st-mini"><b>10</b>★</span>
+          </div>
+        </div>
+        <div class="dim2">
+          <div class="l1"><b>Кошки</b><small>ср. 9 ★ · 58 голосов</small></div>
+          <div class="strow">
+            <span class="st st-mini"><b>0</b>★</span><span class="st st-mini"><b>1</b>★</span><span class="st st-mini"><b>2</b>★</span>
+            <span class="st st-mini"><b>3</b>★</span><span class="st st-mini"><b>4</b>★</span><span class="st st-mini"><b>5</b>★</span>
+            <span class="st st-mini"><b>6</b>★</span><span class="st st-mini"><b>7</b>★</span><span class="st st-mini"><b>8</b>★</span>
+            <span class="st st-mini"><b>9</b>★</span><span class="st st-mini pick"><b>10</b>★</span>
+          </div>
+        </div>
+        <div class="dim2">
+          <div class="l1"><b>Театр</b><small>ср. 6 ★ · 12 голосов</small></div>
+          <div class="strow">
+            <span class="st st-mini"><b>0</b>★</span><span class="st st-mini"><b>1</b>★</span><span class="st st-mini"><b>2</b>★</span>
+            <span class="st st-mini"><b>3</b>★</span><span class="st st-mini"><b>4</b>★</span><span class="st st-mini"><b>5</b>★</span>
+            <span class="st st-mini"><b>6</b>★</span><span class="st st-mini"><b>7</b>★</span><span class="st st-mini"><b>8</b>★</span>
+            <span class="st st-mini"><b>9</b>★</span><span class="st st-mini"><b>10</b>★</span>
+          </div>
+        </div>
+      </div>
+      <p class="hint">Не оценено — звёзды пустые; Ваша оценка подсвечена. Оценки видите только Вы.</p>
+    </div>
+    <div class="bnav">
+      <span><span class="ico">⌂</span>Дом</span><span><span class="ico">◎</span>Связи</span>
+      <span><span class="ico">✳</span>Пространство</span><span class="on"><span class="ico">✦</span>Измерения</span>
+      <span><span class="ico">☰</span>Меню</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ V8 «Космос-дом» ═══ -->
+<section class="variant">
+  <h2>V8 — «Космос-дом»: мост от лендинга</h2>
+  <p class="why">Навигация и разделы — 1.x, но шапка «Дома» — тёмный космос лендинга: аватар,
+     имя и прогресс NDim ID живут в том же мире, что и первый экран сайта. Продукт и лендинг
+     говорят одним языком; ниже — обычные карточки «Бумаги». Самый смелый по стилю.</p>
+  <div class="phone">
+    <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">Пространство NDim</span><span class="lang">RU</span><span class="me">Н</span></div>
+    <div class="hero">
+      <div class="visit-head">
+        <span class="ava">Н</span>
+        <span><b>Николай</b><small>В Пространстве с мая 2025</small></span>
+      </div>
+      <div class="progress" style="margin-top:14px"><span class="hint">NDim ID</span><span class="pbar"><i style="width:47%"></i></span><span class="hint"><b>14 / 30</b></span></div>
+    </div>
+    <div class="body">
+      <div class="card">
+        <h3>Личное</h3>
+        <div class="prop"><span class="k">О себе</span><span class="v">Ищу похожих людей…</span><span class="aud">👥 Друзья</span></div>
+        <div class="prop"><span class="k">Дата рождения</span><span class="v">14 марта</span><span class="aud circ">◎ Круг «Клуб»</span></div>
+      </div>
+      <div class="card">
+        <h3>Мой NDim ID</h3>
+        <div class="dim-row"><span class="n">Кошки</span><span class="scale"><i style="width:100%"></i></span><span class="val">10</span></div>
+        <div class="dim-row"><span class="n">Путешествия</span><span class="scale"><i style="width:90%"></i></span><span class="val">9</span></div>
+        <a class="btn ghost" style="margin-top:10px">Все измерения →</a>
+      </div>
+    </div>
+    <div class="bnav">
+      <span class="on"><span class="ico">⌂</span>Дом</span><span><span class="ico">◎</span>Связи</span>
+      <span><span class="ico">✳</span>Пространство</span><span><span class="ico">✦</span>Измерения</span>
+      <span><span class="ico">☰</span>Меню</span>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<p class="note" style="margin-top:26px"><b style="color:#fff">Принцип, зафиксированный владельцем
+(чат, 2026-07-11):</b> <b>ввод</b> оценки — классические звёзды 0–10 из старого NDim (с цифрами,
+как в мастере V4 и карточках V6); <b>отображение</b> уже поставленных оценок в списках — наглядные
+прогресс-бары (V1, V2, V8). Звёзды — жест, бары — обзор. Владелец о первой серии: «все экраны
+нравятся… оставить этот макет как вдохновение».</p>
+
+<p class="note"><b style="color:#fff">Как утверждаем.</b> Выбери один из
+восьми вариантов — можно с правками и гибридами через обе серии (например, V5 как каркас +
+звёздные карточки V6 + предпросмотр «глазами гостя» из V3 кнопкой). Утверждённый макет станет
+SvelteKit-маршрутом на модели 2.0 с тестовыми данными на эмуляторе (решения В1–В2 интервью №003)
+и получит e2e-проверки на стенде.</p>
 
 </body>
 </html>
