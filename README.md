@@ -17,6 +17,7 @@
 [![Framework](https://img.shields.io/badge/Framework-KAIF-7F52FF.svg)](https://github.com/MikalaiKryvusha/KAIF)
 [![Stack](https://img.shields.io/badge/Stack-SvelteKit%20%2B%20TypeScript-FF3E00.svg)](#сборка-и-стенд)
 [![Live 1.x](https://img.shields.io/badge/Live%201.x-ndim--space.web.app-00C853.svg)](https://ndim-space.web.app)
+[![Landing 2.0](https://img.shields.io/badge/Landing%202.0-ndimspace.app-1467D6.svg)](https://ndimspace.web.app)
 
 **Честный поиск похожих людей в многомерном пространстве самооценок.**
 Платформа знакомств, которая ищет вам человека, а не удерживает вас ради подписки.
@@ -77,7 +78,10 @@
 | Видимость профиля | [`src/lib/model/visibility.ts`](src/lib/model/visibility.ts) — раскладка свойств по кругам владельца | 30 тестов; четыре сценария утечки — мутациями |
 | Схема документов | [`src/lib/model/schema.ts`](src/lib/model/schema.ts) — типы Firestore, логика дружбы, границы значений | 29 тестов |
 | Правила безопасности | [`firestore.rules`](firestore.rules) — единственный сторож между клиентом и чужими данными | 56 тестов на эмуляторе, проверяют **отказы** |
-| Лендинг | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, статический пререндер, светлая/тёмная темы, RU/EN | 10 e2e-проверок в настоящем браузере |
+| Лендинг | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, статический пререндер, светлая/тёмная темы, RU/EN, canonical на `ndimspace.app` | e2e в настоящем браузере |
+| Экран «Профиль» | [`src/routes/profile/`](src/routes/profile/+page.svelte) — вкладки Личное · Измерения · Видимость; оценки звёздами 0–10, аудитории по кругам, предпросмотр «глазами гостя» | живой стенд + e2e; смена аудитории физически перекладывает бакеты |
+| Экран «Связи» | [`src/routes/relations/`](src/routes/relations/+page.svelte) — топ похожих: три метрики сразу, «яркость связи», математика общего пространства | живой стенд + e2e |
+| Вычислитель связей | [`calculator/`](calculator/index.mjs) — Docker-служба, очередь «грязных» точек, топ-250 в `relations/`; только исходящие соединения | прогон на эмуляторе и из контейнера |
 | План миграции 1.x → 2.0 | [`plans/02_migration.md`](plans/02_migration.md) — уважительная: труд людей не теряется | — |
 
 ### Дорожная карта
@@ -87,9 +91,9 @@
 | Фундамент | наследие 1.x в архив, KAIF, аудит и отзыв секретов, чистая история | ✅ |
 | Решения владельца | стек, хостинг, бэкенд, лицензия — интервью №001–002 | ✅ |
 | Ядро 2.0 | математика + модель данных + правила + тесты + план миграции | ✅ |
-| Фронтенд 2.0 | SvelteKit: лендинг готов (темы, RU/EN, пререндер, e2e); дальше — экраны продукта | 🔧 |
-| Бэкенд | фоновый вычислитель связей в Docker, расчёт уходит с телефона автора | 🔲 |
-| Публикация | собственный домен, SEO, индексация, перенос пользователей | 🔲 |
+| Фронтенд 2.0 | SvelteKit: лендинг + экраны «Профиль» и «Связи» работают на модели 2.0 (дев-стенд эмуляторов); дальше — вход/онбординг | 🔧 |
+| Бэкенд | вычислитель связей работает в Docker; боевое включение — вместе с миграцией данных | 🔧 |
+| Публикация | домен `ndimspace.app` куплен (до 2031), лендинг на постоянном сайте, привязка домена в процессе; дальше — sitemap и поисковики | 🔧 |
 
 Живой статус — [`STATUS.md`](STATUS.md) · дорожная карта — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 видение автора — [`GOAL.md`](GOAL.md).
@@ -101,9 +105,10 @@ Node ≥ 24 (исполняет TypeScript нативно), npm. Для тест
 ```bash
 npm install
 npm run dev        # разработка: http://localhost:5173
+npm run stand      # живой стенд: эмуляторы + тестовые данные + вычислитель → /profile, /relations
 npm test           # 88 юнит-тестов ядра и модели данных
 npm run test:rules # 56 тестов правил Firestore на эмуляторе
-npm run e2e        # 10 браузерных e2e-проверок лендинга (Playwright, продакшен-сборка)
+npm run e2e        # 18 браузерных e2e-проверок (Playwright, продакшен-сборка)
 npm run build      # статическая сборка в build/ — весь сайт пререндерится
 ```
 
@@ -189,7 +194,10 @@ you see it.
 | Profile visibility | [`src/lib/model/visibility.ts`](src/lib/model/visibility.ts) — properties laid out by the owner's circles | 30 tests; four leak scenarios checked by mutations |
 | Document schema | [`src/lib/model/schema.ts`](src/lib/model/schema.ts) — Firestore types, friendship logic, value bounds | 29 tests |
 | Security rules | [`firestore.rules`](firestore.rules) — the only guard between a client and other people's data | 56 emulator tests asserting **denials** |
-| Landing page | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, static prerender, light/dark themes, RU/EN | 10 e2e checks in a real browser |
+| Landing page | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, static prerender, light/dark themes, RU/EN, canonical on `ndimspace.app` | e2e in a real browser |
+| Profile screen | [`src/routes/profile/`](src/routes/profile/+page.svelte) — Personal · Dimensions · Visibility tabs; 0–10 star ratings, per-property audiences, "through a guest's eyes" preview | live stand + e2e; audience change physically redistributes buckets |
+| Relations screen | [`src/routes/relations/`](src/routes/relations/+page.svelte) — top similar people: all three metrics at once, "connection brightness", the shared-space maths | live stand + e2e |
+| Relation calculator | [`calculator/`](calculator/index.mjs) — Docker service, dirty-points queue, top-250 into `relations/`; outgoing connections only | verified on the emulator and from the container |
 | 1.x → 2.0 migration plan | [`plans/02_migration.md`](plans/02_migration.md) — respectful: people's work is never lost | — |
 
 ### Roadmap
@@ -199,9 +207,9 @@ you see it.
 | Foundation | 1.x legacy archived, KAIF deployed, secrets audited and revoked, clean history | ✅ |
 | Owner decisions | stack, hosting, backend, license — interviews #001–002 | ✅ |
 | Core 2.0 | maths + data model + rules + tests + migration plan | ✅ |
-| Frontend 2.0 | SvelteKit: landing done (themes, RU/EN, prerender, e2e); product screens next | 🔧 |
-| Backend | background relation calculator in Docker, computation leaves the author's phone | 🔲 |
-| Publication | own domain, SEO, indexing, user migration | 🔲 |
+| Frontend 2.0 | SvelteKit: landing + Profile and Relations screens run on the 2.0 model (emulator dev stand); sign-in/onboarding next | 🔧 |
+| Backend | the relation calculator runs in Docker; production switch-on comes with the data migration | 🔧 |
+| Publication | `ndimspace.app` bought (until 2031), landing on its permanent site, domain binding in progress; sitemap and search engines next | 🔧 |
 
 Live status — [`STATUS.md`](STATUS.md) · roadmap — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 the author's vision — [`GOAL.md`](GOAL.md).
@@ -213,9 +221,10 @@ Node ≥ 24 (runs TypeScript natively), npm. Rules tests additionally need Java 
 ```bash
 npm install
 npm run dev        # development: http://localhost:5173
+npm run stand      # live stand: emulators + seed data + calculator → /profile, /relations
 npm test           # 88 unit tests: core and data model
 npm run test:rules # 56 Firestore rules tests on the emulator
-npm run e2e        # 10 browser e2e checks of the landing (Playwright, production build)
+npm run e2e        # 18 browser e2e checks (Playwright, production build)
 npm run build      # static build into build/ — the whole site is prerendered
 ```
 
