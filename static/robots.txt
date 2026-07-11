@@ -1,3 +1,6 @@
 # allow crawling everything by default
 User-agent: *
 Disallow:
+
+# absolute URL is required by both Google and Yandex (researches/08 s4)
+Sitemap: https://ndimspace.app/sitemap.xml

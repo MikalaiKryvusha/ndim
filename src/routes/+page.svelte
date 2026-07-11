@@ -12,11 +12,12 @@
   // TODO(SEO): полноценный per-URL i18n (RU/EN как отдельные адреса) — решение на потом;
   //            сейчас RU пререндерится, EN переключается на клиенте (паритет с 1.x).
   import { onMount } from 'svelte';
+  import { SITE_ORIGIN } from '$lib/site';
 
   const APP_URL = 'https://ndim-space.web.app';
-  // Постоянный адрес лендинга: домен куплен 2026-07-11 (homeworks/03, оплачен до 2031).
   // Абсолютный canonical гасит дубли трёх хостов (researches/08 §2, §5).
-  const CANONICAL_URL = 'https://ndimspace.app/';
+  // Домен — единая константа src/lib/site.ts (её же использует sitemap.xml).
+  const CANONICAL_URL = `${SITE_ORIGIN}/`;
 
   type Lang = 'ru' | 'en';
   type Theme = 'light' | 'dark';
