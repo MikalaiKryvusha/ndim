@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — демо похожести на лендинге, 4 варианта</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — ДЕМО ПОХОЖЕСТИ НА ЛЕНДИНГЕ (ideas/10, интервью №004 В1=A).
+     Первый слой стратегии «пощупать до аккаунта»: человек двигает свои оценки
+     и живьём видит, как настоящий алгоритм считает похожесть с персонажами.
+
+     4 ВАРИАНТА (кнопки сверху, или #v1…#v4 в адресе):
+       · V1 «Соседи»      — я и три персонажа, у каждого живой бар похожести;
+       · V2 «Дуэль»       — крупная механика: похожесть = близость × общность;
+       · V3 «Пространство»— мини-карта: моя точка среди чужих, яркость = сила связи;
+       · V4 «Диалог»      — ось за осью, как будущий онбординг: беседа, не допрос.
+
+     ЧЕСТНОСТЬ МАКЕТА: расчёт — точная копия ядра src/lib/similarity/similarity.ts
+     (в проде компонент ИМПОРТИРУЕТ ядро, копия — только для этого сырого макета).
+     Ввод — звёзды 0…10 с цифрой (канон 1.x), просмотр — бары (канон 2.0).
+     Персонажи вымышленные. Ничего никуда не отправляется.
+     Тема: ☀/☾ в панели (или добавь -dark к хешу: #v3-dark). Тексты RU;
+     EN приедет при реализации через словарь лендинга. Смотри и в узком окне.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker .hint { color: #8fa9c0; margin-left: auto; font-size: 11px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+
+  /* ── Токены: светлая «Бумага» (дефолт) и тёмный киберпанк — 1:1 с продом ── */
+  .screen {
+    --bg: #f6f8fb; --panel: #ffffff;
+    --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff;
+    --accent: #1f7fc9; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --ghost-brd: rgba(20,103,214,.35); --ghost-ink: #1a63c4;
+    --bar-track: #edf3fa;
+    --link-stroke: rgba(52,130,214,.24); --node-fill: rgba(52,130,214,.38);
+    --card-shadow: 0 16px 40px rgba(29,50,71,.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+    /* в узком окне панель пикера двухэтажная — отступ должен её перекрывать */
+    min-height: 100vh; margin-top: 106px; padding: 28px 16px 60px;
+    background: var(--bg); color: var(--text); transition: background .3s, color .3s;
+  }
+  @media (min-width: 900px) { .screen { margin-top: 52px; } }
+  .screen[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.78);
+    --edge: rgba(77,159,255,.22); --edge-soft: rgba(77,159,255,.14);
+    --primary: #1467d6; --primary-ink: #ffffff;
+    --accent: #3fd9ff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --ghost-brd: rgba(63,217,255,.45); --ghost-ink: #a8e2ff;
+    --bar-track: rgba(77,159,255,.12);
+    --link-stroke: rgba(77,159,255,.16); --node-fill: rgba(99,176,255,.4);
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
+  }
+
+  .wrap { max-width: 560px; margin: 0 auto; }
+  .crumb { text-align: center; font-size: 12px; color: var(--faint); margin-bottom: 18px; }
+  h2.demo-title { color: var(--heading); font-size: 24px; text-align: center; margin-bottom: 6px; }
+  .demo-sub { text-align: center; font-size: 14px; color: var(--dim); margin-bottom: 22px; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    box-shadow: var(--card-shadow); padding: 18px; margin-bottom: 14px;
+  }
+
+  /* ── Звёзды 0…10 с цифрой (жест оценки из 1.x) ── */
+  .axis { display: flex; align-items: center; gap: 10px; padding: 7px 0; flex-wrap: wrap; }
+  .axis .name { flex: 0 0 118px; font-size: 14px; color: var(--text); }
+  .stars { display: flex; gap: 1px; }
+  .stars button {
+    font-size: 17px; line-height: 1; cursor: pointer; border: none; background: none;
+    color: var(--edge); padding: 2px 1px; transition: color .1s, transform .1s;
+  }
+  .stars button.on { color: var(--star); }
+  .stars button:hover { transform: scale(1.25); }
+  .axis .val {
+    font: 600 13px var(--mono); color: var(--accent); min-width: 22px; text-align: right;
+  }
+
+  /* ── Бары (жест просмотра 2.0) ── */
+  .bar { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+  .bar .lbl { flex: 0 0 86px; font-size: 12px; color: var(--dim); }
+  .bar .track { flex: 1; height: 8px; border-radius: 99px; background: var(--bar-track); overflow: hidden; }
+  .bar .fill { height: 100%; border-radius: 99px; background: var(--primary); transition: width .25s; }
+  .bar.hero .fill { background: linear-gradient(90deg, var(--primary), var(--accent)); }
+  .bar .pct { font: 600 12px var(--mono); color: var(--heading); min-width: 40px; text-align: right; }
+
+  .persona-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .ava {
+    width: 34px; height: 34px; border-radius: 50%; flex: 0 0 34px;
+    display: grid; place-items: center; font-weight: 700; color: #fff; font-size: 15px;
+  }
+  .persona-head .who { font-weight: 600; color: var(--heading); font-size: 15px; }
+  .persona-head .meta { font-size: 12px; color: var(--faint); }
+  .persona-head .big {
+    margin-left: auto; font: 700 22px var(--mono); color: var(--accent);
+  }
+
+  .cta { text-align: center; margin-top: 20px; }
+  .cta a {
+    display: inline-block; padding: 12px 26px; border-radius: 12px; text-decoration: none;
+    background: var(--primary); color: var(--primary-ink); font-weight: 600; font-size: 15px;
+  }
+  .trust { text-align: center; font-size: 12px; color: var(--faint); margin-top: 10px; }
+
+  /* V2 */
+  .duel-similarity { text-align: center; margin: 6px 0 14px; }
+  .duel-similarity .num { font: 800 56px/1 var(--mono); color: var(--accent); }
+  .duel-similarity .cap { font-size: 13px; color: var(--dim); margin-top: 2px; }
+  .formula {
+    text-align: center; font: 13px var(--mono); color: var(--dim);
+    padding: 8px; border: 1px dashed var(--edge); border-radius: 10px; margin-top: 12px;
+  }
+  .formula b { color: var(--heading); }
+
+  /* V3 */
+  .space-svg { display: block; width: 100%; height: auto; }
+  .space-note { font-size: 12px; color: var(--faint); text-align: center; margin-top: 6px; }
+
+  /* V4 */
+  .dlg-progress { font-size: 12px; color: var(--faint); text-align: center; margin-bottom: 10px; }
+  .dlg-q { font-size: 17px; color: var(--heading); text-align: center; margin-bottom: 10px; font-weight: 600; }
+  .dlg-stars { display: flex; justify-content: center; }
+  .dlg-stars .stars button { font-size: 24px; padding: 3px 2px; }
+  .dlg-next { text-align: center; margin-top: 12px; }
+  .dlg-next button {
+    font: inherit; cursor: pointer; padding: 9px 20px; border-radius: 10px;
+    border: 1px solid var(--ghost-brd); background: none; color: var(--ghost-ink); font-weight: 600;
+  }
+  .dlg-feed { margin-top: 16px; }
+
+  .vhide { display: none; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Демо похожести:</b>
+  <button data-v="v1">V1 · Соседи</button>
+  <button data-v="v2">V2 · Дуэль</button>
+  <button data-v="v3">V3 · Пространство</button>
+  <button data-v="v4">V4 · Диалог</button>
+  <button id="themeBtn" title="Переключить тему">☀/☾</button>
+  <span class="hint">оценки общие для всех вариантов — двигай звёзды</span>
+</div>
+
+<div class="screen" id="screen">
+  <div class="wrap">
+    <div class="crumb">…лендинг «Колонна»: герой → три фичи → <b>[ЭТОТ БЛОК]</b> → манифест → кнопки…</div>
+
+    <!-- ════════ V1 «Соседи» ════════ (id с префиксом sec-: голый id совпал бы
+         с хешем #v1 и браузер скроллил бы страницу к якорю под фиксированный пикер) -->
+    <section id="sec-v1">
+      <h2 class="demo-title">Попробуй прямо здесь</h2>
+      <p class="demo-sub">Оцени себя по пяти осям — и смотри, кто из троих окажется ближе.
+        Алгоритм настоящий, тот же, что в продукте.</p>
+      <div class="card"><div id="v1-me"></div></div>
+      <div id="v1-personas"></div>
+      <div class="cta"><a href="#">Создать своё пространство →</a></div>
+      <p class="trust">Ничего не сохраняется и не отправляется — всё считается в твоём браузере.</p>
+    </section>
+
+    <!-- ════════ V2 «Дуэль» ════════ -->
+    <section id="sec-v2" class="vhide">
+      <h2 class="demo-title">Похожесть — это математика</h2>
+      <p class="demo-sub">Ты и Алиса. Двигай свои звёзды — формула пересчитается мгновенно.</p>
+      <div class="card">
+        <div class="duel-similarity">
+          <div class="num" id="v2-sim">—</div>
+          <div class="cap">похожесть с Алисой</div>
+        </div>
+        <div class="bar"><span class="lbl">близость</span><div class="track"><div class="fill" id="v2-prox-f"></div></div><span class="pct" id="v2-prox">—</span></div>
+        <div class="bar"><span class="lbl">общность</span><div class="track"><div class="fill" id="v2-comm-f"></div></div><span class="pct" id="v2-comm">—</span></div>
+        <div class="formula">похожесть = близость × общность → <b id="v2-f"></b></div>
+      </div>
+      <div class="card"><div id="v2-me"></div></div>
+      <div class="cta"><a href="#">Создать своё пространство →</a></div>
+      <p class="trust">Персонажи вымышленные. Расчёт — в твоём браузере, без серверов.</p>
+    </section>
+
+    <!-- ════════ V3 «Пространство» ════════ -->
+    <section id="sec-v3" class="vhide">
+      <h2 class="demo-title">Ты — точка в Пространстве</h2>
+      <p class="demo-sub">Оцени себя — и точка сдвинется. Чем ярче линия, тем сильнее связь.</p>
+      <div class="card">
+        <svg class="space-svg" id="v3-svg" viewBox="0 0 520 300" role="img" aria-label="Мини-карта пространства"></svg>
+        <p class="space-note">Расстояния на карте — настоящие: доля дистанции от диаметра общего пространства.</p>
+      </div>
+      <div class="card"><div id="v3-me"></div></div>
+      <div class="cta"><a href="#">Занять своё место в Пространстве →</a></div>
+      <p class="trust">Ничего не сохраняется и не отправляется — всё считается в твоём браузере.</p>
+    </section>
+
+    <!-- ════════ V4 «Диалог» ════════ -->
+    <section id="sec-v4" class="vhide">
+      <h2 class="demo-title">Пять вопросов о тебе</h2>
+      <p class="demo-sub">Ось за осью — как в будущем онбординге. Похожесть проявляется по мере ответов.</p>
+      <div class="card">
+        <div class="dlg-progress" id="v4-prog"></div>
+        <div class="dlg-q" id="v4-q"></div>
+        <div class="dlg-stars"><div class="stars" id="v4-stars"></div></div>
+        <div class="dlg-next"><button id="v4-next">Дальше →</button></div>
+      </div>
+      <div class="dlg-feed" id="v4-feed"></div>
+      <div class="cta"><a href="#">Продолжить со своим пространством →</a></div>
+      <p class="trust">Твои ответы живут только на этой странице.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   КОПИЯ ЯДРА для сырого макета (в проде — импорт src/lib/similarity/similarity.ts).
+   Формулы и округления — 1:1: близость = 1−(d/D)^0.7, общность — Дайс,
+   похожесть — произведение долей ДО округления.
+════════════════════════════════════════════════════════════════════════ */
+const MAX_RATING = 10, PROXIMITY_EXPONENT = 0.7;
+const toPercent = f => Math.round(f * 100);
+const spaceDiameter = n => Math.sqrt(n) * MAX_RATING;
+function computeRelation(ownerDims, guestDims) {
+  const ownerAxes = Object.keys(ownerDims);
+  const guestSet = new Set(Object.keys(guestDims));
+  const common = ownerAxes.filter(a => guestSet.has(a));
+  if (common.length === 0) return null;
+  let sq = 0;
+  for (const a of common) { const d = ownerDims[a] - guestDims[a]; sq += d * d; }
+  const distance = Math.sqrt(sq);
+  const D = spaceDiameter(common.length);
+  const proximityFraction = 1 - Math.pow(distance / D, PROXIMITY_EXPONENT);
+  const commonalityFraction = (2 * common.length) / (ownerAxes.length + guestSet.size);
+  const similarityFraction = proximityFraction * commonalityFraction;
+  return {
+    similarity: toPercent(similarityFraction),
+    proximity: toPercent(proximityFraction),
+    commonality: toPercent(commonalityFraction),
+    distanceRate: distance / D,
+    commonCount: common.length
+  };
+}
+
+/* ── Данные демо: 5 понятных осей, 3 вымышленных персонажа ── */
+const AXES = [
+  { id: 'quiet',  name: 'Люблю тишину' },
+  { id: 'travel', name: 'Путешествия' },
+  { id: 'sport',  name: 'Спорт' },
+  { id: 'books',  name: 'Книги' },
+  { id: 'humor',  name: 'Чувство юмора' }
+];
+const PERSONAS = [
+  { id: 'alice', name: 'Алиса', color: '#7c5cff', note: 'заполнила все 5 осей',
+    dims: { quiet: 8, travel: 6, sport: 3, books: 9, humor: 7 } },
+  { id: 'boris', name: 'Борис', color: '#0ea578', note: 'заполнил только 3 оси',
+    dims: { travel: 9, sport: 8, humor: 6 } },
+  { id: 'vera',  name: 'Вера',  color: '#d6544f', note: 'заполнила все 5 осей',
+    dims: { quiet: 2, travel: 3, sport: 9, books: 1, humor: 4 } }
+];
+/* Стартовые оценки пользователя — общие для всех вариантов */
+const me = { quiet: 7, travel: 5, sport: 4, books: 8, humor: 6 };
+
+/* ── Виджет «звёзды 0…10 с цифрой»: клик по звезде k → оценка k; по активной — 0 ── */
+function starsRow(axisId, size, onChange) {
+  const row = document.createElement('div');
+  row.className = 'stars';
+  const paint = () => {
+    [...row.children].forEach((b, i) => b.classList.toggle('on', i < (me[axisId] ?? 0)));
+  };
+  for (let k = 1; k <= MAX_RATING; k++) {
+    const b = document.createElement('button');
+    b.textContent = '★';
+    b.title = `${k} (повторный клик — 0)`;
+    b.addEventListener('click', () => {
+      me[axisId] = (me[axisId] === k) ? 0 : k;
+      paint(); onChange();
+    });
+    row.appendChild(b);
+  }
+  paint();
+  row.repaint = paint;
+  return row;
+}
+function axesEditor(container, onChange) {
+  container.innerHTML = '';
+  const repaints = [];
+  for (const ax of AXES) {
+    const line = document.createElement('div');
+    line.className = 'axis';
+    const nm = document.createElement('span'); nm.className = 'name'; nm.textContent = ax.name;
+    const st = starsRow(ax.id, 17, () => { val.textContent = me[ax.id]; onChange(); });
+    const val = document.createElement('span'); val.className = 'val'; val.textContent = me[ax.id];
+    line.append(nm, st, val);
+    container.appendChild(line);
+    repaints.push(() => { st.repaint(); val.textContent = me[ax.id]; });
+  }
+  return () => repaints.forEach(f => f());
+}
+const bar = (lbl, hero) => `
+  <div class="bar${hero ? ' hero' : ''}"><span class="lbl">${lbl}</span>
+    <div class="track"><div class="fill"></div></div><span class="pct">—</span></div>`;
+function setBar(el, pct) {
+  el.querySelector('.fill').style.width = Math.max(0, pct) + '%';
+  el.querySelector('.pct').textContent = pct + '%';
+}
+
+/* ════════ V1 «Соседи» ════════ */
+const v1Repaint = axesEditor(document.getElementById('v1-me'), renderAll);
+const v1P = document.getElementById('v1-personas');
+function renderV1() {
+  const rels = PERSONAS.map(p => ({ p, r: computeRelation(me, p.dims) }))
+    .sort((a, b) => (b.r?.similarity ?? -1) - (a.r?.similarity ?? -1));
+  v1P.innerHTML = '';
+  rels.forEach(({ p, r }, idx) => {
+    const c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = `
+      <div class="persona-head">
+        <div class="ava" style="background:${p.color}">${p.name[0]}</div>
+        <div><div class="who">${p.name}${idx === 0 ? ' · ближе всех' : ''}</div>
+             <div class="meta">${p.note}</div></div>
+        <div class="big">${r ? r.similarity + '%' : '—'}</div>
+      </div>
+      ${bar('похожесть', true)}${bar('близость')}${bar('общность')}`;
+    const bars = c.querySelectorAll('.bar');
+    if (r) { setBar(bars[0], r.similarity); setBar(bars[1], r.proximity); setBar(bars[2], r.commonality); }
+    v1P.appendChild(c);
+  });
+}
+
+/* ════════ V2 «Дуэль» (против Алисы) ════════ */
+const v2Repaint = axesEditor(document.getElementById('v2-me'), renderAll);
+function renderV2() {
+  const r = computeRelation(me, PERSONAS[0].dims);
+  document.getElementById('v2-sim').textContent = r ? r.similarity + '%' : '—';
+  setBar(document.getElementById('v2-prox-f').closest('.bar'), r.proximity);
+  setBar(document.getElementById('v2-comm-f').closest('.bar'), r.commonality);
+  document.getElementById('v2-f').textContent =
+    `${(r.proximity / 100).toFixed(2)} × ${(r.commonality / 100).toFixed(2)} = ${(r.similarity / 100).toFixed(2)}`;
+}
+
+/* ════════ V3 «Пространство» ════════ */
+const v3Repaint = axesEditor(document.getElementById('v3-me'), renderAll);
+function renderV3() {
+  const svg = document.getElementById('v3-svg');
+  const cx = 260, cy = 150, MAXR = 118;
+  const angles = { alice: -90, boris: 25, vera: 155 };
+  let out = `
+    <circle cx="${cx}" cy="${cy}" r="${MAXR + 14}" fill="none" stroke="var(--edge)" stroke-dasharray="3 5"/>
+  `;
+  for (const p of PERSONAS) {
+    const r = computeRelation(me, p.dims);
+    const rad = (angles[p.id] * Math.PI) / 180;
+    const dist = Math.min(1, r.distanceRate) * MAXR + 26;
+    const x = cx + Math.cos(rad) * dist, y = cy + Math.sin(rad) * dist;
+    const glow = (r.similarity / 100).toFixed(2);
+    out += `
+      <line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--accent)"
+            stroke-opacity="${Math.max(0.12, glow)}" stroke-width="${1 + 3 * glow}"/>
+      <circle cx="${x}" cy="${y}" r="13" fill="${p.color}"/>
+      <text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">${p.name[0]}</text>
+      <text x="${x}" y="${y < cy ? y - 22 : y + 30}" text-anchor="middle" font-size="12"
+            fill="var(--dim)">${p.name} · ${r.similarity}%</text>`;
+  }
+  out += `
+    <circle cx="${cx}" cy="${cy}" r="15" fill="var(--primary)"/>
+    <text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Я</text>`;
+  svg.innerHTML = out;
+}
+
+/* ════════ V4 «Диалог» ════════ */
+let v4Step = 0;                      // сколько осей уже открыто (0…5)
+const v4Answered = {};               // ответы диалога — отдельно от общих me? НЕТ: пишем в me,
+                                     // но похожесть считаем только по открытым осям
+function v4Dims() {
+  const d = {};
+  AXES.slice(0, v4Step + 1).forEach(ax => { if (v4Answered[ax.id]) d[ax.id] = me[ax.id]; });
+  return d;
+}
+function renderV4() {
+  const done = Object.keys(v4Dims()).length;
+  document.getElementById('v4-prog').textContent =
+    v4Step >= AXES.length ? 'все 5 осей заполнены — вот твои соседи' : `ось ${v4Step + 1} из ${AXES.length}`;
+  const qEl = document.getElementById('v4-q'), stWrap = document.getElementById('v4-stars'),
+        next = document.getElementById('v4-next');
+  if (v4Step < AXES.length) {
+    const ax = AXES[v4Step];
+    qEl.textContent = `«${ax.name}» — насколько это про тебя?`;
+    stWrap.innerHTML = '';
+    stWrap.appendChild(starsRow(ax.id, 24, () => { v4Answered[ax.id] = true; renderV4Feed(); }));
+    next.style.display = ''; next.textContent = v4Step === AXES.length - 1 ? 'Показать итог' : 'Дальше →';
+  } else {
+    qEl.textContent = 'Готово: это была настоящая математика NDim.';
+    stWrap.innerHTML = ''; next.style.display = 'none';
+  }
+  renderV4Feed();
+}
+function renderV4Feed() {
+  const dims = v4Dims(), feed = document.getElementById('v4-feed');
+  feed.innerHTML = '';
+  if (Object.keys(dims).length === 0) return;
+  PERSONAS.map(p => ({ p, r: computeRelation(dims, p.dims) }))
+    .sort((a, b) => (b.r?.similarity ?? -1) - (a.r?.similarity ?? -1))
+    .forEach(({ p, r }) => {
+      const c = document.createElement('div'); c.className = 'card';
+      c.innerHTML = `
+        <div class="persona-head">
+          <div class="ava" style="background:${p.color}">${p.name[0]}</div>
+          <div><div class="who">${p.name}</div><div class="meta">${r ? 'общих осей: ' + r.commonCount : 'общих осей пока нет'}</div></div>
+          <div class="big">${r ? r.similarity + '%' : '—'}</div>
+        </div>${bar('похожесть', true)}`;
+      if (r) setBar(c.querySelector('.bar'), r.similarity);
+      feed.appendChild(c);
+    });
+}
+document.getElementById('v4-next').addEventListener('click', () => {
+  v4Answered[AXES[v4Step].id] = true;   // «Дальше» подтверждает текущую (даже дефолтную) оценку
+  v4Step = Math.min(v4Step + 1, AXES.length);
+  renderV4();
+});
+
+/* ── Оркестровка: общий пересчёт, пикер вариантов, тема, хеш ── */
+function renderAll() {
+  v1Repaint(); v2Repaint(); v3Repaint();
+  renderV1(); renderV2(); renderV3(); renderV4();
+}
+const screen = document.getElementById('screen');
+function show(v) {
+  ['v1', 'v2', 'v3', 'v4'].forEach(id =>
+    document.getElementById('sec-' + id).classList.toggle('vhide', id !== v));
+  document.querySelectorAll('.picker [data-v]').forEach(b =>
+    b.classList.toggle('active', b.dataset.v === v));
+}
+document.querySelectorAll('.picker [data-v]').forEach(b =>
+  b.addEventListener('click', () => { location.hash = b.dataset.v; show(b.dataset.v); }));
+document.getElementById('themeBtn').addEventListener('click', () =>
+  screen.dataset.theme = screen.dataset.theme === 'dark' ? '' : 'dark');
+/* Хеш #v2 / #v3-dark — чтобы открывать нужный вариант скриншотером и по ссылке */
+(function initFromHash() {
+  const h = (location.hash || '#v1').slice(1);
+  const [v, theme] = h.split('-');
+  if (['v1', 'v2', 'v3', 'v4'].includes(v)) show(v); else show('v1');
+  if (theme === 'dark') screen.dataset.theme = 'dark';
+})();
+renderAll();
+</script>
+</body>
+</html>
