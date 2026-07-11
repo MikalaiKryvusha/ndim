@@ -42,16 +42,20 @@ D:\work\ai_sandbox\ndim\
 │  ── КОД NDim Space 2.0 (SvelteKit: Kit 2.69 · Svelte 5 · Vite 8) ──
 ├── src/routes/                  # страницы приложения
 │   ├── +layout.ts               # prerender = true: весь сайт — статический HTML (SEO)
-│   ├── +layout.svelte           # глобальные стили: палитра «синий киберпанк-неон»
-│   └── +page.svelte             # ★ ЛЕНДИНГ — утверждённый макет «Колонна», тексты владельца
-├── src/app.html                 # HTML-оболочка (lang=ru, theme-color)
+│   ├── +layout.svelte           # глобальные стили: токены светлой «Бумаги» и тёмной темы
+│   ├── +page.svelte             # ★ ЛЕНДИНГ — утверждённый макет «Колонна», тексты владельца
+│   ├── profile/+page.svelte     # экран «Профиль» (модель 2.0, живой стенд; в проде — заглушка)
+│   ├── relations/+page.svelte   # экран «Связи» (синтез S4; в проде — заглушка)
+│   └── sitemap.xml/+server.ts   # пререндеренный sitemap: только публичные страницы
+├── src/lib/site.ts              # единая константа боевого домена (canonical + sitemap)
+├── src/app.html                 # HTML-оболочка (lang=ru, theme-color, скрипт темы до отрисовки)
 ├── src/app.d.ts
-├── static/                      # favicon.svg (кластер трёх точек), robots.txt
+├── static/                      # favicon.svg (лого V3), robots.txt (+Sitemap), 404.html
 ├── vite.config.ts               # SvelteKit + adapter-static (svelte.config.js больше не нужен)
 ├── design/landing-mockups.html  # утверждённые макеты (история 3 раундов правок владельца)
 ├── design/light-theme-mockups.html # 4 варианта светлой темы; утверждена V1 «Бумага» (2026-07-11)
 ├── playwright.config.ts         # e2e-стенд: собирает продакшен-артефакт и гоняет браузер по нему
-├── e2e/landing.spec.ts          # 10 проверок лендинга: пререндер, темы, языки, кнопки, консоль
+├── e2e/                         # 22 проверки: лендинг, смоук профиля/связей, SEO (sitemap, robots)
 ├── src/lib/
 │   ├── similarity/              # ★ математическое ядро — то, ради чего проект существует
 │   │   ├── similarity.ts        # computeRelation: близость × общность = похожесть
