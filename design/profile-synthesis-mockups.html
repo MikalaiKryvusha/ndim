@@ -19,9 +19,12 @@
          5 разделов, РАСКРЫВАЮЩИЕСЯ карточки: измерение (Описание/Автор/Год/Теги),
          связь (математика общего пространства), история версий.
 
-     Это не 4 альтернативы, а ЧЕТЫРЕ ЭКРАНА ОДНОГО ДИЗАЙНА:
-       S1 Измерения (V6 + раскрытая карточка) · S2 Дом/Личное (V2) ·
-       S3 Дом/Видимость (V3) · S4 Связи (превью по мотивам живого 1.x).
+     Это не 4 альтернативы, а ЧЕТЫРЕ ЭКРАНА ОДНОГО ДИЗАЙНА. Переосмысление по правке
+     владельца: сегмент «Все | Мой NDim ID» — костыль 1.x, НЕ переносится; экран «Профиль»
+     несёт три вкладки (Личное | Измерения | Видимость), измерения — единая лента с поиском
+     и фильтрами; нижняя навигация — 4 раздела (Профиль · Связи · Пространство · Меню):
+       S1 Профиль/Измерения (лента + раскрытая карточка V6) · S2 Профиль/Личное (V2) ·
+       S3 Профиль/Видимость (V3) · S4 Связи (превью по мотивам живого 1.x).
 
      Принципы, уже зафиксированные владельцем:
        · ввод оценки — классические звёзды 0–10 с цифрами; просмотр — прогресс-бары;
@@ -57,7 +60,7 @@
   .card { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 14px; }
   .card h3 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
   .hint { font-size: 11.5px; color: var(--dim); line-height: 1.45; }
-  .hintbox { background: var(--chip); border-radius: 10px; padding: 10px 12px; font-size: 11.5px; color: var(--dim); line-height: 1.45; text-align: center; }
+  .search { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--panel); font-size: 13px; color: var(--dim); }
   .btn { display: block; text-align: center; padding: 12px; border-radius: 12px; background: var(--primary); color: #fff; font-size: 14px; font-weight: 600; }
   .btn.ghost { background: transparent; border: 1px solid rgba(20,103,214,.35); color: var(--primary); }
 
@@ -69,9 +72,15 @@
   .tabs { display: flex; background: var(--panel); border-bottom: 1px solid var(--edge); }
   .tabs span { flex: 1; text-align: center; font-size: 13px; padding: 10px 0; color: var(--dim); }
   .tabs .on { color: var(--primary); font-weight: 650; box-shadow: inset 0 -2px 0 var(--primary); }
-  .seg2 { display: flex; background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; overflow: hidden; }
-  .seg2 span { flex: 1; text-align: center; padding: 9px 0; font-size: 13px; color: var(--dim); }
-  .seg2 .on { background: #e3efff; color: var(--primary); font-weight: 650; }
+
+  /* лента измерений: свёрнутая строка = имя + бар; раскрытая = карточка V6 */
+  .dim-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--edge); }
+  .dim-row:last-child { border-bottom: 0; }
+  .dim-row .n { font-size: 14px; color: var(--heading); flex: 1; }
+  .scale { flex: none; width: 130px; height: 6px; border-radius: 3px; background: var(--chip); position: relative; }
+  .scale i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: linear-gradient(90deg, #1467d6, #1fa8c9); }
+  .val { flex: none; width: 26px; text-align: right; font-size: 13.5px; font-weight: 700; color: var(--primary); }
+  .dim2 { padding: 12px 0; border-bottom: 1px solid var(--edge); }
 
   /* свойства и аудитории */
   .prop { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--edge); }
@@ -141,62 +150,71 @@
   </defs>
 </svg>
 
-<h1>Синтез · V6 × V2 × V3 + живой 1.x — четыре экрана одного дизайна</h1>
-<p class="note">Это не альтернативы, а <b>связный набор</b>: каркас — нижняя навигация 1.x
-(Дом · Связи · Пространство · Измерения · Меню); «Измерения» — целевой V6 с раскрывающейся
-карточкой, как в живом 1.x; «Дом» — табы V2 (Личное | Видимость), где «Видимость» — это
-предпросмотр «глазами гостя» из V3; «Связи» — превью следующего экрана по мотивам раскрытой
-карточки живого 1.x. Прежние 8 вариантов — <code>design/profile-mockups.html</code>, без изменений.</p>
+<h1>Синтез · V6 × V2 × V3 — переосмысление после правки владельца</h1>
+<p class="note"><b style="color:#fff">Правка владельца (чат, 2026-07-11):</b> сегмент
+«Все | Мой NDim ID» — костыль 1.x, не тащить; три вкладки на одном экране — удобно; прогресс-бары —
+красивые; «старый ндим — не панацея, а напоминание, как было, чтобы сделать лучше».</p>
+<p class="note">Итог переосмысления: <b>один экран «Профиль» с вкладками
+Личное | Измерения | Видимость</b> (V2). Вместо сегмента — <b>единая лента измерений</b> с поиском
+и фильтрами: свёрнутая строка — имя + прогресс-бар (просмотр), раскрытая — карточка V6
+(описание, автор, теги, рейтинг сообщества и звёзды 0–10 для ввода). Следствие: разделы «Дом» и
+«Измерения» сливаются, нижняя навигация сжимается до четырёх — <b>Профиль · Связи · Пространство ·
+Меню</b> (это предложение — скажи, если хочется иначе). Из 1.x остаётся хорошее: раскрывающиеся
+карточки, рейтинг сообщества, «Предложить измерение». Прежние 8 вариантов —
+<code>design/profile-mockups.html</code>, без изменений.</p>
 
 <div class="row">
 
-<!-- ═══ S1: Измерения (V6 + раскрытие) ═══ -->
+<!-- ═══ S1: Профиль · Измерения (единая лента, без сегмента-костыля) ═══ -->
 <section class="variant">
-  <h2>S1 — Измерения · «Мой NDim ID» (V6, карточка раскрыта)</h2>
-  <p class="why">Целевой V6: сегмент, карточка с типом и названием, рейтинг сообщества, звёзды
-     0–10 с цифрами. Новое из живого 1.x: тап по названию раскрывает Описание, Автора, Год и Теги.</p>
+  <h2>S1 — Профиль · вкладка «Измерения» (единая лента)</h2>
+  <p class="why">Вместо «Все | Мой NDim ID» — одна лента с поиском и фильтрами. Свёрнутая строка —
+     имя + бар (просмотр); тап раскрывает карточку V6: описание, автор, теги, рейтинг сообщества
+     и звёзды для ввода. Оценённое и неоценённое — фильтром, а не отдельной вселенной.</p>
   <div class="phone">
     <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">Пространство NDim</span><span class="lang">RU</span><span class="me">Н</span></div>
+    <div class="tabs"><span>Личное</span><span class="on">Измерения</span><span>Видимость</span></div>
     <div class="body">
-      <div class="seg2"><span>Все</span><span class="on">Мой NDim ID</span></div>
-      <div class="hintbox">Тап по звезде — Ваша оценка. Тап по названию — подробности. Оценки видите только Вы.</div>
+      <div class="search">🔎 Найти среди 214 измерений…</div>
+      <div class="seg"><span class="on">Мои · 14</span><span>Не оценено</span><span>Все · 214</span></div>
       <div class="card">
-        <div class="dhead"><span class="dtype">Фильм:</span><b>«Таксист» (1976)</b><span class="dots3">⋮</span></div>
-        <div class="avg"><b>9.3</b><span class="star">★</span><small>4 голоса</small></div>
-        <div class="meta">
-          <div><h4>Описание</h4><p>Драма Мартина Скорсезе о ветеране Вьетнамской войны, работающем таксистом в Нью-Йорке…</p></div>
-          <div><h4>Автор</h4><p>Мартин Скорсезе</p></div>
-          <div class="tags"><span>drama</span><span>movie</span><span>кино</span><span>фильм</span></div>
+        <div class="dim-row"><span class="n">Кошки</span><span class="scale"><i style="width:100%"></i></span><span class="val">10</span></div>
+        <div class="dim-row"><span class="n">Путешествия</span><span class="scale"><i style="width:90%"></i></span><span class="val">9</span></div>
+        <div class="dim2">
+          <div class="dhead"><span class="dtype">Фильм:</span><b>«Таксист» (1976)</b><span class="dots3">⋮</span></div>
+          <div class="avg"><b>9.3</b><span class="star">★</span><small>4 голоса</small></div>
+          <div class="meta">
+            <div><h4>Описание</h4><p>Драма Мартина Скорсезе о ветеране Вьетнамской войны, работающем таксистом в Нью-Йорке…</p></div>
+            <div class="tags"><span>drama</span><span>movie</span><span>кино</span><span>фильм</span></div>
+          </div>
+          <div class="strow">
+            <span class="st"><b>0</b>★</span><span class="st"><b>1</b>★</span><span class="st"><b>2</b>★</span><span class="st"><b>3</b>★</span>
+            <span class="st"><b>4</b>★</span><span class="st"><b>5</b>★</span><span class="st"><b>6</b>★</span><span class="st"><b>7</b>★</span>
+            <span class="st"><b>8</b>★</span><span class="st pick"><b>9</b>★</span><span class="st"><b>10</b>★</span>
+          </div>
+          <p class="strow-cap">Ваша оценка: 9 · Свернуть ▴</p>
         </div>
-        <div class="strow">
-          <span class="st"><b>0</b>★</span><span class="st"><b>1</b>★</span><span class="st"><b>2</b>★</span><span class="st"><b>3</b>★</span>
-          <span class="st"><b>4</b>★</span><span class="st"><b>5</b>★</span><span class="st"><b>6</b>★</span><span class="st"><b>7</b>★</span>
-          <span class="st"><b>8</b>★</span><span class="st pick"><b>9</b>★</span><span class="st"><b>10</b>★</span>
-        </div>
-        <p class="strow-cap">Ваша оценка: 9</p>
-        <p class="fold">Свернуть ▴</p>
+        <div class="dim-row"><span class="n">Тишина</span><span class="scale"><i style="width:70%"></i></span><span class="val">7</span></div>
+        <div class="dim-row"><span class="n">Математика</span><span class="scale"><i style="width:80%"></i></span><span class="val">8</span></div>
       </div>
-      <div class="card">
-        <div class="dhead"><span class="dtype">Роман:</span><b>«Алхимик» (1988)</b><span class="dots3">⋮</span></div>
-        <div class="avg"><b>10</b><span class="star">★</span><small>3 голоса</small></div>
-      </div>
+      <a class="btn ghost">💡 Предложить новое измерение</a>
+      <p class="hint">Свёрнуто — бар (просмотр), раскрыто — звёзды (ввод). Оценки видите только Вы.</p>
     </div>
     <div class="bnav">
-      <span><span class="ico">⌂</span>Дом</span><span><span class="ico">◎</span>Связи</span>
-      <span><span class="ico">✳</span>Пространство</span><span class="on"><span class="ico">✦</span>Измерения</span>
-      <span><span class="ico">☰</span>Меню</span>
+      <span class="on"><span class="ico">⌂</span>Профиль</span><span><span class="ico">◎</span>Связи</span>
+      <span><span class="ico">✳</span>Пространство</span><span><span class="ico">☰</span>Меню</span>
     </div>
   </div>
 </section>
 
 <!-- ═══ S2: Дом · Личное (V2) ═══ -->
 <section class="variant">
-  <h2>S2 — Дом · вкладка «Личное» (V2)</h2>
-  <p class="why">«Дом» — комнаты V2: Личное | Видимость. Свойства с чипами аудитории (умолчание —
-     «Никому»), сводка NDim ID с прогресс-баром (принцип: просмотр — бары) и мостиком в Измерения.</p>
+  <h2>S2 — Профиль · вкладка «Личное»</h2>
+  <p class="why">Свойства с чипами аудитории (умолчание — «Никому»), сводка NDim ID с
+     прогресс-баром (просмотр — бары) и мостиком во вкладку «Измерения» этого же экрана.</p>
   <div class="phone">
     <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">Пространство NDim</span><span class="lang">RU</span><span class="me">Н</span></div>
-    <div class="tabs"><span class="on">Личное</span><span>Видимость</span></div>
+    <div class="tabs"><span class="on">Личное</span><span>Измерения</span><span>Видимость</span></div>
     <div class="body">
       <div class="card">
         <div class="visit-head"><span class="ava">Н</span><span><b>Николай</b><small>В Пространстве с мая 2025</small></span></div>
@@ -216,21 +234,20 @@
       </div>
     </div>
     <div class="bnav">
-      <span class="on"><span class="ico">⌂</span>Дом</span><span><span class="ico">◎</span>Связи</span>
-      <span><span class="ico">✳</span>Пространство</span><span><span class="ico">✦</span>Измерения</span>
-      <span><span class="ico">☰</span>Меню</span>
+      <span class="on"><span class="ico">⌂</span>Профиль</span><span><span class="ico">◎</span>Связи</span>
+      <span><span class="ico">✳</span>Пространство</span><span><span class="ico">☰</span>Меню</span>
     </div>
   </div>
 </section>
 
 <!-- ═══ S3: Дом · Видимость (V3) ═══ -->
 <section class="variant">
-  <h2>S3 — Дом · вкладка «Видимость» (V3, глазами гостя)</h2>
-  <p class="why">Вкладка «Видимость» — это V3: переключатель аудитории, профиль показан так, как
-     его видит выбранный зритель; скрытое гаснет. Приватность видна буквально, не абстракцией.</p>
+  <h2>S3 — Профиль · вкладка «Видимость» (V3, глазами гостя)</h2>
+  <p class="why">Переключатель аудитории, профиль показан так, как его видит выбранный зритель;
+     скрытое гаснет. Приватность видна буквально, не абстракцией.</p>
   <div class="phone">
     <div class="bar"><svg width="24" height="24"><use href="#mark"/></svg><span class="wm">Пространство NDim</span><span class="lang">RU</span><span class="me">Н</span></div>
-    <div class="tabs"><span>Личное</span><span class="on">Видимость</span></div>
+    <div class="tabs"><span>Личное</span><span>Измерения</span><span class="on">Видимость</span></div>
     <div class="body">
       <div class="seg"><span>Я</span><span class="on">🌐 Все</span><span>👥 Друзья</span><span>◎ Клуб</span></div>
       <div class="card">
@@ -249,9 +266,8 @@
       <a class="btn ghost">Изменить аудиторию свойств</a>
     </div>
     <div class="bnav">
-      <span class="on"><span class="ico">⌂</span>Дом</span><span><span class="ico">◎</span>Связи</span>
-      <span><span class="ico">✳</span>Пространство</span><span><span class="ico">✦</span>Измерения</span>
-      <span><span class="ico">☰</span>Меню</span>
+      <span class="on"><span class="ico">⌂</span>Профиль</span><span><span class="ico">◎</span>Связи</span>
+      <span><span class="ico">✳</span>Пространство</span><span><span class="ico">☰</span>Меню</span>
     </div>
   </div>
 </section>
@@ -286,9 +302,8 @@
       <p class="hint">Гость видит похожесть, но не оценки: из чего сложилась близость — приватно.</p>
     </div>
     <div class="bnav">
-      <span><span class="ico">⌂</span>Дом</span><span class="on"><span class="ico">◎</span>Связи</span>
-      <span><span class="ico">✳</span>Пространство</span><span><span class="ico">✦</span>Измерения</span>
-      <span><span class="ico">☰</span>Меню</span>
+      <span><span class="ico">⌂</span>Профиль</span><span class="on"><span class="ico">◎</span>Связи</span>
+      <span><span class="ico">✳</span>Пространство</span><span><span class="ico">☰</span>Меню</span>
     </div>
   </div>
 </section>
