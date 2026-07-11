@@ -22,6 +22,8 @@
 // O(N·M), терпимый до тысяч людей. Уход к инкрементальной схеме — задача фазы 4+,
 // зафиксирована в MASTER_PLAN.
 
+import { pathToFileURL } from 'node:url';
+
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { computeRelation } from '../src/lib/similarity/similarity.ts';
@@ -44,7 +46,15 @@ const db = getFirestore();
 
 const log = (message) => console.log(`[calc ${new Date().toISOString()}] ${message}`);
 
-/** Читает оценки всех людей: uid → { dimId: value }. */
+/**
+ * Читает точки всех людей: uid → { ratings: { dimId: value }, anonymous: boolean }.
+ *
+ * ⚠️ Не путать два слова «гость». Флаг `guest: true` на документе points/{uid} —
+ * это АНОНИМНЫЙ гость (plans/03, этап 2): правила гарантируют честность флага
+ * (honestGuestFlag в firestore.rules). А `guestUid` в записях топа — «другой человек
+ * связи», наследие формата 1.x. Чтобы не смешивать, внутри вычислителя аноним
+ * называется `anonymous`.
+ */
 async function loadAllPoints() {
   const points = new Map();
   const owners = await db.collection('points').get();
@@ -53,20 +63,25 @@ async function loadAllPoints() {
       const dims = await owner.ref.collection('dims').get();
       const ratings = {};
       for (const dim of dims.docs) ratings[dim.id] = dim.data().value;
-      points.set(owner.id, ratings);
+      points.set(owner.id, { ratings, anonymous: owner.data().guest === true });
     }),
   );
   return points;
 }
 
-/** Топ связей одного владельца против всех остальных точек. */
+/**
+ * Топ связей одного владельца против остальных точек.
+ * Анонимные гости НЕ кандидаты ни в чей топ (В3: гость невидим другим) — но сам
+ * владелец-гость получает свой топ против публичных точек на общих основаниях.
+ */
 function topFor(ownerUid, points) {
-  const ownerDims = points.get(ownerUid);
+  const ownerDims = points.get(ownerUid).ratings;
   const top = [];
-  for (const [guestUid, guestDims] of points) {
-    if (guestUid === ownerUid) continue;
-    const relation = computeRelation(ownerDims, guestDims);
-    if (relation !== null) top.push({ ...relation, guestUid });
+  for (const [otherUid, other] of points) {
+    if (otherUid === ownerUid) continue;
+    if (other.anonymous) continue; // гостя не видит никто — даже другой гость
+    const relation = computeRelation(ownerDims, other.ratings);
+    if (relation !== null) top.push({ ...relation, guestUid: otherUid });
   }
   top.sort((a, b) => b.similarity - a.similarity);
   return top.slice(0, TOP_LIMIT);
@@ -91,8 +106,8 @@ export async function runCycle() {
   // у кого есть оценки. При «dirty × все» это не дороже точечных вставок,
   // зато код очевиден и не умеет рассинхронизироваться.
   let recomputed = 0;
-  for (const [uid, dims] of points) {
-    if (Object.keys(dims).length === 0) continue;
+  for (const [uid, point] of points) {
+    if (Object.keys(point.ratings).length === 0) continue;
     batch.set(db.doc(`relations/${uid}`), {
       computedAt: now,
       version: RELATIONS_VERSION,
@@ -111,18 +126,24 @@ export async function runCycle() {
 }
 
 // ── Точка входа ──────────────────────────────────────────────────────────────
+// Срабатывает только при прямом запуске файла. При импорте (тесты) модуль лишь
+// отдаёт runCycle и ничего не запускает — иначе тест поднял бы вечную службу.
 
-const once = process.argv.includes('--once');
-const intervalSeconds = Number(process.env.CALC_INTERVAL_SECONDS ?? 60);
+const runDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 
-log(`старт: проект ${projectId}, эмулятор: ${process.env.FIRESTORE_EMULATOR_HOST ?? 'нет (боевой Firestore)'}`);
+if (runDirectly) {
+  const once = process.argv.includes('--once');
+  const intervalSeconds = Number(process.env.CALC_INTERVAL_SECONDS ?? 60);
 
-if (once) {
-  await runCycle();
-} else {
-  log(`режим службы: цикл каждые ${intervalSeconds} с`);
-  await runCycle();
-  setInterval(() => {
-    runCycle().catch((error) => log(`ошибка цикла: ${error.message}`));
-  }, intervalSeconds * 1000);
+  log(`старт: проект ${projectId}, эмулятор: ${process.env.FIRESTORE_EMULATOR_HOST ?? 'нет (боевой Firestore)'}`);
+
+  if (once) {
+    await runCycle();
+  } else {
+    log(`режим службы: цикл каждые ${intervalSeconds} с`);
+    await runCycle();
+    setInterval(() => {
+      runCycle().catch((error) => log(`ошибка цикла: ${error.message}`));
+    }, intervalSeconds * 1000);
+  }
 }
