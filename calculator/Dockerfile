@@ -21,7 +21,15 @@ WORKDIR /app
 COPY calculator/package.json calculator/
 RUN cd calculator && npm install --omit=dev && npm cache clean --force
 
-COPY src/lib/similarity/similarity.ts src/lib/similarity/
+# Чистые модули, которые сервер переиспользует: ядро похожести и агрегаты Пространства.
+#
+# Копируем ДИРЕКТОРИЯМИ, а не отдельными файлами. Поймано на боевом выкате 2026-07-12: контейнер
+# упал в цикле перезапуска (ERR_MODULE_NOT_FOUND: src/lib/model/stats.ts) — index.mjs начал
+# импортировать stats.ts, когда сервер научился считать статистику Пространства, а Dockerfile
+# всё ещё копировал один similarity.ts. На стенде дефект невидим: там весь репозиторий лежит на
+# диске. Директория переживает появление новых импортов внутри неё — файл не переживает.
+COPY src/lib/similarity/ src/lib/similarity/
+COPY src/lib/model/ src/lib/model/
 COPY calculator/index.mjs calculator/
 
 USER node

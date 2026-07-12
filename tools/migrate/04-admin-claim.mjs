@@ -36,21 +36,24 @@ const auth = getAuth();
 const list = (await db.doc('admins/list_of_admins').get()).data();
 const emails = Array.isArray(list?.admins_emails_list) ? list.admins_emails_list : [];
 
-/** email → uid по коллекции users (в 1.x почта дублировалась в профиле). */
-const emailToUid = new Map();
-for (const doc of (await db.collection('users').get()).docs) {
-  const email = doc.data().email;
-  if (typeof email === 'string') emailToUid.set(email.toLowerCase(), doc.id);
-}
-
+// Почты админов 1.x → uid разрешаем ЧЕРЕЗ FIREBASE AUTH, а не через коллекцию `users`.
+//
+// Почему не через `users` (поймано на боевом выкате 2026-07-12): миграция 02-run.mjs
+// ПЕРЕЗАПИСЫВАЕТ корневой документ `users/{uid}` схемой 2.0, а в ней поля `email` нет вовсе —
+// почта это ПДн и в корень профиля не выносится (transform.ts → migrateProfile). Значит, после
+// шага 2 карта email→uid по коллекции `users` пуста, и claim не достался бы НИКОМУ. Auth почту
+// хранит и остаётся источником истины — там же живёт и сам claim. Порядок шагов больше не важен.
 const uids = new Set();
 const unresolved = [];
 for (const email of emails) {
   if (typeof email !== 'string') continue;
-  const uid = emailToUid.get(email.toLowerCase());
-  // Почту не печатаем даже здесь: репозиторий публичный, а лог может уехать куда угодно.
-  if (uid) uids.add(uid);
-  else unresolved.push('(админ без аккаунта в users)');
+  try {
+    const user = await auth.getUserByEmail(email);
+    uids.add(user.uid);
+  } catch {
+    // Почту не печатаем даже здесь: репозиторий публичный, а лог может уехать куда угодно.
+    unresolved.push('(админ без аккаунта в Auth)');
+  }
 }
 
 console.log(`admins/ в 1.x: ${emails.length} почт(ы) → uid для claim: ${uids.size}`);
