@@ -196,10 +196,32 @@ export interface RelationsDoc {
   readonly top: readonly RelationEntry[];
 }
 
-/** `dims/{dimId}` — ось измерения. Пишет админ, читают подтверждённые пользователи. */
+/**
+ * `dims/{dimId}` — измерение. Пишет админ, читают подтверждённые пользователи и гость.
+ *
+ * Поля `type`/`author`/`year`/`tags`/`time` пришли из 1.x и ЖИВЫ в боевой базе (миграция каталога
+ * писала `title` добавлением). Долгое время 2.0 их не объявлял и не читал — и карточка измерения
+ * выродилась в строку списка. Это и есть та «дань уважения», которой требовал владелец:
+ * измерение — не строка, а `Роман: «Лолита» (1955)` с описанием, автором и тегами
+ * (`researches/11_dims_screen_1x.md`).
+ */
 export interface DimDoc {
   readonly title: Localized;
   readonly description: Localized;
+  /** Вид произведения: «Фильм» · «Роман» · «Видеоигра» … Показывается бейджем в карточке. */
+  readonly type?: Localized;
+  /** Автор произведения (режиссёр, писатель, студия). */
+  readonly author?: Localized;
+  /** Год — строкой, как в 1.x («2007»). Не число: встречаются диапазоны и пустые значения. */
+  readonly year?: string;
+  readonly tags?: readonly string[];
+  /**
+   * Когда измерение завели. По нему карточка получает бейдж «Новое» (14 дней).
+   * В бою — `time.created` (Timestamp), на стенде — плоское `created` (миллисекунды).
+   * Оба обличья понимает `model/feed.ts` → `createdAt`.
+   */
+  readonly time?: { readonly created?: unknown };
+  readonly created?: number;
   /** Сумма всех оценок, поставленных себе людьми по этой оси. */
   readonly stars: number;
   /** Сколько людей заполнили эту ось. */
@@ -207,6 +229,30 @@ export interface DimDoc {
   /** `stars / rates`, округлённое до 0.1. */
   readonly rating: number;
 }
+
+/**
+ * `dims/dims_list` — КОМПАКТНЫЙ ИНДЕКС всего каталога. Наследие 1.x, и очень удачное.
+ *
+ * Один документ вместо 5111 чтений: `{ dimId: { ru, en, year } }`, упакованный в JSON-СТРОКУ
+ * (тот же почерк, что и топ связей 1.x). Им 1.x строил и ленту измерений, и мгновенный поиск.
+ *
+ * Это ТОТ САМЫЙ служебный документ, который 2.0 не узнал и на котором уронил экран «Профиль»
+ * на боевом выкате (`EXPERIENCE.md` → EXP-0041). Теперь он не «сор в каталоге», а опора.
+ */
+export interface DimsIndexDoc {
+  /** JSON-строка вида `{"<dimId>":{"ru":"…","en":"…","year":"1955"}}`. */
+  readonly dims_list: string;
+}
+
+/** Одна запись индекса каталога. */
+export interface DimIndexEntry {
+  readonly ru?: string;
+  readonly en?: string;
+  readonly year?: string;
+}
+
+/** Идентификатор служебного документа-индекса внутри коллекции `dims`. */
+export const DIMS_INDEX_ID = 'dims_list';
 
 /** `suggestions/{id}` — заявка на новую ось. Так пространство измерений растёт снизу. */
 export interface SuggestionDoc {

@@ -123,6 +123,47 @@ async function loadDims(now) {
 }
 
 /**
+ * Следит за ИНДЕКСОМ КАТАЛОГА — `dims/dims_list`.
+ *
+ * Индекс — это один документ с JSON-строкой `{dimId: {ru, en, year}}` по всем измерениям.
+ * На нём держится экран «Измерения»: одно чтение вместо 5111 (принцип владельца — экономить
+ * запросы к базе). Наследие 1.x, и очень удачное.
+ *
+ * Но у индекса есть цена: он может ПРОТУХНУТЬ. Заведут новое измерение — а в индексе его нет,
+ * и человек не увидит его НИКОГДА. Поэтому индекс держит тот, кто и так обходит каталог, —
+ * сервер синхронизации.
+ *
+ * Пересобираем только когда размеры разошлись: перечитывать 5111 документов каждый цикл — ровно
+ * то расточительство, против которого индекс и заведён. Сам `dims_list` в индекс не входит,
+ * поэтому в каталоге на один документ больше.
+ */
+async function ensureDimsIndex(dimsCount) {
+  const ref = db.doc('dims/dims_list');
+  const snapshot = await ref.get();
+
+  let indexed = -1;
+  try {
+    indexed = Object.keys(JSON.parse(snapshot.data()?.dims_list ?? '{}')).length;
+  } catch {
+    indexed = -1; // битый индекс — пересоберём
+  }
+
+  if (indexed === dimsCount - 1) return; // всё сходится, каталог не менялся
+
+  const catalog = await db.collection('dims').get();
+  const index = {};
+  for (const dim of catalog.docs) {
+    if (dim.id === 'dims_list') continue; // индекс не индексирует сам себя
+    const data = dim.data();
+    if (!data.title || typeof data.title !== 'object') continue; // без названия показывать нечего
+    index[dim.id] = { ru: data.title.ru ?? null, en: data.title.en ?? null, year: data.year ?? '' };
+  }
+
+  await ref.set({ dims_list: JSON.stringify(index) }, { merge: true });
+  log(`индекс каталога пересобран: было ${indexed}, стало ${Object.keys(index).length} измерений`);
+}
+
+/**
  * Топ связей одного владельца против остальных точек.
  * Анонимные гости НЕ кандидаты ни в чей топ (В3: гость невидим другим) — но сам
  * владелец-гость получает свой топ против публичных точек на общих основаниях.
@@ -212,6 +253,9 @@ export async function runCycle() {
   log(`грязных точек: ${dirtyUids.length} (${dirtyUids.join(', ')})`);
 
   const [points, { dimsCount, newDims }] = await Promise.all([loadAllPoints(), loadDims(startedAt)]);
+
+  // Индекс каталога обязан поспевать за каталогом: на нём держится экран «Измерения».
+  await ensureDimsIndex(dimsCount);
   const now = Date.now();
   const batch = db.batch();
 

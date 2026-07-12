@@ -24,9 +24,7 @@
     loadProfileScreen,
     previewAs,
     saveProfile,
-    saveRating,
     signInGuest,
-    submitSuggestion,
     type ProfileScreenData,
   } from '$lib/data/profile';
   import {
@@ -43,8 +41,7 @@
   import { isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
 
   type Lang = 'ru' | 'en';
-  type Tab = 'personal' | 'dims' | 'visibility';
-  type DimFilter = 'mine' | 'unrated' | 'all';
+  type Tab = 'personal' | 'visibility';
 
   let lang = $state<Lang>('ru');
   let tab = $state<Tab>('personal');
@@ -76,21 +73,6 @@
   let signupEmail = $state('');
   let signupError = $state('');
 
-  // Вкладка «Измерения»
-  let search = $state('');
-  /**
-   * Вкладка «Измерения» ВСЕГДА встречает человека тем, что он ЕЩЁ НЕ ОЦЕНИЛ.
-   *
-   * Решение владельца (2026-07-12, боевой прод): «когда пользователь попадает на вкладку
-   * Измерения — его встречать должен список незаполненных пользователем измерений».
-   * Раньше умолчанием было «Мои» — и новичок, у которого своих оценок ноль, открывал вкладку
-   * и упирался в пустоту, ничего не понимая.
-   *
-   * Смысл вкладки — ЗАПОЛНЯТЬ измерения. Уже оценённое никуда не денется: оно за фильтром «Мои».
-   */
-  let dimFilter = $state<DimFilter>('unrated');
-  let expandedDim = $state<string | null>(null);
-  let savingDim = $state<string | null>(null);
 
   // Вкладка «Видимость»: выбранная аудитория предпросмотра
   let previewKey = $state('me');
@@ -113,10 +95,6 @@
   let audFriends = $state(false);
   let audGroups = $state<Record<string, boolean>>({});
 
-  // Заявка на новую ось
-  let suggestOpen = $state(false);
-  let suggestText = $state('');
-  let suggestState = $state<'idle' | 'sending' | 'sent'>('idle');
 
   onMount(async () => {
     try {
@@ -536,36 +514,8 @@
     return { icon: '', label: parts.join(' · '), kind: audience.includes(FRIENDS) ? 'open' : 'circ' };
   }
 
-  // ── Вкладка «Измерения»: фильтрация ленты ──
-  const dimsFiltered = $derived.by(() => {
-    if (!data) return [];
-    const query = search.trim().toLowerCase();
-    return data.dims.filter((dim) => {
-      const rated = data!.ratings.has(dim.id);
-      if (dimFilter === 'mine' && !rated) return false;
-      if (dimFilter === 'unrated' && rated) return false;
-      if (query) {
-        const haystack = `${dim.title.ru ?? ''} ${dim.title.en ?? ''}`.toLowerCase();
-        if (!haystack.includes(query)) return false;
-      }
-      return true;
-    });
-  });
-
+  /** Сколько измерений человек оценил. Единственное, что профилю нужно знать про каталог. */
   const ratedCount = $derived(data ? data.ratings.size : 0);
-
-  async function rate(dimId: string, value: number) {
-    if (!data || savingDim) return;
-    savingDim = dimId;
-    try {
-      await saveRating(data.uid, dimId, value);
-      const ratings = new Map(data.ratings);
-      ratings.set(dimId, value);
-      data = { ...data, ratings };
-    } finally {
-      savingDim = null;
-    }
-  }
 
   // ── Вкладка «Видимость»: варианты предпросмотра ──
   const previewOptions = $derived.by(() => {
@@ -589,7 +539,7 @@
   });
 
   const PROPERTIES = ['name', 'gender', 'about', 'born', 'avatar'] as const;
-  const TABS = ['personal', 'dims', 'visibility'] as const;
+  const TABS = ['personal', 'visibility'] as const;
   const STARS = Array.from({ length: 11 }, (_, index) => index);
 
   // ── Редактирование личного ──
@@ -688,20 +638,7 @@
     }
   }
 
-  // ── Заявка на новую ось ──
-  async function sendSuggestion() {
-    if (!data || suggestState === 'sending') return;
-    suggestState = 'sending';
-    editError = '';
-    try {
-      await submitSuggestion(data.uid, suggestText);
-      suggestState = 'sent';
-      suggestText = '';
-    } catch (error) {
-      editError = error instanceof Error ? error.message : String(error);
-      suggestState = 'idle';
-    }
-  }
+  // Заявка на новое измерение уехала на свой экран — /dims: там её место, рядом с каталогом.
 </script>
 
 <svelte:head>
@@ -909,90 +846,11 @@
               <span class="k2">{t.ratedDims[lang]}</span>
               <span class="mval big">{ratedCount}</span>
             </div>
-            <button type="button" class="btn ghost" onclick={() => (tab = 'dims')}>{t.toDims[lang]}</button>
+            <!-- «Измерения» теперь ОТДЕЛЬНЫЙ раздел (требование владельца 2026-07-12),
+                 а не суб-вкладка профиля. Отсюда — прямая дверь туда. -->
+            <a class="btn ghost" href="/dims">{t.toDims[lang]}</a>
           </div>
         {/if}
-      {:else if tab === 'dims'}
-        <input class="search" type="search" placeholder={t.searchDims[lang].replace('{n}', String(data.dims.length))} bind:value={search} />
-        <div class="seg" role="group">
-          <button type="button" class:on={dimFilter === 'mine'} onclick={() => (dimFilter = 'mine')}>{t.filters.mine[lang]} · {ratedCount}</button>
-          <button type="button" class:on={dimFilter === 'unrated'} onclick={() => (dimFilter = 'unrated')}>{t.filters.unrated[lang]}</button>
-          <button type="button" class:on={dimFilter === 'all'} onclick={() => (dimFilter = 'all')}>{t.filters.all[lang]} · {data.dims.length}</button>
-        </div>
-        <div class="card dims-card">
-          {#if dimsFiltered.length === 0}
-            <p class="state">
-              {search.trim()
-                ? t.dimsEmpty.search[lang]
-                : dimFilter === 'mine'
-                  ? t.dimsEmpty.mine[lang]
-                  : t.dimsEmpty.none[lang]}
-            </p>
-          {/if}
-          {#each dimsFiltered as dim (dim.id)}
-            {@const myRating = data.ratings.get(dim.id)}
-            {#if expandedDim === dim.id}
-              <div class="dim-open">
-                <button type="button" class="dhead" onclick={() => (expandedDim = null)}>
-                  <b>{loc(dim.title)}</b><span class="dots3">⋮</span>
-                </button>
-                <div class="avg"><b>{dim.rating}</b><span class="star">★</span><small>{dim.rates} {t.votes[lang]}</small></div>
-                {#if loc(dim.description)}<p class="desc">{loc(dim.description)}</p>{/if}
-                <div class="strow" role="group" aria-label={t.yourRating[lang]}>
-                  {#each STARS as value (value)}
-                    <button
-                      type="button"
-                      class="st"
-                      class:pick={myRating === value}
-                      disabled={savingDim === dim.id}
-                      onclick={() => rate(dim.id, value)}
-                    ><b>{value}</b>★</button>
-                  {/each}
-                </div>
-                <p class="strow-cap">
-                  {t.yourRating[lang]}: {myRating ?? '—'} ·
-                  <button type="button" class="linkish" onclick={() => (expandedDim = null)}>{t.collapse[lang]}</button>
-                </p>
-              </div>
-            {:else}
-              <button type="button" class="dim-row" onclick={() => (expandedDim = dim.id)}>
-                <span class="n">{loc(dim.title)}</span>
-                {#if myRating !== undefined}
-                  <span class="scale"><i style="width:{myRating * 10}%"></i></span>
-                  <span class="val">{myRating}</span>
-                {:else}
-                  <span class="scale"></span>
-                  <span class="val">—</span>
-                {/if}
-              </button>
-            {/if}
-          {/each}
-        </div>
-        {#if suggestState === 'sent'}
-          <div class="card">
-            <p class="hint ok" style="margin-top:0">{t.suggestSent[lang]}</p>
-            <button type="button" class="btn ghost" onclick={() => { suggestState = 'idle'; suggestOpen = true; }}>{t.suggestMore[lang]}</button>
-          </div>
-        {:else if suggestOpen}
-          <div class="card">
-            <h3>{t.suggestTitle[lang]}</h3>
-            <textarea class="ta" bind:value={suggestText} placeholder={t.suggestHint[lang]} maxlength="300"></textarea>
-            <p class="hint">{suggestText.trim().length} / 300</p>
-            {#if editError}<p class="err">{editError}</p>{/if}
-            <div class="duo">
-              <button type="button" class="btn ghost" onclick={() => (suggestOpen = false)}>{t.cancel[lang]}</button>
-              <button
-                type="button"
-                class="btn"
-                disabled={suggestState === 'sending' || suggestText.trim().length < 5}
-                onclick={sendSuggestion}
-              >{t.suggestSend[lang]}</button>
-            </div>
-          </div>
-        {:else}
-          <button type="button" class="btn ghost" onclick={() => (suggestOpen = true)}>{t.suggestDim[lang]}</button>
-        {/if}
-        <p class="hint">{t.barsHint[lang]}</p>
       {:else}
         <div class="seg" role="group">
           {#each previewOptions as option (option.key)}
@@ -1124,45 +982,6 @@
   }
   .seg button.on { background: var(--primary); border-color: transparent; color: var(--primary-ink); font-weight: 600; }
 
-  /* лента измерений */
-  .dim-row {
-    display: flex; align-items: center; gap: 10px; width: 100%;
-    padding: 10px 0; border: 0; border-bottom: 1px solid var(--edge-soft);
-    background: transparent; font: inherit; cursor: pointer; text-align: left;
-  }
-  .dim-row:last-child { border-bottom: 0; }
-  .dim-row .n { font-size: 14px; color: var(--heading); flex: 1; }
-  .scale { flex: none; width: 130px; height: 6px; border-radius: 3px; background: var(--edge-soft); position: relative; }
-  .scale i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: linear-gradient(90deg, var(--primary), var(--accent)); }
-  .val { flex: none; width: 26px; text-align: right; font-size: 13.5px; font-weight: 700; color: var(--primary); }
-
-  .dim-open { padding: 10px 0 12px; border-bottom: 1px solid var(--edge-soft); }
-  .dim-open:last-child { border-bottom: 0; }
-  .dhead {
-    display: flex; align-items: baseline; gap: 7px; width: 100%;
-    background: transparent; border: 0; font: inherit; cursor: pointer; text-align: left; padding: 0;
-  }
-  .dhead b { font-size: 15.5px; color: var(--heading); flex: 1; }
-  .dhead .dots3 { flex: none; color: var(--dim); font-size: 16px; letter-spacing: 1px; }
-  .avg { display: flex; align-items: center; gap: 7px; margin-top: 7px; }
-  .avg b { font-size: 19px; color: #1c9e4f; }
-  .avg .star { color: #f0b429; font-size: 16px; }
-  .avg small { font-size: 12px; color: var(--dim); }
-  .desc { font-size: 12.5px; line-height: 1.5; color: var(--text); margin-top: 8px; }
-
-  .strow { display: flex; justify-content: space-between; margin-top: 12px; }
-  .st {
-    position: relative; font-size: 25px; line-height: 1; color: var(--faint); opacity: 0.65;
-    background: transparent; border: 0; padding: 0; cursor: pointer; font-family: inherit;
-  }
-  .st:hover { opacity: 0.9; }
-  .st b {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 9px; font-weight: 700; color: var(--panel); padding-top: 3px;
-  }
-  .st.pick { color: var(--primary); opacity: 1; }
-  .st:disabled { cursor: wait; }
-  .strow-cap { font-size: 11px; color: var(--dim); text-align: center; margin-top: 6px; }
   .linkish {
     font: inherit; font-size: 11px; color: var(--primary); background: transparent; border: 0;
     cursor: pointer; padding: 0;
@@ -1240,22 +1059,9 @@
        карточка, поиск, сегменты, состояния стенда и подписи. */
     .body > .head-card,
     .body > .guest-card,
-    .body > .search,
     .body > .seg,
-    .body > .state,
-    .body > .hint,
-    .body > .btn {
+    .body > .state {
       grid-column: 1 / -1;
     }
-    /* Лента измерений — длинный список: карточка во всю ширину, а строки внутри
-       неё в две колонки. Раскрытое измерение забирает обе (в нём звёзды и описание). */
-    .dims-card {
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      column-gap: 26px;
-      align-content: start;
-    }
-    .dims-card .dim-open { grid-column: 1 / -1; }
   }
 </style>

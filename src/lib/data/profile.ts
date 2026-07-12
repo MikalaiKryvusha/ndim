@@ -47,9 +47,15 @@ export interface ProfileScreenData {
   readonly values: Partial<ProfileData>;
   /** Круги владельца: id → название (видит только он сам). */
   readonly groups: ReadonlyMap<string, GroupDoc>;
-  /** Каталог осей. */
-  readonly dims: readonly DimEntry[];
-  /** Мои оценки: dimId → 0…10. */
+  /**
+   * Мои оценки: dimId → 0…10. Нужны профилю только ради ОДНОЙ цифры — «оценено измерений».
+   *
+   * Каталога здесь больше НЕТ. Раньше `loadProfileScreen` вычитывал все 5111 документов
+   * коллекции `dims` при каждом открытии профиля — и это позор: Firestore берёт деньги за
+   * каждое чтение. Слово владельца (2026-07-12): «Я весь первый NDim писал так, чтобы
+   * ЭКОНОМИТЬ ЗАПРОСЫ К БАЗЕ!!! Везде, где могу». Каталог живёт на своём экране (`data/dims.ts`),
+   * и там он читается ОДНИМ документом-индексом.
+   */
   readonly ratings: ReadonlyMap<string, number>;
 }
 
@@ -134,11 +140,12 @@ function dirtyStamp(): Record<string, unknown> {
 export async function loadProfileScreen(uid: Uid): Promise<ProfileScreenData> {
   const store = db();
 
-  const [rootSnap, bucketsSnap, groupsSnap, dimsSnap, ratingsSnap] = await Promise.all([
+  // ⚠️ Каталога `dims` здесь НЕТ и быть не должно: это 5111 документов на каждое открытие
+  // профиля. Экономия запросов — принцип автора, унаследованный от 1.x (см. ProfileScreenData).
+  const [rootSnap, bucketsSnap, groupsSnap, ratingsSnap] = await Promise.all([
     getDoc(doc(store, 'users', uid)),
     getDocs(collection(store, 'users', uid, 'profile')),
     getDocs(collection(store, 'users', uid, 'groups')),
-    getDocs(collection(store, 'dims')),
     getDocs(collection(store, 'points', uid, 'dims')),
   ]);
 
@@ -151,22 +158,10 @@ export async function loadProfileScreen(uid: Uid): Promise<ProfileScreenData> {
   const groups = new Map<string, GroupDoc>();
   for (const group of groupsSnap.docs) groups.set(group.id, group.data() as GroupDoc);
 
-  // Документ без названия ПРОПУСКАЕМ, а не падаем на нём.
-  //
-  // Боевой выкат 2026-07-12: в каталоге лежит служебный документ (`dims_list`), у которого
-  // никакого `title` нет, — и `undefined.ru` в сортировке положил экран «Профиль» У ВСЕХ живых
-  // людей разом. Каталог наполняется данными, а данные бывают всякие: один странный документ
-  // не имеет права уносить с собой весь экран. Показать 5111 измерений и молча пропустить один
-  // битый — честнее, чем не показать ничего.
-  const dims: DimEntry[] = dimsSnap.docs
-    .map((dim) => ({ id: dim.id, ...(dim.data() as DimDoc) }))
-    .filter((dim) => dim.title != null && typeof dim.title === 'object')
-    .sort((a, b) => (a.title.ru ?? a.id).localeCompare(b.title.ru ?? b.id, 'ru'));
-
   const ratings = new Map<string, number>();
   for (const rating of ratingsSnap.docs) ratings.set(rating.id, (rating.data() as { value: number }).value);
 
-  return { uid, root: rootSnap.data() as UserRootDoc, values, groups, dims, ratings };
+  return { uid, root: rootSnap.data() as UserRootDoc, values, groups, ratings };
 }
 
 /**

@@ -8,12 +8,18 @@
   // BottomNav от 1024px прячется. Порог один, объявлен в обоих компонентах.
   import Brand from '$lib/ui/Brand.svelte';
 
-  let { active, lang }: { active: 'profile' | 'relations' | 'space' | 'menu'; lang: 'ru' | 'en' } = $props();
+  let {
+    active,
+    lang,
+  }: { active: 'profile' | 'relations' | 'space' | 'dims' | 'menu'; lang: 'ru' | 'en' } = $props();
 
   const items = [
     { key: 'profile', href: '/profile', icon: '⌂', label: { ru: 'Профиль', en: 'Profile' } },
     { key: 'relations', href: '/relations', icon: '◎', label: { ru: 'Связи', en: 'Relations' } },
     { key: 'space', href: '/space', icon: '✳', label: { ru: 'Пространство', en: 'Space' } },
+    // «Измерения» — ОТДЕЛЬНЫЙ раздел, как было в 1.x. Требование владельца 2026-07-12:
+    // «Очень плохо, что нет вкладки Измерения, и попасть в них можно только через профиль».
+    { key: 'dims', href: '/dims', icon: '★', label: { ru: 'Измерения', en: 'Dimensions' } },
     // Экран «Меню» реализован 2026-07-12, но рельс о нём так и не узнал: здесь оставался
     // href: null со времён заглушки «скоро». На боевом выкате пункт оказался мёртвым —
     // человек жал «Меню», и не происходило ничего.

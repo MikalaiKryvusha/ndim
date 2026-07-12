@@ -43,6 +43,10 @@ export const dimsUnit = (value: number, lang: Lang): string =>
       ? 'dimension'
       : 'dimensions';
 
+/** «1 голос» · «4 голоса» · «11 голосов» — подпись под рейтингом измерения (форма 1.x). */
+export const votesUnit = (value: number, lang: Lang): string =>
+  lang === 'ru' ? unitRu(value, ['голос', 'голоса', 'голосов']) : value === 1 ? 'vote' : 'votes';
+
 export const peopleUnit = (value: number, lang: Lang): string =>
   lang === 'ru' ? unitRu(value, ['человек', 'человека', 'человек']) : value === 1 ? 'person' : 'people';
 

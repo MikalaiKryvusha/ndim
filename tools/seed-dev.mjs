@@ -56,26 +56,32 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** Каталог осей: title/description двуязычные, рейтинг сообщества — как в DimDoc. */
 const DIMS = {
   cats: {
+    type: { ru: 'Явление', en: 'Phenomenon' }, year: '', tags: ['животные', 'дом'],
     title: { ru: 'Кошки', en: 'Cats' },
     description: { ru: 'Домашние кошки: насколько они «ваши» существа.', en: 'Domestic cats: how much they are “your” creatures.' },
     stars: 522, rates: 58, rating: 9,
   },
   travel: {
+    type: { ru: 'Явление', en: 'Phenomenon' }, year: '', tags: ['дорога'],
     title: { ru: 'Путешествия', en: 'Travel' },
     description: { ru: 'Новые места, дороги и рюкзаки.', en: 'New places, roads and backpacks.' },
     stars: 217, rates: 31, rating: 7,
   },
   silence: {
+    type: { ru: 'Явление', en: 'Phenomenon' }, year: '', tags: ['покой'],
     title: { ru: 'Тишина', en: 'Silence' },
     description: { ru: 'Ценность тишины и уединения.', en: 'The value of silence and solitude.' },
     stars: 74, rates: 12, rating: 6.2,
   },
   math: {
+    type: { ru: 'Наука', en: 'Science' }, year: '', tags: ['наука'],
     title: { ru: 'Математика', en: 'Mathematics' },
     description: { ru: 'Красота строгих доказательств.', en: 'The beauty of rigorous proofs.' },
     stars: 73, rates: 9, rating: 8.1,
   },
   'taxi-driver-1976': {
+    type: { ru: 'Фильм', en: 'Movie' }, year: '1976', tags: ['кино', 'драма'],
+    author: { ru: 'Мартин Скорсезе', en: 'Martin Scorsese' },
     title: { ru: '«Таксист» (1976)', en: 'Taxi Driver (1976)' },
     description: {
       ru: 'Драма Мартина Скорсезе о ветеране Вьетнамской войны, работающем таксистом в Нью-Йорке.',
@@ -84,16 +90,20 @@ const DIMS = {
     stars: 37, rates: 4, rating: 9.3,
   },
   'alchemist-1988': {
+    type: { ru: 'Роман', en: 'Novel' }, year: '1988', tags: ['книга'],
+    author: { ru: 'Пауло Коэльо', en: 'Paulo Coelho' },
     title: { ru: '«Алхимик» (1988)', en: 'The Alchemist (1988)' },
     description: { ru: 'Роман Пауло Коэльо о пути к своей Личной Легенде.', en: 'Paulo Coelho’s novel about following your Personal Legend.' },
     stars: 30, rates: 3, rating: 10,
   },
   theatre: {
+    type: { ru: 'Явление', en: 'Phenomenon' }, year: '', tags: ['искусство'],
     title: { ru: 'Театр', en: 'Theatre' },
     description: { ru: 'Живая сцена и всё, что на ней.', en: 'The living stage and everything on it.' },
     stars: 72, rates: 12, rating: 6,
   },
   running: {
+    type: { ru: 'Спорт', en: 'Sport' }, year: '', tags: ['спорт'],
     title: { ru: 'Бег', en: 'Running' },
     description: { ru: 'Бег как привычка и удовольствие.', en: 'Running as a habit and a joy.' },
     stars: 44, rates: 8, rating: 5.5,
@@ -101,6 +111,7 @@ const DIMS = {
   // Измерение, появившееся «сегодня»: без него виджету «Сегодня» на экране
   // «Пространство» нечего было бы рассказать про новые измерения.
   'early-rising': {
+    type: { ru: 'Привычка', en: 'Habit' }, year: '', tags: ['режим'],
     title: { ru: 'Ранние подъёмы', en: 'Early rising' },
     description: { ru: 'Утро начинается до рассвета.', en: 'The day starts before dawn.' },
     stars: 0, rates: 0, rating: 0,
@@ -184,7 +195,17 @@ try {
     //
     // Стенд обязан быть похож на бой, ВКЛЮЧАЯ ЕГО СОР. Иначе он проверяет не продукт, а мечту
     // о продукте. Экран должен пережить этот документ и молча его пропустить.
-    await db.doc('dims/dims_list').set({ dims_list: [] });
+    // ИНДЕКС КАТАЛОГА — ровно в той форме, что в боевой базе: JSON-СТРОКА `{id: {ru, en, year}}`.
+    // Это не «сор», а опора: экран «Измерения» строит по нему ленту и поиск ОДНИМ чтением
+    // вместо 5111 (принцип владельца — экономить запросы к базе). Заодно у него нет `title` —
+    // и экран обязан это пережить (именно такой документ уронил профиль на выкате, EXP-0041).
+    const index = Object.fromEntries(
+      Object.entries(DIMS).map(([dimId, dim]) => [
+        dimId,
+        { ru: dim.title.ru, en: dim.title.en, year: dim.year ?? '' },
+      ]),
+    );
+    await db.doc('dims/dims_list').set({ dims_list: JSON.stringify(index) });
 
     // История Пространства: снимки прошлых дней. Их пишет сервер синхронизации — но на пустом
     // стенде истории неоткуда взяться, а без неё нечему расти: не будет ни трендов, ни линий
