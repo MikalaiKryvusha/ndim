@@ -39,6 +39,7 @@
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@types/node": "^24.0.0",
     "firebase": "^12.16.0",
+    "firebase-admin": "^14.1.0",
     "svelte": "^5.56.1",
     "svelte-check": "^4.6.0",
     "typescript": "^5.9.0",
