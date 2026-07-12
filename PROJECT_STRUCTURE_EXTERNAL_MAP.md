@@ -47,9 +47,13 @@ D:\work\ai_sandbox\ndim\
 │   ├── profile/+page.svelte     # экран «Профиль» (модель 2.0, живой стенд; в проде — заглушка)
 │   ├── relations/+page.svelte   # экран «Связи» (синтез S4; в проде — заглушка)
 │   ├── space/+page.svelte       # экран «Пространство» — приборная панель из виджетов (V1)
+│   ├── menu/+page.svelte        # экран «Меню» — манифест + разделы (V1)
+│   ├── menu/[slug]/             # документы: руководство, условия, политика, отказ
+│   ├── menu/{support,donate,about,author}/  # поддержка · пожертвование · о системе · об авторе
 │   └── sitemap.xml/+server.ts   # пререндеренный sitemap: только публичные страницы
 ├── src/lib/site.ts              # единая константа боевого домена (canonical + sitemap)
 ├── src/lib/ui/format.ts         # числа, даты, русская морфология («714,9 звезды») — одна на все экраны
+├── src/lib/content/docs.ts      # ★ ГЕНЕРИРУЕТСЯ (`node tools/extract-docs.mjs`) — тексты владельца из 1.x
 ├── src/app.html                 # HTML-оболочка (lang=ru, theme-color, скрипт темы до отрисовки)
 ├── src/app.d.ts
 ├── static/                      # favicon.svg (лого V3), robots.txt (+Sitemap), 404.html

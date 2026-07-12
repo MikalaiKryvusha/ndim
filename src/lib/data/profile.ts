@@ -9,7 +9,7 @@
  * Схема коллекций: researches/04 · src/lib/model/schema.ts.
  */
 
-import { signInAnonymously, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInAnonymously, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc, getDocs, setDoc, writeBatch } from 'firebase/firestore';
 import { DEV_USER, db, devAuth } from '../firebase.ts';
 import {
@@ -70,6 +70,16 @@ export async function signInGuest(): Promise<Uid> {
 /** Гость ли текущая сессия (анонимный вход). */
 export function isGuestSession(): boolean {
   return devAuth().currentUser?.isAnonymous === true;
+}
+
+/** Почта текущего человека. У гостя её нет — и это не ошибка, а его состояние. */
+export function currentEmail(): string | null {
+  return devAuth().currentUser?.email ?? null;
+}
+
+/** Выход из аккаунта («Меню» → «Выйти»). Данные остаются в Пространстве, уходит только сессия. */
+export async function signOutUser(): Promise<void> {
+  await signOut(devAuth());
 }
 
 /**

@@ -45,6 +45,15 @@ export interface SpaceScreenData {
 }
 
 /**
+ * Только сердцебиение и версия сервера синхронизации — для подвала «Меню».
+ * `null` — сервер ещё ни разу не отчитывался; врать про его версию мы не будем.
+ */
+export async function loadSyncServer(): Promise<SyncServerDoc | null> {
+  const snapshot = await getDoc(doc(db(), 'space', 'server'));
+  return snapshot.exists() ? (snapshot.data() as SyncServerDoc) : null;
+}
+
+/**
  * Загружает всё, что показывает экран. `null` — сервер синхронизации ещё ни разу не считал:
  * показывать нули как «состояние Пространства» было бы враньём.
  */

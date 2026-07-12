@@ -66,6 +66,23 @@ export function seconds(millis: number, lang: Lang): string {
     : `${shown} ${value === 1 ? 'second' : 'seconds'}`;
 }
 
+/**
+ * Разметка внутри текстов документов: `**жирный**` и `*курсив*` → HTML.
+ *
+ * Тексты приходят ИЗ РЕПОЗИТОРИЯ (сгенерированы из исследований), а не от пользователей, —
+ * но экранирование всё равно делаем: правило «не вставляй сырое в HTML» не должно иметь
+ * исключений, о которых кто-то потом забудет.
+ */
+export function richText(text: string): string {
+  const escaped = text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+  return escaped
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/(^|[^*])\*([^*]+?)\*/g, '$1<i>$2</i>');
+}
+
 /** «10 июля 2026 г.» / «July 10, 2026». */
 export const dateOnly = (millis: number, lang: Lang): string =>
   new Date(millis).toLocaleDateString(locale(lang), { day: 'numeric', month: 'long', year: 'numeric' });
