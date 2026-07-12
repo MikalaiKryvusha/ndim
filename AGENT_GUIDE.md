@@ -371,8 +371,10 @@ npm run typecheck  # tsc --noEmit: чистый TS (ядро, модель, те
 Завершай каждое сообщение коммита трейлером соавторства:
 
 ```
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 ```
+
+(Подписывай коммит ТЕМ АГЕНТОМ, который реально работал: владелец различает работу моделей.)
 
 Команда коммита (специального инструмента пока нет):
 
