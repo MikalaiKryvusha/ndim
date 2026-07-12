@@ -345,7 +345,15 @@
           ru: 'Этот способ входа уже связан с другим профилем NDim. Чтобы сохранить текущие результаты, создайте аккаунт на другую почту.',
           en: 'This sign-in method already belongs to another NDim profile. To keep your current results, create an account with a different email.',
         },
-        cancelled: { ru: 'Вход отменён.', en: 'Sign-in cancelled.' },
+        // Firebase сообщает «окно закрыто» и когда человек передумал, и когда Google ОТКАЗАЛ
+        // (2026-07-12: у проекта был удалён OAuth-клиент — Google не пускал никого, а мы писали
+        // «Вход отменён», то есть валили вину на человека и врали ему о причине). Различить эти
+        // два случая мы не можем: наружу приходит один и тот же код. Значит текст обязан быть
+        // правдив в ОБОИХ случаях — и вести к работающей двери.
+        cancelled: {
+          ru: 'Вход через Google не завершён. Попробуйте ещё раз или войдите по ссылке на почту.',
+          en: 'Google sign-in did not complete. Try again, or sign in with an email link.',
+        },
         'expired-link': {
           ru: 'Ссылка больше не действует. Пожалуйста, запросите новую.',
           en: 'The link is no longer valid. Please request a new one.',

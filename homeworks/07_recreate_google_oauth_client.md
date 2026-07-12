@@ -1,0 +1,79 @@
+# Домашка 07 — Пересоздать OAuth-клиент Google (вход через Google не работает)
+
+**Кому:** Николаю · **От:** агента · **Заведена:** 2026-07-12, сразу после боевого запуска
+**Срочность:** высокая — вход через Google не работает **у всех**.
+**Почему человеку:** OAuth-клиент **нельзя создать из кода**. Google не даёт для этого API —
+только консоль. Всё остальное (прописать клиент в Firebase) агент может сделать сам, если нужно.
+
+## Симптом
+
+При нажатии «Войти через Google» Google показывает:
+
+> **Доступ заблокирован: ошибка авторизации**
+> The OAuth client was deleted.
+> **Ошибка 401: `deleted_client`**
+
+## Диагноз (проверено через Identity Toolkit API)
+
+Провайдер Google в боевом проекте **включён**, и в нём прописан клиент:
+
+```
+1077558742259-irqr2a4l7rgbpci6mqmlm4lt3pikt8hc.apps.googleusercontent.com
+```
+
+Именно его Google и объявляет **удалённым**. То есть Firebase держит ссылку на OAuth-клиент,
+которого больше не существует. Наш код тут ни при чём: запрос не доходит до приложения — Google
+отвергает его на своей стороне.
+
+**Скорее всего, это не ничья ошибка.** С 2024 года Google **сам удаляет OAuth-клиенты, неактивные
+более 6 месяцев**. В 1.x вход был по паролю, Google-входом почти не пользовались — клиент протух
+и был вычищен автоматически.
+
+Вход **по ссылке из письма работает** (он OAuth-клиента не требует), поэтому люди из 1.x войти
+могут. Чинить всё равно надо: Google — это один клик вместо письма.
+
+## Что сделать (5 минут)
+
+### Путь А — самый простой (Firebase сам создаст клиент)
+
+1. [Firebase Console → Authentication → Sign-in method](https://console.firebase.google.com/project/ndim-space/authentication/providers)
+2. Открыть провайдер **Google** → **выключить** → Сохранить.
+3. Снова **включить** → Сохранить.
+   Firebase заново создаст OAuth-клиент («Web client (auto created by Google Service)»).
+4. Проверить вход на https://ndimspace.app/profile.
+
+Если после этого ошибка та же — путь Б.
+
+### Путь Б — создать клиент руками
+
+1. [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials?project=ndim-space)
+2. **Create credentials → OAuth client ID → Application type: Web application**.
+3. Имя: `NDim Space Web`.
+4. **Authorized JavaScript origins:**
+   - `https://ndimspace.app`
+   - `https://www.ndimspace.app`
+   - `https://ndim-space.firebaseapp.com`
+5. **Authorized redirect URIs:**
+   - `https://ndim-space.firebaseapp.com/__/auth/handler`
+   ⚠️ Это обязательный адрес — именно туда Google возвращает человека (наш `authDomain`).
+6. Скопировать **Client ID** и **Client secret** →
+   [Firebase Console → Authentication → Sign-in method → Google → Web SDK configuration](https://console.firebase.google.com/project/ndim-space/authentication/providers)
+   → вставить оба поля → Сохранить.
+
+## Как проверить, что починилось
+
+Открыть https://ndimspace.app/profile → «Войти через Google» → выбрать аккаунт → должен открыться
+профиль (тот же UID, те же измерения — вход через Google **привязывается** к существующему
+человеку по почте, а не создаёт нового).
+
+Скажи агенту результат — он проверит конфигурацию через API и допишет статус сюда.
+
+## Заметка на будущее
+
+Чтобы клиент снова не протух: он живёт, пока им пользуются. Как только через Google начнут входить
+живые люди, автоудаление ему больше не грозит.
+
+## Связи
+
+- `plans/04_cutover.md` — шаг 7 (проверка входа руками); именно эта проверка дефект и вскрыла.
+- `STATUS.md` → раздел про боевой инцидент.
