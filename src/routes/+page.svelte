@@ -37,6 +37,22 @@
   let theme = $state<Theme>('light');
 
   onMount(() => {
+    // ── Человек пришёл по ссылке из письма, но попал на ЛЕНДИНГ — уводим его в профиль ──
+    //
+    // Поймано на боевом выкате 2026-07-12. В проекте Firebase переопределён Action URL писем:
+    // он указывает на КОРЕНЬ старого домена (наследие 1.x, где всё приложение жило в одном
+    // index.html и само разбирало oobCode). В 2.0 корень — это лендинг, про вход он не знает,
+    // и человек, ткнув ссылку из письма, оказывался ровно там, откуда начал.
+    //
+    // Проверяем БЕЗ Firebase — простым чтением адреса. Импортировать сюда account.ts нельзя:
+    // он тянет за собой SDK, а лендинг обязан оставаться лёгким (SDK в его бандле нет, и это
+    // охраняется). Код входа не теряем — передаём весь query дальше как есть.
+    const query = new URLSearchParams(location.search);
+    if (query.get('mode') === 'signIn' && query.has('oobCode')) {
+      location.replace(`${APP_URL}${location.search}${location.hash}`);
+      return;
+    }
+
     // Источник истины темы — атрибут, выставленный инлайн-скриптом app.html.
     const attr = document.documentElement.getAttribute('data-theme');
     theme = attr === 'dark' ? 'dark' : 'light';

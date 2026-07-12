@@ -14,10 +14,11 @@
     { key: 'profile', href: '/profile', icon: '⌂', label: { ru: 'Профиль', en: 'Profile' } },
     { key: 'relations', href: '/relations', icon: '◎', label: { ru: 'Связи', en: 'Relations' } },
     { key: 'space', href: '/space', icon: '✳', label: { ru: 'Пространство', en: 'Space' } },
-    { key: 'menu', href: null, icon: '☰', label: { ru: 'Меню', en: 'Menu' } },
+    // Экран «Меню» реализован 2026-07-12, но рельс о нём так и не узнал: здесь оставался
+    // href: null со времён заглушки «скоро». На боевом выкате пункт оказался мёртвым —
+    // человек жал «Меню», и не происходило ничего.
+    { key: 'menu', href: '/menu', icon: '☰', label: { ru: 'Меню', en: 'Menu' } },
   ] as const;
-
-  const soon = { ru: 'скоро', en: 'soon' } as const;
 </script>
 
 <nav class="rail" aria-label="NDim Space">
@@ -27,13 +28,9 @@
   </a>
 
   {#each items as item (item.key)}
-    {#if item.href !== null}
-      <a href={item.href} class:on={active === item.key} aria-current={active === item.key ? 'page' : undefined}>
-        <span class="ico">{item.icon}</span>{item.label[lang]}
-      </a>
-    {:else}
-      <span class="off" title={soon[lang]}><span class="ico">{item.icon}</span>{item.label[lang]}</span>
-    {/if}
+    <a href={item.href} class:on={active === item.key} aria-current={active === item.key ? 'page' : undefined}>
+      <span class="ico">{item.icon}</span>{item.label[lang]}
+    </a>
   {/each}
 </nav>
 
@@ -65,8 +62,7 @@
       font-weight: 650;
       color: var(--heading);
     }
-    .rail > a,
-    .rail > span.off {
+    .rail > a {
       display: flex;
       align-items: center;
       gap: 11px;
@@ -85,10 +81,6 @@
       background: color-mix(in srgb, var(--primary) 12%, transparent);
       color: var(--primary);
       font-weight: 650;
-    }
-    .rail > span.off {
-      color: var(--faint);
-      cursor: default;
     }
     .ico {
       width: 20px;

@@ -30,11 +30,28 @@ import {
   type User,
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, devAuth } from '../firebase.ts';
+import { db, devAuth, isStand } from '../firebase.ts';
+import { SITE_ORIGIN } from '../site.ts';
 import type { Uid } from '../model/schema.ts';
 
-/** Куда почтовая ссылка возвращает человека. Тот же origin — иначе Firebase её отвергнет. */
+/** Куда почтовая ссылка возвращает человека. */
 const LINK_RETURN_PATH = '/profile';
+
+/**
+ * Origin, на который письмо вернёт человека.
+ *
+ * В БОЮ — всегда КАНОНИЧЕСКИЙ домен, а не `location.origin`. Поймано на боевом выкате
+ * 2026-07-12: владелец запросил ссылку со СТАРОГО адреса `ndim-space.web.app` (его знают
+ * 331 человек из 1.x, туда же мы выкатили 2.0), перешёл по ней — и попал на лендинг вместо
+ * профиля. Домена нет в authorized domains проекта, и Firebase молча отбрасывает такой
+ * `continueUrl`, роняя человека на корень.
+ *
+ * У продукта один дом — `ndimspace.app` (`site.ts`). Пусть письмо всегда ведёт домой, откуда
+ * бы человек ни начал. На стенде — origin как есть, иначе письмо уводило бы разработчика в бой.
+ */
+function loginLinkOrigin(): string {
+  return isStand() ? location.origin : SITE_ORIGIN;
+}
 
 /** Ключ, под которым помним почту между отправкой письма и переходом по ссылке. */
 const PENDING_EMAIL_KEY = 'ndim-pending-email';
@@ -141,7 +158,7 @@ export const linkGoogle = continueWithGoogle;
 export async function sendLoginLink(email: string): Promise<UpgradeResult> {
   try {
     await sendSignInLinkToEmail(devAuth(), email, {
-      url: `${location.origin}${LINK_RETURN_PATH}`,
+      url: `${loginLinkOrigin()}${LINK_RETURN_PATH}`,
       handleCodeInApp: true,
     });
     localStorage.setItem(PENDING_EMAIL_KEY, email);

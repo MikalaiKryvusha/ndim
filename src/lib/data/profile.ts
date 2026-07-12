@@ -151,8 +151,16 @@ export async function loadProfileScreen(uid: Uid): Promise<ProfileScreenData> {
   const groups = new Map<string, GroupDoc>();
   for (const group of groupsSnap.docs) groups.set(group.id, group.data() as GroupDoc);
 
+  // Документ без названия ПРОПУСКАЕМ, а не падаем на нём.
+  //
+  // Боевой выкат 2026-07-12: в каталоге лежит служебный документ (`dims_list`), у которого
+  // никакого `title` нет, — и `undefined.ru` в сортировке положил экран «Профиль» У ВСЕХ живых
+  // людей разом. Каталог наполняется данными, а данные бывают всякие: один странный документ
+  // не имеет права уносить с собой весь экран. Показать 5111 измерений и молча пропустить один
+  // битый — честнее, чем не показать ничего.
   const dims: DimEntry[] = dimsSnap.docs
     .map((dim) => ({ id: dim.id, ...(dim.data() as DimDoc) }))
+    .filter((dim) => dim.title != null && typeof dim.title === 'object')
     .sort((a, b) => (a.title.ru ?? a.id).localeCompare(b.title.ru ?? b.id, 'ru'));
 
   const ratings = new Map<string, number>();

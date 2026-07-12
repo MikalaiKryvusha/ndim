@@ -8,12 +8,24 @@
       "cleanUrls": true
     },
     {
-      "//": "ndim-space.web.app — адрес, по которому 331 человек знает ЖИВОЕ приложение 1.x.",
-      "//2": "⛔ Деплой сюда = ЗАМЕНА 1.x на 2.0 (cutover). Только вместе с миграцией и правилами.",
+      "//": "ndim-space.web.app — старый адрес, по которому 331 человек знал приложение 1.x.",
+      "//2": "После cutover (2026-07-12) он больше не дом, а ДВЕРЬ: уводит на купленный домен.",
+      "//3": "У продукта один дом — ndimspace.app. Два одинаковых адреса путают людей и поисковики,",
+      "//4": "а ещё ломают вход: Firebase отбрасывает continueUrl домена не из authorized domains.",
+      "//5": "⛔ Маршруты перечислены ЯВНО. Глобальный '**' нельзя: этот же сайт отвечает и на",
+      "//6": "ndim-space.firebaseapp.com, где в зарезервированном /__/auth/** живёт обработчик входа.",
       "target": "app",
       "public": "build",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "cleanUrls": true
+      "cleanUrls": true,
+      "redirects": [
+        { "source": "/", "destination": "https://ndimspace.app/", "type": 301 },
+        { "source": "/profile", "destination": "https://ndimspace.app/profile", "type": 301 },
+        { "source": "/relations", "destination": "https://ndimspace.app/relations", "type": 301 },
+        { "source": "/space", "destination": "https://ndimspace.app/space", "type": 301 },
+        { "source": "/menu", "destination": "https://ndimspace.app/menu", "type": 301 },
+        { "source": "/menu/:rest*", "destination": "https://ndimspace.app/menu/:rest*", "type": 301 }
+      ]
     }
   ],
   "firestore": {
