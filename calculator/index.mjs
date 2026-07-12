@@ -306,6 +306,10 @@ export async function runCycle() {
   const stats = computeSpaceStats({ points: summaries, dimsCount, newDims, similarities }, now);
   batch.set(db.doc('space/stats'), stats);
   batch.set(db.doc(`space/stats/daily/${dayKey(now)}`), snapshotOf(stats));
+  // Публичная витрина лендинга («С нами уже N человек», bugs/07): РОВНО тот же счёт людей,
+  // что на экране «Пространство». Документ читается без авторизации (правила), поэтому в
+  // нём нет ничего, кроме агрегата. В 1.x он назывался так же — space/public_metrics.
+  batch.set(db.doc('space/public_metrics'), { people: stats.people, computedAt: now });
 
   await batch.commit();
 

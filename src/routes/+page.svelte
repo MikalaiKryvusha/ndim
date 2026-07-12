@@ -9,13 +9,16 @@
   // Кнопки ведут В САМ ПРОДУКТ 2.0: «Создать аккаунт» и «Войти» открывают /profile,
   // где живёт вход без пароля (Google · ссылка на почту) и гостевой режим. Человек из 1.x
   // входит там же и той же почтой — его измерения и связи на месте.
-  // TODO(фаза 5): счётчик людей — живая метрика из space/public_metrics.
   // TODO(SEO): полноценный per-URL i18n (RU/EN как отдельные адреса) — решение на потом;
   //            сейчас RU пререндерится, EN переключается на клиенте (паритет с 1.x).
   import { onMount } from 'svelte';
+  import { fade } from 'svelte/transition';
   import { SITE_ORIGIN } from '$lib/site';
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
+  import { loadPublicPeople } from '$lib/data/metrics';
+  import { num, peopleUnit } from '$lib/ui/format';
+  import { MOTION } from '$lib/ui/motion';
 
   /** Дверь в продукт: вход, гостевой режим и профиль — всё на одном экране. */
   const APP_URL = '/profile';
@@ -35,6 +38,11 @@
   // Реальный сохранённый выбор подхватываем в onMount (только в браузере).
   let lang = $state<Lang>('ru');
   let theme = $state<Theme>('light');
+
+  // «С нами уже N человек» — ЖИВОЕ число из space/public_metrics (пишет сервер
+  // синхронизации; bugs/07). Пока числа нет — строки нет: выдуманное число хуже
+  // отсутствующего (здесь стоял литерал «2 184 человека» при 331 живом).
+  let joinedPeople = $state<number | null>(null);
 
   onMount(() => {
     // ── Человек пришёл по ссылке из письма, но попал на ЛЕНДИНГ — уводим его в профиль ──
@@ -62,6 +70,8 @@
     // Первый шаг воронки (plans/03 этап 4). Ничего персонального не пишет и
     // ничего не ждёт: аналитика не имеет права тормозить лендинг.
     void track('landing_view');
+    // Живой счётчик людей — тоже не ждём: строка тихо появится, когда число придёт.
+    void loadPublicPeople().then((people) => (joinedPeople = people));
   });
 
   function toggleTheme() {
@@ -97,7 +107,6 @@
     create: { ru: 'Создать Аккаунт', en: 'Create Account' },
     login: { ru: 'Войти в Аккаунт', en: 'Log In' },
     joinedPre: { ru: 'С нами уже ', en: 'We already have ' },
-    joinedCount: { ru: '2 184 человека', en: '2,184 people' },
     joinedPost: { ru: ' — и каждый день приходят новые', en: ' — and new ones come every day' },
     foot: {
       ru: 'Пространство NDim · открытая платформа, сделанная с заботой о людях',
@@ -210,9 +219,11 @@
       <a class="btn primary" href={APP_URL}>{t.create[lang]}</a>
       <a class="btn ghost" href={APP_URL}>{t.login[lang]}</a>
     </div>
-    <p class="joined">
-      {t.joinedPre[lang]}<b>{t.joinedCount[lang]}</b>{t.joinedPost[lang]}
-    </p>
+    {#if joinedPeople !== null}
+      <p class="joined" in:fade={{ duration: MOTION.base }}>
+        {t.joinedPre[lang]}<b>{num(joinedPeople, lang)} {peopleUnit(joinedPeople, lang)}</b>{t.joinedPost[lang]}
+      </p>
+    {/if}
   </section>
 
   <section class="feats" aria-label="Как устроено Пространство NDim">

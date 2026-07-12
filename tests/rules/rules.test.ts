@@ -784,6 +784,7 @@ describe('Статистика Пространства — витрина, ко
   const STATS = 'space/stats';
   const SERVER = 'space/server';
   const SNAPSHOT = 'space/stats/daily/2026-07-12';
+  const PUBLIC = 'space/public_metrics';
 
   /** Цифры, записанные сервером синхронизации (в жизни — через Admin SDK, мимо правил). */
   async function seedStats(): Promise<void> {
@@ -791,8 +792,22 @@ describe('Статистика Пространства — витрина, ко
       await setDoc(doc(db, STATS), { computedAt: 1, people: 96, dims: 5111, relations: 318 });
       await setDoc(doc(db, SNAPSHOT), { date: '2026-07-12', people: 96 });
       await setDoc(doc(db, SERVER), { version: '0.1.0', lastRunAt: 1, intervalSeconds: 60 });
+      await setDoc(doc(db, PUBLIC), { people: 96, computedAt: 1 });
     });
   }
+
+  test('витрина лендинга читается БЕЗ авторизации — «С нами уже N человек» видит любой посетитель', async () => {
+    // Паритет с 1.x (researches/05): счётчик людей на лендинге работал без входа.
+    await seedStats();
+    await assertSucceeds(getDoc(doc(anonymous().firestore(), PUBLIC)));
+  });
+
+  test('🔒 витрину лендинга нельзя переписать с клиента — число пишет только сервер синхронизации', async () => {
+    await seedStats();
+    for (const db of [verified(ALICE).firestore(), guest(GHOST).firestore(), anonymous().firestore()]) {
+      await assertFails(setDoc(doc(db, PUBLIC), { people: 1_000_000 }));
+    }
+  });
 
   test('житель Пространства видит его статистику — и гость тоже', async () => {
     await seedStats();
