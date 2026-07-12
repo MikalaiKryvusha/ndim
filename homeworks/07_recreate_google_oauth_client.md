@@ -34,17 +34,17 @@
 
 ## Что сделать (5 минут)
 
-### Путь А — самый простой (Firebase сам создаст клиент)
+### ❌ Путь А — НЕ РАБОТАЕТ (проверено 2026-07-12)
 
-1. [Firebase Console → Authentication → Sign-in method](https://console.firebase.google.com/project/ndim-space/authentication/providers)
-2. Открыть провайдер **Google** → **выключить** → Сохранить.
-3. Снова **включить** → Сохранить.
-   Firebase заново создаст OAuth-клиент («Web client (auto created by Google Service)»).
-4. Проверить вход на https://ndimspace.app/profile.
+Владелец выключил и снова включил провайдер Google в Firebase Console. Агент сверил конфигурацию
+через Identity Toolkit API: **`clientId` остался прежним** — тем же удалённым. Firebase авто-создаёт
+OAuth-клиент **только при самом первом включении** провайдера; повторное переключение лишь
+переиспользует сохранённую ссылку. Пересоздания не происходит.
 
-Если после этого ошибка та же — путь Б.
+**Вывод: клиент придётся создать руками (путь Б).** Другого пути нет — API для создания
+OAuth-клиентов Google не предоставляет.
 
-### Путь Б — создать клиент руками
+### ✅ Путь Б — создать клиент руками (единственный рабочий)
 
 1. [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials?project=ndim-space)
 2. **Create credentials → OAuth client ID → Application type: Web application**.
