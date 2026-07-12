@@ -20,6 +20,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 /** Идентификатор дев-проекта. Префикс `demo-` = только эмуляторы, никакого прода. */
 export const DEV_PROJECT_ID = 'demo-ndim-dev';
@@ -58,6 +59,7 @@ function databaseId(): string {
 let app: FirebaseApp | null = null;
 let firestore: Firestore | null = null;
 let auth: Auth | null = null;
+let bucket: FirebaseStorage | null = null;
 
 function ensureApp(): FirebaseApp {
   if (app) return app;
@@ -87,6 +89,18 @@ export function db(): Firestore {
 
   firestore = getFirestore(ensureApp(), databaseId());
   return firestore;
+}
+
+/**
+ * Storage: здесь живут ФОТОГРАФИИ людей — `users/{uid}/avatar/avatar.webp` (наследие 1.x).
+ *
+ * В Firestore лежит только ФЛАГ `avatar: boolean`, самой картинки там нет, — поэтому за фото
+ * надо сходить отдельно. Эмулятор Storage мы не поднимаем: на стенде фотографий просто не
+ * бывает, и это честное «нечего показать», а не поломка.
+ */
+export function storage(): FirebaseStorage {
+  if (!bucket) bucket = getStorage(ensureApp());
+  return bucket;
 }
 
 /** Auth: на стенде — эмулятор, в бою — настоящий. Вызывать только в браузере. */

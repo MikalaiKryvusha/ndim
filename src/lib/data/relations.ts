@@ -19,6 +19,13 @@ export interface RelationCard {
   /** Имя гостя, как он открыл его всем; null — гость не открыл имя. */
   readonly guestName: Localized | null;
   readonly guestNick: Localized | null;
+  /**
+   * Есть ли у человека фотография (сам файл — в Storage, см. `data/avatar.ts`).
+   *
+   * Флаг берём здесь, а не ходим за картинкой на каждого: без него список на 250 человек
+   * устроил бы 250 заведомо пустых запросов. Фото в боевой базе загрузили считаные люди.
+   */
+  readonly guestAvatar: boolean;
 }
 
 export interface RelationsScreenData {
@@ -38,12 +45,16 @@ export async function loadRelations(uid: Uid): Promise<RelationsScreenData | nul
     relations.top.map(async (entry): Promise<RelationCard> => {
       const guestProfile = await getDoc(doc(store, 'users', entry.guestUid, 'profile', 'everyone'));
       const data = guestProfile.exists()
-        ? (guestProfile.data() as { name?: { first: Localized; nick: Localized } })
+        ? (guestProfile.data() as {
+            name?: { first: Localized; nick: Localized };
+            avatar?: boolean;
+          })
         : {};
       return {
         entry,
         guestName: data.name?.first ?? null,
         guestNick: data.name?.nick ?? null,
+        guestAvatar: data.avatar === true,
       };
     }),
   );

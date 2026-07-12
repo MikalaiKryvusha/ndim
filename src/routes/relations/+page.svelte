@@ -12,6 +12,7 @@
   // только публичный бакет профиля гостя (researches/04).
   import { onMount } from 'svelte';
   import AppBar from '$lib/ui/AppBar.svelte';
+  import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession } from '$lib/data/profile';
@@ -129,7 +130,12 @@
         {@const entry = card.entry}
         <div class="card">
           <button type="button" class="head" onclick={() => (expanded = expanded === entry.guestUid ? null : entry.guestUid)}>
-            <span class="ava">{guestTitle(card).slice(0, 1)}</span>
+            <Avatar
+              uid={entry.guestUid}
+              name={guestTitle(card)}
+              has={card.guestAvatar}
+              size={46}
+            />
             <b>{guestTitle(card)}</b>
           </button>
           <div class="trio">
@@ -219,11 +225,7 @@
     display: flex; align-items: center; gap: 12px; width: 100%;
     background: transparent; border: 0; padding: 0; font: inherit; cursor: pointer; text-align: left;
   }
-  .ava {
-    width: 46px; height: 46px; border-radius: 50%; background: var(--edge-soft); flex: none;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; color: var(--primary); font-size: 18px;
-  }
+  /* кружок с лицом теперь живёт в Avatar.svelte — один на все экраны */
   .head b { font-size: 16px; color: var(--heading); }
 
   /* тройка метрик — все три видны в свёрнутом состоянии (правка владельца, как в 1.x) */

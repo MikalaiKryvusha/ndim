@@ -87,6 +87,28 @@ export function richText(text: string): string {
 export const dateOnly = (millis: number, lang: Lang): string =>
   new Date(millis).toLocaleDateString(locale(lang), { day: 'numeric', month: 'long', year: 'numeric' });
 
+/**
+ * Месяц и год ПОСЛЕ ПРЕДЛОГА «с»: «февраля 2025 г.» / «February 2025».
+ *
+ * Браузер этого не умеет. `toLocaleDateString({ month: 'long' })` возвращает ИМЕНИТЕЛЬНЫЙ падеж
+ * («февраль»), потому что падеж зависит от фразы, а не от даты. В профиле из-за этого стояло
+ * «В Пространстве с феврал**ь** 2025 г.» — поймано владельцем на боевом выкате 2026-07-12.
+ *
+ * В английском падежей нет — там достаточно локали.
+ */
+const MONTHS_GENITIVE_RU = [
+  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+] as const;
+
+export function monthYearSince(millis: number, lang: Lang): string {
+  const date = new Date(millis);
+  if (lang !== 'ru') {
+    return date.toLocaleDateString(locale(lang), { month: 'long', year: 'numeric' });
+  }
+  return `${MONTHS_GENITIVE_RU[date.getMonth()]} ${date.getFullYear()} г.`;
+}
+
 /** «12 июля 2026 г. в 03:00» — форма из 1.x. */
 export function dateTime(millis: number, lang: Lang): string {
   const time = new Date(millis).toLocaleTimeString(locale(lang), {

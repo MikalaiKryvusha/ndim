@@ -12,8 +12,10 @@
   // Прод-шелл пререндерится; Firebase трогаем только в onMount (в браузере).
   import { onMount } from 'svelte';
   import AppBar from '$lib/ui/AppBar.svelte';
+  import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
+  import { monthYearSince } from '$lib/ui/format';
   import {
     currentSession,
     ensureSpaceExists,
@@ -201,15 +203,13 @@
 
   /**
    * «В Пространстве с <месяц год>» — из настоящей даты создания профиля.
-   * Раньше здесь стояла жёстко вписанная строка «с мая 2025»: свежесозданному
-   * гостю продукт врал про его же возраст. Месяц берём из локали браузера.
+   *
+   * Раньше здесь стояла жёстко вписанная строка «с мая 2025»: свежесозданному гостю продукт
+   * врал про его же возраст. А затем месяц брался прямо из локали браузера — и выходило
+   * «с феврал**ь** 2025 г.»: после «с» русскому нужен родительный падеж, но браузер про
+   * предлог ничего не знает. Морфология живёт в одном месте — `format.ts`.
    */
-  function sinceMonth(created: number): string {
-    return new Date(created).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
-      month: 'long',
-      year: 'numeric',
-    });
-  }
+  const sinceMonth = (created: number): string => monthYearSince(created, lang);
 
   async function startGoogle() {
     signupError = '';
@@ -799,7 +799,12 @@
       {/if}
       {#if tab === 'personal'}
         <div class="card head-card">
-          <span class="ava">{formatValue('name', data.values.name).slice(0, 1)}</span>
+          <Avatar
+            uid={data.uid}
+            name={formatValue('name', data.values.name)}
+            has={data.values.avatar === true}
+            size={54}
+          />
           <span><b>{formatValue('name', data.values.name)}</b><small>{t.inSpaceSince[lang]} {sinceMonth(data.root.time.created)}</small></span>
         </div>
         {#if editing}
@@ -1012,11 +1017,7 @@
   .hint { font-size: 11.5px; color: var(--dim); line-height: 1.45; margin-top: 8px; }
 
   .head-card { display: flex; align-items: center; gap: 12px; }
-  .ava {
-    width: 54px; height: 54px; border-radius: 50%; background: var(--edge-soft); flex: none;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; color: var(--primary); font-size: 20px;
-  }
+  /* кружок с лицом теперь живёт в Avatar.svelte — один на все экраны */
   .head-card b { font-size: 17px; color: var(--heading); display: block; }
   .head-card small { font-size: 12px; color: var(--dim); }
 
