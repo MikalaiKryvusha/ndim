@@ -21,8 +21,15 @@
    * ЭКОНОМИЯ ЗАПРОСОВ (принцип владельца): каталог целиком не читается НИКОГДА. Один документ
    * `dims/dims_list` даёт индекс всех 5111 измерений; полные карточки берём порциями по 12 и
    * кешируем. См. `data/dims.ts`.
+   *
+   * ОБОЛОЧКА И ДВИЖЕНИЕ (bugs/05, bugs/06): десктоп — канон V2 «Рабочий стол» (сетка
+   * «рельс 232px + контент», лента в 2 колонки от 1024px), карточки — панельные токены темы
+   * (--panel/--card-shadow), движение — переходы Svelte по канону MOTION (`$lib/ui/motion`).
    */
   import { onMount } from 'svelte';
+  import { flip } from 'svelte/animate';
+  import { cubicOut } from 'svelte/easing';
+  import { fade, fly, slide } from 'svelte/transition';
 
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
@@ -39,9 +46,10 @@
     type DimCard,
     type DimsScreenData,
   } from '$lib/data/dims';
-  import { isNewDim, searchIndex } from '$lib/model/feed';
+  import { dimCardTitle, isNewDim, searchIndex } from '$lib/model/feed';
   import { technicalDetail } from '$lib/ui/errors';
   import { votesUnit, type Lang } from '$lib/ui/format';
+  import { MOTION } from '$lib/ui/motion';
   import type { Localized } from '$lib/model/schema';
 
   /** Сколько секунд человек может передумать, прежде чем оценка уедет в базу. */
@@ -74,7 +82,10 @@
   let pending = $state<{ dimId: string; value: number; left: number } | null>(null);
   let ticker: ReturnType<typeof setInterval> | null = null;
 
-  /** Карточка, уезжающая вправо после сохранения (её анимация не должна дёргать список). */
+  /**
+   * Оценённая карточка уезжает ВПРАВО (жест 1.x). Метка отличает этот уход от обычного
+   * исчезновения (фильтр, смена вкладки): out-переход по ней выбирает большой сдвиг вправо.
+   */
   let leaving = $state<string | null>(null);
 
   /** Поп-ап отмены: живёт, пока человек может передумать. */
@@ -184,16 +195,13 @@
 
     ratings = new Map(ratings).set(dimId, value);
 
-    // Карточка уезжает вправо (как в 1.x) — и только ПОСЛЕ анимации покидает список,
-    // иначе соседние карточки прыгнули бы вверх на полпути.
+    // Карточка уезжает вправо (как в 1.x): её везёт out-переход, а соседей плавно
+    // подтягивает animate:flip — руками ничего не хронометрируем.
     const card = shown.find((item) => item.id === dimId);
     leaving = dimId;
-    setTimeout(() => {
-      shown = shown.filter((item) => item.id !== dimId);
-      leaving = null;
-    }, 320);
+    shown = shown.filter((item) => item.id !== dimId);
 
-    showUndo(dimId, card ? loc(card.title) : '');
+    showUndo(dimId, card ? dimCardTitle(loc(card.title), card.year).name : '');
   }
 
   function showUndo(dimId: string, name: string): void {
@@ -219,6 +227,7 @@
     const next = new Map(ratings);
     next.delete(dimId);
     ratings = next;
+    leaving = null; // вернувшаяся карточка впредь уходит как обычная, а не «вправо»
 
     // Возвращаем измерение в начало очереди и сразу показываем — человек должен УВИДЕТЬ результат.
     queue = feedWithRestored(queue, dimId);
@@ -308,7 +317,8 @@
   }
 
   function webSearch(card: DimCard): void {
-    const query = `${loc(card.type)} ${loc(card.title)} ${card.year ?? ''}`.trim();
+    const title = dimCardTitle(loc(card.title), card.year);
+    const query = `${loc(card.type)} ${title.name} ${title.year ?? ''}`.trim();
     window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank', 'noopener');
   }
 
@@ -406,16 +416,24 @@
       </div>
 
       {#if visible.length === 0 && search.trim() !== ''}
-        <div class="card pad"><p class="state">{t.nothingFound[lang]}</p></div>
+        <div class="card pad" in:fade={{ duration: MOTION.base }}><p class="state">{t.nothingFound[lang]}</p></div>
       {:else if visible.length === 0 && tab === 'mine'}
-        <div class="card pad"><p class="state">{t.mineEmpty[lang]}</p></div>
+        <div class="card pad" in:fade={{ duration: MOTION.base }}><p class="state">{t.mineEmpty[lang]}</p></div>
       {/if}
 
       <div class="feed">
         {#each visible as card (card.id)}
           {@const mine = starValue(card.id)}
           {@const kind = typeKind(card)}
-          <article class="card dim" class:leaving={leaving === card.id}>
+          {@const title = dimCardTitle(loc(card.title), card.year)}
+          <article
+            class="card dim"
+            in:fly={{ y: 14, duration: MOTION.base, easing: cubicOut }}
+            out:fly={leaving === card.id
+              ? { x: 480, duration: MOTION.slow, easing: cubicOut }
+              : { y: 8, duration: MOTION.fast }}
+            animate:flip={{ duration: MOTION.slow, easing: cubicOut }}
+          >
             <div class="top">
               <div class="titles">
                 {#if card.type}<span class="tbadge {kind}">{loc(card.type)}</span>{/if}
@@ -423,14 +441,14 @@
                   <span class="new">{t.isNew[lang]} 🔥</span>
                 {/if}
                 <button type="button" class="name" onclick={() => (expanded = expanded === card.id ? null : card.id)}>
-                  «{loc(card.title)}»{#if card.year}<span class="year"> ({card.year})</span>{/if}
+                  «{title.name}»{#if title.year}<span class="year"> ({title.year})</span>{/if}
                 </button>
               </div>
 
               <div class="menu">
                 <button type="button" class="dots" aria-label="⋮" onclick={() => (menuOpen = menuOpen === card.id ? null : card.id)}>⋮</button>
                 {#if menuOpen === card.id}
-                  <div class="drop">
+                  <div class="drop" transition:fade={{ duration: MOTION.fast }}>
                     <button type="button" onclick={() => { webSearch(card); menuOpen = null; }}>{t.searchWeb[lang]}</button>
                     {#if ratings.has(card.id)}
                       <button type="button" onclick={() => { showUndo(card.id, loc(card.title)); void cancelRating(); menuOpen = null; }}>
@@ -471,14 +489,14 @@
             </div>
 
             {#if pending?.dimId === card.id}
-              <div class="countdown">
+              <div class="countdown" transition:slide={{ duration: MOTION.fast }}>
                 <span>{t.savingIn[lang]} {pending.left} {t.sec[lang]}…</span>
                 <button type="button" class="now" onclick={() => void commit()}>{t.saveNow[lang]}</button>
               </div>
             {/if}
 
             {#if expanded === card.id}
-              <div class="deep">
+              <div class="deep" transition:slide={{ duration: MOTION.base }}>
                 {#if loc(card.description)}
                   <h4>{t.description[lang]}</h4><p>{loc(card.description)}</p>
                 {/if}
@@ -508,14 +526,14 @@
 
       <!-- Заявка на новое измерение: так Пространство растёт снизу (в 1.x — лампочка на этом экране). -->
       {#if suggestState === 'sent'}
-        <div class="card pad sug">
+        <div class="card pad sug" transition:slide={{ duration: MOTION.base }}>
           <p class="ok">{t.suggestSent[lang]}</p>
           <button type="button" class="ghost" onclick={() => { suggestState = 'idle'; suggestOpen = true; }}>
             {t.suggestMore[lang]}
           </button>
         </div>
       {:else if suggestOpen}
-        <div class="card pad sug">
+        <div class="card pad sug" transition:slide={{ duration: MOTION.base }}>
           <h3>{t.suggestTitle[lang]}</h3>
           <textarea class="ta" bind:value={suggestText} placeholder={t.suggestHint[lang]} maxlength="300"></textarea>
           <p class="hint">{suggestText.trim().length} / 300</p>
@@ -538,7 +556,7 @@
   </main>
 
   {#if undo}
-    <div class="toast" role="status">
+    <div class="toast" role="status" transition:fly={{ y: 12, duration: MOTION.base }}>
       <span>{t.saved[lang]}{#if undo.name}: «{undo.name}»{/if}</span>
       <button type="button" onclick={() => void cancelRating()}>{t.cancelRating[lang]}</button>
     </div>
@@ -548,24 +566,36 @@
 </div>
 
 <style>
-  .screen { min-height: 100dvh; background: var(--bg); }
-  .body { max-width: 760px; margin: 0 auto; padding: 12px 14px 96px; }
-  @media (min-width: 1024px) { .body { max-width: 1100px; padding-left: 26px; } }
+  /* Оболочка — канон всех вкладок (см. space/+page.svelte): мобильная колонна 430px,
+     от 1024px — сетка «рельс 232px + контент» (V2 «Рабочий стол»). Именно этой сетки
+     здесь не было — рельс ложился СВЕРХУ во всю ширину (bugs/06). */
+  .screen {
+    max-width: 430px; margin: 0 auto; min-height: 100vh; min-height: 100dvh;
+    display: flex; flex-direction: column; background: var(--bg);
+  }
+  .body { flex: 1; padding: 12px 14px 96px; }
 
-  .screen-title { font-size: 22px; color: var(--heading); margin: 6px 0 12px; }
+  .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); margin: 6px 0 12px; }
   .state { color: var(--dim); text-align: center; padding: 18px 8px; margin: 0; }
   .hint { color: var(--faint); font-size: 12px; margin: 14px 2px 0; }
-  .mono { font-family: ui-monospace, monospace; font-size: 11px; }
-  .card { background: var(--card); border: 1px solid var(--edge-soft); border-radius: 16px; }
+  .mono { font-family: var(--mono); font-size: 11px; }
+  /* Панельные токены темы, как у всех вкладок: токена --card в теме НЕТ, из-за него
+     карточки стояли прозрачными (bugs/06). */
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    box-shadow: var(--card-shadow);
+  }
   .pad { padding: 16px; }
   .btn {
-    display: block; text-align: center; padding: 10px; border-radius: 12px;
-    border: 1px solid var(--primary); color: var(--primary); text-decoration: none;
+    display: block; text-align: center; padding: 12px; margin-top: 10px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; background: var(--primary); color: var(--primary-ink);
+    text-decoration: none;
   }
 
   .search {
-    width: 100%; padding: 11px 14px; border-radius: 12px; background: var(--card);
-    border: 1px solid var(--edge-soft); color: var(--text); font: inherit; margin-bottom: 10px;
+    width: 100%; padding: 11px 14px; border-radius: 12px; background: var(--panel);
+    border: 1px solid var(--edge); color: var(--text); font: inherit; margin-bottom: 10px;
+    transition: border-color 0.15s ease;
   }
   .search:focus { outline: none; border-color: var(--primary); }
 
@@ -575,17 +605,19 @@
     border: 1px solid var(--edge); border-radius: 999px; padding: 6px 14px; cursor: pointer;
     transition: background .16s ease, color .16s ease, border-color .16s ease;
   }
-  .segs button.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .segs button.on { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
 
   .feed { display: flex; flex-direction: column; gap: 12px; }
 
-  /* Карточка. Уезжает ВПРАВО после сохранения — как в оригинальном NDim. */
+  /* Карточка. Уезд вправо и подтягивание соседей — переходы Svelte (fly + flip). */
   .dim {
     padding: 14px;
-    transition: transform .3s cubic-bezier(.4, 0, .2, 1), opacity .3s ease, border-color .18s ease;
+    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   }
-  .dim:hover { border-color: var(--edge); }
-  .dim.leaving { transform: translateX(115%); opacity: 0; }
+  .dim:hover {
+    border-color: color-mix(in srgb, var(--primary) 30%, var(--edge));
+    transform: translateY(-1px);
+  }
 
   .top { display: flex; align-items: flex-start; gap: 8px; }
   .titles { flex: 1; min-width: 0; }
@@ -594,15 +626,19 @@
     display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .05em;
     text-transform: uppercase; border-radius: 6px; padding: 2px 7px; margin: 0 6px 6px 0;
   }
-  .tbadge.film { background: #1d2f4d; color: #7db3ff; }
-  .tbadge.book { background: #2b2440; color: #c4a6ff; }
-  .tbadge.game { background: #143a33; color: #5fe3c0; }
-  .tbadge.music { background: #3d2436; color: #ff9ecb; }
+  /* Цвета бейджей выводятся из оттенка через color-mix: прежние литералы были сняты с
+     ТЁМНОГО макета и в светлой «Бумаге» (тема по умолчанию!) выглядели чужеродно. */
+  .tbadge.film { background: color-mix(in srgb, #3b82f6 14%, transparent); color: color-mix(in srgb, #3b82f6 70%, var(--heading)); }
+  .tbadge.book { background: color-mix(in srgb, #8b5cf6 14%, transparent); color: color-mix(in srgb, #8b5cf6 70%, var(--heading)); }
+  .tbadge.game { background: color-mix(in srgb, #10b981 14%, transparent); color: color-mix(in srgb, #10b981 70%, var(--heading)); }
+  .tbadge.music { background: color-mix(in srgb, #ec4899 14%, transparent); color: color-mix(in srgb, #ec4899 70%, var(--heading)); }
   .tbadge.other { background: var(--edge-soft); color: var(--dim); }
 
   .new {
     display: inline-block; font-size: 10px; border-radius: 999px; padding: 2px 7px;
-    background: #3a2a12; color: #ffd7a1; border: 1px solid #5b4118; margin-bottom: 6px;
+    background: color-mix(in srgb, #f59e0b 14%, transparent);
+    color: color-mix(in srgb, #f59e0b 62%, var(--heading));
+    border: 1px solid color-mix(in srgb, #f59e0b 35%, transparent); margin-bottom: 6px;
   }
 
   .name {
@@ -610,7 +646,7 @@
     font: inherit; font-weight: 650; font-size: 16px; color: var(--heading); cursor: pointer;
   }
   .name:hover { color: var(--primary); }
-  .year { color: var(--faint); font-weight: 400; }
+  .year { color: var(--faint); font-weight: 400; margin-left: 5px; }
 
   .menu { position: relative; }
   .dots {
@@ -620,8 +656,8 @@
   .dots:hover { color: var(--text); }
   .drop {
     position: absolute; right: 0; top: 24px; z-index: 5; min-width: 190px;
-    background: var(--card2, var(--card)); border: 1px solid var(--edge); border-radius: 12px;
-    padding: 5px; display: flex; flex-direction: column;
+    background: var(--panel-2, var(--panel)); border: 1px solid var(--edge); border-radius: 12px;
+    padding: 5px; display: flex; flex-direction: column; box-shadow: var(--card-shadow);
   }
   .drop button {
     background: none; border: 0; color: var(--text); font: inherit; font-size: 13px;
@@ -631,7 +667,8 @@
 
   .rating { display: flex; align-items: center; gap: 9px; margin-top: 8px; }
   .rval { font-size: 21px; font-weight: 800; color: var(--up, #22c55e); letter-spacing: -.5px; }
-  .rstars i { font-style: normal; font-size: 12px; color: var(--edge); }
+  /* Пустые звёзды: --edge в светлой «Бумаге» почти белый — берём приглушённый общий тон. */
+  .rstars i { font-style: normal; font-size: 12px; color: color-mix(in srgb, var(--faint) 45%, transparent); }
   .rstars i.lit { color: #f5a524; }
   .rvotes { color: var(--faint); font-size: 12px; }
 
@@ -644,7 +681,8 @@
   }
   .st:hover { background: var(--edge-soft); transform: translateY(-2px); }
   .st i {
-    font-style: normal; font-size: 27px; line-height: 1; color: var(--edge);
+    font-style: normal; font-size: 27px; line-height: 1;
+    color: color-mix(in srgb, var(--faint) 55%, transparent);
     transition: color .15s ease, transform .15s ease, filter .15s ease;
   }
   .st b { font-size: 10px; font-weight: 600; color: var(--faint); transition: color .15s ease; }
@@ -665,7 +703,7 @@
     color: var(--dim); font-size: 13px;
   }
   .now {
-    background: var(--primary); border: 0; color: #fff; font: inherit; font-size: 13px;
+    background: var(--primary); border: 0; color: var(--primary-ink); font: inherit; font-size: 13px;
     border-radius: 999px; padding: 6px 14px; cursor: pointer;
   }
 
@@ -709,20 +747,45 @@
   .spin { display: inline-block; animation: spin 1.1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Поп-ап отмены — «чтобы можно было отменить оценивание и вернуть карточку» (владелец). */
+  /* Поп-ап отмены — «чтобы можно было отменить оценивание и вернуть карточку» (владелец).
+     Центрируется полями, а не transform: transform анимирует Svelte-переход fly. */
   .toast {
-    position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 30;
-    display: flex; align-items: center; gap: 14px; max-width: calc(100vw - 28px);
-    background: var(--card); border: 1px solid var(--edge); border-radius: 999px;
+    position: fixed; left: 14px; right: 14px; bottom: 84px; margin: 0 auto; width: fit-content;
+    z-index: 30; display: flex; align-items: center; gap: 14px; max-width: calc(100vw - 28px);
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 999px;
     padding: 9px 9px 9px 16px; color: var(--text); font-size: 13px;
-    box-shadow: 0 18px 40px -20px #000;
-    animation: rise .22s cubic-bezier(.4, 0, .2, 1);
+    box-shadow: var(--card-shadow);
   }
   .toast button {
     background: none; border: 1px solid var(--primary); color: var(--primary); font: inherit;
     font-size: 13px; border-radius: 999px; padding: 6px 14px; cursor: pointer; white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease;
   }
-  .toast button:hover { background: var(--primary); color: #fff; }
-  @keyframes rise { from { opacity: 0; transform: translate(-50%, 12px); } }
-  @media (min-width: 1024px) { .toast { bottom: 28px; } }
+  .toast button:hover { background: var(--primary); color: var(--primary-ink); }
+
+  /* ── Десктоп: V2 «Рабочий стол», как у остальных вкладок. Медиа-блок стоит В КОНЦЕ
+     таблицы стилей осознанно: при равной специфичности выигрывает последнее правило,
+     и мобильные значения выше его бы перебили (EXP-0026). ── */
+  @media (min-width: 1024px) {
+    .screen {
+      max-width: none;
+      display: grid;
+      grid-template-columns: 232px minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+    }
+    .body {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 26px 34px;
+    }
+    /* Лента — в две колонки: карточка остаётся карточкой, а не полосой во всю панель.
+       align-items: start — раскрытая карточка не растягивает соседку по ряду. */
+    .feed {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+    .toast { bottom: 28px; }
+  }
 </style>

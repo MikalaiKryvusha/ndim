@@ -20,7 +20,9 @@ import { expect, test } from '@playwright/test';
 const DESKTOP_MIN_WIDTH = 1024;
 const NARROW_COLUMN = 430; // прежняя ширина приложения на любом экране
 
-for (const route of ['/profile', '/relations']) {
+// «/dims» добавлен после bugs/06: экран «Измерения» вышел без десктопной сетки .screen,
+// и рельс лёг СВЕРХУ во всю ширину. Геометрия рельса — ровно тот инвариант, который это ловит.
+for (const route of ['/profile', '/relations', '/space', '/dims']) {
   test(`оболочка ${route}: десктоп — рельс слева, телефон — нижняя панель, и никогда обе разом`, async ({
     page,
   }) => {

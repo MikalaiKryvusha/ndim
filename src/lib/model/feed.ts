@@ -139,3 +139,54 @@ export function isNewDim(dim: { time?: unknown; created?: unknown } | null | und
   const created = createdAt(dim);
   return created !== null && now - created <= NEW_DIM_WINDOW_MS;
 }
+
+/**
+ * Имя карточки без задвоения кавычек и года — грязь настоящих данных 1.x.
+ *
+ * Люди заводили измерения руками и часть названий пришла В УЖЕ ОФОРМЛЕННОМ виде:
+ * `«Алхимик» (1988)` с отдельным полем `year: 1988`. Карточка декорирует имя сама
+ * (`«…» (год)`), и без нормализации на экране выходило ««Алхимик» (1988)» (1988) —
+ * видно на боевом проде. Правим ПОКАЗ, а не данные: труд людей не трогаем.
+ *
+ * Правила (только для однозначной грязи, ничего не выдумываем):
+ *   · хвост `(ГГГГ)` срезается, если год совпадает с полем `year` — а если поля нет,
+ *     вынутый из имени год начинает показываться как год карточки;
+ *   · обрамляющие «…» / "…" срезаются, если охватывают ВСЁ имя (внутренние кавычки
+ *     вроде `Сериал «Друзья»` не трогаются).
+ */
+export function dimCardTitle(
+  raw: string,
+  year: string | number | null | undefined,
+): { name: string; year: string | null } {
+  let name = raw.trim();
+  // Год в схеме 2.0 — строка ('1976'), но стенд и часть данных пишут число. Терпим оба.
+  let shownYear = year === null || year === undefined || year === '' ? null : String(year);
+
+  const tail = name.match(/^(.*?)\s*\((\d{4})\)$/);
+  if (tail) {
+    const embedded = tail[2];
+    if (shownYear === null || embedded === shownYear) {
+      name = tail[1].trim();
+      shownYear = shownYear ?? embedded;
+    }
+  }
+
+  for (const [open, close] of [
+    ['«', '»'],
+    ['"', '"'],
+    ['“', '”'],
+  ] as const) {
+    if (
+      name.length > 1 &&
+      name.startsWith(open) &&
+      name.endsWith(close) &&
+      // кавычка закрывается только в самом конце — иначе это внутренние кавычки
+      name.indexOf(close, 1) === name.length - 1
+    ) {
+      name = name.slice(1, -1).trim();
+      break;
+    }
+  }
+
+  return { name, year: shownYear };
+}
