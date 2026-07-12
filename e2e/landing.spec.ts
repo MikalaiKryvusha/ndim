@@ -10,7 +10,8 @@ import { test, expect } from '@playwright/test';
 
 const RU_TITLE = 'Добро пожаловать в Пространство NDim';
 const EN_TITLE = 'Welcome to the NDim Space';
-const APP_URL = 'https://ndim-space.web.app';
+/** Кнопки лендинга ведут в сам продукт: вход без пароля живёт на экране профиля. */
+const APP_URL = '/profile';
 
 // Фон <body> — объективный маркер применённой темы (переменная --bg в +layout.svelte)
 const LIGHT_BG = 'rgb(246, 248, 251)'; // #f6f8fb — светлая «Бумага»

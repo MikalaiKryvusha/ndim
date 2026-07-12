@@ -15,9 +15,9 @@ test('связи: шелл пререндерен — заголовок, вод
   }
 });
 
-test('связи: без эмуляторов — честное состояние «стенд не поднят»', async ({ page }) => {
+test('связи: без данных — честная ошибка человеческим языком', async ({ page }) => {
   await page.goto('/relations');
-  await expect(page.getByText('Стенд не поднят', { exact: false })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText('Не удалось загрузить', { exact: false })).toBeVisible({ timeout: 20000 });
   // Нижняя навигация жива и ведёт в профиль
   await expect(page.getByRole('link', { name: 'Профиль' })).toBeVisible();
 });

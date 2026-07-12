@@ -14,28 +14,28 @@
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
-  import { signInDev } from '$lib/data/profile';
+  import { currentSession } from '$lib/data/profile';
   import { loadRelations, strengthLevel, type RelationsScreenData } from '$lib/data/relations';
   import { dateOnly, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
   import type { Localized } from '$lib/model/schema';
 
   let lang = $state<Lang>('ru');
   // 'prod' — публичный домен: экраны 2.0 ещё не открыты, показываем заглушку со ссылкой на 1.x.
-  let stand = $state<'connecting' | 'ready' | 'down' | 'prod'>('connecting');
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
   let standError = $state('');
   let data = $state<RelationsScreenData | null>(null);
   let expanded = $state<string | null>(null);
-  const LIVE_APP_URL = 'https://ndim-space.web.app';
 
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');
     if (saved === 'en' || saved === 'ru') lang = saved;
-    if (!['localhost', '127.0.0.1'].includes(location.hostname)) {
-      stand = 'prod';
-      return;
-    }
     try {
-      const uid = await signInDev();
+      // Связи — величина приватная: без входа их не существует, и показывать здесь нечего.
+      const uid = await currentSession();
+      if (uid === null) {
+        stand = 'signedout';
+        return;
+      }
       data = await loadRelations(uid);
       stand = 'ready';
     } catch (error) {
@@ -52,16 +52,16 @@
 
   const t = {
     title: { ru: 'Связи', en: 'Relations' },
-    connecting: { ru: 'Подключаюсь к стенду…', en: 'Connecting to the stand…' },
+    connecting: { ru: 'Подключаюсь…', en: 'Connecting…' },
     standDown: {
-      ru: 'Стенд не поднят. Запусти: npm run stand (эмуляторы + сид + dev-сервер).',
-      en: 'The stand is not running. Start it: npm run stand (emulators + seed + dev server).',
+      ru: 'Не удалось загрузить связи. Обновите страницу — если не поможет, напишите в поддержку.',
+      en: 'Could not load your relations. Reload the page — if that does not help, write to support.',
     },
-    prodStub: {
-      ru: 'Экраны NDim Space 2.0 ещё строятся. Живое приложение работает по кнопке ниже — там настоящие люди и связи.',
-      en: 'The NDim Space 2.0 screens are still under construction. The live app works via the button below — with real people and relations.',
+    signedOut: {
+      ru: 'Войдите, чтобы увидеть людей, похожих на Вас.',
+      en: 'Sign in to see the people who are similar to you.',
     },
-    openLive: { ru: 'Открыть NDim Space (текущая версия)', en: 'Open NDim Space (current version)' },
+    signIn: { ru: 'Войти', en: 'Sign in' },
     empty: {
       ru: 'Связей пока нет: вычислитель ещё не считал. На стенде: node calculator/index.mjs --once',
       en: 'No relations yet: the calculator has not run. On the stand: node calculator/index.mjs --once',
@@ -112,10 +112,10 @@
 
     {#if stand === 'connecting'}
       <p class="state">{t.connecting[lang]}</p>
-    {:else if stand === 'prod'}
+    {:else if stand === 'signedout'}
       <div class="card">
-        <p class="state">{t.prodStub[lang]}</p>
-        <a class="btn" href={LIVE_APP_URL}>{t.openLive[lang]}</a>
+        <p class="state">{t.signedOut[lang]}</p>
+        <a class="btn" href="/profile">{t.signIn[lang]}</a>
       </div>
     {:else if stand === 'down'}
       <div class="card">

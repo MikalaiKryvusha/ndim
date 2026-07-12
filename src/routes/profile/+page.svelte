@@ -15,18 +15,20 @@
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import {
+    currentSession,
     ensureSpaceExists,
+    isGuestSession,
     loadProfileScreen,
     previewAs,
     saveProfile,
     saveRating,
-    signInDev,
     signInGuest,
     submitSuggestion,
     type ProfileScreenData,
   } from '$lib/data/profile';
   import {
     completeLoginLink,
+    continueWithGoogle,
     isLoginLink,
     linkGoogle,
     sendLoginLink,
@@ -47,10 +49,9 @@
   // Состояние стенда — честное: подключаемся / готово / стенда нет / публичный хост.
   // На публичном домене экраны 2.0 ещё не открыты (данные 2.0 появятся с миграцией) —
   // показываем честную заглушку со ссылкой на живое приложение, а не дев-сообщение.
-  let stand = $state<'connecting' | 'ready' | 'down' | 'prod'>('connecting');
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
   let standError = $state('');
   let data = $state<ProfileScreenData | null>(null);
-  const LIVE_APP_URL = 'https://ndim-space.web.app';
 
   // Гостевой режим (plans/03 этап 2, макет V1 «Тихий бейдж» утверждён 2026-07-11):
   // ?guest в адресе → мгновенный анонимный вход. Карточка гостя показана при первом
@@ -105,15 +106,12 @@
   let suggestState = $state<'idle' | 'sending' | 'sent'>('idle');
 
   onMount(async () => {
-    if (!['localhost', '127.0.0.1'].includes(location.hostname)) {
-      stand = 'prod';
-      return;
-    }
     try {
-      let uid: string;
-      // Человек вернулся по ссылке из письма. Входить заново НЕЛЬЗЯ: его гостевая
-      // сессия жива в хранилище, и привязать почту нужно именно к ней — иначе
-      // родится новый пользователь, а весь труд гостя останется сиротой.
+      let uid: string | null;
+      // Человек вернулся по ссылке из письма. Если он был гостем — почта привязывается
+      // к его же сессии (UID и труд сохраняются). Если сессии нет — это вход человека,
+      // который у нас уже есть: 331 человек из 1.x входит именно так, и вход по ссылке
+      // ЗАОДНО подтверждает им почту.
       if (isLoginLink()) {
         uid = await finishEmailLink();
       } else if (new URLSearchParams(location.search).has('guest')) {
@@ -123,7 +121,15 @@
         guestCard = localStorage.getItem(GUEST_CARD_KEY) !== 'later';
         void track('guest_start'); // третий шаг воронки (plans/03 этап 4)
       } else {
-        uid = await signInDev();
+        // Стенд входит сам; в бою — только существующая сессия. Её нет — предлагаем войти,
+        // а не заводим человеку анонимную сессию за его спиной.
+        uid = await currentSession();
+        if (uid === null) {
+          stand = 'signedout';
+          return;
+        }
+        guest = isGuestSession();
+        guestCard = guest && localStorage.getItem(GUEST_CARD_KEY) !== 'later';
       }
       data = await loadProfileScreen(uid);
       stand = 'ready';
@@ -132,6 +138,30 @@
       stand = 'down';
     }
   });
+
+  /** Вход человека, который у нас уже есть (или заводит аккаунт с нуля). */
+  async function signIn(method: 'google' | 'email') {
+    signupError = '';
+
+    if (method === 'google') {
+      signupStep = 'linking';
+      const result = await continueWithGoogle();
+      if (!result.ok) {
+        signupError = t.account.errors[result.reason][lang];
+        signupStep = 'facts';
+        return;
+      }
+      location.reload(); // сессия появилась — перезагружаем экран уже как вошедший
+      return;
+    }
+
+    signupStep = 'choose'; // форма почты: дальше по той же дороге, что и у гостя
+  }
+
+  /** Продолжить гостем — тот же путь, что с лендинга. */
+  async function continueAsGuest() {
+    location.href = '/profile?guest=1';
+  }
 
   /**
    * Возврат по почтовой ссылке. Показывает карточку в состоянии «подтверждаем»,
@@ -218,16 +248,23 @@
       dims: { ru: 'Измерения', en: 'Dimensions' },
       visibility: { ru: 'Видимость', en: 'Visibility' },
     },
-    connecting: { ru: 'Подключаюсь к стенду…', en: 'Connecting to the stand…' },
+    connecting: { ru: 'Подключаюсь…', en: 'Connecting…' },
     standDown: {
-      ru: 'Стенд не поднят. Запусти: npm run stand (эмуляторы + сид + dev-сервер).',
-      en: 'The stand is not running. Start it: npm run stand (emulators + seed + dev server).',
+      ru: 'Не удалось загрузить данные. Обновите страницу — если не поможет, напишите в поддержку.',
+      en: 'Could not load your data. Reload the page — if that does not help, write to support.',
     },
-    prodStub: {
-      ru: 'Экраны NDim Space 2.0 ещё строятся. Живое приложение работает по кнопке ниже — там настоящие люди и связи.',
-      en: 'The NDim Space 2.0 screens are still under construction. The live app works via the button below — with real people and relations.',
+    // Экран входа: человек не вошёл. Паролей в 2.0 нет — ни у новых людей, ни у тех,
+    // кто пришёл из 1.x: вход по ссылке из письма подтверждает их почту сам.
+    signedOut: {
+      title: { ru: 'Войдите в Пространство', en: 'Sign in to the Space' },
+      lede: {
+        ru: 'Пароль не нужен. Если Вы уже были в Пространстве NDim — войдите той же почтой, и все Ваши измерения и связи будут на месте.',
+        en: 'No password needed. If you have been in NDim Space before — sign in with the same email, and all your dimensions and relations will be there.',
+      },
+      google: { ru: 'Войти через Google', en: 'Continue with Google' },
+      email: { ru: 'Войти по ссылке на почту', en: 'Sign in with an email link' },
+      guest: { ru: 'Осмотреться гостем', en: 'Look around as a guest' },
     },
-    openLive: { ru: 'Открыть NDim Space (текущая версия)', en: 'Open NDim Space (current version)' },
     // Гость: тексты утверждённого макета V1 «Тихий бейдж».
     // Правила текста (владелец, 2026-07-12): обращение — «Вы» во всём продукте;
     // слово «навсегда» не используем (человек может удалить свои данные);
@@ -658,10 +695,39 @@
   <main class="body">
     {#if stand === 'connecting'}
       <p class="state">{t.connecting[lang]}</p>
-    {:else if stand === 'prod'}
-      <div class="card">
-        <p class="state">{t.prodStub[lang]}</p>
-        <a class="btn" href={LIVE_APP_URL}>{t.openLive[lang]}</a>
+    {:else if stand === 'signedout'}
+      <!-- Человек не вошёл. Три двери, и ни одной с паролем: Google · ссылка на почту ·
+           гостем. Люди из 1.x входят той же почтой — их UID, оценки и связи на месте. -->
+      <div class="card signin">
+        <h2>{t.signedOut.title[lang]}</h2>
+        <p class="state">{t.signedOut.lede[lang]}</p>
+
+        {#if signupStep === 'choose' || signupStep === 'sending' || signupStep === 'sent'}
+          <!-- Форма почты — та же, что у гостя (макет V4 «Врезка»). -->
+          {#if signupStep === 'sent'}
+            <p class="sent">✉ {t.account.sentTitle[lang]}</p>
+            <p class="hint">{t.account.sentNote[lang]}</p>
+          {:else}
+            <input
+              class="inp acc-email"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              placeholder={t.account.emailPlaceholder[lang]}
+              bind:value={signupEmail}
+              disabled={signupStep === 'sending'}
+            />
+            <button type="button" class="btn" disabled={signupStep === 'sending'} onclick={requestLink}>
+              {signupStep === 'sending' ? t.account.sending[lang] : t.account.sendLink[lang]}
+            </button>
+          {/if}
+        {:else}
+          <button type="button" class="btn" onclick={() => signIn('google')}>{t.signedOut.google[lang]}</button>
+          <button type="button" class="btn ghost" onclick={() => signIn('email')}>{t.signedOut.email[lang]}</button>
+          <button type="button" class="linkish" onclick={continueAsGuest}>{t.signedOut.guest[lang]}</button>
+        {/if}
+
+        {#if signupError}<p class="err">{signupError}</p>{/if}
       </div>
     {:else if stand === 'down'}
       <div class="card">

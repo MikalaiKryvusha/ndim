@@ -11,7 +11,8 @@
 
 import { signInAnonymously, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc, getDocs, setDoc, writeBatch } from 'firebase/firestore';
-import { DEV_USER, db, devAuth } from '../firebase.ts';
+import { DEV_USER, db, devAuth, isStand } from '../firebase.ts';
+import { waitForSession } from './account.ts';
 import {
   bucketsForAudience,
   distribute,
@@ -56,6 +57,24 @@ export interface ProfileScreenData {
 export async function signInDev(): Promise<Uid> {
   const credentials = await signInWithEmailAndPassword(devAuth(), DEV_USER.email, DEV_USER.password);
   return credentials.user.uid;
+}
+
+/**
+ * Кто сейчас за экраном.
+ *
+ *   · **стенд** (localhost) — автоматически входим пользователем стенда: там нет живых людей,
+ *     и требовать вход у самого себя незачем (на этом держатся `npm run stand` и e2e);
+ *   · **бой** — восстанавливаем СУЩЕСТВУЮЩУЮ сессию из браузера. Если её нет — возвращаем
+ *     `null`, и экран честно предлагает войти. Молча заводить человеку анонимную сессию
+ *     нельзя: он мог просто открыть страницу.
+ *
+ * `null` — это не ошибка, а состояние «человек не вошёл».
+ */
+export async function currentSession(): Promise<Uid | null> {
+  if (isStand()) return signInDev();
+
+  const user = await waitForSession();
+  return user?.uid ?? null;
 }
 
 /**

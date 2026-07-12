@@ -25,6 +25,8 @@ import {
   linkWithPopup,
   onAuthStateChanged,
   sendSignInLinkToEmail,
+  signInWithEmailLink,
+  signInWithPopup,
   type User,
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -101,18 +103,35 @@ async function finishUpgrade(): Promise<UpgradeResult> {
   return { ok: true, uid };
 }
 
-/** Google в одно нажатие: привязывает аккаунт Google к текущему гостю. */
-export async function linkGoogle(): Promise<UpgradeResult> {
+/**
+ * Google в одно нажатие. Ветка выбирается по тому, КТО сейчас в сессии, — и это не деталь:
+ *
+ *   · сессия ГОСТЯ → `linkWithPopup`: Google привязывается к существующему анонимному
+ *     пользователю, UID не меняется, весь труд гостя остаётся при нём;
+ *   · сессии НЕТ (человек 1.x вернулся, или новый человек) → `signInWithPopup`: обычный вход
+ *     в свой аккаунт. Здесь `link*` был бы бессмыслен: привязывать не к кому.
+ *
+ * Перепутать эти два случая — значит либо осиротить труд гостя, либо не пустить человека
+ * в его собственный профиль.
+ */
+export async function continueWithGoogle(): Promise<UpgradeResult> {
   const user = devAuth().currentUser;
-  if (!user) return { ok: false, reason: 'unknown' };
 
   try {
-    await linkWithPopup(user, new GoogleAuthProvider());
-    return await finishUpgrade();
+    if (user && user.isAnonymous) {
+      await linkWithPopup(user, new GoogleAuthProvider());
+      return await finishUpgrade();
+    }
+
+    const credentials = await signInWithPopup(devAuth(), new GoogleAuthProvider());
+    return { ok: true, uid: credentials.user.uid };
   } catch (error) {
     return { ok: false, reason: classify(error) };
   }
 }
+
+/** Старое имя — оставлено для экрана профиля: там это всегда апгрейд гостя. */
+export const linkGoogle = continueWithGoogle;
 
 /**
  * Шаг 1 почтового входа: отправляет письмо со ссылкой. Почту запоминаем локально —
@@ -155,20 +174,32 @@ export function waitForSession(): Promise<User | null> {
 }
 
 /**
- * Шаг 2 почтового входа: человек вернулся по ссылке из письма. Привязываем почту к
- * тому же анонимному пользователю — UID и весь его труд остаются прежними.
+ * Шаг 2 почтового входа: человек вернулся по ссылке из письма.
+ *
+ * Та же развилка, что и в Google:
+ *   · сессия ГОСТЯ → `linkWithCredential`: почта привязывается к анонимному пользователю,
+ *     UID и весь его труд остаются прежними;
+ *   · сессии НЕТ → `signInWithEmailLink`: обычный вход. Для 331 человека из 1.x это и есть
+ *     их дверь: у них аккаунты с паролем, а паролей в 2.0 нет. Вход по ссылке ЗАОДНО
+ *     подтверждает почту — а без подтверждённой почты правила 2.0 не показали бы им ничего
+ *     (в боевой базе 109 неподтверждённых). То есть этот шаг чинит их сам, без нашего вмешательства.
  */
 export async function completeLoginLink(href: string = location.href): Promise<UpgradeResult> {
   const email = localStorage.getItem(PENDING_EMAIL_KEY);
   if (!email) return { ok: false, reason: 'expired-link' };
 
   const user = devAuth().currentUser;
-  if (!user) return { ok: false, reason: 'unknown' };
 
   try {
-    await linkWithCredential(user, EmailAuthProvider.credentialWithLink(email, href));
+    if (user && user.isAnonymous) {
+      await linkWithCredential(user, EmailAuthProvider.credentialWithLink(email, href));
+      localStorage.removeItem(PENDING_EMAIL_KEY);
+      return await finishUpgrade();
+    }
+
+    const credentials = await signInWithEmailLink(devAuth(), email, href);
     localStorage.removeItem(PENDING_EMAIL_KEY);
-    return await finishUpgrade();
+    return { ok: true, uid: credentials.user.uid };
   } catch (error) {
     return { ok: false, reason: classify(error) };
   }

@@ -17,9 +17,9 @@
   import SideRail from '$lib/ui/SideRail.svelte';
   import {
     currentEmail,
+    currentSession,
     isGuestSession,
     loadProfileScreen,
-    signInDev,
     signOutUser,
     type ProfileScreenData,
   } from '$lib/data/profile';
@@ -30,7 +30,7 @@
 
   let lang = $state<Lang>('ru');
   let theme = $state<'light' | 'dark'>('light');
-  let stand = $state<'connecting' | 'ready' | 'down' | 'prod'>('connecting');
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
   let data = $state<ProfileScreenData | null>(null);
   let email = $state<string | null>(null);
   let guest = $state(false);
@@ -39,19 +39,20 @@
 
   const APP_VERSION = __APP_VERSION__;
   const APP_BUILT_AT = __APP_BUILT_AT__;
-  const LIVE_APP_URL = 'https://ndim-space.web.app';
 
   onMount(async () => {
     const savedLang = localStorage.getItem('ndim-lang');
     if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
     theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
 
-    if (!['localhost', '127.0.0.1'].includes(location.hostname)) {
-      stand = 'prod';
-      return;
-    }
     try {
-      const uid = await signInDev();
+      // Меню работает и без входа: манифест, документы и версии от данных не зависят.
+      const uid = await currentSession();
+      if (uid === null) {
+        stand = 'signedout';
+        server = await loadSyncServer().catch(() => null);
+        return;
+      }
       guest = isGuestSession();
       email = currentEmail();
       [data, server] = await Promise.all([loadProfileScreen(uid), loadSyncServer()]);
@@ -187,11 +188,11 @@
     app: { ru: 'Приложение', en: 'Application' },
     syncServer: { ru: 'Сервер синхронизации', en: 'Sync server' },
     build: { ru: 'билд', en: 'build' },
-    prodStub: {
-      ru: 'Аккаунт и настройки появятся здесь вместе с запуском NDim Space 2.0. Живое приложение работает по кнопке ниже.',
-      en: 'The account and settings will appear here with the launch of NDim Space 2.0. The live app works via the button below.',
+    signedOutNote: {
+      ru: 'Вы не вошли. Манифест и документы открыты и так — а чтобы увидеть свои измерения и связи, войдите.',
+      en: 'You are not signed in. The manifest and the documents are open anyway — sign in to see your dimensions and relations.',
     },
-    openLive: { ru: 'Открыть NDim Space (текущая версия)', en: 'Open NDim Space (current version)' },
+    signIn: { ru: 'Войти', en: 'Sign in' },
   } as const;
 </script>
 
@@ -226,9 +227,9 @@
       <div class="card">
         <h3>{t.account[lang]}</h3>
 
-        {#if stand === 'prod'}
-          <p class="note">{t.prodStub[lang]}</p>
-          <a class="btn primary wide" href={LIVE_APP_URL}>{t.openLive[lang]}</a>
+        {#if stand === 'signedout'}
+          <p class="note">{t.signedOutNote[lang]}</p>
+          <a class="btn primary wide" href="/profile">{t.signIn[lang]}</a>
         {:else if stand === 'ready' && guest}
           <div class="who guest">
             <span class="ava guest" aria-hidden="true">◌</span>
@@ -254,7 +255,7 @@
             <span class="ic">↪</span><span class="lb">{t.leave[lang]}</span><span class="chev">›</span>
           </button>
         {:else}
-          <p class="note">{t.prodStub[lang]}</p>
+          <p class="note">{t.signedOutNote[lang]}</p>
         {/if}
       </div>
 

@@ -6,9 +6,10 @@
   // Тексты — владельца, RU+EN из researches/05_onboarding_texts_1x.md.
   // Тема и палитра — CSS-переменные из +layout.svelte; здесь всё берётся из них.
   //
-  // Кнопки пока ведут в живое приложение 1.x (ndim-space.web.app): лендинг честный —
-  // за ним стоит работающий продукт. TODO(фаза 3+): заменить на экраны 2.0.
-  // TODO(фаза 3+): счётчик людей — живая метрика из space/public_metrics.
+  // Кнопки ведут В САМ ПРОДУКТ 2.0: «Создать аккаунт» и «Войти» открывают /profile,
+  // где живёт вход без пароля (Google · ссылка на почту) и гостевой режим. Человек из 1.x
+  // входит там же и той же почтой — его измерения и связи на месте.
+  // TODO(фаза 5): счётчик людей — живая метрика из space/public_metrics.
   // TODO(SEO): полноценный per-URL i18n (RU/EN как отдельные адреса) — решение на потом;
   //            сейчас RU пререндерится, EN переключается на клиенте (паритет с 1.x).
   import { onMount } from 'svelte';
@@ -16,7 +17,8 @@
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
 
-  const APP_URL = 'https://ndim-space.web.app';
+  /** Дверь в продукт: вход, гостевой режим и профиль — всё на одном экране. */
+  const APP_URL = '/profile';
   // Абсолютный canonical гасит дубли трёх хостов (researches/08 §2, §5).
   // Домен — единая константа src/lib/site.ts (её же использует sitemap.xml).
   const CANONICAL_URL = `${SITE_ORIGIN}/`;

@@ -18,7 +18,7 @@
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
-  import { signInDev } from '$lib/data/profile';
+  import { currentSession } from '$lib/data/profile';
   import { loadSpace, type SpaceScreenData } from '$lib/data/space';
   import { nextRunAt, type DailySnapshotDoc, type SpaceEvent } from '$lib/model/stats';
   import {
@@ -37,10 +37,9 @@
 
   let lang = $state<Lang>('ru');
   // 'prod' — публичный домен: экраны 2.0 ещё не открыты, показываем заглушку со ссылкой на 1.x.
-  let stand = $state<'connecting' | 'ready' | 'down' | 'prod'>('connecting');
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
   let standError = $state('');
   let data = $state<SpaceScreenData | null>(null);
-  const LIVE_APP_URL = 'https://ndim-space.web.app';
 
   // Версия приложения вшивается в сборку (vite define): врать о ней нельзя, а тянуть
   // из сети — незачем. Версию сервера синхронизации сообщает сам сервер.
@@ -50,12 +49,14 @@
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');
     if (saved === 'en' || saved === 'ru') lang = saved;
-    if (!['localhost', '127.0.0.1'].includes(location.hostname)) {
-      stand = 'prod';
-      return;
-    }
     try {
-      await signInDev();
+      // Цифры Пространства открыты каждому, кто вошёл, включая гостя. Не вошёл — правила
+      // молчат: агрегаты продукта не витрина лендинга.
+      const uid = await currentSession();
+      if (uid === null) {
+        stand = 'signedout';
+        return;
+      }
       data = await loadSpace();
       stand = 'ready';
     } catch (error) {
@@ -76,16 +77,16 @@
       ru: 'Ниже представлены текущие метрики и статистика Пространства NDim.',
       en: 'Below are the current metrics and statistics of NDim Space.',
     },
-    connecting: { ru: 'Подключаюсь к стенду…', en: 'Connecting to the stand…' },
+    connecting: { ru: 'Подключаюсь…', en: 'Connecting…' },
     standDown: {
-      ru: 'Стенд не поднят. Запусти: npm run stand (эмуляторы + сид + dev-сервер).',
-      en: 'The stand is not running. Start it: npm run stand (emulators + seed + dev server).',
+      ru: 'Не удалось загрузить статистику Пространства. Обновите страницу.',
+      en: 'Could not load the statistics of the Space. Reload the page.',
     },
-    prodStub: {
-      ru: 'Экраны NDim Space 2.0 ещё строятся. Живое приложение работает по кнопке ниже — там настоящие люди и связи.',
-      en: 'The NDim Space 2.0 screens are still under construction. The live app works via the button below — with real people and relations.',
+    signedOut: {
+      ru: 'Войдите, чтобы увидеть Пространство изнутри.',
+      en: 'Sign in to see the Space from the inside.',
     },
-    openLive: { ru: 'Открыть NDim Space (текущая версия)', en: 'Open NDim Space (current version)' },
+    signIn: { ru: 'Войти', en: 'Sign in' },
     empty: {
       ru: 'Сервер синхронизации ещё ни разу не считал — показывать пока нечего. На стенде: node calculator/index.mjs --once',
       en: 'The sync server has not run yet — nothing to show. On the stand: node calculator/index.mjs --once',
@@ -311,10 +312,10 @@
 
     {#if stand === 'connecting'}
       <p class="state full">{t.connecting[lang]}</p>
-    {:else if stand === 'prod'}
+    {:else if stand === 'signedout'}
       <div class="card full">
-        <p class="state">{t.prodStub[lang]}</p>
-        <a class="btn" href={LIVE_APP_URL}>{t.openLive[lang]}</a>
+        <p class="state">{t.signedOut[lang]}</p>
+        <a class="btn" href="/profile">{t.signIn[lang]}</a>
       </div>
     {:else if stand === 'down'}
       <div class="card full">

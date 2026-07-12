@@ -1,10 +1,21 @@
 {
-  "hosting": {
-    "target": "landing",
-    "public": "build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "cleanUrls": true
-  },
+  "hosting": [
+    {
+      "//": "ndimspace.app — домен продукта. Здесь живёт лендинг и всё приложение 2.0.",
+      "target": "landing",
+      "public": "build",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "cleanUrls": true
+    },
+    {
+      "//": "ndim-space.web.app — адрес, по которому 331 человек знает ЖИВОЕ приложение 1.x.",
+      "//2": "⛔ Деплой сюда = ЗАМЕНА 1.x на 2.0 (cutover). Только вместе с миграцией и правилами.",
+      "target": "app",
+      "public": "build",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "cleanUrls": true
+    }
+  ],
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
