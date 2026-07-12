@@ -15,6 +15,7 @@
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
+  import { technicalDetail } from '$lib/ui/errors';
   import { monthYearSince } from '$lib/ui/format';
   import {
     currentSession,
@@ -77,7 +78,17 @@
 
   // Вкладка «Измерения»
   let search = $state('');
-  let dimFilter = $state<DimFilter>('mine');
+  /**
+   * Вкладка «Измерения» ВСЕГДА встречает человека тем, что он ЕЩЁ НЕ ОЦЕНИЛ.
+   *
+   * Решение владельца (2026-07-12, боевой прод): «когда пользователь попадает на вкладку
+   * Измерения — его встречать должен список незаполненных пользователем измерений».
+   * Раньше умолчанием было «Мои» — и новичок, у которого своих оценок ноль, открывал вкладку
+   * и упирался в пустоту, ничего не понимая.
+   *
+   * Смысл вкладки — ЗАПОЛНЯТЬ измерения. Уже оценённое никуда не денется: оно за фильтром «Мои».
+   */
+  let dimFilter = $state<DimFilter>('unrated');
   let expandedDim = $state<string | null>(null);
   let savingDim = $state<string | null>(null);
 
@@ -136,7 +147,7 @@
       data = await loadProfileScreen(uid);
       stand = 'ready';
     } catch (error) {
-      standError = error instanceof Error ? error.message : String(error);
+      standError = technicalDetail(error);
       stand = 'down';
     }
   });
@@ -380,6 +391,20 @@
       mine: { ru: 'Мои', en: 'Mine' },
       unrated: { ru: 'Не оценено', en: 'Unrated' },
       all: { ru: 'Все', en: 'All' },
+    },
+    // Пустой список ОБЯЗАН объяснить себя. На боевом проде новичок открывал «Измерения» и видел
+    // белое ничто: фильтр по умолчанию — «Мои», а своих оценок у него ноль (2026-07-12).
+    // Пустота, которая молчит, — это не минимализм, это брошенный человек.
+    dimsEmpty: {
+      mine: {
+        ru: 'Вы ещё не оценили ни одного измерения. Откройте «Не оценено» — и поставьте первые звёзды.',
+        en: 'You have not rated any dimension yet. Open “Unrated” and give your first stars.',
+      },
+      search: {
+        ru: 'Ничего не нашлось. Попробуйте другое слово.',
+        en: 'Nothing found. Try another word.',
+      },
+      none: { ru: 'Здесь пока пусто.', en: 'Nothing here yet.' },
     },
     votes: { ru: 'голосов', en: 'votes' },
     yourRating: { ru: 'Ваша оценка', en: 'Your rating' },
@@ -740,7 +765,7 @@
     {:else if stand === 'down'}
       <div class="card">
         <p class="state">{t.standDown[lang]}</p>
-        <p class="hint mono">{standError}</p>
+        {#if standError}<p class="hint mono">{standError}</p>{/if}
       </div>
     {:else if data}
       {#if guestCard && (guest || signupStep === 'done')}
@@ -895,6 +920,15 @@
           <button type="button" class:on={dimFilter === 'all'} onclick={() => (dimFilter = 'all')}>{t.filters.all[lang]} · {data.dims.length}</button>
         </div>
         <div class="card dims-card">
+          {#if dimsFiltered.length === 0}
+            <p class="state">
+              {search.trim()
+                ? t.dimsEmpty.search[lang]
+                : dimFilter === 'mine'
+                  ? t.dimsEmpty.mine[lang]
+                  : t.dimsEmpty.none[lang]}
+            </p>
+          {/if}
           {#each dimsFiltered as dim (dim.id)}
             {@const myRating = data.ratings.get(dim.id)}
             {#if expandedDim === dim.id}

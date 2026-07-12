@@ -17,6 +17,7 @@
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession } from '$lib/data/profile';
   import { loadRelations, strengthLevel, type RelationsScreenData } from '$lib/data/relations';
+  import { technicalDetail } from '$lib/ui/errors';
   import { dateOnly, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
   import type { Localized } from '$lib/model/schema';
 
@@ -40,7 +41,7 @@
       data = await loadRelations(uid);
       stand = 'ready';
     } catch (error) {
-      standError = error instanceof Error ? error.message : String(error);
+      standError = technicalDetail(error);
       stand = 'down';
     }
   });
@@ -63,9 +64,14 @@
       en: 'Sign in to see the people who are similar to you.',
     },
     signIn: { ru: 'Войти', en: 'Sign in' },
+    // ⚠️ ТЕКСТ ДЛЯ ЧЕЛОВЕКА, А НЕ ДЛЯ РАЗРАБОТЧИКА. Здесь стояло «вычислитель ещё не считал.
+    // На стенде: node calculator/index.mjs --once» — и это увидели живые люди на боевом проде
+    // (2026-07-12). Два нарушения канона разом: слово «вычислитель» (в интерфейсе — только
+    // «Сервер синхронизации») и команда разработчика на лице продукта.
+    // Экран пустой — значит человеку надо сказать, ЧТО СДЕЛАТЬ, а не чем занят наш бэкенд.
     empty: {
-      ru: 'Связей пока нет: вычислитель ещё не считал. На стенде: node calculator/index.mjs --once',
-      en: 'No relations yet: the calculator has not run. On the stand: node calculator/index.mjs --once',
+      ru: 'Связей пока нет. Оцените несколько измерений — и здесь появятся люди, похожие на Вас.',
+      en: 'No relations yet. Rate a few dimensions — and people similar to you will appear here.',
     },
     metrics: {
       similarity: { ru: 'Похожесть', en: 'Similarity' },
@@ -121,7 +127,7 @@
     {:else if stand === 'down'}
       <div class="card">
         <p class="state">{t.standDown[lang]}</p>
-        <p class="hint mono">{standError}</p>
+        {#if standError}<p class="hint mono">{standError}</p>{/if}
       </div>
     {:else if data === null || data.cards.length === 0}
       <div class="card"><p class="state">{t.empty[lang]}</p></div>

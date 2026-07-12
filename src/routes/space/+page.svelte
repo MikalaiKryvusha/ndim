@@ -21,6 +21,7 @@
   import { currentSession } from '$lib/data/profile';
   import { loadSpace, type SpaceScreenData } from '$lib/data/space';
   import { nextRunAt, type DailySnapshotDoc, type SpaceEvent } from '$lib/model/stats';
+  import { technicalDetail } from '$lib/ui/errors';
   import {
     dateOnly,
     dateTime,
@@ -60,7 +61,7 @@
       data = await loadSpace();
       stand = 'ready';
     } catch (error) {
-      standError = error instanceof Error ? error.message : String(error);
+      standError = technicalDetail(error);
       stand = 'down';
     }
   });
@@ -87,9 +88,12 @@
       en: 'Sign in to see the Space from the inside.',
     },
     signIn: { ru: 'Войти', en: 'Sign in' },
+    // ⚠️ Здесь тоже висел хвост для разработчика — «На стенде: node calculator/index.mjs --once».
+    // Команды на лице продукта не место (см. relations/+page.svelte). Само название
+    // «Сервер синхронизации» — законный термин продукта (словарь в AGENT_GUIDE), его оставляем.
     empty: {
-      ru: 'Сервер синхронизации ещё ни разу не считал — показывать пока нечего. На стенде: node calculator/index.mjs --once',
-      en: 'The sync server has not run yet — nothing to show. On the stand: node calculator/index.mjs --once',
+      ru: 'Сервер синхронизации ещё ни разу не считал — показывать пока нечего.',
+      en: 'The sync server has not run yet — nothing to show.',
     },
 
     // Плитки
@@ -320,7 +324,7 @@
     {:else if stand === 'down'}
       <div class="card full">
         <p class="state">{t.standDown[lang]}</p>
-        <p class="hint mono">{standError}</p>
+        {#if standError}<p class="hint mono">{standError}</p>{/if}
       </div>
     {:else if data === null}
       <div class="card full"><p class="state">{t.empty[lang]}</p></div>

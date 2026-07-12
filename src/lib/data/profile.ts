@@ -143,7 +143,7 @@ export async function loadProfileScreen(uid: Uid): Promise<ProfileScreenData> {
   ]);
 
   if (!rootSnap.exists()) {
-    throw new Error(`users/${uid} не существует — стенд не засеян (npm run stand)`);
+    throw new Error(`Профиль не найден: документа users/${uid} нет в базе.`);
   }
 
   const values = mergeBuckets(bucketsSnap.docs.map((bucket) => bucket.data())) as Partial<ProfileData>;
