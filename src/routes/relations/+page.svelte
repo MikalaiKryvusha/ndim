@@ -16,9 +16,8 @@
   import SideRail from '$lib/ui/SideRail.svelte';
   import { signInDev } from '$lib/data/profile';
   import { loadRelations, strengthLevel, type RelationsScreenData } from '$lib/data/relations';
+  import { dateOnly, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
   import type { Localized } from '$lib/model/schema';
-
-  type Lang = 'ru' | 'en';
 
   let lang = $state<Lang>('ru');
   // 'prod' — публичный домен: экраны 2.0 ещё не открыты, показываем заглушку со ссылкой на 1.x.
@@ -91,31 +90,9 @@
   const loc = (value: Localized | null): string | null =>
     value ? (value[lang] ?? value.ru ?? value.en) : null;
 
-  /** Русские формы множественного числа; для дробных чисел — родительный ед. («17.3 звезды»). */
-  function unitRu(value: number, forms: [string, string, string]): string {
-    if (!Number.isInteger(value)) return forms[1];
-    const mod100 = value % 100;
-    const mod10 = value % 10;
-    if (mod100 >= 11 && mod100 <= 14) return forms[2];
-    if (mod10 === 1) return forms[0];
-    if (mod10 >= 2 && mod10 <= 4) return forms[1];
-    return forms[2];
-  }
-
-  const dimsUnit = (value: number): string =>
-    lang === 'ru' ? unitRu(value, ['измерение', 'измерения', 'измерений']) : (value === 1 ? 'dimension' : 'dimensions');
-
-  const starsUnit = (value: number): string =>
-    lang === 'ru' ? unitRu(value, ['звезда', 'звезды', 'звёзд']) : (value === 1 ? 'star' : 'stars');
-
   function guestTitle(card: { guestName: Localized | null; guestNick: Localized | null }): string {
     return loc(card.guestName) ?? loc(card.guestNick) ?? t.noName[lang];
   }
-
-  const dateFmt = (millis: number): string =>
-    new Date(millis).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
-      day: 'numeric', month: 'long', year: 'numeric',
-    });
 
   const TRIO = ['similarity', 'proximity', 'commonality'] as const;
 </script>
@@ -168,15 +145,15 @@
           {#if expanded === entry.guestUid}
             <div class="deep">
               <h3>{t.ourSpace[lang]}</h3>
-              <div class="kv"><span class="k3">{t.dimsCount[lang]}</span><span class="v3">{entry.commonSpaceSize} {dimsUnit(entry.commonSpaceSize)}</span></div>
-              <div class="kv"><span class="k3">{t.diameter[lang]}</span><span class="v3">{entry.commonSpaceDiameter} {starsUnit(entry.commonSpaceDiameter)}</span></div>
-              <div class="kv"><span class="k3">{t.distance[lang]}</span><span class="v3">{entry.distance} {starsUnit(entry.distance)} · {entry.distanceRateOfCommonSpaceDiameter}%</span></div>
+              <div class="kv"><span class="k3">{t.dimsCount[lang]}</span><span class="v3">{entry.commonSpaceSize} {dimsUnit(entry.commonSpaceSize, lang)}</span></div>
+              <div class="kv"><span class="k3">{t.diameter[lang]}</span><span class="v3">{entry.commonSpaceDiameter} {starsUnit(entry.commonSpaceDiameter, lang)}</span></div>
+              <div class="kv"><span class="k3">{t.distance[lang]}</span><span class="v3">{entry.distance} {starsUnit(entry.distance, lang)} · {entry.distanceRateOfCommonSpaceDiameter}%</span></div>
               <div class="mrow">
                 <span class="k3">{t.youAnd[lang]} {guestTitle(card)}</span>
                 <span class="mbar"><i style="width:{entry.distanceRateOfCommonSpaceDiameter}%"></i></span>
                 <span class="v3">{entry.distanceRateOfCommonSpaceDiameter}%</span>
               </div>
-              <p class="hint">{t.computedAt[lang]}: {dateFmt(data.computedAt)}</p>
+              <p class="hint">{t.computedAt[lang]}: {dateOnly(data.computedAt, lang)}</p>
               <button type="button" class="btn" disabled title={t.soon[lang]}>{t.write[lang]} · {t.soon[lang]}</button>
               <button type="button" class="linkish" onclick={() => (expanded = null)}>{t.collapse[lang]}</button>
             </div>

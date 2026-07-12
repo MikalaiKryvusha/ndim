@@ -1,9 +1,15 @@
 // Вычислитель связей NDim Space 2.0 (фаза 4 мастер-плана).
+// В интерфейсе он называется «Сервер синхронизации» — термин 1.x (AGENT_GUIDE → словарь).
 //
 // Фоновая пакетная задача: находит «грязные» точки (человек изменил оценки),
 // пересчитывает их связи со всеми остальными людьми ядром похожести и пишет
 // топ-250 в relations/{uid}. Обновляет и топы ВСЕХ соседей: изменение точки A
 // меняет связь A в каждом чужом топе.
+//
+// Он же — ЕДИНСТВЕННЫЙ продюсер статистики Пространства (ideas/06): раз он и так
+// обходит все точки, ему дёшево записать агрегаты в space/stats, снимок дня в
+// space/stats/daily/{дата} и своё сердцебиение в space/server. Считает их чистый
+// модуль src/lib/model/stats.ts — тот же, которым экран читает эти цифры.
 //
 // Архитектура (интервью №001, В3): работает в Docker, ТОЛЬКО исходящие соединения.
 // Клиенту запись в relations запрещена правилами; вычислитель ходит через Admin SDK
@@ -22,16 +28,29 @@
 // O(N·M), терпимый до тысяч людей. Уход к инкрементальной схеме — задача фазы 4+,
 // зафиксирована в MASTER_PLAN.
 
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { computeRelation } from '../src/lib/similarity/similarity.ts';
+import { computeSpaceStats, dayKey, snapshotOf } from '../src/lib/model/stats.ts';
 
 /** Сколько похожих людей храним в топе. Паритет с 1.x. */
 const TOP_LIMIT = 250;
 /** Версия формата relations-документа. */
 const RELATIONS_VERSION = 2;
+/** Измерение считается новым для виджета «Сегодня» первые сутки после появления. */
+const NEW_DIM_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+// Версия сервера синхронизации — из его package.json; билд и дату сборки проставляет
+// Docker при сборке образа (ideas/07: механика номеров билдов общая с приложением).
+// Дефолты честные: локальный запуск — это `dev`, а не «билд 118».
+const { version: SERVER_VERSION } = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf8'),
+);
+const SERVER_BUILD = process.env.CALC_BUILD ?? 'dev';
+const SERVER_BUILT_AT = process.env.CALC_BUILT_AT ?? null;
 /**
  * Через сколько дней бездействия данные анонимного гостя считаются осиротевшими.
  * Совпадает со сроком автоудаления брошенных анонимных аккаунтов в Firebase
@@ -69,10 +88,38 @@ async function loadAllPoints() {
       const dims = await owner.ref.collection('dims').get();
       const ratings = {};
       for (const dim of dims.docs) ratings[dim.id] = dim.data().value;
-      points.set(owner.id, { ratings, anonymous: owner.data().guest === true });
+      const data = owner.data();
+      points.set(owner.id, {
+        ratings,
+        anonymous: data.guest === true,
+        // Для статистики Пространства: когда человек последний раз менял оценки и когда
+        // сервер синхронизации впервые его увидел (firstSeen ставит он сам, ниже).
+        updated: typeof data.updated === 'number' ? data.updated : null,
+        firstSeen: typeof data.firstSeen === 'number' ? data.firstSeen : null,
+      });
     }),
   );
   return points;
+}
+
+/**
+ * Каталог измерений: сколько их всего и какие появились за сутки (для виджета «Сегодня»).
+ *
+ * Каталог читается АГРЕГАЦИЕЙ, а не выгрузкой: в 1.x измерений было больше пяти тысяч, и
+ * тянуть их целиком ради одного числа — платить за каждый документ на каждом цикле.
+ * У измерения без поля `created` (наследие 1.x до миграции) возраст неизвестен — тогда оно
+ * просто не считается новым, и это честнее, чем объявить новым всё сразу.
+ */
+async function loadDims(now) {
+  const catalog = db.collection('dims');
+  const [count, fresh] = await Promise.all([
+    catalog.count().get(),
+    catalog.where('created', '>=', now - NEW_DIM_WINDOW_MS).get(),
+  ]);
+  return {
+    dimsCount: count.data().count,
+    newDims: fresh.docs.map((dim) => ({ id: dim.id, title: dim.data().title })),
+  };
 }
 
 /**
@@ -124,44 +171,111 @@ export async function cleanupStaleGuests(now = Date.now()) {
   return removed;
 }
 
+/**
+ * Сердцебиение сервера синхронизации: `space/server`.
+ *
+ * Пишется КАЖДЫЙ цикл, даже когда пересчитывать нечего, — по свежести этой отметки экран
+ * и понимает, что сервер работает (`syncServerState` в model/stats.ts). Состояния
+ * «остановлен» здесь нет: остановленный сервер не смог бы его записать.
+ * Поля успешной синхронизации обновляются только в цикле, где связи действительно считались.
+ */
+async function reportServer(now, success = null) {
+  await db.doc('space/server').set(
+    {
+      version: SERVER_VERSION,
+      build: SERVER_BUILD,
+      builtAt: SERVER_BUILT_AT,
+      lastRunAt: now,
+      intervalSeconds: Number(process.env.CALC_INTERVAL_SECONDS ?? 60),
+      ...(success ?? {}),
+    },
+    { merge: true },
+  );
+}
+
 /** Один цикл пересчёта. Возвращает число пересчитанных владельцев. */
 export async function runCycle() {
   // Сначала гигиена: осиротевшие гости не должны попасть в пересчёт.
   await cleanupStaleGuests();
 
+  const startedAt = Date.now();
   const dirtySnap = await db.collection('points').where('dirty', '==', true).get();
   if (dirtySnap.empty) {
     log('грязных точек нет — пересчитывать нечего');
+    // Пересчитывать нечего, но человек на экране «Пространство» должен видеть, что сервер
+    // на месте. Агрегаты при этом не трогаем: Пространство не менялось — не менялись и они.
+    await reportServer(startedAt);
     return 0;
   }
 
   const dirtyUids = dirtySnap.docs.map((doc) => doc.id);
   log(`грязных точек: ${dirtyUids.length} (${dirtyUids.join(', ')})`);
 
-  const points = await loadAllPoints();
+  const [points, { dimsCount, newDims }] = await Promise.all([loadAllPoints(), loadDims(startedAt)]);
   const now = Date.now();
   const batch = db.batch();
+
+  // firstSeen — отметка «сервер синхронизации увидел эту точку впервые»; на ней держится
+  // счётчик «Новых за последние 30 дней». Ставим ДО расчёта статистики, чтобы человек,
+  // пришедший только что, попал в неё уже сегодня, а не через цикл.
+  for (const uid of dirtyUids) {
+    const point = points.get(uid);
+    if (point && point.firstSeen === null) point.firstSeen = now;
+  }
 
   // Изменение точки A меняет связь с A у каждого: пересчитываем топы ВСЕХ,
   // у кого есть оценки. При «dirty × все» это не дороже точечных вставок,
   // зато код очевиден и не умеет рассинхронизироваться.
   let recomputed = 0;
+  const similarities = [];
   for (const [uid, point] of points) {
     if (Object.keys(point.ratings).length === 0) continue;
+    const top = topFor(uid, points);
     batch.set(db.doc(`relations/${uid}`), {
       computedAt: now,
       version: RELATIONS_VERSION,
-      top: topFor(uid, points),
+      top,
     });
     recomputed += 1;
+    // «Связей рассчитано» и средняя похожесть — про Пространство, а гостя в Пространстве
+    // не видно (В3). Его собственный топ мы считаем и пишем, но в статистику не пускаем.
+    if (!point.anonymous) similarities.push(...top.map((entry) => entry.similarity));
   }
 
   for (const uid of dirtyUids) {
-    batch.set(db.doc(`points/${uid}`), { dirty: false, lastSync: now }, { merge: true });
+    const firstSeen = points.get(uid)?.firstSeen ?? now;
+    batch.set(db.doc(`points/${uid}`), { dirty: false, lastSync: now, firstSeen }, { merge: true });
   }
 
+  // Статистика Пространства и снимок дня — тем же батчем, что и топы: цифры на витрине
+  // обязаны описывать ровно ту синхронизацию, которая только что случилась.
+  //
+  // Агрегатору нужно ЧИСЛО оценок человека, а не сами оценки: он считает Пространство,
+  // а не связи. Точку сворачиваем в сводку здесь — модель model/stats.ts о Firestore
+  // не знает и знать не должна.
+  const summaries = [...points.values()].map((point) => ({
+    ratings: Object.keys(point.ratings).length,
+    anonymous: point.anonymous,
+    updated: point.updated,
+    firstSeen: point.firstSeen,
+  }));
+  const stats = computeSpaceStats({ points: summaries, dimsCount, newDims, similarities }, now);
+  batch.set(db.doc('space/stats'), stats);
+  batch.set(db.doc(`space/stats/daily/${dayKey(now)}`), snapshotOf(stats));
+
   await batch.commit();
-  log(`готово: пересчитано топов — ${recomputed}, флаг dirty снят у ${dirtyUids.length}`);
+
+  await reportServer(now, {
+    lastSuccessAt: now,
+    durationMs: Date.now() - startedAt,
+    usersSynced: recomputed,
+    relationsComputed: similarities.length,
+  });
+
+  log(
+    `готово: пересчитано топов — ${recomputed}, флаг dirty снят у ${dirtyUids.length}; ` +
+      `в Пространстве людей ${stats.people}, измерений ${stats.dims}, связей рассчитано ${stats.relations}`,
+  );
   return recomputed;
 }
 

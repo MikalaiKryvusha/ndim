@@ -13,7 +13,7 @@
   const items = [
     { key: 'profile', href: '/profile', icon: '⌂', label: { ru: 'Профиль', en: 'Profile' } },
     { key: 'relations', href: '/relations', icon: '◎', label: { ru: 'Связи', en: 'Relations' } },
-    { key: 'space', href: null, icon: '✳', label: { ru: 'Пространство', en: 'Space' } },
+    { key: 'space', href: '/space', icon: '✳', label: { ru: 'Пространство', en: 'Space' } },
     { key: 'menu', href: null, icon: '☰', label: { ru: 'Меню', en: 'Menu' } },
   ] as const;
 

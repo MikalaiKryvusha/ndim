@@ -42,12 +42,14 @@ D:\work\ai_sandbox\ndim\
 │  ── КОД NDim Space 2.0 (SvelteKit: Kit 2.69 · Svelte 5 · Vite 8) ──
 ├── src/routes/                  # страницы приложения
 │   ├── +layout.ts               # prerender = true: весь сайт — статический HTML (SEO)
-│   ├── +layout.svelte           # глобальные стили: токены светлой «Бумаги» и тёмной темы
+│   ├── +layout.svelte           # глобальные стили: токены светлой «Бумаги» и тёмной темы (+ тренды --up/--down)
 │   ├── +page.svelte             # ★ ЛЕНДИНГ — утверждённый макет «Колонна», тексты владельца
 │   ├── profile/+page.svelte     # экран «Профиль» (модель 2.0, живой стенд; в проде — заглушка)
 │   ├── relations/+page.svelte   # экран «Связи» (синтез S4; в проде — заглушка)
+│   ├── space/+page.svelte       # экран «Пространство» — приборная панель из виджетов (V1)
 │   └── sitemap.xml/+server.ts   # пререндеренный sitemap: только публичные страницы
 ├── src/lib/site.ts              # единая константа боевого домена (canonical + sitemap)
+├── src/lib/ui/format.ts         # числа, даты, русская морфология («714,9 звезды») — одна на все экраны
 ├── src/app.html                 # HTML-оболочка (lang=ru, theme-color, скрипт темы до отрисовки)
 ├── src/app.d.ts
 ├── static/                      # favicon.svg (лого V3), robots.txt (+Sitemap), 404.html
@@ -66,7 +68,9 @@ D:\work\ai_sandbox\ndim\
 │       ├── visibility.ts        # ★ раскладка свойств профиля по бакетам. Здесь рождается утечка
 │       ├── visibility.test.ts   # инвариант приватности (проверен мутациями)
 │       ├── schema.ts            # типы документов Firestore + логика дружбы + границы значений
-│       └── schema.test.ts
+│       ├── schema.test.ts
+│       ├── stats.ts             # ★ агрегаты Пространства: метрики, тренды, состояние сервера
+│       └── stats.test.ts        # честность цифр витрины (проверен мутациями)
 │
 ├── firestore.rules              # ★ права доступа и границы. Схему знает schema.ts, не правила
 ├── firestore.indexes.json

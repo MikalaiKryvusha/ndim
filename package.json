@@ -1,6 +1,6 @@
 {
   "name": "ndim-space",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "private": true,
   "description": "NDim Space — честный поиск похожих людей в многомерном пространстве самооценок",
   "license": "AGPL-3.0-only",
@@ -19,8 +19,8 @@
     "test": "node --test \"src/**/*.test.ts\"",
     "test:watch": "node --test --watch \"src/**/*.test.ts\"",
     "test:rules": "firebase emulators:exec --only firestore --project ndim-rules-test \"node --test tests/rules/*.test.ts\"",
-    "test:calc": "firebase emulators:exec --only firestore --project demo-ndim-dev \"node --test calculator/guest_filter.test.mjs\"",
-    "stand": "firebase emulators:exec --only firestore,auth --project demo-ndim-dev \"node tools/seed-dev.mjs && node calculator/index.mjs --once && vite dev\"",
+    "test:calc": "firebase emulators:exec --only firestore --project demo-ndim-dev \"node --test calculator/*.test.mjs\"",
+    "stand": "firebase emulators:exec --only firestore,auth --project demo-ndim-dev \"node tools/seed-dev.mjs && node tools/stand.mjs\"",
     "e2e": "playwright test",
     "typecheck": "svelte-kit sync && tsc --noEmit",
     "kaif:version": "node tools/kaif.mjs version",

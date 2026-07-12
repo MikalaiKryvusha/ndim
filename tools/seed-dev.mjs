@@ -14,6 +14,7 @@
 
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import { distribute } from '../src/lib/model/visibility.ts';
+import { dayKey } from '../src/lib/model/stats.ts';
 
 const PROJECT_ID = 'demo-ndim-dev';
 const AUTH_URL = 'http://127.0.0.1:9099';
@@ -50,6 +51,7 @@ async function ensureDevUser() {
 // ── 2. Данные модели 2.0 ────────────────────────────────────────────────────
 
 const now = Date.now();
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Каталог осей: title/description двуязычные, рейтинг сообщества — как в DimDoc. */
 const DIMS = {
@@ -96,7 +98,17 @@ const DIMS = {
     description: { ru: 'Бег как привычка и удовольствие.', en: 'Running as a habit and a joy.' },
     stars: 44, rates: 8, rating: 5.5,
   },
+  // Измерение, появившееся «сегодня»: без него виджету «Сегодня» на экране
+  // «Пространство» нечего было бы рассказать про новые измерения.
+  'early-rising': {
+    title: { ru: 'Ранние подъёмы', en: 'Early rising' },
+    description: { ru: 'Утро начинается до рассвета.', en: 'The day starts before dawn.' },
+    stars: 0, rates: 0, rating: 0,
+  },
 };
+
+/** Измерения, появившиеся за последние сутки. Остальные — старожилы каталога. */
+const FRESH_DIMS = new Set(['early-rising']);
 
 /** Значения профиля пользователя стенда (см. schema.ts → ProfileData). */
 const PROFILE_VALUES = {
@@ -157,7 +169,28 @@ try {
     const db = context.firestore();
 
     for (const [dimId, dim] of Object.entries(DIMS)) {
-      await db.doc(`dims/${dimId}`).set(dim);
+      // `created` — возраст измерения. По нему сервер синхронизации отбирает те, что
+      // появились за сутки (виджет «Сегодня»); без даты измерение просто не считается новым.
+      const created = now - (FRESH_DIMS.has(dimId) ? 3 * 60 * 60 * 1000 : 60 * DAY_MS);
+      await db.doc(`dims/${dimId}`).set({ ...dim, created });
+    }
+
+    // История Пространства: снимки прошлых дней. Их пишет сервер синхронизации — но на пустом
+    // стенде истории неоткуда взяться, а без неё нечему расти: не будет ни трендов, ни линий
+    // динамики, ни виджета «Сегодня». Сегодняшний снимок НЕ сеем: его посчитает сам сервер,
+    // и цифры дня обязаны быть настоящими.
+    const HISTORY_DAYS = 13;
+    for (let daysAgo = HISTORY_DAYS; daysAgo >= 1; daysAgo -= 1) {
+      const grown = (HISTORY_DAYS - daysAgo) / HISTORY_DAYS; // 0 в начале истории → 1 вчера
+      const date = dayKey(now - daysAgo * DAY_MS);
+      await db.doc(`space/stats/daily/${date}`).set({
+        date,
+        people: 1 + Math.round(grown * 2), // 1 → 3 (сегодня их станет 4)
+        dims: 5 + Math.round(grown * 3), // 5 → 8 (сегодня добавилось девятое)
+        ratings: 6 + Math.round(grown * 8), // 6 → 14
+        relations: Math.round(grown * 6),
+        avgSimilarity: 61 - Math.round(grown * 5), // Пространство разнообразнее: 61 → 56
+      });
     }
 
     await db.doc(`users/${uid}`).set({
