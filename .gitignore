@@ -42,3 +42,8 @@ Desktop.ini
 # Ключи сервисного аккаунта вычислителя (боевой режим) — никогда не коммитить
 calculator/secrets/*
 !calculator/secrets/.gitkeep
+
+# Учётные данные OAuth-клиента Google (homeworks/07): консоль отдаёт их файлом
+# client_secret_*.json, и он падает прямо в проект. Внутри — живой client secret.
+google/
+client_secret_*.json
