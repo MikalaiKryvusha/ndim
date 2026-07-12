@@ -33,9 +33,11 @@
   .bnav > a {
     flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
     padding: 9px 0 11px; font-size: 10.5px; color: var(--faint); text-decoration: none;
+    transition: color 0.15s ease;
   }
-  .ico { font-size: 17px; line-height: 1; }
+  .ico { font-size: 17px; line-height: 1; transition: transform 0.15s ease; }
   .on { color: var(--primary); font-weight: 650; }
+  .on .ico { transform: translateY(-1px) scale(1.1); }
 
   /* Десктоп (макет V2 «Рабочий стол»): навигация переезжает в боковой рельс
      SideRail — нижняя панель прячется. Порог 1024px общий для обоих компонентов. */

@@ -11,12 +11,14 @@
   // Данные — модель 2.0 с локальных эмуляторов (интервью №003, В2): npm run stand.
   // Прод-шелл пререндерится; Firebase трогаем только в onMount (в браузере).
   import { onMount } from 'svelte';
+  import { fade, slide } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
   import { monthYearSince } from '$lib/ui/format';
+  import { MOTION } from '$lib/ui/motion';
   import {
     currentSession,
     ensureSpaceExists,
@@ -709,7 +711,7 @@
         <!-- Карточка гостя (утверждённый V1 «Тихий бейдж») разворачивается в вход
              прямо на месте — утверждённый макет V4 «Врезка». Ничего не перекрывается
              и никуда не уводит: человек остаётся в своём профиле. -->
-        <div class="card guest-card" class:saved={signupStep === 'done'}>
+        <div class="card guest-card" class:saved={signupStep === 'done'} transition:slide={{ duration: MOTION.base }}>
           {#if signupStep === 'done'}
             <span class="guest-ava solid"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
             <p class="saved-badge">✓ {t.account.doneBadge[lang]}</p>
@@ -768,7 +770,7 @@
         </div>
       {/if}
       {#if tab === 'personal'}
-        <div class="card head-card">
+        <div class="card head-card" in:fade={{ duration: MOTION.base }}>
           <Avatar
             uid={data.uid}
             name={formatValue('name', data.values.name)}
@@ -778,7 +780,7 @@
           <span><b>{formatValue('name', data.values.name)}</b><small>{t.inSpaceSince[lang]} {sinceMonth(data.root.time.created)}</small></span>
         </div>
         {#if editing}
-          <div class="card">
+          <div class="card" in:fade={{ duration: MOTION.base }}>
             <h3>{t.personalInfo[lang]}</h3>
             <div class="grid2">
               {#each NAME_FIELD_KEYS as key (key)}
@@ -807,7 +809,7 @@
             </div>
           </div>
         {:else}
-          <div class="card">
+          <div class="card" in:fade={{ duration: MOTION.base }}>
             <h3>{t.personalInfo[lang]}</h3>
             {#each PROPERTIES as property (property)}
               {@const chip = audienceChip(data.root.visibility[property])}
@@ -817,7 +819,7 @@
                 <button type="button" class="aud {chip.kind}" onclick={() => openAudience(property)}>{chip.icon} {chip.label}</button>
               </div>
               {#if audFor === property}
-                <div class="aud-panel">
+                <div class="aud-panel" transition:slide={{ duration: MOTION.base }}>
                   {#if guest}
                     <!-- Гость невидим (В3): правила отвергнут публикацию — честно говорим об этом -->
                     <p class="hint" style="margin-top:0">◌ {t.guest.audienceLocked[lang]}</p>
@@ -840,7 +842,7 @@
             <p class="hint">{t.defaultHidden[lang]}</p>
             <button type="button" class="btn ghost" onclick={startEdit}>{t.edit[lang]}</button>
           </div>
-          <div class="card">
+          <div class="card" in:fade={{ duration: MOTION.base }}>
             <h3>{t.myNdimId[lang]}</h3>
             <div class="mrow">
               <span class="k2">{t.ratedDims[lang]}</span>
@@ -852,12 +854,12 @@
           </div>
         {/if}
       {:else}
-        <div class="seg" role="group">
+        <div class="seg" role="group" in:fade={{ duration: MOTION.base }}>
           {#each previewOptions as option (option.key)}
             <button type="button" class:on={previewKey === option.key} onclick={() => (previewKey = option.key)}>{option.label}</button>
           {/each}
         </div>
-        <div class="card">
+        <div class="card" in:fade={{ duration: MOTION.base }}>
           <h3>{t.seenBy[lang]}</h3>
           {#each PROPERTIES as property (property)}
             {@const chip = audienceChip(data.root.visibility[property])}
@@ -871,7 +873,7 @@
             </div>
           {/each}
         </div>
-        <div class="card">
+        <div class="card" in:fade={{ duration: MOTION.base }}>
           <h3>{t.tabs.dims[lang]}</h3>
           <p class="hint">{t.dimsPrivate[lang]}</p>
         </div>
@@ -899,7 +901,9 @@
   .tabs button {
     flex: 1; font: inherit; font-size: 13.5px; padding: 11px 0; cursor: pointer;
     color: var(--dim); background: transparent; border: 0;
+    transition: color 0.15s ease, box-shadow 0.15s ease;
   }
+  .tabs button:hover { color: var(--text); }
   .tabs button.on { color: var(--primary); font-weight: 650; box-shadow: inset 0 -2px 0 var(--primary); }
 
   .body { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
@@ -929,11 +933,14 @@
     flex: none; font-size: 11px; padding: 4px 9px; border-radius: 999px;
     background: var(--edge-soft); color: var(--primary); white-space: nowrap;
     border: 0; font-family: inherit; cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
   }
+  button.aud:hover { background: color-mix(in srgb, var(--primary) 14%, var(--edge-soft)); }
   .aud.lock { color: var(--dim); }
   .aud.circ { color: var(--accent); }
   span.aud { cursor: default; }
   .ghosted { opacity: 0.38; }
+  .prop { transition: opacity 0.2s ease; }
 
   /* редактор аудитории и формы */
   .aud-panel {
@@ -949,7 +956,9 @@
   .inp, .ta {
     font: inherit; font-size: 13.5px; color: var(--text); width: 100%;
     padding: 8px 10px; border: 1px solid var(--edge); border-radius: 9px; background: var(--panel);
+    transition: border-color 0.15s ease;
   }
+  .inp:focus, .ta:focus { outline: none; border-color: var(--primary); }
   .ta { min-height: 64px; resize: vertical; }
   .err { font-size: 12px; color: #c0392b; margin-top: 8px; }
   .duo { display: flex; gap: 10px; }
@@ -965,8 +974,11 @@
     display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px;
     border-radius: 12px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
     background: var(--primary); color: var(--primary-ink); border: 0; text-decoration: none;
+    transition: filter 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
+  .btn:hover:not(:disabled) { filter: brightness(1.08); }
   .btn.ghost { background: transparent; border: 1px solid var(--ghost-brd); color: var(--ghost-ink); }
+  .btn.ghost:hover:not(:disabled) { filter: none; border-color: var(--primary); color: var(--primary); }
   .btn:disabled { opacity: 0.55; cursor: default; }
 
   .search {
@@ -979,6 +991,7 @@
   .seg button {
     font: inherit; font-size: 12px; padding: 6px 11px; cursor: pointer;
     border-radius: 999px; border: 1px solid var(--edge); color: var(--dim); background: var(--panel);
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
   .seg button.on { background: var(--primary); border-color: transparent; color: var(--primary-ink); font-weight: 600; }
 

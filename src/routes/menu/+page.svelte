@@ -12,6 +12,8 @@
   // ЧУВСТВИТЕЛЬНОЕ МЕСТО (GOAL.md): пожертвование — спокойная строка, а не баннер. Ни
   // «премиума», ни «плюса», ни счётчиков-крючков здесь не будет никогда.
   import { onMount } from 'svelte';
+  import { cubicOut } from 'svelte/easing';
+  import { fly } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
@@ -26,6 +28,7 @@
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
   import { dateOnly, type Lang } from '$lib/ui/format';
+  import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
 
   let lang = $state<Lang>('ru');
@@ -209,7 +212,7 @@
     <h1 class="screen-title">{t.title[lang]}</h1>
 
     <!-- ── Манифест: меню начинается со смысла, а не с настроек ── -->
-    <section class="card manifest">
+    <section class="card manifest" in:fly={{ y: 10, duration: MOTION.base, easing: cubicOut }}>
       <h2>{t.manifestTitle[lang]}</h2>
       {#each t.manifest[lang] as paragraph}
         <!-- Текст свой, статический (не пользовательский): выделения — часть формулировки. -->
@@ -223,7 +226,7 @@
     </section>
 
     <!-- ── Левая колонка: аккаунт, вид, поделиться ── -->
-    <section class="col">
+    <section class="col" in:fly={{ y: 10, duration: MOTION.base, delay: 45, easing: cubicOut }}>
       <div class="card">
         <h3>{t.account[lang]}</h3>
 
@@ -290,7 +293,7 @@
     </section>
 
     <!-- ── Правая колонка: документы, проект, версии ── -->
-    <section class="col">
+    <section class="col" in:fly={{ y: 10, duration: MOTION.base, delay: 90, easing: cubicOut }}>
       <div class="card">
         <h3>{t.documents[lang]}</h3>
         <a class="row" href="/menu/manual"><span class="ic">📖</span><span class="lb">{t.manual[lang]}</span><span class="chev">›</span></a>
@@ -354,6 +357,7 @@
     padding: 12px 16px; border: 0; border-top: 1px solid var(--edge-soft);
     background: transparent; font: inherit; font-size: 14px; color: var(--text);
     text-align: left; text-decoration: none; cursor: pointer;
+    transition: background 0.15s ease;
   }
   .row:hover { background: var(--edge-soft); }
   .row.off { cursor: default; }
@@ -386,6 +390,7 @@
   .seg button {
     font: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px;
     border: 0; cursor: pointer; background: transparent; color: var(--dim);
+    transition: background 0.15s ease, color 0.15s ease;
   }
   .seg button.on { background: var(--primary); color: var(--primary-ink); }
 
@@ -394,7 +399,10 @@
     padding: 10px 16px; border-radius: 10px; font: inherit; font-size: 13.5px; font-weight: 600;
     border: 1px solid var(--edge); background: var(--panel); color: var(--heading); text-decoration: none;
     cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
   }
+  .btn:hover { border-color: var(--primary); color: var(--primary); }
+  .btn.primary:hover { color: var(--primary-ink); filter: brightness(1.08); }
   .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
   .btn.wide { display: flex; margin: 0 16px 14px; }
 

@@ -15,6 +15,8 @@
   // Чего он НЕ делает: не додумывает недостающее. Нет истории — нет тренда; сервер молчит —
   // мы не рисуем зелёную лампочку.
   import { onMount } from 'svelte';
+  import { cubicOut } from 'svelte/easing';
+  import { fly } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
@@ -22,6 +24,7 @@
   import { loadSpace, type SpaceScreenData } from '$lib/data/space';
   import { nextRunAt, type DailySnapshotDoc, type SpaceEvent } from '$lib/model/stats';
   import { technicalDetail } from '$lib/ui/errors';
+  import { MOTION } from '$lib/ui/motion';
   import {
     dateOnly,
     dateTime,
@@ -296,6 +299,14 @@
   const trendClass = (delta: number): 'up' | 'down' | 'flat' =>
     delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
   const trendArrow = (delta: number): string => (delta > 0 ? '▲' : delta < 0 ? '▼' : '·');
+
+  /** Виджеты приходят лесенкой (bugs/05): каждый следующий — чуть позже предыдущего. */
+  const widgetIn = (order: number) => ({
+    y: 10,
+    duration: MOTION.base,
+    delay: order * 45,
+    easing: cubicOut,
+  });
 </script>
 
 <svelte:head>
@@ -333,7 +344,7 @@
       {@const week = data.week}
 
       <!-- ── Виджет: плитки с трендами и линией динамики ── -->
-      <div class="tiles">
+      <div class="tiles" in:fly={widgetIn(0)}>
         <div class="card tile">
           <b>{num(stats.people, lang)}</b>
           <span class="k">{t.peopleTile[lang]}</span>
@@ -392,7 +403,7 @@
       </div>
 
       <!-- ── Виджет «Сегодня»: что изменилось за сутки ── -->
-      <div class="card w-today">
+      <div class="card w-today" in:fly={widgetIn(1)}>
         <h3>{t.today[lang]}</h3>
         {#if data.events.length === 0}
           <p class="hint">{t.quietDay[lang]}</p>
@@ -415,7 +426,7 @@
       </div>
 
       <!-- ── Виджет «Сейчас в Пространстве» ── -->
-      <div class="card w-now">
+      <div class="card w-now" in:fly={widgetIn(2)}>
         <h3>{t.now[lang]}</h3>
         <div class="kv"><span class="k">{t.totalPeople[lang]}</span><span class="v">{num(stats.people, lang)}</span></div>
         <div class="kv"><span class="k">{t.newIn30[lang]}</span><span class="v">{num(stats.newIn30Days, lang)}</span></div>
@@ -430,7 +441,7 @@
       </div>
 
       <!-- ── Виджет «Как распределена похожесть» ── -->
-      <div class="card w-dist">
+      <div class="card w-dist" in:fly={widgetIn(3)}>
         <h3>{t.distribution[lang]}</h3>
         {#each [{ label: '80–100 %', value: stats.distribution.high }, { label: '60–79 %', value: stats.distribution.upper }, { label: '40–59 %', value: stats.distribution.middle }, { label: '0–39 %', value: stats.distribution.low }] as band (band.label)}
           <div class="bar">
@@ -443,7 +454,7 @@
       </div>
 
       <!-- ── Виджет «Сервер синхронизации» (структура блоков — из 1.x) ── -->
-      <div class="card w-server">
+      <div class="card w-server" in:fly={widgetIn(4)}>
         <h3>{t.server[lang]}</h3>
         {#if data.server === null}
           <p class="hint">{t.noHeartbeat[lang]}</p>
@@ -475,7 +486,7 @@
       </div>
 
       <!-- ── Виджет «Версии» ── -->
-      <div class="card w-ver">
+      <div class="card w-ver" in:fly={widgetIn(5)}>
         <h3>{t.versions[lang]}</h3>
         <div class="vers">
           <div class="ver">
@@ -552,6 +563,15 @@
     width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: currentColor;
     box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent);
   }
+  /* «Работает» дышит — как пульс демо на лендинге. Молчащий сервер не дышит. */
+  .kv .v.running .dot { animation: heartbeat 2.6s ease-in-out infinite; }
+  @keyframes heartbeat {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent); }
+    50% { box-shadow: 0 0 0 6px color-mix(in srgb, currentColor 8%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kv .v.running .dot { animation: none; }
+  }
 
   /* Лента событий «Сегодня» */
   .ev { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--edge-soft); }
@@ -568,7 +588,7 @@
   .bar { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
   .bar .lb { flex: 0 0 68px; font-size: 12.5px; color: var(--dim); }
   .bar .tk { flex: 1; height: 8px; border-radius: 99px; background: var(--edge-soft); overflow: hidden; }
-  .bar .fl { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #1fa8c9); }
+  .bar .fl { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #1fa8c9); transition: width 0.35s ease; }
   .bar .pc { font: 600 12px var(--mono); color: var(--heading); width: 40px; text-align: right; }
 
   /* Версии: три плашки, а не слипшаяся строка */

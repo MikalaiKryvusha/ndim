@@ -11,6 +11,8 @@
   // «Был онлайн» гостя намеренно НЕ показывается: в модели 2.0 зрителю доступен
   // только публичный бакет профиля гостя (researches/04).
   import { onMount } from 'svelte';
+  import { cubicOut } from 'svelte/easing';
+  import { fly, slide } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
@@ -19,6 +21,7 @@
   import { loadRelations, strengthLevel, type RelationsScreenData } from '$lib/data/relations';
   import { technicalDetail } from '$lib/ui/errors';
   import { dateOnly, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
+  import { MOTION } from '$lib/ui/motion';
   import type { Localized } from '$lib/model/schema';
 
   let lang = $state<Lang>('ru');
@@ -132,9 +135,10 @@
     {:else if data === null || data.cards.length === 0}
       <div class="card"><p class="state">{t.empty[lang]}</p></div>
     {:else}
-      {#each data.cards as card (card.entry.guestUid)}
+      {#each data.cards as card, index (card.entry.guestUid)}
         {@const entry = card.entry}
-        <div class="card">
+        <!-- Лёгкая лесенка появления: карточки приходят друг за другом, а не стеной. -->
+        <div class="card" in:fly={{ y: 12, duration: MOTION.base, delay: Math.min(index, 8) * 40, easing: cubicOut }}>
           <button type="button" class="head" onclick={() => (expanded = expanded === entry.guestUid ? null : entry.guestUid)}>
             <Avatar
               uid={entry.guestUid}
@@ -155,7 +159,7 @@
             {/each}
           </div>
           {#if expanded === entry.guestUid}
-            <div class="deep">
+            <div class="deep" transition:slide={{ duration: MOTION.base }}>
               <h3>{t.ourSpace[lang]}</h3>
               <div class="kv"><span class="k3">{t.dimsCount[lang]}</span><span class="v3">{entry.commonSpaceSize} {dimsUnit(entry.commonSpaceSize, lang)}</span></div>
               <div class="kv"><span class="k3">{t.diameter[lang]}</span><span class="v3">{entry.commonSpaceDiameter} {starsUnit(entry.commonSpaceDiameter, lang)}</span></div>
@@ -226,13 +230,19 @@
   .card {
     background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 14px;
     box-shadow: var(--card-shadow);
+    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .card:hover {
+    border-color: color-mix(in srgb, var(--primary) 30%, var(--edge));
+    transform: translateY(-1px);
   }
   .head {
     display: flex; align-items: center; gap: 12px; width: 100%;
     background: transparent; border: 0; padding: 0; font: inherit; cursor: pointer; text-align: left;
   }
   /* кружок с лицом теперь живёт в Avatar.svelte — один на все экраны */
-  .head b { font-size: 16px; color: var(--heading); }
+  .head b { font-size: 16px; color: var(--heading); transition: color 0.15s ease; }
+  .head:hover b { color: var(--primary); }
 
   /* тройка метрик — все три видны в свёрнутом состоянии (правка владельца, как в 1.x) */
   .trio { display: flex; gap: 8px; margin-top: 10px; }
@@ -240,7 +250,7 @@
   .cell small { display: block; font-size: 10.5px; color: var(--dim); margin-bottom: 2px; }
   .cell b { display: block; font-size: 16px; }
   .mini { display: block; height: 4px; border-radius: 2px; background: var(--edge-soft); position: relative; margin-top: 4px; }
-  .mini i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
+  .mini i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; transition: width 0.35s ease; }
 
   /* «яркость связи»: слабая гаснет, средняя синяя, сильная — циан и светится */
   .lv1 b { color: var(--faint); }
@@ -269,10 +279,13 @@
     display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px;
     border-radius: 12px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
     background: var(--primary); color: var(--primary-ink); border: 0; text-decoration: none;
+    transition: filter 0.15s ease;
   }
+  .btn:hover:not(:disabled) { filter: brightness(1.08); }
   .btn:disabled { opacity: 0.55; cursor: default; }
   .linkish {
     display: block; margin: 8px auto 0; font: inherit; font-size: 11px; color: var(--primary);
     background: transparent; border: 0; cursor: pointer;
   }
+  .linkish:hover { text-decoration: underline; }
 </style>

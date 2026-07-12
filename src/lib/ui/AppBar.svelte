@@ -40,7 +40,9 @@
   .lang {
     margin-left: auto; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer;
     color: var(--dim); background: transparent; border: 1px solid var(--edge); border-radius: 8px; padding: 4px 9px;
+    transition: color 0.15s ease, border-color 0.15s ease;
   }
+  .lang:hover { color: var(--primary); border-color: var(--primary); }
   /* Гость = пунктир (не сохранён, невидим другим) — метафора утверждённого макета V1. */
   .badge {
     margin-left: auto; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
