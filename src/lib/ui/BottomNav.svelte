@@ -29,7 +29,15 @@
 </nav>
 
 <style>
-  .bnav { display: flex; background: var(--panel); border-top: 1px solid var(--edge); }
+  .bnav {
+    display: flex; background: var(--panel); border-top: 1px solid var(--edge);
+    /* Прибита к низу вьюпорта (bugs/08.3): раньше панель стояла в потоке ПОСЛЕ контента,
+       и длинный экран выталкивал её за нижний край — до неё нужно было доскроллить.
+       sticky сам резервирует место в потоке: спейсеры и пересчёт отступов не нужны. */
+    position: sticky; bottom: 0; z-index: 6;
+    /* Дом-индикатор iPhone не должен ложиться на кнопки. */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
   .bnav > a {
     flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
     padding: 9px 0 11px; font-size: 10.5px; color: var(--faint); text-decoration: none;

@@ -59,11 +59,15 @@
 </div>
 
 <style>
+  /* Оболочка во всю ширину, колонной зажат только контент (bugs/08.3). */
   .screen {
-    max-width: 430px; margin: 0 auto; min-height: 100vh; min-height: 100dvh;
+    min-height: 100vh; min-height: 100dvh;
     display: flex; flex-direction: column; background: var(--bg);
   }
-  .body { flex: 1; padding: 14px 14px 24px; }
+  .body {
+    flex: 1; padding: 14px 14px 24px;
+    width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
+  }
   .back {
     display: inline-block; font-size: 13px; font-weight: 600; color: var(--primary);
     text-decoration: none; margin-bottom: 10px;

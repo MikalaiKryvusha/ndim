@@ -570,10 +570,14 @@
      от 1024px — сетка «рельс 232px + контент» (V2 «Рабочий стол»). Именно этой сетки
      здесь не было — рельс ложился СВЕРХУ во всю ширину (bugs/06). */
   .screen {
-    max-width: 430px; margin: 0 auto; min-height: 100vh; min-height: 100dvh;
+    min-height: 100vh; min-height: 100dvh;
     display: flex; flex-direction: column; background: var(--bg);
   }
-  .body { flex: 1; padding: 12px 14px 96px; }
+  /* Оболочка во всю ширину, колонной зажат только контент (bugs/08.3). */
+  .body {
+    flex: 1; padding: 12px 14px 96px;
+    width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
+  }
 
   .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); margin: 6px 0 12px; }
   .state { color: var(--dim); text-align: center; padding: 18px 8px; margin: 0; }

@@ -20,6 +20,7 @@
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
+  getAdditionalUserInfo,
   isSignInWithEmailLink,
   linkWithCredential,
   linkWithPopup,
@@ -28,6 +29,7 @@ import {
   signInWithEmailLink,
   signInWithPopup,
   type User,
+  type UserCredential,
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, devAuth, isStand } from '../firebase.ts';
@@ -56,10 +58,22 @@ function loginLinkOrigin(): string {
 /** Ключ, под которым помним почту между отправкой письма и переходом по ссылке. */
 const PENDING_EMAIL_KEY = 'ndim-pending-email';
 
-/** Чем закончился апгрейд. Ошибки — не исключения: экран обязан показать их человеку. */
+/**
+ * Чем закончился апгрейд. Ошибки — не исключения: экран обязан показать их человеку.
+ *
+ * `created` — аккаунт создан ИМЕННО СЕЙЧАС (апгрейд гостя или первый вход новичка).
+ * Обычный вход существующего человека — `created: false`: поздравлять его с «регистрацией»
+ * не с чем, он просто вернулся домой (bugs/08.2 — виджет-поздравление показывался
+ * всем 331 человеку из 1.x при каждом входе по ссылке).
+ */
 export type UpgradeResult =
-  | { readonly ok: true; readonly uid: Uid }
+  | { readonly ok: true; readonly uid: Uid; readonly created: boolean }
   | { readonly ok: false; readonly reason: UpgradeFailure };
+
+/** Первый ли это вход человека — Firebase знает это точно, нам выдумывать не надо. */
+function isNewUser(credentials: UserCredential): boolean {
+  return getAdditionalUserInfo(credentials)?.isNewUser === true;
+}
 
 /**
  * Причины отказа, которые экран показывает человеку своими словами.
@@ -113,11 +127,12 @@ async function refreshToken(): Promise<Uid> {
   return user.uid;
 }
 
-/** Общий хвост обоих способов: обновить токен, расклеить точку, вернуть тот же UID. */
+/** Общий хвост обоих способов: обновить токен, расклеить точку, вернуть тот же UID.
+ *  Апгрейд гостя — это всегда рождение аккаунта: `created: true`. */
 async function finishUpgrade(): Promise<UpgradeResult> {
   const uid = await refreshToken();
   await promoteGuestPoint(uid);
-  return { ok: true, uid };
+  return { ok: true, uid, created: true };
 }
 
 /**
@@ -141,7 +156,7 @@ export async function continueWithGoogle(): Promise<UpgradeResult> {
     }
 
     const credentials = await signInWithPopup(devAuth(), new GoogleAuthProvider());
-    return { ok: true, uid: credentials.user.uid };
+    return { ok: true, uid: credentials.user.uid, created: isNewUser(credentials) };
   } catch (error) {
     return { ok: false, reason: classify(error) };
   }
@@ -162,7 +177,8 @@ export async function sendLoginLink(email: string): Promise<UpgradeResult> {
       handleCodeInApp: true,
     });
     localStorage.setItem(PENDING_EMAIL_KEY, email);
-    return { ok: true, uid: devAuth().currentUser?.uid ?? '' };
+    // Письмо отправлено — аккаунта это ещё не создало.
+    return { ok: true, uid: devAuth().currentUser?.uid ?? '', created: false };
   } catch (error) {
     return { ok: false, reason: classify(error) };
   }
@@ -216,7 +232,9 @@ export async function completeLoginLink(href: string = location.href): Promise<U
 
     const credentials = await signInWithEmailLink(devAuth(), email, href);
     localStorage.removeItem(PENDING_EMAIL_KEY);
-    return { ok: true, uid: credentials.user.uid };
+    // Для 331 человека из 1.x это обычный вход (created: false); для новичка, начавшего
+    // с почты на экране входа, — рождение аккаунта. Firebase различает это за нас.
+    return { ok: true, uid: credentials.user.uid, created: isNewUser(credentials) };
   } catch (error) {
     return { ok: false, reason: classify(error) };
   }

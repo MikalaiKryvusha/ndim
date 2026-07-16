@@ -17,6 +17,7 @@
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
   import { loadPublicPeople } from '$lib/data/metrics';
+  import { hasSession } from '$lib/data/session';
   import { num, peopleUnit } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
 
@@ -61,17 +62,33 @@
       return;
     }
 
+    // ── Вошедший человек лендинг не разглядывает — его дом внутри продукта (bugs/08.1) ──
+    // Гость тоже «внутри»: у него живая сессия и несохранённый труд. Проверка живёт в
+    // отложенном чанке (`data/session.ts` — динамический импорт SDK, канон EXP-0028),
+    // поэтому пререндер и лёгкость лендинга не страдают: лендинг рисуется сразу,
+    // а сессия, если она есть, тихо уводит человека домой.
+    //
+    // Воронка и счётчик — ПОСЛЕ ответа о сессии, только для тех, кто остаётся:
+    //   · вошедший не должен засчитываться в `landing_view` (он не входящий);
+    //   · чтение, оборванное редиректом, роняло бы шум Firestore в консоль.
+    void hasSession().then((inside) => {
+      if (inside) {
+        location.replace(APP_URL);
+        return;
+      }
+      // Первый шаг воронки (plans/03 этап 4). Ничего персонального не пишет и
+      // ничего не ждёт: аналитика не имеет права тормозить лендинг.
+      void track('landing_view');
+      // Живой счётчик людей — тоже не ждём: строка тихо появится, когда число придёт.
+      void loadPublicPeople().then((people) => (joinedPeople = people));
+    });
+
     // Источник истины темы — атрибут, выставленный инлайн-скриптом app.html.
     const attr = document.documentElement.getAttribute('data-theme');
     theme = attr === 'dark' ? 'dark' : 'light';
     const savedLang = localStorage.getItem('ndim-lang');
     if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
     if (['localhost', '127.0.0.1'].includes(location.hostname)) demoUrl = '/profile?guest=1';
-    // Первый шаг воронки (plans/03 этап 4). Ничего персонального не пишет и
-    // ничего не ждёт: аналитика не имеет права тормозить лендинг.
-    void track('landing_view');
-    // Живой счётчик людей — тоже не ждём: строка тихо появится, когда число придёт.
-    void loadPublicPeople().then((people) => (joinedPeople = people));
   });
 
   function toggleTheme() {

@@ -184,11 +184,15 @@
 </div>
 
 <style>
+  /* Оболочка во всю ширину, колонной зажат только контент (bugs/08.3). */
   .screen {
-    max-width: 430px; margin: 0 auto; min-height: 100vh; min-height: 100dvh;
+    min-height: 100vh; min-height: 100dvh;
     display: flex; flex-direction: column; background: var(--bg);
   }
-  .body { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .body {
+    flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px;
+    width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
+  }
   .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); }
 
   /* ── Десктоп: макет V2 «Рабочий стол» (утверждён владельцем 2026-07-11) ──

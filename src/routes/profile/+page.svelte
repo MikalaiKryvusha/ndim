@@ -171,9 +171,19 @@
     history.replaceState(null, '', '/profile');
 
     if (result.ok) {
-      guest = false; // аккаунт создан: пилюля гостя и запреты уходят
-      signupStep = 'done';
-      void track('account_created'); // четвёртый шаг воронки — путь пройден
+      guest = false; // сессия больше не гостевая: пилюля гостя и запреты уходят
+      if (result.created) {
+        // Аккаунт родился только что (апгрейд гостя или первый вход новичка) —
+        // единственный случай, когда поздравление уместно.
+        signupStep = 'done';
+        void track('account_created'); // четвёртый шаг воронки — путь пройден
+      } else {
+        // Обычный вход существующего человека (331 из 1.x входят именно так):
+        // поздравлять его с «регистрацией» не с чем — сразу его профиль (bugs/08.2).
+        // Воронку тоже не трогаем: вход — не создание аккаунта.
+        guestCard = false;
+        signupStep = 'facts';
+      }
       return result.uid;
     }
 
@@ -208,7 +218,9 @@
     if (result.ok) {
       guest = false;
       signupStep = 'done';
-      void track('account_created'); // четвёртый шаг воронки — путь пройден
+      // Апгрейд гостя всегда created: true, но считаем по флагу — воронка не имеет
+      // права засчитать «создан аккаунт» за то, что им не было (bugs/08.2).
+      if (result.created) void track('account_created');
       return;
     }
     signupError = t.account.errors[result.reason][lang];
@@ -886,9 +898,10 @@
 
 <style>
   /* Токены — из корневого лейаута (:root / [data-theme='dark']); здесь только раскладка. */
+  /* Мобильная оболочка (bugs/08.3): шапка, табы и нижняя панель — во всю ширину экрана;
+     колонной комфортной ширины зажат только КОНТЕНТ (.body). Прежний max-width на .screen
+     зажимал и шапку с панелью — на экранах шире 430px они висели с полями по бокам. */
   .screen {
-    max-width: 430px;
-    margin: 0 auto;
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
@@ -906,7 +919,10 @@
   .tabs button:hover { color: var(--text); }
   .tabs button.on { color: var(--primary); font-weight: 650; box-shadow: inset 0 -2px 0 var(--primary); }
 
-  .body { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .body {
+    flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px;
+    width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
+  }
   .state { font-size: 14px; color: var(--dim); text-align: center; padding: 18px 6px; }
   .mono { font-family: var(--mono); font-size: 11px; word-break: break-word; }
 
