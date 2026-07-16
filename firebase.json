@@ -23,6 +23,7 @@
         { "source": "/profile", "destination": "https://ndimspace.app/profile", "type": 301 },
         { "source": "/relations", "destination": "https://ndimspace.app/relations", "type": 301 },
         { "source": "/space", "destination": "https://ndimspace.app/space", "type": 301 },
+        { "source": "/dims", "destination": "https://ndimspace.app/dims", "type": 301 },
         { "source": "/menu", "destination": "https://ndimspace.app/menu", "type": 301 },
         { "source": "/menu/:rest*", "destination": "https://ndimspace.app/menu/:rest*", "type": 301 }
       ]
