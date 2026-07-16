@@ -144,6 +144,7 @@
       ],
     },
 
+    readMore: { ru: 'Читать дальше', en: 'Read more' },
     account: { ru: 'Аккаунт', en: 'Account' },
     guestPill: { ru: 'гость', en: 'guest' },
     guestNote: {
@@ -211,18 +212,20 @@
   <main class="body">
     <h1 class="screen-title">{t.title[lang]}</h1>
 
-    <!-- ── Манифест: меню начинается со смысла, а не с настроек ── -->
+    <!-- ── Манифест: меню начинается со смысла, но НЕ в полный рост (bugs/29 — канон 1.x
+         компактен). Первый абзац виден, остальное — «Читать дальше»; в пререндере
+         полный текст на месте (охраняется e2e). Кнопки-дубли документов убраны:
+         те же двери стоят строками ниже, как в 1.x. ── -->
     <section class="card manifest" in:fly={{ y: 10, duration: MOTION.base, easing: cubicOut }}>
       <h2>{t.manifestTitle[lang]}</h2>
-      {#each t.manifest[lang] as paragraph}
-        <!-- Текст свой, статический (не пользовательский): выделения — часть формулировки. -->
-        <p>{@html paragraph}</p>
-      {/each}
-      <div class="btns">
-        <a class="btn" href="/menu/manual">{t.manual[lang]}</a>
-        <a class="btn" href="/menu/about">{t.about[lang]}</a>
-        <a class="btn" href="/menu/author">{t.author[lang]}</a>
-      </div>
+      <!-- Текст свой, статический (не пользовательский): выделения — часть формулировки. -->
+      <p>{@html t.manifest[lang][0]}</p>
+      <details class="more">
+        <summary>{t.readMore[lang]}</summary>
+        {#each t.manifest[lang].slice(1) as paragraph}
+          <p>{@html paragraph}</p>
+        {/each}
+      </details>
     </section>
 
     <!-- ── Левая колонка: аккаунт, вид, поделиться ── -->
@@ -329,11 +332,11 @@
     display: flex; flex-direction: column; background: var(--bg);
   }
   .body {
-    flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px;
+    flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 10px;
     width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
   }
   .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); }
-  .col { display: flex; flex-direction: column; gap: 12px; }
+  .col { display: flex; flex-direction: column; gap: 10px; }
 
   .card {
     background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
@@ -341,25 +344,30 @@
   }
   .card h3 {
     font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--dim); font-weight: 600; padding: 14px 16px 8px;
+    color: var(--dim); font-weight: 600; padding: 11px 14px 6px;
   }
 
-  /* Манифест */
-  .manifest { padding: 16px; }
+  /* Манифест — компактный (bugs/29): первый абзац + «Читать дальше». */
+  .manifest { padding: 14px; }
   .manifest h2 {
     font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
-    color: var(--dim); font-weight: 600; margin-bottom: 10px;
+    color: var(--dim); font-weight: 600; margin-bottom: 8px;
   }
-  .manifest p { font-size: 14.5px; line-height: 1.7; color: var(--text); }
-  .manifest p + p { margin-top: 12px; }
+  .manifest p { font-size: 13.5px; line-height: 1.6; color: var(--text); }
+  .manifest p + p, .more p + p { margin-top: 10px; }
   .manifest :global(b) { color: var(--heading); }
-  .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .more { margin-top: 8px; }
+  .more summary {
+    cursor: pointer; font-size: 12.5px; font-weight: 650; color: var(--primary);
+    list-style-position: inside;
+  }
+  .more[open] summary { margin-bottom: 8px; }
 
-  /* Строка списка: и ссылка, и кнопка выглядят одинаково */
+  /* Строка списка: плотность канона 1.x (bugs/29) — и ссылка, и кнопка выглядят одинаково */
   .row {
-    display: flex; align-items: center; gap: 12px; width: 100%;
-    padding: 12px 16px; border: 0; border-top: 1px solid var(--edge-soft);
-    background: transparent; font: inherit; font-size: 14px; color: var(--text);
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    padding: 9px 14px; border: 0; border-top: 1px solid var(--edge-soft);
+    background: transparent; font: inherit; font-size: 13.5px; color: var(--text);
     text-align: left; text-decoration: none; cursor: pointer;
     transition: background 0.15s ease;
   }
@@ -372,7 +380,7 @@
   .row .chev { color: var(--faint); }
 
   /* Кто я */
-  .who { display: flex; align-items: center; gap: 12px; padding: 4px 16px 12px; }
+  .who { display: flex; align-items: center; gap: 11px; padding: 2px 14px 10px; }
   .ava {
     width: 46px; height: 46px; border-radius: 50%; flex: none;
     display: grid; place-items: center; font-size: 18px; font-weight: 700;
@@ -383,7 +391,7 @@
   .idn { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .idn b { font-size: 16px; color: var(--heading); }
   .meta { font-size: 12px; color: var(--faint); word-break: break-word; }
-  .note { font-size: 12.5px; color: var(--dim); line-height: 1.5; padding: 0 16px 12px; }
+  .note { font-size: 12.5px; color: var(--dim); line-height: 1.5; padding: 0 14px 10px; }
   .who .note { padding: 0; }
   .pill {
     align-self: flex-start; font-size: 11.5px; font-weight: 650; padding: 3px 10px; border-radius: 999px;
@@ -408,10 +416,10 @@
   .btn:hover { border-color: var(--primary); color: var(--primary); }
   .btn.primary:hover { color: var(--primary-ink); filter: brightness(1.08); }
   .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
-  .btn.wide { display: flex; margin: 0 16px 14px; }
+  .btn.wide { display: flex; margin: 0 14px 12px; }
 
   .quiet { font-size: 11.5px; color: var(--faint); line-height: 1.55; }
-  .quiet.pad { padding: 10px 16px 14px; }
+  .quiet.pad { padding: 8px 14px 12px; }
   .versions {
     text-align: center; font-family: var(--mono); font-size: 11.5px;
     color: var(--faint); line-height: 1.7;

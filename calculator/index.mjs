@@ -245,7 +245,18 @@ export async function runCycle() {
     log('грязных точек нет — пересчитывать нечего');
     // Пересчитывать нечего, но человек на экране «Пространство» должен видеть, что сервер
     // на месте. Агрегаты при этом не трогаем: Пространство не менялось — не менялись и они.
-    await reportServer(startedAt);
+    //
+    // ХОЛОСТОЙ ЦИКЛ — ТОЖЕ УСПЕХ (bugs/33). Раньше lastSuccessAt обновлялся только при
+    // реальном пересчёте: на спокойном Пространстве «последний успех» застывал на дни, и
+    // владелец прочёл это как «сервер не работает». Заодно зеркалим счёт людей в публичную
+    // витрину лендинга: боевой документ оставался в формате 1.x (total_number_of_all_users),
+    // а холостым циклам не представлялось случая его переписать (bugs/07, хвост).
+    const statsSnap = await db.doc('space/stats').get();
+    const people = statsSnap.data()?.people;
+    if (typeof people === 'number') {
+      await db.doc('space/public_metrics').set({ people, computedAt: startedAt });
+    }
+    await reportServer(startedAt, { lastSuccessAt: startedAt });
     return 0;
   }
 
