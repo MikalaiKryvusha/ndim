@@ -155,7 +155,10 @@
     return loc(card.guestName) ?? loc(card.guestNick) ?? t.noName[lang];
   }
 
-  const TRIO = ['similarity', 'proximity', 'commonality'] as const;
+  // Порядок метрик — КАНОН 1.x (bugs/25, слово владельца 2026-07-16: «нужно справа»;
+  // кадр design/reference-1x/app-02-связи.png): слева множители, СПРАВА их произведение —
+  // Общность · Близость · Похожесть.
+  const TRIO = ['commonality', 'proximity', 'similarity'] as const;
 </script>
 
 <svelte:head>
