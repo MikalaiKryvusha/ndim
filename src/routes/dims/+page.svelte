@@ -33,6 +33,7 @@
 
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession, submitSuggestion } from '$lib/data/profile';
   import {
@@ -458,7 +459,8 @@
     <h1 class="screen-title">{t.title[lang]}</h1>
 
     {#if stand === 'connecting'}
-      <p class="state">{t.connecting[lang]}</p>
+      <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
+      <div class="state"><Loading {lang} /></div>
     {:else if stand === 'signedout'}
       <div class="card pad">
         <p class="state">{t.signedOut[lang]}</p>
@@ -652,9 +654,11 @@
     min-height: 100vh; min-height: 100dvh;
     display: flex; flex-direction: column; background: var(--bg);
   }
-  /* Оболочка во всю ширину, колонной зажат только контент (bugs/08.3). */
+  /* Оболочка во всю ширину, колонной зажат только контент (bugs/08.3).
+     Нижний отступ 24px: прежние 96px — страховка времён ДО прибитой панели,
+     теперь они давали мёртвую пустую зону в конце ленты (bugs/20). */
   .body {
-    flex: 1; padding: 12px 14px 96px;
+    flex: 1; padding: 12px 14px 24px;
     width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
   }
 

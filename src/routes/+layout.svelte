@@ -105,4 +105,20 @@
   :global(::selection) {
     background: color-mix(in srgb, var(--accent) 28%, transparent);
   }
+
+  /* ── Фокус и тапы (bugs/26) ──
+     Тап больше не рисует дефолтную синюю обводку браузера (в 1.x её не было):
+     рамку после клика/тапа убираем, мобильную подсветку тапа гасим.
+     Клавиатурный фокус ОСТАЁТСЯ видимым (:focus-visible) — доступность не слепнет,
+     но стиль наш, в тонах темы, а не системный синий. */
+  :global(html) {
+    -webkit-tap-highlight-color: transparent;
+  }
+  :global(:focus:not(:focus-visible)) {
+    outline: none;
+  }
+  :global(:focus-visible) {
+    outline: 2px solid color-mix(in srgb, var(--primary) 60%, transparent);
+    outline-offset: 2px;
+  }
 </style>

@@ -16,6 +16,7 @@
   import AppBar from '$lib/ui/AppBar.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession } from '$lib/data/profile';
   import { loadRelations, strengthLevel, type RelationsScreenData } from '$lib/data/relations';
@@ -30,6 +31,17 @@
   let standError = $state('');
   let data = $state<RelationsScreenData | null>(null);
   let expanded = $state<string | null>(null);
+
+  /**
+   * Подсказки метрик (bugs/24) — как в 1.x: у каждой метрики иконка ⓘ, тап раскрывает
+   * объяснение. Тексты — ДОСЛОВНО из 1.x (сняты в researches/12; те же определения — в
+   * руководстве, researches/07 §3). Открыта одна подсказка за раз; повторный тап закрывает.
+   */
+  let hintFor = $state<{ uid: string; metric: (typeof TRIO)[number] } | null>(null);
+
+  function toggleHint(uid: string, metric: (typeof TRIO)[number]): void {
+    hintFor = hintFor?.uid === uid && hintFor.metric === metric ? null : { uid, metric };
+  }
 
   /**
    * Прогрессивное раскрытие (bugs/13): топ приходит ОДНИМ документом (чтений больше не
@@ -105,6 +117,21 @@
       proximity: { ru: 'Близость', en: 'Proximity' },
       commonality: { ru: 'Общность', en: 'Commonality' },
     },
+    // Тексты подсказок — 1.x дословно (ndim-old/public/index.html, блок relation_card).
+    hints: {
+      similarity: {
+        ru: 'Произведение Общность * Близость. Этот показатель тем больше, чем больше у Вас с другим человеком Общность и Близость. Является показателем того, насколько Вы похожи с другим человеком. Список Ваших Связей сортируется по убыванию этого показателя.',
+        en: 'Product Commonality * Proximity. The more Commonality and Proximity you have with another person, the higher this indicator. It is an indicator of how another person are similar to you. The list of your Relations is sorted in descending order of this indicator.',
+      },
+      proximity: {
+        ru: 'Близость показывает, насколько у Вас с другим человеком совпадают отношения к одним и тем же вещам. Этот показатель тем больше, чем более похоже Вы и другой человек оцениваете одни и те же измерения.',
+        en: 'Proximity shows how much you and another person have similar attitudes towards the same things. The more similar you and the other person rates the same dimensions, the higher this indicator.',
+      },
+      commonality: {
+        ru: 'Общность показывает, насколько Вы с другим человеком разделяете одни и те же интересы. Этот показатель тем больше, чем больше у Вас с другим человеком одинаковых измерений в ваших NDim ID.',
+        en: 'Commonality shows how much you and another person share the same interests. The more similar dimensions you and another person have in your NDim IDs, the higher this indicator.',
+      },
+    },
     ourSpace: { ru: 'Наше общее пространство', en: 'Our common space' },
     dimsCount: { ru: 'Размерность', en: 'Dimensionality' },
     diameter: { ru: 'Диаметр', en: 'Diameter' },
@@ -145,7 +172,8 @@
     <h1 class="screen-title">{t.title[lang]}</h1>
 
     {#if stand === 'connecting'}
-      <p class="state">{t.connecting[lang]}</p>
+      <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
+      <div class="state"><Loading {lang} /></div>
     {:else if stand === 'signedout'}
       <div class="card">
         <p class="state">{t.signedOut[lang]}</p>
@@ -177,16 +205,22 @@
               <b>{guestTitle(card)}</b>
             </button>
           </div>
+          <!-- Тап по метрике раскрывает подсказку; ⓘ показывает, что она есть (канон 1.x, bugs/24) -->
           <div class="trio">
             {#each TRIO as metric (metric)}
               {@const value = entry[metric]}
-              <span class="cell {strengthLevel(value)}">
-                <small>{t.metrics[metric][lang]}</small>
+              <button type="button" class="cell {strengthLevel(value)}" onclick={() => toggleHint(entry.guestUid, metric)}>
+                <small>{t.metrics[metric][lang]} <span class="ihint" aria-hidden="true">ⓘ</span></small>
                 <b>{value}%</b>
                 <span class="mini"><i style="width:{value}%"></i></span>
-              </span>
+              </button>
             {/each}
           </div>
+          {#if hintFor?.uid === entry.guestUid}
+            <p class="hintbox" transition:slide={{ duration: MOTION.base }}>
+              {t.hints[hintFor.metric][lang]}
+            </p>
+          {/if}
           {#if expanded === entry.guestUid}
             <div class="deep" transition:slide={{ duration: MOTION.base }}>
               <h3>{t.ourSpace[lang]}</h3>
@@ -284,9 +318,19 @@
   .who:hover b { color: var(--primary); }
   .reveal-anchor { height: 1px; }
 
-  /* тройка метрик — все три видны в свёрнутом состоянии (правка владельца, как в 1.x) */
+  /* тройка метрик — все три видны в свёрнутом состоянии (правка владельца, как в 1.x);
+     каждая метрика — кнопка подсказки (bugs/24) */
   .trio { display: flex; gap: 8px; margin-top: 10px; }
-  .cell { flex: 1; text-align: center; }
+  .cell {
+    flex: 1; text-align: center;
+    background: none; border: 0; padding: 0; font: inherit; cursor: pointer; color: inherit;
+  }
+  .ihint { font-size: 10px; color: var(--faint); }
+  .cell:hover .ihint { color: var(--primary); }
+  .hintbox {
+    margin-top: 9px; padding: 9px 12px; border-radius: 10px;
+    background: var(--edge-soft); color: var(--text); font-size: 12.5px; line-height: 1.5;
+  }
   .cell small { display: block; font-size: 10.5px; color: var(--dim); margin-bottom: 2px; }
   .cell b { display: block; font-size: 16px; }
   .mini { display: block; height: 4px; border-radius: 2px; background: var(--edge-soft); position: relative; margin-top: 4px; }

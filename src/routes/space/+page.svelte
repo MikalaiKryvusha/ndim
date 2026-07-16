@@ -19,6 +19,7 @@
   import { fly } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession } from '$lib/data/profile';
   import { loadSpace, type SpaceScreenData } from '$lib/data/space';
@@ -326,7 +327,8 @@
     </div>
 
     {#if stand === 'connecting'}
-      <p class="state full">{t.connecting[lang]}</p>
+      <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
+      <div class="state full"><Loading {lang} /></div>
     {:else if stand === 'signedout'}
       <div class="card full">
         <p class="state">{t.signedOut[lang]}</p>

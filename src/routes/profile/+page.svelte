@@ -15,6 +15,7 @@
   import AppBar from '$lib/ui/AppBar.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
   import { monthYearSince } from '$lib/ui/format';
@@ -678,7 +679,8 @@
 
   <main class="body">
     {#if stand === 'connecting'}
-      <p class="state">{t.connecting[lang]}</p>
+      <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
+      <div class="state"><Loading {lang} /></div>
     {:else if stand === 'signedout'}
       <!-- Человек не вошёл. Три двери, и ни одной с паролем: Google · ссылка на почту ·
            гостем. Люди из 1.x входят той же почтой — их UID, оценки и связи на месте. -->
