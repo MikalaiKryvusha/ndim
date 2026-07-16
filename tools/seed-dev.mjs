@@ -48,6 +48,54 @@ async function ensureDevUser() {
   return uid;
 }
 
+// ── 1б. Фотографии в эмулятор Storage (bugs/14): у стенда есть лица ─────────
+//
+// В бою фото живёт в Storage по пути `users/{uid}/avatar/avatar.webp` (EXP-0043).
+// Стенд обязан уметь то же самое — иначе поведение фото (показ, лайтбокс) непроверяемо.
+// «Фото» — детерминированный SVG-портрет: браузеру всё равно, а бинарники в репозитории
+// не нужны. Content-Type честно svg — расширение пути наследие 1.x, роли не играет.
+
+const STORAGE_URL = 'http://127.0.0.1:9199';
+const STORAGE_BUCKET = `${PROJECT_ID}.appspot.com`;
+
+/** Условный портрет: цветной фон + силуэт. Достаточно, чтобы отличать людей на глаз. */
+function avatarSvg(hue) {
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">',
+    `<rect width="240" height="240" fill="hsl(${hue} 45% 40%)"/>`,
+    `<circle cx="120" cy="92" r="46" fill="hsl(${hue} 55% 84%)"/>`,
+    `<path d="M120 150c-52 0-88 32-88 78v12h176v-12c0-46-36-78-88-78z" fill="hsl(${hue} 55% 84%)"/>`,
+    '</svg>',
+  ].join('');
+}
+
+/** Кладёт фото в эмулятор Storage от имени администратора (Bearer owner — мимо правил). */
+async function uploadAvatar(ownerUid, hue) {
+  const name = encodeURIComponent(`users/${ownerUid}/avatar/avatar.webp`);
+  const objects = `${STORAGE_URL}/v0/b/${STORAGE_BUCKET}/o`;
+
+  const upload = await fetch(`${objects}?uploadType=media&name=${name}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'image/svg+xml', Authorization: 'Bearer owner' },
+    body: avatarSvg(hue),
+  });
+  if (!upload.ok) {
+    throw new Error(`загрузка аватара ${ownerUid}: ${upload.status} ${await upload.text()}`);
+  }
+
+  // Эмулятор ИГНОРИРУЕТ Content-Type при media-загрузке и пишет octet-stream, а SVG в <img>
+  // без правильного MIME браузер не рендерит вовсе (поймано ГЛАЗАМИ на скриншоте QA-прогона:
+  // в кружке был alt-текст, DOM-проверки при этом были зелёные). Тип чиним отдельным PATCH.
+  const patch = await fetch(`${objects}/${name}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+    body: JSON.stringify({ contentType: 'image/svg+xml' }),
+  });
+  if (!patch.ok) {
+    throw new Error(`метаданные аватара ${ownerUid}: ${patch.status} ${await patch.text()}`);
+  }
+}
+
 // ── 2. Данные модели 2.0 ────────────────────────────────────────────────────
 
 const now = Date.now();
@@ -118,6 +166,23 @@ const DIMS = {
   },
 };
 
+// Массовка каталога: боевой каталог — 5111 измерений, и ленты живут ПОРЦИЯМИ. На девяти
+// карточках прогрессивную подгрузку (bugs/13) не проверить вовсе — стенд врал бы, что
+// «всё влезло». Часть проб — с голосами сообщества, часть без (высота карточек, bugs/15).
+for (let i = 1; i <= 36; i += 1) {
+  DIMS[`probe-${String(i).padStart(2, '0')}`] = {
+    type: { ru: 'Явление', en: 'Phenomenon' }, year: '', tags: ['проба'],
+    title: { ru: `Проба ${i}`, en: `Probe ${i}` },
+    description: {
+      ru: `Служебное измерение стенда №${i} — массовка для прокрутки лент.`,
+      en: `Stand probe dimension #${i} — crowd filler for feed scrolling.`,
+    },
+    stars: i % 3 === 0 ? 0 : i * 7,
+    rates: i % 3 === 0 ? 0 : (i % 5) + 1,
+    rating: i % 3 === 0 ? 0 : Math.round(((i % 10) + 1) * 0.9 * 10) / 10,
+  };
+}
+
 /** Измерения, появившиеся за последние сутки. Остальные — старожилы каталога. */
 const FRESH_DIMS = new Set(['early-rising']);
 
@@ -132,7 +197,9 @@ const PROFILE_VALUES = {
   about: { ru: 'Ищу похожих на меня людей.', en: 'Looking for people like me.' },
   born: { year: 1986, month: 3, day: 14 },
   gender: 'm',
-  avatar: false,
+  // Фото ЕСТЬ (bugs/14): сам файл сид кладёт в эмулятор Storage, здесь — только флаг,
+  // ровно как в бою (EXP-0043).
+  avatar: true,
 };
 
 /** Карта видимости — как в утверждённом макете: имя и пол всем, о себе друзьям, дата кругу, фото никому. */
@@ -155,6 +222,9 @@ const GUESTS = {
   'stand-guest-anna': {
     name: { ru: 'Анна', en: 'Anna' },
     ratings: { cats: 9, silence: 8, theatre: 6, travel: 7 },
+    // У Анны есть фото (bugs/14): флаг в её публичном бакете + файл в эмуляторе Storage —
+    // «Связи» показывают лицо, тап открывает его во весь экран.
+    avatar: true,
   },
   'stand-guest-viktor': {
     name: { ru: 'Виктор', en: 'Viktor' },
@@ -175,6 +245,10 @@ const env = await initializeTestEnvironment({
 
 try {
   const uid = await ensureDevUser();
+
+  // Лица стенда: владелец и Анна (bugs/14). Файлы — в эмулятор Storage, флаги — ниже.
+  await uploadAvatar(uid, 213);
+  await uploadAvatar('stand-guest-anna', 8);
 
   await env.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
@@ -248,7 +322,7 @@ try {
     // Гости: публичная карточка (profile/everyone) + точка с оценками.
     for (const [guestUid, guest] of Object.entries(GUESTS)) {
       await db.doc(`users/${guestUid}`).set({
-        visibility: { name: 'everyone' },
+        visibility: guest.avatar ? { name: 'everyone', avatar: 'everyone' } : { name: 'everyone' },
         settings: { language: 'ru' },
         time: { created: now, updated: now, lastSignIn: now },
         groupCount: 0,
@@ -260,6 +334,8 @@ try {
           last: { ru: null, en: null },
           nick: { ru: null, en: null },
         },
+        // Флаг фото — в публичном бакете: его читают «Связи» (guestAvatar).
+        ...(guest.avatar ? { avatar: true } : {}),
       });
       await db.doc(`points/${guestUid}`).set({ dirty: false, updated: now, lastSync: null });
       for (const [dimId, value] of Object.entries(guest.ratings)) {

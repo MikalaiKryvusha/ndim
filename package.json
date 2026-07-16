@@ -20,7 +20,7 @@
     "test:watch": "node --test --watch \"src/**/*.test.ts\"",
     "test:rules": "firebase emulators:exec --only firestore --project ndim-rules-test \"node --test tests/rules/*.test.ts\"",
     "test:calc": "firebase emulators:exec --only firestore --project demo-ndim-dev \"node --test calculator/*.test.mjs\"",
-    "stand": "firebase emulators:exec --only firestore,auth --project demo-ndim-dev \"node tools/seed-dev.mjs && node tools/stand.mjs\"",
+    "stand": "firebase emulators:exec --only firestore,auth,storage --project demo-ndim-dev \"node tools/seed-dev.mjs && node tools/stand.mjs\"",
     "e2e": "playwright test",
     "typecheck": "svelte-kit sync && tsc --noEmit",
     "kaif:version": "node tools/kaif.mjs version",

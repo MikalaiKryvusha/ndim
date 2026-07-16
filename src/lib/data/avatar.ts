@@ -14,7 +14,7 @@
  */
 import { getDownloadURL, ref } from 'firebase/storage';
 
-import { isStand, storage } from '../firebase.ts';
+import { storage } from '../firebase.ts';
 import type { Uid } from '../model/schema.ts';
 
 /** Где 1.x положил фотографию человека. */
@@ -24,11 +24,10 @@ const avatarPath = (uid: Uid) => `users/${uid}/avatar/avatar.webp`;
  * Ссылка на фото человека — или `null`, если его нет.
  *
  * Отсутствие фото — норма, а не ошибка: в боевой базе фотографию загрузили считаные люди.
- * Поэтому любая неудача (нет файла, нет Storage на стенде, нет доступа) — это спокойный `null`
- * и кружок с буквой, а не сломанный экран.
+ * Поэтому любая неудача (нет файла, нет доступа) — это спокойный `null` и кружок с буквой,
+ * а не сломанный экран. Стенд ходит в ЭМУЛЯТОР Storage (bugs/14) — фото там кладёт сид.
  */
 export async function avatarUrl(uid: Uid): Promise<string | null> {
-  if (isStand()) return null; // эмулятора Storage нет — на стенде фотографий не бывает
   try {
     return await getDownloadURL(ref(storage(), avatarPath(uid)));
   } catch {

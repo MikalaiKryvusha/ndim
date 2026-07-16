@@ -31,6 +31,30 @@
   let data = $state<RelationsScreenData | null>(null);
   let expanded = $state<string | null>(null);
 
+  /**
+   * Прогрессивное раскрытие (bugs/13): топ приходит ОДНИМ документом (чтений больше не
+   * становится), но рисовать все 250 карточек разом незачем — раскрываем порциями по мере
+   * прокрутки, якорем за пределами вьюпорта, как в 1.x.
+   */
+  const REVEAL_PORTION = 24;
+  let revealed = $state(REVEAL_PORTION);
+  let sentinel: HTMLElement | null = $state(null);
+
+  $effect(() => {
+    if (sentinel === null || data === null) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && data !== null) {
+          revealed = Math.min(revealed + REVEAL_PORTION, data.cards.length);
+        }
+      },
+      // Якорь срабатывает за ~600px до края экрана — догрузка невидима (bugs/13).
+      { rootMargin: '600px 0px' },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  });
+
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');
     if (saved === 'en' || saved === 'ru') lang = saved;
@@ -135,19 +159,24 @@
     {:else if data === null || data.cards.length === 0}
       <div class="card"><p class="state">{t.empty[lang]}</p></div>
     {:else}
-      {#each data.cards as card, index (card.entry.guestUid)}
+      {#each data.cards.slice(0, revealed) as card, index (card.entry.guestUid)}
         {@const entry = card.entry}
         <!-- Лёгкая лесенка появления: карточки приходят друг за другом, а не стеной. -->
         <div class="card" in:fly={{ y: 12, duration: MOTION.base, delay: Math.min(index, 8) * 40, easing: cubicOut }}>
-          <button type="button" class="head" onclick={() => (expanded = expanded === entry.guestUid ? null : entry.guestUid)}>
+          <!-- Фото и имя — РАЗНЫЕ кнопки (bugs/14): тап по фото открывает его во весь
+               экран (лайтбокс внутри Avatar), тап по имени раскрывает карточку.
+               Вложить одно в другое нельзя — вложенные интерактивы невалидны. -->
+          <div class="head">
             <Avatar
               uid={entry.guestUid}
               name={guestTitle(card)}
               has={card.guestAvatar}
               size={46}
             />
-            <b>{guestTitle(card)}</b>
-          </button>
+            <button type="button" class="who" onclick={() => (expanded = expanded === entry.guestUid ? null : entry.guestUid)}>
+              <b>{guestTitle(card)}</b>
+            </button>
+          </div>
           <div class="trio">
             {#each TRIO as metric (metric)}
               {@const value = entry[metric]}
@@ -176,6 +205,10 @@
           {/if}
         </div>
       {/each}
+      {#if revealed < data.cards.length}
+        <!-- Якорь прогрессивного раскрытия: пустой и невидимый, работает за кадром (bugs/13). -->
+        <div class="reveal-anchor" bind:this={sentinel} aria-hidden="true"></div>
+      {/if}
       <p class="hint">{t.privacyHint[lang]}</p>
     {/if}
   </main>
@@ -240,13 +273,16 @@
     border-color: color-mix(in srgb, var(--primary) 30%, var(--edge));
     transform: translateY(-1px);
   }
-  .head {
-    display: flex; align-items: center; gap: 12px; width: 100%;
-    background: transparent; border: 0; padding: 0; font: inherit; cursor: pointer; text-align: left;
+  .head { display: flex; align-items: center; gap: 12px; width: 100%; }
+  /* кружок с лицом живёт в Avatar.svelte (там же лайтбокс, bugs/14);
+     имя — своя кнопка раскрытия карточки */
+  .who {
+    flex: 1; min-width: 0; text-align: left;
+    background: transparent; border: 0; padding: 0; font: inherit; cursor: pointer;
   }
-  /* кружок с лицом теперь живёт в Avatar.svelte — один на все экраны */
-  .head b { font-size: 16px; color: var(--heading); transition: color 0.15s ease; }
-  .head:hover b { color: var(--primary); }
+  .who b { font-size: 16px; color: var(--heading); transition: color 0.15s ease; }
+  .who:hover b { color: var(--primary); }
+  .reveal-anchor { height: 1px; }
 
   /* тройка метрик — все три видны в свёрнутом состоянии (правка владельца, как в 1.x) */
   .trio { display: flex; gap: 8px; margin-top: 10px; }

@@ -46,7 +46,7 @@
     type DimCard,
     type DimsScreenData,
   } from '$lib/data/dims';
-  import { dimCardTitle, isNewDim, searchIndex } from '$lib/model/feed';
+  import { dimCardTitle, isNewDim, searchIndex, sortMyDims } from '$lib/model/feed';
   import { technicalDetail } from '$lib/ui/errors';
   import { votesUnit, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
@@ -74,6 +74,11 @@
   let shown = $state<DimCard[]>([]);
   let loadingMore = $state(false);
   let exhausted = $state(false);
+
+  /** «Мой NDim ID» (bugs/18): свой кеш карточек и сколько позиций своего порядка раскрыто. */
+  let mineCards = $state<Map<string, DimCard>>(new Map());
+  let mineCount = $state(0);
+  let mineLoading = $state(false);
 
   let expanded = $state<string | null>(null);
   let menuOpen = $state<string | null>(null);
@@ -128,11 +133,18 @@
    * Ровно так работал 1.x (`IntersectionObserver` + `allDimsLoader`).
    */
   $effect(() => {
-    if (sentinel === null || stand !== 'ready' || tab !== 'all' || search.trim() !== '') return;
+    if (sentinel === null || stand !== 'ready' || search.trim() !== '') return;
 
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) void loadMore();
-    });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        if (tab === 'all') void loadMore();
+        else void loadMoreMine();
+      },
+      // Якорь срабатывает за ~600px ДО края экрана: догрузка происходит вне видимости,
+      // и человек её не замечает — ровно как в 1.x (bugs/13).
+      { rootMargin: '600px 0px' },
+    );
     observer.observe(sentinel);
     return () => observer.disconnect();
   });
@@ -150,6 +162,22 @@
       if (queue.length === 0) exhausted = true;
     } finally {
       loadingMore = false;
+    }
+  }
+
+  /** Догрузка «Мой NDim ID»: следующая порция СВОЕГО порядка (bugs/18). Карточки кешируются. */
+  async function loadMoreMine(): Promise<void> {
+    if (mineLoading || data === null || mineCount >= mineOrder.length) return;
+    mineLoading = true;
+    try {
+      const portion = mineOrder.slice(mineCount, mineCount + PAGE_SIZE);
+      const cards = await loadDimCards(portion);
+      const merged = new Map(mineCards);
+      for (const card of cards) merged.set(card.id, card);
+      mineCards = merged;
+      mineCount = Math.min(mineCount + PAGE_SIZE, mineOrder.length);
+    } finally {
+      mineLoading = false;
     }
   }
 
@@ -195,13 +223,25 @@
 
     ratings = new Map(ratings).set(dimId, value);
 
-    // Карточка уезжает вправо (как в 1.x): её везёт out-переход, а соседей плавно
-    // подтягивает animate:flip — руками ничего не хронометрируем.
-    const card = shown.find((item) => item.id === dimId);
-    leaving = dimId;
-    shown = shown.filter((item) => item.id !== dimId);
+    const card = shown.find((item) => item.id === dimId) ?? mineCards.get(dimId);
 
-    showUndo(dimId, card ? dimCardTitle(loc(card.title), card.year).name : '');
+    // Оценённая карточка теперь живёт и во вкладке «Мой NDim ID» — кладём её в кеш вкладки,
+    // чтобы она появилась там сразу; своё место она займёт по сортировке (bugs/18).
+    if (card && !mineCards.has(dimId)) {
+      const merged = new Map(mineCards);
+      merged.set(dimId, card);
+      mineCards = merged;
+    }
+
+    if (tab === 'all') {
+      // Карточка уезжает вправо (как в 1.x): её везёт out-переход, а соседей плавно
+      // подтягивает animate:flip — руками ничего не хронометрируем.
+      leaving = dimId;
+      shown = shown.filter((item) => item.id !== dimId);
+      showUndo(dimId, card ? dimCardTitle(loc(card.title), card.year).name : '');
+    }
+    // Во вкладке «Мой NDim ID» карточка ОСТАЁТСЯ и переезжает по сортировке. Раньше смена
+    // оценки отсюда ВЫКИДЫВАЛА карточку из вкладки, хотя оценка стояла (bugs/18, п. 4).
   }
 
   function showUndo(dimId: string, name: string): void {
@@ -257,17 +297,43 @@
     return 'other';
   }
 
+  /**
+   * Живой порядок «Мой NDim ID» — по убыванию своей оценки (bugs/18): считается из ТЕКУЩИХ
+   * оценок функцией sortMyDims, а не из случайного порядка ленты «Все». Поэтому он не
+   * «дрожит» между открытиями, а смена оценки переставляет карточку, не выкидывая её.
+   */
+  const mineOrder = $derived(data === null ? [] : sortMyDims(ratings, data.index, lang));
+
+  /** Раскрытая часть «Мой NDim ID»: первые mineCount позиций порядка, уже загруженные. */
+  const mineVisible = $derived(
+    mineOrder
+      .slice(0, mineCount)
+      .map((id) => mineCards.get(id))
+      .filter((card): card is DimCard => card !== undefined),
+  );
+
   /** Карточки текущей вкладки. Поиск идёт по индексу и перебивает вкладку. */
   const visible = $derived.by((): DimCard[] => {
     if (data === null) return [];
 
     if (search.trim() !== '') {
+      // Ищем среди уже загруженных карточек (обеих вкладок) — каталог целиком не читаем.
       const ids = new Set(searchIndex(data.index, search));
-      return shown.filter((card) => ids.has(card.id));
+      const pool = new Map<string, DimCard>();
+      for (const card of shown) pool.set(card.id, card);
+      for (const [id, card] of mineCards) pool.set(id, card);
+      return [...pool.values()].filter((card) => ids.has(card.id));
     }
-    if (tab === 'mine') return shown.filter((card) => ratings.has(card.id));
+    if (tab === 'mine') return mineVisible;
     return shown;
   });
+
+  /**
+   * Ключ контейнера ленты: вкладки и поиск рендерятся РАЗДЕЛЬНЫМИ списками (bugs/18).
+   * Иначе animate:flip тянул общие карточки через весь экран при переключении вкладок —
+   * та самая «пляска». Пересоздание контейнера мгновенно и локальных переходов не запускает.
+   */
+  const feedKey = $derived(search.trim() !== '' ? 'search' : tab);
 
   /** Сколько измерений человек оценил — цифра на вкладке. */
   const myCount = $derived(ratings.size);
@@ -281,12 +347,11 @@
     return ratings.get(dimId) ?? null;
   }
 
-  async function openMyTab(): Promise<void> {
+  function openMyTab(): void {
     tab = 'mine';
-    if (data === null) return;
-    // Свои карточки могли ещё не попасть в `shown` (их не показывали в ленте) — добираем.
-    const missing = data.mine.filter((id) => !shown.some((card) => card.id === id));
-    if (missing.length > 0) shown = [...shown, ...(await loadDimCards(missing.slice(0, 60)))];
+    search = '';
+    // Первую порцию тянем сразу: не ждём срабатывания якоря под пустой лентой.
+    if (mineCount === 0) void loadMoreMine();
   }
 
   function toggleLang(): void {
@@ -348,6 +413,7 @@
     },
     nothingFound: { ru: 'Ничего не нашлось. Попробуйте другое слово.', en: 'Nothing found. Try another word.' },
     isNew: { ru: 'Новое', en: 'New' },
+    noVotes: { ru: 'ещё без голосов', en: 'no votes yet' },
     saveNow: { ru: 'Сохранить сейчас', en: 'Save now' },
     savingIn: { ru: 'Сохраню через', en: 'Saving in' },
     sec: { ru: 'с', en: 's' },
@@ -410,17 +476,21 @@
         <button type="button" class:on={tab === 'all' && search.trim() === ''} onclick={() => { tab = 'all'; search = ''; }}>
           {t.tabAll[lang]}
         </button>
-        <button type="button" class:on={tab === 'mine' && search.trim() === ''} onclick={() => void openMyTab()}>
+        <button type="button" class:on={tab === 'mine' && search.trim() === ''} onclick={openMyTab}>
           {t.tabMine[lang]} · {myCount}
         </button>
       </div>
 
       {#if visible.length === 0 && search.trim() !== ''}
         <div class="card pad" in:fade={{ duration: MOTION.base }}><p class="state">{t.nothingFound[lang]}</p></div>
-      {:else if visible.length === 0 && tab === 'mine'}
+      {:else if tab === 'mine' && myCount === 0 && search.trim() === ''}
+        <!-- Пусто ИМЕННО потому, что оценок нет. Пока грузится первая порция, молчим:
+             мигающая «пустота» на долю секунды — это и есть мерцание (bugs/18). -->
         <div class="card pad" in:fade={{ duration: MOTION.base }}><p class="state">{t.mineEmpty[lang]}</p></div>
       {/if}
 
+      <!-- Вкладки и поиск — РАЗДЕЛЬНЫЕ списки (bugs/18): flip не тянет карточки между ними -->
+      {#key feedKey}
       <div class="feed">
         {#each visible as card (card.id)}
           {@const mine = starValue(card.id)}
@@ -460,16 +530,22 @@
               </div>
             </div>
 
-            <!-- Рейтинг сообщества. Голосов нет — строки нет вовсе (как в 1.x). -->
-            {#if card.rates > 0}
-              <div class="rating">
+            <!-- Рейтинг сообщества. Строка есть ВСЕГДА — карточки одной высоты (bugs/15);
+                 у неоценённых — пустые звёзды и честное «ещё без голосов». -->
+            <div class="rating">
+              {#if card.rates > 0}
                 <span class="rval">{card.rating}</span>
                 <span class="rstars" aria-hidden="true">
                   {#each Array(10) as _, i (i)}<i class:lit={i < Math.round(card.rating)}>★</i>{/each}
                 </span>
                 <span class="rvotes">({card.rates} {votesUnit(card.rates, lang)})</span>
-              </div>
-            {/if}
+              {:else}
+                <span class="rstars" aria-hidden="true">
+                  {#each Array(10) as _, i (i)}<i>★</i>{/each}
+                </span>
+                <span class="rvotes">{t.noVotes[lang]}</span>
+              {/if}
+            </div>
 
             <!-- Одиннадцать звёзд 0…10: видны СВЁРНУТЫМИ. Это и есть жест оценки. -->
             <div class="stars" role="group">
@@ -511,10 +587,13 @@
           </article>
         {/each}
       </div>
+      {/key}
 
-      {#if tab === 'all' && search.trim() === ''}
+      {#if search.trim() === ''}
         <div class="loader" bind:this={sentinel}>
-          {#if exhausted && shown.length > 0 && queue.length === 0 && ratings.size > 0 && visible.length === 0}
+          {#if tab === 'mine'}
+            {#if mineCount < mineOrder.length}{t.loading[lang]} <span class="spin">◠</span>{/if}
+          {:else if exhausted && shown.length > 0 && queue.length === 0 && ratings.size > 0 && visible.length === 0}
             {t.allDone[lang]}
           {:else if !exhausted}
             {t.loading[lang]} <span class="spin">◠</span>
@@ -660,7 +739,8 @@
   .dots:hover { color: var(--text); }
   .drop {
     position: absolute; right: 0; top: 24px; z-index: 5; min-width: 190px;
-    background: var(--panel-2, var(--panel)); border: 1px solid var(--edge); border-radius: 12px;
+    /* Непрозрачный фон (bugs/23): сквозь полупрозрачное меню читался текст карточки. */
+    background: var(--panel-solid, var(--panel)); border: 1px solid var(--edge); border-radius: 12px;
     padding: 5px; display: flex; flex-direction: column; box-shadow: var(--card-shadow);
   }
   .drop button {
@@ -669,8 +749,11 @@
   }
   .drop button:hover { background: var(--edge-soft); }
 
-  .rating { display: flex; align-items: center; gap: 9px; margin-top: 8px; }
-  .rval { font-size: 21px; font-weight: 800; color: var(--up, #22c55e); letter-spacing: -.5px; }
+  /* min-height = высота строки С КРУПНОЙ ЦИФРОЙ (.rval, 21px/800): без неё вариант
+     «ещё без голосов» был на 7px ниже, и карточки шли вразнобой (bugs/15). */
+  .rating { display: flex; align-items: center; gap: 9px; margin-top: 8px; min-height: 26px; }
+  /* line-height: 1 — иначе строка крупной цифры выше строки «ещё без голосов» (bugs/15). */
+  .rval { font-size: 21px; font-weight: 800; color: var(--up, #22c55e); letter-spacing: -.5px; line-height: 1; }
   /* Пустые звёзды: --edge в светлой «Бумаге» почти белый — берём приглушённый общий тон. */
   .rstars i { font-style: normal; font-size: 12px; color: color-mix(in srgb, var(--faint) 45%, transparent); }
   .rstars i.lit { color: #f5a524; }
@@ -756,7 +839,8 @@
   .toast {
     position: fixed; left: 14px; right: 14px; bottom: 84px; margin: 0 auto; width: fit-content;
     z-index: 30; display: flex; align-items: center; gap: 14px; max-width: calc(100vw - 28px);
-    background: var(--panel); border: 1px solid var(--edge); border-radius: 999px;
+    /* Плавающий слой — непрозрачный, как меню и панель (bugs/22, 23). */
+    background: var(--panel-solid, var(--panel)); border: 1px solid var(--edge); border-radius: 999px;
     padding: 9px 9px 9px 16px; color: var(--text); font-size: 13px;
     box-shadow: var(--card-shadow);
   }

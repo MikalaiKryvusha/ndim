@@ -20,7 +20,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore';
-import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import { connectStorageEmulator, getStorage, type FirebaseStorage } from 'firebase/storage';
 
 /** Идентификатор дев-проекта. Префикс `demo-` = только эмуляторы, никакого прода. */
 export const DEV_PROJECT_ID = 'demo-ndim-dev';
@@ -71,6 +71,9 @@ function ensureApp(): FirebaseApp {
             projectId: DEV_PROJECT_ID,
             // Эмулятору годится любой непустой ключ; боевым этот конфиг не станет никогда.
             apiKey: 'demo-api-key',
+            // Эмулятору Storage нужен явный бакет: без него getStorage() падает раньше,
+            // чем connectStorageEmulator успевает его перенаправить (bugs/14).
+            storageBucket: `${DEV_PROJECT_ID}.appspot.com`,
           }
         : PROD_CONFIG,
     );
@@ -95,11 +98,14 @@ export function db(): Firestore {
  * Storage: здесь живут ФОТОГРАФИИ людей — `users/{uid}/avatar/avatar.webp` (наследие 1.x).
  *
  * В Firestore лежит только ФЛАГ `avatar: boolean`, самой картинки там нет, — поэтому за фото
- * надо сходить отдельно. Эмулятор Storage мы не поднимаем: на стенде фотографий просто не
- * бывает, и это честное «нечего показать», а не поломка.
+ * надо сходить отдельно. На стенде — эмулятор Storage (порт 9199): фотографии на стенде
+ * НАСТОЯЩИЕ, их кладёт сид (bugs/14). Раньше стенд жил «без фотографий» — и поведение фото
+ * было непроверяемо в принципе.
  */
 export function storage(): FirebaseStorage {
-  if (!bucket) bucket = getStorage(ensureApp());
+  if (bucket) return bucket;
+  bucket = getStorage(ensureApp());
+  if (isStand()) connectStorageEmulator(bucket, '127.0.0.1', 9199);
   return bucket;
 }
 
