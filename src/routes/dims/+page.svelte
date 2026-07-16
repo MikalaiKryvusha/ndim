@@ -388,6 +388,16 @@
     window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank', 'noopener');
   }
 
+  /**
+   * «Сообщить об ошибке» — пункт меню ⋮ из 1.x (bugs/27): письмо в поддержку с уже
+   * подставленным измерением. Адрес — канон страницы «Поддержка» (researches/06).
+   */
+  function reportError(card: DimCard): void {
+    const title = dimCardTitle(loc(card.title), card.year);
+    const subject = lang === 'ru' ? `Ошибка в измерении «${title.name}» (${card.id})` : `Mistake in dimension “${title.name}” (${card.id})`;
+    location.href = `mailto:ndimspace@yandex.ru?subject=${encodeURIComponent(subject)}`;
+  }
+
   const t = {
     title: { ru: 'Измерения', en: 'Dimensions' },
     connecting: { ru: 'Подключаюсь…', en: 'Connecting…' },
@@ -400,6 +410,12 @@
       en: 'Sign in to rate dimensions and find people similar to you.',
     },
     signIn: { ru: 'Войти', en: 'Sign in' },
+    // Вводная подсказка экрана — канон 1.x (кадр app-15; bugs/27). Формулировка чуть
+    // адаптирована к 2.0: кнопки «Сохранить» больше нет — оценка сохраняется сама.
+    intro: {
+      ru: 'Чтобы пополнить Ваш NDim ID новыми измерениями, установите желаемое количество звёзд в любом измерении из списка — оценка сохранится сама. Управляйте измерениями Вашего профиля во вкладке «Мой NDim ID». Подробнее об измерении — нажмите на его название. Для быстрого поиска воспользуйтесь строкой поиска, а предложить новое измерение можно кнопкой внизу.',
+      en: 'To grow your NDim ID with new dimensions, set the desired number of stars on any dimension in the list — the rating is saved by itself. Manage the dimensions of your profile on the “My NDim ID” tab. Tap a dimension’s name to learn more about it. Use the search bar to find a dimension quickly, and suggest a new one with the button below.',
+    },
     tabAll: { ru: 'Все', en: 'All' },
     tabMine: { ru: 'Мой NDim ID', en: 'My NDim ID' },
     searchPlaceholder: { ru: 'Найти измерение…', en: 'Search a dimension…' },
@@ -425,6 +441,7 @@
     year: { ru: 'Год', en: 'Year' },
     tags: { ru: 'Теги', en: 'Tags' },
     searchWeb: { ru: 'Искать в Интернете', en: 'Search the web' },
+    reportError: { ru: 'Сообщить об ошибке', en: 'Report a mistake' },
     removeRating: { ru: 'Убрать мою оценку', en: 'Remove my rating' },
     hint: {
       ru: 'Оценки видите только Вы. Из них складывается Ваш NDim ID — и по нему находятся похожие люди.',
@@ -472,6 +489,9 @@
         {#if standError}<p class="hint mono">{standError}</p>{/if}
       </div>
     {:else}
+      <!-- Вводная подсказка экрана — канон 1.x (bugs/27) -->
+      <p class="intro">{t.intro[lang]}</p>
+
       <input class="search" type="search" placeholder={t.searchPlaceholder[lang]} bind:value={search} />
 
       <div class="segs" role="group">
@@ -522,6 +542,7 @@
                 {#if menuOpen === card.id}
                   <div class="drop" transition:fade={{ duration: MOTION.fast }}>
                     <button type="button" onclick={() => { webSearch(card); menuOpen = null; }}>{t.searchWeb[lang]}</button>
+                    <button type="button" onclick={() => { reportError(card); menuOpen = null; }}>{t.reportError[lang]}</button>
                     {#if ratings.has(card.id)}
                       <button type="button" onclick={() => { showUndo(card.id, loc(card.title)); void cancelRating(); menuOpen = null; }}>
                         {t.removeRating[lang]}
@@ -663,6 +684,11 @@
   }
 
   .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); margin: 6px 0 12px; }
+  /* Вводная подсказка экрана (канон 1.x, bugs/27): спокойная плашка, а не карточка. */
+  .intro {
+    font-size: 12px; line-height: 1.55; color: var(--dim); margin: 0 0 12px;
+    padding: 10px 12px; border-radius: 10px; background: var(--edge-soft);
+  }
   .state { color: var(--dim); text-align: center; padding: 18px 8px; margin: 0; }
   .hint { color: var(--faint); font-size: 12px; margin: 14px 2px 0; }
   .mono { font-family: var(--mono); font-size: 11px; }

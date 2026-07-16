@@ -102,6 +102,12 @@
       ru: 'Войдите, чтобы увидеть людей, похожих на Вас.',
       en: 'Sign in to see the people who are similar to you.',
     },
+    // Вводная подсказка экрана — 1.x ДОСЛОВНО (кадр app-02-связи.png; bugs/27):
+    // владелец объяснял людям, что это за список и почему он может быть пуст.
+    intro: {
+      ru: 'Пространство NDim периодически выполняет поиски среди всех пользователей системы и находит до 250 наиболее похожих на Вас людей. Найденные люди отображаются здесь. Выше по списку расположены наиболее похожие на Вас люди, ниже — менее похожие в порядке убывания похожести. Чтобы Пространство NDim могло находить похожих на Вас людей, пожалуйста, убедитесь, что Ваш NDim ID профиль на вкладке «Измерения» заполнен измерениями.',
+      en: 'NDim Space periodically searches among all users of the system and finds up to 250 people most similar to you. The people found are shown here. Higher on the list are the people most similar to you; lower — less similar, in descending order of similarity. For NDim Space to be able to find people similar to you, please make sure your NDim ID profile on the “Dimensions” tab is filled with dimensions.',
+    },
     signIn: { ru: 'Войти', en: 'Sign in' },
     // ⚠️ ТЕКСТ ДЛЯ ЧЕЛОВЕКА, А НЕ ДЛЯ РАЗРАБОТЧИКА. Здесь стояло «вычислитель ещё не считал.
     // На стенде: node calculator/index.mjs --once» — и это увидели живые люди на боевом проде
@@ -188,8 +194,11 @@
         {#if standError}<p class="hint mono">{standError}</p>{/if}
       </div>
     {:else if data === null || data.cards.length === 0}
+      <p class="intro">{t.intro[lang]}</p>
       <div class="card"><p class="state">{t.empty[lang]}</p></div>
     {:else}
+      <!-- Вводная подсказка экрана — канон 1.x (bugs/27) -->
+      <p class="intro">{t.intro[lang]}</p>
       {#each data.cards.slice(0, revealed) as card, index (card.entry.guestUid)}
         {@const entry = card.entry}
         <!-- Лёгкая лесенка появления: карточки приходят друг за другом, а не стеной. -->
@@ -264,6 +273,11 @@
     width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
   }
   .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); }
+  /* Вводная подсказка экрана (канон 1.x, bugs/27). */
+  .intro {
+    font-size: 12px; line-height: 1.55; color: var(--dim); margin: 0;
+    padding: 10px 12px; border-radius: 10px; background: var(--edge-soft);
+  }
 
   /* ── Десктоп: макет V2 «Рабочий стол» (утверждён владельцем 2026-07-11) ──
      Рельс слева во всю высоту, справа шапка и контент. Связи — сетка карточек:
@@ -290,6 +304,7 @@
     }
     .body > .screen-title,
     .body > .state,
+    .body > .intro,
     .body > .hint {
       grid-column: 1 / -1;
     }
