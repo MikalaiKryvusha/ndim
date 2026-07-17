@@ -36,7 +36,7 @@ const commands = {
     console.log(`  развёрнут:   ${m.deployed ?? '—'}`);
     console.log(`  отслеживание: ${m.tracking}${m.origin ? ` → ${m.origin}` : ''}`);
     console.log(`  сфера:       ${m.sphere}`);
-    console.log(`  агент:       ${m.agent}`);
+    console.log(`  агент:       ${(m.agents ?? [m.agent]).filter(Boolean).join(', ')}`);
     console.log(`  язык:        ${m.language ?? '—'}`);
     console.log(`\nПроверить, есть ли новее: /kaif-version  ·  сверить ядро: node tools/02-kaif-fetch.mjs`);
   },

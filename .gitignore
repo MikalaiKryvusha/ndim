@@ -33,6 +33,9 @@ build/
 test-results/
 playwright-report/
 
+# ── Личные настройки Claude Code (правила разрешений этой машины) ──
+.claude/settings.local.json
+
 # ── ОС и редакторы ──
 Thumbs.db
 Desktop.ini

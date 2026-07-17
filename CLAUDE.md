@@ -38,4 +38,5 @@
 `/bug-research` · `/propose-idea`
 Владелец: `/interview` · `/fix-vision` — Планирование: `/revision` · `/what-next`
 Помощь: `/help-kaif` — Выпуск: `/release`
+Дисциплина исполнения: `/fable-method` · `/fable-loop` · `/fable-judge` · `/fable-domain`
 Жизненный цикл KAIF: `/kaif-version` · `/kaif-update` · `/kaif-fork` · `/kaif-switch-origin` · `/kaif-remove`

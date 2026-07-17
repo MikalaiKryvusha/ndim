@@ -90,6 +90,7 @@ const EXPECTED_SKILLS = [
   'experience', 'report-bug', 'bug-research', 'propose-idea', 'interview', 'revision',
   'fix-vision', 'what-next', 'help-kaif', 'release',
   'kaif-version', 'kaif-update', 'kaif-fork', 'kaif-switch-origin', 'kaif-remove',
+  'fable-method', 'fable-loop', 'fable-judge', 'fable-domain',
 ];
 const hasCyrillic = (s) => /[а-яёА-ЯЁ]/.test(s);
 
@@ -134,9 +135,12 @@ if (exists('.kaif/kaif.json')) {
   catch { fail('.kaif/kaif.json: невалидный JSON'); }
 
   if (marker) {
-    for (const field of ['framework', 'version', 'released', 'tracking', 'sphere', 'agent']) {
+    for (const field of ['framework', 'version', 'released', 'tracking', 'sphere']) {
       if (!marker[field]) fail(`.kaif/kaif.json: нет поля «${field}»`);
     }
+    // Схема 1.4: строка «agent»; тонкая машинерия (пред-1.5): массив «agents».
+    const agents = marker.agents ?? (marker.agent ? [marker.agent] : []);
+    if (!Array.isArray(agents) || agents.length === 0) fail('.kaif/kaif.json: нет поля «agent»/«agents»');
     if (marker.framework !== 'KAIF') fail('.kaif/kaif.json: framework ≠ "KAIF"');
     if (!/^\d+\.\d+$/.test(marker.version ?? '')) fail('.kaif/kaif.json: версия должна быть MAJOR.MINOR');
     if (marker.tracking === 'anonymous' && marker.origin) fail('.kaif/kaif.json: anonymous-режим не должен содержать origin');
