@@ -143,6 +143,37 @@ try {
     await context.close();
   }
 
+  // ── bugs/38: манифест — кнопкой на телефоне, виджетом рядом с кнопками на десктопе ──
+  console.log('bugs/38 · манифест: телефон — кнопка, десктоп — виджет рядом:');
+  {
+    const { context, page, errors } = await person(browser);
+    await page.goto(`${BASE}/menu`);
+    await page.waitForSelector('a.manifest-link', { timeout: 10000 });
+    check('телефон: полный манифест скрыт', !(await page.locator('section.manifest').isVisible()));
+    check('телефон: кнопка манифеста видна', await page.locator('a.manifest-link').isVisible());
+    await page.locator('a.manifest-link').click();
+    await page.waitForURL('**/menu/manifesto');
+    check('кнопка ведёт на полный манифест', (await page.textContent('article')).includes('объединять людей'));
+    await page.screenshot({ path: `${SHOTS}/manifesto-page-mobile.png` });
+    check('консоль чиста (манифест, телефон)', errors.length === 0, errors.join(' | ').slice(0, 200));
+    await context.close();
+  }
+  {
+    const { context, page, errors } = await person(browser, { width: 1440 });
+    await page.goto(`${BASE}/menu`);
+    await page.waitForSelector('section.manifest', { timeout: 10000 });
+    check('десктоп: манифест-виджет виден', await page.locator('section.manifest').isVisible());
+    check('десктоп: кнопка манифеста скрыта', !(await page.locator('a.manifest-link').isVisible()));
+    // «Рядышком»: виджет и первая карточка кнопок стоят на одной высоте, в разных колонках.
+    const m = await page.locator('section.manifest').boundingBox();
+    const c = await page.locator('.col .card').first().boundingBox();
+    check('виджеты стоят рядом', m !== null && c !== null && Math.abs(m.y - c.y) < 8 && c.x > m.x + m.width - 1,
+      `manifest y=${m?.y} x=${m?.x} · card y=${c?.y} x=${c?.x}`);
+    await page.screenshot({ path: `${SHOTS}/menu-desktop-manifest.png` });
+    check('консоль чиста (манифест, десктоп)', errors.length === 0, errors.join(' | ').slice(0, 200));
+    await context.close();
+  }
+
   // ── bugs/37: смена языка не переставляет карточки «Мой NDim ID» ──
   console.log('bugs/37 · RU↔EN не трогает порядок «Мой NDim ID»:');
   {

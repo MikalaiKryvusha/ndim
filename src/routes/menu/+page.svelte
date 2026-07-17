@@ -27,6 +27,7 @@
   } from '$lib/data/profile';
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
+  import { MANIFEST } from '$lib/content/manifest';
   import { dateOnly, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
@@ -123,28 +124,7 @@
 
   const t = {
     title: { ru: 'Меню', en: 'Menu' },
-    manifestTitle: {
-      ru: 'Зачем существует Пространство NDim',
-      en: 'Why NDim Space exists',
-    },
-    // Текст утверждён владельцем (design/menu-mockups.html, V1). Правило: пишем о том,
-    // что ЕСТЬ, — о цели и ценностях, а не о том, чего у нас нет.
-    manifest: {
-      ru: [
-        'Пространство NDim ищет людей, <b>похожих друг на друга</b> — по внутреннему миру, характеру, взглядам. Не по анкете и не по фотографии: только по тому, как человек сам оценил важные для себя вещи. Считает это <b>строгая математика</b>, одинаково беспристрастная ко всем — независимо от пола, происхождения, веры и убеждений.',
-        'Пространство создано, чтобы <b>объединять людей</b> — по интересам, убеждениям, образу мысли — и чтобы в мире становилось больше дружбы, поддержки и любви. Оно стоит на взаимном уважении, доброжелательности, честности и доверии.',
-        'Пространство работает <b>бесплатно</b> и открыто для всех, где есть интернет.',
-        'Когда мир, благодаря Пространству NDim, станет более добрым и приятным местом для жизни, — можно будет считать, что оно успешно выполнило свою работу.',
-      ],
-      en: [
-        'NDim Space looks for people who are <b>similar to each other</b> — by their inner world, character and views. Not by a questionnaire and not by a photo: only by how a person rated the things that matter to them. This is computed by <b>rigorous mathematics</b>, equally impartial to everyone — regardless of gender, origin, faith or beliefs.',
-        'The Space was created to <b>bring people together</b> — by interests, beliefs and ways of thinking — so that there is more friendship, support and love in the world. It stands on mutual respect, goodwill, honesty and trust.',
-        'The Space works <b>free of charge</b> and is open to everyone who has the internet.',
-        'When the world, thanks to NDim Space, becomes a kinder and more pleasant place to live — we can consider that it has done its job.',
-      ],
-    },
-
-    readMore: { ru: 'Читать дальше', en: 'Read more' },
+    manifestBtn: { ru: 'Манифест', en: 'Manifesto' },
     account: { ru: 'Аккаунт', en: 'Account' },
     guestPill: { ru: 'гость', en: 'guest' },
     guestNote: {
@@ -212,20 +192,21 @@
   <main class="body">
     <h1 class="screen-title">{t.title[lang]}</h1>
 
-    <!-- ── Манифест: меню начинается со смысла, но НЕ в полный рост (bugs/29 — канон 1.x
-         компактен). Первый абзац виден, остальное — «Читать дальше»; в пререндере
-         полный текст на месте (охраняется e2e). Кнопки-дубли документов убраны:
-         те же двери стоят строками ниже, как в 1.x. ── -->
+    <!-- ── Манифест (bugs/38, слово владельца): на ТЕЛЕФОНЕ развесистый текст не съедает
+         первый экран — вместо него кнопка на полную страницу /menu/manifesto; на ДЕСКТОПЕ
+         места полно — манифест висит виджетом рядом с кнопками меню. Полный текст
+         остаётся в пререндере этой страницы (виджет скрыт CSS) — охраняется e2e. ── -->
+    <a class="card manifest-link" href="/menu/manifesto" in:fly={{ y: 10, duration: MOTION.base, easing: cubicOut }}>
+      <span class="ic">📜</span>
+      <span class="lb"><b>{t.manifestBtn[lang]}</b><span class="sub">{MANIFEST.title[lang]}</span></span>
+      <span class="chev">›</span>
+    </a>
     <section class="card manifest" in:fly={{ y: 10, duration: MOTION.base, easing: cubicOut }}>
-      <h2>{t.manifestTitle[lang]}</h2>
+      <h2>{MANIFEST.title[lang]}</h2>
       <!-- Текст свой, статический (не пользовательский): выделения — часть формулировки. -->
-      <p>{@html t.manifest[lang][0]}</p>
-      <details class="more">
-        <summary>{t.readMore[lang]}</summary>
-        {#each t.manifest[lang].slice(1) as paragraph}
-          <p>{@html paragraph}</p>
-        {/each}
-      </details>
+      {#each MANIFEST.paragraphs[lang] as paragraph, index (index)}
+        <p>{@html paragraph}</p>
+      {/each}
     </section>
 
     <!-- ── Левая колонка: аккаунт, вид, поделиться ── -->
@@ -347,21 +328,29 @@
     color: var(--dim); font-weight: 600; padding: 11px 14px 6px;
   }
 
-  /* Манифест — компактный (bugs/29): первый абзац + «Читать дальше». */
-  .manifest { padding: 14px; }
+  /* Манифест (bugs/38): на телефоне — только кнопка на /menu/manifesto, полный виджет
+     скрыт (текст при этом остаётся в пререндере страницы); на десктопе — наоборот. */
+  .manifest { display: none; padding: 14px; }
   .manifest h2 {
     font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
     color: var(--dim); font-weight: 600; margin-bottom: 8px;
   }
   .manifest p { font-size: 13.5px; line-height: 1.6; color: var(--text); }
-  .manifest p + p, .more p + p { margin-top: 10px; }
+  .manifest p + p { margin-top: 10px; }
   .manifest :global(b) { color: var(--heading); }
-  .more { margin-top: 8px; }
-  .more summary {
-    cursor: pointer; font-size: 12.5px; font-weight: 650; color: var(--primary);
-    list-style-position: inside;
+
+  /* Кнопка манифеста (телефон): та же строка-дверь, что и остальные пункты меню. */
+  .manifest-link {
+    display: flex; align-items: center; gap: 11px;
+    padding: 11px 14px; font-size: 13.5px; color: var(--text);
+    text-decoration: none; transition: background 0.15s ease;
   }
-  .more[open] summary { margin-bottom: 8px; }
+  .manifest-link:hover { background: var(--edge-soft); }
+  .manifest-link .ic { width: 24px; text-align: center; font-size: 15px; }
+  .manifest-link .lb { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .manifest-link .lb b { color: var(--heading); font-size: 14px; }
+  .manifest-link .sub { font-size: 12px; color: var(--dim); }
+  .manifest-link .chev { color: var(--faint); }
 
   /* Строка списка: плотность канона 1.x (bugs/29) — и ссылка, и кнопка выглядят одинаково */
   .row {
@@ -425,7 +414,9 @@
     color: var(--faint); line-height: 1.7;
   }
 
-  /* ── Десктоп: макет V2 «Рабочий стол». Манифест — во всю ширину, ниже две колонки.
+  /* ── Десктоп: макет V2 «Рабочий стол». Манифест — виджет РЯДОМ с кнопками меню
+     (bugs/38, слово владельца: «в десктопе полно места — два виджета рядышком»):
+     три колонки — манифест | аккаунт-вид-поделиться | документы-проект-версии.
      Медиа-блок в конце файла: при равной специфичности выигрывает последнее правило (EXP-0026). */
   @media (min-width: 1024px) {
     .screen {
@@ -436,9 +427,11 @@
     }
     .body {
       width: 100%; max-width: 1280px; margin: 0 auto; padding: 20px 26px 34px;
-      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
       align-content: start; align-items: start; gap: 12px;
     }
-    .screen-title, .manifest { grid-column: 1 / -1; }
+    .screen-title { grid-column: 1 / -1; }
+    .manifest { display: block; }
+    .manifest-link { display: none; }
   }
 </style>
