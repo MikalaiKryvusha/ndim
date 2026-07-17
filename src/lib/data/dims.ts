@@ -108,7 +108,6 @@ export interface DimsScreenData {
 export async function loadDimsScreen(
   uid: Uid,
   ratings: ReadonlyMap<string, number>,
-  lang: 'ru' | 'en' = 'ru',
 ): Promise<DimsScreenData> {
   const index = await loadDimsIndex();
   const rated = new Set(ratings.keys());
@@ -117,7 +116,7 @@ export async function loadDimsScreen(
     index,
     ratings,
     feed: buildUnratedFeed(index, rated),
-    mine: sortMyDims(ratings, index, lang),
+    mine: sortMyDims(ratings),
   };
 }
 

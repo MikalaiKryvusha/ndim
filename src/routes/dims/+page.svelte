@@ -113,7 +113,7 @@
         }
         uid = session;
         ratings = await loadMyRatings(session);
-        data = await loadDimsScreen(session, ratings, lang);
+        data = await loadDimsScreen(session, ratings);
         queue = [...data.feed];
         stand = 'ready';
         await loadMore();
@@ -302,8 +302,9 @@
    * Живой порядок «Мой NDim ID» — по убыванию своей оценки (bugs/18): считается из ТЕКУЩИХ
    * оценок функцией sortMyDims, а не из случайного порядка ленты «Все». Поэтому он не
    * «дрожит» между открытиями, а смена оценки переставляет карточку, не выкидывая её.
+   * Язык сюда не входит (bugs/37): порядок один на RU и EN, смена языка карточки не трогает.
    */
-  const mineOrder = $derived(data === null ? [] : sortMyDims(ratings, data.index, lang));
+  const mineOrder = $derived(data === null ? [] : sortMyDims(ratings));
 
   /** Раскрытая часть «Мой NDim ID»: первые mineCount позиций порядка, уже загруженные. */
   const mineVisible = $derived(

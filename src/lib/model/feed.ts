@@ -71,21 +71,14 @@ export function buildUnratedFeed(
 
 /**
  * Порядок вкладки «Мой NDim ID» — по убыванию СОБСТВЕННОЙ оценки (10 → 0), как в 1.x.
- * При равных оценках — по имени, чтобы порядок не «дрожал» между открытиями.
+ * При равных оценках — по id измерения: ключ стабилен и одинаков на обоих языках,
+ * поэтому смена языка интерфейса НИКОГДА не переставляет карточки (bugs/37 — тай-брейк
+ * по локализованному имени заставлял их «прыгать» при переключении RU↔EN).
  */
-export function sortMyDims(
-  rated: ReadonlyMap<string, number>,
-  index: DimsIndex,
-  lang: 'ru' | 'en' = 'ru',
-): string[] {
-  const nameOf = (dimId: string) => {
-    const entry = index.get(dimId);
-    return entry?.[lang] ?? entry?.ru ?? entry?.en ?? dimId;
-  };
-
+export function sortMyDims(rated: ReadonlyMap<string, number>): string[] {
   return [...rated.keys()].sort((a, b) => {
     const byValue = (rated.get(b) ?? 0) - (rated.get(a) ?? 0);
-    return byValue !== 0 ? byValue : nameOf(a).localeCompare(nameOf(b), 'ru');
+    return byValue !== 0 ? byValue : a < b ? -1 : a > b ? 1 : 0;
   });
 }
 
