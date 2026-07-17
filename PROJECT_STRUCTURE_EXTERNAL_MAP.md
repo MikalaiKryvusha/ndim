@@ -22,7 +22,8 @@ D:\work\ai_sandbox\ndim\
 │  ── КЛЮЧЕВЫЕ ДОКУМЕНТЫ KAIF (корень) ──
 ├── AGENT_GUIDE.md                       # канон: правила работы над проектом
 ├── PHILOSOPHY.md                        # как агент мыслит (KISS + Оккам + набор принципов)
-├── BUG_FIXING_FRAMEWORK.md              # как агент чинит дефекты
+├── BUG_FIXING_FRAMEWORK.md              # как агент чинит дефекты (ворота INTENT + проверка близнецов)
+├── TESTING_FRAMEWORK.md                 # канон тестирования: 7 принципов + маркеры [NOT-TESTED]/[TESTED]
 ├── GOAL.md                              # видение владельца (его документ, агент не выдумывает)
 ├── STATUS.md                            # живое состояние — обновляется после каждой значимой задачи
 ├── EXPERIENCE.md                        # журнал уроков агента (грепается по тегам)
@@ -82,10 +83,12 @@ D:\work\ai_sandbox\ndim\
 ├── tests/rules/rules.test.ts    # 56 тестов правил на эмуляторе — проверяют ОТКАЗЫ
 │
 │  ── ОБВЯЗКА ──
-├── .kaif/kaif.json     # маркер развёртывания: версия · дата · origin · tracking · сфера · агент
-├── .claude/skills/     # 22 слэш-скилла KAIF (ритуалы работы)
+├── .kaif/              # kaif.json (маркер: версия · origin · tracking · сфера · агенты) ·
+│                       # kaif-core.mjs (ядро жизненного цикла) · spheres/ (библиотека сфер)
+├── .claude/skills/     # 26 слэш-скиллов KAIF (ритуалы работы, включая fable-*)
 ├── CLAUDE.md           # автозагружаемый контекст Claude Code → указывает на AGENT_GUIDE.md
 ├── AGENTS.md           # универсальный фолбэк для других агентских систем
+├── .agents/ .grok/ .cline/ .clinerules/ .roo/  # обёртки скиллов для Codex/Grok Build/Cline/Zoo Code (KAIF 1.5)
 ├── LICENSE             # GNU AGPL-3.0
 ├── package.json        # скрипты test/typecheck/kaif:*, лицензия, репозиторий
 ├── package-lock.json

@@ -5,7 +5,13 @@
   "origin": "https://github.com/MikalaiKryvusha/KAIF",
   "tracking": "origin",
   "sphere": "programming",
-  "agent": "claude-code",
   "language": "ru",
-  "deployed": "2026-07-10"
+  "deployed": "2026-07-10",
+  "agents": [
+    "claude-code",
+    "codex",
+    "grok-build",
+    "cline",
+    "zoo-code"
+  ]
 }
