@@ -356,11 +356,7 @@
     if (mineCount === 0) void loadMoreMine();
   }
 
-  function toggleLang(): void {
-    lang = lang === 'ru' ? 'en' : 'ru';
-    document.documentElement.setAttribute('lang', lang);
-    localStorage.setItem('ndim-lang', lang);
-  }
+  // Смену языка и её persist делает шапка (bugs/39) — экран лишь принимает новое значение.
 
   // ── Заявка на новое измерение ───────────────────────────────────────────────
   // Её место — здесь, рядом с каталогом (в 1.x это была лампочка 💡 на этом же экране),
@@ -471,7 +467,7 @@
 
 <div class="screen">
   <SideRail active="dims" {lang} />
-  <AppBar {lang} onToggleLang={toggleLang} />
+  <AppBar {lang} onLang={(next) => (lang = next)} />
 
   <main class="body">
     <h1 class="screen-title">{t.title[lang]}</h1>

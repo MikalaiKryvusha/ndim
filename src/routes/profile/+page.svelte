@@ -478,11 +478,7 @@
     if (saved === 'en' || saved === 'ru') lang = saved;
   });
 
-  function toggleLang() {
-    lang = lang === 'ru' ? 'en' : 'ru';
-    document.documentElement.setAttribute('lang', lang);
-    localStorage.setItem('ndim-lang', lang);
-  }
+  // Смену языка и её persist делает шапка (bugs/39) — экран лишь принимает новое значение.
 
   // ── Отображение значений ──
   const loc = (value: Localized | undefined | null): string | null =>
@@ -666,7 +662,7 @@
 
   <AppBar
     {lang}
-    onToggleLang={toggleLang}
+    onLang={(next) => (lang = next)}
     badge={guest ? t.guest.pill[lang] : undefined}
     onBadge={() => (guestCard = !guestCard)}
   />

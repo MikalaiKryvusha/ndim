@@ -29,11 +29,7 @@
     if (saved === 'en' || saved === 'ru') lang = saved;
   });
 
-  function toggleLang() {
-    lang = lang === 'ru' ? 'en' : 'ru';
-    document.documentElement.setAttribute('lang', lang);
-    localStorage.setItem('ndim-lang', lang);
-  }
+  // Смену языка и её persist делает шапка (bugs/39) — оболочка лишь принимает новое значение.
 
   const back = { ru: '‹ Меню', en: '‹ Menu' } as const;
 </script>
@@ -45,7 +41,7 @@
 
 <div class="screen">
   <SideRail active="menu" {lang} />
-  <AppBar {lang} onToggleLang={toggleLang} />
+  <AppBar {lang} onLang={(next) => (lang = next)} />
 
   <main class="body">
     <a class="back" href="/menu">{back[lang]}</a>

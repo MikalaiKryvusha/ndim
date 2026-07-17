@@ -143,6 +143,76 @@ try {
     await context.close();
   }
 
+  // ── bugs/39: язык — выпадашкой, тема — рядом в шапке ──
+  console.log('bugs/39 · шапка: выпадающее меню языка + переключатель темы:');
+  {
+    const { context, page, errors } = await person(browser);
+    await page.goto(`${BASE}/menu`);
+    await page.waitForSelector('header.bar .lang', { timeout: 10000 });
+
+    // Страница пререндерена: селектор есть в статическом HTML ДО гидрации, и первый клик
+    // может уйти в пустоту. Кликаем с ретраем — это и есть барьер гидрации.
+    let opened = false;
+    for (let i = 0; i < 10 && !opened; i += 1) {
+      await page.locator('header.bar .lang').click();
+      await page.waitForTimeout(300);
+      opened = (await page.locator('header.bar .dd').count()) > 0;
+    }
+    check('выпадашка открывается', opened);
+    const ddBg = await page.locator('header.bar .dd').evaluate((el) => getComputedStyle(el).backgroundColor);
+    check('фон выпадашки непрозрачный (bugs/23)', !ddBg.includes('rgba') || ddBg.endsWith(', 1)'), ddBg);
+
+    await page.mouse.click(200, 400); // тап мимо
+    await page.waitForTimeout(200);
+    check('тап мимо закрывает', (await page.locator('header.bar .dd').count()) === 0);
+
+    await page.locator('header.bar .lang').click();
+    await page.locator('header.bar .dd').waitFor({ timeout: 3000 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    check('Esc закрывает', (await page.locator('header.bar .dd').count()) === 0);
+
+    await page.locator('header.bar .lang').click();
+    await page.locator('header.bar .dd').waitFor({ timeout: 3000 });
+    await page.locator('header.bar .dd button', { hasText: 'English' }).click();
+    await page.waitForTimeout(300);
+    check('выбор English переключает тексты', (await page.textContent('h1'))?.includes('Menu'));
+    check('выбор сохранён', await page.evaluate(() => localStorage.getItem('ndim-lang') === 'en'));
+    await page.locator('header.bar .lang').click();
+    await page.locator('header.bar .dd').waitFor({ timeout: 3000 });
+    await page.locator('header.bar .dd button', { hasText: 'Русский' }).click();
+
+    // Тема из шапки: переключается, «Вид» в меню не отстаёт, выбор переживает перезагрузку.
+    await page.locator('header.bar .theme').click();
+    await page.waitForTimeout(200);
+    check('тема переключилась из шапки', await page.evaluate(() => document.documentElement.getAttribute('data-theme') === 'dark'));
+    const segOn = await page.locator('.seg button', { hasText: 'Тёмная' }).evaluate((el) => el.classList.contains('on'));
+    check('сегмент «Вид» в меню не отстал', segOn);
+    await page.reload();
+    await page.waitForSelector('header.bar .theme', { timeout: 10000 });
+    check('тема пережила перезагрузку', await page.evaluate(() => document.documentElement.getAttribute('data-theme') === 'dark'));
+    await page.screenshot({ path: `${SHOTS}/appbar-dropdown.png` });
+    check('консоль чиста (шапка-контролы)', errors.length === 0, errors.join(' | ').slice(0, 200));
+    await context.close();
+  }
+
+  // ── bugs/41: под нижней панелью нет пустой полосы (страницы DocShell) ──
+  for (const width of [390, 800, 1023]) {
+    console.log(`bugs/41 · нижняя панель прилегает к низу (ширина ${width}):`);
+    const { context, page, errors } = await person(browser, { width });
+    await page.goto(`${BASE}/menu/manifesto`);
+    await page.waitForSelector('nav.tabs, .tabs, footer, [class*="nav"]', { timeout: 10000 }).catch(() => {});
+    const gap = await page.evaluate(() => {
+      const nav = document.querySelector('.screen > :last-child');
+      if (!nav) return null;
+      return Math.round(window.innerHeight - nav.getBoundingClientRect().bottom);
+    });
+    check('панель прилегает к низу вьюпорта (зазор 0px)', gap !== null && Math.abs(gap) <= 1, `зазор: ${gap}px`);
+    if (width === 800) await page.screenshot({ path: `${SHOTS}/manifesto-bottom-${width}.png` });
+    check(`консоль чиста (manifesto, ${width})`, errors.length === 0, errors.join(' | ').slice(0, 200));
+    await context.close();
+  }
+
   // ── bugs/38: манифест — кнопкой на телефоне, виджетом рядом с кнопками на десктопе ──
   console.log('bugs/38 · манифест: телефон — кнопка, десктоп — виджет рядом:');
   {
@@ -186,12 +256,17 @@ try {
     const order = await page.$$eval('article.dim', (els) => els.map((el) => el.dataset.dim));
     check('вкладка «Мой NDim ID» показывает карточки', order.length > 0, `карточек: ${order.length}`);
 
-    await page.locator('header.bar .lang').click(); // RU → EN
+    // Язык теперь живёт в выпадашке (bugs/39): открыть меню → выбрать пункт.
+    await page.locator('header.bar .lang').click();
+    await page.locator('header.bar .dd').waitFor({ timeout: 3000 });
+    await page.locator('header.bar .dd button', { hasText: 'English' }).click(); // RU → EN
     await page.waitForTimeout(600);
     const orderEn = await page.$$eval('article.dim', (els) => els.map((el) => el.dataset.dim));
     check('порядок в EN тот же, что в RU', JSON.stringify(orderEn) === JSON.stringify(order));
 
-    await page.locator('header.bar .lang').click(); // EN → RU
+    await page.locator('header.bar .lang').click();
+    await page.locator('header.bar .dd').waitFor({ timeout: 3000 });
+    await page.locator('header.bar .dd button', { hasText: 'Русский' }).click(); // EN → RU
     await page.waitForTimeout(600);
     const orderBack = await page.$$eval('article.dim', (els) => els.map((el) => el.dataset.dim));
     check('возврат на RU не переставил карточки', JSON.stringify(orderBack) === JSON.stringify(order));

@@ -49,6 +49,12 @@
     if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
     theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
 
+    // Тему теперь можно менять и из шапки (bugs/39) — сегмент «Вид» обязан не отставать.
+    const observer = new MutationObserver(() => {
+      theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
     try {
       // Меню работает и без входа: манифест, документы и версии от данных не зависят.
       const uid = await currentSession();
@@ -187,7 +193,7 @@
 
 <div class="screen">
   <SideRail active="menu" {lang} />
-  <AppBar {lang} onToggleLang={() => setLang(lang === 'ru' ? 'en' : 'ru')} />
+  <AppBar {lang} onLang={(next) => (lang = next)} />
 
   <main class="body">
     <h1 class="screen-title">{t.title[lang]}</h1>

@@ -85,11 +85,7 @@
     }
   });
 
-  function toggleLang() {
-    lang = lang === 'ru' ? 'en' : 'ru';
-    document.documentElement.setAttribute('lang', lang);
-    localStorage.setItem('ndim-lang', lang);
-  }
+  // Смену языка и её persist делает шапка (bugs/39) — экран лишь принимает новое значение.
 
   const t = {
     title: { ru: 'Связи', en: 'Relations' },
@@ -175,7 +171,7 @@
 <div class="screen">
   <SideRail active="relations" {lang} />
 
-  <AppBar {lang} onToggleLang={toggleLang} />
+  <AppBar {lang} onLang={(next) => (lang = next)} />
 
   <main class="body">
     <h1 class="screen-title">{t.title[lang]}</h1>
