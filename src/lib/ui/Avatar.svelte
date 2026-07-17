@@ -27,6 +27,27 @@
   let src = $state<string | null>(null);
   let open = $state(false);
 
+  /**
+   * Портал: выносит лайтбокс в document.body (bugs/36). Внутри карточки ему жить нельзя:
+   * у карточек есть transform (hover «Связей»), а трансформированный предок делает
+   * position: fixed относительным СЕБЯ — фото открывалось «в карточке», обрезалось,
+   * и соседние карточки рисовались поверх (z-index заперт в их stacking context).
+   */
+  function portal(node: HTMLElement) {
+    document.body.appendChild(node);
+    return { destroy: () => node.remove() };
+  }
+
+  // Пока фото развёрнуто — страница под ним не прокручивается (bugs/36, полировка).
+  $effect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  });
+
   $effect(() => {
     if (!has) {
       src = null;
@@ -58,6 +79,7 @@
       type="button"
       class="lightbox"
       aria-label={name}
+      use:portal
       transition:fade={{ duration: MOTION.base }}
       onclick={() => (open = false)}
     >

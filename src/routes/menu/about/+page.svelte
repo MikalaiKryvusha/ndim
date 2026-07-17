@@ -100,15 +100,24 @@
   .vers dt { color: var(--dim); }
   .vers dd { font-family: var(--mono); color: var(--heading); font-weight: 600; }
 
-  .history { margin-top: 22px; border-top: 1px solid var(--edge-soft); padding-top: 12px; }
+  /* «История версий» — карточка по канону продукта (bugs/35, кадр app-17: в 1.x это
+     выразительный контейнер, а не голый список). Рецепт карточки — как у виджетов
+     «Связей»/«Пространства»: --panel + --edge + radius 14 + --card-shadow. */
+  .history {
+    margin-top: 22px; padding: 8px 14px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    box-shadow: var(--card-shadow);
+  }
   .history summary {
-    cursor: pointer; font-size: 15px; font-weight: 700; color: var(--heading); padding: 6px 0;
+    cursor: pointer; font-size: 15px; font-weight: 700; color: var(--heading); padding: 8px 0;
   }
-  /* Вложенная раскрывашка версии (канон 1.x): компактная плашка, список внутри. */
+  .history[open] { padding-bottom: 12px; }
+  /* Каждая версия — своя серая плашка-раскрывашка, как в 1.x (bugs/30 — вложенность,
+     bugs/35 — видимый контейнер: белое-на-белом карточкой не читалось). */
   .ver {
-    margin: 8px 0; border: 1px solid var(--edge-soft); border-radius: 10px;
-    padding: 4px 12px; background: var(--panel);
+    margin: 10px 0; border: 1px solid var(--edge); border-radius: 12px;
+    padding: 4px 14px; background: var(--edge-soft);
   }
-  .ver summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--heading); padding: 6px 0; }
-  .ver[open] { padding-bottom: 8px; }
+  .ver summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--heading); padding: 8px 0; }
+  .ver[open] { padding-bottom: 10px; }
 </style>

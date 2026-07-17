@@ -34,7 +34,12 @@
 <style>
   .bar {
     display: flex; align-items: center; gap: 9px;
-    padding: 14px 16px 12px; background: var(--panel); border-bottom: 1px solid var(--edge);
+    padding: 14px 16px 12px; border-bottom: 1px solid var(--edge);
+    /* Шапка приклеена к верху вьюпорта — канон 1.x (bugs/34, симметрично прибитой
+       нижней панели bugs/12). Под ней едет контент, поэтому фон — только непрозрачный
+       токен (bugs/22): обычный --panel в тёмной теме полупрозрачен по построению. */
+    position: sticky; top: 0; z-index: 10;
+    background: var(--panel-solid, var(--panel));
   }
   .wm { font-size: 15px; font-weight: 650; color: var(--heading); }
   .lang {

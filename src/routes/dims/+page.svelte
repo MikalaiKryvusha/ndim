@@ -521,6 +521,7 @@
           {@const title = dimCardTitle(loc(card.title), card.year)}
           <article
             class="card dim"
+            data-dim={card.id}
             in:fly={{ y: 14, duration: MOTION.base, easing: cubicOut }}
             out:fly={leaving === card.id
               ? { x: 480, duration: MOTION.slow, easing: cubicOut }
