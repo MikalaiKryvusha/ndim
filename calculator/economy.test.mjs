@@ -4,7 +4,9 @@
 // не имеет права перечитывать и переписывать Пространство целиком на каждый чих. Обычный
 // цикл пишет ТОЛЬКО изменившееся (diff), свежую правку пережидает тихим периодом (человек
 // ещё оценивает), а чужие топы обновляет лениво — их дописывает суточный полный проход
-// (см. full_pass.test.mjs).
+// (см. full_pass.test.mjs). Исключение из тихого периода — ОКНО НОВИЧКА (ideas/05):
+// человек, ждущий свою ПЕРВУЮ ценность, синхронизируется ближайшим циклом; в 1.x новички
+// ждали до часа и уходили с мыслью «связей нет».
 //
 // Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
 
@@ -25,9 +27,18 @@ const { getFirestore } = await import('firebase-admin/firestore');
 const db = getFirestore();
 const MIN = 60 * 1000;
 
-/** Сеет точку; updated по умолчанию древний — тихий период (120 с) таким не мешает. */
-async function seedPoint(uid, ratings, { updated = 1, guest = false } = {}) {
-  await db.doc(`points/${uid}`).set({ dirty: true, updated, lastSync: null, ...(guest ? { guest: true } : {}) });
+/**
+ * Сеет точку; updated по умолчанию древний — тихий период (120 с) таким не мешает.
+ * firstSeen задаётся, когда тесту нужен «бывалый» (вне окна новичка).
+ */
+async function seedPoint(uid, ratings, { updated = 1, guest = false, firstSeen = null } = {}) {
+  await db.doc(`points/${uid}`).set({
+    dirty: true,
+    updated,
+    lastSync: null,
+    ...(guest ? { guest: true } : {}),
+    ...(firstSeen === null ? {} : { firstSeen }),
+  });
   for (const [dimId, value] of Object.entries(ratings)) {
     await db.doc(`points/${uid}/dims/${dimId}`).set({ value });
   }
@@ -77,37 +88,52 @@ describe('Экономия запросов: обычный цикл пишет 
     assert.equal((await db.doc('relations/boris').get()).data().computedAt, borisComputedAt);
   });
 
-  test('тихий период: свежую правку цикл откладывает — человек ещё оценивает', async () => {
+  test('окно новичка: первый расчёт не ждёт тихий период — первая ценность сразу', async () => {
+    // ideas/05: вера только что поставила первую оценку (updated свежий, firstSeen пуст).
+    // Бывалого тихий период отложил бы; новичка ближайший цикл забирает немедленно.
     await seedPoint('vera', { calm: 6 }, { updated: Date.now() });
 
     const written = await runCycle();
 
-    assert.equal(written, 0);
-    assert.equal((await db.doc('points/vera').get()).data().dirty, true, 'точка ждёт своего пересчёта');
-    assert.equal((await db.doc('relations/vera').get()).exists, false);
-  });
-
-  test('тихий период истёк: точка синхронизирована', async () => {
-    await db.doc('points/vera').set({ updated: Date.now() - 3 * MIN }, { merge: true });
-
-    const written = await runCycle();
-
-    assert.equal(written, 1, 'записан ровно один топ — верин');
+    assert.equal(written, 1, 'записан ровно один топ — верин, первым же циклом');
     assert.deepEqual((await topUids('vera')).sort(), ['anna', 'boris']);
     assert.equal((await db.doc('points/vera').get()).data().dirty, false);
   });
 
-  test('ленивый контракт 1.x: в чужие топы вера попадёт полным проходом, не сейчас', async () => {
+  test('тихий период: бывалого со свежей правкой цикл откладывает', async () => {
+    // Олег в Пространстве давно (firstSeen старше окна новичка) — его свежая правка ждёт:
+    // человек ещё оценивает, сессия соберётся в один пересчёт.
+    await seedPoint('oleg', { calm: 8 }, { updated: Date.now(), firstSeen: Date.now() - 2 * 60 * MIN });
+
+    const written = await runCycle();
+
+    assert.equal(written, 0);
+    assert.equal((await db.doc('points/oleg').get()).data().dirty, true, 'точка ждёт своего пересчёта');
+    assert.equal((await db.doc('relations/oleg').get()).exists, false);
+  });
+
+  test('тихий период истёк: бывалый синхронизирован', async () => {
+    await db.doc('points/oleg').set({ updated: Date.now() - 3 * MIN }, { merge: true });
+
+    const written = await runCycle();
+
+    assert.equal(written, 1, 'записан ровно один топ — олегов');
+    assert.deepEqual((await topUids('oleg')).sort(), ['anna', 'boris', 'vera']);
+    assert.equal((await db.doc('points/oleg').get()).data().dirty, false);
+  });
+
+  test('ленивый контракт 1.x: в чужие топы новички попадут полным проходом, не сейчас', async () => {
     // Наследие 1.x (researches/13 §5): свой топ — быстро, появление в чужих — в течение
     // суток. Цена, которой куплена экономия записей; страховка — full_pass.test.mjs.
     const anna = (await db.doc('relations/anna').get()).data();
     assert.equal(anna.computedAt, annaComputedAt, 'аннин документ не переписывался');
-    assert.ok(!(await topUids('anna')).includes('vera'));
+    const annaTop = await topUids('anna');
+    assert.ok(!annaTop.includes('vera') && !annaTop.includes('oleg'));
   });
 
   test('счёт людей изменился — витрина лендинга обновлена', async () => {
     const metrics = (await db.doc('space/public_metrics').get()).data();
-    assert.equal(metrics.people, 3, 'анна, борис и вера; витрина не отстаёт от Пространства');
+    assert.equal(metrics.people, 4, 'анна, борис, вера, олег; витрина не отстаёт от Пространства');
     assert.ok(metrics.computedAt > metricsComputedAt, 'запись случилась, потому что счёт изменился');
   });
 });

@@ -28,8 +28,13 @@ const { getFirestore } = await import('firebase-admin/firestore');
 
 const db = getFirestore();
 
-async function seedPoint(uid, ratings, { updated = 1 } = {}) {
-  await db.doc(`points/${uid}`).set({ dirty: true, updated, lastSync: null });
+async function seedPoint(uid, ratings, { updated = 1, firstSeen = null } = {}) {
+  await db.doc(`points/${uid}`).set({
+    dirty: true,
+    updated,
+    lastSync: null,
+    ...(firstSeen === null ? {} : { firstSeen }),
+  });
   for (const [dimId, value] of Object.entries(ratings)) {
     await db.doc(`points/${uid}/dims/${dimId}`).set({ value });
   }
@@ -60,8 +65,10 @@ describe('Полный проход — суточная страховка ле
     assert.ok((await topUids('boris')).includes('vera'));
   });
 
-  test('полный проход игнорирует тихий период: суточная партия важнее недописанной сессии', async () => {
-    await seedPoint('grisha', { calm: 5 }, { updated: Date.now() });
+  test('полный проход игнорирует тихий период даже у бывалого: суточная партия важнее', async () => {
+    // Гриша нарочно «бывалый» (firstSeen старше окна новичка — ideas/05): новичка обычный
+    // цикл и так забрал бы, а тест стережёт именно то, что ПОЛНЫЙ проход сильнее тишины.
+    await seedPoint('grisha', { calm: 5 }, { updated: Date.now(), firstSeen: Date.now() - 2 * 60 * 60 * 1000 });
 
     await runCycle();
 

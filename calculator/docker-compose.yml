@@ -26,6 +26,8 @@ services:
       # Экономия запросов (ideas/14): тихий период после правки оценок и период полного прохода.
       CALC_QUIET_SECONDS: ${CALC_QUIET_SECONDS:-120}
       CALC_FULL_SYNC_HOURS: ${CALC_FULL_SYNC_HOURS:-24}
+      # Окно новичка (ideas/05): первую сессию тихий период не действует — первая ценность быстрее.
+      CALC_NEWCOMER_MINUTES: ${CALC_NEWCOMER_MINUTES:-30}
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     volumes:
       - ./secrets:/secrets:ro
