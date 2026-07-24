@@ -86,6 +86,12 @@ describe('Экономия запросов: обычный цикл пишет 
     assert.equal(written, 0, 'содержимое топа не изменилось — записывать нечего');
     assert.equal((await db.doc('points/boris').get()).data().dirty, false, 'но точка проверена и чиста');
     assert.equal((await db.doc('relations/boris').get()).data().computedAt, borisComputedAt);
+
+    // Отчёт честен раздельно (bugs/42): это была ЧАСТИЧНАЯ синхронизация с нулём обновлений,
+    // и она не затёрла итоги полного прохода.
+    const server = (await db.doc('space/server').get()).data();
+    assert.equal(server.partialSync.updated, 0, 'частичная случилась, обновлять было нечего');
+    assert.equal(server.fullSync.updated, 2, 'итоги полного прохода нетронуты');
   });
 
   test('окно новичка: первый расчёт не ждёт тихий период — первая ценность сразу', async () => {
@@ -98,6 +104,8 @@ describe('Экономия запросов: обычный цикл пишет 
     assert.equal(written, 1, 'записан ровно один топ — верин, первым же циклом');
     assert.deepEqual((await topUids('vera')).sort(), ['anna', 'boris']);
     assert.equal((await db.doc('points/vera').get()).data().dirty, false);
+    const server = (await db.doc('space/server').get()).data();
+    assert.equal(server.partialSync.updated, 1, 'частичная синхронизация отчиталась вериным топом');
   });
 
   test('тихий период: бывалого со свежей правкой цикл откладывает', async () => {

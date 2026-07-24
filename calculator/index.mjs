@@ -415,8 +415,10 @@ export async function runCycle() {
   const readySet = new Set(readyUids);
   const similarities = [];
   let written = 0;
+  let checked = 0; // пользователей, чьи топы пересчитаны и сверены в этом цикле
   for (const [uid, point] of pointsCache) {
     if (Object.keys(point.ratings).length === 0) continue;
+    checked += 1;
     const top = topFor(uid, pointsCache);
     // «Связей рассчитано» и средняя похожесть — про Пространство, а гостя в Пространстве
     // не видно (В3). Его собственный топ мы считаем и пишем, но в статистику не пускаем.
@@ -472,11 +474,29 @@ export async function runCycle() {
   for (const [uid, fingerprint] of writtenNow) writtenTops.set(uid, fingerprint);
   if (publishPeople) lastPublishedPeople = stats.people;
 
+  // Полная и частичная синхронизации отчитываются РАЗДЕЛЬНЫМИ блоками — как в 1.x
+  // (researches/13 §6: last_full_sync_* / last_partial_sync_*). Виджет «Пространства»
+  // склеивал минутное сердцебиение с числами суточного прохода и врал владельцу (bugs/42).
+  // Плоские поля ниже — легаси для закэшированных бандлов экрана; новый экран их не читает.
+  const durationMs = Date.now() - startedAt;
+  const syncBlock = fullPass
+    ? {
+        fullSync: {
+          at: now,
+          durationMs,
+          checked,
+          updated: written,
+          relationsComputed: similarities.length,
+          nextAt: now + FULL_SYNC_MS,
+        },
+      }
+    : { partialSync: { at: now, durationMs, updated: written } };
   await reportServer(now, {
     lastSuccessAt: now,
-    durationMs: Date.now() - startedAt,
+    durationMs,
     usersSynced: written,
     relationsComputed: similarities.length,
+    ...syncBlock,
   });
 
   log(

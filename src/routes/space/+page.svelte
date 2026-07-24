@@ -131,18 +131,31 @@
       en: 'Computed over all relations. A similarity of 100% is extremely rare.',
     },
 
-    // Сервер синхронизации — блоки и подписи 1.x
+    // Сервер синхронизации — три блока, как в 1.x: статус · полная · частичная (bugs/42).
     server: { ru: 'Сервер синхронизации', en: 'Sync server' },
     status: { ru: 'Статус', en: 'Status' },
     currentState: { ru: 'Текущее состояние', en: 'Current state' },
     running: { ru: 'Работает', en: 'Running' },
     silent: { ru: 'Не отвечает', en: 'Not responding' },
     lastRun: { ru: 'Последний запуск', en: 'Last run' },
+    nextCycle: { ru: 'Следующий цикл', en: 'Next cycle' },
     fullSync: { ru: 'Полная синхронизация', en: 'Full synchronisation' },
+    fullSyncHint: {
+      ru: 'Сверка связей всех людей Пространства.',
+      en: 'Re-checks every relation in the Space.',
+    },
+    partialSync: { ru: 'Частичная синхронизация', en: 'Partial synchronisation' },
+    partialSyncHint: {
+      ru: 'Между полными сервер обновляет тех, кто менял оценки.',
+      en: 'Between full runs the server updates those who changed ratings.',
+    },
     lastSuccess: { ru: 'Последняя успешная', en: 'Last successful' },
     took: { ru: 'Выполнена за', en: 'Completed in' },
-    usersSynced: { ru: 'Пользователей синхронизировано', en: 'Users synchronised' },
+    usersChecked: { ru: 'Пользователей проверено', en: 'Users checked' },
+    usersUpdated: { ru: 'Из них обновлено', en: 'Of them updated' },
+    partialUpdated: { ru: 'Пользователей обновлено', en: 'Users updated' },
     scheduled: { ru: 'Запланированная', en: 'Scheduled' },
+    notYet: { ru: 'ещё не было', en: 'none yet' },
     noHeartbeat: {
       ru: 'Сервер синхронизации ещё не отчитывался.',
       en: 'The sync server has not reported yet.',
@@ -469,16 +482,33 @@
             </span>
           </div>
           <div class="kv"><span class="k">{t.lastRun[lang]}</span><span class="v">{dateTime(server.lastRunAt, lang)}</span></div>
+          <div class="kv"><span class="k">{t.nextCycle[lang]}</span><span class="v">{dateTime(nextRunAt(server), lang)}</span></div>
 
-          {#if server.lastSuccessAt !== null}
+          <!-- Полная и частичная — РАЗДЕЛЬНО, как в 1.x (bugs/42): раньше минутное
+               сердцебиение склеивалось с числами суточного прохода, и виджет читался как
+               «полная синхронизация каждую минуту». Старый документ без блоков не
+               додумываем — экран показывает только то, о чём сервер отчитался. -->
+          {#if server.fullSync}
+            {@const full = server.fullSync}
             <p class="sub-h">{t.fullSync[lang]}</p>
-            <div class="kv"><span class="k">{t.lastSuccess[lang]}</span><span class="v">{dateTime(server.lastSuccessAt, lang)}</span></div>
-            {#if server.durationMs !== null}
-              <div class="kv"><span class="k">{t.took[lang]}</span><span class="v">{seconds(server.durationMs, lang)}</span></div>
+            <p class="hint">{t.fullSyncHint[lang]}</p>
+            <div class="kv"><span class="k">{t.lastSuccess[lang]}</span><span class="v">{dateTime(full.at, lang)}</span></div>
+            <div class="kv"><span class="k">{t.took[lang]}</span><span class="v">{seconds(full.durationMs, lang)}</span></div>
+            <div class="kv"><span class="k">{t.usersChecked[lang]}</span><span class="v">{num(full.checked, lang)}</span></div>
+            <div class="kv"><span class="k">{t.usersUpdated[lang]}</span><span class="v">{num(full.updated, lang)}</span></div>
+            <div class="kv"><span class="k">{t.relationsCount[lang]}</span><span class="v">{num(full.relationsComputed, lang)}</span></div>
+            <div class="kv"><span class="k">{t.scheduled[lang]}</span><span class="v">{dateTime(full.nextAt, lang)}</span></div>
+
+            <p class="sub-h">{t.partialSync[lang]}</p>
+            <p class="hint">{t.partialSyncHint[lang]}</p>
+            {#if server.partialSync}
+              {@const partial = server.partialSync}
+              <div class="kv"><span class="k">{t.lastSuccess[lang]}</span><span class="v">{dateTime(partial.at, lang)}</span></div>
+              <div class="kv"><span class="k">{t.took[lang]}</span><span class="v">{seconds(partial.durationMs, lang)}</span></div>
+              <div class="kv"><span class="k">{t.partialUpdated[lang]}</span><span class="v">{num(partial.updated, lang)}</span></div>
+            {:else}
+              <div class="kv"><span class="k">{t.lastSuccess[lang]}</span><span class="v">{t.notYet[lang]}</span></div>
             {/if}
-            <div class="kv"><span class="k">{t.usersSynced[lang]}</span><span class="v">{num(server.usersSynced, lang)}</span></div>
-            <div class="kv"><span class="k">{t.relationsCount[lang]}</span><span class="v">{num(server.relationsComputed, lang)}</span></div>
-            <div class="kv"><span class="k">{t.scheduled[lang]}</span><span class="v">{dateTime(nextRunAt(server), lang)}</span></div>
           {/if}
         {/if}
       </div>

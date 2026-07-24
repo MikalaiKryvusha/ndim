@@ -83,6 +83,13 @@ describe('Полный проход — суточная страховка ле
 
     assert.equal(written, 0, 'Пространство не менялось — записывать нечего');
     assert.equal((await db.doc('relations/anna').get()).data().computedAt, annaComputedAt);
+
+    // Отчёт полного прохода честен и при нуле записей (bugs/42): «проверено 4, из них
+    // обновлено 0» — так владелец читает тишину как норму, а не как поломку.
+    const server = (await db.doc('space/server').get()).data();
+    assert.equal(server.fullSync.checked, 4, 'анна, борис, вера, гриша — все проверены');
+    assert.equal(server.fullSync.updated, 0);
+    assert.equal(server.partialSync, undefined, 'в этом файле все циклы полные — частичных не было');
   });
 
   test('снимок дня пишется и в тихий день — тренды не должны дырявиться', async () => {

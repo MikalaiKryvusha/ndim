@@ -96,15 +96,49 @@ export interface DailySnapshotDoc {
  * Состояния «остановлен» здесь нет и быть не может: остановленный сервер не смог бы его
  * записать. Состояние ВЫВОДИТСЯ по свежести сердцебиения — {@link syncServerState}.
  */
+/**
+ * Итог последнего ПОЛНОГО прохода — суточной сверки связей всех людей (bugs/42; в 1.x —
+ * `last_full_sync_*`, researches/13 §6).
+ */
+export interface FullSyncDoc {
+  readonly at: Millis;
+  readonly durationMs: number;
+  /** Пользователей проверено: топы пересчитаны и сверены с записанными. */
+  readonly checked: number;
+  /** Из них обновлено: топ реально изменился и переписан (0 — Пространство не менялось). */
+  readonly updated: number;
+  readonly relationsComputed: number;
+  /** Когда запланирован следующий полный проход. */
+  readonly nextAt: Millis;
+}
+
+/**
+ * Итог последней ЧАСТИЧНОЙ синхронизации — обычного цикла, обработавшего людей, менявших
+ * оценки (в 1.x — `last_partial_sync_*`).
+ */
+export interface PartialSyncDoc {
+  readonly at: Millis;
+  readonly durationMs: number;
+  /** Пользователей обновлено этим циклом (0 — оценки пересохранили без изменений). */
+  readonly updated: number;
+}
+
 export interface SyncServerDoc {
   readonly version: string;
   readonly build: string;
   readonly builtAt: string | null;
   /** Последний запуск цикла — сердцебиение. */
   readonly lastRunAt: Millis;
-  /** Последняя успешная синхронизация (цикл, в котором действительно считались связи). */
+  /**
+   * Последний УСПЕШНЫЙ цикл — включая холостые (bugs/33): успех значит «сервер отработал»,
+   * даже если менять было нечего. Итоги реальных синхронизаций — в fullSync/partialSync;
+   * склейка этой отметки с их числами и была ложью виджета (bugs/42).
+   */
   readonly lastSuccessAt: Millis | null;
-  /** Выполнена за, мс. */
+  /** Полная и частичная синхронизации — раздельно, как в 1.x. Нет — сервер ещё старый. */
+  readonly fullSync?: FullSyncDoc;
+  readonly partialSync?: PartialSyncDoc;
+  /** Выполнена за, мс. Легаси плоских полей — для закэшированных бандлов экрана. */
   readonly durationMs: number | null;
   readonly usersSynced: number;
   readonly relationsComputed: number;
