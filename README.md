@@ -13,11 +13,10 @@
 </p>
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-2.0%20в%20разработке-orange.svg)](STATUS.md)
+[![Status](https://img.shields.io/badge/Status-2.0%20в%20бою-00C853.svg)](STATUS.md)
 [![Framework](https://img.shields.io/badge/Framework-KAIF-7F52FF.svg)](https://github.com/MikalaiKryvusha/KAIF)
 [![Stack](https://img.shields.io/badge/Stack-SvelteKit%20%2B%20TypeScript-FF3E00.svg)](#сборка-и-стенд)
-[![Live 1.x](https://img.shields.io/badge/Live%201.x-ndim--space.web.app-00C853.svg)](https://ndim-space.web.app)
-[![Landing 2.0](https://img.shields.io/badge/Landing%202.0-ndimspace.app-1467D6.svg)](https://ndimspace.app)
+[![Live 2.0](https://img.shields.io/badge/Live%202.0-ndimspace.app-1467D6.svg)](https://ndimspace.app)
 
 **Честный поиск похожих людей в многомерном пространстве самооценок.**
 Платформа знакомств, которая ищет вам человека, а не удерживает вас ради подписки.
@@ -95,9 +94,10 @@
 | Фундамент | наследие 1.x в архив, KAIF, аудит и отзыв секретов, чистая история | ✅ |
 | Решения владельца | стек, хостинг, бэкенд, лицензия — интервью №001–002 | ✅ |
 | Ядро 2.0 | математика + модель данных + правила + тесты + план миграции | ✅ |
-| Фронтенд 2.0 | SvelteKit: лендинг, «Профиль», «Связи»; **онбординг целиком** (демо → гость → аккаунт без пароля → воронка) работает на дев-стенде. Дальше — экраны «Пространство» и «Меню» (макеты утверждены) | 🔧 |
-| Бэкенд | вычислитель связей работает в Docker **в бою** (с 2026-07-12; v0.2.0 с экономией запросов — с 2026-07-24) | ✅ |
-| Публикация | **https://ndimspace.app живёт**: домен куплен до 2031, привязан, сертификат раскатан, canonical на месте; дальше — sitemap и поисковики | 🔧 |
+| Фронтенд 2.0 | SvelteKit: лендинг и все экраны продукта — «Профиль», «Связи», «Пространство», «Измерения», «Меню» + онбординг (демо → гость → аккаунт без пароля) — **в бою** | ✅ |
+| Бэкенд | сервер синхронизации работает в Docker **в бою** (с 2026-07-12; v0.2.0 с экономией запросов — с 2026-07-24) | ✅ |
+| Публикация | **https://ndimspace.app живёт**: cutover 2026-07-12, труд 331 человека из 1.x перенесён и сверен; sitemap и поисковики прописаны | ✅ |
+| Паритет с 1.x | инвентарь поведения 1.x снят целиком ([`researches/12`](researches/12_1x_behavior_inventory.md)); волны багов владельца мельчают, открыт хвост — пачки 4–5 | 🔧 |
 
 Живой статус — [`STATUS.md`](STATUS.md) · дорожная карта — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 видение автора — [`GOAL.md`](GOAL.md).
@@ -216,9 +216,10 @@ you see it.
 | Foundation | 1.x legacy archived, KAIF deployed, secrets audited and revoked, clean history | ✅ |
 | Owner decisions | stack, hosting, backend, license — interviews #001–002 | ✅ |
 | Core 2.0 | maths + data model + rules + tests + migration plan | ✅ |
-| Frontend 2.0 | SvelteKit: landing, Profile, Relations; **the whole onboarding** (demo → guest → passwordless account → funnel) runs on the dev stand. Next: the Space and Menu screens (mockups approved) | 🔧 |
-| Backend | the relation calculator runs in Docker **in production** (since 2026-07-12; v0.2.0 with request economy — since 2026-07-24) | ✅ |
-| Publication | **https://ndimspace.app is live**: domain bought until 2031, bound, certificate deployed, canonical in place; sitemap and search engines next | 🔧 |
+| Frontend 2.0 | SvelteKit: the landing and every product screen — Profile, Relations, Space, Dimensions, Menu + onboarding (demo → guest → passwordless account) — **in production** | ✅ |
+| Backend | the sync server runs in Docker **in production** (since 2026-07-12; v0.2.0 with request economy — since 2026-07-24) | ✅ |
+| Publication | **https://ndimspace.app is live**: cutover on 2026-07-12, the work of 331 people from 1.x migrated and verified; sitemap and search engines done | ✅ |
+| Parity with 1.x | the 1.x behaviour inventory is fully mapped ([`researches/12`](researches/12_1x_behavior_inventory.md)); the owner's bug waves are shrinking, the tail — batches 4–5 | 🔧 |
 
 Live status — [`STATUS.md`](STATUS.md) · roadmap — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 the author's vision — [`GOAL.md`](GOAL.md).
