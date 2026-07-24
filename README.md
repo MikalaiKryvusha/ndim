@@ -81,7 +81,7 @@
 | Лендинг | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, статический пререндер, светлая/тёмная темы, RU/EN, canonical на `ndimspace.app` | e2e в настоящем браузере |
 | Экран «Профиль» | [`src/routes/profile/`](src/routes/profile/+page.svelte) — вкладки Личное · Измерения · Видимость; оценки звёздами 0–10, аудитории по кругам, предпросмотр «глазами гостя» | живой стенд + e2e; смена аудитории физически перекладывает бакеты |
 | Экран «Связи» | [`src/routes/relations/`](src/routes/relations/+page.svelte) — топ похожих: три метрики сразу, «яркость связи», математика общего пространства | живой стенд + e2e |
-| Вычислитель связей | [`calculator/`](calculator/index.mjs) — Docker-служба, очередь «грязных» точек, топ-250 в `relations/`; только исходящие соединения | прогон на эмуляторе и из контейнера |
+| Вычислитель связей | [`calculator/`](calculator/index.mjs) — Docker-служба, очередь «грязных» точек, топ-250 в `relations/`; только исходящие соединения. Экономия запросов в духе 1.x: кэш точек в памяти, запись только изменившихся топов, тихий период с окном новичка, суточный полный проход (`researches/13`) | прогон на эмуляторе, из контейнера и в бою |
 | Онбординг без трения | [`plans/03`](plans/03_onboarding_2x.md) — демо похожести на лендинге → гость (анонимный вход, невидим другим) → аккаунт без пароля | сквозные сценарии на живом стенде; мутации ловятся |
 | Аккаунт без пароля | [`src/lib/data/account.ts`](src/lib/data/account.ts) — Google и ссылка на почту через `linkWithCredential`: **UID тот же, труд гостя остаётся** | стенд: гость → письмо → аккаунт; данные на месте |
 | Воронка без слежки | [`src/lib/data/funnel.ts`](src/lib/data/funnel.ts) — четыре счётчика в сутки и больше ничего: ни UID, ни почты, ни устройства | правила разрешают ровно +1 к одному счётчику |
@@ -96,7 +96,7 @@
 | Решения владельца | стек, хостинг, бэкенд, лицензия — интервью №001–002 | ✅ |
 | Ядро 2.0 | математика + модель данных + правила + тесты + план миграции | ✅ |
 | Фронтенд 2.0 | SvelteKit: лендинг, «Профиль», «Связи»; **онбординг целиком** (демо → гость → аккаунт без пароля → воронка) работает на дев-стенде. Дальше — экраны «Пространство» и «Меню» (макеты утверждены) | 🔧 |
-| Бэкенд | вычислитель связей работает в Docker; боевое включение — вместе с миграцией данных | 🔧 |
+| Бэкенд | вычислитель связей работает в Docker **в бою** (с 2026-07-12; v0.2.0 с экономией запросов — с 2026-07-24) | ✅ |
 | Публикация | **https://ndimspace.app живёт**: домен куплен до 2031, привязан, сертификат раскатан, canonical на месте; дальше — sitemap и поисковики | 🔧 |
 
 Живой статус — [`STATUS.md`](STATUS.md) · дорожная карта — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
@@ -112,7 +112,7 @@ npm run dev        # разработка: http://localhost:5173
 npm run stand      # живой стенд: эмуляторы + тестовые данные + вычислитель → /profile, /relations
 npm test           # 88 юнит-тестов ядра и модели данных
 npm run test:rules # 81 тест правил Firestore на эмуляторе (проверяют ОТКАЗЫ)
-npm run test:calc  # 9 тестов сервера синхронизации на эмуляторе
+npm run test:calc  # 29 тестов сервера синхронизации на эмуляторе
 npm run e2e        # 37 браузерных e2e-проверок (Playwright, продакшен-сборка)
 npm run build      # статическая сборка в build/ — весь сайт пререндерится
 ```
@@ -202,7 +202,7 @@ you see it.
 | Landing page | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, static prerender, light/dark themes, RU/EN, canonical on `ndimspace.app` | e2e in a real browser |
 | Profile screen | [`src/routes/profile/`](src/routes/profile/+page.svelte) — Personal · Dimensions · Visibility tabs; 0–10 star ratings, per-property audiences, "through a guest's eyes" preview | live stand + e2e; audience change physically redistributes buckets |
 | Relations screen | [`src/routes/relations/`](src/routes/relations/+page.svelte) — top similar people: all three metrics at once, "connection brightness", the shared-space maths | live stand + e2e |
-| Relation calculator | [`calculator/`](calculator/index.mjs) — Docker service, dirty-points queue, top-250 into `relations/`; outgoing connections only | verified on the emulator and from the container |
+| Relation calculator | [`calculator/`](calculator/index.mjs) — Docker service, dirty-points queue, top-250 into `relations/`; outgoing connections only. Request economy in the 1.x spirit: in-process points cache, changed-tops-only writes, quiet period with a newcomer window, daily full pass (`researches/13`) | verified on the emulator, from the container, and in production |
 | Frictionless onboarding | [`plans/03`](plans/03_onboarding_2x.md) — similarity demo on the landing → guest (anonymous, invisible to others) → passwordless account | end-to-end scenarios on the live stand; mutations get caught |
 | Passwordless account | [`src/lib/data/account.ts`](src/lib/data/account.ts) — Google and email link via `linkWithCredential`: **same UID, the guest's work stays** | stand: guest → email → account; data intact |
 | Analytics without tracking | [`src/lib/data/funnel.ts`](src/lib/data/funnel.ts) — four daily counters and nothing else: no UID, no email, no device id | rules allow exactly +1 to one counter |
@@ -217,7 +217,7 @@ you see it.
 | Owner decisions | stack, hosting, backend, license — interviews #001–002 | ✅ |
 | Core 2.0 | maths + data model + rules + tests + migration plan | ✅ |
 | Frontend 2.0 | SvelteKit: landing, Profile, Relations; **the whole onboarding** (demo → guest → passwordless account → funnel) runs on the dev stand. Next: the Space and Menu screens (mockups approved) | 🔧 |
-| Backend | the relation calculator runs in Docker; production switch-on comes with the data migration | 🔧 |
+| Backend | the relation calculator runs in Docker **in production** (since 2026-07-12; v0.2.0 with request economy — since 2026-07-24) | ✅ |
 | Publication | **https://ndimspace.app is live**: domain bought until 2031, bound, certificate deployed, canonical in place; sitemap and search engines next | 🔧 |
 
 Live status — [`STATUS.md`](STATUS.md) · roadmap — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
@@ -233,7 +233,7 @@ npm run dev        # development: http://localhost:5173
 npm run stand      # live stand: emulators + seed data + calculator → /profile, /relations
 npm test           # 88 unit tests: core and data model
 npm run test:rules # 81 Firestore rules tests on the emulator (asserting DENIALS)
-npm run test:calc  # 9 sync-server tests on the emulator
+npm run test:calc  # 29 sync-server tests on the emulator
 npm run e2e        # 37 browser e2e checks (Playwright, production build)
 npm run build      # static build into build/ — the whole site is prerendered
 ```

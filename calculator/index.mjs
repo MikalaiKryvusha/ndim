@@ -258,7 +258,10 @@ function topFor(ownerUid, points) {
     const relation = computeRelation(ownerDims, other.ratings);
     if (relation !== null) top.push({ ...relation, guestUid: otherUid });
   }
-  top.sort((a, b) => b.similarity - a.similarity);
+  // Тай-брейк по uid обязателен: без него порядок людей с равной похожестью зависел бы от
+  // порядка чтения точек (он недетерминирован), diff видел бы «изменение» и переписывал
+  // топы на ровном месте — дырка в экономии записей (ideas/14).
+  top.sort((a, b) => b.similarity - a.similarity || (a.guestUid < b.guestUid ? -1 : 1));
   return top.slice(0, TOP_LIMIT);
 }
 
