@@ -57,6 +57,16 @@
       padding: 16px 12px;
       background: var(--panel);
       border-right: 1px solid var(--edge);
+      /* Рельс прибит (bugs/49, слово владельца): колонка сетки тянется на всю высоту
+         ДОКУМЕНТА, поэтому без sticky кнопки уезжали за верхний край при скролле.
+         align-self: start сжимает сам рельс до высоты вьюпорта — иначе sticky
+         нечему липнуть; на низком окне пункты скроллятся внутри рельса. */
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      height: 100dvh;
+      overflow-y: auto;
     }
     .brand {
       display: flex;

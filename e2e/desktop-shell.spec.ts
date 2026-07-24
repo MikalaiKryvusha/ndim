@@ -44,6 +44,13 @@ for (const route of ['/profile', '/relations', '/space', '/dims']) {
       // Контент занимает ширину, а не жмётся в прежнюю колонку (правка владельца)
       const bodyBox = await page.locator('main.body').boundingBox();
       expect(bodyBox!.width).toBeGreaterThan(NARROW_COLUMN * 1.6);
+
+      // Рельс ПРИБИТ (bugs/49): скролл в самый низ не увозит навигацию с экрана.
+      // Без sticky кнопки стояли у верха колонки высотой с документ и уезжали.
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      const railAfterScroll = await rail.boundingBox();
+      expect(railAfterScroll!.y).toBe(0);
+      await expect(rail.getByText(/Меню|Menu/)).toBeInViewport();
     } else {
       await expect(bottomNav).toBeVisible();
       await expect(rail).toBeHidden();
