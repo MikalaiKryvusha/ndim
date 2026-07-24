@@ -23,6 +23,9 @@ services:
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-demo-ndim-dev}
       FIRESTORE_EMULATOR_HOST: ${FIRESTORE_EMULATOR_HOST:-host.docker.internal:8181}
       CALC_INTERVAL_SECONDS: ${CALC_INTERVAL_SECONDS:-60}
+      # Экономия запросов (ideas/14): тихий период после правки оценок и период полного прохода.
+      CALC_QUIET_SECONDS: ${CALC_QUIET_SECONDS:-120}
+      CALC_FULL_SYNC_HOURS: ${CALC_FULL_SYNC_HOURS:-24}
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     volumes:
       - ./secrets:/secrets:ro

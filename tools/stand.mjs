@@ -17,6 +17,8 @@ import { spawn } from 'node:child_process';
 
 /** Цикл сервера синхронизации на стенде — короткий: человек не должен ждать. */
 const CALC_INTERVAL_SECONDS = '15';
+/** Тихий период на стенде выключен по той же причине: оценка должна долетать сразу. */
+const CALC_QUIET_SECONDS = '0';
 
 const children = [];
 
@@ -48,7 +50,7 @@ process.on('SIGTERM', () => {
 });
 
 // Сервер синхронизации: служба с коротким циклом. Первый цикл он делает сразу.
-start('node', ['calculator/index.mjs'], { CALC_INTERVAL_SECONDS });
+start('node', ['calculator/index.mjs'], { CALC_INTERVAL_SECONDS, CALC_QUIET_SECONDS });
 
 // Приложение. Стенд живёт ровно столько, сколько живёт dev-сервер: закрыли его — гасим всё.
 const app = start('npx', ['vite', 'dev']);

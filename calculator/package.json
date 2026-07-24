@@ -1,13 +1,14 @@
 {
   "name": "ndim-calculator",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "NDim Space 2.0 — вычислитель связей: фоновый пересчёт похожести (Docker, только исходящие соединения)",
   "license": "AGPL-3.0-only",
   "type": "module",
   "main": "index.mjs",
   "dependencies": {
-    "firebase-admin": "^13.0.0"
+    "firebase-admin": "^13.0.0",
+    "ndim-space": "file:.."
   },
   "engines": {
     "node": ">=23.6"
