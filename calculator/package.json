@@ -7,8 +7,7 @@
   "type": "module",
   "main": "index.mjs",
   "dependencies": {
-    "firebase-admin": "^13.0.0",
-    "ndim-space": "file:.."
+    "firebase-admin": "^13.0.0"
   },
   "engines": {
     "node": ">=23.6"
