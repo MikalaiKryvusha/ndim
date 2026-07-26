@@ -156,6 +156,32 @@ const DIMS = {
     description: { ru: 'Бег как привычка и удовольствие.', en: 'Running as a habit and a joy.' },
     stars: 44, rates: 8, rating: 5.5,
   },
+  // ── Сор настоящих данных: имена, которые люди набивали руками (bugs/50) ──
+  // Стенд обязан быть похож на бой ВКЛЮЧАЯ его сор (урок EXP-0041). Эти три измерения
+  // несут ровно ту грязь, из-за которой поиск в 2.0 не находил существующее: «ё» вместо
+  // «е», дефис внутри имени, римская цифра. На идеальных данных проверить нормализацию
+  // поиска невозможно — стенд молча говорил бы, что всё хорошо.
+  'star-wars-1977': {
+    type: { ru: 'Фильм', en: 'Movie' }, year: '1977', tags: ['кино', 'фантастика'],
+    author: { ru: 'Джордж Лукас', en: 'George Lucas' },
+    title: { ru: '«Звёздные войны» (1977)', en: 'Star Wars (1977)' },
+    description: { ru: 'Космическая опера Джорджа Лукаса.', en: 'George Lucas’ space opera.' },
+    stars: 61, rates: 7, rating: 8.7,
+  },
+  'spider-man-2002': {
+    type: { ru: 'Фильм', en: 'Movie' }, year: '2002', tags: ['кино', 'комикс'],
+    author: { ru: 'Сэм Рэйми', en: 'Sam Raimi' },
+    title: { ru: '«Человек-паук» (2002)', en: 'Spider-Man (2002)' },
+    description: { ru: 'Экранизация комикса о Питере Паркере.', en: 'The Peter Parker comic on screen.' },
+    stars: 42, rates: 6, rating: 7,
+  },
+  'rocky-4-1985': {
+    type: { ru: 'Фильм', en: 'Movie' }, year: '1985', tags: ['кино', 'спорт'],
+    author: { ru: 'Сильвестр Сталлоне', en: 'Sylvester Stallone' },
+    title: { ru: 'Рокки IV (1985)', en: 'Rocky IV (1985)' },
+    description: { ru: 'Четвёртая часть саги о боксёре.', en: 'The fourth part of the boxer saga.' },
+    stars: 25, rates: 5, rating: 5,
+  },
   // Измерение, появившееся «сегодня»: без него виджету «Сегодня» на экране
   // «Пространство» нечего было бы рассказать про новые измерения.
   'early-rising': {
