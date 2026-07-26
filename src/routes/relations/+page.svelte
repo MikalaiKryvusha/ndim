@@ -448,9 +448,9 @@
     font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
     color: var(--dim); margin-bottom: 6px; font-weight: 600;
   }
-  /* Второй и следующие заголовки блоков раскрытия отбиваются от предыдущего блока. */
-  .deep h3 + .kv { margin-top: 0; }
-  .deep .kv + h3 { margin-top: 12px; }
+  /* Второй и следующие заголовки блоков раскрытия отбиваются от предыдущего блока —
+     независимо от того, что стояло выше (строка `.kv` или абзац «О себе»). */
+  .deep h3:not(:first-child) { margin-top: 14px; }
   .kv { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12.5px; }
   /* Коэффициент сравнения — вспомогательная строка под значением, как в 1.x
      («199 звёзд» / «(×0.9 моего)»), а не равноправное число. */

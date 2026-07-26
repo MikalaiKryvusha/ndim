@@ -225,14 +225,25 @@ const GUESTS = {
     // У Анны есть фото (bugs/14): флаг в её публичном бакете + файл в эмуляторе Storage —
     // «Связи» показывают лицо, тап открывает его во весь экран.
     avatar: true,
+    // Анна открыла ВСЕМ ещё и себя: гендер, дату рождения, «о себе». Без такого соседа
+    // раскрытая карточка связи (bugs/46) на стенде выглядела бы пустой — и стенд не смог бы
+    // показать разницу между «поле скрыто» и «поля нет» (EXP-0041: стенд обязан быть похож
+    // на бой, включая его сор И его полноту).
+    gender: 'w',
+    born: { year: 1990, month: 11, day: 2 },
+    about: { ru: 'Люблю тишину и театр.', en: 'I love silence and theatre.' },
   },
   'stand-guest-viktor': {
     name: { ru: 'Виктор', en: 'Viktor' },
     ratings: { travel: 10, math: 7, cats: 3, running: 5 },
+    // Виктор указал только год рождения — возраст по неполной дате НЕ достраивается.
+    born: { year: 1979, month: null, day: null },
   },
   'stand-guest-maria': {
     name: { ru: 'Мария', en: 'Maria' },
     ratings: { silence: 2, cats: 10, travel: 8, math: 9, theatre: 4 },
+    // Мария не открыла о себе ничего: в её карточке блока «Персональная информация»
+    // быть не должно вовсе — ни строк, ни прочерков.
   },
 };
 
@@ -336,6 +347,11 @@ try {
         },
         // Флаг фото — в публичном бакете: его читают «Связи» (guestAvatar).
         ...(guest.avatar ? { avatar: true } : {}),
+        // Персональное — только то, что человек открыл всем (bugs/46). Чего нет в бакете,
+        // того зритель не увидит: это и есть модель видимости 2.0.
+        ...(guest.gender ? { gender: guest.gender } : {}),
+        ...(guest.born ? { born: guest.born } : {}),
+        ...(guest.about ? { about: guest.about } : {}),
       });
       await db.doc(`points/${guestUid}`).set({ dirty: false, updated: now, lastSync: null });
       for (const [dimId, value] of Object.entries(guest.ratings)) {

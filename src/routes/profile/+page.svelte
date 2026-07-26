@@ -931,9 +931,11 @@
             <h3>{t.myNdimId[lang]}</h3>
             <div class="mrow">
               <span class="k2">{t.dimsAmount[lang]}</span>
-              <span class="mval big">{decimal(ratedCount, lang)}</span>
+              <!-- Число и эмоциональный комментарий — ОДНОЙ строкой, как в 1.x
+                   («485 (Ого! 🤩)», app.js:5699). -->
+              <span class="mval big">{decimal(ratedCount, lang)}
+                <small class="scale">{t.dimsScale[dimsScaleStep(ratedCount)][lang]}</small></span>
             </div>
-            <p class="scale">{t.dimsScale[dimsScaleStep(ratedCount)][lang]}</p>
             <div class="mrow">
               <span class="k2">{t.myDiameter[lang]}</span>
               <span class="mval big">{decimal(myDiameter, lang)} {starsUnit(myDiameter, lang)}</span>
@@ -1121,8 +1123,8 @@
     font-size: 12px; line-height: 1.55; color: var(--dim); margin: 0;
     padding: 10px 12px; border-radius: 10px; background: var(--edge-soft);
   }
-  /* Эмоциональный комментарий шкалы 1.x — реплика продукта, а не подпись к числу. */
-  .scale { font-size: 13px; color: var(--dim); margin: -2px 0 6px; }
+  /* Эмоциональный комментарий шкалы 1.x — реплика продукта рядом с числом, а не второе число. */
+  .scale { font-size: 12.5px; font-weight: 500; color: var(--dim); white-space: nowrap; }
   .instruction {
     margin-top: 8px; padding: 9px 11px; border-radius: 10px;
     background: var(--edge-soft); color: var(--text);
