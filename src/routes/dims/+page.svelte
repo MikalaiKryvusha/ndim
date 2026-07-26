@@ -450,6 +450,25 @@
       ru: 'Что это за измерение и почему оно важно? От 5 до 300 символов.',
       en: 'What is this dimension and why does it matter? From 5 to 300 characters.',
     },
+    // Правила оформления заявки — дословно из 1.x (ndim_old/public/index.html,
+    // #suggest_editor_form_hit_container). Без них заявки приходят вольным текстом, и админу
+    // труднее завести измерение: правила УЧАТ формату на живом примере (bugs/48).
+    // [TESTED: 2026-07-26 · сверено построчно с исходником 1.x; e2e stores the example line]
+    suggestRulesTitle: { ru: 'Правила оформления', en: 'Description rules' },
+    suggestRules: {
+      ru: [
+        'Напишите тип измерения, его название, год создания (если есть). Пример: Фильм "Пятый элемент", 1995 года.',
+        'Можете добавить краткое описание для лучшего понимания, какой объект культуры имеется в виду.',
+        'Можете добавить ссылку на Интернет-ресурс с описанием объекта культуры.',
+        'Старайтесь описать кратко. Максимум 300 символов текста.',
+      ],
+      en: [
+        'Write the type of dimension, its name, year of creation (if any). Example: Movie "The Fifth Element", 1995.',
+        'You can add a short description for a better understanding of what cultural object is meant.',
+        'You can add a link to an Internet resource with a description of the cultural object.',
+        'Try to describe briefly. Maximum 300 characters of text.',
+      ],
+    },
     suggestSend: { ru: 'Отправить', en: 'Send' },
     suggestSent: {
       ru: 'Спасибо! Заявка отправлена — так Пространство растёт снизу.',
@@ -635,6 +654,15 @@
       {:else if suggestOpen}
         <div class="card pad sug" transition:slide={{ duration: MOTION.base }}>
           <h3>{t.suggestTitle[lang]}</h3>
+          <!-- Правила оформления (канон 1.x): человек видит формат ДО того, как начал писать. -->
+          <div class="rules">
+            <b>{t.suggestRulesTitle[lang]}</b>
+            <ul>
+              {#each t.suggestRules[lang] as rule}
+                <li>{rule}</li>
+              {/each}
+            </ul>
+          </div>
           <textarea class="ta" bind:value={suggestText} placeholder={t.suggestHint[lang]} maxlength="300"></textarea>
           <p class="hint">{suggestText.trim().length} / 300</p>
           <div class="duo">
@@ -841,6 +869,11 @@
   .sug { margin-top: 14px; }
   .sug h3 { margin: 0 0 8px; font-size: 14px; color: var(--heading); }
   .sug .ok { color: #22c55e; font-size: 13px; margin: 0 0 10px; }
+  /* Правила оформления заявки — тихая справка, а не второй заголовок формы (канон 1.x). */
+  .sug .rules { margin: 0 0 10px; }
+  .sug .rules b { display: block; font-size: 13px; color: var(--heading); margin-bottom: 4px; }
+  .sug .rules ul { margin: 0; padding-left: 16px; list-style: disc; }
+  .sug .rules li { color: var(--dim); font-size: 12px; line-height: 1.5; }
   .ta {
     width: 100%; min-height: 72px; resize: vertical; padding: 10px 12px; border-radius: 12px;
     background: var(--bg); border: 1px solid var(--edge-soft); color: var(--text); font: inherit;
