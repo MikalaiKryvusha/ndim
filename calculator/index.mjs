@@ -57,9 +57,9 @@ import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { computeRelation } from '../src/lib/similarity/similarity.ts';
 import { computeSpaceStats, dayKey, snapshotOf } from '../src/lib/model/stats.ts';
-
-/** Сколько похожих людей храним в топе. Паритет с 1.x. */
-const TOP_LIMIT = 250;
+// Потолок топа объявлен в схеме, а не здесь: его же показывает профиль человека
+// («250 (максимум)», bugs/43). Две копии числа разъехались бы молча.
+import { RELATIONS_TOP_LIMIT as TOP_LIMIT } from '../src/lib/model/schema.ts';
 /** Версия формата relations-документа. */
 const RELATIONS_VERSION = 2;
 /** Измерение считается новым для виджета «Сегодня» первые сутки после появления. */

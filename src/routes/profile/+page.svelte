@@ -18,7 +18,11 @@
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
-  import { monthYearSince } from '$lib/ui/format';
+  import { dateTime, monthYearSince, num as decimal, starsUnit } from '$lib/ui/format';
+  import { loadRelationsSummary, type RelationsSummary } from '$lib/data/relations';
+  import { dimsScaleStep, needsDimsInstruction, relationBands } from '$lib/model/ndimid';
+  import { roundedSpaceDiameter } from '$lib/similarity/similarity';
+  import { RELATIONS_TOP_LIMIT } from '$lib/model/schema';
   import { MOTION } from '$lib/ui/motion';
   import {
     currentSession,
@@ -127,6 +131,14 @@
       }
       data = await loadProfileScreen(uid);
       stand = 'ready';
+      // Сводка связей грузится ПОСЛЕ профиля и отдельно: экран не должен ждать её, чтобы
+      // показаться, и не должен падать, если её ещё нет (сервер синхронизации мог не считать).
+      try {
+        relations = await loadRelationsSummary(uid);
+      } catch {
+        relations = null;
+      }
+      relationsAsked = true;
     } catch (error) {
       standError = technicalDetail(error);
       stand = 'down';
@@ -379,6 +391,49 @@
     // владельца, 2026-07-11). Показываем только абсолютное число оценённого.
     ratedDims: { ru: 'Оценено измерений', en: 'Dimensions rated' },
     toDims: { ru: 'К измерениям →', en: 'To dimensions →' },
+
+    // Вводная подсказка «Дома» 1.x (index.html:818) — адаптирована: убрано обещание
+    // «управлять учётной записью» (экран появится с bugs/45), остальное дословно.
+    homeIntro: {
+      ru: 'Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас. Персональная информация необязательна для заполнения. Можете заполнять только те поля, которые Вы хотите показать другим людям в Пространстве NDim.',
+      en: 'This is your home page. Here you can see your NDim ID statistics and edit personal information about you. Personal information is optional. You can fill in the fields that you want to show to other people in NDim Space.',
+    },
+
+    // ── Статистика «Дома» 1.x (bugs/43) ──
+    // Тексты и эмоциональная шкала — ДОСЛОВНО из ndim_old/public/scripts/app.js:5660-5935.
+    // Это не украшение: человек видит, живёт ли его пространство, ещё до перехода на «Связи».
+    dimsAmount: { ru: 'Количество измерений', en: 'Number of dimensions' },
+    dimsScale: {
+      veryLittle: { ru: '(очень мало 😭)', en: '(very little 😭)' },
+      little: { ru: '(мало ☹️)', en: '(little ☹️)' },
+      medium: { ru: '(средне 😐)', en: '(medium 😐)' },
+      aLot: { ru: '(много 🙂)', en: '(a lot 🙂)' },
+      veryMuch: { ru: '(очень много 😎)', en: '(very much 😎)' },
+      great: { ru: '(Отлично! 🥰)', en: '(Great! 🥰)' },
+      wow: { ru: '(Ого! 🤩)', en: '(Wow! 🤩)' },
+    },
+    // Инструкция всплывает на нижней ступени шкалы — как в 1.x (showDimsInstruction).
+    dimsInstruction: {
+      ru: 'Измерений пока слишком мало, чтобы найти похожих на Вас людей. Откройте «Измерения» и поставьте звёзды тому, что про Вас, — чем больше измерений, тем точнее связи.',
+      en: 'You have too few dimensions for people similar to you to be found. Open “Dimensions” and give stars to what describes you — the more dimensions, the more precise the relations.',
+    },
+    myDiameter: { ru: 'Диаметр моего пространства', en: 'My space diameter' },
+    updatedAt: { ru: 'Обновлен', en: 'Updated' },
+    syncedAt: { ru: 'Синхронизирован', en: 'Synchronized' },
+    myRelations: { ru: 'Мои связи', en: 'My relations' },
+    relationsAmount: { ru: 'Количество установленных связей', en: 'Number of established relations' },
+    relationsMax: { ru: '(максимум)', en: '(maximum)' },
+    relationsTop90: { ru: 'Количество связей в Топ-90%', en: 'Number of relations in Top-90%' },
+    relationsTop75: { ru: 'Количество связей в 75%…89%', en: 'Number of relations in 75%…89%' },
+    relationsTop50: { ru: 'Количество связей в 50%…74%', en: 'Number of relations in 50%…74%' },
+    relationsSynced: { ru: 'Синхронизированы', en: 'Synchronized' },
+    // Связей ещё не считали — говорим это словами. Ноль в такой строке означал бы
+    // «людей для Вас не нашлось», а это неправда (EXP-0033: у витрины нет права на «что-нибудь»).
+    relationsNever: {
+      ru: 'Связи ещё не рассчитывались. Сервер синхронизации посчитает их после Ваших первых оценок.',
+      en: 'Relations have not been computed yet. The sync server will compute them after your first ratings.',
+    },
+    toRelations: { ru: 'К связям →', en: 'To relations →' },
     searchDims: { ru: 'Найти среди {n} измерений…', en: 'Search {n} dimensions…' },
     filters: {
       mine: { ru: 'Мои', en: 'Mine' },
@@ -527,6 +582,19 @@
 
   /** Сколько измерений человек оценил. Единственное, что профилю нужно знать про каталог. */
   const ratedCount = $derived(data ? data.ratings.size : 0);
+
+  /**
+   * Статистика «Дома» 1.x (bugs/43): виджеты «Мой NDim ID» и «Мои связи».
+   *
+   * Сводка связей — ОДНО чтение (`loadRelationsSummary`). Её отсутствие не ломает экран:
+   * человек без единой оценки связей не имеет, и это нормальное состояние, а не ошибка.
+   */
+  let relations = $state<RelationsSummary | null>(null);
+  let relationsAsked = $state(false);
+
+  const bands = $derived(relations === null ? null : relationBands(relations.similarities));
+  /** Диаметр своего пространства — диагональ куба из моих измерений (та же формула, что в ядре). */
+  const myDiameter = $derived(roundedSpaceDiameter(ratedCount));
 
   // ── Вкладка «Видимость»: варианты предпросмотра ──
   const previewOptions = $derived.by(() => {
@@ -780,6 +848,10 @@
         </div>
       {/if}
       {#if tab === 'personal'}
+        <!-- Вводная подсказка экрана — канон «Дома» 1.x (bugs/43). Про управление
+             учётной записью не обещаем: этого экрана в 2.0 пока нет (bugs/45), а текст,
+             описывающий несуществующий интерфейс, — враньё о продукте (EXP-0036). -->
+        <p class="intro">{t.homeIntro[lang]}</p>
         <div class="card head-card" in:fade={{ duration: MOTION.base }}>
           <Avatar
             uid={data.uid}
@@ -852,15 +924,73 @@
             <p class="hint">{t.defaultHidden[lang]}</p>
             <button type="button" class="btn ghost" onclick={startEdit}>{t.edit[lang]}</button>
           </div>
+          <!-- Виджет «Мой NDim ID» — канон «Дома» 1.x (кадр app-01, bugs/43): человек видит,
+               ЖИВЁТ ли его пространство, не уходя с профиля. Все четыре строки 1.x на месте;
+               эмоциональная шкала — чистая функция (model/ndimid.ts), проверенная на границах. -->
           <div class="card" in:fade={{ duration: MOTION.base }}>
             <h3>{t.myNdimId[lang]}</h3>
             <div class="mrow">
-              <span class="k2">{t.ratedDims[lang]}</span>
-              <span class="mval big">{ratedCount}</span>
+              <span class="k2">{t.dimsAmount[lang]}</span>
+              <span class="mval big">{decimal(ratedCount, lang)}</span>
             </div>
+            <p class="scale">{t.dimsScale[dimsScaleStep(ratedCount)][lang]}</p>
+            <div class="mrow">
+              <span class="k2">{t.myDiameter[lang]}</span>
+              <span class="mval big">{decimal(myDiameter, lang)} {starsUnit(myDiameter, lang)}</span>
+            </div>
+            <div class="mrow">
+              <span class="k2">{t.updatedAt[lang]}</span>
+              <span class="mval small">{dateTime(data.root.time.updated, lang)}</span>
+            </div>
+            {#if relations !== null}
+              <div class="mrow">
+                <span class="k2">{t.syncedAt[lang]}</span>
+                <span class="mval small">{dateTime(relations.computedAt, lang)}</span>
+              </div>
+            {/if}
+            {#if needsDimsInstruction(ratedCount)}
+              <!-- Нижняя ступень шкалы: в 1.x здесь всплывала инструкция. Человеку без
+                   измерений некого искать — и это единственное, что ему сейчас важно. -->
+              <p class="hint instruction" transition:slide={{ duration: MOTION.base }}>{t.dimsInstruction[lang]}</p>
+            {/if}
             <!-- «Измерения» теперь ОТДЕЛЬНЫЙ раздел (требование владельца 2026-07-12),
                  а не суб-вкладка профиля. Отсюда — прямая дверь туда. -->
             <a class="btn ghost" href="/dims">{t.toDims[lang]}</a>
+          </div>
+
+          <!-- Виджет «Мои связи» — вторая половина статистики «Дома» 1.x. Полосы похожести
+               считаются по уже загруженной сводке (одно чтение), а не по 250 карточкам. -->
+          <div class="card" in:fade={{ duration: MOTION.base }}>
+            <h3>{t.myRelations[lang]}</h3>
+            {#if bands === null}
+              {#if relationsAsked}
+                <p class="hint">{t.relationsNever[lang]}</p>
+              {/if}
+            {:else}
+              <div class="mrow">
+                <span class="k2">{t.relationsAmount[lang]}</span>
+                <span class="mval big">
+                  {decimal(bands.total, lang)}{bands.total >= RELATIONS_TOP_LIMIT ? ` ${t.relationsMax[lang]}` : ''}
+                </span>
+              </div>
+              <div class="mrow">
+                <span class="k2">{t.relationsTop90[lang]}</span>
+                <span class="mval">{decimal(bands.top90, lang)}</span>
+              </div>
+              <div class="mrow">
+                <span class="k2">{t.relationsTop75[lang]}</span>
+                <span class="mval">{decimal(bands.band75, lang)}</span>
+              </div>
+              <div class="mrow">
+                <span class="k2">{t.relationsTop50[lang]}</span>
+                <span class="mval">{decimal(bands.band50, lang)}</span>
+              </div>
+              <div class="mrow">
+                <span class="k2">{t.relationsSynced[lang]}</span>
+                <span class="mval small">{dateTime(relations!.computedAt, lang)}</span>
+              </div>
+            {/if}
+            <a class="btn ghost" href="/relations">{t.toRelations[lang]}</a>
           </div>
         {/if}
       {:else}
@@ -983,6 +1113,20 @@
   .mrow .k2 { font-size: 12px; color: var(--dim); flex: none; }
   .mval { flex: none; font-size: 13.5px; font-weight: 700; color: var(--primary); }
   .mval.big { font-size: 19px; margin-left: auto; }
+  /* Даты — не метрики: они не должны кричать цветом акцента рядом с числами (канон 1.x). */
+  .mval.small { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--heading); text-align: right; }
+  .mrow .mval:not(.big):not(.small) { margin-left: auto; }
+  /* Вводная подсказка экрана — та же серая плашка, что на «Связях» и «Измерениях» (канон 1.x). */
+  .intro {
+    font-size: 12px; line-height: 1.55; color: var(--dim); margin: 0;
+    padding: 10px 12px; border-radius: 10px; background: var(--edge-soft);
+  }
+  /* Эмоциональный комментарий шкалы 1.x — реплика продукта, а не подпись к числу. */
+  .scale { font-size: 13px; color: var(--dim); margin: -2px 0 6px; }
+  .instruction {
+    margin-top: 8px; padding: 9px 11px; border-radius: 10px;
+    background: var(--edge-soft); color: var(--text);
+  }
 
   .btn {
     display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px;
@@ -1087,6 +1231,7 @@
     .body > .head-card,
     .body > .guest-card,
     .body > .seg,
+    .body > .intro,
     .body > .state {
       grid-column: 1 / -1;
     }

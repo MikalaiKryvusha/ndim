@@ -87,6 +87,33 @@ export async function loadRelations(uid: Uid): Promise<RelationsScreenData | nul
   return { computedAt: relations.computedAt, cards };
 }
 
+/** Сводка топа для виджета «Мои связи» в профиле: без имён, без лиц — только числа. */
+export interface RelationsSummary {
+  readonly computedAt: number;
+  /** Похожести всех связей топа. Полосы 90 / 75…89 / 50…74 считает `model/ndimid.ts`. */
+  readonly similarities: readonly number[];
+}
+
+/**
+ * Лёгкая сводка связей для профиля (bugs/43) — РОВНО ОДНО чтение Firestore.
+ *
+ * Отдельная функция, а не `loadRelations`, именно ради экономии запросов (канон владельца
+ * 2026-07-12): полная загрузка ходит ещё и в публичный бакет КАЖДОГО человека из топа — до
+ * 250 чтений. Профилю нужны только числа, и они все лежат в одном документе `relations/{uid}`.
+ *
+ * `null` — сервер синхронизации ещё ни разу не считал связи этого человека.
+ */
+export async function loadRelationsSummary(uid: Uid): Promise<RelationsSummary | null> {
+  const snapshot = await getDoc(doc(db(), 'relations', uid));
+  if (!snapshot.exists()) return null;
+
+  const relations = snapshot.data() as RelationsDoc;
+  return {
+    computedAt: relations.computedAt,
+    similarities: relations.top.map((entry) => entry.similarity),
+  };
+}
+
 /**
  * Уровень силы метрики для «яркости связи» (утверждено владельцем 2026-07-11):
  * слабая (<30) гаснет, средняя (30–59) — синяя, сильная (≥60) — циан и светится.
