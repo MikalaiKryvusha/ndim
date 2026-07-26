@@ -11,9 +11,16 @@
 
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase.ts';
-import type { Localized, RelationEntry, RelationsDoc, Uid } from '../model/schema.ts';
+import type {
+  BirthDate,
+  Gender,
+  Localized,
+  RelationEntry,
+  RelationsDoc,
+  Uid,
+} from '../model/schema.ts';
 
-/** Строка топа + публичное имя гостя (из его бакета everyone). */
+/** Строка топа + публичный профиль гостя (из его бакета everyone). */
 export interface RelationCard {
   readonly entry: RelationEntry;
   /** Имя гостя, как он открыл его всем; null — гость не открыл имя. */
@@ -26,6 +33,18 @@ export interface RelationCard {
    * устроил бы 250 заведомо пустых запросов. Фото в боевой базе загрузили считаные люди.
    */
   readonly guestAvatar: boolean;
+  /**
+   * Персональная информация человека — то, что он открыл ВСЕМ (bugs/46, канон 1.x: раскрытая
+   * карточка была досье знакомства, а не тремя цифрами).
+   *
+   * ⚠️ Осознанное отличие от 1.x: там в чужой карточке было видно всё, здесь — только
+   * содержимое бакета `everyone`. Скрытое поле не показывается и НЕ подменяется прочерком:
+   * зритель не должен уметь отличить «не заполнено» от «скрыто от меня» (`researches/04`).
+   * Читаем из того же документа, что и имя, — новых чтений Firestore не добавляется.
+   */
+  readonly guestGender: Gender;
+  readonly guestBorn: BirthDate | null;
+  readonly guestAbout: Localized | null;
 }
 
 export interface RelationsScreenData {
@@ -48,6 +67,9 @@ export async function loadRelations(uid: Uid): Promise<RelationsScreenData | nul
         ? (guestProfile.data() as {
             name?: { first: Localized; nick: Localized };
             avatar?: boolean;
+            gender?: Gender;
+            born?: BirthDate;
+            about?: Localized;
           })
         : {};
       return {
@@ -55,6 +77,9 @@ export async function loadRelations(uid: Uid): Promise<RelationsScreenData | nul
         guestName: data.name?.first ?? null,
         guestNick: data.name?.nick ?? null,
         guestAvatar: data.avatar === true,
+        guestGender: data.gender ?? null,
+        guestBorn: data.born ?? null,
+        guestAbout: data.about ?? null,
       };
     }),
   );

@@ -8,7 +8,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { monthYearSince } from './format.ts';
+import { ageAt, bornWithAge, monthYearSince, yearsUnit } from './format.ts';
 
 // День берём из середины месяца: так перевод UTC → местное время не утащит дату в соседний месяц.
 const midMonth = (year: number, month: number) => new Date(year, month, 15).getTime();
@@ -35,4 +35,63 @@ test('склоняются все двенадцать месяцев', () => {
 
 test('в английском падежей нет — месяц остаётся как есть', () => {
   assert.equal(monthYearSince(midMonth(2025, 1), 'en'), 'February 2025');
+});
+
+// ── Возраст в чужой карточке связи (bugs/46) ────────────────────────────────
+//
+// Возраст — единственное число раскрытой карточки, которое НЕ приходит из базы, а считается
+// на месте. Ошибка на год выглядит как враньё продукта, поэтому проверяются именно границы:
+// день рождения вчера / сегодня / завтра.
+
+const born = (year: number | null, month: number | null, day: number | null) => ({ year, month, day });
+const at = (year: number, month: number, day: number) => new Date(year, month - 1, day).getTime();
+
+test('возраст: день рождения уже прошёл в этом году', () => {
+  assert.equal(ageAt(born(1986, 5, 13), at(2026, 7, 26)), 40);
+});
+
+test('возраст: день рождения в этом году ещё НЕ наступил — минус год', () => {
+  assert.equal(ageAt(born(1986, 12, 13), at(2026, 7, 26)), 39);
+});
+
+test('возраст: границы «вчера · сегодня · завтра»', () => {
+  // Сегодня исполнилось — возраст уже новый; завтра исполнится — ещё старый.
+  assert.equal(ageAt(born(2000, 7, 25), at(2026, 7, 26)), 26, 'вчера');
+  assert.equal(ageAt(born(2000, 7, 26), at(2026, 7, 26)), 26, 'сегодня');
+  assert.equal(ageAt(born(2000, 7, 27), at(2026, 7, 26)), 25, 'завтра');
+});
+
+test('возраст: неполная дата НЕ достраивается — возраста нет', () => {
+  // Человек вправе указать только год (BirthDate). Достроить месяц и день — значит выдумать
+  // число; 1.x в этом случае считал от декабря предыдущего года и врал.
+  assert.equal(ageAt(born(1986, null, null), at(2026, 7, 26)), null);
+  assert.equal(ageAt(born(1986, 5, null), at(2026, 7, 26)), null);
+  assert.equal(ageAt(born(null, null, null), at(2026, 7, 26)), null);
+});
+
+test('склонение возраста — формы 1.x (getAgeWord)', () => {
+  assert.equal(yearsUnit(1, 'ru'), 'год');
+  assert.equal(yearsUnit(21, 'ru'), 'год');
+  assert.equal(yearsUnit(2, 'ru'), 'года');
+  assert.equal(yearsUnit(34, 'ru'), 'года');
+  assert.equal(yearsUnit(5, 'ru'), 'лет');
+  assert.equal(yearsUnit(11, 'ru'), 'лет', '11…14 — исключение: «одиннадцать лет», не «год»');
+  assert.equal(yearsUnit(12, 'ru'), 'лет');
+  assert.equal(yearsUnit(14, 'ru'), 'лет');
+  assert.equal(yearsUnit(40, 'ru'), 'лет');
+  assert.equal(yearsUnit(1, 'en'), 'year old');
+  assert.equal(yearsUnit(40, 'en'), 'years old');
+});
+
+test('день рождения целиком: «13 мая 1986 г. (40 лет)» — форма 1.x', () => {
+  assert.equal(bornWithAge(born(1986, 5, 13), 'ru', at(2026, 7, 26)), '13 мая 1986 г. (40 лет)');
+  assert.equal(bornWithAge(born(1986, 5, 13), 'en', at(2026, 7, 26)), 'May 13, 1986 (40 years old)');
+});
+
+test('день рождения: только год — показываем год без возраста, а не пустоту и не догадку', () => {
+  assert.equal(bornWithAge(born(1986, null, null), 'ru', at(2026, 7, 26)), '1986');
+});
+
+test('день рождения не заполнен — строки на экране нет вовсе', () => {
+  assert.equal(bornWithAge(born(null, null, null), 'ru', at(2026, 7, 26)), null);
 });

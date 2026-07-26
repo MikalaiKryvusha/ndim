@@ -19,9 +19,14 @@
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession } from '$lib/data/profile';
-  import { loadRelations, strengthLevel, type RelationsScreenData } from '$lib/data/relations';
+  import {
+    loadRelations,
+    strengthLevel,
+    type RelationCard,
+    type RelationsScreenData,
+  } from '$lib/data/relations';
   import { technicalDetail } from '$lib/ui/errors';
-  import { dateOnly, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
+  import { bornWithAge, dateOnly, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   import type { Localized } from '$lib/model/schema';
 
@@ -134,10 +139,28 @@
         en: 'Commonality shows how much you and another person share the same interests. The more similar dimensions you and another person have in your NDim IDs, the higher this indicator.',
       },
     },
-    ourSpace: { ru: 'Наше общее пространство', en: 'Our common space' },
+    // Заголовки блоков раскрытия — дословно 1.x (app.js:7305/7359, кадр app-16).
+    // Раскрытая карточка была ДОСЬЕ ЗНАКОМСТВА: кто человек, каково его пространство и
+    // каково наше общее — а 2.0 показывал только последнее (bugs/46).
+    person: { ru: 'Персональная информация', en: 'Personal information' },
+    guestSpace: { ru: 'Параметры пространства', en: 'Space parameters' },
+    ourSpace: { ru: 'Параметры нашего общего пространства', en: 'Parameters of our common space' },
     dimsCount: { ru: 'Размерность', en: 'Dimensionality' },
     diameter: { ru: 'Диаметр', en: 'Diameter' },
     distance: { ru: 'Расстояние между вами', en: 'Distance between you' },
+    // Коэффициенты сравнения — форма 1.x: «(×0.36 моего, ×0.44 хозяина)».
+    // «Хозяин» здесь — человек, чью карточку смотрят (термин 1.x, сохраняем).
+    ofMine: { ru: 'моего', en: 'of mine' },
+    ofOwner: { ru: 'хозяина', en: 'of owner' },
+    ofDiameter: { ru: 'от диаметра', en: 'of the diameter' },
+    gender: { ru: 'Гендер', en: 'Gender' },
+    genders: {
+      m: { ru: 'Мужчина', en: 'Man' },
+      w: { ru: 'Женщина', en: 'Woman' },
+      nb: { ru: 'Небинарный', en: 'Non-binary' },
+    },
+    bornLabel: { ru: 'День рождения', en: 'Date of birth' },
+    aboutLabel: { ru: 'О себе', en: 'About myself' },
     youAnd: { ru: 'Вы ↔', en: 'You ↔' },
     computedAt: { ru: 'Связи посчитаны', en: 'Relations computed' },
     write: { ru: 'Написать', en: 'Message' },
@@ -155,6 +178,25 @@
 
   function guestTitle(card: { guestName: Localized | null; guestNick: Localized | null }): string {
     return loc(card.guestName) ?? loc(card.guestNick) ?? t.noName[lang];
+  }
+
+  /**
+   * Персональные строки чужой карточки (bugs/46) — ТОЛЬКО то, что человек открыл всем.
+   *
+   * Незаполненное поле не даёт строки вовсе: прочерк сообщал бы зрителю, что поле существует
+   * и скрыто именно от него, — а это уже утечка настройки приватности (`researches/04`).
+   * «О себе» живёт отдельным абзацем: это текст, а не значение.
+   */
+  function personRows(card: RelationCard): { label: string; value: string }[] {
+    const rows: { label: string; value: string }[] = [];
+    if (card.guestGender !== null) {
+      rows.push({ label: t.gender[lang], value: t.genders[card.guestGender][lang] });
+    }
+    // Возраст считается от «сейчас» страницы, а не от времени сборки: экран пререндерен,
+    // и вшитая дата старела бы вместе с артефактом.
+    const bornText = card.guestBorn === null ? null : bornWithAge(card.guestBorn, lang, Date.now());
+    if (bornText !== null) rows.push({ label: t.bornLabel[lang], value: bornText });
+    return rows;
   }
 
   // Порядок метрик — КАНОН 1.x (bugs/25, слово владельца 2026-07-16: «нужно справа»;
@@ -230,11 +272,51 @@
             </p>
           {/if}
           {#if expanded === entry.guestUid}
+            <!-- Досье знакомства по канону 1.x (кадр app-16): кто человек → каково ЕГО
+                 пространство → каково НАШЕ общее. Все числа уже посчитаны ядром и лежат
+                 в этой же записи топа — ни одного дополнительного чтения базы. -->
+            {@const rows = personRows(card)}
+            {@const about = loc(card.guestAbout)}
             <div class="deep" transition:slide={{ duration: MOTION.base }}>
+              {#if rows.length > 0 || about}
+                <h3>{t.person[lang]}</h3>
+                {#each rows as row (row.label)}
+                  <div class="kv"><span class="k3">{row.label}</span><span class="v3">{row.value}</span></div>
+                {/each}
+                {#if about}
+                  <div class="kv about"><span class="k3">{t.aboutLabel[lang]}</span></div>
+                  <p class="abouttext">{about}</p>
+                {/if}
+              {/if}
+
+              <h3>{t.guestSpace[lang]}</h3>
+              <div class="kv">
+                <span class="k3">{t.dimsCount[lang]}</span>
+                <span class="v3">{entry.guestSpaceSize} {dimsUnit(entry.guestSpaceSize, lang)}
+                  <small class="rate">(×{entry.guestSpaceSizeRateOfOwner} {t.ofMine[lang]})</small></span>
+              </div>
+              <div class="kv">
+                <span class="k3">{t.diameter[lang]}</span>
+                <span class="v3">{entry.guestSpaceDiameter} {starsUnit(entry.guestSpaceDiameter, lang)}
+                  <small class="rate">(×{entry.guestSpaceDiameterRateOfOwner} {t.ofMine[lang]})</small></span>
+              </div>
+
               <h3>{t.ourSpace[lang]}</h3>
-              <div class="kv"><span class="k3">{t.dimsCount[lang]}</span><span class="v3">{entry.commonSpaceSize} {dimsUnit(entry.commonSpaceSize, lang)}</span></div>
-              <div class="kv"><span class="k3">{t.diameter[lang]}</span><span class="v3">{entry.commonSpaceDiameter} {starsUnit(entry.commonSpaceDiameter, lang)}</span></div>
-              <div class="kv"><span class="k3">{t.distance[lang]}</span><span class="v3">{entry.distance} {starsUnit(entry.distance, lang)} · {entry.distanceRateOfCommonSpaceDiameter}%</span></div>
+              <div class="kv">
+                <span class="k3">{t.dimsCount[lang]}</span>
+                <span class="v3">{entry.commonSpaceSize} {dimsUnit(entry.commonSpaceSize, lang)}
+                  <small class="rate">(×{entry.commonSpaceSizeRateOfOwner} {t.ofMine[lang]}, ×{entry.commonSpaceSizeRateOfGuest} {t.ofOwner[lang]})</small></span>
+              </div>
+              <div class="kv">
+                <span class="k3">{t.diameter[lang]}</span>
+                <span class="v3">{entry.commonSpaceDiameter} {starsUnit(entry.commonSpaceDiameter, lang)}
+                  <small class="rate">(×{entry.commonSpaceDiameterRateOfOwner} {t.ofMine[lang]}, ×{entry.commonSpaceDiameterRateOfGuest} {t.ofOwner[lang]})</small></span>
+              </div>
+              <div class="kv">
+                <span class="k3">{t.distance[lang]}</span>
+                <span class="v3">{entry.distance} {starsUnit(entry.distance, lang)}
+                  <small class="rate">({entry.distanceRateOfCommonSpaceDiameter}% {t.ofDiameter[lang]})</small></span>
+              </div>
               <div class="mrow">
                 <span class="k3">{t.youAnd[lang]} {guestTitle(card)}</span>
                 <span class="mbar"><i style="width:{entry.distanceRateOfCommonSpaceDiameter}%"></i></span>
@@ -366,7 +448,18 @@
     font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
     color: var(--dim); margin-bottom: 6px; font-weight: 600;
   }
+  /* Второй и следующие заголовки блоков раскрытия отбиваются от предыдущего блока. */
+  .deep h3 + .kv { margin-top: 0; }
+  .deep .kv + h3 { margin-top: 12px; }
   .kv { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12.5px; }
+  /* Коэффициент сравнения — вспомогательная строка под значением, как в 1.x
+     («199 звёзд» / «(×0.9 моего)»), а не равноправное число. */
+  .rate { display: block; font-weight: 400; color: var(--dim); font-size: 11px; margin-top: 1px; }
+  .about { padding-bottom: 0; }
+  .abouttext {
+    font-size: 12.5px; line-height: 1.5; color: var(--text);
+    margin: 2px 0 4px; white-space: pre-wrap; overflow-wrap: anywhere;
+  }
   .k3 { color: var(--dim); }
   .v3 { color: var(--heading); font-weight: 600; text-align: right; }
   .mrow { display: flex; align-items: center; gap: 10px; padding: 7px 0; }

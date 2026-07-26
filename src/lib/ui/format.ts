@@ -113,6 +113,61 @@ export function monthYearSince(millis: number, lang: Lang): string {
   return `${MONTHS_GENITIVE_RU[date.getMonth()]} ${date.getFullYear()} г.`;
 }
 
+/**
+ * Возраст в годах на момент `now`. `null` — возраст неизвестен.
+ *
+ * Считается ровно как в 1.x (`app.js:7064-7073`): разность годов минус поправка, если день
+ * рождения в этом году ещё не наступил. Возраст — **не** «сколько ему лет примерно»: ошибка
+ * на год в чужом профиле выглядит как враньё продукта.
+ *
+ * ⚠️ Требуется ПОЛНАЯ дата. В модели 2.0 человек вправе указать только год (`BirthDate`),
+ * а 1.x такой случай не обрабатывал вовсе (`new Date(y, null-1, null)` даёт декабрь прошлого
+ * года). Достраивать недостающие месяц и день нельзя: получится выдуманное число, а
+ * выдуманное хуже отсутствующего (`PHILOSOPHY.md` → правило трёх дверей). Неполная дата →
+ * `null`, и экран показывает дату без возраста.
+ */
+export function ageAt(
+  born: { year: number | null; month: number | null; day: number | null },
+  now: number,
+): number | null {
+  const { year, month, day } = born;
+  if (year === null || month === null || day === null) return null;
+
+  const today = new Date(now);
+  let age = today.getFullYear() - year;
+  const monthDiff = today.getMonth() - (month - 1);
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) age--;
+  return age < 0 ? null : age;
+}
+
+/** «40 лет» · «21 год» · «2 года» · «40 years old» — формы 1.x (`getAgeWord`). */
+export const yearsUnit = (value: number, lang: Lang): string =>
+  lang === 'ru'
+    ? unitRu(value, ['год', 'года', 'лет'])
+    : value === 1
+      ? 'year old'
+      : 'years old';
+
+/**
+ * День рождения так, как его показывал 1.x: «13 мая 1986 г. (40 лет)».
+ * Неполная дата показывается без возраста; пустая — `null` (строки на экране не будет).
+ */
+export function bornWithAge(
+  born: { year: number | null; month: number | null; day: number | null },
+  lang: Lang,
+  now: number,
+): string | null {
+  if (born.year === null) return null;
+
+  const age = ageAt(born, now);
+  if (born.month === null || born.day === null) return String(born.year);
+
+  // Дата строится в ЛОКАЛЬНОЙ зоне (как в 1.x): `Date.UTC` у зрителя западнее Гринвича
+  // отрисовался бы предыдущим днём — чужой день рождения сдвинулся бы на сутки.
+  const shown = dateOnly(new Date(born.year, born.month - 1, born.day).getTime(), lang);
+  return age === null ? shown : `${shown} (${age} ${yearsUnit(age, lang)})`;
+}
+
 /** «12 июля 2026 г. в 03:00» — форма из 1.x. */
 export function dateTime(millis: number, lang: Lang): string {
   const time = new Date(millis).toLocaleTimeString(locale(lang), {
