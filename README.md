@@ -97,7 +97,7 @@
 | Фронтенд 2.0 | SvelteKit: лендинг и все экраны продукта — «Профиль», «Связи», «Пространство», «Измерения», «Меню» + онбординг (демо → гость → аккаунт без пароля) — **в бою** | ✅ |
 | Бэкенд | сервер синхронизации работает в Docker **в бою** (с 2026-07-12; v0.2.0 с экономией запросов — с 2026-07-24) | ✅ |
 | Публикация | **https://ndimspace.app живёт**: cutover 2026-07-12, труд 331 человека из 1.x перенесён и сверен; sitemap и поисковики прописаны | ✅ |
-| Паритет с 1.x | инвентарь поведения 1.x снят целиком ([`researches/12`](researches/12_1x_behavior_inventory.md)); боли переезда разложены по тирам ([`plans/07`](plans/07_owner_pain_tiers.md)), **тир A закрыт** — статистика «Дома», досье связи, сетка соцсетей, правила оформления | 🔧 |
+| Паритет с 1.x | инвентарь поведения 1.x снят целиком ([`researches/12`](researches/12_1x_behavior_inventory.md)); боли переезда разложены по тирам ([`plans/07`](plans/07_owner_pain_tiers.md)), **тир A закрыт** — статистика «Дома», досье связи, сетка соцсетей, правила оформления; **волна 10 в бою** — поиск измерений ищет по всему Пространству, вход «Предложить измерение» вернулся на видное место | 🔧 |
 
 Живой статус — [`STATUS.md`](STATUS.md) · дорожная карта — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 видение автора — [`GOAL.md`](GOAL.md).
@@ -219,7 +219,7 @@ you see it.
 | Frontend 2.0 | SvelteKit: the landing and every product screen — Profile, Relations, Space, Dimensions, Menu + onboarding (demo → guest → passwordless account) — **in production** | ✅ |
 | Backend | the sync server runs in Docker **in production** (since 2026-07-12; v0.2.0 with request economy — since 2026-07-24) | ✅ |
 | Publication | **https://ndimspace.app is live**: cutover on 2026-07-12, the work of 331 people from 1.x migrated and verified; sitemap and search engines done | ✅ |
-| Parity with 1.x | the 1.x behaviour inventory is fully mapped ([`researches/12`](researches/12_1x_behavior_inventory.md)); migration pains are sorted into tiers ([`plans/07`](plans/07_owner_pain_tiers.md)), **tier A is closed** — home statistics, the relation dossier, the social grid, the submission rules | 🔧 |
+| Parity with 1.x | the 1.x behaviour inventory is fully mapped ([`researches/12`](researches/12_1x_behavior_inventory.md)); migration pains are sorted into tiers ([`plans/07`](plans/07_owner_pain_tiers.md)), **tier A is closed** — home statistics, the relation dossier, the social grid, the submission rules; **wave 10 is live** — dimension search now covers the whole Space, and the “suggest a dimension” door is visible again | 🔧 |
 
 Live status — [`STATUS.md`](STATUS.md) · roadmap — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 the author's vision — [`GOAL.md`](GOAL.md).
