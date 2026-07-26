@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NDim Space — «Предложить измерение»: 4 макета на утверждение</title>
+
+<!--
+  ГДЕ ЖИВЁТ ВХОД В «ПРЕДЛОЖИТЬ ИЗМЕРЕНИЕ» — 4 варианта владельцу (bugs/51).
+
+  Повод (2026-07-26, слово владельца): «раньше были FAB про добавить новое измерение —
+  теперь это запрятано вниз списка измерений, там пользователь никогда не найдёт. Нужно
+  вытянуть на видное место, давай обсуждать варианты, я видел самым удобным в старом
+  Ндим — FAB».
+
+  Канон 1.x снят с живого кода, а не выдуман:
+    · разметка — ndim_old/public/index.html:2944 (контейнер extra_tools_container внутри
+      нижней панели: 💡 сверху, 🔍 под ней);
+    · стили   — ndim_old/public/styles/styles.css:3005 и :3202
+      (кнопка 50×50, border-radius: 20px, фон rgb(210,230,255), тень 2px 2px 10px rgba(0,0,0,.3),
+      нажатие → rgb(100,180,255), иконка 20px; контейнер: position absolute, bottom 120%,
+      right 3%, z-index 90, колонка, зазор clamp(4px,4vw,6px));
+    · кадр    — design/reference-1x/app-04-измерения-все.png.
+
+  ОБЩЕЕ ДЛЯ ВСЕХ ЧЕТЫРЁХ (не предмет выбора):
+    · вход в «Предложить измерение» ВИДЕН БЕЗ ПРОКРУТКИ и остаётся видимым при прокрутке
+      ленты — это и есть суть бага;
+    · сама форма не меняется: раскрытие, «Правила оформления» дословно из 1.x (bugs/48),
+      лимит 300 символов;
+    · поиск остаётся строкой сверху (это решение владелец уже принял вместе с макетом V1);
+    · ничего не перекрывает звёзды карточек и не спорит с нижней панелью (bugs/12)
+      и рельсом десктопа (bugs/49);
+    · иконка — 💡 лампочка, как в 1.x.
+
+  РАЗЛИЧАЮТСЯ варианты ТЕМ, ГДЕ СТОИТ ВХОД и насколько он навязчив.
+  Нарисовано в тёмной теме (как остальные макеты); в светлой берутся те же токены.
+-->
+
+<style>
+  :root {
+    --bg: #0b1220; --card: #111c30; --card2: #16233c; --edge: #1e3050; --edge-soft: #1a2942;
+    --text: #dbe6f5; --dim: #7e91ad; --heading: #eaf2ff; --primary: #3b82f6; --cyan: #22d3ee;
+    --gold: #f5a524; --good: #22c55e; --faint: #4d5f7a; --panel: #0f1a2c;
+    --r: 16px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; }
+  .page { max-width: 1700px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1 { color: var(--heading); font-size: 24px; margin: 0 0 6px; }
+  .lede { color: var(--dim); margin: 0 0 8px; max-width: 92ch; }
+  .lede b { color: var(--cyan); }
+  .note { color: var(--faint); font-size: 13px; margin: 0 0 26px; max-width: 92ch; }
+  .note code { color: var(--dim); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 22px; }
+
+  .variant { background: #0d1626; border: 1px solid var(--edge); border-radius: 20px; padding: 16px; }
+  .variant.fav { border-color: #2f5c9e; box-shadow: 0 0 0 1px rgba(59,130,246,.25); }
+  .vhead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+  .vhead h2 { margin: 0; font-size: 17px; color: var(--heading); }
+  .vhead .tag { font-size: 11px; color: var(--primary); border: 1px solid var(--edge);
+    border-radius: 999px; padding: 2px 8px; }
+  .vhead .tag.own { color: var(--gold); border-color: #4a3a1a; }
+  .vwhy { color: var(--dim); font-size: 13px; margin: 0 0 12px; min-height: 72px; }
+  .vwhy b { color: var(--text); }
+
+  /* ── телефон ─────────────────────────────────────────────────────────── */
+  .phone { position: relative; width: 330px; height: 620px; margin: 0 auto;
+    background: var(--bg); border: 1px solid var(--edge); border-radius: 26px; overflow: hidden;
+    display: flex; flex-direction: column; }
+  .appbar { display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+    background: var(--panel); border-bottom: 1px solid var(--edge-soft); flex: none; }
+  .logo { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--primary), var(--cyan));
+    display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #06101f; }
+  .appbar .name { font-size: 13px; color: var(--heading); font-weight: 600; }
+  .appbar .right { margin-left: auto; display: flex; gap: 6px; }
+  .chip { font-size: 11px; color: var(--dim); border: 1px solid var(--edge); border-radius: 999px; padding: 2px 8px; }
+
+  .screen { flex: 1; overflow: hidden; padding: 10px 12px 0; position: relative; }
+  .h2 { font-size: 17px; color: var(--heading); margin: 2px 0 8px; font-weight: 700; }
+  .intro { font-size: 11px; color: var(--dim); background: var(--card); border-radius: 12px;
+    padding: 8px 10px; margin: 0 0 10px; }
+  .searchrow { display: flex; gap: 6px; margin-bottom: 8px; }
+  .search { flex: 1; background: var(--card); border: 1px solid var(--edge); border-radius: 12px;
+    padding: 8px 10px; font-size: 12px; color: var(--faint); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tab { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--edge); color: var(--dim); }
+  .tab.on { background: var(--card2); color: var(--heading); border-color: #2b4368; }
+
+  .dim { background: var(--card); border: 1px solid var(--edge-soft); border-radius: 14px;
+    padding: 10px; margin-bottom: 8px; }
+  .dim .type { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; color: var(--primary);
+    background: rgba(59,130,246,.12); border-radius: 6px; padding: 2px 6px; display: inline-block; }
+  .dim .title { font-size: 13px; color: var(--heading); font-weight: 600; margin: 6px 0 4px; }
+  .dim .rate { font-size: 11px; color: var(--good); }
+  .dim .stars { margin-top: 6px; color: var(--faint); font-size: 12px; letter-spacing: 2px; }
+
+  .bnav { flex: none; display: flex; justify-content: space-around; padding: 8px 0 10px;
+    background: var(--panel); border-top: 1px solid var(--edge-soft); font-size: 9px; color: var(--dim); }
+  .bnav div { text-align: center; }
+  .bnav .ico { display: block; font-size: 13px; margin-bottom: 2px; }
+  .bnav .on { color: var(--cyan); }
+
+  /* ── V1: FAB канона 1.x ──────────────────────────────────────────────── */
+  .fab { position: absolute; right: 12px; bottom: 14px; width: 52px; height: 52px;
+    border-radius: 20px; background: linear-gradient(140deg, #d2e6ff, #a8cdff);
+    display: grid; place-items: center; font-size: 22px;
+    box-shadow: 2px 2px 10px rgba(0,0,0,.45); }
+  .fab.small { width: 44px; height: 44px; border-radius: 16px; font-size: 18px; }
+
+  /* ── V2: расширенный FAB ─────────────────────────────────────────────── */
+  .fab-ext { position: absolute; right: 12px; bottom: 14px; height: 46px; padding: 0 16px;
+    border-radius: 23px; background: linear-gradient(140deg, #d2e6ff, #a8cdff); color: #0a1b33;
+    display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;
+    box-shadow: 2px 2px 10px rgba(0,0,0,.45); }
+
+  /* ── V3: кнопка в шапке поиска ───────────────────────────────────────── */
+  .headbtn { width: 38px; display: grid; place-items: center; background: var(--card2);
+    border: 1px solid #2b4368; border-radius: 12px; font-size: 17px; }
+
+  /* ── V4: карточка-приглашение ────────────────────────────────────────── */
+  .invite { background: linear-gradient(140deg, rgba(59,130,246,.16), rgba(34,211,238,.10));
+    border: 1px dashed #2f5c9e; border-radius: 14px; padding: 12px; margin-bottom: 8px; text-align: center; }
+  .invite .t { font-size: 12px; color: var(--heading); font-weight: 600; }
+  .invite .s { font-size: 11px; color: var(--dim); margin: 4px 0 8px; }
+  .invite .b { display: inline-block; font-size: 11px; color: #0a1b33; font-weight: 600;
+    background: linear-gradient(140deg, #d2e6ff, #a8cdff); border-radius: 999px; padding: 6px 14px; }
+
+  .fade { position: absolute; left: 0; right: 0; bottom: 0; height: 46px;
+    background: linear-gradient(transparent, var(--bg)); pointer-events: none; }
+
+  .pros { list-style: none; padding: 0; margin: 12px 0 0; font-size: 12px; }
+  .pros li { display: flex; gap: 7px; margin-bottom: 4px; color: var(--dim); }
+  .pros li b { color: var(--text); font-weight: 600; }
+  .pros .p::before { content: '+'; color: var(--good); font-weight: 700; }
+  .pros .m::before { content: '−'; color: #ef6b6b; font-weight: 700; }
+
+  .desk { margin-top: 34px; }
+  .deskframe { border: 1px solid var(--edge); border-radius: 18px; overflow: hidden; display: grid;
+    grid-template-columns: 150px 1fr; height: 300px; background: var(--bg); max-width: 760px; }
+  .rail { background: var(--panel); border-right: 1px solid var(--edge-soft); padding: 12px 10px; font-size: 11px; color: var(--dim); }
+  .rail div { padding: 5px 0; }
+  .rail .on { color: var(--cyan); }
+  .deskbody { padding: 12px; position: relative; overflow: hidden; }
+  .deskgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  footer { margin-top: 40px; color: var(--faint); font-size: 12px; border-top: 1px solid var(--edge); padding-top: 16px; }
+  footer b { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>«Предложить измерение» — где живёт вход. Четыре варианта</h1>
+  <p class="lede">
+    Боль владельца (2026-07-26): <b>«запрятано вниз списка измерений — там пользователь никогда
+    не найдёт»</b>. Лента бесконечная, низа у неё нет. Пространство растёт снизу, от людей, —
+    а дверь, через которую оно растёт, сейчас невидима.
+  </p>
+  <p class="note">
+    Общее для всех четырёх: вход виден <b>без прокрутки</b> и не исчезает при прокрутке; форма и
+    «Правила оформления» (bugs/48) не меняются; поиск остаётся строкой сверху; ничто не
+    перекрывает звёзды и не спорит с нижней панелью. Различие — <b>где стоит вход и насколько он
+    навязчив</b>. Канон 1.x: <code>extra_tools_container</code> — 50×50, радиус 20px, над нижней
+    панелью справа (<code>ndim_old/public/styles/styles.css:3005,3202</code>).
+  </p>
+
+  <div class="grid">
+
+    <!-- ── V1 ───────────────────────────────────────────────────────────── -->
+    <div class="variant fav">
+      <div class="vhead">
+        <h2>V1 · «Канон 1.x»</h2>
+        <span class="tag">рекомендую</span>
+        <span class="tag own">фаворит владельца</span>
+      </div>
+      <p class="vwhy">
+        Плавающая кнопка 💡 над нижней панелью справа — <b>ровно та геометрия, что была в старом
+        NDim</b>: 52×52, скруглённый квадрат, голубая заливка, мягкая тень. Одна кнопка, один
+        смысл. Ничего нового изобретать не нужно — это возврат долга.
+      </p>
+      <div class="phone">
+        <div class="appbar">
+          <div class="logo">N</div><div class="name">Пространство NDim</div>
+          <div class="right"><span class="chip">☾</span><span class="chip">Ru ▾</span></div>
+        </div>
+        <div class="screen">
+          <div class="h2">Измерения</div>
+          <div class="searchrow"><div class="search">Найти измерение…</div></div>
+          <div class="tabs"><span class="tab on">Все</span><span class="tab">Мой NDim ID · 4</span></div>
+          <div class="dim"><span class="type">Фильм</span><div class="title">«Таксист» (1976)</div>
+            <div class="rate">9.3 ★★★★★★★★★☆ (4 голоса)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Явление</span><div class="title">Кошки</div>
+            <div class="rate">9.0 ★★★★★★★★★☆ (58 голосов)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Роман</span><div class="title">«Алхимик» (1988)</div>
+            <div class="rate">10 ★★★★★★★★★★ (3 голоса)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="fade"></div>
+          <div class="fab">💡</div>
+        </div>
+        <div class="bnav">
+          <div><span class="ico">⌂</span>Профиль</div><div><span class="ico">◎</span>Связи</div>
+          <div><span class="ico">✳</span>Пространство</div><div class="on"><span class="ico">★</span>Измерения</div>
+          <div><span class="ico">☰</span>Меню</div>
+        </div>
+      </div>
+      <ul class="pros">
+        <li class="p"><span><b>Это уже проверено людьми</b> — та самая кнопка из 1.x, к которой владелец привык.</span></li>
+        <li class="p"><span>Не занимает места в ленте и не спорит с поиском.</span></li>
+        <li class="m"><span>Иконка без подписи: новичок может не понять, что это «предложить».</span></li>
+      </ul>
+    </div>
+
+    <!-- ── V2 ───────────────────────────────────────────────────────────── -->
+    <div class="variant">
+      <div class="vhead"><h2>V2 · «FAB с подписью»</h2><span class="tag">понятнее новичку</span></div>
+      <p class="vwhy">
+        Та же плавающая кнопка, но <b>с текстом</b>: «Предложить измерение». При прокрутке ленты
+        вниз сворачивается в круглую 💡 (и разворачивается обратно наверху) — так делают Gmail и
+        Google Maps. Видно и понятно с первой секунды.
+      </p>
+      <div class="phone">
+        <div class="appbar">
+          <div class="logo">N</div><div class="name">Пространство NDim</div>
+          <div class="right"><span class="chip">☾</span><span class="chip">Ru ▾</span></div>
+        </div>
+        <div class="screen">
+          <div class="h2">Измерения</div>
+          <div class="searchrow"><div class="search">Найти измерение…</div></div>
+          <div class="tabs"><span class="tab on">Все</span><span class="tab">Мой NDim ID · 4</span></div>
+          <div class="dim"><span class="type">Фильм</span><div class="title">«Таксист» (1976)</div>
+            <div class="rate">9.3 ★★★★★★★★★☆ (4 голоса)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Явление</span><div class="title">Кошки</div>
+            <div class="rate">9.0 ★★★★★★★★★☆ (58 голосов)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Роман</span><div class="title">«Алхимик» (1988)</div>
+            <div class="rate">10 ★★★★★★★★★★ (3 голоса)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="fade"></div>
+          <div class="fab-ext">💡 Предложить измерение</div>
+        </div>
+        <div class="bnav">
+          <div><span class="ico">⌂</span>Профиль</div><div><span class="ico">◎</span>Связи</div>
+          <div><span class="ico">✳</span>Пространство</div><div class="on"><span class="ico">★</span>Измерения</div>
+          <div><span class="ico">☰</span>Меню</div>
+        </div>
+      </div>
+      <ul class="pros">
+        <li class="p"><span><b>Ноль догадок:</b> человек читает, что делает кнопка.</span></li>
+        <li class="p"><span>Сворачивается при прокрутке — ленту не загораживает.</span></li>
+        <li class="m"><span>Шире: на узких экранах закрывает край карточки под собой.</span></li>
+        <li class="m"><span>Дальше от канона 1.x, чем V1.</span></li>
+      </ul>
+    </div>
+
+    <!-- ── V3 ───────────────────────────────────────────────────────────── -->
+    <div class="variant">
+      <div class="vhead"><h2>V3 · «Рядом с поиском»</h2><span class="tag">ничего не перекрывает</span></div>
+      <p class="vwhy">
+        Кнопка 💡 стоит <b>в одной строке с поиском</b> — как в 1.x, где 💡 и 🔍 были парой. Лента
+        не перекрыта ничем, кнопка всегда на месте (строка поиска прибита к верху вместе с шапкой).
+      </p>
+      <div class="phone">
+        <div class="appbar">
+          <div class="logo">N</div><div class="name">Пространство NDim</div>
+          <div class="right"><span class="chip">☾</span><span class="chip">Ru ▾</span></div>
+        </div>
+        <div class="screen">
+          <div class="h2">Измерения</div>
+          <div class="searchrow"><div class="search">Найти измерение…</div><div class="headbtn">💡</div></div>
+          <div class="tabs"><span class="tab on">Все</span><span class="tab">Мой NDim ID · 4</span></div>
+          <div class="dim"><span class="type">Фильм</span><div class="title">«Таксист» (1976)</div>
+            <div class="rate">9.3 ★★★★★★★★★☆ (4 голоса)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Явление</span><div class="title">Кошки</div>
+            <div class="rate">9.0 ★★★★★★★★★☆ (58 голосов)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Роман</span><div class="title">«Алхимик» (1988)</div>
+            <div class="rate">10 ★★★★★★★★★★ (3 голоса)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Спорт</span><div class="title">Бег</div>
+            <div class="rate">5.5 ★★★★★☆☆☆☆☆ (8 голосов)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="fade"></div>
+        </div>
+        <div class="bnav">
+          <div><span class="ico">⌂</span>Профиль</div><div><span class="ico">◎</span>Связи</div>
+          <div><span class="ico">✳</span>Пространство</div><div class="on"><span class="ico">★</span>Измерения</div>
+          <div><span class="ico">☰</span>Меню</div>
+        </div>
+      </div>
+      <ul class="pros">
+        <li class="p"><span>Ленту <b>не закрывает ни на пиксель</b> — все звёзды доступны.</span></li>
+        <li class="p"><span>Восстанавливает пару 💡/🔍 из 1.x в одном месте.</span></li>
+        <li class="m"><span>Верх экрана становится плотнее; кнопка теряется рядом с полем ввода.</span></li>
+        <li class="m"><span>Это не FAB — а владелец назвал удобным именно FAB.</span></li>
+      </ul>
+    </div>
+
+    <!-- ── V4 ───────────────────────────────────────────────────────────── -->
+    <div class="variant">
+      <div class="vhead"><h2>V4 · «Приглашение в ленте»</h2><span class="tag">растит Пространство</span></div>
+      <p class="vwhy">
+        Карточка-приглашение <b>внутри ленты</b>, через каждые ~10 измерений: «Не нашли своё?
+        Предложите». Мысль приходит именно тогда, когда человек листает и не видит своего, — и
+        дверь оказывается прямо под рукой.
+      </p>
+      <div class="phone">
+        <div class="appbar">
+          <div class="logo">N</div><div class="name">Пространство NDim</div>
+          <div class="right"><span class="chip">☾</span><span class="chip">Ru ▾</span></div>
+        </div>
+        <div class="screen">
+          <div class="h2">Измерения</div>
+          <div class="searchrow"><div class="search">Найти измерение…</div></div>
+          <div class="tabs"><span class="tab on">Все</span><span class="tab">Мой NDim ID · 4</span></div>
+          <div class="dim"><span class="type">Фильм</span><div class="title">«Таксист» (1976)</div>
+            <div class="rate">9.3 ★★★★★★★★★☆ (4 голоса)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="invite">
+            <div class="t">Не нашли своё измерение?</div>
+            <div class="s">Пространство состоит из того, что предложили люди.</div>
+            <div class="b">💡 Предложить измерение</div>
+          </div>
+          <div class="dim"><span class="type">Явление</span><div class="title">Кошки</div>
+            <div class="rate">9.0 ★★★★★★★★★☆ (58 голосов)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Роман</span><div class="title">«Алхимик» (1988)</div>
+            <div class="rate">10 ★★★★★★★★★★ (3 голоса)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="fade"></div>
+        </div>
+        <div class="bnav">
+          <div><span class="ico">⌂</span>Профиль</div><div><span class="ico">◎</span>Связи</div>
+          <div><span class="ico">✳</span>Пространство</div><div class="on"><span class="ico">★</span>Измерения</div>
+          <div><span class="ico">☰</span>Меню</div>
+        </div>
+      </div>
+      <ul class="pros">
+        <li class="p"><span>Попадает <b>в момент мысли</b> «моего тут нет» — самый честный триггер.</span></li>
+        <li class="p"><span>Объясняет смысл: Пространство растёт от людей.</span></li>
+        <li class="m"><span>Повторяется по ленте — рискует надоесть (реклама в потоке).</span></li>
+        <li class="m"><span>При поиске и на «Мой NDim ID» всё равно нужен постоянный вход.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── десктоп ─────────────────────────────────────────────────────────── -->
+  <div class="desk">
+    <h1 style="font-size:19px">На десктопе (канон V2 «Рабочий стол»)</h1>
+    <p class="note">
+      На широком экране нижней панели нет — FAB висит над правым нижним углом колонки контента,
+      не задевая рельс навигации слева (bugs/49). Для V3 кнопка просто остаётся у строки поиска.
+      Показан вариант V1.
+    </p>
+    <div class="deskframe">
+      <div class="rail">
+        <div>◈ NDim</div><div>Профиль</div><div>Связи</div><div>Пространство</div>
+        <div class="on">★ Измерения</div><div>Меню</div>
+      </div>
+      <div class="deskbody">
+        <div class="searchrow"><div class="search">Найти измерение…</div></div>
+        <div class="deskgrid">
+          <div class="dim"><span class="type">Фильм</span><div class="title">«Таксист» (1976)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Явление</span><div class="title">Кошки</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Роман</span><div class="title">«Алхимик» (1988)</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+          <div class="dim"><span class="type">Спорт</span><div class="title">Бег</div><div class="stars">☆☆☆☆☆☆☆☆☆☆☆</div></div>
+        </div>
+        <div class="fade"></div>
+        <div class="fab small">💡</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p><b>Что выбрать.</b> Рекомендация агента — <b>V1</b>: он ровно то, что владелец назвал удобным,
+    и это возврат канона, а не новое изобретение. Если беспокоит понятность иконки для новичка —
+    <b>V2</b> (тот же FAB, но с подписью, сворачивается при прокрутке). V1 и V4 совместимы:
+    постоянный FAB плюс редкое приглашение в ленте.</p>
+    <p>После выбора: правка одного экрана, e2e-страж «кнопка видна без прокрутки и после прокрутки
+    на 3000px», QA-прогон живым Chrome в обеих темах на 390 и 1440. Документ бага —
+    <b>bugs/51_suggest_dim_buried_below_feed.md</b>.</p>
+  </footer>
+</div>
+</body>
+</html>
