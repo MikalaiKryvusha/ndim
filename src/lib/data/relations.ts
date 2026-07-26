@@ -15,6 +15,7 @@ import type {
   BirthDate,
   Gender,
   Localized,
+  PointDoc,
   RelationEntry,
   RelationsDoc,
   Uid,
@@ -89,28 +90,44 @@ export async function loadRelations(uid: Uid): Promise<RelationsScreenData | nul
 
 /** Сводка топа для виджета «Мои связи» в профиле: без имён, без лиц — только числа. */
 export interface RelationsSummary {
-  readonly computedAt: number;
   /** Похожести всех связей топа. Полосы 90 / 75…89 / 50…74 считает `model/ndimid.ts`. */
   readonly similarities: readonly number[];
+  /**
+   * Когда сервер синхронизации в последний раз ОБРАБОТАЛ эту точку. `null` — ни разу.
+   *
+   * ⚠️ Берётся из `points/{uid}.lastSync`, а НЕ из `relations/{uid}.computedAt`, и это
+   * принципиально. С экономией запросов (`ideas/14`) топ переписывается только когда он
+   * ИЗМЕНИЛСЯ, а `lastSync` обновляется каждый раз, когда точку посчитали. Если бы строка
+   * «Синхронизирован» показывала `computedAt`, у человека со стабильным топом она застыла
+   * бы на неделю — и отвечала бы не на свой вопрос («когда связи менялись» вместо «когда
+   * меня синхронизировали»). Витрина обязана отвечать ровно на тот вопрос, который задаёт
+   * её подпись (EXP-0033).
+   */
+  readonly lastSync: number | null;
 }
 
 /**
- * Лёгкая сводка связей для профиля (bugs/43) — РОВНО ОДНО чтение Firestore.
+ * Лёгкая сводка «Дома» для профиля (bugs/43) — ДВА чтения Firestore, оба маленькие.
  *
  * Отдельная функция, а не `loadRelations`, именно ради экономии запросов (канон владельца
- * 2026-07-12): полная загрузка ходит ещё и в публичный бакет КАЖДОГО человека из топа — до
- * 250 чтений. Профилю нужны только числа, и они все лежат в одном документе `relations/{uid}`.
+ * 2026-07-12): полная загрузка ходит ещё и в публичный бакет КАЖДОГО человека из топа —
+ * до 250 чтений. Здесь читаются ровно два документа: собственный топ и собственная точка.
  *
  * `null` — сервер синхронизации ещё ни разу не считал связи этого человека.
  */
 export async function loadRelationsSummary(uid: Uid): Promise<RelationsSummary | null> {
-  const snapshot = await getDoc(doc(db(), 'relations', uid));
-  if (!snapshot.exists()) return null;
+  const store = db();
+  const [top, point] = await Promise.all([
+    getDoc(doc(store, 'relations', uid)),
+    getDoc(doc(store, 'points', uid)),
+  ]);
+  if (!top.exists()) return null;
 
-  const relations = snapshot.data() as RelationsDoc;
+  const relations = top.data() as RelationsDoc;
+  const lastSync = point.exists() ? ((point.data() as PointDoc).lastSync ?? null) : null;
   return {
-    computedAt: relations.computedAt,
     similarities: relations.top.map((entry) => entry.similarity),
+    lastSync,
   };
 }
 

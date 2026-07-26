@@ -944,10 +944,10 @@
               <span class="k2">{t.updatedAt[lang]}</span>
               <span class="mval small">{dateTime(data.root.time.updated, lang)}</span>
             </div>
-            {#if relations !== null}
+            {#if relations !== null && relations.lastSync !== null}
               <div class="mrow">
                 <span class="k2">{t.syncedAt[lang]}</span>
-                <span class="mval small">{dateTime(relations.computedAt, lang)}</span>
+                <span class="mval small">{dateTime(relations.lastSync, lang)}</span>
               </div>
             {/if}
             {#if needsDimsInstruction(ratedCount)}
@@ -987,10 +987,12 @@
                 <span class="k2">{t.relationsTop50[lang]}</span>
                 <span class="mval">{decimal(bands.band50, lang)}</span>
               </div>
-              <div class="mrow">
-                <span class="k2">{t.relationsSynced[lang]}</span>
-                <span class="mval small">{dateTime(relations!.computedAt, lang)}</span>
-              </div>
+              {#if relations?.lastSync != null}
+                <div class="mrow">
+                  <span class="k2">{t.relationsSynced[lang]}</span>
+                  <span class="mval small">{dateTime(relations.lastSync, lang)}</span>
+                </div>
+              {/if}
             {/if}
             <a class="btn ghost" href="/relations">{t.toRelations[lang]}</a>
           </div>

@@ -27,6 +27,21 @@ function check(name, ok, detail = '') {
   console.log(`${ok ? '  ✅' : '  ❌'} ${name}${detail ? ` — ${detail}` : ''}`);
 }
 
+/**
+ * Барьер: сводка связей грузится ПОСЛЕ профиля (отдельным запросом), поэтому виджет
+ * «Мои связи» несколько кадров пуст. Без ожидания оснастка читает пустоту и врёт про
+ * продукт — ровно класс EXP-0049 (наличие узла ≠ готовность данных).
+ */
+async function awaitRelationsWidget(page) {
+  await page.waitForFunction(
+    () => {
+      const text = document.querySelector('main.body')?.textContent ?? '';
+      return text.includes('Количество установленных связей') || text.includes('ещё не рассчитывались');
+    },
+    { timeout: 20000 },
+  );
+}
+
 async function person(browser, { theme = 'light', width = 390, lang } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 820 }, locale: 'ru-RU' });
   await context.addInitScript((value) => localStorage.setItem('ndim-theme', value), theme);
@@ -40,6 +55,24 @@ async function person(browser, { theme = 'light', width = 390, lang } = {}) {
   return { context, page, errors };
 }
 
+// ── Прямой доступ к эмулятору Firestore ──
+// Эмулятор применяет правила и к REST: без заголовка `Authorization: Bearer owner` чтение
+// отвергается, и ответ выглядит как «документа нет» (EXP-0029).
+const FIRESTORE = 'http://127.0.0.1:8181/v1/projects/demo-ndim-dev/databases/(default)/documents';
+const ADMIN = { Authorization: 'Bearer owner' };
+
+async function firestoreGet(path) {
+  const response = await fetch(`${FIRESTORE}/${path}`, { headers: ADMIN });
+  return response.ok ? response.json() : null;
+}
+
+/** uid хозяина стенда: единственная точка, не принадлежащая сеянным гостям. */
+async function standOwnerUid() {
+  const list = await firestoreGet('points');
+  const names = (list?.documents ?? []).map((d) => d.name.split('/').pop());
+  return names.find((uid) => !uid.startsWith('stand-guest-')) ?? null;
+}
+
 const browser = await chromium.launch();
 await mkdir(SHOTS, { recursive: true });
 
@@ -50,6 +83,7 @@ try {
     const { context, page, errors } = await person(browser, { theme, width });
     await page.goto(`${BASE}/profile`);
     await page.waitForSelector('.card', { timeout: 30000 });
+    await awaitRelationsWidget(page);
 
     const body = await page.locator('main.body').innerText();
     check('виджет «Мой NDim ID» на месте', body.includes('Количество измерений'));
@@ -88,6 +122,45 @@ try {
     const cards = await page.locator('main.body > .card').count();
     check('число связей совпадает с экраном «Связи»', cards === relationsTotal, `профиль ${relationsTotal} · связи ${cards}`);
     await context.close();
+  }
+
+  // ── bugs/43, страж класса: «Синхронизирован» отвечает на СВОЙ вопрос ──
+  //
+  // С экономией запросов (ideas/14) `relations.computedAt` обновляется только когда топ
+  // ИЗМЕНИЛСЯ, а `points.lastSync` — каждый раз, когда сервер синхронизации посчитал точку.
+  // Виджет обязан показывать второе. Проверка портит computedAt заведомо старой датой:
+  // если экран читает его, дата на экране станет старой — и страж покраснеет.
+  {
+    console.log('bugs/43 · «Синхронизирован» показывает синхронизацию, а не смену топа:');
+    const uid = await standOwnerUid();
+    check('хозяин стенда найден', uid !== null, String(uid));
+
+    const before = await firestoreGet(`relations/${uid}`);
+    const savedComputedAt = before?.fields?.computedAt?.integerValue;
+    check('топ на стенде существует', savedComputedAt !== undefined);
+
+    const ancient = String(Date.UTC(2020, 0, 1));
+    await fetch(`${FIRESTORE}/relations/${uid}?updateMask.fieldPaths=computedAt`, {
+      method: 'PATCH',
+      headers: { ...ADMIN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { computedAt: { integerValue: ancient } } }),
+    });
+
+    const { context, page } = await person(browser, { width: 390 });
+    await page.goto(`${BASE}/profile`);
+    await page.waitForSelector('.card', { timeout: 30000 });
+    await awaitRelationsWidget(page);
+    const body = await page.locator('main.body').innerText();
+    check('дата синхронизации НЕ взята из computedAt', !body.includes('2020'), body.match(/Синхронизирован\s+(.+)/)?.[1] ?? '—');
+    check('строка «Синхронизирован» на месте', /Синхронизирован\s+\d/.test(body));
+    await context.close();
+
+    // Возвращаем стенд в исходное состояние: оснастка не оставляет следов.
+    await fetch(`${FIRESTORE}/relations/${uid}?updateMask.fieldPaths=computedAt`, {
+      method: 'PATCH',
+      headers: { ...ADMIN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { computedAt: { integerValue: savedComputedAt } } }),
+    });
   }
 
   // ── bugs/46: раскрытая связь — досье, а не три цифры ──
