@@ -136,6 +136,25 @@
 
   let sentinel: HTMLElement | null = $state(null);
 
+  /**
+   * Высота прибитой шапки — чтобы строка поиска прилипала ПОД ней, а не пряталась ЗА неё
+   * (bugs/51). Число именно меряется: живой замер даёт 57px на 390 и 52px на 1440, так что
+   * любая зашитая константа была бы враньём на одной из ширин. `ResizeObserver` держит
+   * значение верным и при повороте экрана, и при смене языка.
+   */
+  let barHeight = $state(56);
+
+  onMount(() => {
+    const bar = document.querySelector('.bar');
+    if (!(bar instanceof HTMLElement)) return;
+
+    const measure = () => (barHeight = Math.round(bar.getBoundingClientRect().height));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  });
+
   onMount(() => {
     const saved = localStorage.getItem('ndim-lang');
     if (saved === 'en' || saved === 'ru') lang = saved;
@@ -466,6 +485,20 @@
   let suggestText = $state('');
   let suggestState = $state<'idle' | 'sending' | 'sent'>('idle');
 
+  /**
+   * Кнопка 💡 в строке поиска открывает и закрывает форму (bugs/51, макет V3).
+   *
+   * Форма живёт сразу под прибитой строкой — то есть у ВЕРХА страницы. Если человек
+   * пролистал ленту и нажал 💡, форма раскрылась бы ВЫШЕ экрана, и он увидел бы, что
+   * «кнопка ничего не делает». Поэтому при открытии поднимаем страницу к форме.
+   * (Поймано наблюдением на стенде: y формы был −752.)
+   */
+  function toggleSuggest(): void {
+    suggestState = 'idle';
+    suggestOpen = !suggestOpen;
+    if (suggestOpen) window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   async function sendSuggestion(): Promise<void> {
     if (uid === null || suggestState === 'sending') return;
     suggestState = 'sending';
@@ -511,8 +544,8 @@
     // Вводная подсказка экрана — канон 1.x (кадр app-15; bugs/27). Формулировка чуть
     // адаптирована к 2.0: кнопки «Сохранить» больше нет — оценка сохраняется сама.
     intro: {
-      ru: 'Чтобы пополнить Ваш NDim ID новыми измерениями, установите желаемое количество звёзд в любом измерении из списка — оценка сохранится сама. Управляйте измерениями Вашего профиля во вкладке «Мой NDim ID». Подробнее об измерении — нажмите на его название. Для быстрого поиска воспользуйтесь строкой поиска, а предложить новое измерение можно кнопкой внизу.',
-      en: 'To grow your NDim ID with new dimensions, set the desired number of stars on any dimension in the list — the rating is saved by itself. Manage the dimensions of your profile on the “My NDim ID” tab. Tap a dimension’s name to learn more about it. Use the search bar to find a dimension quickly, and suggest a new one with the button below.',
+      ru: 'Чтобы пополнить Ваш NDim ID новыми измерениями, установите желаемое количество звёзд в любом измерении из списка — оценка сохранится сама. Управляйте измерениями Вашего профиля во вкладке «Мой NDim ID». Подробнее об измерении — нажмите на его название. Для быстрого поиска воспользуйтесь строкой поиска, а предложить новое измерение можно кнопкой 💡 рядом с ней.',
+      en: 'To grow your NDim ID with new dimensions, set the desired number of stars on any dimension in the list — the rating is saved by itself. Manage the dimensions of your profile on the “My NDim ID” tab. Tap a dimension’s name to learn more about it. Use the search bar to find a dimension quickly, and suggest a new one with the 💡 button next to it.',
     },
     tabAll: { ru: 'Все', en: 'All' },
     tabMine: { ru: 'Мой NDim ID', en: 'My NDim ID' },
@@ -620,7 +653,59 @@
       <!-- Вводная подсказка экрана — канон 1.x (bugs/27) -->
       <p class="intro">{t.intro[lang]}</p>
 
-      <input class="search" type="search" placeholder={t.searchPlaceholder[lang]} bind:value={search} />
+      <!--
+        Строка поиска ПРИБИТА под шапкой, и в ней живёт вход в «Предложить измерение»
+        (bugs/51, макет V3, утверждён владельцем 2026-07-26). Раньше эта дверь стояла ПОД
+        бесконечной лентой: «там пользователь никогда не найдёт». Пара «поиск + 💡» — канон
+        1.x, где 💡 и 🔍 были соседями (`extra_tools_container`).
+        Смещение `top` — измеренная высота шапки: она разная на 390 и 1440, и любое
+        зашитое число было бы враньём на одной из ширин.
+      -->
+      <div class="searchbar" style="top: {barHeight}px">
+        <input class="search" type="search" placeholder={t.searchPlaceholder[lang]} bind:value={search} />
+        <button
+          type="button"
+          class="suggest-btn"
+          class:on={suggestOpen}
+          aria-label={t.suggestTitle[lang]}
+          title={t.suggestTitle[lang]}
+          onclick={toggleSuggest}
+        >💡</button>
+      </div>
+
+      <!-- Форма открывается ЗДЕСЬ ЖЕ, под кнопкой: человек не должен искать, куда она уехала. -->
+      {#if suggestState === 'sent'}
+        <div class="card pad sug" transition:slide={{ duration: MOTION.base }}>
+          <p class="ok">{t.suggestSent[lang]}</p>
+          <button type="button" class="ghost" onclick={() => { suggestState = 'idle'; suggestOpen = true; }}>
+            {t.suggestMore[lang]}
+          </button>
+        </div>
+      {:else if suggestOpen}
+        <div class="card pad sug" transition:slide={{ duration: MOTION.base }}>
+          <h3>{t.suggestTitle[lang]}</h3>
+          <!-- Правила оформления (канон 1.x): человек видит формат ДО того, как начал писать. -->
+          <div class="rules">
+            <b>{t.suggestRulesTitle[lang]}</b>
+            <ul>
+              {#each t.suggestRules[lang] as rule}
+                <li>{rule}</li>
+              {/each}
+            </ul>
+          </div>
+          <textarea class="ta" bind:value={suggestText} placeholder={t.suggestHint[lang]} maxlength="300"></textarea>
+          <p class="hint">{suggestText.trim().length} / 300</p>
+          <div class="duo">
+            <button type="button" class="ghost" onclick={() => (suggestOpen = false)}>{t.cancel[lang]}</button>
+            <button
+              type="button"
+              class="now"
+              disabled={suggestState === 'sending' || suggestText.trim().length < 5}
+              onclick={() => void sendSuggestion()}
+            >{t.suggestSend[lang]}</button>
+          </div>
+        </div>
+      {/if}
 
       <div class="segs" role="group">
         <button type="button" class:on={tab === 'all' && search.trim() === ''} onclick={() => { tab = 'all'; search = ''; }}>
@@ -769,42 +854,12 @@
         </div>
       {/if}
 
-      <!-- Заявка на новое измерение: так Пространство растёт снизу (в 1.x — лампочка на этом экране). -->
-      {#if suggestState === 'sent'}
-        <div class="card pad sug" transition:slide={{ duration: MOTION.base }}>
-          <p class="ok">{t.suggestSent[lang]}</p>
-          <button type="button" class="ghost" onclick={() => { suggestState = 'idle'; suggestOpen = true; }}>
-            {t.suggestMore[lang]}
-          </button>
-        </div>
-      {:else if suggestOpen}
-        <div class="card pad sug" transition:slide={{ duration: MOTION.base }}>
-          <h3>{t.suggestTitle[lang]}</h3>
-          <!-- Правила оформления (канон 1.x): человек видит формат ДО того, как начал писать. -->
-          <div class="rules">
-            <b>{t.suggestRulesTitle[lang]}</b>
-            <ul>
-              {#each t.suggestRules[lang] as rule}
-                <li>{rule}</li>
-              {/each}
-            </ul>
-          </div>
-          <textarea class="ta" bind:value={suggestText} placeholder={t.suggestHint[lang]} maxlength="300"></textarea>
-          <p class="hint">{suggestText.trim().length} / 300</p>
-          <div class="duo">
-            <button type="button" class="ghost" onclick={() => (suggestOpen = false)}>{t.cancel[lang]}</button>
-            <button
-              type="button"
-              class="now"
-              disabled={suggestState === 'sending' || suggestText.trim().length < 5}
-              onclick={() => void sendSuggestion()}
-            >{t.suggestSend[lang]}</button>
-          </div>
-        </div>
-      {:else}
-        <button type="button" class="ghost wide" onclick={() => (suggestOpen = true)}>{t.suggest[lang]}</button>
-      {/if}
-
+      <!--
+        Кнопки «Предложить измерение» ПОД лентой больше нет: она и была багом 51
+        («запрятано вниз списка измерений — там пользователь никогда не найдёт»).
+        Единственный вход — 💡 в прибитой строке поиска выше. Две двери в одну комнату
+        только запутали бы, а нижняя всё равно недостижима: лента бесконечна.
+      -->
       <p class="hint">{t.hint[lang]}</p>
     {/if}
   </main>
@@ -857,11 +912,35 @@
     text-decoration: none;
   }
 
+  /*
+   * Строка поиска прибита под шапкой (bugs/51): вход в «Предложить измерение» обязан
+   * оставаться на экране, сколько бы человек ни листал ленту. Фон — только НЕПРОЗРАЧНЫЙ
+   * токен: под строкой едут карточки (bugs/22). z-index ниже шапки (10) — если что-то
+   * и наложится, строка уедет ПОД шапку, а не поверх неё.
+   */
+  .searchbar {
+    position: sticky; z-index: 9;
+    display: flex; gap: 8px; align-items: stretch;
+    background: var(--panel-solid, var(--panel));
+    padding: 8px 0 10px; margin-bottom: 0;
+  }
   .search {
-    width: 100%; padding: 11px 14px; border-radius: 12px; background: var(--panel);
-    border: 1px solid var(--edge); color: var(--text); font: inherit; margin-bottom: 10px;
+    flex: 1; min-width: 0;
+    padding: 11px 14px; border-radius: 12px; background: var(--panel);
+    border: 1px solid var(--edge); color: var(--text); font: inherit;
     transition: border-color 0.15s ease;
   }
+
+  /* 💡 — та самая лампочка 1.x, только рядом с поиском, а не под лентой. */
+  .suggest-btn {
+    flex: none; width: 46px; border-radius: 12px; cursor: pointer;
+    background: var(--panel); border: 1px solid var(--edge);
+    font-size: 19px; line-height: 1; color: var(--text);
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  }
+  .suggest-btn:hover { border-color: var(--primary); }
+  .suggest-btn:active { transform: scale(0.94); }
+  .suggest-btn.on { border-color: var(--primary); background: var(--panel-2, var(--panel)); }
   .search:focus { outline: none; border-color: var(--primary); }
 
   .segs { display: flex; gap: 7px; margin-bottom: 12px; }
