@@ -1,97 +1,109 @@
 ---
 name: autoloop
-description: Run the agent in a LONG autonomous series over a pool of AUTONOMOUS tasks (tasks that need no human and no special resources). The agent picks a task from the pool, writes code, builds, tests on the harness, fixes, commits, and takes the next one. Invoked by the human ("run the autonomous loop", "work on your own", "autopilot", "autoloop", "grind the backlog", "work while I step away", "работай сам", "автопилот", "погриндь беклог") AND by the agent on its own initiative when there is an autonomous backlog, no active interactive task, and the environment is ready (the agent enters the mode and self-restarts after each task). Trigger aliases (ru): «работай сам», «автопилот», «погриндь беклог», «запусти автономный цикл»
+description: Запустить агента в ДЛИННУЮ автономную серию по пулу АВТОНОМНЫХ задач (задач, которым не нужен человек и особые ресурсы). Агент берёт задачу из пула, пишет код, собирает, тестирует на стенде, чинит, коммитит и берёт следующую. Вызывается человеком («запусти автономный цикл», «работай сам», «автопилот», «автолуп», «погриндь беклог», «поработай, пока я отойду», "run the autonomous loop", "autopilot", "work on your own") И самим агентом по собственной инициативе, когда есть автономный беклог, нет активной интерактивной задачи и окружение готово (агент входит в режим и перезапускает себя после каждой задачи).
 ---
 
-# /autoloop — long autonomous work over a task pool
+# /autoloop — длинная автономная работа по пулу задач
 
-The human steps away / doesn't want to intervene. The agent's job: **enter a self-directed loop and
-grind the pool of AUTONOMOUS tasks** one by one, until the pool is empty or a blocker appears. Between
-tasks — short chat reports so the human can glance in and see progress.
+Человек отошёл или не хочет вмешиваться. Задача агента: **войти в самоуправляемый цикл и молоть пул
+АВТОНОМНЫХ задач** одну за другой, пока пул не опустеет или не появится блокер. Между задачами —
+короткие отчёты в чат, чтобы человек мог заглянуть и увидеть прогресс.
 
-## 🔁 Self-invoke and self-restart (the agent starts itself)
+## 🔁 Самовызов и самоперезапуск (агент запускает себя сам)
 
-The agent may and SHOULD invoke this skill **on its own initiative** (via the Skill tool), without
-waiting for an explicit command, when ALL conditions hold:
-- there are open tasks in the AUTONOMOUS pool (`STATUS.md` → "🤖 Autonomous backlog pool");
-- there is no active interactive task/question from the human right now (they stepped away / granted autonomy);
-- the environment is ready (build works; any needed devices/services are available).
+Агент может и ДОЛЖЕН вызвать этот скилл **по собственной инициативе** (через инструмент Skill), не
+дожидаясь явной команды, когда выполняются ВСЕ условия:
+- в АВТОНОМНОМ пуле есть открытые задачи (`STATUS.md` → «🤖 Пул автономных задач»);
+- прямо сейчас нет активной интерактивной задачи или вопроса от человека (он отошёл или дал автономию);
+- окружение готово (сборка работает; нужные устройства и сервисы доступны).
 
-Moreover, **the loop self-restarts**: having finished one task (commit + short report), the agent
-proceeds to the next iteration of this same skill — **immediately invokes `/autoloop` again** and takes
-the next task, without waiting for a command. So the series runs long and continuously. Stop ONLY by the
-conditions in "When to STOP" below.
+Более того, **цикл сам себя перезапускает**: закончив одну задачу (коммит + короткий отчёт), агент
+переходит к следующей итерации того же скилла — **немедленно вызывает `/autoloop` снова** и берёт
+следующую задачу, не дожидаясь команды. Так серия идёт долго и непрерывно. Останавливайся ТОЛЬКО по
+условиям из раздела «Когда ОСТАНОВИТЬ цикл».
 
-> ⛔ **ANTI-PATTERN (don't do this):** finish a task and "ask the human: continue or stop?" when the
-> pool STILL has a task. That violates the skill. "Long session", "late", "lots of context", "risk of a
-> limit", "tired" — are NOT stop conditions. If the pool has an autonomous task — invoke `/autoloop`
-> yourself and continue. Stop EXCLUSIVELY by the list below. Context and limits are the harness's
-> concern, not a reason to break the autonomous series.
+> ⛔ **АНТИПАТТЕРН (так не делай):** закончить задачу и «спросить человека: продолжать или остановиться?»,
+> когда в пуле ЕЩЁ есть задача. Это нарушение скилла. «Длинная сессия», «поздно», «много контекста»,
+> «риск упереться в лимит», «устал» — НЕ стоп-условия. Если в пуле есть автономная задача — вызывай
+> `/autoloop` сам и продолжай. Останавливайся ИСКЛЮЧИТЕЛЬНО по списку ниже. Контекст и лимиты — забота
+> харнесса, а не причина рвать автономную серию.
 
-> Don't abuse it: self-invocation is for the autonomous pool. If the human gave a specific interactive
-> task — do that, don't run off into a loop. If they explicitly said "stop / enough / pause" — stop.
+> Не злоупотребляй: самовызов — для автономного пула. Если человек дал конкретную интерактивную
+> задачу — делай её, не убегай в цикл. Если он явно сказал «стоп / хватит / пауза» — останавливайся.
 
-> 🧠 Work by `PHILOSOPHY.md` (SIMPLE, KISS, Occam) and `BUG_FIXING_FRAMEWORK.md` (3 attempts → stop →
-> `/bug-research`). Comment your code. Narrate in the chat what you're doing.
+> 🧠 Работай по `PHILOSOPHY.md` (ПРОСТО, KISS, Оккам) и `BUG_FIXING_FRAMEWORK.md` (3 попытки → стоп →
+> `/bug-research`). Комментируй код. Рассказывай в чате, что делаешь.
 
-## The autonomy boundary (hard limit)
+## Граница автономии (жёсткий предел)
 
-Some tasks need the human (their hands, eyes, accounts, decisions on UX/brand/architecture) or special
-resources the agent can't access right now. **Do NOT take those tasks — defer them, take another.** Keep
-the boundary explicit in `STATUS.md`'s autonomous pool: list only tasks verifiable WITHOUT the human and
-without those resources.
+Некоторым задачам нужен человек (его руки, глаза, аккаунты, решения по UX/бренду/архитектуре) или
+особые ресурсы, к которым у агента сейчас нет доступа. **НЕ бери такие задачи — отложи их, возьми
+другую.** Держи границу явной в автономном пуле `STATUS.md`: перечисляй там только задачи, проверяемые
+БЕЗ человека и без этих ресурсов.
 
-## Step 0. Setup (once at the start)
+## Шаг 0. Настройка (один раз в начале)
 
-1. Read: `STATUS.md` (the "🤖 Autonomous backlog pool" section), `PHILOSOPHY.md`, `AGENT_GUIDE.md`,
-   `BUG_FIXING_FRAMEWORK.md`, `EXPERIENCE.md` (recall lessons — grep by tag), the relevant `ideas/*`
-   and `bugs/*`.
-2. Check the environment is ready (build toolchain, devices/services — see `AGENT_GUIDE.md`).
-3. Assemble/refresh the working pool list from STATUS. Tell the human in one paragraph: what's in the
-   pool, which task you start with, and why.
+1. Прочитай: `STATUS.md` (раздел «🤖 Пул автономных задач»), `PHILOSOPHY.md`, `AGENT_GUIDE.md`,
+   `BUG_FIXING_FRAMEWORK.md`, `EXPERIENCE.md` (вспомни уроки — греп по тегу), релевантные `ideas/*`
+   и `bugs/*`.
+2. Проверь готовность окружения (тулчейн сборки, устройства и сервисы — см. `AGENT_GUIDE.md`).
+3. Собери или освежи рабочий список пула из STATUS. Скажи человеку одним абзацем: что в пуле, с какой
+   задачи начинаешь и почему.
 
-## The cycle (repeat per task)
+## Цикл (повторяется на каждую задачу)
 
-1. **Pick** the next autonomous task from the pool (priority from STATUS). Verify it can be checked
-   WITHOUT the human/special resources. If not — defer, take the next.
-2. **Understand it simply** (PHILOSOPHY) — state it in 1–2 sentences. For bugs — open/create a `bugs/` doc.
-3. **Implement** in a targeted way, with comments. Don't over-complicate. Execute the item by the fable
-   loop (`/fable-method`; `/fable-loop` for substantive items) — its gates and forced artifacts
-   (`INTENT`/`AUTH`/`TWINS`/`PENDING`) apply inside the cycle too.
-4. **Build** (`npm run build`). If errors — fix them, don't commit broken state.
-5. **Deploy/run** as your project requires.
-6. **Verify autonomously** on the harness (`npm test`). Look at the result carefully — don't
-   wishful-think; verify objectively.
-7. **Fix cycle** on a bug: fix → build → test → logs (fresh by timestamp). The **3-attempts** rule →
-   `/bug-research` (no code) → then fix.
-8. **Judge pass — MANDATORY before "done"**: run `/fable-judge` over the finished item — re-run the
-   claimed checks, diff what actually changed against the item's scope. REFUTED → back to work, not to
-   "done"; after 3 failed fix-judge cycles, record it honestly in `STATUS.md`/`bugs/` and take another task.
-9. **Capture knowledge**: for bugs — reflection in `bugs/NN_*.md`; for features — status/date in
-   `ideas/*`; update `STATUS.md`. After a meaningful success or failure, append the approach-level lesson
-   to `EXPERIENCE.md` (skill: `/experience`) — don't wait for the human.
-10. **Commit** a small commit (don't lose progress): `git add -A && git commit -m "<msg>" && git push` (style from `AGENT_GUIDE.md`,
-   with the Co-Authored-By trailer).
-11. **Short chat report** (1–3 lines): what you did, what you verified, what's next. → next task.
+1. **Возьми** следующую автономную задачу из пула (приоритет из STATUS). Убедись, что её можно
+   проверить БЕЗ человека и особых ресурсов. Если нет — отложи, возьми следующую.
+2. **Пойми просто** (PHILOSOPHY) — сформулируй в 1–2 предложениях. Для багов — открой или создай
+   документ в `bugs/`.
+3. **Реализуй** точечно, с комментариями. Не усложняй. Исполняй по фейбл-циклу (`/fable-method`;
+   для содержательных задач — `/fable-loop`): его ворота и обязательные артефакты
+   (`INTENT`/`AUTH`/`TWINS`/`PENDING`) действуют и внутри цикла.
+4. **Собери** (сборка проекта — см. `AGENT_GUIDE.md` → «Сборка»; пока не настроена). Если ошибки —
+   почини, не коммить сломанное состояние.
+5. **Разверни / запусти**, как того требует проект.
+6. **Проверь автономно** на стенде (см. `AGENT_GUIDE.md` → «Испытательный стенд»; пока не построен —
+   строить его и есть первая задача пула). Смотри на результат внимательно — не выдавай желаемое за
+   действительное, проверяй объективно.
+7. **Цикл починки** на баге: фикс → сборка → тест → логи (свежие по отметке времени). Правило
+   **трёх попыток** → `/bug-research` (без кода) → затем фикс.
+8. **Судейский проход — ОБЯЗАТЕЛЕН перед «готово»**: прогони `/fable-judge` по завершённой задаче —
+   перепрогони заявленные проверки, сверь фактический дифф с рамками задачи. REFUTED → задача
+   возвращается в работу (шаги 3–7), а не в «готово»; после 3 неудачных циклов «фикс → судья» честно
+   зафиксируй это в `STATUS.md`/`bugs/` и возьми другую задачу.
+9. **Зафиксируй знание**: для багов — рефлексия в `bugs/NN_*.md`; для фич — статус и дата в `ideas/*`;
+   обнови `STATUS.md`. После значимого успеха или провала допиши урок уровня подхода в `EXPERIENCE.md`
+   (скилл: `/experience`) — не дожидаясь человека.
+10. **Закоммить** маленьким коммитом (не теряй прогресс): `git add -A && git commit -m "..."`
+   (стиль из `AGENT_GUIDE.md`, с трейлером Co-Authored-By). **Правило одного шага:** одно осмысленное
+   изменение = один полный прогон гейтов (сборка + тесты + проверки) = один коммит. Никогда не
+   сваливай в коммит полдня работы: большой дифф не может честно отревьюить даже его автор, а когда
+   судья находит беду, откат стоит одного файла, а не сессии. Перед коммитом — `git diff --stat`:
+   увидел что-то, чего не собирался менять, — стоп.
+11. **Короткий отчёт в чат** (1–3 строки): что сделал, что проверил, что дальше. → следующая задача.
 
-## Self-pacing (so the loop runs LONG)
+## Самозадание темпа (чтобы цикл шёл ДОЛГО)
 
-- Go task after task without stopping for confirmations (unless a task is destructive).
-- If you're waiting on a background operation (a long build) — continue when ready; don't ping the human.
-- If you need to "continue on a timer", use the harness's loop mechanism (`ScheduleWakeup`/`/loop`) with
-  a reasonable interval, passing this same skill back so the cycle resumes.
+- Иди задача за задачей, не останавливаясь за подтверждениями (если задача не разрушительная).
+- Если ждёшь фоновую операцию (долгую сборку) — продолжай, когда она готова; не дёргай человека.
+- Если нужно «продолжить по таймеру», используй механизм циклов харнесса (`ScheduleWakeup` / `/loop`)
+  с разумным интервалом, передавая обратно этот же скилл, чтобы цикл возобновился.
 
-## When to STOP the loop (and report to the human)
+## Когда ОСТАНОВИТЬ цикл (и доложить человеку)
 
-- The autonomous pool is exhausted (everything left needs the human/resources).
-- A serious UI/UX/brand/architecture fork the agent must NOT decide alone → file an `/interview` and pause.
-- Something destructive/irreversible (a release, a deletion, a force-push) — don't do it alone, ask.
+- Автономный пул исчерпан (всё оставшееся требует человека или ресурсов).
+- Серьёзная развилка по UI/UX/бренду/архитектуре, которую агент НЕ должен решать один → заведи
+  `/interview` и приостановись.
+- Что-то разрушительное или необратимое (релиз, удаление, force-push) — не делай в одиночку, спроси.
 
-At the end of the loop — a summary: what got done across the series (list of commits), what was deferred
-and why, what to propose next. The commits along the way guarantee no progress is lost.
+В конце цикла — сводка: что сделано за серию (список коммитов), что отложено и почему, что предложить
+дальше. Коммиты по пути гарантируют, что прогресс не потерян.
 
-## Notes
+## Заметки
 
-- Do NOT publish releases, do NOT force-push, do NOT delete others' work — that's outside autonomy.
-- Keep the tree clean before committing; generated artifacts are gitignored.
-- Read only FRESH logs (verify by timestamp).
+- НЕ публикуй релизы, НЕ делай force-push, НЕ удаляй чужую работу — это вне автономии.
+- **Старого кода в проекте нет** — версия 1.x живёт в приватном `ndim-old`, её знание выжато в
+  `researches/02` и `researches/03`. Не тащи оттуда файлы обратно.
+- **UI/UX и бренд не решай сам** — 4 варианта макета на утверждение автору (`AGENT_GUIDE.md` → «Дизайн»).
+- Держи дерево чистым перед коммитом; сгенерированные артефакты в `.gitignore`.
+- Читай только СВЕЖИЕ логи (сверяйся по отметке времени).

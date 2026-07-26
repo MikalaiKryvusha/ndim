@@ -1,60 +1,75 @@
 ---
 name: bug-research
-description: Investigate a bug WITHOUT coding/fixing/builds — web-search the problem and collect a raw knowledge base, read and analyze the code to find the cause, reflect and write hypotheses into the bug document. Use when a bug resists direct attempts (≥3 failed blind fix iterations), OR when the human says "research the bug", "look this up", "figure out the cause", "stop poking blindly", "research", "investigate", "исследуй баг", "разберись в причине". Trigger aliases (ru): «исследуй баг», «разберись в причине», «хватит тыкать вслепую», «погугли проблему»
+description: Исследовать баг БЕЗ написания кода, фиксов и сборок — искать проблему в вебе и собирать сырую базу знаний, читать и анализировать код для поиска причины, отрефлексировать и записать гипотезы в документ бага. Используй, когда баг сопротивляется прямым попыткам (≥3 неудачных слепых итерации фикса), ЛИБО когда человек говорит «исследуй баг», «разберись в причине», «хватит тыкать вслепую», «изучи вопрос», "research the bug", "figure out the cause", "investigate".
 ---
 
-# /bug-research — deep bug investigation without coding
+# /bug-research — глубокое исследование бага без кодирования
 
-Used when a bug **won't yield to direct attempts** (rule: after **3 failed iterations** of
-fix→build→test we stop going blind — see `BUG_FIXING_FRAMEWORK.md`). Random poking wastes time and
-builds; stop and UNDERSTAND the cause.
+Применяется, когда баг **не поддаётся прямым попыткам** (правило: после **трёх неудачных итераций**
+фикс→сборка→тест мы прекращаем идти вслепую — см. `BUG_FIXING_FRAMEWORK.md`). Случайное тыканье тратит
+время и сборки; остановись и ПОЙМИ причину.
 
-> ⛔ In this skill we do NOT write code, do NOT fix, do NOT build, do NOT run the software. Only reading,
-> searching, analysis, reflection, and writing into the bug's md document. Pure cognitive work.
+> ⛔ В этом скилле мы НЕ пишем код, НЕ чиним, НЕ собираем, НЕ запускаем софт. Только чтение, поиск,
+> анализ, рефлексия и запись в md-документ бага. Чистая когнитивная работа.
 
-## Step 0. Anchor on the bug
+> 📚 Этот скилл — *частный, «багового» вида* случай общего канона KAIF (`AGENT_GUIDE.md`, шаг 9
+> чеклиста — **разведка до кода**): всякий раз, когда задача опирается на внешнюю правду (старая или
+> эталонная система, чужой API, поведение прода, док вендора), первым артефактом идёт разведдок в
+> `researches/`, и код пишется с цитированием этого документа, а не по памяти. На багах это правило
+> просто срабатывает чаще всего.
+>
+> На NDim Space эталон — версия 1.x (приватный `ndim-old`), а инвентарь её поведения —
+> `researches/12_1x_behavior_inventory.md`. Правило «нет строки инвентаря — нет кода» родилось
+> здесь (`plans/06`, EXP-0046).
 
-- Open the bug doc in `bugs/NN_*.md` (if none — create one per `BUG_FIXING_FRAMEWORK.md`).
-- Briefly write out: the symptom, what's been tried (attempt log), under what conditions it reproduces.
-- Tell the human in one line that you're switching to research mode (we stop poking blindly).
+## Шаг 0. Закрепись на баге
 
-## Step 1. Web search — collect a RAW knowledge base
+- Открой документ бага в `bugs/NN_*.md` (если его нет — создай по `BUG_FIXING_FRAMEWORK.md`).
+- Кратко выпиши: симптом, что уже пробовали (журнал попыток), при каких условиях воспроизводится.
+- Скажи человеку одной строкой, что переключаешься в режим исследования (перестаём тыкать вслепую).
 
-Make several targeted queries (`WebSearch`), then pull the most relevant pages (`WebFetch`). Look in:
-library GitHub issues/discussions/wiki, Stack Overflow, Reddit, official docs.
+## Шаг 1. Поиск в вебе — собери СЫРУЮ базу знаний
 
-- Phrase queries by exact APIs/classes/symptoms (method names, error texts, versions).
-- **Record the raw data VERBATIM** in the bug doc under "Knowledge base — raw search data": quotes from
-  maintainers, method signatures, explanations, source links. This is knowledge for future sessions —
-  don't paraphrase loosely; preserve facts and links.
-- Separately note: **is what we're doing even possible** (sometimes it's a platform/library limitation).
+Сделай несколько точных запросов (`WebSearch`), затем вытяни самые релевантные страницы (`WebFetch`).
+Смотри в: GitHub issues/discussions/wiki библиотеки, Stack Overflow, Reddit, официальную документацию.
 
-## Step 2. Code analysis — find where the cause is (no edits)
+- Формулируй запросы через точные API, классы и симптомы (имена методов, тексты ошибок, версии).
+- **Записывай сырые данные ДОСЛОВНО** в документ бага под заголовком «База знаний — сырые данные
+  поиска»: цитаты мейнтейнеров, сигнатуры методов, объяснения, ссылки на источники. Это знание для
+  будущих сессий — не пересказывай вольно; сохраняй факты и ссылки.
+- Отдельно отметь: **возможно ли вообще то, что мы делаем** (иногда это ограничение платформы или
+  библиотеки).
 
-Read and trace the chain related to the bug (data/calls/state). Don't edit — dissect.
+## Шаг 2. Анализ кода — найди, где причина (без правок)
 
-- Build the chain (data flow / call flow) from the source of the problem to the symptom; write it down.
-- Find suspicious spots: who passes what, where a value is lost/distorted, what assumptions are made.
-- Map our attempts against what you learned ("attempt → what it does per the docs → why it didn't help").
+Прочитай и проследи цепочку, связанную с багом (данные, вызовы, состояние). Не правь — препарируй.
 
-> 🧠 Keep `PHILOSOPHY.md` in mind: a stall usually means the SOLUTION is too complex from misunderstanding
-> the task, not that the task is hard. Look for the SIMPLE supported path (KISS + Occam). If the
-> hypothesis/plan turns bulky — you probably still don't understand the task; restate it in plain words.
+- Построй цепочку (поток данных / поток вызовов) от источника проблемы к симптому; запиши её.
+- Найди подозрительные места: кто что передаёт, где значение теряется или искажается, какие
+  допущения делаются.
+- Сопоставь наши попытки с тем, что узнал («попытка → что она делает по документации → почему не помогла»).
 
-## Step 3. Reflection and hypotheses
+> 🧠 Держи в голове `PHILOSOPHY.md`: застревание обычно означает, что РЕШЕНИЕ слишком сложно из-за
+> непонимания задачи, а не что задача трудна. Ищи ПРОСТОЙ поддерживаемый путь (KISS + Оккам). Если
+> гипотеза или план получаются громоздкими — ты, вероятно, всё ещё не понял задачу; переформулируй её
+> обычными словами.
 
-In the bug doc, state:
-- **A root-cause hypothesis** (one or two, justified by steps 1–2).
-- **Next steps for a focused coding session** — concrete, testable (which files, which experiment, how to
-  verify the result reliably — not "by eye").
-- **Open questions for the human**, if the choice of approach is theirs.
+## Шаг 3. Рефлексия и гипотезы
 
-## Step 4. Summary in the chat
+В документе бага сформулируй:
+- **Гипотезу о корневой причине** (одну-две, обоснованные шагами 1–2).
+- **Следующие шаги для сфокусированной сессии кодирования** — конкретные, проверяемые (какие файлы,
+  какой эксперимент, как надёжно проверить результат — не «на глаз»).
+- **Открытые вопросы к человеку**, если выбор подхода за ним.
 
-Briefly: what you found (key facts), the working cause hypothesis, and the proposed plan for the next
-coding pass. Do NOT start fixing within this skill — it ends with a ready knowledge base.
+## Шаг 4. Сводка в чат
 
-## Notes
-- A reliable verification method matters more than speed: if a visual check is unreliable, invent an
-  objective one (known-shape controls, measurements, size logs) and write it into the doc.
-- The skill's goal: turn "it won't work, I'm poking blindly" into "I understand the cause, I have a plan".
+Кратко: что нашёл (ключевые факты), рабочая гипотеза о причине, предлагаемый план на следующий проход
+кодирования. НЕ начинай чинить внутри этого скилла — он заканчивается готовой базой знаний.
+
+## Заметки
+- Надёжный способ проверки важнее скорости: если визуальная проверка ненадёжна, придумай объективную
+  (контрольные входы известной формы, измерения, логи размеров) и запиши её в документ.
+- Цель скилла: превратить «не работает, тыкаю вслепую» в «я понимаю причину, у меня есть план».
+- Если исследование получилось крупным и его выводы переживут эту задачу — вынеси их в `researches/`
+  и сошлись оттуда (DRY — не исследуй дважды).

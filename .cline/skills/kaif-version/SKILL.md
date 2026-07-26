@@ -1,38 +1,42 @@
 ---
 name: kaif-version
-description: Report the KAIF version deployed in this project and check the origin repository for a newer release. Reads the .kaif/kaif.json marker (version, release date, origin, tracking mode). Use when the human says "what KAIF version", "check for KAIF updates", "is there a new framework version", "kaif version", "проверь версию KAIF", "есть ли обновление фреймворка". Trigger aliases (ru): «версия KAIF», «проверь обновления KAIF», «есть ли новая версия фреймворка»
+description: Сообщить версию KAIF, развёрнутую в этом проекте, и проверить origin-репозиторий на наличие более свежего релиза. Читает маркер .kaif/kaif.json (версия, дата релиза, origin, режим отслеживания). Используй, когда человек говорит «какая версия KAIF», «проверь версию KAIF», «есть ли обновление фреймворка», «проверь обновления KAIF», "what KAIF version", "check for KAIF updates".
 ---
 
-# /kaif-version — report the deployed KAIF version & check origin for updates
+# /kaif-version — сообщить развёрнутую версию KAIF и проверить origin на обновления
 
-KAIF is deployed (injected) into a project with a specific version. This skill tells the human which
-version is in the project and whether a newer one exists upstream.
+KAIF развёрнут (инъектирован) в проект с конкретной версией. Этот скилл сообщает человеку, какая
+версия стоит в проекте и существует ли более свежая наверху.
 
-## What to do
+## Что делать
 
-1. **Read the local marker** `.kaif/kaif.json`:
+1. **Прочитай локальный маркер** `.kaif/kaif.json`:
    ```json
    { "framework": "KAIF", "version": "X.Y", "released": "YYYY-MM-DD",
      "origin": "https://github.com/MikalaiKryvusha/KAIF", "tracking": "origin", "sphere": "...", "agent": "..." }
    ```
-   Report: current version + release date, the `tracking` mode (`origin` or `fork`), the sphere and agent.
-   (Equivalent quick command: `npm run kaif:version`.)
+   Сообщи: текущую версию + дату релиза, режим `tracking` (`origin` или `fork`), сферу и агента.
+   (Эквивалентная быстрая команда: `npm run kaif:version`.)
 
-2. **Check the origin for a newer release.** Query the latest release/tag of the `origin` repo, e.g.:
+2. **Проверь origin на более свежий релиз.** Запроси последний релиз или тег репозитория `origin`, например:
    ```bash
    gh release view --repo MikalaiKryvusha/KAIF --json tagName,publishedAt 2>/dev/null \
      || gh api repos/MikalaiKryvusha/KAIF/releases/latest --jq '.tag_name + " " + .published_at'
    ```
-   Compare semantic versions (`MAJOR.MINOR`).
+   Сравни семантические версии (`MAJOR.MINOR`).
 
-3. **Report to the human:**
-   - If up to date → say so.
-   - If a newer version exists → say which, and offer: *"I see a newer KAIF version (vX.Y, DATE). Want me
-     to run a respectful update & migration for this project?"* → if yes, hand off to `/kaif-update`.
-   - If `tracking` is `fork` → note that this project follows the user's own KAIF fork, not the official
-     origin; origin updates are informational only (see `/kaif-switch-origin` to return to official).
+   > 💡 Полезно знать: ядро `KAIF.md` в origin может меняться **без бампа версии**. Чтобы сравнить
+   > содержимое, а не только номер, используй `node tools/02-kaif-fetch.mjs` — он сверяет sha256.
 
-## Notes
-- If `.kaif/kaif.json` is missing, KAIF may not be deployed here (or the marker was lost) — say so and
-  point to `KAIF.md` for (re)deployment.
-- Read-only skill: it never changes the project. Updates go through `/kaif-update`.
+3. **Доложи человеку:**
+   - Если версия актуальна → так и скажи.
+   - Если существует более свежая → назови её и предложи: *«Вижу более свежую версию KAIF (vX.Y, ДАТА).
+     Провести бережное обновление и миграцию для этого проекта?»* → если да, передай в `/kaif-update`.
+   - Если `tracking` = `fork` → отметь, что проект следует за собственным форком KAIF пользователя, а
+     не за официальным origin; обновления origin носят справочный характер (см. `/kaif-switch-origin`,
+     чтобы вернуться к официальному).
+
+## Заметки
+- Если `.kaif/kaif.json` отсутствует, KAIF, возможно, здесь не развёрнут (или маркер потерян) — скажи
+  об этом и укажи на `KAIF.md` для (пере)развёртывания.
+- Скилл только читает: он никогда не меняет проект. Обновления идут через `/kaif-update`.

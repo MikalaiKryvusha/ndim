@@ -1,33 +1,37 @@
 ---
-description: Propose the next steps when the owner asks "what's next?" — a value-ranked plan of what to do right now toward the owner's vision, derived from GOAL.md, MASTER_PLAN.md, STATUS.md and the open backlog. Use when the human says "what's next", "what now", "what should we do next", "что дальше", "предложи следующие шаги" — especially to pull the agent out of a stalled state where it stopped without proposing anything. Trigger aliases (ru): «что дальше», «что теперь», «предложи следующие шаги»
+description: Предложить следующие шаги, когда владелец спрашивает «что дальше?» — ранжированный по ценности план того, что делать прямо сейчас ради видения владельца, выведенный из GOAL.md, MASTER_PLAN.md, STATUS.md и открытого беклога. Используй, когда человек говорит «что дальше», «что теперь», «предложи следующие шаги», «чем займёмся», "what's next", "what now", "what should we do next" — особенно чтобы вытащить агента из состояния, где он остановился, ничего не предложив.
 ---
 
-# /what-next — propose the highest-value next steps
+# /what-next — предложить самые ценные следующие шаги
 
-Sometimes the agent stops and proposes nothing. This skill is the one-command answer to the owner's
-simple question — **"what's next?"** — a plan of next steps ranked by value toward the owner's vision.
+Иногда агент останавливается и ничего не предлагает. Этот скилл — ответ одной командой на простой
+вопрос владельца — **«что дальше?»** — план следующих шагов, ранжированный по ценности для видения
+владельца.
 
-## Procedure
+## Процедура
 
-### Step 1. Re-orient (cheap, no deep dive)
-Read `GOAL.md` (the vision), `MASTER_PLAN.md` (the phase we're in), `STATUS.md` (where we are), and walk
-the open backlog: `bugs/`, `ideas/`, `plans/`, `homeworks/` without the `DONE` tag, plus unanswered
+### Шаг 1. Переориентируйся (дёшево, без глубокого погружения)
+Прочитай `GOAL.md` (видение), `MASTER_PLAN.md` (в какой мы фазе), `STATUS.md` (где мы) и обойди
+открытый беклог: `bugs/`, `ideas/`, `plans/`, `homeworks/` без тега `DONE`, плюс неотвеченные
 `interviews/`.
 
-### Step 2. Rank by value
-Order candidate steps by **value toward the vision** per `PHILOSOPHY.md`: Pareto (the vital few that
-move the result), the Eisenhower matrix (important × urgent), second-order effects (what unblocks the
-most future work). Note the rough effort of each.
+### Шаг 2. Ранжируй по ценности
+Упорядочь кандидатов по **ценности для видения** согласно `PHILOSOPHY.md`: Парето (немногие жизненно
+важные, двигающие результат), матрица Эйзенхауэра (важно × срочно), эффекты второго порядка (что
+разблокирует больше всего будущей работы). Отметь примерную трудоёмкость каждого.
 
-### Step 3. Answer in chat
-1. **The ONE next step** — highest value, and *why it is next* (tie it to GOAL/MASTER_PLAN).
-2. **2–4 runner-ups** — one line each, with value/effort.
-3. **Blocked on the owner** — open interviews/homework, if any.
+### Шаг 3. Ответь в чате
+1. **ОДИН следующий шаг** — наивысшая ценность, и *почему именно он следующий* (свяжи с
+   `GOAL.md` / `MASTER_PLAN.md`).
+2. **2–4 претендента** — по одной строке каждый, с ценностью и трудоёмкостью.
+3. **Заблокировано на владельце** — открытые интервью и домашки, если есть.
 
-### Step 4. Offer to start
-Offer to begin the top step immediately; on the owner's confirmation (or in an autonomous loop) — start.
+### Шаг 4. Предложи начать
+Предложи немедленно начать верхний шаг; по подтверждению владельца (или в автономном цикле) — начинай.
 
-## Rules
-- Never answer "nothing to do": an empty backlog means propose `/check-backlog` or `/refresh-context`,
-  quality/debt work, or an `/interview` to refill the vision.
-- Be concrete: steps with names and files, not generalities.
+## Правила
+- Никогда не отвечай «делать нечего»: пустой беклог означает, что нужно предложить `/check-backlog` или
+  `/refresh-context`, работу над качеством и техдолгом, либо `/interview`, чтобы пополнить видение.
+- Будь конкретен: шаги с именами и файлами, а не общие слова.
+- На NDim Space помни: фаза 0 (стенд и тесты математического ядра) не заблокирована ничем и почти
+  всегда является самым ценным ответом, пока интервью №001 не закрыто.

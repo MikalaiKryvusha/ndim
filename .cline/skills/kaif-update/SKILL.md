@@ -1,50 +1,64 @@
 ---
 name: kaif-update
-description: Respectfully update & migrate the KAIF framework deployed in this project to a newer version from the origin repository, preserving local customizations and all content artifacts. Use when the human accepts an update offer, or says "update KAIF", "migrate to the new framework version", "respectful update", "обнови KAIF", "проведи миграцию фреймворка". Trigger aliases (ru): «обнови KAIF», «проведи миграцию фреймворка»
+description: Бережно обновить и мигрировать фреймворк KAIF, развёрнутый в этом проекте, до более свежей версии из origin-репозитория, сохраняя локальные доработки и все содержательные артефакты. Используй, когда человек принимает предложение об обновлении или говорит «обнови KAIF», «проведи миграцию фреймворка», «бережное обновление», "update KAIF", "migrate to the new framework version".
 ---
 
-# /kaif-update — respectful migration update from origin
+# /kaif-update — бережное обновление с миграцией из origin
 
-A newer KAIF version exists upstream (see `/kaif-version`). Since KAIF 1.5 the heavy lifting is
-**mechanical**: the machinery (`.kaif/kaif-core.mjs`) knows what was deployed and which files were never
-touched since (content snapshots in `.kaif/deploy-manifest.json`), so it replaces the untouched framework
-files itself, adds the new ones, never enters owner content (`GOAL.md`, `STATUS.md`, the knowledge
-directories, your project files), and hands you a short `KAIF_UPDATE_TASK.md` covering ONLY the genuinely
-diverged places. Your cognitive work is that task, not the migration.
+Наверху существует более свежая версия KAIF (см. `/kaif-version`). Этот скилл подтягивает фреймворк
+проекта до неё **бережно**: он никогда не ломает проект пользователя, сохраняет его локальные
+доработки и все содержательные артефакты (`bugs/`, `interviews/`, `ideas/`, домашки).
 
-> ⚠️ This changes the framework wrapper. Confirm with the human before applying. Commit first so the
-> update is a clean, revertable diff.
+> ⚠️ Это меняет обёртку фреймворка. Подтверди с человеком перед применением. Сначала закоммить, чтобы
+> обновление стало чистым, откатываемым диффом.
 
-## Procedure
+## Процедура
 
-1. **Pre-flight.** Working tree clean (commit/stash first). Read `.kaif/kaif.json`: if `tracking` is
-   `fork`, confirm the human really wants to pull from the official origin.
+> ⚡ **Механический путь (KAIF ≥ 1.5, есть `.kaif/kaif-core.mjs`) — начинай с него:**
+> `node .kaif/kaif-core.mjs update` (канал по умолчанию — release). Машинерия сама скачает свежий
+> набор с origin (sha256), заменит нетронутые файлы фреймворка по снапшотам
+> `.kaif/deploy-manifest.json`, добавит новые, разошедшиеся НЕ тронет и перечислит их в
+> `KAIF_UPDATE_TASK.md` для точечной сшивки, обновит саму себя и проштампует `.kaif/kaif.json`.
+> Дальше: пройди чеклист задания (чекпоинты — `node .kaif/kaif-core.mjs checkpoint <id>`),
+> прогони `/fable-judge` по обновлению и заверши `node .kaif/kaif-core.mjs update-verify`.
+> ⚠️ После механического прохода СВЕРЬ диф: замена «нетронутых» файлов может снести локальные
+> адаптации и язык (случилось 2026-07-17 — 18 русских скиллов и PHILOSOPHY.md пришлось вернуть
+> из git и сшить заново). Шаги ниже — ручной путь и общий канон бережности.
 
-2. **Route by what the project has:**
-   - **`.kaif/kaif-core.mjs` exists (KAIF ≥ 1.5):** run `node .kaif/kaif-core.mjs update`
-     (or `npm run kaif:update`). It fetches the latest machinery from origin (sha256-verified),
-     replaces every framework file that is byte-identical to its install snapshot, adds new files,
-     keeps diverged ones untouched, swaps the machinery itself, stamps `.kaif/kaif.json`, and writes
-     `KAIF_UPDATE_TASK.md`.
-   - **No machinery (KAIF ≤ 1.4, or an anonymous install):** put the fresh **thin `KAIF.md`** from the
-     origin release in the project root and follow its bootstrap (three `KAIF-BOOT:` steps). The
-     installer detects the existing older `.kaif/kaif.json` and runs as an update: existing files are
-     KEPT, new entities added, owner-level fields of the marker preserved, and `KAIF_UPDATE_TASK.md`
-     replaces the usual adaptation task.
+1. **Предполётная проверка.** Прочитай `.kaif/kaif.json` (текущая версия, `origin`, `tracking`). Если
+   `tracking` = `fork`, уточни, действительно ли человек хочет тянуть из официального origin (обычно
+   он обновлялся бы из своего форка). Убедись, что рабочее дерево чистое (сначала закоммить или спрячь).
 
-3. **Work `KAIF_UPDATE_TASK.md`** — the only cognitive part: merge the template news into the files the
-   machinery could not touch (they carry your local edits), review what's new, run
-   `node .kaif/kaif-core.mjs check`, and finish with a `/fable-judge` pass over the update. Tick each
-   item AND append its `KAIF-UPDATE: <id> done` checkpoint.
+2. **Скачай целевую версию** из `origin`: новый `KAIF.md` (и/или артефакт релиза). Самоизвлекающийся
+   `KAIF.md` — единственный источник истины о том, что содержит новая версия.
+   На этом проекте для скачивания и сверки есть готовый инструмент: `node tools/02-kaif-fetch.mjs`.
 
-4. **Verify & self-clean:** `node .kaif/kaif-core.mjs update-verify` — it greps the checkpoints and
-   removes the transient installer files.
+3. **Сравни старое → новое.** Сопоставь руководящие документы, скиллы и конвенции новой версии с тем,
+   что развёрнуто. Классифицируй каждое изменение: (а) чистое обновление фреймворка (безопасно
+   применить), (б) затрагивает файл, который пользователь дорабатывал (нужен аккуратный трёхсторонний
+   мёрдж), (в) новая возможность (добавить).
 
-5. **Report & commit.** Summarize: replaced/added/kept counts, what you merged by hand, anything left
-   for the human. Commit `chore: update KAIF to X.Y`.
+4. **Мигрируй бережно:**
+   - Применяй обновления, принадлежащие фреймворку (скиллы, шаблоны руководящих документов) — заново
+     выводи развёрнутую обёртку из нового `KAIF.md`, на рабочем языке и в сфере проекта
+     (см. `.kaif/kaif.json`).
+   - **Сохраняй доработки пользователя** — там, где он правил руководящий документ, делай мёрдж, а не
+     перезапись; конфликты показывай человеку, не угадывай.
+     > На NDim Space доработок много: `AGENT_GUIDE.md`, `PHILOSOPHY.md`, обе карты и почти все скиллы
+     > содержат правила, специфичные для проекта (правило четырёх макетов; запрет механик удержания;
+     > обязательный `npm run kaif:check` перед push; заметки о PowerShell и BOM).
+     > **Их нельзя потерять при обновлении.**
+   - **Никогда не трогай содержательные артефакты** (`bugs/`, `interviews/`, `ideas/`, `researches/`,
+     `homeworks/`) и собственные файлы проекта. Мигрируется только ядро и обёртка KAIF.
+   - Освежи npm-хендлы `kaif:*`, если новая версия их изменила.
 
-## Notes
-- The guiding word is **respectful**: the project must stay whole and working at every step; owner
-  content is never in the update's scope at all.
-- If the migration is large or risky, do it behind a clean commit so it's easy to revert.
-- A heavily diverged project may be better served by a fork (`/kaif-fork`) than by tracking origin.
+5. **Проштампуй новую версию** в `.kaif/kaif.json` (версия, дата релиза). Запусти `npm run kaif:check`
+   (валидатор), чтобы убедиться, что результат корректен.
+
+6. **Доложи и закоммить.** Суммируй, что изменилось, что смёржено, какие конфликты остались человеку.
+   Коммит `chore: обновление KAIF до vX.Y (ДАТА)`.
+
+## Заметки
+- Ключевое слово — **бережно**: проект обязан оставаться целым и работающим на каждом шаге.
+- Если миграция крупная или рискованная, делай её в ветке или за чистым коммитом, чтобы легко откатить.
+- Сильно разошедшемуся проекту может лучше подойти форк (`/kaif-fork`), чем отслеживание origin.

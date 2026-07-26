@@ -1,101 +1,104 @@
 ---
 name: interview
-description: Interview the human about open questions the agent must NOT decide alone — UI/UX decisions, serious technical forks, choices that define the brand or architecture. A rare event: by default the agent works autonomously. Use when the agent hits such a decision, OR when the human says "interview me", "ask me", "let's do an interview", "interview", "проведи интервью", "спроси меня", "уточни у меня". Trigger aliases (ru): «возьми интервью», «задай вопросы по развилке», «интервью»
+description: Провести интервью с человеком по открытым вопросам, которые агент НЕ должен решать один — решения по UI/UX, серьёзные технические развилки, выбор, определяющий бренд или архитектуру. Редкое событие: по умолчанию агент работает автономно. Используй, когда агент упирается в такое решение, ЛИБО когда человек говорит «проведи интервью», «спроси меня», «уточни у меня», «задай вопросы», "interview me", "ask me", "let's do an interview".
 ---
 
-# /interview — interview the owner
+# /interview — интервью с владельцем
 
-This skill captures decisions that **must not be made autonomously** into an md document in
-`interviews/` and pauses the work until the human answers.
+Этот скилл фиксирует решения, которые **нельзя принимать автономно**, в md-документ в `interviews/` и
+приостанавливает работу до ответа человека.
 
-All interviews live in `interviews/interview_NNN_<topic>.md`.
+Все интервью живут в `interviews/interview_NNN_<тема>.md`.
 
-## When to call (this is a RARE event)
+## Когда вызывать (это РЕДКОЕ событие)
 
-By default the agent works **autonomously** and makes technical decisions with sensible defaults.
-Interviews are the exception. Call one ONLY when the question is genuinely the owner's:
+По умолчанию агент работает **автономно** и принимает технические решения с разумными умолчаниями.
+Интервью — исключение. Вызывай его ТОЛЬКО когда вопрос по-настоящему принадлежит владельцу:
 
-- **A UI/UX decision** — how something looks, behaves, feels for the end user. Never make a UI/UX choice
-  without confirmation.
-- **A serious technical fork** — choosing a library/protocol/architectural approach with long-lived,
-  hard-to-reverse consequences.
-- **Brand / vision / product priorities** — naming, icon, target platforms, what's in a phase vs. not.
+- **Решение по UI/UX** — как что-то выглядит, ведёт себя, ощущается конечным пользователем. Никогда не
+  делай выбор по UI/UX без подтверждения.
+- **Серьёзная техническая развилка** — выбор библиотеки, протокола, архитектурного подхода с
+  долгоживущими, трудно обратимыми последствиями.
+- **Бренд / видение / приоритеты продукта** — нейминг, иконка, целевые платформы, что входит в фазу, а что нет.
+- **Деньги и обязательства** — покупка домена, платный хостинг, подписки. На этом проекте деньги —
+  чувствительная тема (`GOAL.md`).
 
-Do NOT call an interview for: small implementation details, variable names, ordinary bug fixes,
-refactors, choices between equivalent technical options — decide those yourself and report in the chat.
+НЕ вызывай интервью ради: мелких деталей реализации, имён переменных, обычных фиксов багов,
+рефакторингов, выбора между равноценными техническими вариантами — решай сам и докладывай в чате.
 
-If unsure "is this the owner's level or mine?", ask: *is it cheap to reverse?* If yes — decide yourself.
-If it shapes brand/architecture/UX for the long term — interview.
+Если сомневаешься, «это уровень владельца или мой?», спроси себя: *дёшево ли это откатить?* Если да —
+решай сам. Если это формирует бренд, архитектуру или UX вдолгую — интервью.
 
-## Procedure
+## Процедура
 
-### Step 1. Preparation (before writing questions)
-- Read the context in code/docs — don't ask what you can find out yourself.
-- Verify the technical facts that determine which options are even possible (e.g. "can this dialog be
-  removed?", "does the library have the needed API?"). A question without verified groundwork is a bad question.
-- Look at past interviews (`ls interviews/`) so you don't duplicate accepted decisions and keep one style.
+### Шаг 1. Подготовка (до написания вопросов)
+- Прочитай контекст в коде и документах — не спрашивай о том, что можешь выяснить сам.
+- Проверь технические факты, определяющие, какие варианты вообще возможны (например: «можно ли убрать
+  этот диалог?», «есть ли в библиотеке нужный API?»). Вопрос без проверенной подготовки — плохой вопрос.
+- Посмотри прошлые интервью (`ls interviews/`), чтобы не дублировать принятые решения и держать один стиль.
 
-### Step 2. Create the interview document
-- Name: `interviews/interview_NNN_<short_topic>.md`, where `NNN` is the next free number
-  (`ls interviews/` → max+1, format `004`, `005`, …).
-- Template:
+### Шаг 2. Создай документ интервью
+- Имя: `interviews/interview_NNN_<короткая_тема>.md`, где `NNN` — следующий свободный номер
+  (`ls interviews/` → максимум + 1, формат `004`, `005`, …).
+- Шаблон:
   ```markdown
-  # Interview #NNN — <Topic>
+  # Интервью №NNN — <Тема>
 
-  > Topic: <one sentence on what this interview is about>
-  > Source of the idea: <file/chat, date>
-  > Status: **🟡 awaiting the owner's answers**
+  > Тема: <одно предложение о том, о чём это интервью>
+  > Источник вопроса: <файл/чат, дата>
+  > Статус: **🟡 ожидает ответов владельца**
 
-  ## Context / what I already found in the code
-  <briefly: current state + verified technical facts that constrain the options>
+  ## Контекст / что я уже выяснил в коде
+  <кратко: текущее состояние + проверенные технические факты, ограничивающие варианты>
 
-  ## QUESTIONS
+  ## ВОПРОСЫ
 
-  ### Q1. <question>
-  - **A) (recommended)** <the option distilled through PHILOSOPHY.md — simplest/most effective — + why>
-  - **B)** <option>
-  - **C)** <option>
-  - **D) your own answer** — <the owner writes their own here>
+  ### В1. <вопрос>
+  - **A) (рекомендуется)** <вариант, пропущенный через PHILOSOPHY.md — простейший и самый эффективный — + почему>
+  - **B)** <вариант>
+  - **C)** <вариант>
+  - **D) свой ответ** — <владелец пишет собственный здесь>
 
-  **Answer:**
+  **Ответ:**
 
-  ### Q2. ...
+  ### В2. ...
 
-  ## Proposed implementation plan (after answers)
-  <the steps you'll take once the questions are closed>
+  ## Предлагаемый план реализации (после ответов)
+  <шаги, которые ты предпримешь, когда вопросы будут закрыты>
   ```
 
-### Step 3. Rules for good questions
-- **Closed** options **A/B/C/D** — not an open "what's best?".
-- **Option A is always the recommendation**, marked `(recommended)`, and is **distilled through
-  `PHILOSOPHY.md`** — run the choice through the principle set (simplicity/KISS + Occam first, then Pareto,
-  best-practices, second-order thinking, …). In the vast majority of cases A is the simplest, clearest, most
-  useful, effective, and fastest way to what the owner wants. Put it first.
-- **Option D is always "your own answer"** — a slot for the owner to write their own choice if none of
-  A/B/C fits.
-- **B and C** are the serious alternatives, each with a short "why" / trade-off.
-- Group: usually 1–5 questions per interview; when the topic genuinely needs it — **up to 10**. Don't
-  pad, but don't starve the interview either: a cramped interview that misses what the agent actually
-  needed to clarify is worse than a few extra questions.
-- Don't ask what's already decided in `plans/`/`MASTER_PLAN.md` or past interviews.
+### Шаг 3. Правила хороших вопросов
+- **Закрытые** варианты **A/B/C/D** — а не открытое «как лучше?».
+- **Вариант A — всегда рекомендация**, помеченная `(рекомендуется)`, и **пропущенная через
+  `PHILOSOPHY.md`**: прогони выбор через набор принципов (сначала простота/KISS + Оккам, затем Парето,
+  best practices, мышление второго порядка, …). В подавляющем большинстве случаев A — простейший,
+  яснейший, самый полезный, эффективный и быстрый путь к тому, чего хочет владелец. Ставь его первым.
+- **Вариант D — всегда «свой ответ»** — слот, где владелец пишет собственный выбор, если ни A/B/C не подходят.
+- **B и C** — серьёзные альтернативы, у каждой короткое «почему» и компромисс.
+- Группируй: обычно 1–5 вопросов на интервью; когда тема действительно требует — **до 10**. Не
+  раздувай, но и не морь интервью голодом: тесное интервью, упустившее то, что агенту на самом деле
+  нужно было прояснить, хуже пары лишних вопросов.
+- Не спрашивай о том, что уже решено в `plans/`, `MASTER_PLAN.md` или прошлых интервью.
 
-### Step 4. Ask the owner — via the document
-The default, autonomy-friendly method: the owner answers **right in the md document** (fills the
-"**Answer:**" fields). This keeps the work async — the agent isn't blocked on a synchronous chat.
+### Шаг 4. Спроси владельца — через документ
+Метод по умолчанию, дружественный автономии: владелец отвечает **прямо в md-документе** (заполняет
+поля «**Ответ:**»). Это оставляет работу асинхронной — агент не заблокирован синхронным чатом.
 
-Sequence:
-- Compose `interviews/interview_NNN_<topic>.md` with questions and "**Answer:**" fields.
-- Write ONE paragraph in the chat: what you found, the forks, and a link to the document.
-- **Pause** the work (so the owner is signaled to come and fill in the answers). Don't guess for them and
-  don't proceed blindly on UI/UX/brand/architecture questions.
+Последовательность:
+- Составь `interviews/interview_NNN_<тема>.md` с вопросами и полями «**Ответ:**».
+- Напиши ОДИН абзац в чат: что ты выяснил, какие развилки, и ссылку на документ.
+- **Приостанови** работу (чтобы владелец получил сигнал прийти и заполнить ответы). Не угадывай за
+  него и не иди вслепую по вопросам UI/UX/бренда/архитектуры.
 
-### Step 5. After the answers
-- Write the decisions into the document: change status to `✅ ANSWERS RECEIVED <date>` and add a
-  "Decisions" table.
-- If the decisions affect the plan/architecture — update `STATUS.md` and the relevant files in `plans/`.
-- Proceed to implement per the approved plan (or, if the owner asks to pause — call `/pause`).
+### Шаг 5. После ответов
+- **Сначала закоммить ответы владельца дословно** (первоисточники владельца неприкосновенны —
+  `AGENT_GUIDE.md`, git-гигиена); только потом, следующим коммитом, перерабатывай документ.
+- Впиши решения в документ: смени статус на `✅ ОТВЕТЫ ПОЛУЧЕНЫ <дата>` и добавь таблицу «Решения».
+- Если решения затрагивают план или архитектуру — обнови `STATUS.md`, `MASTER_PLAN.md` (при крупном
+  сдвиге — через `/revision`) и релевантные файлы в `plans/`.
+- Переходи к реализации по одобренному плану (или, если владелец просит паузу, — вызови `/pause`).
 
-## Notes
-- Style and language — match the owner's.
-- Past interviews are the reference for tone and structure.
-- The skill's goal — minimize bothering the owner, but do NOT make their fateful decisions for them.
+## Заметки
+- Стиль и язык — как у владельца (русский).
+- Прошлые интервью — эталон тона и структуры.
+- Цель скилла — минимизировать беспокойство владельца, но НЕ принимать за него судьбоносные решения.

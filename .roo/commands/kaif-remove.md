@@ -1,59 +1,65 @@
 ---
-description: Respectfully remove KAIF from the project. Default — surgical removal of the framework core/wrapper while KEEPING the content artifacts (bugs, interviews, ideas, homework). Full mode (--all) also removes the artifacts. Either way the user's own project stays whole and working. Use when the human says "remove KAIF", "uninstall the framework", "remove KAIF but keep my bug reports", "fully remove KAIF", "удали KAIF", "убери фреймворк, артефакты оставь", "выжги KAIF полностью". Trigger aliases (ru): «удали KAIF», «убери фреймворк»
+description: Бережно удалить KAIF из проекта. По умолчанию — хирургическое удаление ядра и обёртки фреймворка с СОХРАНЕНИЕМ содержательных артефактов (баги, интервью, идеи, исследования, домашки). Полный режим (--all) удаляет и артефакты. В обоих случаях собственный проект пользователя остаётся целым и работающим. Используй, когда человек говорит «удали KAIF», «убери фреймворк», «убери фреймворк, артефакты оставь», «выжги KAIF полностью», "remove KAIF", "uninstall the framework".
 ---
 
-# /kaif-remove — respectful removal of KAIF (partial or full)
+# /kaif-remove — бережное удаление KAIF (частичное или полное)
 
-Cleanly take KAIF out of a project. The guiding word is **respectful**: the user's own project remains
-intact and working — we only remove what KAIF added, surgically.
+Чисто вынуть KAIF из проекта. Ключевое слово — **бережно**: собственный проект пользователя остаётся
+целым и работающим; мы удаляем только то, что добавил KAIF, хирургически.
 
-## Two modes
+## Два режима
 
-- **Partial** — remove the framework **core/wrapper** but **keep the content artifacts**:
-  `bugs/`, `interviews/`, `ideas/`, `researches/`, `homeworks/`, and any other knowledge the work produced.
-  The agent's accumulated knowledge survives; only the KAIF machinery leaves.
-- **Full** — remove the core/wrapper **and** the content artifacts. KAIF is burned out of the project's
-  history as if it had never been there — leaving only the user's project.
+- **Частичное** — удалить **ядро и обёртку** фреймворка, но **сохранить содержательные артефакты**:
+  `bugs/`, `interviews/`, `ideas/`, `researches/`, `homeworks/` и любое другое знание, произведённое
+  работой. Накопленное знание агента переживает удаление; уходит только машинерия KAIF.
+- **Полное** — удалить ядро и обёртку **вместе с** содержательными артефактами. KAIF выжигается из
+  проекта, как будто его там никогда не было, — остаётся только проект пользователя.
 
-## Procedure
+## Процедура
 
-1. **MANDATORY — ask the owner, in natural language, WHICH removal to run, and wait for an explicit,
-   unambiguous answer.** This is destructive; never assume a mode. Ask plainly, e.g.:
+1. **ОБЯЗАТЕЛЬНО — спроси владельца естественным языком, КАКОЕ удаление запускать, и дождись явного,
+   недвусмысленного ответа.** Это разрушительно; никогда не предполагай режим. Спроси прямо, например:
 
-   > *"Removing KAIF. Which do you want — **partial** (remove the framework, but KEEP your content
-   > artifacts: bugs, interviews, ideas, research, homework) or **full** (remove KAIF AND those artifacts)?
-   > The rest of your project stays untouched either way. Please answer in words."*
+   > *«Удаляю KAIF. Какое удаление нужно — **частичное** (убрать фреймворк, но СОХРАНИТЬ твои
+   > содержательные артефакты: баги, интервью, идеи, исследования, домашки) или **полное** (убрать
+   > KAIF И эти артефакты)? Остальная часть проекта в любом случае останется нетронутой. Ответь,
+   > пожалуйста, словами.»*
 
-   - Proceed **only** on a clear, unambiguous natural-language answer that names one mode.
-   - If the answer is vague, ambiguous, or conditional ("maybe", "whatever's cleaner", "up to you", silence)
-     — do **not** guess and do **not** default. Ask again, restating the two options, until the owner gives
-     an explicit choice.
-   - A `--all` flag or an explicit phrase like "full removal" / "выжги полностью" counts as an explicit
-     answer for **full**; "keep my artifacts" / "частично" counts as **partial**. Anything else → re-ask.
+   - Продолжай **только** при ясном, недвусмысленном ответе на естественном языке, называющем один режим.
+   - Если ответ расплывчатый, неоднозначный или условный («может быть», «как чище», «на твоё
+     усмотрение», молчание) — **не** угадывай и **не** используй умолчание. Спроси снова, повторив оба
+     варианта, пока владелец не сделает явный выбор.
+   - Флаг `--all` или явная фраза «полное удаление» / «выжги полностью» считается явным ответом за
+     **полное**; «оставь артефакты» / «частично» считается за **частичное**. Всё остальное → переспроси.
 
-2. **Identify KAIF-owned items** from `.kaif/kaif.json` and the known layout:
-   - **Core/wrapper (removed in both modes):** the key docs (`AGENT_GUIDE.md`, `PHILOSOPHY.md`,
-     `BUG_FIXING_FRAMEWORK.md`, `STATUS.md`, `GOAL.md`, `MASTER_PLAN.md`, the two maps, `KAIF_FRAMEWORK.md`),
-     the deployed skills (`.claude/skills/` or the agent's equivalent), the `kaif` tools,
-     `KAIF.md`/`framework/` if present, `.kaif/`, and the KAIF additions to the auto-loaded context file
-     (`CLAUDE.md`/`AGENTS.md`).
-   - **Content artifacts (kept in partial, removed in full):** `bugs/`, `interviews/`, `ideas/`,
-     `researches/`, `homeworks/`, `plans/`, etc.
-   - **NEVER touched:** the user's own project files and directories.
+2. **Определи то, что принадлежит KAIF**, из `.kaif/kaif.json` и известной раскладки:
+   - **Ядро и обёртка (удаляются в обоих режимах):** ключевые документы (`AGENT_GUIDE.md`,
+     `PHILOSOPHY.md`, `BUG_FIXING_FRAMEWORK.md`, `STATUS.md`, `GOAL.md`, `MASTER_PLAN.md`, обе карты,
+     `KAIF_FRAMEWORK.md`), развёрнутые скиллы (`.claude/skills/`), инструменты `kaif`,
+     `KAIF.md`/`framework/`, если они есть, `.kaif/`, и добавления KAIF в автозагружаемый файл
+     контекста (`CLAUDE.md`/`AGENTS.md`).
+   - **Содержательные артефакты (сохраняются при частичном, удаляются при полном):** `bugs/`,
+     `interviews/`, `ideas/`, `researches/`, `homeworks/`, `plans/`.
+   - **НИКОГДА не трогается:** собственные файлы и директории пользователя.
+     > На NDim Space к ним относится `.private/` — там ПДн, ключи и единственная полная копия
+     > git-истории версии 1.x (`ndim-1.x-history.bundle`). Это не фреймворк, и удалять это нельзя.
+     > Также осторожно с `GOAL.md`: формально это документ KAIF, но написан он владельцем и содержит
+     > видение продукта — **прежде чем удалять его, отдельно переспроси**.
 
-3. **Un-wire the npm handles.** Remove the `kaif:*` scripts that KAIF added to the project's
-   `package.json` (the block KAIF inserted), leaving the user's own scripts untouched. (`npm run` is no
-   longer cluttered with KAIF handles.)
+3. **Отвяжи npm-хендлы.** Убери скрипты `kaif:*`, которые KAIF добавил в `package.json` проекта,
+   оставив собственные скрипты пользователя нетронутыми.
 
-4. **Remove** the identified items per mode. In partial mode, leave a short note (e.g. keep `bugs/` with
-   its README) so the artifacts remain self-explanatory without KAIF.
+4. **Удали** определённое, согласно режиму. В частичном режиме оставь короткую заметку (например,
+   сохрани `bugs/` вместе с его README), чтобы артефакты оставались самообъясняющими без KAIF.
 
-5. **Verify the project still works** (its own build/tests) and **report**: what was removed, what was
-   kept, and confirm the project is intact. Commit `chore: remove KAIF (partial|full) — project preserved`.
+5. **Проверь, что проект по-прежнему работает** (его собственная сборка и тесты) и **доложи**: что
+   удалено, что сохранено, и подтверди целостность проекта. Коммит
+   `chore: удаление KAIF (частичное|полное) — проект сохранён`.
 
-## Notes
-- **Never default the mode** — always get the owner's explicit natural-language choice first (Step 1). If
-  you must nudge, note that **partial** is the safer/gentler option (accumulated knowledge — bug forensics,
-  decisions, research — survives), but the owner decides.
-- Respect git history: removal is a normal commit; the user can still see KAIF in past history unless
-  they choose to rewrite it (we don't rewrite history without an explicit request).
+## Заметки
+- **Никогда не выбирай режим по умолчанию** — всегда сначала получи явный ответ владельца на
+  естественном языке (шаг 1). Если нужно подтолкнуть, отметь, что **частичное** — более безопасный и
+  мягкий вариант (накопленное знание — криминалистика багов, решения, исследования — выживает), но
+  решает владелец.
+- Уважай историю git: удаление — обычный коммит; пользователь по-прежнему увидит KAIF в прошлой
+  истории, если не решит её переписать (мы не переписываем историю без явной просьбы).

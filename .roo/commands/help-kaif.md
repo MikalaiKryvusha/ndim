@@ -1,52 +1,56 @@
 ---
-description: Give the human operator a clear, structured user manual for KAIF right here in the chat — what it is (briefly), and mainly HOW to use it: the structure, the conventions, the documents, the directories, and the skills/commands. Use when the human says "help kaif", "how do I use KAIF", "explain KAIF", "KAIF manual", "what can KAIF do", "как пользоваться KAIF", "помощь по KAIF", "мануал KAIF", "что умеет KAIF", "справка KAIF". Trigger aliases (ru): «расскажи про KAIF», «как пользоваться KAIF», «помощь по KAIF»
+description: Дать человеку-оператору ясное, структурированное руководство по KAIF прямо здесь, в чате: что это (кратко) и, главное, КАК этим пользоваться — структура, конвенции, документы, директории, скиллы и команды. Используй, когда человек говорит «как пользоваться KAIF», «объясни KAIF», «мануал KAIF», «что умеет KAIF», «справка KAIF», «помощь по KAIF», "help kaif", "how do I use KAIF", "explain KAIF".
 ---
 
-# /help-kaif — explain KAIF to the operator, in chat
+# /help-kaif — объяснить KAIF оператору, в чате
 
-Deliver a **user manual for KAIF directly in the chat**, in the operator's working language. This is a
-teaching moment for the human running the project — it produces **no file changes**, just a clear,
-well-structured explanation they can read and act on.
+Выдай **руководство пользователя по KAIF прямо в чат**, на рабочем языке оператора (русском). Это
+обучающий момент для человека, ведущего проект: скилл **не меняет файлы**, а даёт ясное, хорошо
+структурированное объяснение, которое можно прочитать и применить.
 
-## Framing (important)
-- KAIF is **already deployed** in this project. Do **not** talk about unpacking/installation — that's done.
-  Speak as "here's how to *use* what's already here."
-- Keep "what KAIF is" to a **couple of sentences**. Spend the bulk of the answer on **how to use it**:
-  structure, conventions, documents, directories, and skills.
-- Write in the operator's working language. Keep `/command` names and file names canonical.
-- Base it on the deployed reality of *this* project (read `KAIF_FRAMEWORK.md`, `AGENT_GUIDE.md`, the
-  directory READMEs) — not a generic pitch. Adapt terminology to the project's sphere.
+## Рамка (важно)
+- KAIF **уже развёрнут** в этом проекте. **Не** говори о распаковке и установке — это сделано. Говори
+  в духе «вот как *пользоваться* тем, что уже здесь».
+- «Что такое KAIF» держи в пределах **пары предложений**. Основную часть ответа потрать на **как им
+  пользоваться**: структура, конвенции, документы, директории, скиллы.
+- Пиши на рабочем языке оператора. Имена `/команд` и файлов держи каноническими.
+- Опирайся на развёрнутую реальность *этого* проекта (прочитай `KAIF_FRAMEWORK.md`, `AGENT_GUIDE.md`,
+  README директорий), а не на общий рекламный текст. Адаптируй терминологию к сфере проекта.
 
-## What to output (structure the chat message like this)
+## Что вывести (так и структурируй сообщение в чате)
 
-1. **What KAIF is (2–3 sentences).** A context-resilient, autonomy-disciplined method for the human–AI
-   tandem: the human is the visionary, the agent the executor, and the project's memory/discipline live in
-   files in the repo so no session starts from zero. One line on why it's useful here.
+1. **Что такое KAIF (2–3 предложения).** Устойчивый к потере контекста, дисциплинирующий автономию
+   метод работы тандема «человек — ИИ»: человек — визионер, агент — исполнитель, а память и дисциплина
+   проекта живут файлами в репозитории, поэтому ни одна сессия не начинается с нуля. Одна строка о
+   том, чем он полезен здесь.
 
-2. **The key documents — what to read/keep, and who owns each.** Briefly, as a list:
-   `AGENT_GUIDE.md` (the canon), `PHILOSOPHY.md` (how the agent thinks), `BUG_FIXING_FRAMEWORK.md`,
-   **`GOAL.md`** (the owner's vision — *your* document), `STATUS.md` (living state), `MASTER_PLAN.md`
-   (roadmap), the external & internal maps, `KAIF_FRAMEWORK.md` (this "what's deployed" summary).
+2. **Ключевые документы — что читать и вести, и чей каждый.** Кратко, списком:
+   `AGENT_GUIDE.md` (канон), `PHILOSOPHY.md` (как агент мыслит), `BUG_FIXING_FRAMEWORK.md`,
+   **`GOAL.md`** (видение владельца — *твой* документ), `STATUS.md` (живое состояние),
+   `MASTER_PLAN.md` (дорожная карта), внешняя и внутренняя карты, `KAIF_FRAMEWORK.md` (эта сводка «что
+   развёрнуто»).
 
-3. **The directories — where knowledge lives, and where the owner acts.** `plans/`, `ideas/` (mostly
-   yours), `bugs/`, `researches/`, `interviews/` (you answer here), `homeworks/` (tasks for you). Mention
-   the DONE-tag convention in one line.
+3. **Директории — где живёт знание и где действует владелец.** `plans/`, `ideas/` (в основном твои),
+   `bugs/`, `researches/`, `interviews/` (здесь отвечаешь ты), `homeworks/` (задачи тебе). Одной
+   строкой упомяни конвенцию DONE-тега.
 
-4. **The skills — the commands you type.** List them grouped, each with a one-line purpose: session
-   (`/resume`, `/pause`), autonomy (`/autoloop`, `/dayloop`, `/nightloop`), hygiene (`/refresh-context`,
-   `/check-backlog`), knowledge (`/report-bug`, `/bug-research`, `/propose-idea`), owner (`/interview`),
-   planning (`/revision`), help (`/help-kaif`), shipping (`/release`), and the lifecycle (`/kaif-version`,
-   `/kaif-update`, `/kaif-fork`, `/kaif-switch-origin`, `/kaif-remove`).
+4. **Скиллы — команды, которые ты набираешь.** Перечисли их группами, у каждой — одна строка о
+   назначении: сессия (`/resume`, `/pause`), автономия (`/autoloop`, `/dayloop`, `/nightloop`),
+   гигиена (`/refresh-context`, `/check-backlog`), знание (`/experience`, `/report-bug`,
+   `/bug-research`, `/propose-idea`), владелец (`/interview`, `/fix-vision`), планирование
+   (`/revision`, `/what-next`), помощь (`/help-kaif`), выпуск (`/release`) и жизненный цикл
+   (`/kaif-version`, `/kaif-update`, `/kaif-fork`, `/kaif-switch-origin`, `/kaif-remove`).
 
-5. **How a normal workflow looks.** A short example: *"`/resume` to start → I work and keep `STATUS.md`
-   current → you drop ideas in `ideas/` or answer an `/interview` → `/pause` to wrap up."* Note the human's
-   role (visionary: `GOAL.md`, ideas, interview answers) vs. the agent's (executor).
+5. **Как выглядит обычный рабочий процесс.** Короткий пример: *«`/resume`, чтобы начать → я работаю и
+   держу `STATUS.md` актуальным → ты кладёшь идеи в `ideas/` или отвечаешь на `/interview` → `/pause`,
+   чтобы свернуться».* Отметь роль человека (визионер: `GOAL.md`, идеи, ответы на интервью) против
+   роли агента (исполнитель).
 
-6. **Where to go deeper.** Point to `KAIF_FRAMEWORK.md` and `AGENT_GUIDE.md` for the full detail.
+6. **Куда копать глубже.** Укажи на `KAIF_FRAMEWORK.md` и `AGENT_GUIDE.md` за полными деталями.
 
-## Notes
-- This is a **read-and-explain** skill — don't edit files, don't deploy, don't change state.
-- Keep it scannable: short sections, lists over paragraphs. The goal is that the operator finishes reading
-  and knows exactly which document to open and which command to type next.
-- If the operator asked about one specific part ("how do interviews work?"), answer that focused, then
-  offer the full manual.
+## Заметки
+- Это скилл **прочитать-и-объяснить** — не правь файлы, не разворачивай, не меняй состояние.
+- Держи ответ просматриваемым: короткие разделы, списки вместо абзацев. Цель — чтобы оператор дочитал
+  и точно знал, какой документ открыть и какую команду набрать следующей.
+- Если оператор спросил про одну конкретную часть («как работают интервью?»), ответь на неё точечно, а
+  затем предложи полное руководство.

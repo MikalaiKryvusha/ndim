@@ -1,104 +1,120 @@
 ---
 name: release
-description: Build a release candidate and publish it to GitHub Releases — pre-check, refresh README (and bilingual copies), regenerate rendered docs, version bump + build + tag + push + GitHub Release. Use when the human says "make a release", "ship a release", "cut an RC", "publish a new version", "release", "ship it", "сделай релиз", "выпусти релиз". Trigger aliases (ru): «сделай релиз», «выпусти релиз», «опубликуй новую версию», «отгружай»
+description: Собрать релиз-кандидат и опубликовать его в GitHub Releases — предпроверка, обновление README (и двуязычных копий), перегенерация рендеренных документов, бамп версии + сборка + тег + push + GitHub Release. Используй, когда человек говорит «сделай релиз», «выпусти релиз», «опубликуй новую версию», «выкати версию», "make a release", "ship a release", "publish a new version".
 ---
 
-# /release — publish a release to GitHub
+# /release — опубликовать релиз на GitHub
 
-The human asks to ship a new version. This is an **irreversible external action** (a public tag +
-GitHub Release). Run the routine **in order**; narrate each step in the chat. If a step fails — stop,
-show the error, do NOT continue blindly.
+Человек просит выпустить новую версию. Это **необратимое внешнее действие** (публичный тег +
+GitHub Release). Выполняй процедуру **по порядку**; проговаривай каждый шаг в чате. Если шаг
+провалился — остановись, покажи ошибку, НЕ продолжай вслепую.
 
-> ⚠️ **CONFIRMATION REQUIRED.** Before the publish itself, show the human: which version it'll be
-> (current → new), that the tree is clean, that it built. Publish only on their explicit "yes". A release
-> = a public tag and Release, unpleasant to roll back. **In autonomous mode (`/autoloop`/loops) do NOT
-> publish a release.**
+> ⚠️ **ТРЕБУЕТСЯ ПОДТВЕРЖДЕНИЕ.** Перед самой публикацией покажи человеку: какая будет версия
+> (текущая → новая), что дерево чистое, что сборка прошла. Публикуй только по его явному «да». Релиз —
+> это публичный тег и Release, откатывать неприятно. **В автономном режиме (`/autoloop` и другие
+> циклы) релизы НЕ публикуй.**
 
-## Step 0. Decide the bump type and the codename
+## Шаг 0. Определи тип бампа и кодовое имя
 
-Confirm with the human (or confirm the default): patch / minor / major. State the current → new version.
+Согласуй с человеком (или подтверди умолчание): patch / minor / major. Назови текущую → новую версию.
 
-**Every release gets a short codename** (a memorable one- or two-word name for the theme, e.g. *Anonymous*,
-*Slim*, *Savvied*). Ask the human for it (or propose one and confirm). The codename drives the release
-**title** and headline — see Step 6.
+**У каждого релиза есть короткое кодовое имя** (запоминающееся слово или два, описывающие тему релиза).
+Спроси его у человека (или предложи и подтверди). Кодовое имя определяет **заголовок** релиза и
+подзаголовок — см. шаг 6.
 
-## Step 1. Pre-check the environment (don't release on a dirty/broken tree)
+## Шаг 1. Предпроверка окружения (не релизь на грязном или сломанном дереве)
 
 ```bash
-git status --short          # tree must be CLEAN (except gitignored artifacts)
-git branch --show-current   # the release branch (e.g. main)
-git pull --rebase           # so the push is fast-forward
-gh auth status              # gh logged in (needed for the GitHub Release)
+git status --short          # дерево должно быть ЧИСТЫМ (кроме gitignored-артефактов)
+git branch --show-current   # ветка релиза (main)
+git pull --rebase           # чтобы push был fast-forward
+gh auth status              # gh залогинен (нужен для GitHub Release)
 ```
-If the tree is dirty — commit/sort it out first (`/pause` or your commit tool).
+Если дерево грязное — сначала закоммить или разберись (`/pause` или твой инструмент коммитов).
 
-## Step 2. Refresh README (all languages)
+## Шаг 2. Освежи README (все языки)
 
-Bring `README.md` in line with reality: phase status, working features, instructions. If bilingual, keep
-both languages in sync. Don't invent — reflect only what's actually done and verified (cross-check
-`STATUS.md` and the closed `bugs/`/`ideas/` `*_DONE_*`).
+Приведи `README.md` в соответствие с реальностью: статус фаз, работающие фичи, инструкции. Если он
+двуязычный (ru/en — на этом проекте так и есть), держи оба языка синхронными. Не выдумывай — отражай
+только то, что действительно сделано и проверено (сверься со `STATUS.md` и закрытыми `bugs/`/`ideas/`
+с тегом `DONE`).
 
-## Step 3. Regenerate rendered docs
+## Шаг 3. Перегенерируй рендеренные документы
 
-`<Regenerate any rendered artifacts, e.g. README.pdf (node tools/readme-pdf.mjs). For this framework's
-own project, also regenerate the self-extracting core: node tools/build-framework.mjs.>`
+Если в проекте появятся генерируемые артефакты (например, `README.pdf`), перегенерируй их здесь.
+Сейчас таких нет.
 
-## Step 4. Control build (before the release)
+## Шаг 4. Контрольная сборка (перед релизом)
 
-`<Run the project build (BUILD_COMMAND). It must succeed. This catches errors BEFORE the version bump so
-you don't leave a half-released version.>`
+Запусти сборку проекта (см. `AGENT_GUIDE.md` → «Сборка»). Она обязана пройти. Это ловит ошибки ДО
+бампа версии, чтобы не оставить полурелизнутую версию.
 
-## Step 4.5. Judge pass — MANDATORY adversarial verification before publishing
+## Шаг 4а. Судейский проход — ОБЯЗАТЕЛЕН перед публикацией
 
-Run `/fable-judge` over the release candidate's own claims: every statement in the README/notes about
-what works is re-run or re-opened (build, self-checks, artifact list, versions, links), and the change
-set is diffed against the release's declared scope. The verdict must be **VERIFIED**, or **VERIFIED WITH
-CAVEATS** with every caveat explicitly carried into the release notes. **REFUTED blocks the release** —
-fix and re-judge before proceeding. (A release is the one artifact whose false claims the whole world
-downloads.)
+Прогони `/fable-judge` по релиз-кандидату: перепрогони заявленные проверки (тесты, сборка,
+`kaif:check`), сверь фактический дифф с тем, что релиз ЗАЯВЛЯЕТ. Вердикт REFUTED = релиз не выходит,
+пока расхождение не устранено. Релиз — необратимое внешнее действие; неподтверждённое «всё проверено»
+здесь дороже всего.
 
-## Step 5. Commit the doc/build changes (before the release)
+## Шаг 5. Закоммить изменения документов и сборки (перед релизом)
 
-Commit the README/docs updates so the `release: X.Y` commit is a clean version bump:
+Закоммить обновления README и документов, чтобы коммит `release: X.Y` был чистым бампом версии:
 ```bash
-git add -A && git commit -m "<msg>" && git push "docs: README for release X.Y"
+git add -A && git commit -m "docs: README для релиза X.Y"
 ```
 
-## Step 6. Publish (after the human's confirmation)
+## Шаг 6. Опубликуй (после подтверждения человека)
 
-`<Run your release flow. If you have a release tool (e.g. tools/release.mjs that bumps the version,
-builds, renames the artifact, commits "release: X.Y", tags vX.Y, pushes, and runs gh release create),
-run it. Otherwise, do it explicitly:>`
 ```bash
-# bump version (in version.json or your manifest), then:
+# бампни версию (в version.json или манифесте), затем:
 git commit -am "release: X.Y" && git tag vX.Y && git push && git push --tags
-gh release create vX.Y --title "<PROJECT> X.Y — <Codename>" --notes-file <NOTES.md> <ARTIFACT(S) if any>
+gh release create vX.Y --title "NDim Space X.Y — <Кодовое имя>" --notes-file <NOTES.md> <АРТЕФАКТЫ, если есть>
 ```
 
-> 📛 **Release title — FIXED FORMAT (CANON):** `<PROJECT> X.Y — <Codename>` — the project name, the
-> `major.minor` version, an em dash `—`, then the Step-0 codename. Examples: `KAIF 1.2 — Anonymous KAIF`,
-> `KAIF 1.3 — Slim KAIF`, `KAIF 1.4 — Savvied KAIF`. **Not** `vX.Y`, no guillemets, no quotes. Keep it
-> consistent with every prior release (check `gh release list`).
+> 📛 **Заголовок релиза — ФИКСИРОВАННЫЙ ФОРМАТ (КАНОН):** `NDim Space X.Y — <Кодовое имя>` — имя
+> проекта, версия `major.minor`, длинное тире `—`, затем кодовое имя из шага 0. **Не** `vX.Y`, без
+> кавычек и ёлочек. Держи формат согласованным со всеми прошлыми релизами (проверь `gh release list`).
 >
-> 📝 **Release notes — detailed and BILINGUAL (do NOT `--generate-notes`).** Write real notes and mirror
-> **every language the README ships in**, with in-page language anchors/toggles, matching the house style
-> of previous releases (check the last release's body with `gh release view <prev> --json body -q .body`
-> and follow its shape). Structure per language: a header line (release date · place), a one-paragraph
-> "what this release is", a short "what KAIF is" paragraph, the attached artifacts, a **✨ What's new**
-> section, and a **🚀 Get started** section. Write the notes to a file and pass `--notes-file`.
+> 📝 **Заметки релиза — подробные и ДВУЯЗЫЧНЫЕ (НЕ используй `--generate-notes`).** Напиши настоящие
+> заметки и продублируй их **на каждом языке, который есть в README**, с якорями или переключателями
+> языка на странице, в стиле предыдущих релизов (посмотри тело прошлого релиза через
+> `gh release view <prev> --json body -q .body` и следуй его форме). Структура на язык: строка
+> заголовка (дата релиза · место), абзац «что это за релиз», короткий абзац «что такое проект»,
+> приложенные артефакты, раздел **✨ Что нового** и раздел **🚀 Начать**. Запиши заметки в файл и
+> передай через `--notes-file`.
 
-## Step 7. Verify and report
+## Шаг 6.5. Чеклист выката (когда релиз заменяет РАБОТАЮЩУЮ систему)
+
+Если релиз включает выкат поверх живого сервера, контейнера или службы — пройди пять ворот. Каждые
+существуют потому, что пропуск ровно этих ворот однажды уронил настоящий прод:
+
+1. **Сначала зеркало прода.** Сними ФАКТИЧЕСКУЮ конфигурацию работающего прода ДО того, как его
+   заменять (`docker inspect`, переменные окружения, версия) — прод часто живёт с настройками,
+   которых не помнит ни один документ, и слепой перевыкат «по докам» молча меняет поведение (или
+   направляет прод в эмулятор стенда). Каждое отличие старого запуска от нового обязано быть
+   осознанным и названным решением.
+2. **Живой смоук.** Запусти новый экземпляр и прочитай глазами его первый рабочий цикл в логе
+   (`TESTING_FRAMEWORK.md` → ворота наблюдения).
+3. **Самодостаточность артефакта.** Образ или бандл запускается в изоляции, все модули на месте —
+   образ, отставший от кода, ронял прод при всех зелёных тестах (это ровно EXP-0040).
+4. **Инварианты домена.** До переключения выпиши числа, которые НЕ должны измениться (счётчики,
+   суммы, размеры); после — сверь.
+5. **Документ боевого запуска.** После выката обнови документ проекта про боевой запуск
+   (`plans/04_cutover.md`) — единственный источник истины о том, как прод запускается на самом деле.
+   Конфигурация прода, живущая только внутри работающего процесса, — мина для следующей сессии.
+
+## Шаг 7. Проверь и доложи
 
 ```bash
-gh release view vX.Y        # the release exists, artifacts attached
-git log --oneline -3        # the release commit + tag are visible
+gh release view vX.Y        # релиз существует, артефакты приложены
+git log --oneline -3        # виден коммит релиза и тег
 ```
-Report to the human: the version, the release link, what was attached. Done.
+Доложи человеку: версия, ссылка на релиз, что приложено. Готово.
 
-## Notes
-- Releases bump minor/major; ordinary in-progress commits bump the build/patch.
-- If the push is rejected (non-fast-forward) — `git pull --rebase` and retry. On step 6 this is critical:
-  a tag may already exist locally — check `git tag` and `git tag -d vX.Y` before retrying.
-- NEVER force-push and never delete others' tags/releases. If something goes wrong during publish — stop
-  and show the human, don't "fix" it blindly.
-- Don't release in autonomous mode — only on the human's explicit request.
+## Заметки
+- Релизы бампают minor/major; обычные рабочие коммиты бампают build/patch.
+- Если push отклонён (non-fast-forward) — `git pull --rebase` и повтори. На шаге 6 это критично: тег
+  может уже существовать локально — проверь `git tag` и `git tag -d vX.Y` перед повтором.
+- НИКОГДА не делай force-push и не удаляй чужие теги и релизы. Если во время публикации что-то пошло
+  не так — остановись и покажи человеку, не «чини» вслепую.
+- Не релизь в автономном режиме — только по явной просьбе человека.

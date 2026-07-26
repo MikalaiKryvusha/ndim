@@ -1,53 +1,59 @@
 ---
 name: pause
-description: End a work session (pause) — record status and next-session plans in STATUS.md, refresh README, (re)build the project, commit and push. Use when the human says "let's pause", "wrap up", "save progress", "commit and push", "end the session", "сделаем паузу", "заверши сессию", "зафиксируй статус". Trigger aliases (ru): «пауза», «сделаем паузу», «сверни сессию», «сохрани прогресс», «зафиксируй статус»
+description: Завершить рабочую сессию (пауза) — записать статус и планы на следующую сессию в STATUS.md, освежить README, собрать проект, закоммитить и запушить. Используй, когда человек говорит «сделаем паузу», «заверши сессию», «зафиксируй статус», «сохрани прогресс», «закоммить и запушь», "let's pause", "wrap up", "end the session".
 ---
 
-# /pause — end the work session
+# /pause — завершение рабочей сессии
 
-The human is pausing. Run the wrap-up routine **in order**. Narrate each step briefly in the chat.
-Don't skip steps. If a step fails — stop, tell the human, don't continue blindly.
+Человек ставит паузу. Выполни процедуру завершения **по порядку**. Кратко проговаривай каждый шаг в
+чате. Не пропускай шаги. Если шаг провалился — остановись, скажи человеку, не продолжай вслепую.
 
-## Step 1. Record status & plans in STATUS.md
+## Шаг 1. Записать статус и планы в STATUS.md
 
-Update `STATUS.md`:
-- **What was done this session** — concrete, tied to bugs/features and files.
-- **Current position** — what works, what's in progress, where we are.
-- **Plans for next session** — a clear "where to continue" checklist (commands, files, what to verify
-  first). Remember: the next agent session starts with empty context — write so it can jump straight in.
-- Convert relative dates to absolute (find today's date from context / `date`).
+Обнови `STATUS.md`:
+- **Что сделано за эту сессию** — конкретно, с привязкой к багам, фичам и файлам.
+- **Текущая позиция** — что работает, что в процессе, где мы.
+- **Планы на следующую сессию** — ясный чеклист «где продолжить» (команды, файлы, что проверить
+  первым). Помни: следующая сессия агента стартует с пустым контекстом — пиши так, чтобы она могла
+  сразу впрыгнуть в работу.
+- Переводи относительные даты в абсолютные (сегодняшнюю дату возьми из контекста или `date`).
 
-Reconcile with the active bug docs in `bugs/` and reflect their status.
+Сверься с активными документами багов в `bugs/` и отрази их статус.
 
-## Step 2. Refresh README
+## Шаг 2. Освежить README
 
-Bring `README.md` in line with reality: phase status, working features, instructions. If the README is
-bilingual, keep both languages in sync. Don't invent — reflect only what is actually done and verified.
+Приведи `README.md` в соответствие с реальностью: статус фаз, работающие фичи, инструкции. Если README
+двуязычный — держи оба языка синхронными. Не выдумывай — отражай только то, что действительно сделано
+и проверено.
 
-## Step 3. (Re)build / regenerate artifacts
+## Шаг 3. Пересобрать / перегенерировать артефакты
 
-`<Run the project build and any artifact regeneration (e.g. a rendered README.pdf). For this framework's
-own project: `node tools/build-framework.mjs` regenerates KAIF.md, and `node tools/readme-pdf.mjs`
-regenerates README.pdf.>` If a build fails, stop and show the errors — don't commit broken state.
+Сборки проекта пока нет — стек NDim Space 2.0 не выбран (см. `AGENT_GUIDE.md` → «Сборка»). Когда она
+появится, запускай её здесь. Если сборка падает — остановись и покажи ошибки, не коммить сломанное
+состояние.
 
-## Step 4. Commit and push
+## Шаг 4. Закоммитить и запушить
 
-`<Use your commit tool/flow. If you have one (e.g. tools/commit.mjs that bumps build, adds, commits,
-pushes), run it. Otherwise: git add -A && git commit -m "..." && git push.>`
-
-Message style (from `AGENT_GUIDE.md`): `feat:` / `fix:` / `docs:` / `refactor:` / `ci:` + one line.
-End the message with:
-```
-Co-Authored-By: <YOUR AGENT/MODEL> <noreply@anthropic.com>
+```bash
+git add -A && git commit -m "..."
 ```
 
-## Step 5. Report
+Стиль сообщения (из `AGENT_GUIDE.md`): `feat:` / `fix:` / `docs:` / `refactor:` / `ci:` + одна строка.
+Заверши сообщение трейлером:
+```
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+```
 
-Briefly report to the human: what was recorded, what was built, the commit hash, what was pushed, and
-one line — the main plan for next session. That's the pause.
+⚠️ **Push — только по явной команде владельца.** Удалённый репозиторий для 2.0 ещё не выбран
+(интервью №001). До этого коммить локально.
 
-## Notes
+## Шаг 5. Доложить
 
-- If a push is rejected (non-fast-forward) — `git pull --rebase`, retry the push, then tell the human
-  about the divergence.
-- Generated artifacts that are gitignored (e.g. README.pdf, build outputs) won't be committed — that's fine.
+Кратко доложи человеку: что записано, что собрано, хеш коммита, что запушено, и одной строкой —
+главный план на следующую сессию. Это и есть пауза.
+
+## Заметки
+
+- Если push отклонён (non-fast-forward) — `git pull --rebase`, повтори push, затем расскажи человеку
+  о расхождении.
+- Сгенерированные артефакты, попавшие в `.gitignore` (сборка, логи), не коммитятся — это нормально.

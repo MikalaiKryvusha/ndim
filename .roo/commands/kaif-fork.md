@@ -1,36 +1,37 @@
 ---
-description: Snapshot this project's evolved KAIF into the user's own GitHub repository and switch version tracking to that fork — so the user develops and versions their own evolution of KAIF independently of the origin. Use when the human says "fork KAIF", "make my own KAIF", "snapshot the framework to my repo", "track my own KAIF", "сделай свой слепок KAIF", "форкни фреймворк под себя". Trigger aliases (ru): «форкни KAIF под себя», «сделай свой слепок KAIF»
+description: Снять слепок эволюционировавшего KAIF этого проекта в собственный GitHub-репозиторий пользователя и переключить отслеживание версий на этот форк — чтобы пользователь развивал и версионировал свою эволюцию KAIF независимо от origin. Используй, когда человек говорит «форкни фреймворк под себя», «сделай свой слепок KAIF», «сделай мой KAIF», «отслеживай мой KAIF», "fork KAIF", "make my own KAIF".
 ---
 
-# /kaif-fork — snapshot KAIF into the user's own repo & track it
+# /kaif-fork — снять слепок KAIF в собственный репозиторий пользователя и отслеживать его
 
-After living in a project, KAIF often evolves far from origin — locally improved, adapted, extended. At
-some point the user wants to **own that evolution**: keep developing and versioning *their* KAIF in
-*their* repo, no longer bound to the origin's release cadence. This skill does that in one move.
+Пожив в проекте, KAIF часто уходит далеко от origin — его локально улучшают, адаптируют, расширяют. В
+какой-то момент пользователь хочет **владеть этой эволюцией**: развивать и версионировать *свой* KAIF в
+*своём* репозитории, больше не будучи привязанным к темпу релизов origin. Этот скилл делает это одним
+движением.
 
-## Procedure
+## Процедура
 
-1. **Gather the current KAIF.** Identify everything that constitutes the deployed framework in this
-   project (the core/wrapper: guidance docs, `.claude/skills/` or the agent's equivalent, the `kaif/`
-   tools, `.kaif/kaif.json`) — **not** the user's project files and **not** the content artifacts
-   (those stay in the project).
+1. **Собери текущий KAIF.** Определи всё, что составляет развёрнутый фреймворк в этом проекте (ядро и
+   обёртка: руководящие документы, `.claude/skills/`, инструменты `kaif`, `.kaif/kaif.json`) — **не**
+   файлы проекта пользователя и **не** содержательные артефакты (они остаются в проекте).
 
-2. **Create the user's KAIF repo.** With the human's confirmation, create a new GitHub repo under their
-   account (e.g. `gh repo create <user>/<their-kaif-name> --public`). Put the snapshot of the framework
-   there as its own self-contained KAIF (carry over `KAIF.md`/`framework/`, tools, README, LICENSE,
-   versioning). This becomes the user's origin.
+2. **Создай репозиторий KAIF пользователя.** С подтверждения человека создай новый GitHub-репозиторий
+   под его аккаунтом (например, `gh repo create <user>/<имя-его-KAIF> --public`). Положи туда слепок
+   фреймворка как самодостаточный KAIF (перенеси `KAIF.md`/`framework/`, инструменты, README, LICENSE,
+   версионирование). Это становится его origin.
 
-3. **Switch tracking.** Update `.kaif/kaif.json` in the project: set `origin` to the user's new repo and
-   `tracking: "fork"`. From now on `/kaif-version` and `/kaif-update` follow the user's fork.
+3. **Переключи отслеживание.** Обнови `.kaif/kaif.json` в проекте: поставь `origin` на новый
+   репозиторий пользователя и `tracking: "fork"`. С этого момента `/kaif-version` и `/kaif-update`
+   следуют за форком пользователя.
 
-4. **Seed the fork's versioning.** Start the fork's `version.json` from the current version (note it
-   descends from origin vX.Y) with today's release date. The fork evolves on its own semver line.
+4. **Посей версионирование форка.** Начни `version.json` форка с текущей версии (отметив, что она
+   происходит от origin vX.Y) с сегодняшней датой релиза. Форк развивается по собственной линии semver.
 
-5. **Report & commit.** Tell the human the fork repo URL and that tracking now points to it. Commit the
-   `.kaif/kaif.json` change in the project.
+5. **Доложи и закоммить.** Скажи человеку URL репозитория форка и что отслеживание теперь указывает на
+   него. Закоммить изменение `.kaif/kaif.json` в проекте.
 
-## Notes
-- This is a branching of lineage: the user's KAIF may diverge from and even surpass the origin.
-- To return to the official origin later, use `/kaif-switch-origin` (with a respectful migration).
-- Respect attribution: a fork still carries the MIT license and credits KAIF's origin author; the user
-  adds themselves as the fork's maintainer.
+## Заметки
+- Это ветвление родословной: KAIF пользователя может разойтись с origin и даже превзойти его.
+- Чтобы позже вернуться к официальному origin, используй `/kaif-switch-origin` (с бережной миграцией).
+- Уважай атрибуцию: форк по-прежнему несёт лицензию MIT и указывает автора origin KAIF; пользователь
+  добавляет себя как мейнтейнера форка.

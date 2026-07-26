@@ -1,56 +1,64 @@
 ---
-description: Work with the agent's accumulated experience log (EXPERIENCE.md) — either CAPTURE a fresh lesson ("let's add this to experience", "log this", "remember this lesson", "add to experience") or RECALL relevant past lessons before a task ("recount your experience", "what do we know about this", "check your experience", "recall lessons"). EXPERIENCE.md is externalized memory of what works and what doesn't, so a context-less session or an autonomous loop never repeats a dead end. Invoked by the human with those phrases AND by the agent itself — recall at the start of a task, capture after any meaningful success or failure. Trigger aliases (ru): «вспомни опыт», «сверься с опытом», «допиши урок в опыт»
+description: Работа с журналом накопленного опыта агента (EXPERIENCE.md) — либо ЗАФИКСИРОВАТЬ свежий урок («добавь это в опыт», «запиши урок», «запомни этот урок»), либо ВСПОМНИТЬ релевантные прошлые уроки перед задачей («вспомни свой опыт», «что мы про это знаем», «сверься с опытом», «припомни уроки»). EXPERIENCE.md — внешняя память о том, что работает, а что нет, чтобы лишённая контекста сессия или автономный цикл не повторяли тупик. Вызывается человеком этими фразами И самим агентом: вспоминать в начале задачи, фиксировать после любого значимого успеха или провала.
 ---
 
-# /experience — the agent's accumulated experience (EXPERIENCE.md)
+# /experience — накопленный опыт агента (EXPERIENCE.md)
 
-`EXPERIENCE.md` (project root) is the agent's **growing log of lessons** — externalized memory of *what
-works and what doesn't*. It survives context resets: a fresh session or an autonomous loop consults it and
-avoids repeating dead ends. It is a **living reference — never DONE-tagged**. Plain markdown, searched with
-grep — no database, no vectors.
+`EXPERIENCE.md` (корень проекта) — **растущий журнал уроков** агента, внешняя память о том, *что
+работает, а что нет*. Он переживает сбросы контекста: свежая сессия или автономный цикл сверяется с
+ним и избегает повторения тупиков. Это **живой справочник — никогда не помечается DONE**. Обычный
+markdown, ищется грепом — без базы данных и векторов.
 
-This skill has two modes. Match the human's phrasing (or your own need) to one.
+У скилла два режима. Сопоставь формулировку человека (или собственную потребность) с одним из них.
 
-## Mode A — CAPTURE a lesson ("add this to experience")
+## Режим A — ЗАФИКСИРОВАТЬ урок («добавь это в опыт»)
 
-Trigger: the human says "let's add this to experience" / "log this lesson" / "remember this", OR you just
-finished something with a reusable takeaway (a success worth repeating, a failure worth avoiding, a
-non-obvious gotcha). **Capture proactively — don't wait to be asked.**
+Триггер: человек говорит «добавь это в опыт» / «запиши урок» / «запомни это», ЛИБО ты только что
+закончил что-то с переиспользуемым выводом (успех, который стоит повторять; провал, которого стоит
+избегать; неочевидная ловушка). **Фиксируй проактивно — не жди, пока попросят.**
 
-1. **Distill the lesson** to its reusable core — the *approach-level* takeaway, not defect detail
-   (defect detail belongs in `bugs/`; `EXPERIENCE.md` is "what to do / not do next time").
-2. **Write one entry** at the **top** of the `## Entries` section, in the canonical format:
+1. **Выдистиллируй урок** до переиспользуемой сути — вывода *уровня подхода*, а не детали дефекта
+   (детали дефекта живут в `bugs/`; `EXPERIENCE.md` — это «что делать и чего не делать в следующий раз»).
+2. **Напиши одну запись** в **начало** секции `## Записи`, в каноническом формате:
    ```
-   ### EXP-NNNN · <ISO date> · <✅|❌|❌→✅> · #tag #area
-   **Context:** one line.
-   **Tried / did:** briefly.
-   **Result:** ✅/❌ — what happened.
-   **Lesson:** the reusable takeaway.   → link: bugs/NN · ideas/NN · plans/NN (if any)
+   ### EXP-NNNN · <ISO-дата> · <✅|❌|❌→✅> · #тег #область
+   **Контекст:** одна строка.
+   **Пробовал / сделал:** кратко.
+   **Результат:** ✅/❌ — что произошло.
+   **Урок:** переиспользуемый вывод.   → ссылка: bugs/NN · ideas/NN · plans/NN (если есть)
+   **Repro:** готовая к запуску команда или проверка, которая подтверждает или применяет урок
+   (опускай, только если её действительно нет).
+   **Not for:** граница применимости — где этот урок НЕ действует.
    ```
-   - `EXP-NNNN` = next id (highest existing + 1, zero-padded).
-   - Pick 1–3 short `#tags` **inline on the entry** (there is no central tag cloud) — reuse an existing tag
-     where one fits (grep the file to see what's in use), so `grep '#tag'` collects related experiences.
-   - Keep it SHORT and grep-friendly: stable id, ISO date, outcome marker, inline tags.
-3. Keep it truthful — record what actually happened, including failures.
+   - `EXP-NNNN` = следующий id (максимальный существующий + 1, с ведущими нулями).
+   - Выбери 1–3 коротких `#тега` **прямо в записи** (централизованного облака тегов нет) —
+     переиспользуй существующий тег, если он подходит (грепни файл, чтобы посмотреть, какие в ходу),
+     чтобы `grep '#тег'` собирал родственный опыт.
+   - Держи запись КОРОТКОЙ и удобной для грепа: стабильный id, ISO-дата, маркер исхода, встроенные теги.
+3. Будь правдив — записывай, что произошло на самом деле, включая провалы.
 
-## Mode B — RECALL lessons ("recount your experience")
+## Режим B — ВСПОМНИТЬ уроки («вспомни свой опыт»)
 
-Trigger: the human says "recount your experience" / "what do we know about X" / "check your experience",
-OR you are **starting a task** and want to avoid known dead ends. **Recall at the start of a task by
-default** — it's cheap and prevents repeated mistakes.
+Триггер: человек говорит «вспомни свой опыт» / «что мы знаем про X» / «сверься с опытом», ЛИБО ты
+**начинаешь задачу** и хочешь избежать известных тупиков. **По умолчанию вспоминай в начале задачи** —
+это дёшево и предотвращает повторные ошибки.
 
-1. **Grep** `EXPERIENCE.md` by the task's tags/keywords: `grep -i '#loop\|context' EXPERIENCE.md`
-   (`-A4` to include the entry body), then read the matched entries.
-2. **Summarize** the relevant lessons in 1–5 lines: what was tried, what worked, what to avoid — and let
-   that steer the approach BEFORE writing code. If a past entry says an approach failed, don't blindly
-   retry it; go the other way (or note why this time differs).
-3. If nothing relevant exists, say so briefly and proceed.
+1. **Грепни** `EXPERIENCE.md` по тегам и ключевым словам задачи: `grep -i '#loop\|context' EXPERIENCE.md`
+   (`-A4`, чтобы захватить тело записи), затем прочитай найденные записи.
+2. **Суммируй** релевантные уроки в 1–5 строках: что пробовали, что сработало, чего избегать — и дай
+   этому направить подход ДО написания кода. Если прошлая запись говорит, что подход провалился, не
+   повторяй его вслепую; иди другим путём (или отметь, чем этот раз отличается). Держи в уме
+   **Not for:** каждой записи — урок, применённый за границей его применимости, это новая ошибка,
+   а не опыт.
+3. **Процитируй, что вспомнил** (id + одна строка на запись) в своём отчёте — либо скажи «релевантных
+   уроков нет». Непроцитированный recall непроверяем; `/fable-judge` эту строку ищет.
 
-## Notes
+## Заметки
 
-- **Boundary with `bugs/`:** `bugs/` = one document per defect (symptom → forensics → fix). `EXPERIENCE.md`
-  = short, cross-task lessons at the level of approach — including successes. Link, don't duplicate.
-- **Autonomy:** in loops (`/autoloop`, `/dayloop`, `/nightloop`) and on `/resume` / `/refresh-context`,
-  recall at the start and capture after meaningful outcomes — without waiting for the human.
-- **Hygiene:** keep entries short; reuse tag names consistently (grep before inventing a near-duplicate tag)
-  and periodically prune stale entries (like grooming a backlog) so the file stays greppable.
+- **Граница с `bugs/`:** `bugs/` = один документ на дефект (симптом → криминалистика → фикс).
+  `EXPERIENCE.md` = короткие межзадачные уроки уровня подхода, включая успехи. Ссылайся, не дублируй.
+- **Автономность:** в циклах (`/autoloop`, `/dayloop`, `/nightloop`) и при `/resume` / `/refresh-context`
+  вспоминай в начале и фиксируй после значимых исходов — не дожидаясь человека.
+- **Гигиена:** держи записи короткими; переиспользуй имена тегов последовательно (грепни, прежде чем
+  выдумывать почти-дубликат) и периодически подчищай устаревшие записи (как груминг беклога), чтобы
+  файл оставался грепаемым.

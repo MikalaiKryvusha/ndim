@@ -1,73 +1,80 @@
 ---
-description: File a bug document in bugs/ by the project's rules, when the agent hits a defect during development/testing (a crash, wrong behavior, regression, library defect). The agent keeps its OWN bug backlog — one md per noticed bug, by the canon of the existing bugs/ docs. Invoked by the agent when it finds a bug (including inside autoloops) AND by the human ("file a bug", "report this bug", "report-bug", "write this bug down", "заведи баг", "зарепорти баг"). Trigger aliases (ru): «заведи баг», «зарепорти баг», «запиши этот баг»
+description: Завести документ бага в bugs/ по правилам проекта, когда агент наткнулся на дефект в ходе разработки или тестирования (падение, неверное поведение, регрессия, дефект библиотеки). Агент ведёт СОБСТВЕННЫЙ беклог багов — один md на каждый замеченный баг, по канону существующих документов в bugs/. Вызывается агентом, когда он находит баг (в том числе внутри автоциклов), И человеком («заведи баг», «зарепорти баг», «запиши этот баг», "file a bug", "report this bug").
 ---
 
-# /report-bug — file a bug document in bugs/ (the agent keeps its own bug backlog)
+# /report-bug — завести документ бага в bugs/ (агент ведёт свой беклог багов)
 
-Whenever the agent writes code, tests it, and **hits a bug** (crash, wrong behavior, artifact,
-regression, library defect), it files a SEPARATE md document in `bugs/` by the same rules as the
-existing bug docs. This way the agent accumulates a bug backlog for itself — nothing is lost, and any bug
-can be returned to (or handed to `/bug-research`).
+Всякий раз, когда агент пишет код, тестирует его и **натыкается на баг** (падение, неверное поведение,
+артефакт, регрессия, дефект библиотеки), он заводит ОТДЕЛЬНЫЙ md-документ в `bugs/` по тем же правилам,
+что и существующие документы багов. Так агент накапливает беклог багов для себя — ничего не теряется, и
+к любому багу можно вернуться (или передать его в `/bug-research`).
 
-> Project rule (`AGENT_GUIDE.md`): "for every bug, even small ones — reflect and capture knowledge in a
-> dedicated md in `bugs/`." This skill automates exactly that.
+> Правило проекта (`AGENT_GUIDE.md`): «по каждому багу, даже маленькому, — отрефлексируй и зафиксируй
+> знание в отдельном md в `bugs/`». Этот скилл ровно это и автоматизирует.
 
-## When to call
+## Когда вызывать
 
-- The agent saw a defect during dev/test that it is NOT fixing right now (or is fixing, but wants to
-  capture the forensics/postmortem).
-- A bug needs to be deferred (take another task) without losing it.
-- The human asks to file a bug.
-- NOT for a "stuck-from-misunderstanding" stall (that's `PHILOSOPHY.md`) and not instead of fixing a trivial typo.
+- Агент увидел дефект в ходе разработки или теста и НЕ чинит его прямо сейчас (или чинит, но хочет
+  зафиксировать криминалистику и постмортем).
+- Баг нужно отложить (взять другую задачу), не потеряв его.
+- Человек просит завести баг.
+- НЕ для застревания из-за непонимания (это `PHILOSOPHY.md`) и не вместо починки тривиальной опечатки.
 
-## What to do
+## Что делать
 
-1. **Determine the next number.** `ls bugs/` → max two-digit `NN` + 1. Filename:
-   `bugs/NN_<short_english_name>.md` (snake_case, like its neighbors; NO `DONE` tag — the bug is open).
+1. **Определи следующий номер.** `ls bugs/` → максимальный двузначный `NN` + 1. Имя файла:
+   `bugs/NN_<короткое_английское_имя>.md` (snake_case, как у соседей; БЕЗ тега `DONE` — баг открыт).
 
-2. **Gather facts BEFORE writing** (don't invent — a bug doc is valuable for its facts):
-   - Symptom: what exactly is observed (and how it differs from expected).
-   - Repro: deterministic steps. Where possible — via the harness, so the bug reproduces without the human.
-   - Forensics: logs / crash file / measurements — attach the key lines (stack, abort message, error
-     codes, sizes).
-   - Build/version, environment, mode.
+2. **Собери факты ДО написания** (не выдумывай — документ бага ценен фактами):
+   - Симптом: что именно наблюдается (и чем отличается от ожидаемого).
+   - Воспроизведение: детерминированные шаги. Где возможно — через стенд, чтобы баг воспроизводился
+     без человека.
+   - Криминалистика: логи / файл падения / измерения — приложи ключевые строки (стек, сообщение об
+     аварии, коды ошибок, размеры).
+   - Сборка/версия, окружение, режим.
 
-3. **Write the document by the canon** (structure like the existing bug docs):
+3. **Напиши документ по канону** (структура — как у существующих документов багов):
    ```
-   # Bug NN — <one-line description>
+   # Bug NN — <однострочное описание>
 
-   **Status:** 🔴 OPEN   (or 🟡 partial / 🔬 research-only / 🔧 fix pending verification)
-   **Version/build:** <build>   ·   **When/context:** <date, during which task it was found>
+   **Статус:** 🔴 OPEN   (или 🟡 частично / 🔬 только исследование / 🔧 фикс ждёт проверки)
+   **Версия/сборка:** <сборка>   ·   **Когда/контекст:** <дата, в ходе какой задачи найден>
 
-   ## Symptom
-   <what is observed>
+   ## Симптом
+   <что наблюдается>
 
-   ## Repro (deterministic)
-   <steps; harness commands if available>
+   ## Воспроизведение (детерминированное)
+   <шаги; команды стенда, если есть>
 
-   ## Forensics
-   <key logs / crash / measurements>
+   ## Криминалистика
+   <ключевые логи / падение / измерения>
 
-   ## Root cause / Hypotheses
-   <the cause if clear; otherwise ranked hypotheses — do NOT patch blindly>
+   ## Корневая причина / Гипотезы
+   <причина, если ясна; иначе — ранжированные гипотезы. НЕ патчить вслепую>
 
-   ## Fix plan (or the fix, if done)
-   <steps; relation to architecture / other bugs>
+   ## План фикса (или сам фикс, если сделан)
+   <шаги; связь с архитектурой и другими багами>
 
-   ## Links
-   <related bugs / ideas / interviews>
+   ## Решения, принятые без владельца
+   <заполняется при закрытии: каждое решение, принятое агентом соло (и как он выбрал), либо «нет»>
+
+   ## Ссылки
+   <связанные баги / идеи / интервью>
    ```
-   Follow `BUG_FIXING_FRAMEWORK.md`. If the bug is in a third-party library, file a ticket for them (e.g.
-   via `gh`) and reference it from the doc.
+   Следуй `BUG_FIXING_FRAMEWORK.md`. Если баг в сторонней библиотеке — заведи тикет им (например,
+   через `gh`) и сошлись на него из документа.
 
-4. **Record in the backlog/process:**
-   - If important/blocking — a short line in `STATUS.md`.
-   - Commit (in autoloops, by the usual discipline): `git add -A && git commit -m "<msg>" && git push "docs(bugNN): …"`.
+4. **Отрази в беклоге и процессе:**
+   - Если важный или блокирующий — короткая строка в `STATUS.md`.
+   - Закоммить (в автоциклах — по обычной дисциплине): `git add -A && git commit -m "docs(bugNN): …"`.
 
-5. **Lifecycle:** while open — file WITHOUT `DONE`. When CONFIRMED closed (fixed and verified) — rename
-   `git mv bugs/NN_x.md bugs/NN_DONE_x.md` and append a `## ✅ STATUS: DONE (date)` section (what was
-   done / how verified). Backlog revision — the `/check-backlog` skill.
+5. **Жизненный цикл:** пока открыт — файл БЕЗ `DONE`. Когда ПОДТВЕРЖДЁННО закрыт (исправлен и
+   проверен) — `git mv bugs/NN_x.md bugs/NN_DONE_x.md` и допиши секцию `## ✅ СТАТУС: DONE (дата)`
+   (что сделано / как проверено). Ревизия беклога — скилл `/check-backlog`.
 
-## Notes
-- Better to file a bug and leave it open than to lose it. Factual accuracy beats prose.
-- If a bug resists (≥3 blind fix attempts) — switch to `/bug-research` (investigation without code) on the same doc.
+## Заметки
+- Лучше завести баг и оставить его открытым, чем потерять. Фактическая точность важнее красивой прозы.
+- Если баг сопротивляется (≥3 слепых попыток фикса) — переходи к `/bug-research` (исследование без
+  кода) на том же документе.
+- **Дефекты версии 1.x** (она в приватном `ndim-old`) заводить здесь можно и полезно, но чинить их
+  негде и незачем: такой баг фиксирует знание о том, как надо сделать иначе в 2.0.

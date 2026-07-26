@@ -1,27 +1,27 @@
 ---
-description: Switch this project's KAIF tracking from the user's fork back to the official origin (Mikalai Kryvusha's repo), performing a respectful migration that preserves the project and its content artifacts. Use when the human says "switch back to official KAIF", "track the origin again", "return to upstream KAIF", "вернись на официальный KAIF", "переключись обратно на origin". Trigger aliases (ru): «вернись на официальный KAIF», «переключись обратно на origin»
+description: Переключить отслеживание KAIF в этом проекте с форка пользователя обратно на официальный origin (репозиторий Николая Кривуши), проведя бережную миграцию, которая сохраняет проект и его содержательные артефакты. Используй, когда человек говорит «вернись на официальный KAIF», «переключись обратно на origin», «отслеживай апстрим KAIF», "switch back to official KAIF", "track the origin again".
 ---
 
-# /kaif-switch-origin — return tracking to the official origin
+# /kaif-switch-origin — вернуть отслеживание на официальный origin
 
-The inverse of `/kaif-fork`. A project that was tracking the user's own KAIF fork can return to the
-official origin (`MikalaiKryvusha/KAIF`), reconciling the two lineages respectfully.
+Обратная операция к `/kaif-fork`. Проект, отслеживавший собственный форк KAIF пользователя, может
+вернуться к официальному origin (`MikalaiKryvusha/KAIF`), бережно примирив две родословные.
 
-## Procedure
+## Процедура
 
-1. **Read `.kaif/kaif.json`** — confirm `tracking: "fork"` and note the current (fork) version.
-2. **Confirm with the human** — switching lineages can be significant if the fork diverged a lot. Make
-   sure they want the official origin's evolution, not their fork's.
-3. **Respectful migration to origin:** fetch the official origin's current `KAIF.md`; diff against
-   the deployed (fork-derived) wrapper; apply the same careful 3-way merge as `/kaif-update` — preserve
-   local customizations where possible, surface conflicts, **never** touch content artifacts or the
-   user's project files.
-4. **Switch tracking:** set `origin` back to `https://github.com/MikalaiKryvusha/KAIF` and
-   `tracking: "origin"` in `.kaif/kaif.json`; stamp the origin version + date.
-5. **Validate, report, commit:** `npm run kaif:check`; summarize what reconciled and any conflicts left;
-   commit `chore: switch KAIF tracking to origin vX.Y (DATE)`.
+1. **Прочитай `.kaif/kaif.json`** — подтверди `tracking: "fork"` и запомни текущую (форковую) версию.
+2. **Подтверди с человеком** — смена родословной может быть значимой, если форк сильно разошёлся.
+   Убедись, что он хочет эволюцию официального origin, а не своего форка.
+3. **Бережная миграция на origin:** скачай текущий `KAIF.md` официального origin (`node
+   tools/02-kaif-fetch.mjs`); сравни его с развёрнутой (происходящей от форка) обёрткой; примени тот же
+   аккуратный трёхсторонний мёрдж, что и `/kaif-update` — сохрани локальные доработки, где возможно,
+   покажи конфликты, **никогда** не трогай содержательные артефакты и файлы проекта пользователя.
+4. **Переключи отслеживание:** верни `origin` на `https://github.com/MikalaiKryvusha/KAIF` и
+   `tracking: "origin"` в `.kaif/kaif.json`; проштампуй версию origin + дату.
+5. **Провалидируй, доложи, закоммить:** `npm run kaif:check`; суммируй, что примирилось и какие
+   конфликты остались; коммит `chore: переключение отслеживания KAIF на origin vX.Y (ДАТА)`.
 
-## Notes
-- If the fork had valuable improvements, consider contributing them upstream (a PR to the origin) before
-  switching, so they aren't lost.
-- As always: respectful — the project stays whole and working throughout.
+## Заметки
+- Если в форке были ценные улучшения, подумай о том, чтобы предложить их наверх (PR в origin) перед
+  переключением, — чтобы они не потерялись.
+- Как всегда: бережно — проект остаётся целым и работающим на протяжении всей операции.

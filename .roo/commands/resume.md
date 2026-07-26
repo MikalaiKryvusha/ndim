@@ -1,50 +1,53 @@
 ---
-description: Resume work where the last session left off — read the key project documents, decide the single most important thing to do now, announce it, and start. Use when the human says "continue", "let's continue", "what's next", "where did we leave off", "resume", "pick up where we left off", "продолжи", "продолжим", "что дальше". Trigger aliases (ru): «продолжи», «продолжим», «возобнови», «на чём мы остановились», «что дальше по работе»
+description: Возобновить работу с того места, где остановилась прошлая сессия — прочитать ключевые документы проекта, решить, что сейчас самое важное, объявить это и начать. Используй, когда человек говорит «продолжи», «продолжим», «что дальше», «на чём остановились», «возобнови», «поехали дальше», "continue", "resume", "what's next", "pick up where we left off".
 ---
 
-# /resume — pick up where we left off
+# /resume — продолжить с того места, где остановились
 
-A new session starts with empty context. This skill rebuilds the picture fast and gets to work.
+Новая сессия стартует с пустым контекстом. Этот скилл быстро восстанавливает картину и приступает к делу.
 
-## Step 1. Read the key documents (all in parallel)
+## Шаг 1. Прочитай ключевые документы (все параллельно)
 
-Read at once:
+Читай сразу:
 
-- `STATUS.md` — current state, what's in progress, the "where to continue" checklist
-- `MASTER_PLAN.md` — the long-term plan and phases
-- `AGENT_GUIDE.md` — the rules for working on this project (mandatory)
-- `PROJECT_STRUCTURE_EXTERNAL_MAP.md` — architecture: modules, files, data flow
+- `STATUS.md` — текущее состояние, что в работе, чеклист «где продолжить»
+- `MASTER_PLAN.md` — долгосрочный план и фазы
+- `AGENT_GUIDE.md` — правила работы над этим проектом (обязательно)
+- `PROJECT_STRUCTURE_EXTERNAL_MAP.md` — архитектура: модули, файлы, потоки данных
 
-- `EXPERIENCE.md` — recall relevant lessons (grep by the task's tags) so you don't repeat a known dead end
+- `EXPERIENCE.md` — вспомни релевантные уроки (греп по тегам задачи), чтобы не повторить известный тупик
 
-If relevant to open questions:
-- `bugs/` — `ls bugs/`, open the non-`DONE` bugs
-- `BUG_FIXING_FRAMEWORK.md` — if a bug fix is likely
-- `PHILOSOPHY.md` — the simplicity principle
+Если это относится к открытым вопросам:
+- `bugs/` — `ls bugs/`, открой баги без тега `DONE`
+- `BUG_FIXING_FRAMEWORK.md` — если вероятна починка бага
+- `PHILOSOPHY.md` — принцип простоты
 
-## Step 2. Synthesize — choose the one main thing
+## Шаг 2. Синтезируй — выбери одну главную вещь
 
-Pick a single direction for this session. Priority (descending):
+Выбери единственное направление на эту сессию. Приоритет (по убыванию):
 
-1. **Open bugs with real symptoms** — if `STATUS.md` lists an open bug with reproducible symptoms, it's
-   priority #1. Work by `BUG_FIXING_FRAMEWORK.md`.
-2. **Next item from the `STATUS.md` "where to continue" checklist** — if bugs are clear.
-3. **Next phase from `MASTER_PLAN.md`** — if the checklist is empty/done.
+1. **Открытые баги с реальными симптомами** — если `STATUS.md` перечисляет открытый баг с
+   воспроизводимыми симптомами, это приоритет №1. Работай по `BUG_FIXING_FRAMEWORK.md`.
+2. **Следующий пункт из чеклиста «где продолжить»** в `STATUS.md` — если с багами ясно.
+3. **Следующая фаза из `MASTER_PLAN.md`** — если чеклист пуст или пройден.
 
-Before starting, **tell the human in one paragraph**: what you read and the current status; what you
-picked as the main thing and why; what you're about to do right now.
+Прежде чем начать, **скажи человеку одним абзацем**: что ты прочитал и каков текущий статус; что
+выбрал главным и почему; что собираешься делать прямо сейчас.
 
-Wait for confirmation only if the task is **destructive** or **large and non-obvious**. If the plan is
-clear — start right after the short announcement.
+Жди подтверждения, только если задача **разрушительная** или **крупная и неочевидная**. Если план
+ясен — начинай сразу после короткого объявления.
 
-## Step 3. Work
+## Шаг 3. Работай
 
-Do the chosen task. Along the way:
-- Write short updates in the chat (what you're doing, what you found, where you're digging).
-- Follow `AGENT_GUIDE.md` (code style, the bug framework, the test harness).
-- If it's a bug — keep a log in the relevant `bugs/` file.
+Делай выбранную задачу. По ходу:
+- Пиши короткие апдейты в чат (что делаешь, что нашёл, куда копаешь).
+- Следуй `AGENT_GUIDE.md` (стиль кода, фреймворк багов, испытательный стенд).
+- Если это баг — веди журнал в соответствующем файле `bugs/`.
 
-## Notes
+## Заметки
 
-- Verify the environment before relying on it (build toolchain, devices, services) — see `AGENT_GUIDE.md`.
-- Don't re-derive what the docs already state; trust `STATUS.md` and the plans, then verify by doing.
+- Проверяй окружение, прежде чем на него полагаться (тулчейн сборки, устройства, сервисы) — см. `AGENT_GUIDE.md`.
+- Не выводи заново то, что уже сказано в документах; доверяй `STATUS.md` и планам, а затем проверяй делом.
+- На NDim Space помни: старого кода в проекте нет. Версия 1.x — в приватном `MikalaiKryvusha/ndim-old`,
+  а её ключевое знание уже выжато в `researches/02` (модель данных) и `researches/03` (ядро похожести).
+  Если задача звучит как «почини старое» — это почти наверняка задача «сделай правильно в 2.0».

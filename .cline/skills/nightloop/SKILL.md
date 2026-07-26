@@ -1,81 +1,97 @@
 ---
 name: nightloop
-description: Nighttime autonomous work loop while the human is ASLEEP and can't answer the chat. The agent takes ANY backlog task (not needing a human architectural decision), writes code, builds, tests on the harness, fixes, periodically commits and PUSHES, and self-restarts the loop. Stops ONLY when: (1) a wake time has arrived, (2) the human writes in the chat, (3) an insurmountable critical error. Invoked by the human ("run the night loop", "work overnight", "nightloop", "work until morning") and by the agent when the human goes to sleep. Trigger aliases (ru): «ночной цикл», «работай до утра», «поработай ночью»
+description: Ночной автономный рабочий цикл, пока человек СПИТ и не может отвечать в чат. Агент берёт ЛЮБУЮ задачу беклога (не требующую архитектурного решения человека), пишет код, собирает, тестирует на стенде, чинит, периодически коммитит и ПУШИТ, и перезапускает цикл. Останавливается ТОЛЬКО когда: (1) наступило время подъёма, (2) человек написал в чат, (3) непреодолимая критическая ошибка. Вызывается человеком («запусти ночной цикл», «работай ночью», «найтлуп», «работай до утра») и агентом, когда человек уходит спать.
 ---
 
-# /nightloop — autonomous work until morning
+# /nightloop — автономная работа до утра
 
-Night. The human is ASLEEP — no interaction, no one to ask. The machine is on, the harness is available.
-The agent's job: **enter a self-directed loop and grind the backlog until morning**, setting itself
-not-too-hard tasks, committing/pushing, and self-restarting the loop.
+Ночь. Человек СПИТ — взаимодействия нет, спросить некого. Машина включена, стенд доступен. Задача
+агента: **войти в самоуправляемый цикл и молоть беклог до утра**, ставя себе не слишком трудные
+задачи, коммитя и пуша, и перезапуская цикл.
 
-This is the night variant of `/autoloop`: same execution discipline, but with **hard stop conditions on
-time and on the human appearing**, and **self-restart via `ScheduleWakeup`**.
+Это ночной вариант `/autoloop`: та же дисциплина исполнения, но с **жёсткими стоп-условиями по времени
+и по появлению человека**, и **самоперезапуском через `ScheduleWakeup`**.
 
-## 🛑 STOP CONDITIONS (check at the START of each iteration)
+## 🛑 СТОП-УСЛОВИЯ (проверяй в НАЧАЛЕ каждой итерации)
 
-Stop the loop ONLY if one of:
-1. **It is ≥ the wake time** (default 09:00 local; set it when starting the loop). ⏰ Check the time
-   (`date "+%H:%M"`) PERIODICALLY — don't miss the wake hour. The human comes online in the morning.
-2. **The human wrote in the chat.** Any new user message = exit, switch to them. The loop interrupts immediately.
-3. **ONLY a truly critical error** that can't be worked around autonomously and makes continuing
-   impossible in principle. RARE.
-   ❗ **Non-critical errors are NOT a stop condition — just keep working:** failed build (fix), flaky
-   connection (reconnect), software bug (file & fix or defer), hard task (take an easier one), crash
-   (investigate/fix). Working situations, not reasons to stop.
+Останавливай цикл ТОЛЬКО если:
+1. **Время ≥ времени подъёма** (по умолчанию 09:00 по местному; задай его при запуске цикла).
+   ⏰ Сверяйся с часами (`date "+%H:%M"`) ПЕРИОДИЧЕСКИ — не проспи час подъёма. Утром человек выйдет
+   на связь.
+2. **Человек написал в чат.** Любое новое сообщение пользователя = выйти, переключиться на него.
+   Цикл прерывается немедленно.
+3. **ТОЛЬКО по-настоящему критическая ошибка**, которую нельзя обойти автономно и которая делает
+   продолжение в принципе невозможным. РЕДКОСТЬ.
+   ❗ **Некритические ошибки — НЕ стоп-условие, просто продолжай работать:** упавшая сборка (почини),
+   плавающее соединение (переподключись), баг в софте (заведи и почини или отложи), трудная задача
+   (возьми полегче), падение (расследуй и почини). Рабочие ситуации, а не поводы останавливаться.
 
-Until one fires — don't stop, don't wait for confirmations, work.
+Пока ни одно не сработало — не останавливайся, не жди подтверждений, работай.
 
-> ⛔ **"Context overflow / filling up", "turn exhausted", "tired", "risk of hitting the limit" are NOT
-> stop conditions and NOT a reason to announce a pause or cut the turn short.** Context management is the
-> harness's job (it summarizes and continues on its own). Do NOT assess how much context is left and do
-> NOT end the turn yourself. Grind until morning — until a real stop condition above fires.
+> ⛔ **«Контекст переполняется», «ход исчерпан», «устал», «риск упереться в лимит» — НЕ стоп-условия и
+> НЕ повод объявлять паузу или обрывать ход.** Управление контекстом — задача харнесса (он сам
+> суммаризирует и продолжает). НЕ оценивай, сколько осталось контекста, и НЕ завершай ход сам. Мели до
+> утра — пока не сработает настоящее стоп-условие выше.
 
-## 🔁 The cycle (one iteration)
+## 🔁 Цикл (одна итерация)
 
-1. **Check stop conditions** (above). If stop — go to "Finishing".
-2. **Pick ANY backlog task.** Sources & priority as in `/dayloop` (finish started > bugs/polish > new ideas).
-   - Make technical/implementation decisions yourself.
-   - ONLY brand/UX/architecture-defining decisions — file an `/interview` + mark `STATUS.md`, take another task.
-   - Tasks needing human actions (real hardware, external accounts) — file homework in `plans/homework_*.md`.
-3. **Do it**: code → build (`npm run build`) → deploy → test on the harness (`npm test`),
-   verify objectively. High-level harness commands first; if missing, do it low-level then ADD the command.
-   Execute the item by the fable loop (`/fable-method`; `/fable-loop` for substantive items) — its gates
-   and forced artifacts (`INTENT`/`AUTH`/`TWINS`/`PENDING`) apply inside the cycle too.
-4. **Judge pass — MANDATORY before "done"**: run `/fable-judge` over the finished item — re-run the
-   claimed checks, diff what actually changed against the item's scope. REFUTED → back to work (step 3),
-   not to "done"; after 3 failed fix-judge cycles, record it honestly in `STATUS.md`/`bugs/` and take
-   another task.
-5. **Document**: worklog in `plans/`, bug docs in `bugs/`, `STATUS.md` along the way; append the
-   approach-level lesson to `EXPERIENCE.md` after a meaningful success/failure (skill: `/experience`).
-6. **Commit and PUSH** (per `AGENT_GUIDE.md`): after each finished task or every ~20–30 minutes. `git add -A && git commit -m "<msg>" && git push`.
-7. **Short chat report** (1–3 lines): so in the morning the human sees the progress.
-8. **Self-restart**: if there's work left in the turn — just continue the next iteration in the same
-   turn; don't assess how much context is left and don't end the turn yourself (the harness does that).
-   `ScheduleWakeup` (same `/nightloop` input, short listen) is a *mechanical fallback* for when the
-   harness ITSELF ends the turn: then the cycle resumes in a new turn. Don't call it preemptively
-   "because context is filling up".
+1. **Проверь стоп-условия** (выше). Если стоп — переходи к «Завершению».
+2. **Возьми ЛЮБУЮ задачу беклога.** Источники и приоритет — как в `/dayloop` (доделать начатое > баги
+   и полировка > новые идеи).
+   - Технические и реализационные решения принимай сам.
+   - ТОЛЬКО решения, определяющие бренд/UX/архитектуру — заведи `/interview` + отметь `STATUS.md`,
+     возьми другую задачу.
+   - Задачи, требующие действий человека (реальное железо, внешние аккаунты) — заведи домашку в
+     `homeworks/NN_*.md`.
+3. **Сделай**: код → сборка (см. `AGENT_GUIDE.md` → «Сборка») → развернуть → тест на стенде (см.
+   `AGENT_GUIDE.md` → «Испытательный стенд»), проверь объективно. Сначала высокоуровневые команды
+   стенда; если их нет — сделай низкоуровнево, затем ДОБАВЬ команду. Исполняй задачу по фейбл-циклу
+   (`/fable-method`; для содержательных — `/fable-loop`): ворота и артефакты
+   (`INTENT`/`AUTH`/`TWINS`/`PENDING`) действуют и внутри цикла.
+3а. **Судейский проход — ОБЯЗАТЕЛЕН перед «готово»**: прогони `/fable-judge` по завершённой задаче —
+   перепрогони заявленные проверки, сверь фактический дифф с рамками задачи. REFUTED → задача
+   возвращается в работу (шаг 3), а не в «готово»; после 3 неудачных циклов «фикс → судья» честно
+   зафиксируй в `STATUS.md`/`bugs/` и возьми другую задачу.
+4. **Документируй**: рабочий журнал в `plans/`, документы багов в `bugs/`, `STATUS.md` по ходу; после
+   значимого успеха или провала допиши урок уровня подхода в `EXPERIENCE.md` (скилл: `/experience`).
+5. **Коммить и ПУШЬ** (по `AGENT_GUIDE.md`): после каждой завершённой задачи или каждые ~20–30 минут.
+   `git add -A && git commit -m "..."`. **Правило одного шага:** одно осмысленное изменение = один
+   полный прогон гейтов = один коммит; никаких пакетных коммитов (большой дифф нельзя отревьюить
+   честно, а осуждённый провал откатывается одним файлом, а не ночью). Проход `/fable-judge` — перед
+   КАЖДЫМ push.
+   ⚠️ Push — только если владелец уже выбрал удалённый репозиторий (интервью №001). Иначе коммить локально.
+6. **Короткий отчёт в чат** (1–3 строки): чтобы утром человек увидел прогресс.
+7. **Самоперезапуск**: если в ходе осталась работа — просто продолжай следующую итерацию в том же
+   ходе; не оценивай, сколько осталось контекста, и не завершай ход сам (это делает харнесс).
+   `ScheduleWakeup` (тот же вход `/nightloop`, короткое ожидание) — *механический запасной вариант* на
+   случай, когда харнесс САМ завершил ход: тогда цикл возобновится в новом ходе. Не вызывай его
+   превентивно «потому что контекст заполняется».
 
-## ⚙️ Practice
+## ⚙️ Практика
 
-- **Don't go interactive:** no questions to the human with waiting — they're asleep. Human-level
-  decisions (UX/brand/architecture) — defer with a note, don't decide alone.
-- **Change safety:** small verified commits; if you break something, fix it or revert via git history.
-- **⏰ Watch the time** (`date "+%H:%M"`) so you don't miss the wake hour (stop condition).
-- **🔄 Periodically refresh context** — every few iterations call `/refresh-context`.
-- **🧹 Occasionally revise the backlog** — every few iterations call `/check-backlog`.
-- **🐞 Hit a bug** you won't fix now — file it with `/report-bug`.
-- **💡 A worthwhile NEW idea** — file it with `/propose-idea` and continue with OTHER tasks. **Don't
-  implement before the human approves.**
+- **Не уходи в интерактив:** никаких вопросов человеку с ожиданием — он спит. Решения уровня человека
+  (UX/бренд/архитектура) — отложи с пометкой, не решай один.
+- **Безопасность изменений:** маленькие проверенные коммиты; если что-то сломал — почини или откатись
+  через историю git.
+- **⏰ Следи за временем** (`date "+%H:%M"`), чтобы не проспать час подъёма (стоп-условие).
+- **🔄 Периодически освежай контекст** — раз в несколько итераций вызывай `/refresh-context`.
+- **🧹 Иногда ревизуй беклог** — раз в несколько итераций вызывай `/check-backlog`.
+- **🐞 Наткнулся на баг**, который сейчас чинить не будешь — заведи через `/report-bug`.
+- **💡 Стоящая НОВАЯ идея** — заведи через `/propose-idea` и продолжай ДРУГИЕ задачи. **Не реализуй до
+  одобрения человеком.**
+- **Старого кода в проекте нет** — версия 1.x в приватном `ndim-old`; знание из неё в `researches/`.
+- **UI/UX и бренд не решай сам** — 4 варианта макета на утверждение автору (`AGENT_GUIDE.md` → «Дизайн»).
 
-## Finishing (when a stop condition fired)
+## Завершение (когда сработало стоп-условие)
 
-- Get the current micro-step compiling, **commit and push** (don't leave broken/uncommitted main).
-- Update `STATUS.md`: what got done overnight, where you stopped, what's next, any "awaiting human review".
-- If stop = wake time or the human wrote — write a short summary of the night in the chat.
-- If stop = a critical error — describe it, what you tried, why you can't continue; wait.
+- Доведи текущий микрошаг до собирающегося состояния, **закоммить** (не оставляй сломанный или
+  незакоммиченный `main`).
+- Обнови `STATUS.md`: что сделано за ночь, где остановился, что дальше, что «ожидает решения человека».
+- Если стоп = время подъёма или человек написал — напиши короткую сводку ночи в чат.
+- Если стоп = критическая ошибка — опиши её, что пробовал, почему не можешь продолжать; жди.
 
-## Notes
+## Заметки
 
-- This is an INTENSIVE mode: don't spare tokens/time, maximize useful autonomous work overnight.
-- The global goal and vision live in `STATUS.md`/`plans/`/`AGENT_GUIDE.md`/`PHILOSOPHY.md`. Keep checking against them.
+- Это ИНТЕНСИВНЫЙ режим: не жалей токенов и времени, максимизируй полезную автономную работу за ночь.
+- Глобальная цель и видение живут в `GOAL.md`/`STATUS.md`/`AGENT_GUIDE.md`/`PHILOSOPHY.md`.
+  Постоянно сверяйся с ними.
