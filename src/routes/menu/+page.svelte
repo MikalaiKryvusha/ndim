@@ -85,20 +85,9 @@
     localStorage.setItem('ndim-theme', next);
   }
 
-  /** Приглашение друга: системное «поделиться», а где его нет — копирование ссылки. */
-  async function invite() {
-    const text = t.inviteText[lang];
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'NDim Space', text, url: SITE_ORIGIN });
-        return;
-      } catch {
-        // Человек передумал делиться — это не ошибка.
-        return;
-      }
-    }
-    await copyLink();
-  }
+  // Системное «поделиться» переехало на страницу «Пригласить друзей» (`/menu/share`,
+  // bugs/47) — вместе с сеткой соцсетей и прямой ссылкой, как было в 1.x. Здесь осталось
+  // копирование ссылки: это один тап, ради которого незачем уходить с меню.
 
   async function copyLink() {
     await navigator.clipboard.writeText(SITE_ORIGIN);
@@ -270,11 +259,14 @@
         </div>
       </div>
 
+      <!-- «Пригласить друзей» — своя страница, как в 1.x (кадр app-09): там сетка соцсетей,
+           системное «поделиться» и прямая ссылка (bugs/47). В меню остаётся строка-дверь:
+           канон меню 1.x — компактный список, а не развёрнутые блоки (bugs/29). -->
       <div class="card">
         <h3>{t.share[lang]}</h3>
-        <button type="button" class="row" onclick={invite}>
+        <a class="row" href="/menu/share">
           <span class="ic">↗</span><span class="lb">{t.invite[lang]}</span><span class="chev">›</span>
-        </button>
+        </a>
         <button type="button" class="row" onclick={copyLink}>
           <span class="ic">⧉</span><span class="lb">{t.copyLink[lang]}</span>
           <span class="val">{copied ? t.copiedLabel[lang] : SITE_ORIGIN.replace('https://', '')}</span>
