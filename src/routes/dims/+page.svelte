@@ -47,7 +47,14 @@
     type DimCard,
     type DimsScreenData,
   } from '$lib/data/dims';
-  import { dimCardTitle, isNewDim, searchIndex, sortMyDims } from '$lib/model/feed';
+  import {
+    dimCardTitle,
+    isNewDim,
+    searchIndex,
+    SEARCH_RESULT_LIMIT,
+    sortMyDims,
+    type DimsIndex,
+  } from '$lib/model/feed';
   import { technicalDetail } from '$lib/ui/errors';
   import { votesUnit, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
@@ -68,6 +75,35 @@
 
   let tab = $state<Tab>('all');
   let search = $state('');
+
+  /**
+   * ПОИСК ПО ВСЕМУ ПРОСТРАНСТВУ (bugs/50).
+   *
+   * Ищем по индексу `dims_list` (все 5111 измерений) и ДОГРУЖАЕМ найденное из базы —
+   * ровно как `doSearchDims` в 1.x. Раньше результат индекса использовался лишь как фильтр
+   * по карточкам, уже лежащим на экране, и человек не находил измерение, которое ЕСТЬ:
+   * «словно оно ищет только в том скоупе, который подгружен в браузере» (слово владельца).
+   *
+   * Экономия запросов при этом не нарушена: читаем не каталог, а ≤20 найденных документов,
+   * и только когда человек действительно ищет. Прочитанное оседает в кеше `data/dims.ts`.
+   */
+  let searchCards = $state<DimCard[]>([]);
+  /** Сколько всего совпадений в каталоге — чтобы честно сказать «показаны первые 20». */
+  let searchTotal = $state(0);
+  let searchBusy = $state(false);
+  /** Поиск ДОВЕДЁН до конца. Без этого «Ничего не найдено» врало бы во время загрузки. */
+  let searchDone = $state(false);
+  let searchError = $state('');
+
+  /**
+   * Таймер устранения дребезга и метка запроса — намеренно ОБЫЧНЫЕ переменные, не `$state`:
+   * их читает эффект поиска, и реактивность здесь означала бы бесконечный цикл.
+   */
+  let searchTimer: ReturnType<typeof setTimeout> | null = null;
+  let searchToken = 0;
+
+  /** Пауза перед запросом: человек печатает, а не ищет каждую букву (в 1.x искали по Enter). */
+  const SEARCH_DEBOUNCE_MS = 250;
 
   /** Очередь ещё не показанных id (вкладка «Все»). Из неё карточки достаются порциями. */
   let queue = $state<string[]>([]);
@@ -150,6 +186,65 @@
     return () => observer.disconnect();
   });
 
+  /**
+   * Поиск: запрос изменился → пауза → ищем по индексу → догружаем найденное (bugs/50).
+   *
+   * Эффект читает ТОЛЬКО `search` и `data` — записи в `searchCards`/`searchBusy` его не
+   * перезапускают. Метка `searchToken` отбрасывает ответ на устаревший запрос: человек
+   * печатает быстрее, чем отвечает сеть, и без неё результат «Тако» мог бы прилететь
+   * поверх результата «Такси».
+   */
+  $effect(() => {
+    const query = search.trim();
+    const index = data?.index ?? null;
+
+    if (searchTimer !== null) clearTimeout(searchTimer);
+
+    if (query === '' || index === null) {
+      searchToken += 1; // ответ на прошлый запрос уже никому не нужен
+      searchCards = [];
+      searchTotal = 0;
+      searchBusy = false;
+      searchDone = false;
+      searchError = '';
+      return;
+    }
+
+    searchBusy = true;
+    searchDone = false;
+    searchError = '';
+
+    searchToken += 1;
+    const token = searchToken;
+    searchTimer = setTimeout(() => void runSearch(index, query, token), SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (searchTimer !== null) clearTimeout(searchTimer);
+    };
+  });
+
+  /** Один заход поиска: индекс даёт id, база — карточки. Каталог целиком не читается. */
+  async function runSearch(index: DimsIndex, query: string, token: number): Promise<void> {
+    const ids = searchIndex(index, query);
+    try {
+      const cards = await loadDimCards(ids.slice(0, SEARCH_RESULT_LIMIT));
+      if (token !== searchToken) return; // пришёл ответ на уже неактуальный запрос
+      searchCards = cards;
+      searchTotal = ids.length;
+    } catch (error) {
+      if (token !== searchToken) return;
+      // Молчать нельзя: «Ничего не найдено» вместо ошибки сети — это витрина, которая врёт.
+      searchError = technicalDetail(error);
+      searchCards = [];
+      searchTotal = 0;
+    } finally {
+      if (token === searchToken) {
+        searchBusy = false;
+        searchDone = true;
+      }
+    }
+  }
+
   async function loadMore(): Promise<void> {
     if (loadingMore || queue.length === 0) {
       if (queue.length === 0) exhausted = true;
@@ -224,7 +319,12 @@
 
     ratings = new Map(ratings).set(dimId, value);
 
-    const card = shown.find((item) => item.id === dimId) ?? mineCards.get(dimId);
+    // Карточка может прийти из ленты, из «Мой NDim ID» ИЛИ из выдачи поиска (bugs/50):
+    // измерение, найденное поиском, могло не побывать в ленте вовсе.
+    const card =
+      shown.find((item) => item.id === dimId) ??
+      mineCards.get(dimId) ??
+      searchCards.find((item) => item.id === dimId);
 
     // Оценённая карточка теперь живёт и во вкладке «Мой NDim ID» — кладём её в кеш вкладки,
     // чтобы она появилась там сразу; своё место она займёт по сортировке (bugs/18).
@@ -234,11 +334,19 @@
       mineCards = merged;
     }
 
-    if (tab === 'all') {
+    // Оценённое уходит из очереди «Все» в любом случае: даже если человек оценил его
+    // из выдачи поиска и в ленте оно ещё ни разу не показывалось (bugs/50).
+    queue = queue.filter((id) => id !== dimId);
+    shown = shown.filter((item) => item.id !== dimId);
+
+    if (search.trim() !== '') {
+      // В ВЫДАЧЕ ПОИСКА карточка ОСТАЁТСЯ со своими звёздами. Человек искал именно её —
+      // если она исчезнет в момент оценки, он решит, что что-то сломалось.
+      showUndo(dimId, card ? dimCardTitle(loc(card.title), card.year).name : '');
+    } else if (tab === 'all') {
       // Карточка уезжает вправо (как в 1.x): её везёт out-переход, а соседей плавно
       // подтягивает animate:flip — руками ничего не хронометрируем.
       leaving = dimId;
-      shown = shown.filter((item) => item.id !== dimId);
       showUndo(dimId, card ? dimCardTitle(loc(card.title), card.year).name : '');
     }
     // Во вкладке «Мой NDim ID» карточка ОСТАЁТСЯ и переезжает по сортировке. Раньше смена
@@ -314,18 +422,11 @@
       .filter((card): card is DimCard => card !== undefined),
   );
 
-  /** Карточки текущей вкладки. Поиск идёт по индексу и перебивает вкладку. */
+  /** Карточки текущей вкладки. Поиск перебивает вкладку и живёт своим списком (bugs/50). */
   const visible = $derived.by((): DimCard[] => {
     if (data === null) return [];
 
-    if (search.trim() !== '') {
-      // Ищем среди уже загруженных карточек (обеих вкладок) — каталог целиком не читаем.
-      const ids = new Set(searchIndex(data.index, search));
-      const pool = new Map<string, DimCard>();
-      for (const card of shown) pool.set(card.id, card);
-      for (const [id, card] of mineCards) pool.set(id, card);
-      return [...pool.values()].filter((card) => ids.has(card.id));
-    }
+    if (search.trim() !== '') return searchCards;
     if (tab === 'mine') return mineVisible;
     return shown;
   });
@@ -426,6 +527,17 @@
       en: 'You have not rated anything yet. Open “All” and give your first stars.',
     },
     nothingFound: { ru: 'Ничего не нашлось. Попробуйте другое слово.', en: 'Nothing found. Try another word.' },
+    // Текст 1.x дословно (`doSearchDims`), число подставляется из константы канона.
+    tooMany: {
+      ru: (limit: number) =>
+        `По Вашему запросу найдено очень много измерений. Будут показаны только первые ${limit} совпадений. Пожалуйста, уточните Ваш запрос для более точного поиска.`,
+      en: (limit: number) =>
+        `Too many dimensions were found by your query. Only the first ${limit} matches will be shown. Please refine your query for more accurate results.`,
+    },
+    searchFailed: {
+      ru: 'Не удалось выполнить поиск. Проверьте соединение и попробуйте ещё раз.',
+      en: 'The search could not be completed. Check your connection and try again.',
+    },
     isNew: { ru: 'Новое', en: 'New' },
     noVotes: { ru: 'ещё без голосов', en: 'no votes yet' },
     saveNow: { ru: 'Сохранить сейчас', en: 'Save now' },
@@ -519,9 +631,23 @@
         </button>
       </div>
 
-      {#if visible.length === 0 && search.trim() !== ''}
-        <div class="card pad" in:fade={{ duration: MOTION.base }}><p class="state">{t.nothingFound[lang]}</p></div>
-      {:else if tab === 'mine' && myCount === 0 && search.trim() === ''}
+      {#if search.trim() !== ''}
+        <!-- Поиск идёт по ВСЕМУ Пространству и догружает найденное (bugs/50). Пока карточки
+             летят из базы — каноничное кольцо 1.x; «Ничего не найдено» говорим ТОЛЬКО когда
+             поиск действительно закончен, иначе витрина врёт о каталоге. -->
+        {#if searchBusy}
+          <div class="state"><Loading {lang} /></div>
+        {:else if searchError !== ''}
+          <div class="card pad" in:fade={{ duration: MOTION.base }}>
+            <p class="state">{t.searchFailed[lang]}</p>
+            <p class="hint mono">{searchError}</p>
+          </div>
+        {:else if searchCards.length === 0}
+          <div class="card pad" in:fade={{ duration: MOTION.base }}><p class="state">{t.nothingFound[lang]}</p></div>
+        {:else if searchTotal > SEARCH_RESULT_LIMIT}
+          <p class="intro" in:fade={{ duration: MOTION.base }}>{t.tooMany[lang](SEARCH_RESULT_LIMIT)}</p>
+        {/if}
+      {:else if tab === 'mine' && myCount === 0}
         <!-- Пусто ИМЕННО потому, что оценок нет. Пока грузится первая порция, молчим:
              мигающая «пустота» на долю секунды — это и есть мерцание (bugs/18). -->
         <div class="card pad" in:fade={{ duration: MOTION.base }}><p class="state">{t.mineEmpty[lang]}</p></div>

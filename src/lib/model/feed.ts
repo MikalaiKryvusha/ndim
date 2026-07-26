@@ -82,17 +82,138 @@ export function sortMyDims(rated: ReadonlyMap<string, number>): string[] {
   });
 }
 
-/** Поиск по индексу — по имени на обоих языках сразу (человек ищет как ему удобно). */
+/**
+ * Сколько найденных измерений показываем за раз — канон 1.x (`doSearchDims`).
+ *
+ * Ограничение не косметическое: за каждой показанной карточкой идёт чтение документа из
+ * Firestore. Двадцать чтений на запрос — цена, которую 1.x считал приемлемой; пятьсот —
+ * нет. Больше двадцати совпадений → человеку честно предлагают уточнить запрос.
+ */
+export const SEARCH_RESULT_LIMIT = 20;
+
+/** Римские цифры, которые 1.x приводил к арабским (I…XV — как в оригинале, не шире). */
+const ROMAN_TO_ARABIC: Readonly<Record<string, number>> = {
+  I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8,
+  IX: 9, X: 10, XI: 11, XII: 12, XIII: 13, XIV: 14, XV: 15,
+};
+
+/** Римские цифры отдельным словом. Регулярка — дословно из 1.x, вместе с её причудами. */
+const ROMAN_WORD = /\b(?:X[IV]?|IX|IV|V?I{0,3})\b/gi;
+
+/**
+ * Нормализация строки для поиска — перенос `normalizeStringForSearch` из 1.x ДОСЛОВНО
+ * (`ndim_old/public/scripts/app.js:9052`).
+ *
+ * Зачем: каталог набивали живые люди, и одно и то же название встречается в разных
+ * обличьях — «Звёздные войны» и «Звездные войны», «Человек-паук» и «Человек паук»,
+ * «„Алхимик“ (1988)», «Рокки IV». Без нормализации человек не находит измерение, которое
+ * ЕСТЬ, — и уходит с мыслью, что поиск сломан (ровно жалоба владельца, bugs/50).
+ *
+ * Правила (обе стороны сравнения нормализуются одинаково):
+ *   · римские цифры I…XV → арабские;
+ *   · нижний регистр; «ё» → «е»;
+ *   · дефис/тире МЕЖДУ символами → пробел, а с пробелами вокруг — удаляется совсем;
+ *   · остаются только буквы (латиница/кириллица), цифры и пробелы — кавычки, точки,
+ *     скобки, двоеточия отбрасываются;
+ *   · несколько пробелов → один, края обрезаются.
+ *
+ * ⚠️ Причуда, унаследованная сознательно: правило римских цифр срабатывает и на отдельно
+ * стоящих латинских буквах i/v/x («I Am Legend» → «1 am legend»). Она безвредна, потому
+ * что применяется К ОБЕИМ сторонам сравнения, а канон здесь — поведение 1.x, а не наши
+ * представления о правильном (`AGENT_GUIDE.md` → разведка до кода).
+ */
+export function normalizeForSearch(input: string): string {
+  return input
+    .replace(ROMAN_WORD, (match) => {
+      const arabic = ROMAN_TO_ARABIC[match.toUpperCase()];
+      return arabic === undefined ? match : String(arabic);
+    })
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/(\S)[-–—‑](\S)/g, '$1 $2')
+    .replace(/\s*[-–—‑]\s*/g, '')
+    .replace(/[^a-zа-я0-9 ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Нормализованные имена индекса — считаются один раз на индекс.
+ *
+ * Индекс — 5111 записей, и нормализовать их на КАЖДОЕ нажатие клавиши значило бы делать
+ * ту же работу заново десятки раз подряд. Кеш живёт в WeakMap: сменился индекс — старая
+ * запись уходит с ним, ничего не протухает.
+ */
+interface NormalizedNames {
+  readonly ru: string;
+  readonly en: string;
+  /** Длины ИСХОДНЫХ имён — по ним 1.x считал релевантность. */
+  readonly ruLength: number;
+  readonly enLength: number;
+}
+
+const normalizedCache = new WeakMap<object, Map<string, NormalizedNames>>();
+
+function normalizedNames(index: DimsIndex): Map<string, NormalizedNames> {
+  const cached = normalizedCache.get(index as object);
+  if (cached !== undefined) return cached;
+
+  const built = new Map<string, NormalizedNames>();
+  for (const [dimId, entry] of index) {
+    // Языки нормализуем и сравниваем ПО ОТДЕЛЬНОСТИ: склейка «ru en» давала ложные
+    // совпадения на стыке языков (запрос, попавший на хвост русского и начало английского).
+    const ru = entry.ru ?? '';
+    const en = entry.en ?? '';
+    built.set(dimId, {
+      ru: normalizeForSearch(ru),
+      en: normalizeForSearch(en),
+      ruLength: ru.length,
+      enLength: en.length,
+    });
+  }
+  normalizedCache.set(index as object, built);
+  return built;
+}
+
+/**
+ * Поиск по индексу каталога — по имени на обоих языках сразу, по ВСЕМ измерениям.
+ *
+ * Возвращает ВСЕ совпадения (обрезать до `SEARCH_RESULT_LIMIT` — дело экрана: функция
+ * обязана честно сказать, сколько нашлось, иначе экран не сможет предложить уточнить запрос).
+ *
+ * Порядок — по релевантности, как в 1.x (`searchInJson`): чем ближе длина найденного имени
+ * к длине запроса, тем выше. «Такси» находит фильм «Такси» раньше, чем «Такси-блюз для
+ * начинающих». При равной близости — по id: порядок обязан быть детерминированным, иначе
+ * выдача «дрожит» между одинаковыми запросами (`AGENT_GUIDE.md` → «Стиль кода»).
+ */
 export function searchIndex(index: DimsIndex, query: string): string[] {
-  const needle = query.trim().toLowerCase();
+  const needle = normalizeForSearch(query);
   if (needle === '') return [];
 
-  const found: string[] = [];
-  for (const [dimId, entry] of index) {
-    const haystack = `${entry.ru ?? ''} ${entry.en ?? ''}`.toLowerCase();
-    if (haystack.includes(needle)) found.push(dimId);
+  const names = normalizedNames(index);
+  const found: { dimId: string; distance: number }[] = [];
+
+  for (const [dimId, name] of names) {
+    const hitRu = name.ru.includes(needle);
+    const hitEn = name.en.includes(needle);
+    if (!hitRu && !hitEn) continue;
+
+    // Длину берём у того имени, которое совпало (при совпадении обоих — у английского,
+    // как в 1.x: `enMatch ? obj.en.length : obj.ru.length`).
+    const length = hitEn ? name.enLength : name.ruLength;
+    found.push({ dimId, distance: Math.abs(length - needle.length) });
   }
-  return found;
+
+  found.sort((a, b) =>
+    a.distance !== b.distance
+      ? a.distance - b.distance
+      : a.dimId < b.dimId
+        ? -1
+        : a.dimId > b.dimId
+          ? 1
+          : 0,
+  );
+  return found.map((item) => item.dimId);
 }
 
 /** Измерение считается новым две недели — как в 1.x (бейдж «Новое 🔥»). */

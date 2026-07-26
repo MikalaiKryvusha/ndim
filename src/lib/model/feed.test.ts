@@ -12,8 +12,10 @@ import {
   buildUnratedFeed,
   dimCardTitle,
   isNewDim,
+  normalizeForSearch,
   parseDimsIndex,
   searchIndex,
+  SEARCH_RESULT_LIMIT,
   shuffle,
   sortMyDims,
   type DimsIndex,
@@ -112,6 +114,84 @@ test('поиск ищет на обоих языках сразу', () => {
   assert.deepEqual(searchIndex(index, 'queen'), ['c']);
   assert.deepEqual(searchIndex(index, 'ЛОЛ'), ['a'], 'регистр не должен мешать');
   assert.deepEqual(searchIndex(index, '   '), [], 'пустой запрос ничего не ищет');
+});
+
+/**
+ * Стражи bugs/50 — «поиск искал только то, что уже подгружено в браузер».
+ *
+ * Слово владельца: «в старом НДим я вводил название измерения — и оно находило его среди
+ * ВСЕХ измерений пространства». Значит поиск — свойство продукта, и он обязан быть доказан
+ * на данных, которых на экране заведомо нет.
+ */
+
+/** Каталог, где ни одно из имён не «загружено» на экран: поиск обязан находить их все. */
+const GRIME_INDEX: DimsIndex = parseDimsIndex(
+  JSON.stringify({
+    sw: { ru: 'Звёздные войны', en: 'Star Wars', year: '1977' },
+    sp: { ru: 'Человек-паук', en: 'Spider-Man', year: '2002' },
+    al: { ru: '«Алхимик»', en: 'The Alchemist', year: '1988' },
+    r4: { ru: 'Рокки IV', en: 'Rocky IV', year: '1985' },
+    // ПОРЯДОК В ФИКСТУРЕ НАМЕРЕННО ОБРАТЕН релевантности: длинное имя стоит раньше
+    // короткого. Иначе тест на релевантность проходил бы «по счастливой случайности»
+    // порядка каталога и не заметил бы потерю сортировки.
+    tb: { ru: 'Такси-блюз для начинающих', en: 'Taxi Blues for Beginners', year: '1990' },
+    tx: { ru: 'Такси', en: 'Taxi', year: '1998' },
+  }),
+);
+
+test('поиск ищет по ВСЕМУ каталогу, а не по загруженному куску (bugs/50)', () => {
+  // Ключевой страж: `searchIndex` получает ТОЛЬКО индекс — у него физически нет входа
+  // «что сейчас на экране». Регресс к фильтру по загруженным карточкам живёт в экране,
+  // и его ловит e2e; здесь стережём контракт функции.
+  assert.deepEqual(searchIndex(GRIME_INDEX, 'алхимик'), ['al']);
+  assert.equal(searchIndex(GRIME_INDEX, 'войны').length, 1);
+});
+
+test('нормализация 1.x: грязь настоящих названий не мешает найти (bugs/50)', () => {
+  // Каждая строка — реальная форма грязи из каталога, набитого людьми.
+  assert.deepEqual(searchIndex(GRIME_INDEX, 'звездные войны'), ['sw'], 'ё → е');
+  assert.deepEqual(searchIndex(GRIME_INDEX, 'Звёздные Войны'), ['sw'], 'регистр и ё');
+  assert.deepEqual(searchIndex(GRIME_INDEX, 'человек паук'), ['sp'], 'дефис → пробел');
+  assert.deepEqual(searchIndex(GRIME_INDEX, 'spider man'), ['sp'], 'дефис → пробел (en)');
+  assert.deepEqual(searchIndex(GRIME_INDEX, 'алхимик'), ['al'], 'кавычки отбрасываются');
+  assert.deepEqual(searchIndex(GRIME_INDEX, 'рокки 4'), ['r4'], 'римские цифры → арабские');
+});
+
+test('нормализация одинакова для запроса и для имени', () => {
+  // Односторонняя нормализация — классическая ловушка: запрос почистили, каталог нет.
+  assert.equal(normalizeForSearch('«Человек-паук»'), 'человек паук');
+  assert.equal(normalizeForSearch('  Звёздные   войны  '), 'звездные войны');
+  assert.equal(normalizeForSearch('Рокки IV'), 'рокки 4');
+  assert.equal(normalizeForSearch('The Queen’s Gambit'), 'the queens gambit');
+  assert.equal(normalizeForSearch('...'), '', 'из одной пунктуации запроса не выйдет');
+});
+
+test('выдача упорядочена по релевантности, а не по порядку каталога (bugs/50)', () => {
+  // «Такси» короче и ближе к запросу, чем «Такси-блюз для начинающих», — оно и первое.
+  assert.deepEqual(searchIndex(GRIME_INDEX, 'такси'), ['tx', 'tb']);
+});
+
+test('порядок выдачи детерминирован при равной релевантности', () => {
+  // Одинаковая длина имён → тай-брейк по id. Иначе выдача «дрожала» бы между запросами.
+  const twins = parseDimsIndex(
+    JSON.stringify({
+      zz: { ru: 'Море', en: 'Sea' },
+      aa: { ru: 'Море', en: 'Sea' },
+    }),
+  );
+  assert.deepEqual(searchIndex(twins, 'море'), ['aa', 'zz']);
+});
+
+test('нет ложных совпадений на стыке языков', () => {
+  // Старая реализация склеивала «ru en» в одну строку — и находила несуществующее.
+  const pair = parseDimsIndex(JSON.stringify({ p: { ru: 'Лето', en: 'Summer' } }));
+  assert.deepEqual(searchIndex(pair, 'лето summer'), [], 'склейка языков искать не должна');
+  assert.deepEqual(searchIndex(pair, 'лето'), ['p']);
+  assert.deepEqual(searchIndex(pair, 'summer'), ['p']);
+});
+
+test('лимит выдачи — канон 1.x, и он именованная константа', () => {
+  assert.equal(SEARCH_RESULT_LIMIT, 20);
 });
 
 test('бейдж «Новое» живёт две недели и не выдумывается', () => {
