@@ -90,9 +90,12 @@
   let searchCards = $state<DimCard[]>([]);
   /** Сколько всего совпадений в каталоге — чтобы честно сказать «показаны первые 20». */
   let searchTotal = $state(0);
+  /**
+   * Идёт ли поиск прямо сейчас. Он же отвечает на вопрос «поиск ЗАВЕРШЁН?»: пока `searchBusy`
+   * истинен, экран показывает кольцо загрузки, и «Ничего не найдено» физически не может
+   * появиться во время загрузки — а именно этим витрина и врала бы.
+   */
   let searchBusy = $state(false);
-  /** Поиск ДОВЕДЁН до конца. Без этого «Ничего не найдено» врало бы во время загрузки. */
-  let searchDone = $state(false);
   let searchError = $state('');
 
   /**
@@ -224,13 +227,11 @@
       searchCards = [];
       searchTotal = 0;
       searchBusy = false;
-      searchDone = false;
       searchError = '';
       return;
     }
 
     searchBusy = true;
-    searchDone = false;
     searchError = '';
 
     searchToken += 1;
@@ -259,7 +260,6 @@
     } finally {
       if (token === searchToken) {
         searchBusy = false;
-        searchDone = true;
       }
     }
   }
