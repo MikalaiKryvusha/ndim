@@ -589,7 +589,6 @@
       ru: 'Оценки видите только Вы. Из них складывается Ваш NDim ID — и по нему находятся похожие люди.',
       en: 'Only you see your ratings. They form your NDim ID — and people similar to you are found by it.',
     },
-    suggest: { ru: '💡 Предложить новое измерение', en: '💡 Suggest a new dimension' },
     suggestTitle: { ru: 'Предложить новое измерение', en: 'Suggest a new dimension' },
     suggestHint: {
       ru: 'Что это за измерение и почему оно важно? От 5 до 300 символов.',
