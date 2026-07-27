@@ -26,7 +26,7 @@
    * «рельс 232px + контент», лента в 2 колонки от 1024px), карточки — панельные токены темы
    * (--panel/--card-shadow), движение — переходы Svelte по канону MOTION (`$lib/ui/motion`).
    */
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { flip } from 'svelte/animate';
   import { cubicOut } from 'svelte/easing';
   import { fade, fly, slide } from 'svelte/transition';
@@ -195,17 +195,53 @@
   $effect(() => {
     if (sentinel === null || stand !== 'ready' || search.trim() !== '') return;
 
+    const anchor = sentinel;
+    let pumping = false;
+
+    /**
+     * Догружать, ПОКА якорь остаётся в поле зрения, — а не один раз на пересечение.
+     *
+     * `IntersectionObserver` сообщает о ПЕРЕСЕЧЕНИИ границы. Если после подгрузки якорь
+     * так и остался видимым (короткая лента, широкий экран в две колонки, порция меньше
+     * высоты вьюпорта), нового пересечения не будет НИКОГДА — и лента встаёт намертво.
+     * Ровно это владелец описал как «ломается триггер подгрузки новых измерений из БД»
+     * (поймано QA-прогоном: на 1440px грузились 12 карточек и всё).
+     *
+     * Поэтому качаем циклом: подгрузили порцию — проверили, виден ли якорь ещё, и если
+     * да, идём за следующей. Цикл сам останавливается, когда якорь уехал за экран или
+     * когда грузить больше нечего (`loadMore`/`loadMoreMine` выходят сразу).
+     */
+    async function pump(): Promise<void> {
+      if (pumping) return;
+      pumping = true;
+      try {
+        for (let guard = 0; guard < 20; guard += 1) {
+          const before = tab === 'all' ? shown.length : mineCount;
+          if (tab === 'all') await loadMore();
+          else await loadMoreMine();
+          await tick();
+          const after = tab === 'all' ? shown.length : mineCount;
+          // Ничего не прибавилось — грузить нечего, дальше цикл только жёг бы запросы.
+          if (after === before) return;
+          const rect = anchor.getBoundingClientRect();
+          const stillVisible = rect.top < window.innerHeight + 600 && rect.bottom > -600;
+          if (!stillVisible) return;
+        }
+      } finally {
+        pumping = false;
+      }
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries[0]?.isIntersecting) return;
-        if (tab === 'all') void loadMore();
-        else void loadMoreMine();
+        void pump();
       },
       // Якорь срабатывает за ~600px ДО края экрана: догрузка происходит вне видимости,
       // и человек её не замечает — ровно как в 1.x (bugs/13).
       { rootMargin: '600px 0px' },
     );
-    observer.observe(sentinel);
+    observer.observe(anchor);
     return () => observer.disconnect();
   });
 
@@ -265,36 +301,68 @@
     }
   }
 
-  async function loadMore(): Promise<void> {
-    if (loadingMore || queue.length === 0) {
-      if (queue.length === 0) exhausted = true;
-      return;
+  /**
+   * Порция ленты «Все».
+   *
+   * ⚠️ Повторный вызов во время уже идущей загрузки ЖДЁТ её, а не выходит пустым.
+   * Раньше он выходил — и это была настоящая причина «загрузка ломается» (владелец,
+   * 2026-07-27). Гонка: `stand = 'ready'` выставляется ДО того, как первая порция
+   * приехала, поэтому якорь подгрузки успевает отрисоваться и `IntersectionObserver`
+   * срабатывает СРАЗУ — на пустой ленте. Тот единственный вызов натыкался на
+   * `loadingMore === true`, возвращался ни с чем, а нового ПЕРЕСЕЧЕНИЯ уже не
+   * происходило: якорь так и оставался в поле зрения. Лента вставала на первой порции.
+   * На узком экране беды не было видно — 12 карточек делают страницу длиннее вьюпорта,
+   * и следующая прокрутка давала новое пересечение; на 1440px лента в две колонки
+   * помещалась целиком, и всё замирало на 12 карточках (поймано QA-прогоном).
+   */
+  let feedInFlight: Promise<void> | null = null;
+
+  function loadMore(): Promise<void> {
+    if (feedInFlight !== null) return feedInFlight;
+    if (queue.length === 0) {
+      exhausted = true;
+      return Promise.resolve();
     }
     loadingMore = true;
-    try {
-      const batch = queue.slice(0, PAGE_SIZE);
-      queue = queue.slice(PAGE_SIZE);
-      shown = [...shown, ...(await loadDimCards(batch))];
-      if (queue.length === 0) exhausted = true;
-    } finally {
-      loadingMore = false;
-    }
+    feedInFlight = (async () => {
+      try {
+        const batch = queue.slice(0, PAGE_SIZE);
+        queue = queue.slice(PAGE_SIZE);
+        shown = [...shown, ...(await loadDimCards(batch))];
+        if (queue.length === 0) exhausted = true;
+      } finally {
+        loadingMore = false;
+        feedInFlight = null;
+      }
+    })();
+    return feedInFlight;
   }
 
-  /** Догрузка «Мой NDim ID»: следующая порция СВОЕГО порядка (bugs/18). Карточки кешируются. */
-  async function loadMoreMine(): Promise<void> {
-    if (mineLoading || data === null || mineCount >= mineOrder.length) return;
+  /**
+   * Догрузка «Мой NDim ID»: следующая порция СВОЕГО порядка (bugs/18). Карточки кешируются.
+   * Как и у ленты «Все», повторный вызов во время идущей загрузки ЖДЁТ её (см. `loadMore`):
+   * иначе единственное срабатывание якоря могло уйти в пустоту и вкладка вставала.
+   */
+  let mineInFlight: Promise<void> | null = null;
+
+  function loadMoreMine(): Promise<void> {
+    if (mineInFlight !== null) return mineInFlight;
+    if (data === null || mineCount >= mineOrder.length) return Promise.resolve();
     mineLoading = true;
-    try {
-      const portion = mineOrder.slice(mineCount, mineCount + PAGE_SIZE);
-      const cards = await loadDimCards(portion);
-      const merged = new Map(mineCards);
-      for (const card of cards) merged.set(card.id, card);
-      mineCards = merged;
-      mineCount = Math.min(mineCount + PAGE_SIZE, mineOrder.length);
-    } finally {
-      mineLoading = false;
-    }
+    mineInFlight = (async () => {
+      try {
+        const portion = mineOrder.slice(mineCount, mineCount + PAGE_SIZE);
+        const cards = await loadDimCards(portion);
+        const merged = new Map(mineCards);
+        for (const card of cards) merged.set(card.id, card);
+        mineCards = merged;
+        mineCount = Math.min(mineCount + PAGE_SIZE, mineOrder.length);
+      } finally {
+        mineLoading = false;
+        mineInFlight = null;
+      }
+    })();
+    return mineInFlight;
   }
 
   // ── Оценка: выбор → отсчёт → сохранение → карточка уезжает → можно отменить ──────────────
@@ -470,11 +538,83 @@
     return ratings.get(dimId) ?? null;
   }
 
-  function openMyTab(): void {
-    tab = 'mine';
+  /**
+   * СВОЯ ПАМЯТЬ ПРОКРУТКИ У КАЖДОЙ ВКЛАДКИ (слово владельца 2026-07-27).
+   *
+   * Дословно: «Загрузка на Измерениях ломается при переключении между ВСЕ и МОЙ NDIM ID…
+   * Я на ВСЕ могу пролистать очень глубоко вниз — это не значит, что МОЙ NDIM ID так вниз
+   * нужно листать, а оно, по всей видимости, пытается — и это ломает триггер подгрузки».
+   *
+   * Диагноз владельца верен. Вкладки делят ОДНО окно и одну прокрутку: уходя с «Все»
+   * глубоко внизу, человек попадал на «Мой NDim ID» с тем же `scrollY`. Короткая лента
+   * такой прокрутки не имеет — браузер прижимал страницу к её концу, якорь подгрузки
+   * (`sentinel`) оказывался прямо во вьюпорте и оставался там, а `IntersectionObserver`
+   * срабатывает на ПЕРЕСЕЧЕНИЕ: элемент, который уже виден и не двигается, новых событий
+   * не даёт. Лента вставала.
+   *
+   * Лечение: у каждой вкладки своя запомненная позиция. Уходим — записали, вернулись —
+   * восстановили; у вкладки, где ещё не были, позиция 0 (её верх).
+   */
+  const tabScroll: Record<Tab, number> = { all: 0, mine: 0 };
+
+  function switchTab(next: Tab): void {
+    if (tab !== next) tabScroll[tab] = window.scrollY;
+    const target = tabScroll[next];
+    tab = next;
     search = '';
-    // Первую порцию тянем сразу: не ждём срабатывания якоря под пустой лентой.
-    if (mineCount === 0) void loadMoreMine();
+    // Первую порцию «моих» тянем сразу: не ждём срабатывания якоря под пустой лентой.
+    if (next === 'mine' && mineCount === 0) void loadMoreMine();
+    void tick().then(() => restoreScroll(target));
+  }
+
+  /**
+   * Вернуть прокрутку на запомненное место.
+   *
+   * Одного `scrollTo` мало: сразу после переключения документ ещё не набрал прежнюю
+   * высоту (лента перерисовывается заново), и браузер ПРИЖИМАЕТ прокрутку к текущему
+   * концу — человек оказывается не там, где был. Поймано QA-прогоном: просили 7658px,
+   * получали 7191px. Поэтому повторяем по кадрам, пока не сядем ровно или пока не станет
+   * ясно, что документ уже не растёт.
+   *
+   * `instant` обязателен: плавный переход здесь и был бы тем самым «съездом», от которого
+   * мы уходим.
+   */
+  function restoreScroll(target: number): void {
+    if (target <= 0) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      return;
+    }
+    /*
+     * Держимся ПО ВРЕМЕНИ, а не по числу кадров: лента перерисовывается не мгновенно, и
+     * прежняя высота документа набирается постепенно. Отсчёт в кадрах (30 ≈ полсекунды)
+     * сдавался раньше — QA-прогон ловил промах ровно на 469px, то есть прокрутка
+     * оставалась прижатой к тогдашнему концу документа.
+     *
+     * И уважаем человека: если он за это время сам тронул прокрутку, мы немедленно
+     * отступаем — бороться с рукой пользователя недопустимо.
+     */
+    const DEADLINE_MS = 1200;
+    const until = performance.now() + DEADLINE_MS;
+    let cancelled = false;
+    const giveUp = () => { cancelled = true; };
+    const events = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const;
+    for (const type of events) window.addEventListener(type, giveUp, { once: true, passive: true });
+
+    const stop = () => {
+      for (const type of events) window.removeEventListener(type, giveUp);
+    };
+
+    const step = () => {
+      if (cancelled) return stop();
+      window.scrollTo({ top: target, behavior: 'instant' });
+      if (Math.abs(window.scrollY - target) <= 2 || performance.now() > until) return stop();
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  function openMyTab(): void {
+    switchTab('mine');
   }
 
   // Смену языка и её persist делает шапка (bugs/39) — экран лишь принимает новое значение.
@@ -677,10 +817,8 @@
     reportError: { ru: 'Сообщить об ошибке', en: 'Report a mistake' },
     cardMenu: { ru: 'Действия с измерением', en: 'Dimension actions' },
     removeRating: { ru: 'Убрать мою оценку', en: 'Remove my rating' },
-    hint: {
-      ru: 'Оценки видите только Вы. Из них складывается Ваш NDim ID — и по нему находятся похожие люди.',
-      en: 'Only you see your ratings. They form your NDim ID — and people similar to you are found by it.',
-    },
+    // Сноска «Оценки видите только Вы…» убрана из-под ленты по слову владельца
+    // 2026-07-27: «текст внизу под списком — убрать».
     suggestTitle: { ru: 'Предложить новое измерение', en: 'Suggest a new dimension' },
     suggestHint: {
       ru: 'Что это за измерение и почему оно важно? От 5 до 300 символов.',
@@ -758,30 +896,32 @@
   >
     <div class="trow">
       <div class="segs" role="group">
-        <button type="button" class:on={tab === 'all' && search.trim() === ''} onclick={() => { tab = 'all'; search = ''; }}>
+        <button type="button" class:on={tab === 'all' && search.trim() === ''} onclick={() => switchTab('all')}>
           {t.tabAll[lang]}
         </button>
         <button type="button" class:on={tab === 'mine' && search.trim() === ''} onclick={openMyTab}>
-          {t.tabMine[lang]} · {myCount}
+          {t.tabMine[lang]}
         </button>
       </div>
-      <button
-        type="button"
-        class="ibtn"
-        class:on={searchOpen}
-        aria-label={t.searchTitle[lang]}
-        aria-expanded={searchOpen}
-        title={t.searchTitle[lang]}
-        onclick={toggleSearch}
-      ><Icon name="search" size={16} /></button>
-      <button
-        type="button"
-        class="ibtn suggest-btn"
-        class:on={suggestOpen}
-        aria-label={t.suggestTitle[lang]}
-        title={t.suggestTitle[lang]}
-        onclick={toggleSuggest}
-      ><Icon name="bulb" size={16} /></button>
+      <div class="tools">
+        <button
+          type="button"
+          class="ibtn"
+          class:on={searchOpen}
+          aria-label={t.searchTitle[lang]}
+          aria-expanded={searchOpen}
+          title={t.searchTitle[lang]}
+          onclick={toggleSearch}
+        ><Icon name="search" size={16} /></button>
+        <button
+          type="button"
+          class="ibtn suggest-btn"
+          class:on={suggestOpen}
+          aria-label={t.suggestTitle[lang]}
+          title={t.suggestTitle[lang]}
+          onclick={toggleSuggest}
+        ><Icon name="bulb" size={16} /></button>
+      </div>
     </div>
 
     <!-- Ящик: поле поиска занимает высоту только когда человек его вызвал (макет V3). -->
@@ -986,13 +1126,20 @@
       {/key}
 
       {#if search.trim() === ''}
+        <!--
+          Догрузка ленты показывается ТОЙ ЖЕ каноничной карточкой 1.x, что и все загрузки
+          продукта (`Loading.svelte`, bugs/21: кольцо «( )»). Здесь висел самодельный глиф
+          «◠» — у него нет ни сетки, ни анимации кольца, и владелец справедливо попросил
+          «переделать под вид канона старого NDim с фирменной анимацией — она уже
+          переиспользована и адаптирована, найти и использовать её».
+        -->
         <div class="loader" bind:this={sentinel}>
           {#if tab === 'mine'}
-            {#if mineCount < mineOrder.length}{t.loading[lang]} <span class="spin">◠</span>{/if}
+            {#if mineCount < mineOrder.length}<Loading {lang} />{/if}
           {:else if exhausted && shown.length > 0 && queue.length === 0 && ratings.size > 0 && visible.length === 0}
             {t.allDone[lang]}
           {:else if !exhausted}
-            {t.loading[lang]} <span class="spin">◠</span>
+            <Loading {lang} />
           {:else if queue.length === 0 && shown.length === 0}
             {t.allDone[lang]}
           {/if}
@@ -1005,7 +1152,6 @@
         Единственный вход — 💡 в прибитой строке поиска выше. Две двери в одну комнату
         только запутали бы, а нижняя всё равно недостижима: лента бесконечна.
       -->
-      <p class="hint">{t.hint[lang]}</p>
     {/if}
   </main>
 
@@ -1090,7 +1236,20 @@
   }
   .toolbar.hidden { transform: translateY(-200%); }
 
-  .trow { display: flex; gap: 8px; align-items: center; }
+  /*
+   * Мобильная раскладка: переключатель стоит РОВНО ПО ЦЕНТРУ ширины (слово владельца
+   * «центрировать эти кнопки в мобильной вёрстке»; в 1.x радио-группа тоже центрировалась —
+   * styles.css `.form_radio_group { justify-content: center }`).
+   *
+   * Сетка `1fr auto 1fr`, а не flex с `justify-content: center`: пара кнопок справа имеет
+   * ширину, и при простом центрировании переключатель уехал бы влево ровно на неё.
+   * Пустая первая колонка уравновешивает вторую — центр получается настоящий.
+   */
+  .trow {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center;
+  }
+  .segs { grid-column: 2; }
+  .tools { grid-column: 3; justify-self: end; display: flex; gap: 8px; }
 
   /* Ящик поиска: закрыт — нулевой высоты, то есть ленте отданы все его пиксели. */
   .drawer {
@@ -1117,11 +1276,11 @@
   .ibtn {
     flex: none; width: 32px; height: 32px; border-radius: 9px; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
-    background: var(--panel); border: 1px solid var(--edge);
-    line-height: 1; color: var(--dim);
+    background: var(--panel); border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--edge));
+    line-height: 1; color: var(--primary);
     transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, color 0.15s ease;
   }
-  .ibtn:hover { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, var(--edge)); }
+  .ibtn:hover { border-color: color-mix(in srgb, var(--primary) 55%, var(--edge)); background: color-mix(in srgb, var(--primary) 6%, var(--panel)); }
   .ibtn:active { transform: scale(0.94); }
   .ibtn.on {
     color: var(--primary);
@@ -1129,8 +1288,30 @@
     background: color-mix(in srgb, var(--primary) 8%, transparent);
   }
 
-  /* Переключатель занимает всю оставшуюся ширину, кнопки — фиксированную. */
-  .segs { display: flex; gap: 7px; flex: 1; min-width: 0; }
+  /*
+   * Лампочка — ТЁПЛОГО золота (тот же токен, что у звёзд оценки), поиск — фирменного синего.
+   * Владелец просил «красивые цветные, как в макете»: в макете там стояли системные эмодзи
+   * 🔍/💡, и цветными их делал шрифт вендора. Растрировать их нельзя — это чужая графика
+   * (Segoe UI Emoji на Windows, Noto на Android), разная на разных системах и чужеродная
+   * рядом с авторскими иконками нав-панели. Ту же цветность даёт вектор из нашего набора,
+   * покрашенный токенами темы: он остаётся одноцветным (currentColor), значит обе темы и
+   * Ч/Б-инвариант продолжают работать сами.
+   */
+  .suggest-btn {
+    color: var(--star);
+    border-color: color-mix(in srgb, var(--star) 32%, var(--edge));
+  }
+  .suggest-btn:hover {
+    border-color: color-mix(in srgb, var(--star) 60%, var(--edge));
+    background: color-mix(in srgb, var(--star) 8%, var(--panel));
+  }
+  .suggest-btn.on {
+    color: var(--star);
+    border-color: color-mix(in srgb, var(--star) 55%, var(--edge));
+    background: color-mix(in srgb, var(--star) 12%, transparent);
+  }
+
+  .segs { display: flex; gap: 7px; min-width: 0; }
   .segs button {
     font: inherit; font-size: 13px; color: var(--dim); background: none;
     border: 1px solid var(--edge); border-radius: 999px; padding: 6px 14px; cursor: pointer;
@@ -1284,9 +1465,9 @@
   .ghost.wide { display: block; width: 100%; margin-top: 14px; }
   .now:disabled { opacity: .5; cursor: default; }
 
-  .loader { text-align: center; color: var(--faint); font-size: 13px; padding: 20px 0; }
-  .spin { display: inline-block; animation: spin 1.1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  /* Якорь бесконечной подгрузки. Внутри — общая карточка загрузки продукта; своей
+     анимации у него больше нет (самодельный глиф «◠» и его @keyframes удалены). */
+  .loader { display: flex; justify-content: center; color: var(--faint); font-size: 13px; padding: 20px 0; }
 
   /* Поп-ап отмены — «чтобы можно было отменить оценивание и вернуть карточку» (владелец).
      Центрируется полями, а не transform: transform анимирует Svelte-переход fly. */
@@ -1328,8 +1509,12 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-items: start;
     }
-    /* Панель — в колонке контента сетки (справа от рельса), поля как у шапки. */
+    /* Панель — в колонке контента сетки (справа от рельса), поля как у шапки.
+       На десктопе переключатель прижат влево: центрировать его на широкой панели
+       незачем — рядом нет краёв, относительно которых центр читался бы. */
     .toolbar { grid-column: 2; padding: 8px 26px 10px; }
+    .trow { display: flex; }
+    .segs { flex: 1; }
     .screen { grid-template-rows: auto auto 1fr; }
     .toast { bottom: 28px; }
   }
