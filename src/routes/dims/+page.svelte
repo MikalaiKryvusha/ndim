@@ -497,7 +497,72 @@
   function toggleSuggest(): void {
     suggestState = 'idle';
     suggestOpen = !suggestOpen;
-    if (suggestOpen) window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (suggestOpen) {
+      searchOpen = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  // ── Верхнее меню «Измерений» — макет V3 «Панель-ящик» (bugs/52) ─────────────
+  //
+  // Слово владельца: «вверху должен быть переключатель всех измерений и моего NDim ID…
+  // чтобы это было целое меню с поиском, с предложить измерение и с переключателями»,
+  // и «может быть открывающимся и скрывающимся, как у меня открывались и скрывались
+  // ВСЕ и МОЙ NDIM ID кнопки».
+  //
+  // РАЗВЕДКА 1.x (researches/12, снято по коду): панель `top_sticky_toolbar` была ПРИБИТА
+  // под шапкой и пряталась ПО НАПРАВЛЕНИЮ ПРОКРУТКИ — вниз `translateY(-200%)`, вверх
+  // `translateY(0)`, 300 мс; выше 40px прокрутки всегда показана; порог срабатывания 20px
+  // (index.html:958-976, styles.css:551-565, app.js:2870-2947). Числа ниже — оттуда.
+
+  /** Панель спрятана прокруткой вниз. Возвращается прокруткой вверх — канон 1.x. */
+  let toolbarHidden = $state(false);
+  /** Ящик поиска выдвинут (V3): поле занимает место только когда оно нужно. */
+  let searchOpen = $state(false);
+  let searchInput: HTMLInputElement | null = $state(null);
+
+  /** Прокрутка, ниже которой панель показана ВСЕГДА (канон 1.x). */
+  const TOOLBAR_ALWAYS_BELOW = 40;
+  /** Насколько надо проскроллить, чтобы панель среагировала (канон 1.x). */
+  const TOOLBAR_SCROLL_STEP = 20;
+
+  onMount(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < TOOLBAR_ALWAYS_BELOW) {
+        toolbarHidden = false;
+        last = y;
+        return;
+      }
+      if (Math.abs(y - last) < TOOLBAR_SCROLL_STEP) return;
+      const down = y > last;
+      last = y;
+      // Пока человек ищет или пишет заявку, панель не прячем: она в этот момент —
+      // не украшение, а рабочий инструмент, и увести её из-под руки было бы грубо.
+      if (down && (searchOpen || search.trim() !== '' || suggestOpen)) return;
+      toolbarHidden = down;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  });
+
+  /**
+   * 🔍 выдвигает и убирает ящик поиска.
+   *
+   * Закрытие ОЧИЩАЕТ запрос: лента показывает результаты поиска, пока в поле что-то есть,
+   * и спрятанное поле с текстом означало бы «лента врёт, а почему — не видно».
+   */
+  function toggleSearch(): void {
+    searchOpen = !searchOpen;
+    if (searchOpen) {
+      suggestOpen = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Фокус — после отрисовки ящика: раньше поля просто нет в DOM.
+      queueMicrotask(() => searchInput?.focus());
+    } else {
+      search = '';
+    }
   }
 
   async function sendSuggestion(): Promise<void> {
@@ -545,12 +610,14 @@
     // Вводная подсказка экрана — канон 1.x (кадр app-15; bugs/27). Формулировка чуть
     // адаптирована к 2.0: кнопки «Сохранить» больше нет — оценка сохраняется сама.
     intro: {
-      ru: 'Чтобы пополнить Ваш NDim ID новыми измерениями, установите желаемое количество звёзд в любом измерении из списка — оценка сохранится сама. Управляйте измерениями Вашего профиля во вкладке «Мой NDim ID». Подробнее об измерении — нажмите на его название. Для быстрого поиска воспользуйтесь строкой поиска, а предложить новое измерение можно кнопкой 💡 рядом с ней.',
-      en: 'To grow your NDim ID with new dimensions, set the desired number of stars on any dimension in the list — the rating is saved by itself. Manage the dimensions of your profile on the “My NDim ID” tab. Tap a dimension’s name to learn more about it. Use the search bar to find a dimension quickly, and suggest a new one with the 💡 button next to it.',
+      ru: 'Чтобы пополнить Ваш NDim ID новыми измерениями, установите желаемое количество звёзд в любом измерении из списка — оценка сохранится сама. Управляйте измерениями Вашего профиля во вкладке «Мой NDim ID». Подробнее об измерении — нажмите на его название. Для быстрого поиска нажмите кнопку поиска в меню сверху, а рядом с ней — кнопка «Предложить измерение».',
+      en: 'To grow your NDim ID with new dimensions, set the desired number of stars on any dimension in the list — the rating is saved by itself. Manage the dimensions of your profile on the “My NDim ID” tab. Tap a dimension’s name to learn more about it. Tap the search button in the top menu to find a dimension quickly; the button next to it suggests a new one.',
     },
     tabAll: { ru: 'Все', en: 'All' },
     tabMine: { ru: 'Мой NDim ID', en: 'My NDim ID' },
-    searchPlaceholder: { ru: 'Найти измерение…', en: 'Search a dimension…' },
+    // Текст задан владельцем дословно (2026-07-27, при утверждении макета V3).
+    searchPlaceholder: { ru: 'Введите искомое название', en: 'Enter the name you are looking for' },
+    searchTitle: { ru: 'Поиск измерения', en: 'Search a dimension' },
     loading: { ru: 'Загрузка', en: 'Loading' },
     allDone: {
       ru: 'Вы оценили все измерения Пространства. Это по-настоящему редкое достижение.',
@@ -680,16 +747,50 @@
         Смещение `top` — измеренная высота шапки: она разная на 390 и 1440, и любое
         зашитое число было бы враньём на одной из ширин.
       -->
-      <div class="searchbar" style="top: {barHeight}px">
-        <input class="search" type="search" placeholder={t.searchPlaceholder[lang]} bind:value={search} />
-        <button
-          type="button"
-          class="suggest-btn"
-          class:on={suggestOpen}
-          aria-label={t.suggestTitle[lang]}
-          title={t.suggestTitle[lang]}
-          onclick={toggleSuggest}
-        ><Icon name="bulb" size={19} /></button>
+      <div
+        class="toolbar"
+        class:hidden={toolbarHidden}
+        class:open={searchOpen}
+        style="top: {barHeight}px"
+      >
+        <div class="trow">
+          <div class="segs" role="group">
+            <button type="button" class:on={tab === 'all' && search.trim() === ''} onclick={() => { tab = 'all'; search = ''; }}>
+              {t.tabAll[lang]}
+            </button>
+            <button type="button" class:on={tab === 'mine' && search.trim() === ''} onclick={openMyTab}>
+              {t.tabMine[lang]} · {myCount}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="ibtn"
+            class:on={searchOpen}
+            aria-label={t.searchTitle[lang]}
+            aria-expanded={searchOpen}
+            title={t.searchTitle[lang]}
+            onclick={toggleSearch}
+          ><Icon name="search" size={17} /></button>
+          <button
+            type="button"
+            class="ibtn suggest-btn"
+            class:on={suggestOpen}
+            aria-label={t.suggestTitle[lang]}
+            title={t.suggestTitle[lang]}
+            onclick={toggleSuggest}
+          ><Icon name="bulb" size={18} /></button>
+        </div>
+
+        <!-- Ящик: поле поиска занимает высоту только когда человек его вызвал (макет V3). -->
+        <div class="drawer">
+          <input
+            bind:this={searchInput}
+            class="search"
+            type="search"
+            placeholder={t.searchPlaceholder[lang]}
+            bind:value={search}
+          />
+        </div>
       </div>
 
       <!-- Форма открывается ЗДЕСЬ ЖЕ, под кнопкой: человек не должен искать, куда она уехала. -->
@@ -725,15 +826,6 @@
           </div>
         </div>
       {/if}
-
-      <div class="segs" role="group">
-        <button type="button" class:on={tab === 'all' && search.trim() === ''} onclick={() => { tab = 'all'; search = ''; }}>
-          {t.tabAll[lang]}
-        </button>
-        <button type="button" class:on={tab === 'mine' && search.trim() === ''} onclick={openMyTab}>
-          {t.tabMine[lang]} · {myCount}
-        </button>
-      </div>
 
       {#if search.trim() !== ''}
         <!-- Поиск идёт по ВСЕМУ Пространству и догружает найденное (bugs/50). Пока карточки
@@ -938,35 +1030,64 @@
    * токен: под строкой едут карточки (bugs/22). z-index ниже шапки (10) — если что-то
    * и наложится, строка уедет ПОД шапку, а не поверх неё.
    */
-  .searchbar {
+  /*
+   * Верхнее меню «Измерений» — макет V3 «Панель-ящик», утверждён владельцем 2026-07-27
+   * (bugs/52). Одна компактная строка: переключатель «Все / Мой NDim ID» + 🔍 + 💡.
+   *
+   * Прибита под шапкой (`top` — ИЗМЕРЕННАЯ высота шапки: 57px на 390 и 52px на 1440,
+   * зашитая константа врала бы на одной из ширин). Фон — только НЕПРОЗРАЧНЫЙ токен:
+   * под панелью едут карточки (bugs/22). z-index ниже шапки (10): если что-то и
+   * наложится, панель уедет ПОД шапку, а не поверх неё.
+   *
+   * Прячется прокруткой вниз и возвращается прокруткой вверх — канон 1.x, где ровно так
+   * вёл себя `top_sticky_toolbar` (300 мс, translateY(-200%)). Это и есть «открывались и
+   * скрывались» из слов владельца. Уезжает на 200% собственной высоты, чтобы вместе с ней
+   * ушла и её тень, и раскрытый ящик.
+   */
+  .toolbar {
     position: sticky; z-index: 9;
-    display: flex; gap: 8px; align-items: stretch;
     background: var(--panel-solid, var(--panel));
-    padding: 8px 0 10px; margin-bottom: 0;
+    padding: 8px 0 10px;
+    transition: transform 0.3s ease;
+    will-change: transform;
   }
+  .toolbar.hidden { transform: translateY(-200%); }
+
+  .trow { display: flex; gap: 8px; align-items: center; }
+
+  /* Ящик поиска: закрыт — нулевой высоты, то есть ленте отданы все его пиксели. */
+  .drawer {
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height 0.28s ease, opacity 0.2s ease;
+  }
+  .toolbar.open .drawer { max-height: 64px; opacity: 1; }
+
   .search {
-    flex: 1; min-width: 0;
+    width: 100%; margin-top: 8px;
     padding: 11px 14px; border-radius: 12px; background: var(--panel);
     border: 1px solid var(--edge); color: var(--text); font: inherit;
     transition: border-color 0.15s ease;
   }
-
-  /* 💡 — та самая лампочка 1.x, только рядом с поиском, а не под лентой. */
-  .suggest-btn {
-    flex: none; width: 46px; border-radius: 12px; cursor: pointer;
-    background: var(--panel); border: 1px solid var(--edge);
-    font-size: 19px; line-height: 1; color: var(--text);
-    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
-  }
-  .suggest-btn:hover { border-color: var(--primary); }
-  .suggest-btn:active { transform: scale(0.94); }
-  .suggest-btn.on { border-color: var(--primary); background: var(--panel-2, var(--panel)); }
   .search:focus { outline: none; border-color: var(--primary); }
 
-  .segs { display: flex; gap: 7px; margin-bottom: 12px; }
+  /* Пара кнопок панели: 🔍 и 💡 — соседи, как в 1.x (`extra_tools_container`). */
+  .ibtn {
+    flex: none; width: 38px; height: 38px; border-radius: 11px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--panel); border: 1px solid var(--edge);
+    line-height: 1; color: var(--text);
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, color 0.15s ease;
+  }
+  .ibtn:hover { border-color: var(--primary); }
+  .ibtn:active { transform: scale(0.94); }
+  .ibtn.on { border-color: var(--primary); color: var(--primary); background: var(--panel-2, var(--panel)); }
+
+  /* Переключатель занимает всю оставшуюся ширину, кнопки — фиксированную. */
+  .segs { display: flex; gap: 7px; flex: 1; min-width: 0; }
   .segs button {
     font: inherit; font-size: 13px; color: var(--dim); background: none;
     border: 1px solid var(--edge); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     transition: background .16s ease, color .16s ease, border-color .16s ease;
   }
   .segs button.on { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
