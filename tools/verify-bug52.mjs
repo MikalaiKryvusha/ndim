@@ -126,7 +126,30 @@ for (const theme of ['light', 'dark']) {
     if (leftover === '') ok(`${label}: закрытие ящика очистило запрос`);
     else bad(`${label} очистка`, `в поле осталось «${leftover}»`);
 
-    // 4. Автопрятание по направлению прокрутки — канон 1.x.
+    // 4а. ДЫРА (поймана владельцем в бою): панель уезжает `transform`ом, а её место в
+    //     потоке остаётся. Пока панель не прилипла к шапке, это место ВИДНО — пустой
+    //     прямоугольник посреди страницы. Проверяем маленькую прокрутку: либо панель на
+    //     месте, либо она уже целиком за шапкой — третьего («улетела, дыра осталась») быть
+    //     не должно ни при какой прокрутке.
+    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await page.waitForTimeout(400);
+    for (const step of [60, 120, 240, 500]) {
+      await page.evaluate((y) => window.scrollTo({ top: y }), step);
+      await page.waitForTimeout(450);
+      const st = await page.evaluate(() => {
+        const t = document.querySelector('.toolbar');
+        const b = document.querySelector('header.bar');
+        if (!t || !b) return null;
+        const tr = t.getBoundingClientRect();
+        return { hidden: t.classList.contains('hidden'), top: Math.round(tr.top), bottom: Math.round(tr.bottom), barBottom: Math.round(b.getBoundingClientRect().bottom) };
+      });
+      if (!st) { bad(`${label} дыра @${step}px`, 'элементы не найдены'); continue; }
+      const okState = !st.hidden || st.bottom <= st.barBottom + 1;
+      if (okState) ok(`${label}: на прокрутке ${step}px дыры нет (${st.hidden ? 'спрятана за шапкой' : 'на месте'})`);
+      else bad(`${label} ДЫРА @${step}px`, `панель спрятана, но её низ ${st.bottom} ниже шапки ${st.barBottom} — место в потоке видно`);
+    }
+
+    // 4б. Автопрятание по направлению прокрутки — канон 1.x.
     await page.evaluate(() => window.scrollTo({ top: 0 }));
     await page.waitForTimeout(400);
     await page.mouse.wheel(0, 700);

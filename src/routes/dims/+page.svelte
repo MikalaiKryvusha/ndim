@@ -538,10 +538,33 @@
       if (Math.abs(y - last) < TOOLBAR_SCROLL_STEP) return;
       const down = y > last;
       last = y;
+      if (!down) {
+        toolbarHidden = false;
+        return;
+      }
       // Пока человек ищет или пишет заявку, панель не прячем: она в этот момент —
       // не украшение, а рабочий инструмент, и увести её из-под руки было бы грубо.
-      if (down && (searchOpen || search.trim() !== '' || suggestOpen)) return;
-      toolbarHidden = down;
+      if (searchOpen || search.trim() !== '' || suggestOpen) return;
+
+      /*
+       * ПРЯЧЕМ ТОЛЬКО ПРИЛИПШУЮ ПАНЕЛЬ — иначе остаётся ДЫРА (найдено владельцем в бою).
+       *
+       * `transform` уводит саму панель, но её место в потоке остаётся. Пока панель ещё
+       * не прилипла (над ней на экране заголовок и подсказка), это место ВИДНО — и
+       * человек получает пустой прямоугольник посреди страницы, а панель улетает поверх
+       * подсказки. Как только панель прилипла к шапке, её место в потоке уже выше
+       * вьюпорта, и уезд не оставляет за собой ничего.
+       *
+       * В 1.x проблемы не было по построению: там `top_sticky_toolbar` был ПЕРВЫМ
+       * элементом экрана, и к моменту прятания его место всегда было за верхним краем.
+       * У нас над панелью стоят заголовок и вводная подсказка — поэтому условие явное.
+       */
+      const el = document.querySelector('.toolbar');
+      if (!(el instanceof HTMLElement)) return;
+      const pinned = el.getBoundingClientRect().top <= barHeight + 1;
+      if (!pinned) return;
+
+      toolbarHidden = true;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -719,6 +742,61 @@
   <SideRail active="dims" {lang} />
   <AppBar {lang} onLang={(next) => (lang = next)} />
 
+  <!--
+    Верхнее меню живёт ВНЕ колонки контента, сразу под шапкой (слово владельца 2026-07-27:
+    «не растягиваешь почему-то на всю ширину… Это приборная панель, её можно тянуть на всю
+    ширину хедера»). Побочно это чинит и ДЫРУ, которую владелец поймал в бою: теперь панель —
+    ПЕРВЫЙ элемент экрана, ровно как `top_sticky_toolbar` в 1.x, и к моменту уезда её место
+    в потоке всегда уже за верхним краем.
+  -->
+  {#if stand === 'ready'}
+  <div
+    class="toolbar"
+    class:hidden={toolbarHidden}
+    class:open={searchOpen}
+    style="top: {barHeight}px"
+  >
+    <div class="trow">
+      <div class="segs" role="group">
+        <button type="button" class:on={tab === 'all' && search.trim() === ''} onclick={() => { tab = 'all'; search = ''; }}>
+          {t.tabAll[lang]}
+        </button>
+        <button type="button" class:on={tab === 'mine' && search.trim() === ''} onclick={openMyTab}>
+          {t.tabMine[lang]} · {myCount}
+        </button>
+      </div>
+      <button
+        type="button"
+        class="ibtn"
+        class:on={searchOpen}
+        aria-label={t.searchTitle[lang]}
+        aria-expanded={searchOpen}
+        title={t.searchTitle[lang]}
+        onclick={toggleSearch}
+      ><Icon name="search" size={16} /></button>
+      <button
+        type="button"
+        class="ibtn suggest-btn"
+        class:on={suggestOpen}
+        aria-label={t.suggestTitle[lang]}
+        title={t.suggestTitle[lang]}
+        onclick={toggleSuggest}
+      ><Icon name="bulb" size={16} /></button>
+    </div>
+
+    <!-- Ящик: поле поиска занимает высоту только когда человек его вызвал (макет V3). -->
+    <div class="drawer">
+      <input
+        bind:this={searchInput}
+        class="search"
+        type="search"
+        placeholder={t.searchPlaceholder[lang]}
+        bind:value={search}
+      />
+    </div>
+  </div>
+  {/if}
+
   <main class="body">
     <h1 class="screen-title">{t.title[lang]}</h1>
 
@@ -747,51 +825,6 @@
         Смещение `top` — измеренная высота шапки: она разная на 390 и 1440, и любое
         зашитое число было бы враньём на одной из ширин.
       -->
-      <div
-        class="toolbar"
-        class:hidden={toolbarHidden}
-        class:open={searchOpen}
-        style="top: {barHeight}px"
-      >
-        <div class="trow">
-          <div class="segs" role="group">
-            <button type="button" class:on={tab === 'all' && search.trim() === ''} onclick={() => { tab = 'all'; search = ''; }}>
-              {t.tabAll[lang]}
-            </button>
-            <button type="button" class:on={tab === 'mine' && search.trim() === ''} onclick={openMyTab}>
-              {t.tabMine[lang]} · {myCount}
-            </button>
-          </div>
-          <button
-            type="button"
-            class="ibtn"
-            class:on={searchOpen}
-            aria-label={t.searchTitle[lang]}
-            aria-expanded={searchOpen}
-            title={t.searchTitle[lang]}
-            onclick={toggleSearch}
-          ><Icon name="search" size={17} /></button>
-          <button
-            type="button"
-            class="ibtn suggest-btn"
-            class:on={suggestOpen}
-            aria-label={t.suggestTitle[lang]}
-            title={t.suggestTitle[lang]}
-            onclick={toggleSuggest}
-          ><Icon name="bulb" size={18} /></button>
-        </div>
-
-        <!-- Ящик: поле поиска занимает высоту только когда человек его вызвал (макет V3). -->
-        <div class="drawer">
-          <input
-            bind:this={searchInput}
-            class="search"
-            type="search"
-            placeholder={t.searchPlaceholder[lang]}
-            bind:value={search}
-          />
-        </div>
-      </div>
 
       <!-- Форма открывается ЗДЕСЬ ЖЕ, под кнопкой: человек не должен искать, куда она уехала. -->
       {#if suggestState === 'sent'}
@@ -1047,7 +1080,11 @@
   .toolbar {
     position: sticky; z-index: 9;
     background: var(--panel-solid, var(--panel));
-    padding: 8px 0 10px;
+    border-bottom: 1px solid var(--edge);
+    /* Во всю ширину, как шапка (слово владельца): панель — часть верхней оснастки экрана,
+       а не элемент колонки контента. Поля совпадают с полями шапки, чтобы содержимое
+       обеих стояло по одной вертикали. */
+    padding: 8px 16px 10px;
     transition: transform 0.3s ease;
     will-change: transform;
   }
@@ -1070,17 +1107,27 @@
   }
   .search:focus { outline: none; border-color: var(--primary); }
 
-  /* Пара кнопок панели: 🔍 и 💡 — соседи, как в 1.x (`extra_tools_container`). */
+  /*
+   * Пара кнопок панели: 🔍 и 💡 — соседи, как в 1.x (`extra_tools_container`).
+   * Размер и вес — как в утверждённом макете: спокойная серая иконка в тонкой рамке.
+   * Первая реализация была «уродская» (слово владельца): 38px, тёмная иконка и ЖИРНАЯ
+   * синяя рамка в активном состоянии — кнопка кричала громче содержимого экрана.
+   * Активность передаём мягко: цвет иконки и чуть подкрашенные рамка с фоном.
+   */
   .ibtn {
-    flex: none; width: 38px; height: 38px; border-radius: 11px; cursor: pointer;
+    flex: none; width: 32px; height: 32px; border-radius: 9px; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
     background: var(--panel); border: 1px solid var(--edge);
-    line-height: 1; color: var(--text);
+    line-height: 1; color: var(--dim);
     transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, color 0.15s ease;
   }
-  .ibtn:hover { border-color: var(--primary); }
+  .ibtn:hover { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, var(--edge)); }
   .ibtn:active { transform: scale(0.94); }
-  .ibtn.on { border-color: var(--primary); color: var(--primary); background: var(--panel-2, var(--panel)); }
+  .ibtn.on {
+    color: var(--primary);
+    border-color: color-mix(in srgb, var(--primary) 45%, var(--edge));
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
+  }
 
   /* Переключатель занимает всю оставшуюся ширину, кнопки — фиксированную. */
   .segs { display: flex; gap: 7px; flex: 1; min-width: 0; }
@@ -1281,6 +1328,9 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-items: start;
     }
+    /* Панель — в колонке контента сетки (справа от рельса), поля как у шапки. */
+    .toolbar { grid-column: 2; padding: 8px 26px 10px; }
+    .screen { grid-template-rows: auto auto 1fr; }
     .toast { bottom: 28px; }
   }
 </style>
