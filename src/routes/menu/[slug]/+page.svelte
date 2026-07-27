@@ -9,13 +9,9 @@
 
   let { data }: { data: PageData } = $props();
 
-  // Разделы руководства, описывающие ЭКРАНЫ версии 1.x, сюда не перенесены: в 2.0 такого
-  // интерфейса нет, и дословный перенос был бы враньём о продукте. Говорим об этом честно,
-  // а не делаем вид, что руководство полное.
-  const manualNote = {
-    ru: 'Разделы о работе с экранами и о синхронизации обновляются под NDim Space 2.0.',
-    en: 'The sections about the screens and about synchronisation are being updated for NDim Space 2.0.',
-  } as const;
+  // Плашка «разделы обновляются под 2.0» УБРАНА по слову владельца (2026-07-27):
+  // решение о непереносе разделов про экраны 1.x остаётся в силе, но объявлять об этом
+  // на лице продукта владелец не хочет.
 
   // Главы для плавающего пагинатора (bugs/55, только руководство — остальные документы
   // короткие): якоря sec-<номер блока> ставит DocBlocks, индексы совпадают по построению.
@@ -32,20 +28,21 @@
   );
 </script>
 
+<svelte:head>
+  {#if data.doc.slug === 'manual'}
+    <!-- Логотип шапки греется ДО рендера (глобальное правило владельца: графика не
+         «доезжает на горячую») — с пререндером он готов к первому кадру, как в 1.x,
+         где preload-теги стояли на всю статику. -->
+    <link rel="preload" as="image" href="/img/docs/logo-1x.webp" />
+  {/if}
+</svelte:head>
+
 <DocShell title={data.doc.title}>
   {#snippet children(lang)}
     <DocBlocks blocks={data.doc.blocks} {lang} />
     {#if data.doc.slug === 'manual'}
-      <p class="note">{manualNote[lang]}</p>
       <ChapterNav {chapters} {lang} />
     {/if}
   {/snippet}
 </DocShell>
 
-<style>
-  .note {
-    margin-top: 26px; padding: 12px 14px; border-radius: 12px;
-    background: var(--edge-soft); border: 1px solid var(--edge);
-    font-size: 12.5px; color: var(--dim); line-height: 1.55;
-  }
-</style>

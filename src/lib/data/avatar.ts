@@ -39,10 +39,16 @@ const ready = new Map<Uid, string | null>();
 
 /** Скачивание файла целиком — дословно механизм `fetchUserAvatar` 1.x (app.js:4967). */
 async function download(uid: Uid): Promise<string | null> {
+  let url: string;
   try {
-    const url = await getDownloadURL(ref(storage(), avatarPath(uid)));
+    url = await getDownloadURL(ref(storage(), avatarPath(uid)));
+  } catch {
+    // Флаг мог пережить сам файл (человек удалил фото). Показать букву — честнее, чем битую картинка.
+    return null;
+  }
+  try {
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) throw new Error(String(response.status));
     const objectUrl = URL.createObjectURL(await response.blob());
     // Декодируем ДО вставки в DOM: без этого <img> с готовым blob всё равно один кадр
     // стоит пустым (замер трассой: 17 мс EMPTY между монтированием и naturalWidth > 0).
@@ -52,8 +58,12 @@ async function download(uid: Uid): Promise<string | null> {
     await image.decode().catch(() => undefined);
     return objectUrl;
   } catch {
-    // Флаг мог пережить сам файл (человек удалил фото). Показать букву — честнее, чем битую картинку.
-    return null;
+    // fetch — CORS-запрос, и он ЛОМАЕТСЯ, если бакет не разрешил домен (боевой инцидент
+    // 2026-07-27: cors-config 1.x не знал ndimspace.app — лица исчезли ВЕЗДЕ). Файл при
+    // этом существует: отдаём сетевой URL, и <img> скачает его сам no-CORS-путём — лицо
+    // с мягкой догрузкой несравнимо лучше вечной буквы. CORS чинится конфигом бакета
+    // (storage.cors.json), этот путь — страховка, чтобы класс отказа больше не гасил фото.
+    return url;
   }
 }
 

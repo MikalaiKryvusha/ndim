@@ -16,6 +16,19 @@
   import type { DocBlock } from '$lib/content/docs';
 
   let { blocks, lang }: { blocks: readonly DocBlock[]; lang: Lang } = $props();
+
+  /**
+   * Глобальное правило владельца (2026-07-27): графика НИГДЕ не «доезжает на горячую».
+   * Блок картинки резервирует место атрибутами w/h (раскладка не прыгает), а сама она
+   * ПРОЯВЛЯЕТСЯ готовой: класс ok ставится по факту загрузки. Пререндер + гидрация:
+   * к моменту действия картинка из кэша может быть уже загружена — тогда onload не
+   * сыграет никогда, поэтому сперва проверяем complete (класс EXP-0049).
+   */
+  function ready(img: HTMLImageElement) {
+    const ok = () => img.classList.add('ok');
+    if (img.complete && img.naturalWidth > 0) ok();
+    else img.addEventListener('load', ok, { once: true });
+  }
 </script>
 
 <!-- Цветной смайлик оценки (шкала 1.x): «десятка» — многоцветный авторский файл. -->
@@ -44,15 +57,16 @@
         <li>
           {@html richText(item)}
           {#if block.images?.[itemIndex]}
+            {@const art = block.images[itemIndex]}
             <!-- В 1.x иллюстрация стояла ВНУТРИ пункта, под его текстом (researches/12). -->
-            <span class="art"><img src={block.images[itemIndex]} alt="" loading="lazy" /></span>
+            <span class="art"><img use:ready src={art.src} width={art.w} height={art.h} alt="" loading="lazy" /></span>
           {/if}
         </li>
       {/each}
     </ul>
   {:else if block.type === 'img'}
     <span class="art" class:logo={block.kind === 'logo'}>
-      <img src={block.src} alt={block.alt} loading={block.kind === 'logo' ? 'eager' : 'lazy'} />
+      <img use:ready src={block.src} width={block.w} height={block.h} alt={block.alt} loading={block.kind === 'logo' ? 'eager' : 'lazy'} />
     </span>
   {:else if block.type === 'scale'}
     <!-- Шкала 0…10 как в 1.x: звезда + цифра + цветной смайлик в колонке «Оценка».
@@ -96,7 +110,7 @@
            Образец не интерактивен — это картинка интерфейса, а не сам интерфейс. -->
       <span class="sample">
         <span class="ibtn" class:gold={block.kind === 'suggest'} aria-hidden="true">
-          <Icon name={block.kind === 'suggest' ? 'bulb' : 'search'} size={16} />
+          <Icon name={block.kind === 'suggest' ? 'bulb' : 'search'} size={40} />
         </span>
       </span>
     {/if}
@@ -134,9 +148,19 @@
   li { margin: 8px 0; }
   p :global(b), li :global(b) { color: var(--heading); }
 
-  /* ── Иллюстрации 1.x: по центру, высота — канон 1.x (researches/12). ── */
+  /* ── Иллюстрации 1.x: по центру, высота — канон 1.x (researches/12). ──
+     Атрибуты w/h резервируют место (height:auto держит пропорцию — ничего не прыгает),
+     а видимой картинка становится ГОТОВОЙ: проявление через ok (правило владельца
+     «графика не доезжает на горячую»). */
   .art { display: flex; justify-content: center; margin: 12px 0; }
-  .art img { max-width: 100%; height: auto; max-height: clamp(180px, 40vw, 300px); object-fit: contain; }
+  .art img {
+    /* width:auto перебивает атрибут ширины (иначе ужатая max-height даёт «банку» с полями
+       по бокам, и подложка красит пустоту); резерв места жив — браузер держит пропорцию
+       по атрибутам w/h через встроенный aspect-ratio-мэппинг. */
+    width: auto; height: auto; max-width: 100%; max-height: clamp(180px, 40vw, 300px);
+    opacity: 0; transition: opacity var(--motion-base) var(--motion-ease);
+  }
+  .art img:global(.ok) { opacity: 1; }
   .art.logo { margin: 4px 0 14px; }
   .art.logo img { max-height: clamp(60px, 16vw, 100px); }
 
@@ -167,10 +191,11 @@
   .sample .cell { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
   .sample .cell small { font-size: 10.5px; color: var(--dim); font-family: var(--mono); }
 
-  /* Копия .ibtn с экрана «Измерения» (dims/+page.svelte) — образец обязан совпадать
-     с продуктом; лампочка — тёплого золота, как там (токен --star). */
+  /* Кнопка-образец: ФОРМА и цвета — как у .ibtn на «Измерениях», но КРУПНО, как в 1.x
+     (там образцы были 80×80 с иконкой 40 и радиусом 30 — «в руководстве я не стеснялся
+     их увеличивать для наглядности», слово владельца). Лампочка — золото (токен --star). */
   .sample .ibtn {
-    width: 32px; height: 32px; border-radius: 9px;
+    width: 80px; height: 80px; border-radius: 30px;
     display: inline-flex; align-items: center; justify-content: center;
     background: var(--panel); border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--edge));
     color: var(--primary); line-height: 1;
@@ -183,9 +208,13 @@
   /* Широкую таблицу (шкала оценок) прокручиваем внутри неё самой: страница не должна
      разъезжаться по горизонтали на телефоне. */
   .scroll { overflow-x: auto; margin: 12px 0; }
+  /* Таблица выглядит ТАБЛИЦЕЙ, как в 1.x (styles.css:2790: collapse, границы у КАЖДОЙ
+     ячейки, зебра нечётных строк) — слово владельца: «в оригинальном NDim тут была
+     таблица». Чёрные рамки 1.x переведены в токены темы. */
   table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
-  th, td { text-align: left; vertical-align: top; padding: 9px 10px; border-bottom: 1px solid var(--edge-soft); }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border: 1px solid var(--edge); }
   th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dim); }
+  tbody tr:nth-child(odd) { background: var(--edge-soft); }
   table:not(.grades) td:first-child { font-family: var(--mono); font-weight: 700; color: var(--primary); width: 44px; }
   td :global(b) { color: var(--heading); }
 </style>

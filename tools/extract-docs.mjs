@@ -35,20 +35,23 @@ function splitHeading(text) {
  * Файлы уже лежат в static/img/docs/ (сняты из архива 1.x); имена местами отличаются.
  */
 const IMAGE_FILES = {
-  'island_compressed.webp': 'island.webp',
-  'airplane.webp': 'airplane.webp',
-  'hospital.webp': 'hospital.webp',
-  'network.webp': 'network.webp',
-  'NDim_LOGO_v8_196.webp': 'logo-1x.webp',
+  // Размеры зашиты, чтобы страница РЕЗЕРВИРОВАЛА место до загрузки (глобальное правило
+  // владельца 2026-07-27: графика нигде не «доезжает на горячую», раскладка не прыгает).
+  // Файлы статичны; меняешь картинку — обнови размер (magick identify -format "%w %h").
+  'island_compressed.webp': { file: 'island.webp', w: 737, h: 600 },
+  'airplane.webp': { file: 'airplane.webp', w: 582, h: 459 },
+  'hospital.webp': { file: 'hospital.webp', w: 653, h: 500 },
+  'network.webp': { file: 'network.webp', w: 516, h: 520 },
+  'NDim_LOGO_v8_196.webp': { file: 'logo-1x.webp', w: 196, h: 196 },
 };
 
 const IMAGE_NOTE = /\*\[(?:Изображение|Image):\s*([\w.-]+)\s*—\s*([^\]]+)\]\*/;
 
-/** Пометка изображения → img-блок (или null, если файла нет в карте — тогда честный throw). */
+/** Пометка изображения → img-блок (неизвестный файл — честный throw, а не молчание). */
 function imageBlock(note, alt) {
-  const file = IMAGE_FILES[note];
-  if (!file) throw new Error(`Неизвестная иллюстрация в пометке: ${note}`);
-  return { type: 'img', src: `/img/docs/${file}`, alt };
+  const entry = IMAGE_FILES[note];
+  if (!entry) throw new Error(`Неизвестная иллюстрация в пометке: ${note}`);
+  return { type: 'img', src: `/img/docs/${entry.file}`, alt, w: entry.w, h: entry.h };
 }
 
 /**
@@ -82,8 +85,10 @@ function parseBlocks(lines) {
       if (isIndented && items.length > 0) {
         const tail = line.trim();
         const note = IMAGE_NOTE.exec(tail);
-        if (note) images[images.length - 1] = imageBlock(note[1], note[2].trim()).src;
-        else items[items.length - 1] += ` ${tail}`;
+        if (note) {
+          const block = imageBlock(note[1], note[2].trim());
+          images[images.length - 1] = { src: block.src, w: block.w, h: block.h };
+        } else items[items.length - 1] += ` ${tail}`;
         j += 1;
         continue;
       }
@@ -342,7 +347,7 @@ const manualBlocks = [];
 
 // Логотип 1.x в шапке руководства (researches/12 → «Вёрстка страниц документов 1.x»):
 // пометка в исследовании стоит вне переносимых разделов, поэтому блок добавляется явно.
-manualBlocks.push({ type: 'img', src: '/img/docs/logo-1x.webp', alt: 'NDim', kind: 'logo' });
+manualBlocks.push({ type: 'img', src: '/img/docs/logo-1x.webp', alt: 'NDim', kind: 'logo', w: 196, h: 196 });
 
 /**
  * В руководстве разделы («## 5. Звёзды…») добавляются вручную как h2, а распарсенные
@@ -446,15 +451,16 @@ export type DocBlock =
       readonly type: 'ul';
       readonly items: { readonly ru: readonly string[]; readonly en: readonly string[] };
       /** Иллюстрация пункта (1.x: картинки мысленных экспериментов стояли ВНУТРИ пунктов). */
-      readonly images?: readonly (string | null)[];
+      readonly images?: readonly ({ readonly src: string; readonly w: number; readonly h: number } | null)[];
     }
   | {
       readonly type: 'table';
       readonly head: { readonly ru: readonly string[]; readonly en: readonly string[] };
       readonly rows: { readonly ru: readonly string[][]; readonly en: readonly string[][] };
     }
-  /** Иллюстрация 1.x; kind 'logo' — маленький логотип в шапке руководства. */
-  | { readonly type: 'img'; readonly src: string; readonly alt: string; readonly kind?: 'logo' }
+  /** Иллюстрация 1.x (w/h резервируют место — графика не «доезжает на горячую»);
+      kind 'logo' — маленький логотип в шапке руководства. */
+  | { readonly type: 'img'; readonly src: string; readonly alt: string; readonly w: number; readonly h: number; readonly kind?: 'logo' }
   /** Шкала оценок 0…10: звезду, цифру и цветной смайлик рисует рендерер (канон 1.x). */
   | {
       readonly type: 'scale';

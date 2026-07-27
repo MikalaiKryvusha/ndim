@@ -291,10 +291,7 @@
            с экрана «Пространство», где его в 1.x не было вовсе, и дорос до того, о чём
            просил владелец: версия, сборка и дата со временем — по КАЖДОМУ из двух,
            приложению и серверу синхронизации. -->
-      <div class="card">
-        <h3>{t.versions[lang]}</h3>
-        <div class="pad"><Versions {server} {lang} /></div>
-      </div>
+      <Versions {server} {lang} />
     </section>
   </main>
 
@@ -402,10 +399,6 @@
   .btn.primary:hover { color: var(--primary-ink); filter: brightness(1.08); }
   .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
   .btn.wide { display: flex; margin: 0 14px 12px; }
-
-  /* Отступ вокруг содержимого карточки: у .card padding нулевой — его строки списка
-     задают сами (`.row`), а виджету версий поля нужны. */
-  .pad { padding: 4px 14px 14px; }
 
   /* ── Десктоп: макет V2 «Рабочий стол». Манифест — виджет РЯДОМ с кнопками меню
      (bugs/38, слово владельца: «в десктопе полно места — два виджета рядышком»):

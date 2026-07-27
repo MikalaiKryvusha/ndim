@@ -62,9 +62,9 @@
   {#snippet children(lang)}
     <p>{t.body[lang]}</p>
 
-    <h2>{t.versions[lang]}</h2>
-    <!-- Тот же виджет, что в «Меню» (bugs/66): в 1.x подвал версий рисовался ОДНИМ кодом
-         в оба контейнера — `version_container_menu` и `version_container_about`. -->
+    <!-- Тот же виджет-ОБЪЕКТ, что в «Меню» (bugs/66 + слово владельца 2026-07-27:
+         «переиспользовать виджет как объект») — карточка и заголовок «Версии» живут
+         внутри него; в 1.x подвал версий рисовался одним кодом в оба контейнера. -->
     <Versions {server} {lang} />
 
     <details class="history">
@@ -81,10 +81,6 @@
 </DocShell>
 
 <style>
-  h2 {
-    font-size: 16px; font-weight: 700; color: var(--heading);
-    margin: 24px 0 8px; padding-top: 12px; border-top: 1px solid var(--edge-soft);
-  }
   /* «История версий» — карточка по канону продукта (bugs/35, кадр app-17: в 1.x это
      выразительный контейнер, а не голый список). Рецепт карточки — как у виджетов
      «Связей»/«Пространства»: --panel + --edge + radius 14 + --card-shadow. */

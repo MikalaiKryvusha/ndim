@@ -102,12 +102,30 @@ try {
     const rowFaces = await page.$$eval('.doc .sample.row .cell', (nodes) => nodes.length);
     check('ряд смайликов — 11 лиц с подписями', rowFaces === 11, String(rowFaces));
 
-    // ── Кнопки-образцы в текущем виде 2.0 (ibtn с иконками набора) ──
+    // ── Кнопки-образцы: форма ibtn 2.0, но КРУПНО, как в 1.x (80×80, слово владельца) ──
     const samples = await page.$$eval('.doc .sample .ibtn', (nodes) =>
-      nodes.map((node) => ({ gold: node.classList.contains('gold'), svg: node.querySelectorAll('svg').length })),
+      nodes.map((node) => ({
+        gold: node.classList.contains('gold'),
+        svg: node.querySelectorAll('svg').length,
+        size: Math.round(node.getBoundingClientRect().width),
+      })),
     );
     check('две кнопки-образца с иконками набора', samples.length === 2 && samples.every((sample) => sample.svg === 1));
+    check('кнопки КРУПНЫЕ, как в 1.x (80px)', samples.every((sample) => sample.size === 80), JSON.stringify(samples.map((sample) => sample.size)));
     check('лампочка — золотая, поиск — нет', samples[0]?.gold === true && samples[1]?.gold === false);
+
+    // ── Таблица выглядит ТАБЛИЦЕЙ, как в 1.x: границы у ячеек и зебра строк ──
+    const tableLook = await page.$eval('.doc table.grades', (table) => {
+      const cell = table.querySelector('tbody td');
+      const odd = table.querySelector('tbody tr:nth-child(1)');
+      const even = table.querySelector('tbody tr:nth-child(2)');
+      return {
+        border: cell ? getComputedStyle(cell).borderTopWidth : '0',
+        zebra: odd && even ? getComputedStyle(odd).backgroundColor !== getComputedStyle(even).backgroundColor : false,
+      };
+    });
+    check('у ячеек шкалы видимые границы (1px, канон 1.x)', tableLook.border === '1px', tableLook.border);
+    check('зебра нечётных строк (канон 1.x)', tableLook.zebra === true);
 
     // ── Адаптированные фразы стоят, фраз 1.x о «внизу справа» нет ──
     const text = await page.locator('.doc').innerText();

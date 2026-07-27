@@ -25,15 +25,16 @@ export type DocBlock =
       readonly type: 'ul';
       readonly items: { readonly ru: readonly string[]; readonly en: readonly string[] };
       /** Иллюстрация пункта (1.x: картинки мысленных экспериментов стояли ВНУТРИ пунктов). */
-      readonly images?: readonly (string | null)[];
+      readonly images?: readonly ({ readonly src: string; readonly w: number; readonly h: number } | null)[];
     }
   | {
       readonly type: 'table';
       readonly head: { readonly ru: readonly string[]; readonly en: readonly string[] };
       readonly rows: { readonly ru: readonly string[][]; readonly en: readonly string[][] };
     }
-  /** Иллюстрация 1.x; kind 'logo' — маленький логотип в шапке руководства. */
-  | { readonly type: 'img'; readonly src: string; readonly alt: string; readonly kind?: 'logo' }
+  /** Иллюстрация 1.x (w/h резервируют место — графика не «доезжает на горячую»);
+      kind 'logo' — маленький логотип в шапке руководства. */
+  | { readonly type: 'img'; readonly src: string; readonly alt: string; readonly w: number; readonly h: number; readonly kind?: 'logo' }
   /** Шкала оценок 0…10: звезду, цифру и цветной смайлик рисует рендерер (канон 1.x). */
   | {
       readonly type: 'scale';
@@ -1013,7 +1014,9 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         "type": "img",
         "src": "/img/docs/logo-1x.webp",
         "alt": "NDim",
-        "kind": "logo"
+        "kind": "logo",
+        "w": 196,
+        "h": 196
       },
       {
         "type": "h2",
@@ -1220,9 +1223,21 @@ export const DOCS: Readonly<Record<string, Doc>> = {
           ]
         },
         "images": [
-          "/img/docs/island.webp",
-          "/img/docs/airplane.webp",
-          "/img/docs/hospital.webp"
+          {
+            "src": "/img/docs/island.webp",
+            "w": 737,
+            "h": 600
+          },
+          {
+            "src": "/img/docs/airplane.webp",
+            "w": 582,
+            "h": 459
+          },
+          {
+            "src": "/img/docs/hospital.webp",
+            "w": 653,
+            "h": 500
+          }
         ]
       },
       {
@@ -1345,7 +1360,9 @@ export const DOCS: Readonly<Record<string, Doc>> = {
       {
         "type": "img",
         "src": "/img/docs/network.webp",
-        "alt": "сеть людей"
+        "alt": "сеть людей",
+        "w": 516,
+        "h": 520
       }
     ]
   }

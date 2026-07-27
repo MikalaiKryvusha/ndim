@@ -26,6 +26,7 @@
   const APP_BUILT_AT = __APP_BUILT_AT__;
 
   const t = {
+    versions: { ru: 'Версии', en: 'Versions' },
     app: { ru: 'Приложение', en: 'Application' },
     syncServer: { ru: 'Сервер синхронизации', en: 'Sync server' },
     // Род разный: «Приложение собрано», но «Сервер собран». Проект уже считает русскую
@@ -36,26 +37,44 @@
   } as const;
 </script>
 
-<div class="vers">
-  <div class="ver">
-    <span class="k">{t.app[lang]}</span>
-    <b>{versionLabel(APP_VERSION, APP_BUILD)}</b>
-    <span class="t">{t.builtNeuter[lang]} {dateTime(Date.parse(APP_BUILT_AT), lang)}</span>
-  </div>
+<!-- Виджет — ЦЕЛЬНЫЙ ОБЪЕКТ с собственной карточкой и заголовком (слово владельца
+     2026-07-27: «в О системе и в Settings стиль виджетов разный — переиспользовать
+     виджет как объект»). Карточка — в стиле секций «Меню» (его владелец назвал эталоном). -->
+<section class="card">
+  <h3>{t.versions[lang]}</h3>
+  <div class="vers">
+    <div class="ver">
+      <span class="k">{t.app[lang]}</span>
+      <b>{versionLabel(APP_VERSION, APP_BUILD)}</b>
+      <span class="t">{t.builtNeuter[lang]} {dateTime(Date.parse(APP_BUILT_AT), lang)}</span>
+    </div>
 
-  <div class="ver">
-    <span class="k">{t.syncServer[lang]}</span>
-    <b>{server ? versionLabel(server.version, server.build) : t.unknown[lang]}</b>
-    {#if server?.builtAt}
-      <span class="t">{t.builtMasc[lang]} {dateTime(Date.parse(server.builtAt), lang)}</span>
-    {/if}
+    <div class="ver">
+      <span class="k">{t.syncServer[lang]}</span>
+      <b>{server ? versionLabel(server.version, server.build) : t.unknown[lang]}</b>
+      {#if server?.builtAt}
+        <span class="t">{t.builtMasc[lang]} {dateTime(Date.parse(server.builtAt), lang)}</span>
+      {/if}
+    </div>
   </div>
-</div>
+</section>
 
 <style>
+  /* Карточка — вид секций «Меню» (menu/+page.svelte .card/h3): один объект на оба места. */
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    box-shadow: var(--card-shadow); overflow: hidden;
+  }
+  .card h3 {
+    font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--dim); font-weight: 600; padding: 11px 14px 6px; margin: 0;
+  }
+  .vers {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px;
+    padding: 4px 14px 14px;
+  }
   /* Плашки — те же, что были у виджета на «Пространстве» (макет space V1, утверждён
      2026-07-12): виджет ПЕРЕЕХАЛ, а не был придуман заново. */
-  .vers { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
   .ver { padding: 10px 12px; border-radius: 10px; background: var(--edge-soft); border: 1px solid var(--edge); }
   .ver .k { display: block; font-size: 11.5px; color: var(--dim); }
   .ver b { display: block; margin-top: 3px; font-family: var(--mono); font-size: 15px; color: var(--heading); }
