@@ -630,6 +630,24 @@
   <meta name="robots" content="noindex" />
 </svelte:head>
 
+<!-- Тап или клик МИМО контекстного меню карточки закрывает его — канон 1.x, слово
+     владельца 2026-07-27: «в старом NDim делал так, чтобы тап или клик вне контекстного
+     меню закрывало его». Здесь меню закрывалось только повторным тапом по «⋮» или
+     выбором пункта, и человек оставался с висящим меню.
+
+     Именно `pointerdown` вне `.menu`, а не `click` на window: клик по самой кнопке «⋮»
+     Svelte делегирует, и меню закрылось бы тем же событием, которым открылось (гонка
+     open→close за один тап — уже ловилась на выпадашке языка, bugs/39). Точно тот же
+     приём стоит в `AppBar` — это одна форма на оба меню продукта. -->
+<svelte:window
+  onpointerdown={(event) => {
+    if (menuOpen && !(event.target instanceof Element && event.target.closest('.menu'))) menuOpen = null;
+  }}
+  onkeydown={(event) => {
+    if (menuOpen && event.key === 'Escape') menuOpen = null;
+  }}
+/>
+
 <div class="screen">
   <SideRail active="dims" {lang} />
   <AppBar {lang} onLang={(next) => (lang = next)} />
