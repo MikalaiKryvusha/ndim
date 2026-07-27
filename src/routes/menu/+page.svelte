@@ -17,6 +17,11 @@
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
+  // Иконки строк (bugs/17). Здесь стоял зоопарк из 15 знаков ТРЁХ разных природ —
+  // символы (⚙ ↪ ↗ ⧉ § ⓘ ♡ ⚠ ☾), эмодзи (🌐 📖 🔒 📜) и буква N. Слово владельца:
+  // «в Settings полный ужас, иконки маленькие, невзрачные». Эмодзи вдобавок цветные
+  // системным шрифтом и тему не слушают вовсе.
+  import Icon from '$lib/ui/Icon.svelte';
   import {
     currentEmail,
     currentSession,
@@ -192,9 +197,9 @@
          места полно — манифест висит виджетом рядом с кнопками меню. Полный текст
          остаётся в пререндере этой страницы (виджет скрыт CSS) — охраняется e2e. ── -->
     <a class="card manifest-link" href="/menu/manifesto" in:fly={{ y: 10, duration: MOTION.base, easing: cubicOut }}>
-      <span class="ic">📜</span>
+      <span class="ic"><Icon name="stars" size={20} /></span>
       <span class="lb"><b>{t.manifestBtn[lang]}</b><span class="sub">{MANIFEST.title[lang]}</span></span>
-      <span class="chev">›</span>
+      <span class="chev"><Icon name="chevron" size={13} /></span>
     </a>
     <section class="card manifest" in:fly={{ y: 10, duration: MOTION.base, easing: cubicOut }}>
       <h2>{MANIFEST.title[lang]}</h2>
@@ -230,11 +235,11 @@
             </span>
           </div>
           <span class="row off">
-            <span class="ic">⚙</span><span class="lb">{t.manageAccount[lang]}</span>
+            <span class="ic"><Icon name="gear" size={20} /></span><span class="lb">{t.manageAccount[lang]}</span>
             <span class="val">{t.soon[lang]}</span>
           </span>
           <button type="button" class="row" onclick={leave}>
-            <span class="ic">↪</span><span class="lb">{t.leave[lang]}</span><span class="chev">›</span>
+            <span class="ic"><Icon name="logout" size={20} /></span><span class="lb">{t.leave[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
           </button>
         {:else}
           <p class="note">{t.signedOutNote[lang]}</p>
@@ -244,14 +249,14 @@
       <div class="card">
         <h3>{t.view[lang]}</h3>
         <div class="row off">
-          <span class="ic">🌐</span><span class="lb">{t.language[lang]}</span>
+          <span class="ic"><Icon name="globe" size={20} /></span><span class="lb">{t.language[lang]}</span>
           <span class="seg">
             <button type="button" class:on={lang === 'ru'} onclick={() => setLang('ru')}>RU</button>
             <button type="button" class:on={lang === 'en'} onclick={() => setLang('en')}>EN</button>
           </span>
         </div>
         <div class="row off">
-          <span class="ic">☾</span><span class="lb">{t.themeLabel[lang]}</span>
+          <span class="ic"><Icon name={theme === 'dark' ? 'moon' : 'sun'} size={20} /></span><span class="lb">{t.themeLabel[lang]}</span>
           <span class="seg">
             <button type="button" class:on={theme === 'light'} onclick={() => setTheme('light')}>{t.light[lang]}</button>
             <button type="button" class:on={theme === 'dark'} onclick={() => setTheme('dark')}>{t.dark[lang]}</button>
@@ -265,10 +270,10 @@
       <div class="card">
         <h3>{t.share[lang]}</h3>
         <a class="row" href="/menu/share">
-          <span class="ic">↗</span><span class="lb">{t.invite[lang]}</span><span class="chev">›</span>
+          <span class="ic"><Icon name="share" size={20} /></span><span class="lb">{t.invite[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
         </a>
         <button type="button" class="row" onclick={copyLink}>
-          <span class="ic">⧉</span><span class="lb">{t.copyLink[lang]}</span>
+          <span class="ic"><Icon name="copy" size={20} /></span><span class="lb">{t.copyLink[lang]}</span>
           <span class="val">{copied ? t.copiedLabel[lang] : SITE_ORIGIN.replace('https://', '')}</span>
         </button>
       </div>
@@ -278,18 +283,20 @@
     <section class="col" in:fly={{ y: 10, duration: MOTION.base, delay: 90, easing: cubicOut }}>
       <div class="card">
         <h3>{t.documents[lang]}</h3>
-        <a class="row" href="/menu/manual"><span class="ic">📖</span><span class="lb">{t.manual[lang]}</span><span class="chev">›</span></a>
-        <a class="row" href="/menu/terms"><span class="ic">§</span><span class="lb">{t.terms[lang]}</span><span class="chev">›</span></a>
-        <a class="row" href="/menu/privacy"><span class="ic">🔒</span><span class="lb">{t.privacy[lang]}</span><span class="chev">›</span></a>
-        <a class="row" href="/menu/disclaimer"><span class="ic">⚠</span><span class="lb">{t.disclaimer[lang]}</span><span class="chev">›</span></a>
+        <!-- Иконки документов — ровно те, что стояли на этих же пунктах в 1.x
+             (um.svg · tou.svg · pp.svg · disclaimer.svg), кадр app-08-меню.png. -->
+        <a class="row" href="/menu/manual"><span class="ic"><Icon name="manual" size={20} /></span><span class="lb">{t.manual[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href="/menu/terms"><span class="ic"><Icon name="terms" size={20} /></span><span class="lb">{t.terms[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href="/menu/privacy"><span class="ic"><Icon name="privacy" size={20} /></span><span class="lb">{t.privacy[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href="/menu/disclaimer"><span class="ic"><Icon name="disclaimer" size={20} /></span><span class="lb">{t.disclaimer[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
       </div>
 
       <div class="card">
         <h3>{t.project[lang]}</h3>
-        <a class="row" href="/menu/support"><span class="ic">✉</span><span class="lb">{t.support[lang]}</span><span class="chev">›</span></a>
-        <a class="row" href="/menu/donate"><span class="ic">♡</span><span class="lb">{t.donate[lang]}</span><span class="chev">›</span></a>
-        <a class="row" href="/menu/about"><span class="ic">ⓘ</span><span class="lb">{t.about[lang]}</span><span class="chev">›</span></a>
-        <a class="row" href="/menu/author"><span class="ic">N</span><span class="lb">{t.author[lang]}</span><span class="chev">›</span></a>
+        <a class="row" href="/menu/support"><span class="ic"><Icon name="support" size={20} /></span><span class="lb">{t.support[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href="/menu/donate"><span class="ic"><Icon name="donate" size={20} /></span><span class="lb">{t.donate[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href="/menu/about"><span class="ic"><Icon name="about" size={20} /></span><span class="lb">{t.about[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href="/menu/author"><span class="ic"><Icon name="author" size={20} /></span><span class="lb">{t.author[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
         <p class="quiet pad">{t.donationNote[lang]}</p>
       </div>
 
@@ -344,7 +351,8 @@
     text-decoration: none; transition: background 0.15s ease;
   }
   .manifest-link:hover { background: var(--edge-soft); }
-  .manifest-link .ic { width: 24px; text-align: center; font-size: 15px; }
+  /* Иконка теперь SVG, а не знак шрифта: центрируем флексом, размер задаёт сам <Icon>. */
+  .manifest-link .ic { width: 24px; display: flex; justify-content: center; }
   .manifest-link .lb { flex: 1; display: flex; flex-direction: column; gap: 2px; }
   .manifest-link .lb b { color: var(--heading); font-size: 14px; }
   .manifest-link .sub { font-size: 12px; color: var(--dim); }
@@ -361,7 +369,7 @@
   .row:hover { background: var(--edge-soft); }
   .row.off { cursor: default; }
   .row.off:hover { background: transparent; }
-  .row .ic { width: 24px; text-align: center; font-size: 15px; color: var(--accent); }
+  .row .ic { width: 24px; display: flex; justify-content: center; color: var(--accent); }
   .row .lb { flex: 1; }
   .row .val { font-size: 12px; color: var(--faint); font-family: var(--mono); }
   .row .chev { color: var(--faint); }

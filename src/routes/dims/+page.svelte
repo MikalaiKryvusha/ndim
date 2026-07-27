@@ -33,6 +33,7 @@
 
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import Icon from '$lib/ui/Icon.svelte';
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession, submitSuggestion } from '$lib/data/profile';
@@ -584,6 +585,7 @@
     tags: { ru: 'Теги', en: 'Tags' },
     searchWeb: { ru: 'Искать в Интернете', en: 'Search the web' },
     reportError: { ru: 'Сообщить об ошибке', en: 'Report a mistake' },
+    cardMenu: { ru: 'Действия с измерением', en: 'Dimension actions' },
     removeRating: { ru: 'Убрать мою оценку', en: 'Remove my rating' },
     hint: {
       ru: 'Оценки видите только Вы. Из них складывается Ваш NDim ID — и по нему находятся похожие люди.',
@@ -669,7 +671,7 @@
           aria-label={t.suggestTitle[lang]}
           title={t.suggestTitle[lang]}
           onclick={toggleSuggest}
-        >💡</button>
+        ><Icon name="bulb" size={19} /></button>
       </div>
 
       <!-- Форма открывается ЗДЕСЬ ЖЕ, под кнопкой: человек не должен искать, куда она уехала. -->
@@ -765,7 +767,8 @@
               </div>
 
               <div class="menu">
-                <button type="button" class="dots" aria-label="⋮" onclick={() => (menuOpen = menuOpen === card.id ? null : card.id)}>⋮</button>
+                <!-- aria-label был знаком «⋮» — скринридер читал его как символ, а не действие. -->
+                <button type="button" class="dots" aria-label={t.cardMenu[lang]} onclick={() => (menuOpen = menuOpen === card.id ? null : card.id)}><Icon name="dots" size={17} /></button>
                 {#if menuOpen === card.id}
                   <div class="drop" transition:fade={{ duration: MOTION.fast }}>
                     <button type="button" onclick={() => { webSearch(card); menuOpen = null; }}>{t.searchWeb[lang]}</button>

@@ -16,6 +16,7 @@
   import AppBar from '$lib/ui/AppBar.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import Icon from '$lib/ui/Icon.svelte';
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession } from '$lib/data/profile';
@@ -260,7 +261,7 @@
             {#each TRIO as metric (metric)}
               {@const value = entry[metric]}
               <button type="button" class="cell {strengthLevel(value)}" onclick={() => toggleHint(entry.guestUid, metric)}>
-                <small>{t.metrics[metric][lang]} <span class="ihint" aria-hidden="true">ⓘ</span></small>
+                <small>{t.metrics[metric][lang]} <span class="ihint"><Icon name="info" size={13} /></span></small>
                 <b>{value}%</b>
                 <span class="mini"><i style="width:{value}%"></i></span>
               </button>
@@ -421,7 +422,8 @@
     flex: 1; text-align: center;
     background: none; border: 0; padding: 0; font: inherit; cursor: pointer; color: inherit;
   }
-  .ihint { font-size: 10px; color: var(--faint); }
+  /* Подсказка теперь SVG-иконка, а не знак ⓘ: у знака размер зависел от шрифта. */
+  .ihint { display: inline-flex; vertical-align: -1px; color: var(--faint); }
   .cell:hover .ihint { color: var(--primary); }
   .hintbox {
     margin-top: 9px; padding: 9px 12px; border-radius: 10px;

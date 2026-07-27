@@ -15,6 +15,8 @@
   import AppBar from '$lib/ui/AppBar.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import Icon from '$lib/ui/Icon.svelte';
+  import type { IconName } from '$lib/ui/icons';
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
@@ -457,7 +459,6 @@
     votes: { ru: 'голосов', en: 'votes' },
     yourRating: { ru: 'Ваша оценка', en: 'Your rating' },
     collapse: { ru: 'Свернуть ▴', en: 'Collapse ▴' },
-    suggestDim: { ru: '💡 Предложить новое измерение', en: '💡 Suggest a new dimension' },
     soon: { ru: 'скоро', en: 'soon' },
     barsHint: {
       ru: 'Свёрнуто — бар (просмотр), раскрыто — звёзды (ввод). Оценки видите только Вы.',
@@ -568,16 +569,19 @@
     }
   }
 
-  /** Подпись аудитории свойства для чипа: 🌐 Все / 👥 Друзья / ◎ Круг «…» / 🔒 Никому. */
-  function audienceChip(audience: Audience | undefined): { icon: string; label: string; kind: string } {
-    if (audience === EVERYONE) return { icon: '🌐', label: t.everyone[lang], kind: 'open' };
-    if (!audience || audience.length === 0) return { icon: '🔒', label: t.nobody[lang], kind: 'lock' };
+  /** Подпись аудитории свойства для чипа: Все / Друзья / Круг «…» / Никому.
+   *  Иконка отдаётся ИМЕНЕМ, а не символом (bugs/17): раньше здесь были эмодзи
+   *  🌐 👥 ◎ 🔒 — цветные системным шрифтом и глухие к теме. У перечисления групп
+   *  иконки нет вовсе: значков там могло оказаться сколько угодно подряд. */
+  function audienceChip(audience: Audience | undefined): { icon: IconName | null; label: string; kind: string } {
+    if (audience === EVERYONE) return { icon: 'globe', label: t.everyone[lang], kind: 'open' };
+    if (!audience || audience.length === 0) return { icon: 'lock', label: t.nobody[lang], kind: 'lock' };
     const parts = audience.map((groupId) => {
-      if (groupId === FRIENDS) return `👥 ${t.friends[lang]}`;
+      if (groupId === FRIENDS) return t.friends[lang];
       const group = data?.groups.get(groupId);
-      return `◎ ${group ? `${t.circle[lang]} «${group.name}»` : groupId}`;
+      return group ? `${t.circle[lang]} «${group.name}»` : groupId;
     });
-    return { icon: '', label: parts.join(' · '), kind: audience.includes(FRIENDS) ? 'open' : 'circ' };
+    return { icon: null, label: parts.join(' · '), kind: audience.includes(FRIENDS) ? 'open' : 'circ' };
   }
 
   /** Сколько измерений человек оценил. Единственное, что профилю нужно знать про каталог. */
@@ -598,13 +602,13 @@
 
   // ── Вкладка «Видимость»: варианты предпросмотра ──
   const previewOptions = $derived.by(() => {
-    const options = [
-      { key: 'me', label: t.me[lang] },
-      { key: 'everyone', label: `🌐 ${t.everyone[lang]}` },
-      { key: 'friends', label: `👥 ${t.friends[lang]}` },
+    const options: { key: string; label: string; icon: IconName | null }[] = [
+      { key: 'me', label: t.me[lang], icon: 'person' },
+      { key: 'everyone', label: t.everyone[lang], icon: 'globe' },
+      { key: 'friends', label: t.friends[lang], icon: 'relations' },
     ];
     if (data) {
-      for (const [groupId, group] of data.groups) options.push({ key: `group:${groupId}`, label: `◎ ${group.name}` });
+      for (const [groupId, group] of data.groups) options.push({ key: `group:${groupId}`, label: group.name, icon: 'relations' });
     }
     return options;
   });
@@ -755,7 +759,7 @@
         {#if signupStep === 'choose' || signupStep === 'sending' || signupStep === 'sent'}
           <!-- Форма почты — та же, что у гостя (макет V4 «Врезка»). -->
           {#if signupStep === 'sent'}
-            <p class="sent">✉ {t.account.sentTitle[lang]}</p>
+            <p class="sent"><Icon name="envelope" size={15} /> {t.account.sentTitle[lang]}</p>
             <p class="hint">{t.account.sentNote[lang]}</p>
           {:else}
             <input
@@ -898,7 +902,9 @@
               <div class="prop">
                 <span class="k">{t.props[property][lang]}</span>
                 <span class="v">{formatValue(property, data.values[property])}</span>
-                <button type="button" class="aud {chip.kind}" onclick={() => openAudience(property)}>{chip.icon} {chip.label}</button>
+                <button type="button" class="aud {chip.kind}" onclick={() => openAudience(property)}>
+                  {#if chip.icon}<Icon name={chip.icon} size={13} />{/if} {chip.label}
+                </button>
               </div>
               {#if audFor === property}
                 <div class="aud-panel" transition:slide={{ duration: MOTION.base }}>
@@ -907,11 +913,11 @@
                     <p class="hint" style="margin-top:0">◌ {t.guest.audienceLocked[lang]}</p>
                   {:else}
                     <p class="hint" style="margin-top:0">{t.whoSees[lang]}</p>
-                    <label class="chk"><input type="checkbox" bind:checked={audEveryone} /> 🌐 {t.everyone[lang]}</label>
+                    <label class="chk"><input type="checkbox" bind:checked={audEveryone} /> <Icon name="globe" size={14} /> {t.everyone[lang]}</label>
                     {#if !audEveryone}
-                      <label class="chk"><input type="checkbox" bind:checked={audFriends} /> 👥 {t.friends[lang]}</label>
+                      <label class="chk"><input type="checkbox" bind:checked={audFriends} /> <Icon name="relations" size={14} /> {t.friends[lang]}</label>
                       {#each [...data.groups] as [groupId, group] (groupId)}
-                        <label class="chk"><input type="checkbox" bind:checked={audGroups[groupId]} /> ◎ {group.name}</label>
+                        <label class="chk"><input type="checkbox" bind:checked={audGroups[groupId]} /> <Icon name="relations" size={14} /> {group.name}</label>
                       {/each}
                       <p class="hint">{t.nobodyHint[lang]}</p>
                     {/if}
@@ -1000,7 +1006,9 @@
       {:else}
         <div class="seg" role="group" in:fade={{ duration: MOTION.base }}>
           {#each previewOptions as option (option.key)}
-            <button type="button" class:on={previewKey === option.key} onclick={() => (previewKey = option.key)}>{option.label}</button>
+            <button type="button" class:on={previewKey === option.key} onclick={() => (previewKey = option.key)}>
+              {#if option.icon}<Icon name={option.icon} size={13} />{/if} {option.label}
+            </button>
           {/each}
         </div>
         <div class="card" in:fade={{ duration: MOTION.base }}>

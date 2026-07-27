@@ -7,6 +7,9 @@
   // Рельс и нижняя навигация — взаимоисключающие: рельс появляется от 1024px,
   // BottomNav от 1024px прячется. Порог один, объявлен в обоих компонентах.
   import Brand from '$lib/ui/Brand.svelte';
+  // Тот же авторский набор, что в нижней панели (bugs/17) — рельс и панель обязаны
+  // говорить одними иконками, это одна навигация в двух раскладках.
+  import Icon from '$lib/ui/Icon.svelte';
 
   let {
     active,
@@ -14,16 +17,16 @@
   }: { active: 'profile' | 'relations' | 'space' | 'dims' | 'menu'; lang: 'ru' | 'en' } = $props();
 
   const items = [
-    { key: 'profile', href: '/profile', icon: '⌂', label: { ru: 'Профиль', en: 'Profile' } },
-    { key: 'relations', href: '/relations', icon: '◎', label: { ru: 'Связи', en: 'Relations' } },
-    { key: 'space', href: '/space', icon: '✳', label: { ru: 'Пространство', en: 'Space' } },
+    { key: 'profile', href: '/profile', icon: 'home', iconOn: 'homeOn', label: { ru: 'Профиль', en: 'Profile' } },
+    { key: 'relations', href: '/relations', icon: 'relations', iconOn: 'relationsOn', label: { ru: 'Связи', en: 'Relations' } },
+    { key: 'space', href: '/space', icon: 'space', iconOn: 'space', label: { ru: 'Пространство', en: 'Space' } },
     // «Измерения» — ОТДЕЛЬНЫЙ раздел, как было в 1.x. Требование владельца 2026-07-12:
     // «Очень плохо, что нет вкладки Измерения, и попасть в них можно только через профиль».
-    { key: 'dims', href: '/dims', icon: '★', label: { ru: 'Измерения', en: 'Dimensions' } },
+    { key: 'dims', href: '/dims', icon: 'dimensions', iconOn: 'dimensionsOn', label: { ru: 'Измерения', en: 'Dimensions' } },
     // Экран «Меню» реализован 2026-07-12, но рельс о нём так и не узнал: здесь оставался
     // href: null со времён заглушки «скоро». На боевом выкате пункт оказался мёртвым —
     // человек жал «Меню», и не происходило ничего.
-    { key: 'menu', href: '/menu', icon: '☰', label: { ru: 'Меню', en: 'Menu' } },
+    { key: 'menu', href: '/menu', icon: 'menu', iconOn: 'menuOn', label: { ru: 'Меню', en: 'Menu' } },
   ] as const;
 </script>
 
@@ -35,7 +38,7 @@
 
   {#each items as item (item.key)}
     <a href={item.href} class:on={active === item.key} aria-current={active === item.key ? 'page' : undefined}>
-      <span class="ico">{item.icon}</span>{item.label[lang]}
+      <span class="ico"><Icon name={active === item.key ? item.iconOn : item.icon} size={22} /></span>{item.label[lang]}
     </a>
   {/each}
 </nav>
@@ -99,9 +102,11 @@
       font-weight: 650;
     }
     .ico {
-      width: 20px;
-      text-align: center;
-      font-size: 16px;
+      /* Ширина фиксирована, чтобы подписи пунктов стояли по одной вертикали
+         независимо от того, шире или уже конкретная иконка. */
+      width: 22px;
+      display: flex;
+      justify-content: center;
       line-height: 1;
     }
   }

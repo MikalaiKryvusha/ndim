@@ -14,6 +14,7 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import { SITE_ORIGIN } from '$lib/site';
+  import Icon from '$lib/ui/Icon.svelte';
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
   import { loadPublicPeople } from '$lib/data/metrics';
@@ -221,7 +222,7 @@
     onclick={toggleTheme}
     aria-label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
   >
-    <span class="ico" aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
+    <span class="ico"><Icon name={theme === 'dark' ? 'sun' : 'moon'} size={15} /></span>
     <span class="lbl">{t.themeLabel[theme][lang]}</span>
   </button>
 </div>

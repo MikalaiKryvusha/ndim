@@ -19,6 +19,8 @@
   import { fly } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  import Icon from '$lib/ui/Icon.svelte';
+  import type { IconName } from '$lib/ui/icons';
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession } from '$lib/data/profile';
@@ -205,8 +207,13 @@
    */
   type Seg = string | { readonly b: string };
 
-  const icon = (event: SpaceEvent): string =>
-    event.kind === 'people' ? '👤' : event.kind === 'ratings' ? '★' : event.kind === 'dims' ? '✳' : '↯';
+  /** Иконка события ленты (bugs/17): были эмодзи 👤 ★ ✳ ↯ — цветные системным шрифтом
+   *  и глухие к теме. «Измерения» берут АВТОРСКУЮ иконку раздела, чтобы лента и навигация
+   *  говорили об одном одинаково. */
+  const icon = (event: SpaceEvent): IconName =>
+    event.kind === 'people' ? 'person'
+      : event.kind === 'ratings' ? 'stars'
+        : event.kind === 'dims' ? 'dimensions' : 'info';
 
   function eventText(event: SpaceEvent): Seg[] {
     const ru = lang === 'ru';
@@ -422,7 +429,7 @@
           {#each data.events as event (event.kind)}
             {@const note = eventNote(event)}
             <div class="ev">
-              <span class="ic" aria-hidden="true">{icon(event)}</span>
+              <span class="ic"><Icon name={icon(event)} size={18} /></span>
               <div>
                 <p class="tx">
                   {#each eventText(event) as segment}{#if typeof segment === 'string'}{segment}{:else}<b
