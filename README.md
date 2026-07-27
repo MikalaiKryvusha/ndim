@@ -78,7 +78,7 @@
 | Схема документов | [`src/lib/model/schema.ts`](src/lib/model/schema.ts) — типы Firestore, логика дружбы, границы значений | 29 тестов |
 | Правила безопасности | [`firestore.rules`](firestore.rules) — единственный сторож между клиентом и чужими данными | **87** тестов на эмуляторе, проверяют **отказы**; мутации ловятся |
 | Лендинг | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, статический пререндер, светлая/тёмная темы, RU/EN, canonical на `ndimspace.app` | e2e в настоящем браузере |
-| Экран «Профиль» | [`src/routes/profile/`](src/routes/profile/+page.svelte) — вкладки Личное · Видимость; оценки звёздами 0–10, аудитории по кругам, предпросмотр «глазами гостя»; **статистика NDim ID и связей виджетами** (канон «Дома» 1.x) | живой стенд + e2e + QA-прогон живым Chrome; смена аудитории физически перекладывает бакеты |
+| Экран «Профиль» | [`src/routes/profile/`](src/routes/profile/+page.svelte) — аудитории по кругам у каждого свойства, окно **«Как меня видят»** (предпросмотр глазами Я/Все/Друзья), **статистика NDim ID и связей виджетами** (канон «Дома» 1.x) | живой стенд + e2e + QA-прогон живым Chrome; смена аудитории физически перекладывает бакеты |
 | Экран «Связи» | [`src/routes/relations/`](src/routes/relations/+page.svelte) — топ похожих: три метрики сразу, «яркость связи»; раскрытие — **досье знакомства**: человек по его же настройкам видимости и параметры пространств с коэффициентами сравнения | живой стенд + e2e + QA-прогон живым Chrome |
 | Вычислитель связей | [`calculator/`](calculator/index.mjs) — Docker-служба, очередь «грязных» точек, топ-250 в `relations/`; только исходящие соединения. Экономия запросов в духе 1.x: кэш точек в памяти, запись только изменившихся топов, тихий период с окном новичка, суточный полный проход (`researches/13`) | прогон на эмуляторе, из контейнера и в бою |
 | Онбординг без трения | [`plans/03`](plans/03_onboarding_2x.md) — демо похожести на лендинге → гость (анонимный вход, невидим другим) → аккаунт без пароля | сквозные сценарии на живом стенде; мутации ловятся |
@@ -97,7 +97,7 @@
 | Фронтенд 2.0 | SvelteKit: лендинг и все экраны продукта — «Профиль», «Связи», «Пространство», «Измерения», «Меню» + онбординг (демо → гость → аккаунт без пароля) — **в бою** | ✅ |
 | Бэкенд | сервер синхронизации работает в Docker **в бою** (с 2026-07-12; v0.2.0 с экономией запросов — с 2026-07-24) | ✅ |
 | Публикация | **https://ndimspace.app живёт**: cutover 2026-07-12, труд 331 человека из 1.x перенесён и сверен; sitemap и поисковики прописаны | ✅ |
-| Паритет с 1.x | инвентарь поведения 1.x снят целиком ([`researches/12`](researches/12_1x_behavior_inventory.md)); боли переезда разложены по тирам ([`plans/07`](plans/07_owner_pain_tiers.md)), **тир A закрыт** — статистика «Дома», досье связи, сетка соцсетей, правила оформления; **волна 10 в бою** — поиск измерений ищет по всему Пространству, вход «Предложить измерение» вернулся на видное место | 🔧 |
+| Паритет с 1.x | инвентарь поведения 1.x снят целиком ([`researches/12`](researches/12_1x_behavior_inventory.md)); боли переезда разложены по тирам ([`plans/07`](plans/07_owner_pain_tiers.md)); **волны 10–13 в бою**: поиск по всему Пространству, **руководство V1 «Как было»** — иллюстрации 1.x, таблица шкалы со звёздами и цветными смайликами, плавающий пагинатор глав; **карточка ждёт фото** (лица без мерцания, канон 1.x); виджет «Версии» с номерами сборок и датами приложения И сервера | 🔧 |
 
 Живой статус — [`STATUS.md`](STATUS.md) · дорожная карта — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 видение автора — [`GOAL.md`](GOAL.md).
@@ -110,7 +110,7 @@ Node ≥ 24 (исполняет TypeScript нативно), npm. Для тест
 npm install
 npm run dev        # разработка: http://localhost:5173
 npm run stand      # живой стенд: эмуляторы + тестовые данные + вычислитель → /profile, /relations
-npm test           # 163 юнит-теста: ядро, модель данных, статистика NDim ID
+npm test           # 173 юнит-теста: ядро, модель данных, статистика NDim ID
 npm run test:rules # 87 тестов правил Firestore на эмуляторе (проверяют ОТКАЗЫ)
 npm run test:calc  # 30 тестов сервера синхронизации на эмуляторе
 npm run e2e        # 70 браузерных e2e-проверок (Playwright, продакшен-сборка)
@@ -200,7 +200,7 @@ you see it.
 | Document schema | [`src/lib/model/schema.ts`](src/lib/model/schema.ts) — Firestore types, friendship logic, value bounds | 29 tests |
 | Security rules | [`firestore.rules`](firestore.rules) — the only guard between a client and other people's data | **87** emulator tests asserting **denials**; mutations get caught |
 | Landing page | [`src/routes/`](src/routes/+page.svelte) — SvelteKit, static prerender, light/dark themes, RU/EN, canonical on `ndimspace.app` | e2e in a real browser |
-| Profile screen | [`src/routes/profile/`](src/routes/profile/+page.svelte) — Personal · Visibility tabs; 0–10 star ratings, per-property audiences, "through a guest's eyes" preview; **NDim ID and relations statistics as widgets** (the 1.x "Home" canon) | live stand + e2e + a live-Chrome QA pass; audience change physically redistributes buckets |
+| Profile screen | [`src/routes/profile/`](src/routes/profile/+page.svelte) — per-property audiences by circles, the **"How others see me"** window (a preview through Me/Everyone/Friends eyes), **NDim ID and relations statistics as widgets** (the 1.x "Home" canon) | live stand + e2e + a live-Chrome QA pass; audience change physically redistributes buckets |
 | Relations screen | [`src/routes/relations/`](src/routes/relations/+page.svelte) — top similar people: all three metrics at once, "connection brightness"; expanding a card gives a **dossier**: the person as their own visibility settings allow, plus space parameters with comparison ratios | live stand + e2e + a live-Chrome QA pass |
 | Relation calculator | [`calculator/`](calculator/index.mjs) — Docker service, dirty-points queue, top-250 into `relations/`; outgoing connections only. Request economy in the 1.x spirit: in-process points cache, changed-tops-only writes, quiet period with a newcomer window, daily full pass (`researches/13`) | verified on the emulator, from the container, and in production |
 | Frictionless onboarding | [`plans/03`](plans/03_onboarding_2x.md) — similarity demo on the landing → guest (anonymous, invisible to others) → passwordless account | end-to-end scenarios on the live stand; mutations get caught |
@@ -219,7 +219,7 @@ you see it.
 | Frontend 2.0 | SvelteKit: the landing and every product screen — Profile, Relations, Space, Dimensions, Menu + onboarding (demo → guest → passwordless account) — **in production** | ✅ |
 | Backend | the sync server runs in Docker **in production** (since 2026-07-12; v0.2.0 with request economy — since 2026-07-24) | ✅ |
 | Publication | **https://ndimspace.app is live**: cutover on 2026-07-12, the work of 331 people from 1.x migrated and verified; sitemap and search engines done | ✅ |
-| Parity with 1.x | the 1.x behaviour inventory is fully mapped ([`researches/12`](researches/12_1x_behavior_inventory.md)); migration pains are sorted into tiers ([`plans/07`](plans/07_owner_pain_tiers.md)), **tier A is closed** — home statistics, the relation dossier, the social grid, the submission rules; **wave 10 is live** — dimension search now covers the whole Space, and the “suggest a dimension” door is visible again | 🔧 |
+| Parity with 1.x | the 1.x behaviour inventory is fully mapped ([`researches/12`](researches/12_1x_behavior_inventory.md)); migration pains are sorted into tiers ([`plans/07`](plans/07_owner_pain_tiers.md)); **waves 10–13 are live**: search across the whole Space, the **V1 "As it was" User Manual** — 1.x illustrations, the grade table with stars and coloured emojis, a floating chapter paginator; **cards wait for photos** (faces without flicker, the 1.x canon); the "Versions" widget with build numbers and dates for both the app AND the sync server | 🔧 |
 
 Live status — [`STATUS.md`](STATUS.md) · roadmap — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 the author's vision — [`GOAL.md`](GOAL.md).
@@ -232,7 +232,7 @@ Node ≥ 24 (runs TypeScript natively), npm. Rules tests additionally need Java 
 npm install
 npm run dev        # development: http://localhost:5173
 npm run stand      # live stand: emulators + seed data + calculator → /profile, /relations
-npm test           # 163 unit tests: core, data model, NDim ID statistics
+npm test           # 173 unit tests: core, data model, NDim ID statistics
 npm run test:rules # 87 Firestore rules tests on the emulator (asserting DENIALS)
 npm run test:calc  # 30 sync-server tests on the emulator
 npm run e2e        # 70 browser e2e checks (Playwright, production build)

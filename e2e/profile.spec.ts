@@ -16,9 +16,10 @@ test('профиль: шелл пререндерен — вкладки и во
   expect(response.ok()).toBeTruthy();
   const html = (await response.text()).replace(/ |&nbsp;/g, ' ');
 
-  for (const text of ['Пространство NDim', 'Личное', 'Измерения', 'Видимость']) {
-    expect(html).toContain(text);
-  }
+  expect(html).toContain('Пространство NDim');
+  // Вкладки «Личное/Видимость» упразднены (слово владельца 2026-07-27): предпросмотр
+  // аудиторий — окно за кнопкой «Как меня видят». Таб-бар в шелле — регрессия канона.
+  expect(html).not.toContain('>Видимость<');
   // Приватный экран не должен индексироваться (researches/08, чеклист п. 14)
   expect(html).toContain('noindex');
 });
@@ -28,6 +29,4 @@ test('профиль: без данных — честная ошибка чел
   await expect(page.getByText('Не удалось загрузить', { exact: false })).toBeVisible({ timeout: 20000 });
   // На лице приложения не должно быть наших внутренних команд: тот же экран работает в бою.
   await expect(page.getByText('npm run stand')).toHaveCount(0);
-  // Вкладки при этом живы — шелл не сломан
-  await expect(page.getByRole('button', { name: 'Видимость' })).toBeVisible();
 });

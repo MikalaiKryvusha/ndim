@@ -180,8 +180,9 @@ console.log('── Профиль: чипы видимости ──');
   } else {
     await page.goto(`${STAND}/profile`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1800);
-    // Вкладка «Видимость» — там и живут чипы аудитории.
-    await page.locator('button', { hasText: /^Видимость$|^Visibility$/ }).first().click().catch(() => {});
+    // Чипы аудитории живут в окне «Как меня видят» (слово владельца 2026-07-27:
+    // вкладка «Видимость» упразднена — кнопка открывает окно предпросмотра).
+    await page.locator('button', { hasText: /^Как меня видят$|^How others see me$/ }).first().click().catch(() => {});
     await page.waitForTimeout(900);
 
     // 4. На экране не должно быть ИМЁН иконок как текста.

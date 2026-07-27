@@ -51,10 +51,21 @@
   import { isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
 
   type Lang = 'ru' | 'en';
-  type Tab = 'personal' | 'visibility';
+  // Вкладки «Личное/Видимость» упразднены (слово владельца 2026-07-27): предпросмотр
+  // аудиторий — не таба, а ОКНО за кнопкой «Как меня видят»; «Назад» возвращает в профиль.
 
   let lang = $state<Lang>('ru');
-  let tab = $state<Tab>('personal');
+  let seeMeOpen = $state(false);
+
+  // Пока окно предпросмотра открыто — страница под ним не прокручивается (как лайтбокс).
+  $effect(() => {
+    if (!seeMeOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  });
 
   // Состояние стенда — честное: подключаемся / готово / стенда нет / публичный хост.
   // На публичном домене экраны 2.0 ещё не открыты (данные 2.0 появятся с миграцией) —
@@ -268,10 +279,10 @@
   const t = {
     title: { ru: 'Профиль', en: 'Profile' },
     tabs: {
-      personal: { ru: 'Личное', en: 'Personal' },
       dims: { ru: 'Измерения', en: 'Dimensions' },
-      visibility: { ru: 'Видимость', en: 'Visibility' },
     },
+    seeMe: { ru: 'Как меня видят', en: 'How others see me' },
+    backBtn: { ru: 'Назад', en: 'Back' },
     connecting: { ru: 'Подключаюсь…', en: 'Connecting…' },
     standDown: {
       ru: 'Не удалось загрузить данные. Обновите страницу — если не поможет, напишите в поддержку.',
@@ -628,7 +639,6 @@
   });
 
   const PROPERTIES = ['name', 'gender', 'about', 'born', 'avatar'] as const;
-  const TABS = ['personal', 'visibility'] as const;
   const STARS = Array.from({ length: 11 }, (_, index) => index);
 
   // ── Редактирование личного ──
@@ -735,6 +745,12 @@
   <meta name="robots" content="noindex" />
 </svelte:head>
 
+<svelte:window
+  onkeydown={(event) => {
+    if (seeMeOpen && event.key === 'Escape') seeMeOpen = false;
+  }}
+/>
+
 <div class="screen">
   <SideRail active="profile" {lang} />
 
@@ -745,11 +761,6 @@
     onBadge={() => (guestCard = !guestCard)}
   />
 
-  <nav class="tabs" aria-label={t.title[lang]}>
-    {#each TABS as key (key)}
-      <button type="button" class:on={tab === key} onclick={() => (tab = key)}>{t.tabs[key][lang]}</button>
-    {/each}
-  </nav>
 
   <main class="body">
     {#if stand === 'connecting'}
@@ -857,7 +868,6 @@
           {/if}
         </div>
       {/if}
-      {#if tab === 'personal'}
         <!-- Вводная подсказка экрана — канон «Дома» 1.x (bugs/43). Про управление
              учётной записью не обещаем: этого экрана в 2.0 пока нет (bugs/45), а текст,
              описывающий несуществующий интерфейс, — враньё о продукте (EXP-0036). -->
@@ -934,7 +944,11 @@
               {/if}
             {/each}
             <p class="hint">{t.defaultHidden[lang]}</p>
-            <button type="button" class="btn ghost" onclick={startEdit}>{t.edit[lang]}</button>
+            <div class="duo">
+              <button type="button" class="btn ghost" onclick={startEdit}>{t.edit[lang]}</button>
+              <!-- Предпросмотр аудиторий — окно за кнопкой, не таба (слово владельца). -->
+              <button type="button" class="btn ghost" onclick={() => (seeMeOpen = true)}>{t.seeMe[lang]}</button>
+            </div>
           </div>
           <!-- Виджет «Мой NDim ID» — канон «Дома» 1.x (кадр app-01, bugs/43): человек видит,
                ЖИВЁТ ли его пространство, не уходя с профиля. Все четыре строки 1.x на месте;
@@ -1009,15 +1023,29 @@
             <a class="btn ghost" href="/relations">{t.toRelations[lang]}</a>
           </div>
         {/if}
-      {:else}
-        <div class="seg" role="group" in:fade={{ duration: MOTION.base }}>
+    {/if}
+  </main>
+
+  <!-- Окно «Как меня видят» (слово владельца 2026-07-27: не таба, а кнопка → окно
+       предпросмотра; «Назад» возвращает в профиль). Контент — прежний предпросмотр по
+       аудиториям: чипы Я/Все/Друзья и поля глазами выбранной аудитории. -->
+  {#if seeMeOpen && data}
+    <div class="seeme" transition:fade={{ duration: MOTION.base }}>
+      <div class="seeme-head">
+        <button type="button" class="back-btn" onclick={() => (seeMeOpen = false)}>
+          <Icon name="back" size={13} />{t.backBtn[lang]}
+        </button>
+        <h2>{t.seeMe[lang]}</h2>
+      </div>
+      <div class="seeme-body">
+        <div class="seg" role="group">
           {#each previewOptions as option (option.key)}
             <button type="button" class:on={previewKey === option.key} onclick={() => (previewKey = option.key)}>
               {#if option.icon}<Icon name={option.icon} size={13} />{/if} {option.label}
             </button>
           {/each}
         </div>
-        <div class="card" in:fade={{ duration: MOTION.base }}>
+        <div class="card">
           <h3>{t.seenBy[lang]}</h3>
           {#each PROPERTIES as property (property)}
             {@const chip = audienceChip(data.root.visibility[property])}
@@ -1035,13 +1063,13 @@
             </div>
           {/each}
         </div>
-        <div class="card" in:fade={{ duration: MOTION.base }}>
+        <div class="card">
           <h3>{t.tabs.dims[lang]}</h3>
           <p class="hint">{t.dimsPrivate[lang]}</p>
         </div>
-      {/if}
-    {/if}
-  </main>
+      </div>
+    </div>
+  {/if}
 
   <BottomNav active="profile" {lang} />
 </div>
@@ -1060,14 +1088,24 @@
   }
 
 
-  .tabs { display: flex; background: var(--panel); border-bottom: 1px solid var(--edge); }
-  .tabs button {
-    flex: 1; font: inherit; font-size: 13.5px; padding: 11px 0; cursor: pointer;
-    color: var(--dim); background: transparent; border: 0;
-    transition: color 0.15s ease, box-shadow 0.15s ease;
+  /* ── Окно «Как меня видят»: полноэкранный слой со своим скроллом; шапка прибита. ── */
+  .seeme {
+    position: fixed; inset: 0; z-index: 70;
+    background: var(--bg); overflow-y: auto;
   }
-  .tabs button:hover { color: var(--text); }
-  .tabs button.on { color: var(--primary); font-weight: 650; box-shadow: inset 0 -2px 0 var(--primary); }
+  .seeme-head {
+    position: sticky; top: 0; z-index: 1;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; background: var(--panel-solid); border-bottom: 1px solid var(--edge);
+  }
+  .seeme-head h2 { font-size: 16px; font-weight: 700; color: var(--heading); margin: 0; }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--primary);
+    background: none; border: 0; padding: 4px 6px; cursor: pointer;
+  }
+  .seeme-body { max-width: 458px; margin: 0 auto; padding: 14px; }
+  .seeme-body .card { margin-top: 12px; }
 
   .body {
     flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px;
@@ -1230,20 +1268,17 @@
 
   /* ── Десктоп: макет V2 «Рабочий стол» (утверждён владельцем 2026-07-11) ──
      Блок стоит В КОНЦЕ файла намеренно: он переопределяет базовые (мобильные)
-     правила .tabs и .body, а при равной специфичности выигрывает последний.
+     правила .body, а при равной специфичности выигрывает последний.
      Экран становится сеткой: слева рельс во всю высоту (SideRail сам занимает
-     первую колонку через grid-row: 1 / -1), справа шапка, вкладки и контент.
+     первую колонку через grid-row: 1 / -1), справа шапка и контент.
      Узкой колонны 430px на широком экране больше нет — лента идёт в две колонки. */
   @media (min-width: 1024px) {
     .screen {
       max-width: none;
       display: grid;
       grid-template-columns: 232px minmax(0, 1fr);
-      grid-template-rows: auto auto 1fr;
+      grid-template-rows: auto 1fr;
     }
-
-    .tabs { justify-content: flex-start; gap: 4px; padding: 0 26px; }
-    .tabs button { flex: 0 0 auto; padding: 12px 18px; }
 
     .body {
       width: 100%;
@@ -1262,7 +1297,6 @@
        карточка, поиск, сегменты, состояния стенда и подписи. */
     .body > .head-card,
     .body > .guest-card,
-    .body > .seg,
     .body > .intro,
     .body > .state {
       grid-column: 1 / -1;
