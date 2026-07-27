@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — чем заполнить десктопную шапку, 4 макета</title>
+<style>
+  /* ────────────────────────────────────────────────────────────────────────
+     NDim Space — ДЕСКТОПНАЯ ШАПКА: 4 макета на утверждение.
+     Правило четырёх макетов (AGENT_GUIDE → «Дизайн»): агент рисует 4 варианта,
+     владелец утверждает один, возможно с правками.
+
+     ЗАДАЧА ВЛАДЕЛЬЦА ДОСЛОВНО (чат 2026-07-27):
+     «в десктоп версии оцень пустует хедер. Есть идеи, чем его заполнить?
+      Может вспомогательные меню туда перемещать, типа менюшка ВСЕ - МОЙ NDIM ID
+      или может заголовок приложения Пространство NDim туда перенести?
+      В меню кнопок слева выше поднимится?»
+
+     РАЗВЕДКА ПО КОДУ (не по памяти):
+       · src/lib/ui/AppBar.svelte:162-166 — @media (min-width:1024px): знак и водмарк
+         СКРЫТЫ (бренд не двоится с рельсом), .bar → justify-content:flex-end,
+         min-height 52px. В полосе остаются ровно две кнопки 34×34 — отсюда пустота.
+       · src/lib/ui/SideRail.svelte:81-90 — знак + «Пространство NDim» в рельсе,
+         padding 6px 10px 18px → кнопки навигации начинаются на ~46px ниже верха.
+       · src/routes/profile/+page.svelte:1231-1240 — сетка 232px + 1fr: шапка это
+         строка 1 колонки 2, вкладки — строка 2. Две полосы одна под другой,
+         верхняя почти пустая (≈52px), нижняя ≈41px.
+       · src/routes/dims/+page.svelte:892-940 — «Панель-ящик» (bugs/52 V3, утверждена):
+         сегменты «Все | Мой NDim ID» + 🔍 + 💡, top = ИЗМЕРЕННАЯ высота шапки.
+       · researches/12, строка 47 — шапка 1.x: лого N + «Пространство NDim» + пилюля
+         «Ru» справа. Переключатели раздела жили в ОТДЕЛЬНОЙ прилипающей панели
+         (top_sticky_toolbar). НО 1.x был телефонным: десктопной оболочки в нём не
+         было вовсе — она изобретение 2.0 (V2 «Рабочий стол», утверждён 2026-07-11).
+         Значит канон 1.x здесь ответа НЕ диктует, решает владелец.
+
+     ЧТО РЕШАЕМ ЭТИМИ МАКЕТАМИ (одно решение, не четыре):
+       чем становится 52-пиксельная лента над контентом на широком экране.
+     Мобильная раскладка НЕ меняется ни в одном варианте (всё под @media от 1024px):
+     на телефоне шапка уже занята — знак, название, тема, язык.
+
+     ЧЕСТНОСТЬ МАКЕТА: содержимое карточек схематично и уже утверждено (виджеты
+     bugs/43). Смотрим ТОЛЬКО на верхнюю ленту: что в ней, сколько полос, где бренд.
+     Числа взяты из живого профиля владельца (485 измерений, диаметр 220,2 звезды).
+     Иконки навигации — подлинные, авторские (src/lib/ui/icons.ts).
+     ──────────────────────────────────────────────────────────────────────── */
+
+  /* ── Токены светлой темы «Бумага» (дефолт продукта) ── */
+  :root {
+    --bg: #f6f8fb; --panel: #fff; --panel-solid: #fff;
+    --text: #33506e; --heading: #12263c; --dim: #6a819a; --faint: #90a4bb;
+    --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #fff; --accent: #0f9a8a; --star: #e8a516;
+    --card-shadow: 0 16px 40px rgba(29, 50, 71, .08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 28px 22px 70px;
+  }
+  h1 { font-size: 22px; color: var(--heading); margin: 0 0 6px; }
+  .lede { color: var(--dim); max-width: 92ch; margin: 0 0 14px; font-size: 14px; }
+  .canon {
+    max-width: 100ch; margin: 14px 0 10px; padding: 12px 15px; font-size: 13.5px;
+    background: #eaf2fd; border: 1px solid #cfe0f7; border-left: 3px solid var(--primary);
+    border-radius: 10px; color: #23446f;
+  }
+  .canon b { color: #12305c; }
+  .canon .q { display: block; margin: 6px 0 8px; padding-left: 12px; border-left: 2px solid #9dc2ef; font-style: italic; }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 30px; }
+  .toc a {
+    text-decoration: none; font-size: 13px; font-weight: 650; color: var(--primary);
+    background: var(--panel); border: 1px solid #cfe0f7; border-radius: 999px; padding: 7px 14px;
+  }
+  .toc a:hover { background: #eaf2fd; }
+
+  /* ── Блок варианта ── */
+  .variant { max-width: 1240px; margin: 0 0 46px; scroll-margin-top: 14px; }
+  .variant > h2 { font-size: 18px; color: var(--heading); margin: 0 0 4px; }
+  .variant > .idea { font-size: 14px; color: var(--dim); margin: 0 0 14px; max-width: 100ch; }
+  .variant > .idea b { color: var(--text); }
+  .caption { font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase;
+             color: var(--faint); margin: 18px 0 7px; }
+
+  /* ── Рамка «окно браузера» ── */
+  .frame {
+    background: var(--bg); border: 1px solid var(--edge); border-radius: 14px;
+    overflow: hidden; box-shadow: var(--card-shadow);
+  }
+  .shell {
+    display: grid; grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr; min-height: 340px;
+  }
+  /* Рельс — как в продукте: первая колонка во всю высоту */
+  .rail {
+    grid-row: 1 / -1; grid-column: 1; display: flex; flex-direction: column; gap: 3px;
+    padding: 16px 12px; background: var(--panel); border-right: 1px solid var(--edge);
+  }
+  .rail .brand {
+    display: flex; align-items: center; gap: 9px; padding: 6px 10px 18px;
+    font-size: 15px; font-weight: 650; color: var(--heading);
+  }
+  .rail .nav {
+    display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px;
+    font-size: 14px; color: var(--dim);
+  }
+  .rail .nav.on { background: rgba(20, 103, 214, .12); color: var(--primary); font-weight: 650; }
+  .rail .nav svg { width: 22px; height: 22px; flex: none; }
+
+  /* Шапка — та самая лента, о которой идёт речь */
+  .bar {
+    grid-column: 2; grid-row: 1;
+    display: flex; align-items: center; gap: 10px; min-height: 52px;
+    padding: 10px 26px; background: var(--panel-solid); border-bottom: 1px solid var(--edge);
+  }
+  .btns { margin-left: auto; display: flex; gap: 9px; flex: none; }
+  .sqbtn {
+    width: 34px; height: 34px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+    color: var(--dim); background: transparent; border: 1px solid var(--edge); border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+  }
+  .sqbtn svg { width: 15px; height: 15px; }
+
+  /* Полоса вкладок экрана (строка 2 сетки) */
+  .tabs {
+    grid-column: 2; grid-row: 2; display: flex; gap: 4px; padding: 0 26px;
+    background: var(--panel); border-bottom: 1px solid var(--edge);
+  }
+  .tabs span { padding: 12px 18px; font-size: 14px; color: var(--dim); }
+  .tabs span.on { color: var(--primary); font-weight: 650; box-shadow: inset 0 -2px 0 var(--primary); }
+
+  /* Призрак контента: две колонки виджетов, как в продукте */
+  .ghost {
+    grid-column: 2; grid-row: 3; padding: 18px 26px 24px;
+    display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 14px; align-content: start;
+  }
+  .card { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 13px 15px; }
+  .card.wide { grid-column: 1 / -1; }
+  .card h4 { margin: 0 0 9px; font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); }
+  .row { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; padding: 5px 0; border-bottom: 1px solid var(--edge-soft); }
+  .row:last-child { border-bottom: 0; }
+  .row b { color: var(--heading); }
+  .hint { font-size: 13px; color: var(--text); background: #eef3fa; border-radius: 12px; padding: 11px 14px; }
+  .who { display: flex; align-items: center; gap: 12px; }
+  .ava { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(140deg, #cddff2, #9fb9d6);
+         display: flex; align-items: center; justify-content: center; color: #35506e; font-weight: 700; flex: none; }
+  .ava.sm { width: 28px; height: 28px; font-size: 12px; }
+
+  /* Содержимое шапки в вариантах */
+  .ttl { font-size: 15.5px; font-weight: 700; color: var(--heading); }
+  .sub { font-size: 13px; color: var(--dim); }
+  .sep { color: var(--faint); }
+  .barbrand { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 650; color: var(--heading); }
+  .barbrand svg { width: 26px; height: 26px; }
+
+  /* Сегменты и инструменты раздела внутри шапки (переезд «ВСЕ | МОЙ NDIM ID») */
+  .segs { display: flex; gap: 3px; padding: 3px; background: var(--edge-soft); border-radius: 10px; }
+  .segs span { padding: 6px 14px; font-size: 13px; border-radius: 8px; color: var(--dim); }
+  .segs span.on { background: var(--panel); color: var(--primary); font-weight: 650; box-shadow: 0 1px 3px rgba(29, 50, 71, .12); }
+  .pills { display: flex; gap: 4px; }
+  .pills span { padding: 8px 16px; font-size: 13.5px; border-radius: 9px; color: var(--dim); }
+  .pills span.on { background: rgba(20, 103, 214, .12); color: var(--primary); font-weight: 650; }
+  .tools { display: flex; gap: 7px; }
+
+  /* Живые факты (V4) */
+  .facts { display: flex; align-items: center; gap: 14px; margin-left: auto; font-size: 13px; color: var(--dim); }
+  .facts b { color: var(--heading); font-weight: 700; }
+  .facts .dot { width: 8px; height: 8px; border-radius: 50%; background: #22a06b; display: inline-block; margin-right: 5px; }
+  .facts .vr { width: 1px; height: 20px; background: var(--edge); }
+
+  /* Пометки на макете */
+  .note {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 650;
+    color: #0d6f5f; background: #e5f6f2; border: 1px solid #b7e4da; border-radius: 999px; padding: 4px 11px;
+  }
+  .note.warn { color: #8a5b00; background: #fdf4e3; border-color: #f0dcae; }
+
+  /* Полоска «только шапка» — как тот же вариант выглядит на других экранах */
+  .strip { display: grid; grid-template-columns: 232px minmax(0, 1fr); border: 1px solid var(--edge);
+           border-radius: 12px; overflow: hidden; background: var(--panel); margin-bottom: 9px; }
+  .strip .stub { background: var(--panel); border-right: 1px solid var(--edge); padding: 10px 12px;
+                 font-size: 12px; color: var(--faint); display: flex; align-items: center; }
+  .strip .bar { grid-column: 2; grid-row: 1; border-bottom: 0; }
+  .strip.full { grid-template-columns: 1fr; }
+  .strip.full .bar { grid-column: 1; }
+  .striplabel { font-size: 12.5px; color: var(--dim); margin: 0 0 5px; }
+  .striplabel b { color: var(--heading); }
+
+  /* Итоги варианта */
+  .tally { display: flex; flex-wrap: wrap; gap: 18px; margin: 16px 0 0; }
+  .tally > div { flex: 1 1 300px; min-width: 280px; }
+  .tally h5 { margin: 0 0 6px; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
+  .tally ul { margin: 0; padding-left: 18px; font-size: 13.5px; }
+  .tally li { margin-bottom: 4px; }
+  .tally .plus li::marker { color: #22a06b; }
+  .tally .minus li::marker { color: #d4803a; }
+
+  .verdict {
+    max-width: 100ch; margin: 10px 0 0; padding: 15px 17px; font-size: 14px;
+    background: var(--panel); border: 1px solid var(--edge); border-left: 3px solid var(--accent);
+    border-radius: 12px;
+  }
+  .verdict h3 { margin: 0 0 8px; font-size: 15.5px; color: var(--heading); }
+  .verdict p { margin: 0 0 8px; }
+  .verdict b { color: var(--heading); }
+
+  /* ── V3: единая шапка во всю ширину, поверх рельса ── */
+  .shell.v3 { grid-template-rows: auto auto auto 1fr; }
+  .shell.v3 .bar { grid-column: 1 / -1; grid-row: 1; padding-left: 18px; }
+  .shell.v3 .rail { grid-row: 2 / -1; }
+  .shell.v3 .tabs { grid-row: 2; }
+  .shell.v3 .ghost { grid-row: 3 / -1; }
+
+  /* ── V2: полосы вкладок нет — контент сразу под шапкой ── */
+  .shell.v2 { grid-template-rows: auto 1fr; }
+  .shell.v2 .ghost { grid-row: 2; }
+</style>
+</head>
+<body>
+
+<!-- Подлинные авторские иконки навигации: вставлены из src/lib/ui/icons.ts
+     скриптом (переписывать 12 КБ путей руками = искажать форму, которую рисовал владелец). -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="ico-home" viewBox="0 0 48 48" fill="currentColor"><path fill-rule="evenodd" d="M22.7 3.5a7 7 0 0 0-2.21.91A743 743 0 0 0 2.25 22.56c-.68 1.05.18 2.31 1.42 2.08.24-.05.48-.22 1.02-.75l.7-.68v8.75c0 5.5.03 8.96.09 9.3a4.1 4.1 0 0 0 3.1 3.3c.64.13 30.2.13 30.84 0a4.1 4.1 0 0 0 3.11-3.3c.06-.34.09-3.8.09-9.3v-8.75l.7.69c.54.52.78.7 1.02.74 1.24.23 2.1-1.03 1.42-2.08A748 748 0 0 0 27.52 4.4a6.5 6.5 0 0 0-4.83-.91m.15 2.81a5 5 0 0 0-.76.35c-.18.1-3.37 3.24-7.11 6.97l-6.8 6.77.03 10.4.02 10.38.32.32.32.31 4.15.03 4.14.02v-5.7c0-4.77.02-5.77.13-6.18a4.4 4.4 0 0 1 3-3.05c.68-.2 6.77-.2 7.45 0a4.6 4.6 0 0 1 2.65 2.13c.48.94.48.92.48 7.1v5.7h4.03c4.5 0 4.42 0 4.76-.59l.18-.32V20.4l-6.8-6.77a300 300 0 0 0-7.1-6.96 4 4 0 0 0-3.1-.36m-2 23.31c-.34.15-.73.57-.86.92-.07.2-.1 1.78-.1 5.8l-.01 5.52h8.3l-.02-5.52c0-4.02-.03-5.6-.1-5.8a1.8 1.8 0 0 0-.88-.92c-.39-.17-5.95-.16-6.33 0"/></symbol>
+  <symbol id="ico-relations" viewBox="0 0 48 48" fill="currentColor"><path fill-rule="evenodd" d="M11.32 4.14a6.6 6.6 0 0 0-3.93 2.6 6.5 6.5 0 0 0-.42 6.67 7.6 7.6 0 0 0 2.71 2.66c1.84.9 3.93.93 5.69.07a6.3 6.3 0 0 0 3.42-4.25c.35-1.49.1-3.38-.61-4.61a7 7 0 0 0-2.84-2.61 6.2 6.2 0 0 0-4.02-.53m22.32.05a6.34 6.34 0 0 0-4.88 6.14c0 .49.02 1.02.06 1.18a6.6 6.6 0 0 0 3.97 4.83 6.44 6.44 0 0 0 8.53-4.41 7.4 7.4 0 0 0-.05-3.21 6.43 6.43 0 0 0-7.63-4.53M11.3 6.5c-.67.22-1.55.86-2 1.46a4.2 4.2 0 0 0-.28 4.46 5 5 0 0 0 1.84 1.7c1.51.72 3.41.37 4.63-.85a4.1 4.1 0 0 0 .87-4.48 4.5 4.5 0 0 0-2.02-2.08c-.61-.3-.74-.33-1.58-.36-.73-.03-1.02 0-1.46.15m22.45.03a4.2 4.2 0 0 0-2.3 2 4 4 0 0 0 .8 4.76 3.9 3.9 0 0 0 3.47 1.15 4.3 4.3 0 0 0 2.93-1.98c.57-.95.7-2.4.29-3.5a4.4 4.4 0 0 0-2.6-2.47 4.6 4.6 0 0 0-2.59.04M6.98 16.05a5.2 5.2 0 0 0-3.78 2.9A14 14 0 0 0 2 24.59c0 1.67.33 2.64 1.21 3.6a4.4 4.4 0 0 0 2.24 1.26c.65.17 1 .17 7.28.17 5.76 0 6.67-.01 7.24-.14a4.4 4.4 0 0 0 3.28-2.85c.52-1.48.18-5.13-.66-7.08-.9-2.06-2.23-3.19-4.16-3.5-.88-.14-1.2-.06-2.23.59-2.62 1.63-4.27 1.65-6.76.07-1.18-.75-1.45-.82-2.46-.65m22.44 0c-3 .5-4.84 3.7-4.84 8.39 0 2.06.26 2.87 1.24 3.83.61.6 1.2.94 2.11 1.17.66.17 1 .17 7.3.17 7.35 0 7.34 0 8.44-.57a4.3 4.3 0 0 0 2.07-2.33c.2-.5.21-.65.21-2.18 0-1.85-.15-2.89-.59-4.23q-1.22-3.78-4.49-4.27c-.84-.13-1.16-.03-2.35.72a5.7 5.7 0 0 1-3.28 1.1c-1.16 0-2.04-.33-3.48-1.26-.96-.63-1.3-.7-2.34-.53M6.9 18.42c-1.54.47-2.58 2.97-2.58 6.19 0 .5.05 1.08.1 1.26.14.45.55.94.97 1.16.66.33 1.34.36 7.82.34l6.24-.03.47-.22a2.1 2.1 0 0 0 1.17-1.3c.14-.56.12-2.01-.04-3.19-.3-2.1-1.06-3.56-2.14-4.09-.75-.36-.98-.33-1.78.2a7.5 7.5 0 0 1-8.71.03c-.43-.27-.85-.49-.94-.48s-.36.06-.58.13m22.68-.06a3 3 0 0 0-1.18.7c-1 1.05-1.53 2.91-1.54 5.38v1.4l.27.43c.37.61.89.9 1.78 1.03.47.06 2.82.08 6.87.06 6.75-.03 6.53-.02 7.19-.58.7-.6.82-1.13.7-2.97-.19-3.21-1.27-5.25-2.91-5.5-.36-.05-.44-.01-1.08.4a9 9 0 0 1-2.58 1.2c-.9.26-2.62.28-3.5.04a10 10 0 0 1-2.7-1.2c-.68-.46-.88-.52-1.32-.39M11.94 35.01c-.9.2-1.53.55-2.23 1.25a4.37 4.37 0 0 0 0 6.35 4.6 4.6 0 0 0 3.15 1.37 4.7 4.7 0 0 0 4.08-2.6l.33-.7h13.7l.35.7a4.6 4.6 0 0 0 4.33 2.58 4.6 4.6 0 0 0 4.15-3.62c.16-.75.16-1.07 0-1.81-.2-.95-.54-1.57-1.24-2.27S37.23 35.2 36.29 35a3.5 3.5 0 0 0-1.82 0 4.7 4.7 0 0 0-3.37 2.93l-.09.24h-13.8l-.11-.34A4.6 4.6 0 0 0 13.8 35a4 4 0 0 0-1.86 0m.41 2.36q-1 .31-1.42 1.26c-.69 1.52.8 3.28 2.4 2.86a2.11 2.11 0 1 0-.98-4.12m22.38.04c-.5.19-.75.38-1.05.8a2 2 0 0 0-.05 2.36 2.1 2.1 0 0 0 3.62-.16c.28-.5.31-1.39.06-1.87-.5-.97-1.66-1.47-2.58-1.13"/></symbol>
+  <symbol id="ico-space" viewBox="0 0 48 48" fill="currentColor"><path fill-rule="evenodd" d="M23.58 3.23c-2.06.19-3.95.63-5.96 1.41l-.84.33-.36-.25a3.64 3.64 0 0 0-4.7.44 3.6 3.6 0 0 0-1 3.44l.09.47-.58.59c-.31.32-.63.7-.7.85-.5.96.45 2.08 1.5 1.76q.3-.08.87-.68l.55-.59.53.2c1.45.5 2.87.2 3.95-.88.28-.29.55-.52.6-.52.18 0 1.76.63 2.78 1.12l1.1.53v.8c.01.56.06.89.15 1.11l.14.33-.92.95a38 38 0 0 0-1.37 1.46l-.43.5-.63-.04a3.7 3.7 0 0 0-3.51 1.78l-.3.49h-.5c-.71 0-2.2.14-3.5.33-1.95.3-1.79.3-2.25-.2l-.4-.45.19-.56c.27-.83.85-2.1 1.36-3 .55-.98.62-1.2.5-1.6-.24-.89-1.39-1.25-2.03-.64-.5.48-1.63 2.75-2.22 4.42l-.23.67-.52.13c-.78.19-1.29.47-1.84 1.02a3.6 3.6 0 0 0-.71 4.22c.28.6 1.07 1.4 1.68 1.68.27.13.47.28.47.35 0 .89.51 3.62.92 4.92a22 22 0 0 0 4.71 8.16l.55.57-.1.42a3.6 3.6 0 0 0 1.02 3.41 3.65 3.65 0 0 0 4.64.48l.33-.21.63.26a20.8 20.8 0 0 0 15.68.15l.84-.32.37.24a3.64 3.64 0 0 0 4.7-.43 3.7 3.7 0 0 0 .98-3.5l-.1-.37.55-.58a24 24 0 0 0 2.37-3.03c.68-1.04 1.66-3 2.1-4.19.39-1.03.88-2.98 1.07-4.26.21-1.37.22-4.37 0-5.71-.33-2.2-.93-4.28-1.7-5.9l-.4-.86.22-.46c.66-1.4.37-3.04-.75-4.16a3.6 3.6 0 0 0-3.34-1.02q-.58.13-.4-.37c.15-.37.2-1.36.1-1.83a3.9 3.9 0 0 0-2.81-2.88 3.8 3.8 0 0 0-3.16.76l-.32.28-.34-.15a23 23 0 0 0-4.96-1.27c-1.1-.15-3.34-.21-4.36-.12m.07 2.55a19 19 0 0 0-4.97 1.15c-.38.14-.66.29-.62.32s.4.18.8.32a30 30 0 0 1 3.1 1.33l.78.4.3-.2c.63-.44 1.1-.57 2.03-.57.95 0 1.4.14 2.1.62l.38.26 1.36-.66c.76-.36 1.8-.82 2.34-1.02.82-.3.96-.38.94-.52-.04-.32-2.39-1.04-4.24-1.3a24 24 0 0 0-4.3-.13m11.72.27a1.7 1.7 0 0 0-.83 1c-.09.49.03.87.4 1.24.6.6 1.33.6 1.92 0 .55-.55.58-1.26.09-1.83-.43-.5-1.03-.64-1.58-.4m-21.6.4a1.7 1.7 0 0 0-.82 1c-.09.5.03.87.4 1.24.6.6 1.33.6 1.92 0 .55-.55.58-1.26.09-1.83-.43-.5-1.03-.64-1.58-.4m19 3.39a33 33 0 0 0-3.01 1.27l-1 .5v.42c0 .24-.05.64-.1.9l-.08.47 1.05 1.09a30 30 0 0 1 4.62 6.18l.45.83.48.03c.26.02.51 0 .55-.05.2-.24 1.62-3.26 2.04-4.34.7-1.76.69-1.6.15-2.19a3.65 3.65 0 0 1-.76-4c.06-.16.05-.16-.37-.05a3.7 3.7 0 0 1-3.3-.8c-.36-.31-.47-.35-.72-.26m-8.25 1.04a1.7 1.7 0 0 0-.82 1c-.1.49.03.86.4 1.24.6.59 1.32.59 1.91 0 .55-.56.59-1.27.1-1.84-.44-.49-1.04-.64-1.59-.4m15.52.25a1.7 1.7 0 0 0-.83.99c-.09.5.03.87.4 1.24.6.6 1.33.6 1.92 0 .55-.55.58-1.26.09-1.83-.44-.49-1.03-.64-1.58-.4m-13.63 4.47c-.66.27-1.9.3-2.57.05l-.44-.16-.69.71c-.37.4-.9.97-1.17 1.29l-.5.57.28.56.28.56 1.11.19a42 42 0 0 1 9.54 2.97c.17 0-1.54-2.68-2.47-3.86-.62-.8-1.86-2.16-2.47-2.72l-.4-.37zm14.82.44-.37.07-.32.88c-.5 1.4-1.24 3.07-1.99 4.52l-.7 1.35.22.31c.44.67.56 1.12.57 2.06v.87l.79.6a40 40 0 0 1 2.7 2.24l.52.49.11-.37a19 19 0 0 0 .66-5.7c-.1-2.53-.64-4.94-1.52-6.77l-.3-.62zm-23.77 2.88a1.7 1.7 0 0 0-.82 1c-.1.49.03.86.4 1.24.6.59 1.32.59 1.91 0 .55-.55.59-1.26.1-1.83-.44-.5-1.04-.65-1.59-.4m-12.31 1.3a1.7 1.7 0 0 0-.83 1c-.09.5.03.87.4 1.24.6.6 1.33.6 1.92 0 .55-.55.58-1.26.09-1.83-.43-.49-1.03-.64-1.58-.4m7.96 1.2c-1.44.16-3.45.43-3.62.5q-.17.05-.21.38a3.8 3.8 0 0 1-1.71 2.37l-.48.3.04.38c.42 3.6 1.8 7.12 3.88 9.92.66.89 1.31 1.58 1.44 1.53.09-.03.12-.55.15-2.4.04-1.76.09-2.63.22-3.46a30 30 0 0 1 2.08-7.53l.32-.76-.25-.35a5 5 0 0 1-.37-.66c-.12-.29-.14-.3-.48-.3zm8.04.66a3.8 3.8 0 0 1-3.21 1.79h-.5l-.3.68c-.73 1.7-1.39 4-1.7 5.89a25 25 0 0 0-.33 4.41v1.58l.23.09c.56.2.96.45 1.36.81l.43.4 1.1-.49a36 36 0 0 0 10.1-6.52c.9-.8 1.59-1.51 3.23-3.3l.24-.26-.22-.56a4 4 0 0 1-.27-1.24l-.05-.69-.54-.24a38 38 0 0 0-9.16-2.73c-.13-.03-.22.06-.41.38m13.3 1.82a1.7 1.7 0 0 0-.83 1c-.1.49.03.86.4 1.24.38.38.76.5 1.27.4.4-.08.97-.64 1.05-1.05q.12-.68-.32-1.18c-.43-.5-1.03-.65-1.58-.4m2.76 4.33.2 1.05c.24 1.2.25 1.64.07 2.01-.37.8-1.69.86-2.14.1a5 5 0 0 1-.3-1.09c-.24-1.38-.25-1.4-.6-1.47l-.48-.1c-.13-.03-.31.13-.83.73-.84.96-2.96 3.05-3.92 3.88a40 40 0 0 1-10.23 6.32c-.52.22-.96.42-1 .45s-.06.16-.1.3l-.04.27.84.33a18.3 18.3 0 0 0 13.05.04l.8-.3v-.5c0-1.57.93-2.93 2.35-3.5q.4-.14.45-.34c.03-.1.06-.67.06-1.26 0-.9.04-1.12.18-1.41.19-.38.67-.69 1.1-.69s.92.3 1.12.71c.17.35.18.46.14 1.76-.03 1-.02 1.4.05 1.4.12 0 .86-.77 1.45-1.49a20 20 0 0 0 1.88-2.88l.32-.62-.6-.58c-1.27-1.24-3.83-3.33-3.82-3.12M13.7 38.81a1.7 1.7 0 0 0-.83 1c-.1.48.03.86.4 1.24.39.37.76.5 1.27.4.4-.08.97-.64 1.05-1.05q.13-.68-.31-1.19c-.44-.49-1.03-.64-1.58-.4m22 .16a1.7 1.7 0 0 0-.83 1c-.1.49.03.86.4 1.24.39.38.76.5 1.27.4.4-.08.97-.64 1.05-1.05q.13-.68-.31-1.18c-.44-.5-1.03-.65-1.58-.4"/></symbol>
+  <symbol id="ico-dimensions" viewBox="0 0 48 48" fill="currentColor"><path fill-rule="evenodd" d="M21.37 6.84c-2.2 2.21-2.6 2.64-2.65 2.92-.15.83.51 1.47 1.33 1.3.22-.05.64-.4 1.58-1.34l1.29-1.27v7.3l-6.04 3.02-6.04 3.02v14.15l-2.76 1.38c-1.52.76-2.78 1.36-2.8 1.35s.23-.88.56-1.92c.68-2.13.7-2.4.22-2.88-.23-.23-.34-.27-.72-.27-.7 0-.9.26-1.35 1.7L2.83 39q-.8 2.52-.7 2.59c.05.03 1.7.53 3.64 1.11 3.9 1.17 3.98 1.18 4.48.68.23-.23.27-.34.27-.72 0-.74-.22-.9-2.25-1.55l-1.72-.55L9.3 39.2l2.75-1.38 5.98 2.99L24 43.78l5.97-2.98 5.98-2.99 2.75 1.38c1.6.8 2.69 1.4 2.61 1.43a107 107 0 0 1-3.03.95c-.2.05-.48.22-.63.37-.22.23-.26.35-.26.72 0 .38.04.49.28.73.52.52.64.5 4.66-.71a51 51 0 0 0 3.7-1.2q.09-.1 0-.06c-.05.03-.53-1.35-1.23-3.61-1.06-3.37-1.18-3.7-1.47-3.99-.27-.27-.37-.31-.75-.31-.37 0-.5.04-.72.26-.47.45-.46.64.26 2.85.36 1.1.63 2.01.6 2.04-.02.02-1.28-.58-2.8-1.34l-2.76-1.38V21.8l-6.04-3.02-6.04-3.02v-3.63c0-2.17.03-3.63.08-3.63s.6.54 1.24 1.21c1.2 1.28 1.5 1.47 2.05 1.37.32-.07.72-.43.82-.76.04-.12.04-.36 0-.55-.05-.28-.43-.7-2.64-2.92-1.42-1.42-2.6-2.59-2.63-2.59s-1.21 1.17-2.63 2.6m-2.13 13.2-4.71 2.37 4.73 2.36L24 27.15l4.75-2.38 4.76-2.38-4.71-2.35c-2.59-1.3-4.74-2.35-4.78-2.35s-2.19 1.07-4.78 2.37M13 29.99v5.82l4.96 2.48 4.96 2.47V29.1L18 26.63c-2.7-1.35-4.93-2.45-4.96-2.45S13 26.79 13 29.99m16.97-3.35-4.89 2.45v11.67l4.96-2.47L35 35.8v-5.82c0-3.2-.03-5.81-.07-5.8s-2.27 1.1-4.96 2.45"/></symbol>
+  <symbol id="ico-menu" viewBox="0 0 48 48" fill="currentColor"><path fill-rule="evenodd" d="M5.55 5.62a4.8 4.8 0 0 0-3.47 5.39 4.7 4.7 0 0 0 3.45 3.85c.73.2 1.62.2 18.45.2 19.29 0 18.43.03 19.57-.63a4.8 4.8 0 0 0 2.21-2.76 5 5 0 0 1 .25-.75c.12-.23.14-1.55.02-1.43-.04.05-.14-.19-.23-.52a4.8 4.8 0 0 0-2.22-2.88c-1.16-.68-.23-.65-19.63-.64-15.26 0-17.86.03-18.4.18m.4 2.75c-.5.27-.74.5-.98.98-.51 1-.1 2.2.95 2.74.41.21.98.22 18.08.22s17.67-.01 18.08-.22a2.04 2.04 0 0 0 0-3.7c-.41-.2-.98-.2-18.1-.2-15.91 0-17.72.02-18.03.18m-3.91 1.87c0 .41.02.58.04.38a4 4 0 0 0 0-.75c-.02-.2-.04-.04-.04.37m3.51 9.12a4.8 4.8 0 0 0-3.47 5.39 4.7 4.7 0 0 0 3.45 3.85c.73.2 1.62.2 18.45.2 19.29 0 18.43.03 19.57-.63a4.8 4.8 0 0 0 2.21-2.76 5 5 0 0 1 .25-.76c.12-.22.14-1.54.02-1.42-.04.05-.14-.19-.23-.52a4.8 4.8 0 0 0-2.22-2.88c-1.16-.68-.23-.65-19.63-.64-15.26 0-17.86.03-18.4.18m.4 2.75a2 2 0 0 0-.98.98c-.51 1-.1 2.2.95 2.74.41.21.98.22 18.08.22s17.67-.01 18.08-.22a2.04 2.04 0 0 0 0-3.69c-.41-.21-.98-.22-18.1-.21-15.91 0-17.72.02-18.03.18M2.04 24c0 .41.02.58.04.38a4 4 0 0 0 0-.75c-.02-.2-.04-.04-.04.37m3.51 9.12a4.8 4.8 0 0 0-3.47 5.39 4.7 4.7 0 0 0 3.45 3.85c.73.2 1.62.2 18.45.2 19.29 0 18.43.03 19.57-.63a4.8 4.8 0 0 0 2.21-2.76 5 5 0 0 1 .25-.76c.12-.22.14-1.54.02-1.42-.04.05-.14-.19-.23-.52a4.8 4.8 0 0 0-2.22-2.88c-1.16-.68-.23-.65-19.63-.64-15.26 0-17.86.03-18.4.18m.4 2.75c-.5.27-.74.5-.98.98-.51 1-.1 2.2.95 2.74.41.21.98.22 18.08.22s17.67-.01 18.08-.22a2.04 2.04 0 0 0 0-3.69c-.41-.21-.98-.22-18.1-.21-15.91 0-17.72.02-18.03.18m-3.91 1.87c0 .41.02.58.04.38a4 4 0 0 0 0-.75c-.02-.2-.04-.04-.04.37"/></symbol>
+</defs></svg>
+
+<h1>Десктопная шапка: чем её заполнить — 4 макета</h1>
+<p class="lede">
+  Смотреть в окне <b>шире 1240px</b>. Все четыре варианта нарисованы на экране «Профиль» (тот самый,
+  что Вы сняли), плюс показано, как та же шапка ведёт себя на «Измерениях» (там есть свои
+  переключатели) и на «Связях» (там своих переключателей нет — это проверка на прочность).
+</p>
+
+<div class="canon">
+  <b>Задача владельца дословно (чат 2026-07-27):</b>
+  <span class="q">«в десктоп версии оцень пустует хедер. Есть идеи, чем его заполнить? Может
+  вспомогательные меню туда перемещать, типа менюшка ВСЕ - МОЙ NDIM ID или может заголовок
+  приложения Пространство NDim туда перенести? В меню кнопок слева выше поднимится?»</span>
+  <b>Почему пусто (разведка по коду):</b> на десктопе знак и водмарк в шапке скрыты, чтобы бренд не
+  двоился с рельсом (<b>AppBar.svelte:162-166</b>), и в 52-пиксельной ленте остаются ровно две кнопки
+  34×34. При этом сразу под ней идёт вторая полоса — вкладки экрана (<b>сетка profile:1231-1240</b>).
+  <br><b>Канон 1.x ответа не даёт:</b> в 1.x шапка была лого + «Пространство NDim» + пилюля «Ru», а
+  переключатели раздела жили в отдельной прилипающей панели — но 1.x был телефонным, десктопной
+  оболочки в нём не было вовсе (<b>researches/12</b>). Значит это решение владельца, а не перенос.
+</div>
+
+<nav class="toc">
+  <a href="#v1">V1 · Заголовок раздела</a>
+  <a href="#v2">V2 · Панель раздела в шапке</a>
+  <a href="#v3">V3 · Единая шапка продукта</a>
+  <a href="#v4">V4 · Строка состояния</a>
+  <a href="#verdict">Рекомендация агента</a>
+</nav>
+
+<!-- ══════════════════════ V1 ══════════════════════ -->
+<section class="variant" id="v1">
+  <h2>V1 · «Заголовок раздела»</h2>
+  <p class="idea">
+    Шапка отвечает на вопрос <b>«где я и что здесь»</b>: имя раздела крупно, рядом одна тихая строка
+    контекста. Больше ничего не двигается: рельс, вкладки, панель «Измерений» остаются как есть.
+    Самое дешёвое и самое обратимое решение (Оккам).
+  </p>
+
+  <div class="frame"><div class="shell">
+    <aside class="rail">
+      <span class="brand"><svg viewBox="0 0 96 96" width="26" height="26"><rect width="96" height="96" rx="22" fill="#060b14"/><g stroke="#48b4ff" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g><g fill="#48b4ff"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg> Пространство NDim</span>
+      <span class="nav on"><svg><use href="#ico-home"/></svg> Профиль</span>
+      <span class="nav"><svg><use href="#ico-relations"/></svg> Связи</span>
+      <span class="nav"><svg><use href="#ico-space"/></svg> Пространство</span>
+      <span class="nav"><svg><use href="#ico-dimensions"/></svg> Измерения</span>
+      <span class="nav"><svg><use href="#ico-menu"/></svg> Меню</span>
+    </aside>
+
+    <header class="bar">
+      <span class="ttl">Профиль</span>
+      <span class="sep">·</span>
+      <span class="sub">485 измерений, диаметр 220,2 звезды</span>
+      <span class="btns">
+        <span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span>
+        <span class="sqbtn">Ru</span>
+      </span>
+    </header>
+
+    <nav class="tabs"><span class="on">Личное</span><span>Видимость</span></nav>
+
+    <div class="ghost">
+      <div class="card wide hint">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас.</div>
+      <div class="card wide"><div class="who"><span class="ava">Н</span><div><b style="color:var(--heading)">Николай</b><div class="sub">В Пространстве с февраля 2025 г.</div></div></div></div>
+      <div class="card"><h4>Личная информация</h4>
+        <div class="row"><span>Имя</span><b>Николай</b></div>
+        <div class="row"><span>Пол</span><b>Мужской</b></div>
+        <div class="row"><span>Дата рождения</span><b>19 декабря 1993</b></div>
+      </div>
+      <div class="card"><h4>Мой NDim ID</h4>
+        <div class="row"><span>Количество измерений</span><b>485 (Ого! 🤩)</b></div>
+        <div class="row"><span>Диаметр моего пространства</span><b>220,2 звезды</b></div>
+        <div class="row"><span>Синхронизирован</span><b>27 июля в 09:51</b></div>
+      </div>
+    </div>
+  </div></div>
+
+  <p class="caption">та же шапка на других экранах</p>
+  <p class="striplabel"><b>Измерения</b> — своя панель («Все | Мой NDim ID» + поиск + 💡) остаётся на месте, под шапкой: две полосы сохраняются.</p>
+  <div class="strip"><div class="stub">рельс</div>
+    <header class="bar"><span class="ttl">Измерения</span><span class="sep">·</span><span class="sub">5 112 в Пространстве, 48 новых за сутки</span>
+      <span class="btns"><span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span><span class="sqbtn">Ru</span></span></header></div>
+  <p class="striplabel"><b>Связи</b> — переключателей у экрана нет, и шапке всё равно есть что сказать.</p>
+  <div class="strip"><div class="stub">рельс</div>
+    <header class="bar"><span class="ttl">Связи</span><span class="sep">·</span><span class="sub">74 связи, 12 из них ближе 90%</span>
+      <span class="btns"><span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span><span class="sqbtn">Ru</span></span></header></div>
+
+  <div class="tally">
+    <div><h5>Что решает</h5><ul class="plus">
+      <li>Пустоты нет ни на одном из пяти экранов — заголовок есть всегда.</li>
+      <li>Ничего утверждённого не ломает: рельс V2 и панель «Измерений» (bugs/52) не трогаются.</li>
+      <li>Числа берутся из того, что экран уже прочитал — ни одного лишнего запроса к базе.</li>
+      <li>Полдня работы и мгновенный откат.</li>
+    </ul></div>
+    <div><h5>Чем платим</h5><ul class="minus">
+      <li>Шапка остаётся <b>надписью</b>, а не инструментом: полосы всё ещё две, контент начинается так же низко.</li>
+      <li>Имя раздела дублирует подсвеченную кнопку рельса — на широком экране это видно.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ V2 ══════════════════════ -->
+<section class="variant" id="v2">
+  <h2>V2 · «Панель раздела в шапке» <span class="note">Ваша идея №1</span></h2>
+  <p class="idea">
+    Вспомогательное меню экрана <b>переезжает в шапку</b>: вкладки «Личное | Видимость» на профиле,
+    сегменты «Все | Мой NDim ID» с поиском и 💡 на «Измерениях». Вторая полоса исчезает вовсе —
+    вместо двух лент одна, и контент поднимается почти на полсотни пикселей.
+  </p>
+
+  <div class="frame"><div class="shell v2">
+    <aside class="rail">
+      <span class="brand"><svg viewBox="0 0 96 96" width="26" height="26"><rect width="96" height="96" rx="22" fill="#060b14"/><g stroke="#48b4ff" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g><g fill="#48b4ff"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg> Пространство NDim</span>
+      <span class="nav on"><svg><use href="#ico-home"/></svg> Профиль</span>
+      <span class="nav"><svg><use href="#ico-relations"/></svg> Связи</span>
+      <span class="nav"><svg><use href="#ico-space"/></svg> Пространство</span>
+      <span class="nav"><svg><use href="#ico-dimensions"/></svg> Измерения</span>
+      <span class="nav"><svg><use href="#ico-menu"/></svg> Меню</span>
+    </aside>
+
+    <header class="bar">
+      <span class="pills"><span class="on">Личное</span><span>Видимость</span></span>
+      <span class="btns">
+        <span class="note">полоса вкладок исчезла: −41px высоты</span>
+        <span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span>
+        <span class="sqbtn">Ru</span>
+      </span>
+    </header>
+
+    <div class="ghost">
+      <div class="card wide hint">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас.</div>
+      <div class="card wide"><div class="who"><span class="ava">Н</span><div><b style="color:var(--heading)">Николай</b><div class="sub">В Пространстве с февраля 2025 г.</div></div></div></div>
+      <div class="card"><h4>Личная информация</h4>
+        <div class="row"><span>Имя</span><b>Николай</b></div>
+        <div class="row"><span>Пол</span><b>Мужской</b></div>
+        <div class="row"><span>Дата рождения</span><b>19 декабря 1993</b></div>
+      </div>
+      <div class="card"><h4>Мой NDim ID</h4>
+        <div class="row"><span>Количество измерений</span><b>485 (Ого! 🤩)</b></div>
+        <div class="row"><span>Диаметр моего пространства</span><b>220,2 звезды</b></div>
+        <div class="row"><span>Синхронизирован</span><b>27 июля в 09:51</b></div>
+      </div>
+    </div>
+  </div></div>
+
+  <p class="caption">та же шапка на других экранах</p>
+  <p class="striplabel"><b>Измерения</b> — «Панель-ящик» (bugs/52) переезжает В шапку целиком: сегменты, поиск, 💡. Ящик поиска раскрывается вниз из самой шапки.</p>
+  <div class="strip"><div class="stub">рельс</div>
+    <header class="bar">
+      <span class="segs"><span class="on">Все</span><span>Мой NDim ID</span></span>
+      <span class="tools">
+        <span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6 14.5 14.5"/></svg></span>
+        <span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 1.6a4.4 4.4 0 0 0-2.6 7.9V11h5.2V9.5A4.4 4.4 0 0 0 8 1.6Z"/><path d="M6.4 13h3.2"/></svg></span>
+      </span>
+      <span class="btns"><span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span><span class="sqbtn">Ru</span></span></header></div>
+  <p class="striplabel"><b>Связи</b> — переключателей нет, и шапка снова пустеет: приходится держать запасной вариант (имя раздела), то есть два правила вместо одного.</p>
+  <div class="strip"><div class="stub">рельс</div>
+    <header class="bar"><span class="ttl">Связи</span>
+      <span class="btns"><span class="note warn">своих переключателей у экрана нет</span><span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span><span class="sqbtn">Ru</span></span></header></div>
+
+  <div class="tally">
+    <div><h5>Что решает</h5><ul class="plus">
+      <li>Шапка становится <b>рабочим инструментом</b>, а не надписью: в ней то, чем человек реально пользуется.</li>
+      <li><b>Одна полоса вместо двух</b> — контент выше на ~41px, на ноутбуке это целая строка виджета.</li>
+      <li>«Измерения» перестают иметь ДВЕ прилипающие панели одну под другой — исчезает вся арифметика смещений (top = измеренная высота шапки).</li>
+    </ul></div>
+    <div><h5>Чем платим</h5><ul class="minus">
+      <li>На «Связях», «Пространстве» и «Меню» своих переключателей нет — нужен запасной вариант, и шапка выглядит по-разному на разных экранах.</li>
+      <li>Трогает утверждённую панель bugs/52 — её поведение (автопрятание по прокрутке) придётся переносить в шапку.</li>
+      <li>Мобильная шапка остаётся прежней → на телефоне и на десктопе разная логика одной полосы.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ V3 ══════════════════════ -->
+<section class="variant" id="v3">
+  <h2>V3 · «Единая шапка продукта» <span class="note">Ваша идея №2</span></h2>
+  <p class="idea">
+    Знак и «Пространство NDim» <b>переезжают из рельса в шапку</b>, рельс становится чистой
+    навигацией. У этой идеи две геометрии, и они дают РАЗНЫЙ ответ на Ваш вопрос про «кнопки слева
+    поднимутся» — поэтому нарисованы обе, с измеренными числами.
+  </p>
+
+  <p class="caption">геометрия А · шапка во всю ширину, поверх рельса (как GitHub, Linear, Notion)</p>
+  <div class="frame"><div class="shell v3">
+    <header class="bar">
+      <span class="barbrand"><svg viewBox="0 0 96 96"><rect width="96" height="96" rx="22" fill="#060b14"/><g stroke="#48b4ff" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g><g fill="#48b4ff"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg> Пространство NDim</span>
+      <span class="sep">/</span>
+      <span class="ttl">Профиль</span>
+      <span class="btns">
+        <span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span>
+        <span class="sqbtn">Ru</span>
+      </span>
+    </header>
+
+    <aside class="rail">
+      <span class="nav on"><svg><use href="#ico-home"/></svg> Профиль</span>
+      <span class="nav"><svg><use href="#ico-relations"/></svg> Связи</span>
+      <span class="nav"><svg><use href="#ico-space"/></svg> Пространство</span>
+      <span class="nav"><svg><use href="#ico-dimensions"/></svg> Измерения</span>
+      <span class="nav"><svg><use href="#ico-menu"/></svg> Меню</span>
+    </aside>
+
+    <nav class="tabs"><span class="on">Личное</span><span>Видимость</span></nav>
+
+    <div class="ghost">
+      <div class="card wide hint">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас.</div>
+      <div class="card wide"><div class="who"><span class="ava">Н</span><div><b style="color:var(--heading)">Николай</b><div class="sub">В Пространстве с февраля 2025 г.</div></div></div></div>
+      <div class="card"><h4>Личная информация</h4>
+        <div class="row"><span>Имя</span><b>Николай</b></div>
+        <div class="row"><span>Пол</span><b>Мужской</b></div>
+        <div class="row"><span>Дата рождения</span><b>19 декабря 1993</b></div>
+      </div>
+      <div class="card"><h4>Мой NDim ID</h4>
+        <div class="row"><span>Количество измерений</span><b>485 (Ого! 🤩)</b></div>
+        <div class="row"><span>Диаметр моего пространства</span><b>220,2 звезды</b></div>
+        <div class="row"><span>Синхронизирован</span><b>27 июля в 09:51</b></div>
+      </div>
+    </div>
+  </div></div>
+
+  <p class="note warn" style="margin:10px 0 0">замер живым браузером: первая кнопка рельса — ≈71px от верха окна, сегодня ≈69px. Кнопки НЕ поднимаются: шапка во всю ширину съедает ровно то место, что освободил бренд</p>
+
+  <p class="caption">геометрия Б · шапка только над контентом, рельс с самого верха</p>
+  <div class="frame"><div class="shell v3b">
+    <aside class="rail">
+      <span class="nav on"><svg><use href="#ico-home"/></svg> Профиль</span>
+      <span class="nav"><svg><use href="#ico-relations"/></svg> Связи</span>
+      <span class="nav"><svg><use href="#ico-space"/></svg> Пространство</span>
+      <span class="nav"><svg><use href="#ico-dimensions"/></svg> Измерения</span>
+      <span class="nav"><svg><use href="#ico-menu"/></svg> Меню</span>
+    </aside>
+
+    <header class="bar">
+      <span class="barbrand"><svg viewBox="0 0 96 96"><rect width="96" height="96" rx="22" fill="#060b14"/><g stroke="#48b4ff" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g><g fill="#48b4ff"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg> Пространство NDim</span>
+      <span class="sep">/</span>
+      <span class="ttl">Профиль</span>
+      <span class="btns">
+        <span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span>
+        <span class="sqbtn">Ru</span>
+      </span>
+    </header>
+
+    <nav class="tabs"><span class="on">Личное</span><span>Видимость</span></nav>
+
+    <div class="ghost">
+      <div class="card wide hint">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас.</div>
+      <div class="card wide"><div class="who"><span class="ava">Н</span><div><b style="color:var(--heading)">Николай</b><div class="sub">В Пространстве с февраля 2025 г.</div></div></div></div>
+      <div class="card"><h4>Личная информация</h4>
+        <div class="row"><span>Имя</span><b>Николай</b></div>
+        <div class="row"><span>Пол</span><b>Мужской</b></div>
+        <div class="row"><span>Дата рождения</span><b>19 декабря 1993</b></div>
+      </div>
+      <div class="card"><h4>Мой NDim ID</h4>
+        <div class="row"><span>Количество измерений</span><b>485 (Ого! 🤩)</b></div>
+        <div class="row"><span>Диаметр моего пространства</span><b>220,2 звезды</b></div>
+        <div class="row"><span>Синхронизирован</span><b>27 июля в 09:51</b></div>
+      </div>
+    </div>
+  </div></div>
+
+  <p class="note" style="margin:10px 0 0">замер: первая кнопка рельса — 16px от верха окна против нынешних ≈69px. Кнопки действительно поднимаются на ~53px — пять пунктов навигации собираются у самого верха</p>
+
+  <p class="caption">та же шапка на других экранах (геометрия А)</p>
+  <p class="striplabel"><b>Измерения</b> — шапка одна на весь продукт, панель раздела остаётся своей полосой под ней (как в 1.x: шапка + отдельная прилипающая панель).</p>
+  <div class="strip full">
+    <header class="bar"><span class="barbrand"><svg viewBox="0 0 96 96"><rect width="96" height="96" rx="22" fill="#060b14"/><g stroke="#48b4ff" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g><g fill="#48b4ff"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg> Пространство NDim</span><span class="sep">/</span><span class="ttl">Измерения</span>
+      <span class="btns"><span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span><span class="sqbtn">Ru</span></span></header></div>
+  <p class="striplabel"><b>Связи</b> — правило одно на все пять экранов: бренд, косая черта, имя раздела. Пустоты не возникает нигде.</p>
+  <div class="strip full">
+    <header class="bar"><span class="barbrand"><svg viewBox="0 0 96 96"><rect width="96" height="96" rx="22" fill="#060b14"/><g stroke="#48b4ff" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g><g fill="#48b4ff"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg> Пространство NDim</span><span class="sep">/</span><span class="ttl">Связи</span>
+      <span class="btns"><span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span><span class="sqbtn">Ru</span></span></header></div>
+
+  <div class="tally">
+    <div><h5>Что решает</h5><ul class="plus">
+      <li><b>Одно правило на все пять экранов</b> — шапка больше нигде не пустует и нигде не разная.</li>
+      <li>Бренд перестаёт двоиться и возвращается наверх — как в 1.x и как у всех настольных сервисов; тема и язык оказываются в углу окна, где их ищут.</li>
+      <li>Мобильная и десктопная шапка снова говорят одно и то же (знак + имя + тема + язык) — одна логика, а не две.</li>
+      <li><b>Геометрия Б поднимает кнопки рельса на ~53px</b> (замер: 16px против ≈69px) — ровно то, о чём Вы спросили; в геометрии А они остаются на месте (≈71px против ≈69px).</li>
+    </ul></div>
+    <div><h5>Чем платим</h5><ul class="minus">
+      <li>Самая крупная правка оболочки: шапка выходит из колонки контента в отдельную строку сетки на все пять экранов (лендинг не трогаем).</li>
+      <li>Рельс прибит (bugs/49) — в геометрии А его `top` и `height` считаются от высоты шапки; высоту надо мерить, а не зашивать (как в bugs/51).</li>
+      <li>В геометрии Б бренд стоит <b>над контентом, а не над рельсом</b>: знак сдвинут вправо от левого края окна на 232px — надо смотреть, не выглядит ли это случайным.</li>
+      <li>Шапка сама остаётся <b>вывеской</b>: инструмента в ней по-прежнему нет (но её можно потом дополнить по V4).</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ V4 ══════════════════════ -->
+<section class="variant" id="v4">
+  <h2>V4 · «Строка состояния»</h2>
+  <p class="idea">
+    Шапка становится <b>приборной строкой</b>: слева раздел, справа — живые факты о Вашем
+    Пространстве и о сервере синхронизации, затем Вы сами (фото + имя). Это продолжение канона
+    «дашборд из виджетов»: продукт всё время показывает, что он жив и что цифры свежие.
+  </p>
+
+  <div class="frame"><div class="shell">
+    <aside class="rail">
+      <span class="brand"><svg viewBox="0 0 96 96" width="26" height="26"><rect width="96" height="96" rx="22" fill="#060b14"/><g stroke="#48b4ff" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g><g fill="#48b4ff"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg> Пространство NDim</span>
+      <span class="nav on"><svg><use href="#ico-home"/></svg> Профиль</span>
+      <span class="nav"><svg><use href="#ico-relations"/></svg> Связи</span>
+      <span class="nav"><svg><use href="#ico-space"/></svg> Пространство</span>
+      <span class="nav"><svg><use href="#ico-dimensions"/></svg> Измерения</span>
+      <span class="nav"><svg><use href="#ico-menu"/></svg> Меню</span>
+    </aside>
+
+    <header class="bar">
+      <span class="ttl">Профиль</span>
+      <span class="facts">
+        <span><b>485</b> измерений</span>
+        <span class="vr"></span>
+        <span>диаметр <b>220,2 звезды</b></span>
+        <span class="vr"></span>
+        <span><span class="dot"></span>Сервер <b>работает</b> · синхронизирован в 09:51</span>
+        <span class="vr"></span>
+        <span class="who"><span class="ava sm">Н</span> <b>Николай</b></span>
+      </span>
+      <span class="btns">
+        <span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span>
+        <span class="sqbtn">Ru</span>
+      </span>
+    </header>
+
+    <nav class="tabs"><span class="on">Личное</span><span>Видимость</span></nav>
+
+    <div class="ghost">
+      <div class="card wide hint">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас.</div>
+      <div class="card wide"><div class="who"><span class="ava">Н</span><div><b style="color:var(--heading)">Николай</b><div class="sub">В Пространстве с февраля 2025 г.</div></div></div></div>
+      <div class="card"><h4>Личная информация</h4>
+        <div class="row"><span>Имя</span><b>Николай</b></div>
+        <div class="row"><span>Пол</span><b>Мужской</b></div>
+        <div class="row"><span>Дата рождения</span><b>19 декабря 1993</b></div>
+      </div>
+      <div class="card"><h4>Мой NDim ID</h4>
+        <div class="row"><span>Количество измерений</span><b>485 (Ого! 🤩)</b></div>
+        <div class="row"><span>Диаметр моего пространства</span><b>220,2 звезды</b></div>
+        <div class="row"><span>Синхронизирован</span><b>27 июля в 09:51</b></div>
+      </div>
+    </div>
+  </div></div>
+
+  <p class="caption">та же шапка на других экранах</p>
+  <p class="striplabel"><b>Измерения</b> — факты меняются под раздел: сколько измерений в Пространстве и сколько появилось за сутки.</p>
+  <div class="strip"><div class="stub">рельс</div>
+    <header class="bar"><span class="ttl">Измерения</span>
+      <span class="facts"><span><b>5 112</b> в Пространстве</span><span class="vr"></span><span><b>+48</b> за сутки</span><span class="vr"></span><span><b>485</b> моих</span><span class="vr"></span><span class="who"><span class="ava sm">Н</span> <b>Николай</b></span></span>
+      <span class="btns"><span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span><span class="sqbtn">Ru</span></span></header></div>
+  <p class="striplabel"><b>Связи</b> — те же три факта из уже прочитанного топа: сколько связей, сколько близких, когда пересчитано.</p>
+  <div class="strip"><div class="stub">рельс</div>
+    <header class="bar"><span class="ttl">Связи</span>
+      <span class="facts"><span><b>74</b> связи</span><span class="vr"></span><span><b>12</b> ближе 90%</span><span class="vr"></span><span><span class="dot"></span>пересчитано в 09:51</span><span class="vr"></span><span class="who"><span class="ava sm">Н</span> <b>Николай</b></span></span>
+      <span class="btns"><span class="sqbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.1 3.1l1.1 1.1M11.8 11.8l1.1 1.1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1"/></svg></span><span class="sqbtn">Ru</span></span></header></div>
+
+  <div class="tally">
+    <div><h5>Что решает</h5><ul class="plus">
+      <li>Пустота исчезает <b>содержательно</b>: в ленте живая правда о продукте, а не подпись.</li>
+      <li>Продолжает утверждённый канон «дашборд из виджетов»; состояние сервера видно с любого экрана, а не только на «Пространстве».</li>
+      <li>Ваше фото и имя появляются в углу, где их ищут в любом сервисе.</li>
+    </ul></div>
+    <div><h5>Чем платим</h5><ul class="minus">
+      <li><b>Цифры дублируют виджеты</b> «Мой NDim ID» и «Мои связи» — на профиле одно и то же будет сказано дважды.</li>
+      <li>На «Меню» и «Измерениях» этих чисел у экрана НЕТ — их пришлось бы дочитывать (2 документа: своя точка + сердцебиение сервера) и кешировать на сессию. Канон экономии запросов это допускает, но это уже механизм, а не вёрстка.</li>
+      <li>Риск шума: лента становится плотной, а полос по-прежнему две.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section class="verdict" id="verdict">
+  <h3>Рекомендация агента</h3>
+  <p>
+    <b>V3 «Единая шапка продукта», геометрия А</b> — она даёт <b>одно правило на все пять экранов</b>
+    и снимает расхождение между телефоном и десктопом: шапка снова говорит одно и то же. Это самая
+    крупная правка оболочки из четырёх, но самая простая по итогу — сущностей становится
+    <i>меньше</i>, а не больше.
+  </p>
+  <p>
+    <b>Честный ответ на Ваш вопрос про кнопки:</b> сами по себе они поднимаются только в геометрии Б —
+    замер живым браузером даёт 16px против нынешних ≈69px. В геометрии А шапка во всю ширину съедает
+    ровно то место, что освободил бренд (≈71px против ≈69px), и выигрыш там другой: бренд не двоится,
+    рельс становится чистой навигацией, а внутри рельса освобождается место под будущие блоки
+    (установка PWA, аккаунт).
+  </p>
+  <p>
+    <b>Сильная пара:</b> V3 как основа + позже правая часть из V4 (лампочка сервера и «синхронизирован
+    в 09:51») — тогда шапка и вывеска, и приборная строка.
+  </p>
+  <p>
+    <b>Против V2</b> (переезд «Все | Мой NDim ID» в шапку) есть конкретное возражение: у трёх экранов
+    из пяти своих переключателей нет — шапка окажется разной на разных экранах, и понадобится второе
+    правило. Зато выигрыш V2 реален и его можно взять внутри V3: «Измерения» и «Профиль» и так
+    держат свою полосу под шапкой — если Вы захотите, её можно втянуть в шапку отдельным шагом.
+  </p>
+</section>
+
+</body>
+</html>
