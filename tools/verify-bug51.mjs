@@ -64,22 +64,38 @@ try {
     const atBottom = await page.evaluate(
       () => window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4,
     );
-    const after = await button.boundingBox();
     check('лента действительно прокручена', scrolled > 400 || atBottom,
       `scrollY=${Math.round(scrolled)}${atBottom ? ' (низ ленты)' : ''}`);
-    check('после прокрутки кнопка ВО ВЬЮПОРТЕ',
-      after !== null && after.y >= 0 && after.y + after.height <= height,
-      after ? `y=${Math.round(after.y)}` : 'кнопка уехала с экрана');
 
     // Снимок делаем ИМЕННО ЗДЕСЬ, пока лента прокручена: файл с именем «scrolled»,
     // снятый после возврата наверх, врал бы о том, что доказывает.
     await page.screenshot({ path: `${SHOTS}/scrolled-${theme}-${width}.png`, fullPage: false });
 
-    // ── 3. Прибитая строка не прячется ЗА шапку и не наезжает на неё ──
-    const bar = await page.locator('.bar').boundingBox();
-    const row = await page.locator('.searchbar').boundingBox();
+    // КАНОН ИЗМЕНИЛСЯ ПОСЛЕ ЗАКРЫТИЯ bugs/51: bugs/52 (макет V3 «Панель-ящик») ввёл
+    // автопрятание панели по направлению прокрутки — канон 1.x `top_sticky_toolbar`.
+    // Прежняя проверка требовала, чтобы кнопка 💡 оставалась во вьюпорте ПРИ прокрутке вниз,
+    // то есть требовала ровно того, что канон потом запретил, — и краснела на верном коде.
+    // Предмет bugs/51 («кнопка достижима, а не закопана под лентой») стережётся теперь так:
+    // вниз — панель ушла, вверх — панель и кнопка вернулись сами.
+    const hiddenAfterDown = await page.locator('.toolbar.hidden').count();
+    check('прокрутка вниз: панель убралась (канон bugs/52)', hiddenAfterDown === 1,
+      `.toolbar.hidden найдено ${hiddenAfterDown}`);
+
+    await page.mouse.wheel(0, -400);
+    await page.waitForTimeout(600); // возврат панели + конец перехода 300мс
+    const after = await button.boundingBox();
+    check('прокрутка вверх: кнопка 💡 снова ВО ВЬЮПОРТЕ',
+      after !== null && after.y >= 0 && after.y + after.height <= height,
+      after ? `y=${Math.round(after.y)}` : 'кнопка уехала с экрана');
+
+    // ── 3. Вернувшаяся панель не прячется ЗА шапку и не наезжает на неё ──
+    // Селектор был `.searchbar` и сгнил: bugs/52 переименовал строку поиска в панель
+    // `.toolbar`, и проверка падала на `row.y` от null — то есть страж молчал о предмете,
+    // который стережёт. Предмет тот же: панель стоит ВПЛОТНУЮ под шапкой.
+    const bar = await page.locator('header.bar').boundingBox();
+    const row = await page.locator('.toolbar').boundingBox();
     const gap = row.y - (bar.y + bar.height);
-    check('строка поиска стоит ВПЛОТНУЮ под шапкой', Math.abs(gap) <= 2,
+    check('панель «Измерений» стоит ВПЛОТНУЮ под шапкой', Math.abs(gap) <= 2,
       `зазор ${Math.round(gap)}px (шапка ${Math.round(bar.height)}px)`);
 
     // ── 4. Кнопка открывает форму, и форма видна сразу ──
@@ -111,8 +127,11 @@ try {
     const bodyText = await page.locator('main.body').innerText();
     check('кнопки «Предложить новое измерение» под лентой нет',
       !bodyText.includes('Предложить новое измерение'));
+    // Формулировка обновилась волной 11: эмодзи 💡 из ТЕКСТА убран (канон bugs/17 — глифов и
+    // эмодзи на лице продукта нет), подсказка теперь называет кнопки словами. Страж сверяет
+    // смысл, а не старую строку: подсказка ведёт человека к кнопке рядом с поиском.
     check('подсказка экрана указывает на кнопку рядом с поиском',
-      bodyText.includes('кнопкой 💡 рядом с ней'));
+      bodyText.includes('кнопку поиска в меню сверху') && bodyText.includes('Предложить измерение'));
 
     // ── 7. В покое кнопка не наезжает на звёзды карточек ──
     // Именно В ПОКОЕ: прибитая строка ПО ПРИРОДЕ накрывает то, что проезжает под ней при

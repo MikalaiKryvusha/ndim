@@ -9,10 +9,15 @@
   // только колбэк onLang и держат своё состояние — семь одинаковых toggleLang им не нужны.
   //
   // Шапка приклеена к верху (bugs/34); фон — только непрозрачный токен (bugs/22).
-  // На десктопе (от 1024px) знак и водмарк живут в рельсе SideRail — здесь прячутся,
-  // чтобы бренд не двоился (макет V2 «Рабочий стол»).
+  //
+  // На десктопе (от 1024px) шапка — ПЕРВАЯ строка сетки экрана ВО ВСЮ ШИРИНУ, поверх рельса:
+  // макет V3-А, утверждён владельцем 2026-07-27 («Делаем V3 - A, без хлебной крошки»),
+  // документ решения — ideas/17. Знак и водмарк живут ЗДЕСЬ (в рельсе их больше нет — бренд
+  // не двоится), имени раздела в шапке НЕТ: открытую вкладку показывает синяя плашка рельса.
+  // Приборная строка с метриками (V4) — план на будущее, в шапку сейчас не входит.
   import Brand from '$lib/ui/Brand.svelte';
   import Icon from '$lib/ui/Icon.svelte';
+  import { observeBar } from '$lib/ui/barheight.svelte';
   import { theme, toggleTheme } from '$lib/ui/theme.svelte';
   import type { Lang } from '$lib/ui/format';
 
@@ -32,6 +37,17 @@
   } = $props();
 
   let open = $state(false);
+
+  /**
+   * Шапка публикует свою высоту (`--bar-h` + общее число): от неё отсчитывают себя рельс
+   * (начинается под шапкой, bugs/49) и панель «Измерений» (прилипает под шапкой, bugs/51).
+   * Наблюдение ведёт САМА шапка по своему элементу — без поиска по классу в документе.
+   */
+  let barEl: HTMLElement | null = $state(null);
+  $effect(() => {
+    if (barEl === null) return;
+    return observeBar(barEl);
+  });
 
   // Тема НЕ хранится здесь: она в общем источнике `theme.svelte.ts` (bugs/53).
   // Своя копия состояния означала, что переключение темы из «Меню» шапка проспит —
@@ -62,9 +78,15 @@
   }}
 />
 
-<header class="bar">
-  <span class="mark"><Brand size={26} /></span>
-  <span class="wm">{lang === 'ru' ? 'Пространство NDim' : 'NDim Space'}</span>
+<header class="bar" bind:this={barEl}>
+  <!-- Знак ведёт на «Профиль», а НЕ на «/» (bugs/61, слово владельца: «нажимаю на главное
+       лого — на мгновение мерцает лендинг, это тупо, ведь я уже в приложении»). Раньше эта
+       ссылка жила в рельсе; вместе с брендом она переехала сюда, и теперь знак кликабелен
+       и на телефоне, где до сих пор был мёртвым <span>. -->
+  <a class="brand" href="/profile">
+    <Brand size={26} />
+    <span class="wm">{lang === 'ru' ? 'Пространство NDim' : 'NDim Space'}</span>
+  </a>
   {#if badge}
     <button type="button" class="badge" onclick={onBadge}>◌ {badge}</button>
   {/if}
@@ -105,6 +127,11 @@
        токен (bugs/22): обычный --panel в тёмной теме полупрозрачен по построению. */
     position: sticky; top: 0; z-index: 10;
     background: var(--panel-solid, var(--panel));
+  }
+  /* Бренд — ссылка, но выглядит как заголовок: подчёркивания нет, цвет заголовочный. */
+  .brand {
+    display: flex; align-items: center; gap: 9px; flex: none;
+    text-decoration: none; color: var(--heading);
   }
   .wm { font-size: 15px; font-weight: 650; color: var(--heading); }
 
@@ -157,11 +184,21 @@
   }
   .badge ~ .theme { margin-left: 0; }
 
-  /* Десктоп: бренд живёт в рельсе слева — в шапке он лишний.
-     Сама шапка остаётся: в ней гостевой бейдж, тема и язык. */
+  /* ── Десктоп: шапка ВО ВСЮ ШИРИНУ поверх рельса (макет V3-А, ideas/17) ──
+     Шапка сама занимает первую строку сетки экрана на все её колонки — поэтому шести
+     оболочкам продукта (/profile, /relations, /space, /dims, /menu, DocShell) не нужно
+     знать об этой правке ни одной строкой: их сетка `232px minmax(0,1fr)` остаётся
+     прежней, а рельс со своей стороны переезжает во вторую строку.
+
+     Левое поле 24px не случайно: рельс имеет padding 12px, его пункты — ещё 12px,
+     значит иконки навигации начинаются на 24px от края окна. Знак в шапке встаёт
+     ровно над ними, по одной вертикали. */
   @media (min-width: 1024px) {
-    .mark, .wm { display: none; }
-    .bar { justify-content: flex-end; padding: 12px 26px; min-height: 52px; }
-    .badge, .theme { margin-left: 0; }
+    .bar {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      padding: 10px 26px 10px 24px;
+      min-height: 52px;
+    }
   }
 </style>

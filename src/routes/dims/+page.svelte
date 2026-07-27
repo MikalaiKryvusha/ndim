@@ -36,6 +36,7 @@
   import Icon from '$lib/ui/Icon.svelte';
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
+  import { barHeight } from '$lib/ui/barheight.svelte';
   import { currentSession, submitSuggestion } from '$lib/data/profile';
   import {
     feedWithRestored,
@@ -140,24 +141,11 @@
 
   let sentinel: HTMLElement | null = $state(null);
 
-  /**
-   * Высота прибитой шапки — чтобы строка поиска прилипала ПОД ней, а не пряталась ЗА неё
-   * (bugs/51). Число именно меряется: живой замер даёт 57px на 390 и 52px на 1440, так что
-   * любая зашитая константа была бы враньём на одной из ширин. `ResizeObserver` держит
-   * значение верным и при повороте экрана, и при смене языка.
-   */
-  let barHeight = $state(56);
-
-  onMount(() => {
-    const bar = document.querySelector('.bar');
-    if (!(bar instanceof HTMLElement)) return;
-
-    const measure = () => (barHeight = Math.round(bar.getBoundingClientRect().height));
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(bar);
-    return () => observer.disconnect();
-  });
+  // Высота прибитой шапки — чтобы панель прилипала ПОД ней, а не пряталась ЗА неё (bugs/51).
+  // Замер общий на весь продукт и его ведёт сама шапка (`barheight.svelte.ts`): с переездом
+  // шапки во всю ширину (V3-А, ideas/17) от той же высоты отсчитывает себя ещё и рельс, а два
+  // независимых замера одного и того же неизбежно разошлись бы. Прежний локальный замер искал
+  // `.bar` по всему документу — при смене класса он молча оставался бы с дефолтом.
 
   onMount(() => {
     const saved = localStorage.getItem('ndim-lang');
@@ -701,7 +689,7 @@
        */
       const el = document.querySelector('.toolbar');
       if (!(el instanceof HTMLElement)) return;
-      const pinned = el.getBoundingClientRect().top <= barHeight + 1;
+      const pinned = el.getBoundingClientRect().top <= barHeight() + 1;
       if (!pinned) return;
 
       toolbarHidden = true;
@@ -892,7 +880,7 @@
     class="toolbar"
     class:hidden={toolbarHidden}
     class:open={searchOpen}
-    style="top: {barHeight}px"
+    style="top: {barHeight()}px"
   >
     <div class="trow">
       <div class="segs" role="group">

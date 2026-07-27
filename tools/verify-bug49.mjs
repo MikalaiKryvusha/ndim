@@ -43,8 +43,33 @@ try {
       await rail.waitFor({ timeout: 20000 });
       await page.locator('.dim-card, .card').first().waitFor({ timeout: 20000 });
 
+      // С макетом V3-А (ideas/17, 2026-07-27) шапка тянется во всю ширину ПОВЕРХ рельса,
+      // поэтому рельс липнет не к нулю, а к нижнему краю шапки. Предмет проверки тот же:
+      // рельс ПРИБИТ и его пункты не уезжают с экрана. Высоту шапки МЕРИМ, а не зашиваем.
+      const bar = page.locator('header.bar');
+      const barBox = await bar.boundingBox();
+      const barBottom = Math.round(barBox.y + barBox.height);
+      check('шапка прибита к верху', barBox.y === 0, `y=${barBox.y}, высота=${barBox.height}`);
+      // Сравниваем с шириной РАСКЛАДКИ, а не вьюпорта: `scrollbar-gutter: stable` (bugs/59)
+      // забирает ~15px, и `=== width` краснело бы на верном коде.
+      const layoutWidth = await page.evaluate(() => document.body.getBoundingClientRect().width);
+      check(
+        'шапка во всю ширину раскладки',
+        Math.round(barBox.width) === Math.round(layoutWidth),
+        `шапка=${Math.round(barBox.width)}, раскладка=${Math.round(layoutWidth)}`,
+      );
+
       const before = await rail.boundingBox();
-      check('до скролла: рельс у верха', before !== null && before.y === 0, `y=${before?.y}`);
+      check(
+        'до скролла: рельс стоит под шапкой',
+        before !== null && Math.abs(Math.round(before.y) - barBottom) <= 1,
+        `рельс y=${before?.y}, низ шапки=${barBottom}`,
+      );
+      check(
+        'рельс не вылезает за низ вьюпорта (последний пункт достижим)',
+        before !== null && Math.round(before.y + before.height) <= 801,
+        `низ рельса=${before && Math.round(before.y + before.height)}`,
+      );
 
       // В самый низ — и дать ленте догрузиться (прогрессивная подгрузка bugs/13).
       for (let i = 0; i < 4; i += 1) {
@@ -54,8 +79,14 @@ try {
       const scrollY = await page.evaluate(() => window.scrollY);
       check('страница реально длинная (скролл случился)', scrollY > 600, `scrollY=${scrollY}`);
 
+      const barAfter = await bar.boundingBox();
+      check('после скролла: шапка осталась у верха (y=0)', barAfter.y === 0, `y=${barAfter.y}`);
       const after = await rail.boundingBox();
-      check('после скролла: рельс остался у верха (y=0)', after !== null && after.y === 0, `y=${after?.y}`);
+      check(
+        'после скролла: рельс остался под шапкой',
+        after !== null && Math.abs(Math.round(after.y) - Math.round(barAfter.y + barAfter.height)) <= 1,
+        `рельс y=${after?.y}, низ шапки=${Math.round(barAfter.y + barAfter.height)}`,
+      );
 
       const menuItem = rail.locator('a', { hasText: /Меню|Menu/ });
       check('кнопка «Меню» во вьюпорте', await menuItem.isVisible());

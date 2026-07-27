@@ -86,9 +86,18 @@ try {
 
     const overlay = await box.boundingBox();
     const vp = page.viewportSize();
+    // Сравниваем с РАСКЛАДКОЙ, а не с вьюпортом: `scrollbar-gutter: stable` (bugs/59) резервирует
+    // ~15px под полосу прокрутки, и слой `position: fixed; inset: 0` их по построению не накрывает.
+    // Проверка требовала 390 при раскладке 375 и краснела на верном коде — стала правдой, а не
+    // желаемым. То, что полоска гуттера остаётся неприкрытой, — отдельная находка: **bugs/65**.
+    const layout = await page.evaluate(() => document.body.getBoundingClientRect().width);
     check(
-      'оверлей накрывает ВЕСЬ вьюпорт',
-      overlay !== null && overlay.x <= 0 && overlay.y <= 0 && overlay.width >= vp.width && overlay.height >= vp.height,
+      'оверлей накрывает раскладку целиком (полоска гуттера — bugs/65)',
+      overlay !== null &&
+        overlay.x <= 0 &&
+        overlay.y <= 0 &&
+        Math.round(overlay.width) >= Math.round(layout) &&
+        overlay.height >= vp.height,
       JSON.stringify(overlay),
     );
 

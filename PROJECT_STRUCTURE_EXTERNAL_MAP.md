@@ -54,6 +54,9 @@ D:\work\ai_sandbox\ndim\
 │   └── sitemap.xml/+server.ts   # пререндеренный sitemap: только публичные страницы
 ├── src/lib/site.ts              # единая константа боевого домена (canonical + sitemap)
 ├── src/lib/ui/format.ts         # числа, даты, русская морфология («714,9 звезды») — одна на все экраны
+├── src/lib/ui/AppBar.svelte     # шапка продукта: на десктопе — ВО ВСЮ ШИРИНУ поверх рельса (V3-А, ideas/17)
+├── src/lib/ui/SideRail.svelte   # десктопный рельс навигации: чистые 5 пунктов, липнет к низу шапки
+├── src/lib/ui/barheight.svelte.ts # ОДИН замер высоты шапки: число для JS + `--bar-h` для вёрстки
 ├── src/lib/content/docs.ts      # ★ ГЕНЕРИРУЕТСЯ (`node tools/extract-docs.mjs`) — тексты владельца из 1.x
 ├── src/app.html                 # HTML-оболочка (lang=ru, theme-color, скрипт темы до отрисовки)
 ├── src/app.d.ts
