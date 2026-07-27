@@ -28,6 +28,36 @@
 
 ### История версий / Version history
 
+<!-- [AI] ЧЕРНОВИК АГЕНТА, ЖДЁТ СЛОВА ВЛАДЕЛЬЦА (bugs/56, волна 12: «в О системе нужно
+сделать версию 2.0»). Релиз-нот — канон-артефакт владельца: это ЕГО слово о ЕГО продукте,
+и агент имеет право только предложить формулировки. Стиль взят с его же записей 1.x:
+короткие утвердительные строки, RU и EN парой. Каждая строка ниже — проверяемый факт из
+истории проекта (cutover 2026-07-12, plans/04), ни одна не выдумана.
+Владелец говорит «принято» — пометка снимается, и только тогда текст становится каноном.
+Пометки стоят в HTML-комментарии, и в продукт они не попадают: `tools/extract-docs.mjs`
+берёт только парные строки RU/EN, а комментарии молча пропускает (проверено генерацией). -->
+
+#### Версия 2.0 от 12.07.2026 / Version 2.0 from 07/12/2026
+
+- **RU:** Пространство NDim переписано заново. Новый адрес — ndimspace.app.
+  **EN:** The NDim Space has been rewritten from scratch. The new address is ndimspace.app.
+- **RU:** NDim ID и оценки всех пользователей перенесены без потерь.
+  **EN:** The NDim IDs and ratings of all users have been transferred without any loss.
+- **RU:** Светлая и тёмная темы оформления.
+  **EN:** Light and dark themes.
+- **RU:** Вход без пароля: по ссылке на почту и через Google.
+  **EN:** Passwordless sign-in: by an email link and through Google.
+- **RU:** Гостевой режим: Пространство можно попробовать до создания аккаунта.
+  **EN:** Guest mode: you can try the Space before creating an account.
+- **RU:** Настройка видимости персональных данных по каждому свойству.
+  **EN:** Visibility settings for each piece of personal information.
+- **RU:** Новый раздел «Пространство»: живая статистика и состояние сервера синхронизации.
+  **EN:** The new "Space" section: live statistics and the state of the synchronization server.
+- **RU:** Оптимизация и исправление дефектов.
+  **EN:** Optimization and bug fixing.
+
+<!-- [/AI] -->
+
 #### Версия 1.5 от 13.05.2026 / Version 1.5 from 05/13/2026
 
 - **RU:** Переезд на дефолтный домен Firebase.

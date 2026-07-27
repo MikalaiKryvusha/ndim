@@ -13,12 +13,31 @@
 //
 // Запускается внутри `npm run stand` (уже под эмуляторами и после сида).
 
+import { execSync } from 'node:child_process';
 import { spawn } from 'node:child_process';
 
 /** Цикл сервера синхронизации на стенде — короткий: человек не должен ждать. */
 const CALC_INTERVAL_SECONDS = '15';
 /** Тихий период на стенде выключен по той же причине: оценка должна долетать сразу. */
 const CALC_QUIET_SECONDS = '0';
+
+/**
+ * Номер и момент сборки сервера синхронизации.
+ *
+ * В бою их вшивает в образ `npm run calc:image` (docker --build-arg), и на стенде их не
+ * было вовсе — сервер отчитывался версией без сборки и без даты. Стенд, который не умеет
+ * показать поле продукта, не может его и проверить: виджет версий (bugs/66) выглядел бы
+ * зелёным ровно потому, что показывать нечего. Считаем те же числа тем же способом.
+ */
+const CALC_BUILD = (() => {
+  try {
+    return execSync('git rev-list --count HEAD -- calculator', { encoding: 'utf8' }).trim();
+  } catch {
+    return '';
+  }
+})();
+/** До минут, как и у приложения (ideas/15): секунды — шум, а не информация. */
+const CALC_BUILT_AT = new Date().toISOString().replace(/:\d{2}\.\d{3}Z$/, ':00Z');
 
 const children = [];
 
@@ -50,7 +69,12 @@ process.on('SIGTERM', () => {
 });
 
 // Сервер синхронизации: служба с коротким циклом. Первый цикл он делает сразу.
-start('node', ['calculator/index.mjs'], { CALC_INTERVAL_SECONDS, CALC_QUIET_SECONDS });
+start('node', ['calculator/index.mjs'], {
+  CALC_INTERVAL_SECONDS,
+  CALC_QUIET_SECONDS,
+  CALC_BUILD,
+  CALC_BUILT_AT,
+});
 
 // Приложение. Стенд живёт ровно столько, сколько живёт dev-сервер: закрыли его — гасим всё.
 const app = start('npx', ['vite', 'dev']);

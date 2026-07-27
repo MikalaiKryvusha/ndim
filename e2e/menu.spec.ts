@@ -9,6 +9,11 @@
  */
 import { expect, test } from '@playwright/test';
 
+// JSON-модуль отдаёт только default-экспорт: именованного `version` у него нет.
+import pkg from '../package.json' with { type: 'json' };
+
+const APP_VERSION: string = pkg.version;
+
 /** Все страницы раздела и слово, по которому видно, что открылась именно эта. */
 const PAGES = [
   { path: '/menu/manual', marker: 'Манифест' },
@@ -21,6 +26,22 @@ const PAGES = [
   { path: '/menu/author', marker: 'Кривуше' },
   { path: '/menu/manifesto', marker: 'объединять людей' },
 ] as const;
+
+/**
+ * ПЕРЕЕХАВШИЙ СТРАЖ (был в space.spec.ts до bugs/66, когда виджет версий стоял на
+ * «Пространстве»). Стережёт ровно то же самое и по той же причине: источник версии один —
+ * package.json, подставляет её сборка (vite define). Отвалится define — виджет покажет
+ * пустоту, поэтому строку ищем в самом АРТЕФАКТЕ, а не на отрисованной странице.
+ * Адрес другой, смысл прежний — это перенос, а не ослабление.
+ */
+test('меню: версия приложения вшита в сборку, а не выдумана в браузере', async ({ request }) => {
+  const html = await (await request.get('/menu')).text();
+  const chunks = [...new Set([...html.matchAll(/\/_app\/immutable\/[^"']+\.js/g)].map((m) => m[0]))];
+  expect(chunks.length).toBeGreaterThan(0);
+
+  const sources = await Promise.all(chunks.map(async (url) => (await request.get(url)).text()));
+  expect(sources.some((source) => source.includes(APP_VERSION))).toBeTruthy();
+});
 
 test('меню: манифест пререндерен в сыром HTML — это лицо проекта, а не всплывающий текст', async ({ request }) => {
   const html = (await (await request.get('/menu')).text()).replace(/ |&nbsp;/g, ' ');

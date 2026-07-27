@@ -13,6 +13,7 @@
   // считает наших людей, Lighthouse не страдает.
   import DocShell from '$lib/ui/DocShell.svelte';
   import Icon from '$lib/ui/Icon.svelte';
+  import type { IconName } from '$lib/ui/icons';
   import { SITE_ORIGIN } from '$lib/site';
   import type { Lang } from '$lib/ui/format';
 
@@ -50,7 +51,10 @@
   interface Network {
     readonly id: string;
     readonly name: string;
+    /** Монограмма — когда фирменного знака у нас нет (см. комментарий выше). */
     readonly mark: string;
+    /** Настоящая иконка набора — когда есть. Побеждает монограмму. */
+    readonly icon?: IconName;
     readonly color: string;
     /** Собирает адрес «поделиться» этой сети. */
     readonly href: (url: string, text: string, lang: Lang) => string;
@@ -83,7 +87,9 @@
       href: (u, x) => `viber://forward?text=${e(`${x} ${u}`)}` },
     { id: 'pinterest', name: 'Pinterest', mark: 'P', color: '#E60023',
       href: (u, x) => `https://pinterest.com/pin/create/button/?url=${e(u)}&description=${e(x)}` },
-    { id: 'email', name: 'Email', mark: '✉', color: '#5B6472',
+    // Почта — единственная «сеть», для которой знак у нас настоящий: конверт из набора
+    // иконок (bugs/17). Монограммой ✉ она быть перестала — это был глиф (bugs/55).
+    { id: 'email', name: 'Email', mark: 'M', icon: 'envelope', color: '#5B6472',
       href: (u, x, lang) => `mailto:?subject=${e(lang === 'ru' ? 'Пространство NDim' : 'NDim Space')}&body=${e(`${x} ${u}`)}` },
   ];
 
@@ -128,7 +134,9 @@
           rel="noopener noreferrer"
           data-net={network.id}
         >
-          <span class="tile" style="background:{network.color}">{network.mark}</span>
+          <span class="tile" style="background:{network.color}">
+            {#if network.icon}<Icon name={network.icon} size={17} />{:else}{network.mark}{/if}
+          </span>
           <span class="nm">{network.name}</span>
         </a>
       {/each}

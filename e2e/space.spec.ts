@@ -3,18 +3,17 @@
  *
  * Полная картина с данными (плитки, тренды, «Сегодня», сервер синхронизации) живёт на
  * стенде: `npm run stand` → http://localhost:5173/space. Здесь — то, что обязано работать
- * всегда: экран пререндерится, не индексируется, честно деградирует без стенда, а версия
- * приложения действительно вшита в сборку.
+ * всегда: экран пререндерится, не индексируется и честно деградирует без стенда.
+ *
+ * ⚠️ Стража «версия вшита в сборку» здесь БОЛЬШЕ НЕТ — он не удалён, а ПЕРЕЕХАЛ в
+ * `menu.spec.ts` вместе с самим виджетом версий (bugs/66, слово владельца: «со страницы
+ * Пространство убрать виджет Версии»). Стеречь версию на экране, где её нет, — значит
+ * стеречь пустоту.
  *
  * ⚠️ Прогон требует, чтобы эмуляторы были ПОГАШЕНЫ: проверка «данные не загрузились» ждёт их
  * отсутствия и при живом стенде даст ложное падение (EXP-0027).
  */
 import { expect, test } from '@playwright/test';
-
-// JSON-модуль отдаёт только default-экспорт: именованного `version` у него нет.
-import pkg from '../package.json' with { type: 'json' };
-
-const APP_VERSION: string = pkg.version;
 
 test('пространство: шелл пререндерен — заголовок, лид и noindex в сыром HTML', async ({ request }) => {
   const response = await request.get('/space');
@@ -24,17 +23,6 @@ test('пространство: шелл пререндерен — заголо
   for (const text of ['Пространство NDim', 'Пространство', 'метрики и статистика', 'noindex']) {
     expect(html).toContain(text);
   }
-});
-
-test('пространство: версия приложения вшита в сборку, а не выдумана в браузере', async ({ request }) => {
-  // Источник версии один — package.json, и подставляет её сборка (vite define). Если define
-  // отвалится, виджет «Версии» покажет пустоту — а строка обязана лежать в самом артефакте.
-  const html = await (await request.get('/space')).text();
-  const chunks = [...new Set([...html.matchAll(/\/_app\/immutable\/[^"']+\.js/g)].map((m) => m[0]))];
-  expect(chunks.length).toBeGreaterThan(0);
-
-  const sources = await Promise.all(chunks.map(async (url) => (await request.get(url)).text()));
-  expect(sources.some((source) => source.includes(APP_VERSION))).toBeTruthy();
 });
 
 test('пространство: без данных — честная ошибка, и ни одной выдуманной цифры', async ({ page }) => {

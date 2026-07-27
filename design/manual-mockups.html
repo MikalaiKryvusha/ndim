@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NDim Space — «Руководство пользователя»: 4 макета на утверждение</title>
+
+<!--
+  КАК ВЫГЛЯДИТ «РУКОВОДСТВО ПОЛЬЗОВАТЕЛЯ» В 2.0 — 4 варианта владельцу (bugs/55).
+
+  Повод (2026-07-27, слово владельца, волна 12):
+    «починить верстку дочерних страниц Settings — особенно Руководство пользователя.
+     В оригинальном Ndim оно былт с картинками, с кнопками HTML, с таблицами.»
+    «во многих старницах были красивые иконки, если был емодзи — он был красочный.
+     Сейчас там все скупое и некрасивое. нет центровок.»
+    «В Общем — наводим красоту с стиль.»
+
+  КАНОН 1.x СНЯТ С ЖИВОГО ФАЙЛА, а не выдуман (researches/12 → «Вёрстка страниц
+  документов 1.x»). Источник — ndim_old/storage/public/um.html, 101 КБ:
+    · 66 <img>, 2 <table>, 2 круглые кнопки-образца, 9 заголовков, ноль <button>;
+    · логотип шапкой (small_image, высота clamp(60px,16vw,100px));
+    · 3 иллюстрации мысленных экспериментов внутри пунктов списка
+      (island / airplane / hospital, .in_page_image — по центру, clamp(180px,40vw,300px));
+    · таблица шкалы 0–10: в колонке «Оценка» — ЗВЕЗДА + ЦИФРА + ЦВЕТНОЙ СМАЙЛИК;
+    · круглые кнопки .um_extra_tools_button 80×80, радиус 30, фон rgb(210,230,255),
+      иконка 40px — 💡 «Предложить измерение» и 🔍 «Поиск»;
+    · финальная картинка network.webp.
+
+  ЦВЕТА СМАЙЛИКОВ — ЗАМЕРЕНЫ, А НЕ ПОДОБРАНЫ. В 1.x они задавались одиннадцатью
+  CSS-фильтрами (brightness/sepia/saturate/hue-rotate) — по ним цвет не прочитать.
+  Я отрисовал каждый фильтр в Chromium на canvas и снял пиксель:
+    0 #d50000 · 1 #db2b00 · 2 #da5800 · 3 #da8400 · 4 #daae00 · 5 #d0d100
+    6 #afda00 · 7 #85db00 · 8 #58da00 · 9 #2bda00 · 10 — многоцветный файл
+    emoji-heart-eyes-fill-color.svg (единственный, у кого свой цвет был в самом файле).
+  Звёзды: обычная rgb(255,177,0), «ноль» rgb(161,161,161), «десятка» rgb(255,145,41).
+
+  ОБЩЕЕ ДЛЯ ВСЕХ ЧЕТЫРЁХ (не предмет выбора — это возврат утраченного):
+    · картинки 1.x возвращаются на свои места;
+    · таблица шкалы снова со звёздами и ЦВЕТНЫМИ смайликами;
+    · обе круглые кнопки-образца возвращаются;
+    · текст владельца не трогается ни на букву (docs.ts генерируется из researches/07);
+    · разделы про экраны 1.x («Дом», расписание синхронизации) по-прежнему отсутствуют —
+      это решение задокументировано, и молча его не отменяем.
+
+  РАЗЛИЧАЮТСЯ варианты ТЕМ, КАК СОБРАНА СТРАНИЦА и во что превращена шкала оценок.
+  Нарисовано в тёмной теме (как остальные макеты); в светлой берутся те же токены.
+-->
+
+<style>
+  :root {
+    --bg: #0b1220; --card: #111c30; --card2: #16233c; --edge: #1e3050; --edge-soft: #1a2942;
+    --text: #dbe6f5; --dim: #7e91ad; --heading: #eaf2ff; --primary: #3b82f6; --cyan: #22d3ee;
+    --gold: #f5a524; --good: #22c55e; --faint: #4d5f7a; --panel: #0f1a2c;
+    --r: 16px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; }
+  .page { max-width: 1700px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1 { color: var(--heading); font-size: 24px; margin: 0 0 6px; }
+  .lede { color: var(--dim); margin: 0 0 8px; max-width: 92ch; }
+  .lede b { color: var(--cyan); }
+  .note { color: var(--faint); font-size: 13px; margin: 0 0 8px; max-width: 92ch; }
+  .note code { color: var(--dim); }
+  .common { margin: 0 0 26px; padding: 12px 16px; border: 1px dashed var(--edge);
+    border-radius: 12px; color: var(--dim); font-size: 13px; max-width: 92ch; }
+  .common b { color: var(--text); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(370px, 1fr)); gap: 22px; }
+
+  .variant { background: #0d1626; border: 1px solid var(--edge); border-radius: 20px; padding: 16px; }
+  .vhead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+  .vhead h2 { margin: 0; font-size: 17px; color: var(--heading); }
+  .vhead .tag { font-size: 11px; color: var(--primary); border: 1px solid var(--edge);
+    border-radius: 999px; padding: 2px 8px; }
+  .vhead .tag.own { color: var(--gold); border-color: #4a3a1a; }
+  .vwhy { color: var(--dim); font-size: 13px; margin: 0 0 12px; min-height: 96px; }
+  .vwhy b { color: var(--text); }
+
+  /* ── телефон ─────────────────────────────────────────────────────────── */
+  .phone { position: relative; width: 340px; height: 660px; margin: 0 auto;
+    background: var(--bg); border: 1px solid var(--edge); border-radius: 26px; overflow: hidden; }
+  .bar { height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12px; border-bottom: 1px solid var(--edge); background: var(--panel);
+    font-size: 12px; color: var(--dim); }
+  .bar .brand { display: flex; align-items: center; gap: 6px; color: var(--heading); font-weight: 700; }
+  .dot9 { width: 14px; height: 14px; border-radius: 4px;
+    background: linear-gradient(135deg, var(--primary), var(--cyan)); }
+  .scr { height: calc(100% - 44px - 52px); overflow: auto; padding: 12px; }
+  .scr::-webkit-scrollbar { width: 6px; }
+  .scr::-webkit-scrollbar-thumb { background: var(--edge); border-radius: 3px; }
+  .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 52px; display: flex;
+    border-top: 1px solid var(--edge); background: var(--panel); }
+  .nav i { flex: 1; display: grid; place-items: center; font-style: normal;
+    font-size: 10px; color: var(--faint); }
+  .nav i.on { color: var(--primary); }
+
+  .back { color: var(--primary); font-size: 12px; font-weight: 700; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 5px; }
+  .h1 { color: var(--heading); font-size: 19px; font-weight: 800; margin: 0 0 12px; }
+  .h2 { color: var(--heading); font-size: 15px; font-weight: 700; margin: 18px 0 7px;
+    padding-top: 11px; border-top: 1px solid var(--edge-soft); }
+  .p { font-size: 13px; line-height: 1.65; color: var(--text); margin: 8px 0; }
+  .p.sm { font-size: 12px; color: var(--dim); }
+
+  /* иллюстрация */
+  .art { display: block; margin: 12px auto; border-radius: 12px; }
+  .art.wide { width: 100%; }
+  .art.logo { width: 84px; }
+  .fake-art { display: grid; place-items: center; color: var(--faint); font-size: 11px;
+    background: linear-gradient(135deg, #16233c, #0f1a2c); border: 1px solid var(--edge); }
+
+  /* круглая кнопка-образец 1.x */
+  .sample { display: flex; justify-content: center; margin: 14px 0; }
+  .um-btn { width: 74px; height: 74px; border-radius: 26px; background: rgb(210, 230, 255);
+    display: grid; place-items: center; box-shadow: 2px 2px 10px rgba(0,0,0,.35); }
+  .um-btn svg { width: 34px; height: 34px; fill: #1a3a63; }
+  .sample .cap { align-self: center; margin-left: 12px; font-size: 11.5px; color: var(--dim); max-width: 150px; }
+
+  /* шкала: звезда + цифра + смайлик */
+  .st { width: 26px; height: 26px; display: block; }
+  .em { width: 22px; height: 22px; display: block; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .cell b { font-size: 11px; color: var(--gold); font-weight: 700; }
+
+  table.scale { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0; }
+  table.scale th { text-align: left; font-size: 10px; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--dim); padding: 6px 8px; }
+  table.scale th:first-child { text-align: center; width: 56px; }
+  table.scale td { border-top: 1px solid var(--edge-soft); padding: 8px; vertical-align: top;
+    color: var(--text); line-height: 1.5; }
+  table.scale td:first-child { text-align: center; }
+  table.scale td b { color: var(--heading); }
+
+  /* V2: карточка-глава */
+  .chapter { background: var(--card); border: 1px solid var(--edge); border-radius: 14px;
+    overflow: hidden; margin: 12px 0; }
+  .chapter .cap { padding: 10px 12px; }
+  .chapter .cover { width: 100%; height: 104px; object-fit: cover; display: block; }
+  .chapter h3 { margin: 0 0 4px; font-size: 14px; color: var(--heading); }
+  .toc { display: flex; gap: 6px; overflow: auto; padding-bottom: 4px; margin-bottom: 8px; }
+  .toc span { flex: none; font-size: 11px; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--edge); color: var(--dim); background: var(--panel); }
+  .toc span.on { color: #fff; background: var(--primary); border-color: var(--primary); }
+
+  /* V3: живая шкала */
+  .live { background: var(--card); border: 1px solid var(--edge); border-radius: 14px;
+    padding: 12px; margin: 12px 0; }
+  .live .row { display: flex; justify-content: space-between; gap: 2px; }
+  .live .row .cell b { color: var(--faint); }
+  .live .row .cell.on b { color: var(--gold); }
+  .live .desc { margin-top: 10px; font-size: 12px; line-height: 1.55; color: var(--text);
+    border-top: 1px solid var(--edge-soft); padding-top: 9px; }
+  .live .desc b { color: var(--heading); }
+  .live .hint { font-size: 11px; color: var(--faint); margin-top: 6px; }
+
+  /* V4: две колонки на десктопе */
+  .deskwrap { display: flex; gap: 10px; }
+  .deskwrap .side { flex: none; width: 96px; }
+  .deskwrap .side div { font-size: 10.5px; color: var(--dim); padding: 5px 7px;
+    border-left: 2px solid transparent; }
+  .deskwrap .side div.on { color: var(--cyan); border-left-color: var(--cyan); }
+  .floatart { float: right; width: 118px; margin: 4px 0 8px 10px; border-radius: 10px; }
+
+  .foot { margin-top: 28px; color: var(--faint); font-size: 13px; max-width: 92ch; }
+  .foot b { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>«Руководство пользователя» — 4 макета</h1>
+  <p class="lede">
+    Слово владельца: <b>«В оригинальном Ndim оно былт с картинками, с кнопками HTML, с таблицами»</b>,
+    <b>«если был емодзи — он был красочный»</b>, <b>«наводим красоту с стиль»</b>.
+  </p>
+  <p class="note">
+    Канон снят чтением <code>ndim_old/storage/public/um.html</code>: 66 картинок, 2 таблицы,
+    2 круглые кнопки-образца. Цвета смайликов не подобраны на глаз — <b>замерены</b>: каждый из
+    одиннадцати CSS-фильтров 1.x отрисован в Chromium и снят пиксель
+    (<code>#d50000 → #2bda00</code>, «десятка» — многоцветный файл оригинала).
+  </p>
+
+  <p class="common">
+    <b>Общее для всех четырёх, это не предмет выбора:</b> картинки 1.x возвращаются на свои места ·
+    шкала снова со звёздами и цветными смайликами · обе круглые кнопки-образца возвращаются ·
+    текст владельца не меняется ни на букву · разделы про экраны 1.x по-прежнему отсутствуют
+    осознанно. <b>Различаются варианты тем, как собрана страница и во что превращена шкала.</b>
+  </p>
+
+  <div class="grid">
+
+    <!-- ══════════════════ V1 ══════════════════ -->
+    <div class="variant">
+      <div class="vhead"><h2>V1 «Как было»</h2><span class="tag">дословный перенос</span></div>
+      <p class="vwhy">
+        Ровно 1.x, только в токенах 2.0: одна колонка, заголовки разделов, картинки по центру,
+        шкала — <b>таблица</b> из двух колонок, кнопки-образцы кружками по центру.
+        <b>Плюс:</b> ноль изобретения — человек, знавший 1.x, узнаёт страницу.
+        <b>Минус:</b> длинный документ без оглавления — 9 разделов подряд, и найти «Шкалу
+        оценок» можно только прокруткой.
+      </p>
+      <div class="phone">
+        <div class="bar"><span class="brand"><span class="dot9"></span> Пространство NDim</span><span>Ru ▾ ☾</span></div>
+        <div class="scr">
+          <div class="back">‹ Меню</div>
+          <div class="h1">Руководство пользователя</div>
+          <img class="art logo" src="../static/img/docs/logo-1x.webp" alt="" />
+          <div class="h2">Звёзды, или Как выставлять оценки</div>
+          <p class="p">В Пространстве NDim существует 11 возможных оценок измерений от 0 (нуля) до 10 (десяти):</p>
+          <table class="scale">
+            <tr><th>Оценка</th><th>Описание</th></tr>
+            <tr>
+              <td><div class="cell">
+                <svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#a1a1a1"/></svg>
+                <b style="color:#a1a1a1">0</b>
+                <svg class="em" viewBox="0 0 16 16"><use href="#e-angry" fill="#d50000"/></svg>
+              </div></td>
+              <td><b>Абсолютная безусловная ненависть.</b> Вам это не просто не нравится, Вы ненавидите это всей своей душой…</td>
+            </tr>
+            <tr>
+              <td><div class="cell">
+                <svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ff9129"/></svg>
+                <b style="color:#ff9129">10</b>
+                <svg class="em" viewBox="0 0 16 16"><use href="#e-love"/></svg>
+              </div></td>
+              <td><b>Безусловная любовь.</b> Вы любите это всей своей душой…</td>
+            </tr>
+          </table>
+          <div class="h2">Мысленные эксперименты</div>
+          <img class="art wide" src="../static/img/docs/island.webp" alt="" />
+          <p class="p">На суб-вкладке «Все» есть кнопка предложить новое измерение:</p>
+          <div class="sample"><div class="um-btn"><svg viewBox="0 0 16 16"><use href="#bulb"/></svg></div></div>
+          <p class="p">Нажав по ней, Вы можете открыть форму предложения нового измерения.</p>
+        </div>
+        <div class="nav"><i>Дом</i><i>Связи</i><i>Прост.</i><i>Измер.</i><i class="on">Меню</i></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ V2 ══════════════════ -->
+    <div class="variant">
+      <div class="vhead"><h2>V2 «Главы-карточки»</h2><span class="tag">язык продукта</span></div>
+      <p class="vwhy">
+        Каждый раздел — <b>карточка-виджет</b> (тот же рецепт, что у «Связей» и «Пространства»),
+        иллюстрация становится её <b>обложкой</b> во всю ширину. Сверху — липкое оглавление чипами.
+        <b>Плюс:</b> руководство перестаёт быть простынёй, разделы видны и листаются; страница
+        выглядит частью 2.0, а не вставленным документом.
+        <b>Минус:</b> обложка режет картинку по краям; дальше всего от вида 1.x.
+      </p>
+      <div class="phone">
+        <div class="bar"><span class="brand"><span class="dot9"></span> Пространство NDim</span><span>Ru ▾ ☾</span></div>
+        <div class="scr">
+          <div class="back">‹ Меню</div>
+          <div class="h1">Руководство пользователя</div>
+          <div class="toc"><span class="on">Манифест</span><span>Идея</span><span>Термины</span><span>Звёзды</span><span>Шкала</span></div>
+
+          <div class="chapter">
+            <img class="cover" src="../static/img/docs/island.webp" alt="" />
+            <div class="cap"><h3>Мысленные эксперименты</h3></div>
+          </div>
+
+          <div class="chapter">
+            <div class="cap">
+              <h3>Шкала оценок 0–10</h3>
+              <p class="p sm">11 возможных оценок измерений:</p>
+              <table class="scale">
+                <tr>
+                  <td><div class="cell">
+                    <svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#a1a1a1"/></svg>
+                    <b style="color:#a1a1a1">0</b>
+                    <svg class="em" viewBox="0 0 16 16"><use href="#e-angry" fill="#d50000"/></svg>
+                  </div></td>
+                  <td><b>Абсолютная безусловная ненависть.</b> Вы ненавидите это всей душой…</td>
+                </tr>
+                <tr>
+                  <td><div class="cell">
+                    <svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ff9129"/></svg>
+                    <b style="color:#ff9129">10</b>
+                    <svg class="em" viewBox="0 0 16 16"><use href="#e-love"/></svg>
+                  </div></td>
+                  <td><b>Безусловная любовь.</b> Вы любите это всей своей душой…</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <div class="chapter">
+            <div class="cap">
+              <h3>Поиск и предложение</h3>
+              <div class="sample">
+                <div class="um-btn"><svg viewBox="0 0 16 16"><use href="#bulb"/></svg></div>
+                <span class="cap">Кнопка предложения нового измерения</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav"><i>Дом</i><i>Связи</i><i>Прост.</i><i>Измер.</i><i class="on">Меню</i></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ V3 ══════════════════ -->
+    <div class="variant">
+      <div class="vhead"><h2>V3 «Живая шкала»</h2><span class="tag own">учит жестом</span></div>
+      <p class="vwhy">
+        Страница как V1, но <b>таблица шкалы заменена настоящим рядом из 11 оценок</b> — тем же,
+        что человек увидит в карточке измерения. Он тыкает звезду прямо в руководстве и читает
+        описание именно этой оценки.
+        <b>Плюс:</b> руководство перестаёт описывать жест словами и показывает его; вся шкала
+        видна одним взглядом, а не одиннадцатью строками таблицы.
+        <b>Минус:</b> таблица «оценка → описание» как список исчезает — читать подряд все 11
+        описаний уже нельзя.
+      </p>
+      <div class="phone">
+        <div class="bar"><span class="brand"><span class="dot9"></span> Пространство NDim</span><span>Ru ▾ ☾</span></div>
+        <div class="scr">
+          <div class="back">‹ Меню</div>
+          <div class="h1">Руководство пользователя</div>
+          <div class="h2">Шкала оценок 0–10</div>
+          <p class="p">Нажмите на оценку, чтобы прочитать, что она означает:</p>
+          <div class="live">
+            <div class="row">
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#a1a1a1"/></svg><b>0</b><svg class="em" viewBox="0 0 16 16"><use href="#e-angry" fill="#d50000"/></svg></div>
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>1</b><svg class="em" viewBox="0 0 16 16"><use href="#e-frown" fill="#db2b00"/></svg></div>
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>2</b><svg class="em" viewBox="0 0 16 16"><use href="#e-frown" fill="#da5800"/></svg></div>
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>3</b><svg class="em" viewBox="0 0 16 16"><use href="#e-frown" fill="#da8400"/></svg></div>
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>4</b><svg class="em" viewBox="0 0 16 16"><use href="#e-frown" fill="#daae00"/></svg></div>
+              <div class="cell on"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>5</b><svg class="em" viewBox="0 0 16 16"><use href="#e-neutral" fill="#d0d100"/></svg></div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>6</b><svg class="em" viewBox="0 0 16 16"><use href="#e-smile" fill="#afda00"/></svg></div>
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>7</b><svg class="em" viewBox="0 0 16 16"><use href="#e-smile" fill="#85db00"/></svg></div>
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>8</b><svg class="em" viewBox="0 0 16 16"><use href="#e-smile" fill="#58da00"/></svg></div>
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>9</b><svg class="em" viewBox="0 0 16 16"><use href="#e-smile" fill="#2bda00"/></svg></div>
+              <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ff9129"/></svg><b>10</b><svg class="em" viewBox="0 0 16 16"><use href="#e-love"/></svg></div>
+              <div class="cell" style="opacity:0"><svg class="st" viewBox="0 0 64 64"></svg><b>·</b></div>
+            </div>
+            <p class="desc"><b>5 — Нейтральное отношение.</b> Вам это ни нравится, ни не нравится. Не вызывает в Вас никаких эмоций…</p>
+            <p class="hint">выбрана оценка 5 из 10</p>
+          </div>
+          <div class="h2">Мысленные эксперименты</div>
+          <p class="p">Представьте, что Вы оказались на необитаемом острове…</p>
+          <img class="art wide" src="../static/img/docs/hospital.webp" alt="" />
+        </div>
+        <div class="nav"><i>Дом</i><i>Связи</i><i>Прост.</i><i>Измер.</i><i class="on">Меню</i></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ V4 ══════════════════ -->
+    <div class="variant">
+      <div class="vhead"><h2>V4 «Документация»</h2><span class="tag">оглавление сбоку</span></div>
+      <p class="vwhy">
+        На десктопе — <b>липкое оглавление слева</b> и колонка текста справа; картинки обтекаются
+        текстом, а не разрывают его. На телефоне — как V1, одной колонкой.
+        <b>Плюс:</b> в длинном документе видно, где ты и что дальше; десктоп перестаёт быть
+        растянутым телефоном (та же боль, что решала шапка V3-А).
+        <b>Минус:</b> два разных вида одной страницы — больше вёрстки и больше мест сломаться;
+        на телефоне выигрыша нет вовсе.
+      </p>
+      <div class="phone" style="width: 340px">
+        <div class="bar"><span class="brand"><span class="dot9"></span> Пространство NDim</span><span>Ru ▾ ☾</span></div>
+        <div class="scr">
+          <div class="back">‹ Меню</div>
+          <div class="h1">Руководство пользователя</div>
+          <p class="note" style="margin:0 0 8px;font-size:10.5px">↓ так это выглядит на десктопе (здесь ужато)</p>
+          <div class="deskwrap">
+            <div class="side">
+              <div>Манифест</div><div>Идея</div><div>Терминология</div>
+              <div class="on">Звёзды</div><div>Шкала 0–10</div><div>Эксперименты</div>
+              <div>Смайлики</div><div>Совет</div>
+            </div>
+            <div style="min-width:0">
+              <div class="h2" style="margin-top:0;border:0;padding:0">Мысленные эксперименты</div>
+              <img class="floatart" src="../static/img/docs/airplane.webp" alt="" />
+              <p class="p" style="font-size:11.5px">Представьте, что Вы находитесь на борту самолёта в очень длительном перелёте. Попробуйте оценить, с какой вероятностью Вы бы хотели, чтобы именно этот объект культуры был с Вами.</p>
+              <p class="p" style="font-size:11.5px">10 баллов означают, что Вы безмерно рады…</p>
+              <div style="clear:both"></div>
+              <table class="scale" style="font-size:11px">
+                <tr><th>Оц.</th><th>Описание</th></tr>
+                <tr>
+                  <td><div class="cell">
+                    <svg class="st" viewBox="0 0 64 64" style="width:20px;height:20px"><use href="#star" fill="#a1a1a1"/></svg>
+                    <b style="color:#a1a1a1">0</b>
+                    <svg class="em" viewBox="0 0 16 16" style="width:17px;height:17px"><use href="#e-angry" fill="#d50000"/></svg>
+                  </div></td>
+                  <td>Абсолютная безусловная ненависть…</td>
+                </tr>
+                <tr>
+                  <td><div class="cell">
+                    <svg class="st" viewBox="0 0 64 64" style="width:20px;height:20px"><use href="#star" fill="#ff9129"/></svg>
+                    <b style="color:#ff9129">10</b>
+                    <svg class="em" viewBox="0 0 16 16" style="width:17px;height:17px"><use href="#e-love"/></svg>
+                  </div></td>
+                  <td>Безусловная любовь…</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="nav"><i>Дом</i><i>Связи</i><i>Прост.</i><i>Измер.</i><i class="on">Меню</i></div>
+      </div>
+    </div>
+
+  </div>
+
+  <h2 style="color:var(--heading);font-size:18px;margin:34px 0 4px">Что возвращается во всех четырёх</h2>
+  <p class="note" style="margin-bottom:14px">Это не предмет выбора — это утраченное содержимое 1.x. Показано отдельно, потому что в кадре телефона оно оказывается ниже сгиба.</p>
+  <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;background:#0d1626;border:1px solid var(--edge);border-radius:20px;padding:18px">
+    <div>
+      <p class="note" style="margin:0 0 8px">Кнопки-образцы 1.x (80×80, радиус 30, фон rgb(210,230,255))</p>
+      <div style="display:flex;gap:18px">
+        <div style="text-align:center">
+          <div class="um-btn" style="width:80px;height:80px;border-radius:30px;margin:0 auto"><svg viewBox="0 0 16 16" style="width:40px;height:40px"><use href="#bulb"/></svg></div>
+          <p class="note" style="margin:6px 0 0;font-size:11px">Предложить измерение</p>
+        </div>
+        <div style="text-align:center">
+          <div class="um-btn" style="width:80px;height:80px;border-radius:30px;margin:0 auto"><svg viewBox="0 0 16 16" style="width:40px;height:40px"><use href="#search"/></svg></div>
+          <p class="note" style="margin:6px 0 0;font-size:11px">Поиск измерений</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="note" style="margin:0 0 8px">Полная шкала со звёздами и цветными смайликами (цвета замерены с 1.x)</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#a1a1a1"/></svg><b style="color:#a1a1a1">0</b><svg class="em" viewBox="0 0 16 16"><use href="#e-angry" fill="#d50000"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>1</b><svg class="em" viewBox="0 0 16 16"><use href="#e-frown" fill="#db2b00"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>2</b><svg class="em" viewBox="0 0 16 16"><use href="#e-frown" fill="#da5800"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>3</b><svg class="em" viewBox="0 0 16 16"><use href="#e-frown" fill="#da8400"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>4</b><svg class="em" viewBox="0 0 16 16"><use href="#e-frown" fill="#daae00"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>5</b><svg class="em" viewBox="0 0 16 16"><use href="#e-neutral" fill="#d0d100"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>6</b><svg class="em" viewBox="0 0 16 16"><use href="#e-smile" fill="#afda00"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>7</b><svg class="em" viewBox="0 0 16 16"><use href="#e-smile" fill="#85db00"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>8</b><svg class="em" viewBox="0 0 16 16"><use href="#e-smile" fill="#58da00"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ffb100"/></svg><b>9</b><svg class="em" viewBox="0 0 16 16"><use href="#e-smile" fill="#2bda00"/></svg></div>
+        <div class="cell"><svg class="st" viewBox="0 0 64 64"><use href="#star" fill="#ff9129"/></svg><b style="color:#ff9129">10</b><svg class="em" viewBox="0 0 16 16"><use href="#e-love"/></svg></div>
+      </div>
+    </div>
+    <div>
+      <p class="note" style="margin:0 0 8px">Иллюстрации 1.x, вернувшиеся в проект</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <img src="../static/img/docs/island.webp" style="width:82px;border-radius:8px" alt="" />
+        <img src="../static/img/docs/airplane.webp" style="width:82px;border-radius:8px" alt="" />
+        <img src="../static/img/docs/hospital.webp" style="width:82px;border-radius:8px" alt="" />
+        <img src="../static/img/docs/cartoon-couple.webp" style="width:82px;border-radius:8px" alt="" />
+        <img src="../static/img/docs/network.webp" style="width:82px;border-radius:8px" alt="" />
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">
+    <b>Что будет сделано в любом случае, каким бы ни был выбор:</b> те же правила поедут на
+    соседние страницы Settings — «Условия», «Политика», «Отказ от ответственности» получат ту же
+    типографику, а «Поддержка», «Пожертвование» и «Об авторе» уже получили иллюстрации 1.x,
+    настоящие иконки на кнопках, цветной ❤️ и центровку текста, как было в оригинале.
+  </p>
+</div>
+
+<!-- Формы 1.x дословно: звезда (star_full/zero/ten — один путь, разный цвет), четыре
+     смайлика Bootstrap Icons и «десятка» из многоцветного файла оригинала. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="star" viewBox="0 0 64 64">
+    <path d="M31.998,2.478c0.279,0,0.463,0.509,0.463,0.509l8.806,18.759l20.729,3.167l-14.999,15.38l3.541,21.701l-18.54-10.254l-18.54,10.254l3.541-21.701L2,24.912l20.729-3.167l8.798-18.743C31.527,3.002,31.719,2.478,31.998,2.478"/>
+  </symbol>
+  <symbol id="e-angry" viewBox="0 0 16 16">
+    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16M4.053 4.276a.5.5 0 0 1 .67-.223l2 1a.5.5 0 0 1 .166.76c.071.206.111.44.111.687C7 7.328 6.552 8 6 8s-1-.672-1-1.5c0-.408.109-.778.285-1.049l-1.009-.504a.5.5 0 0 1-.223-.67zm.232 8.157a.5.5 0 0 1-.183-.683A4.5 4.5 0 0 1 8 9.5a4.5 4.5 0 0 1 3.898 2.25.5.5 0 1 1-.866.5A3.5 3.5 0 0 0 8 10.5a3.5 3.5 0 0 0-3.032 1.75.5.5 0 0 1-.683.183M10 8c-.552 0-1-.672-1-1.5 0-.247.04-.48.11-.686a.502.502 0 0 1 .166-.761l2-1a.5.5 0 1 1 .448.894l-1.009.504c.176.27.285.64.285 1.049 0 .828-.448 1.5-1 1.5"/>
+  </symbol>
+  <symbol id="e-frown" viewBox="0 0 16 16">
+    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16M7 6.5C7 7.328 6.552 8 6 8s-1-.672-1-1.5S5.448 5 6 5s1 .672 1 1.5m-2.715 5.933a.5.5 0 0 1-.183-.683A4.5 4.5 0 0 1 8 9.5a4.5 4.5 0 0 1 3.898 2.25.5.5 0 0 1-.866.5A3.5 3.5 0 0 0 8 10.5a3.5 3.5 0 0 0-3.032 1.75.5.5 0 0 1-.683.183M10 8c-.552 0-1-.672-1-1.5S9.448 5 10 5s1 .672 1 1.5S10.552 8 10 8"/>
+  </symbol>
+  <symbol id="e-neutral" viewBox="0 0 16 16">
+    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16M7 6.5C7 7.328 6.552 8 6 8s-1-.672-1-1.5S5.448 5 6 5s1 .672 1 1.5m-3 4a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5M10 8c-.552 0-1-.672-1-1.5S9.448 5 10 5s1 .672 1 1.5S10.552 8 10 8"/>
+  </symbol>
+  <symbol id="e-smile" viewBox="0 0 16 16">
+    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16M7 6.5C7 7.328 6.552 8 6 8s-1-.672-1-1.5S5.448 5 6 5s1 .672 1 1.5M4.285 9.567a.5.5 0 0 1 .683.183A3.5 3.5 0 0 0 8 11.5a3.5 3.5 0 0 0 3.032-1.75.5.5 0 1 1 .866.5A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1-3.898-2.25.5.5 0 0 1 .183-.683M10 8c-.552 0-1-.672-1-1.5S9.448 5 10 5s1 .672 1 1.5S10.552 8 10 8"/>
+  </symbol>
+  <symbol id="e-love" viewBox="0 0 16 16">
+    <rect x="2.5" y="3.4" fill="#D45351" width="11" height="5.1"/>
+    <path fill="#00DC00" d="M8,0C3.6,0,0,3.6,0,8s3.6,8,8,8s8-3.6,8-8S12.4,0,8,0 M4.8,4.6c0.8-1.4,4-0.1,1,3.4C1.2,6.4,3.4,3.7,4.8,4.6 M11.3,10c0.3-0.1,0.5,0.1,0.6,0.4c0,0.1,0,0.3-0.1,0.4C11.1,12.1,9.6,13,8,13c-1.6,0-3.1-0.9-3.9-2.2c-0.1-0.2-0.1-0.5,0.2-0.7C4.4,10,4.5,10,4.6,10h0l0,0l0.1,0L5,10.1c0.2,0,0.5,0.1,0.9,0.2c0.7,0.1,1.5,0.2,2.2,0.2s1.5-0.1,2.2-0.2C10.5,10.2,10.9,10.1,11.3,10L11.3,10L11.3,10L11.3,10L11.3,10z M11.2,4.6c1.4-0.9,3.5,1.8-1,3.4C7.2,4.4,10.5,3.1,11.2,4.6L11.2,4.6z"/>
+  </symbol>
+  <symbol id="bulb" viewBox="0 0 16 16">
+    <path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13a.5.5 0 0 1 0 1 .5.5 0 0 1 0 1l-.224.447a1 1 0 0 1-.894.553H6.618a1 1 0 0 1-.894-.553L5.5 15a.5.5 0 0 1 0-1 .5.5 0 0 1 0-1 .5.5 0 0 1-.46-.302l-.761-1.77a2 2 0 0 0-.453-.618A5.98 5.98 0 0 1 2 6m6-5a5 5 0 0 0-3.479 8.592c.263.254.514.564.676.941L5.83 12h4.342l.632-1.467c.162-.377.413-.687.676-.941A5 5 0 0 0 8 1"/>
+  </symbol>
+  <symbol id="search" viewBox="0 0 16 16">
+    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+  </symbol>
+</svg>
+</body>
+</html>

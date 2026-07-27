@@ -606,6 +606,38 @@ export const DOCS: Readonly<Record<string, Doc>> = {
       {
         "type": "h3",
         "text": {
+          "ru": "Версия 2.0 от 12.07.2026",
+          "en": "Version 2.0 from 07/12/2026"
+        }
+      },
+      {
+        "type": "ul",
+        "items": {
+          "ru": [
+            "Пространство NDim переписано заново. Новый адрес — ndimspace.app.",
+            "NDim ID и оценки всех пользователей перенесены без потерь.",
+            "Светлая и тёмная темы оформления.",
+            "Вход без пароля: по ссылке на почту и через Google.",
+            "Гостевой режим: Пространство можно попробовать до создания аккаунта.",
+            "Настройка видимости персональных данных по каждому свойству.",
+            "Новый раздел «Пространство»: живая статистика и состояние сервера синхронизации.",
+            "Оптимизация и исправление дефектов."
+          ],
+          "en": [
+            "The NDim Space has been rewritten from scratch. The new address is ndimspace.app.",
+            "The NDim IDs and ratings of all users have been transferred without any loss.",
+            "Light and dark themes.",
+            "Passwordless sign-in: by an email link and through Google.",
+            "Guest mode: you can try the Space before creating an account.",
+            "Visibility settings for each piece of personal information.",
+            "The new \"Space\" section: live statistics and the state of the synchronization server.",
+            "Optimization and bug fixing."
+          ]
+        }
+      },
+      {
+        "type": "h3",
+        "text": {
           "ru": "Версия 1.5 от 13.05.2026",
           "en": "Version 1.5 from 05/13/2026"
         }
