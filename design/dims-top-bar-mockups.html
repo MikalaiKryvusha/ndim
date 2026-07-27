@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — верхнее меню «Измерений», 4 макета (bugs/52)</title>
+<style>
+  /* ────────────────────────────────────────────────────────────────────────
+     Макеты к bugs/52. Правило четырёх макетов (AGENT_GUIDE → «Дизайн»):
+     агент рисует 4 варианта, владелец утверждает один, возможно с правками.
+
+     Задача владельца дословно:
+     «мне не нравится, как сейчас сделан поиск и предложить идею — оно всё время
+     висит вверху листаемой страницы и перекрывает сверху часть экрана. а вверху
+     должен быть переключатель всех измерений и моего NDim ID. Нужно как-то
+     верхнее прилипающее меню переосмыслить и сделать его более красивым, может
+     быть открывающимся и скрывающимся, как у меня открывались и скрывались ВСЕ
+     и МОЙ NDIM ID кнопки — но чтобы это было целое меню с поиском, с предложить
+     измерение и с переключателями»
+
+     РАЗВЕДКА 1.x (по коду, не по памяти) — researches/12:
+       · index.html:958-976   — радио-группа «Все» / «Мой NDim ID» внутри .top_sticky_toolbar
+       · styles.css:551-565   — sticky, top clamp(42…64px), высота clamp(30…40px),
+                                ширина 90%, радиус 10px, лёгкая тень, transition .3s
+       · app.js:2870-2947     — window.onscroll: вниз → translateY(-200%), вверх →
+                                translateY(0); выше 40px всегда видна; порог 20px
+       · index.html:2944-2953 — 💡 и 🔍 БЫЛИ плавающими кнопками справа снизу
+     Вывод: «открывались и скрывались» = АВТОПРЯТАНИЕ ПО НАПРАВЛЕНИЮ ПРОКРУТКИ.
+     Все четыре макета это поведение уважают; расходятся они в том, ЧТО прячется
+     и как в панели уживаются поиск и «Предложить измерение».
+
+     Все панели ниже — живые: прокрутите ленту внутри телефона.
+     ──────────────────────────────────────────────────────────────────────── */
+
+  :root {
+    --bg: #f6f8fb; --panel: #fff; --panel-solid: #fff;
+    --text: #1b2942; --heading: #0f1c33; --dim: #5b7characters;
+    --dim: #5b7290; --faint: #90a4bb;
+    --edge: #e3e9f2; --edge-soft: #eef2f8;
+    --primary: #1467d6; --primary-ink: #fff; --accent: #0f9a8a;
+    --shadow: 0 1px 8px -4px rgba(15, 28, 51, .55);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 28px 20px 60px;
+  }
+  h1 { font-size: 21px; color: var(--heading); margin: 0 0 6px; }
+  .lede { color: var(--dim); max-width: 78ch; margin: 0 0 8px; font-size: 14px; }
+  .canon {
+    max-width: 78ch; margin: 14px 0 26px; padding: 12px 14px; font-size: 13.5px;
+    background: #eaf2fd; border: 1px solid #cfe0f7; border-left: 3px solid var(--primary);
+    border-radius: 10px; color: #23446f;
+  }
+  .canon b { color: #12305c; }
+
+  .grid { display: flex; flex-wrap: wrap; gap: 26px; }
+  .variant { width: 372px; }
+  .variant > h2 { font-size: 16px; color: var(--heading); margin: 0 0 4px; }
+  .variant > .note { font-size: 13px; color: var(--dim); margin: 0 0 4px; min-height: 62px; }
+  .variant > .tradeoff { font-size: 12.5px; color: var(--faint); margin: 0 0 12px; min-height: 48px; }
+  .tradeoff b { color: var(--dim); font-weight: 600; }
+
+  /* ── Корпус телефона ─────────────────────────────────────────────────── */
+  .phone {
+    width: 372px; height: 620px; border-radius: 26px; overflow: hidden;
+    border: 1px solid var(--edge); background: var(--bg);
+    display: flex; flex-direction: column; position: relative;
+    box-shadow: 0 10px 30px -18px rgba(15, 28, 51, .5);
+  }
+  .bar {
+    display: flex; align-items: center; gap: 9px; padding: 11px 14px 10px;
+    border-bottom: 1px solid var(--edge); background: var(--panel-solid);
+    flex: none; z-index: 40;
+  }
+  .mark { width: 24px; height: 24px; border-radius: 7px; background: #0d1526; flex: none;
+          display: grid; place-items: center; color: #2fa8ff; font-weight: 800; font-size: 13px; }
+  .wm { font-size: 14px; font-weight: 650; color: var(--heading); }
+  .bar .right { margin-left: auto; display: flex; gap: 6px; }
+  .pill-s { font-size: 11px; color: var(--dim); border: 1px solid var(--edge);
+            border-radius: 8px; padding: 3px 7px; }
+
+  .scroll { flex: 1; overflow-y: auto; position: relative; scroll-behavior: auto; }
+  .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); margin: 12px 14px 2px; }
+  .hintbox { margin: 8px 14px 10px; padding: 9px 11px; font-size: 12px; color: var(--dim);
+             background: var(--edge-soft); border-radius: 10px; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    margin: 0 14px 10px; padding: 11px 13px;
+  }
+  .card .t { font-size: 14px; font-weight: 600; color: var(--heading); }
+  .card .m { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+  .stars { margin-top: 7px; letter-spacing: 2px; color: #d8b400; font-size: 13px; }
+
+  .bnav {
+    display: flex; border-top: 1px solid var(--edge); background: var(--panel-solid);
+    flex: none; z-index: 40;
+  }
+  .bnav a {
+    flex: 1; text-align: center; font-size: 9.5px; color: var(--faint);
+    padding: 5px 0 6px; margin: 3px 4px; border-radius: 10px; text-decoration: none;
+  }
+  .bnav a i { display: block; font-style: normal; font-size: 17px; margin-bottom: 1px; }
+  .bnav a.on { color: var(--primary); font-weight: 650;
+               background: color-mix(in srgb, var(--primary) 12%, transparent); }
+
+  /* ── Общая механика прибитой панели ──────────────────────────────────── */
+  .tool {
+    position: sticky; top: 0; z-index: 30;
+    transition: transform .3s ease, opacity .2s ease;
+    will-change: transform;
+  }
+  .tool.hidden { transform: translateY(-200%); }
+
+  /* Сегменты — радио-группа канона 1.x */
+  .seg { display: flex; background: var(--edge-soft); border-radius: 9px; padding: 2px; }
+  .seg button {
+    flex: 1; font: inherit; font-size: 12px; padding: 5px 8px; cursor: pointer;
+    border: 0; background: transparent; color: var(--dim); border-radius: 7px; white-space: nowrap;
+  }
+  .seg button.on { background: var(--panel); color: var(--primary); font-weight: 650; box-shadow: var(--shadow); }
+
+  .ibtn {
+    flex: none; width: 30px; height: 30px; display: grid; place-items: center;
+    border: 1px solid var(--edge); background: var(--panel); border-radius: 9px;
+    color: var(--dim); cursor: pointer; font-size: 14px;
+  }
+  .ibtn.accent { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, var(--edge)); }
+
+  .field {
+    flex: 1; min-width: 0; height: 30px; border: 1px solid var(--edge); border-radius: 9px;
+    background: var(--panel); display: flex; align-items: center; gap: 6px; padding: 0 9px;
+    font-size: 12.5px; color: var(--faint);
+  }
+
+  /* ── V1: таблетка канона 1.x + плавающие кнопки ──────────────────────── */
+  .v1 .tool { padding: 8px 0 2px; display: flex; justify-content: center; }
+  .v1 .tool .inner {
+    width: 90%; height: 36px; background: var(--panel); border-radius: 10px;
+    box-shadow: var(--shadow); display: flex; align-items: center; padding: 3px;
+  }
+  .v1 .fabs {
+    position: absolute; right: 12px; bottom: 62px; z-index: 45;
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .v1 .fab {
+    width: 46px; height: 46px; border-radius: 16px; display: grid; place-items: center;
+    background: var(--panel); border: 1px solid var(--edge); font-size: 19px;
+    box-shadow: 0 6px 16px -8px rgba(15, 28, 51, .6); color: var(--primary);
+  }
+
+  /* ── V2: одна панель, при прокрутке сжимается до сегментов ───────────── */
+  .v2 .tool { background: var(--panel-solid); border-bottom: 1px solid var(--edge); padding: 8px 12px; }
+  .v2 .row1 { display: flex; align-items: center; gap: 7px; }
+  .v2 .row2 {
+    display: flex; align-items: center; gap: 7px; margin-top: 7px;
+    max-height: 40px; opacity: 1; overflow: hidden;
+    transition: max-height .28s ease, opacity .2s ease, margin-top .28s ease;
+  }
+  .v2 .tool.compact .row2 { max-height: 0; opacity: 0; margin-top: 0; }
+
+  /* ── V3: панель-ящик, поиск выдвигается по тапу ──────────────────────── */
+  .v3 .tool { background: var(--panel-solid); border-bottom: 1px solid var(--edge); padding: 8px 12px; }
+  .v3 .row1 { display: flex; align-items: center; gap: 7px; }
+  .v3 .drawer {
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height .28s ease, opacity .2s ease;
+  }
+  .v3 .drawer .inner { display: flex; gap: 7px; padding-top: 8px; }
+  .v3 .tool.open .drawer { max-height: 60px; opacity: 1; }
+  .v3 .handle {
+    display: block; width: 34px; height: 3px; border-radius: 3px; background: var(--edge);
+    margin: 7px auto 0;
+  }
+
+  /* ── V4: сегменты уехали в шапку, верх ленты пуст ────────────────────── */
+  .v4 .bar { flex-wrap: wrap; }
+  .v4 .bar .seg { width: 100%; margin-top: 8px; }
+  .v4 .fabs {
+    position: absolute; right: 12px; bottom: 62px; z-index: 45;
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .v4 .fab {
+    width: 46px; height: 46px; border-radius: 16px; display: grid; place-items: center;
+    background: var(--panel); border: 1px solid var(--edge); font-size: 19px;
+    box-shadow: 0 6px 16px -8px rgba(15, 28, 51, .6); color: var(--primary);
+  }
+
+  .legend { font-size: 12px; color: var(--faint); margin-top: 8px; }
+  .legend b { color: var(--dim); }
+</style>
+</head>
+<body>
+
+<h1>Верхнее меню «Измерений» — 4 макета (bugs/52)</h1>
+<p class="lede">
+  Прокрутите ленту внутри любого телефона — панели живые, поведение настоящее.
+  Сегменты и кнопки кликаются.
+</p>
+
+<div class="canon">
+  <b>Что показала разведка живого 1.x</b> (код, не память): переключатель «Все / Мой NDim ID»
+  жил в <b>прибитой</b> панели <code>top_sticky_toolbar</code> под шапкой — и <b>прятался при
+  прокрутке вниз, возвращался при прокрутке вверх</b> (<code>translateY(-200%)</code> ↔
+  <code>translateY(0)</code>, 300 мс; выше 40&nbsp;px прокрутки всегда виден; порог 20&nbsp;px).
+  Именно это Вы и называли «открывались и скрывались». Поиск и «Предложить измерение» в 1.x
+  были <b>плавающими кнопками справа снизу</b> и верх экрана не занимали вовсе.
+  Все четыре макета уважают автопрятание; расходятся они в том, <b>что именно</b> прячется и
+  где живут поиск с «предложить».
+</div>
+
+<div class="grid">
+
+  <!-- ═══ V1 ═══════════════════════════════════════════════════════════ -->
+  <div class="variant v1">
+    <h2>V1 — «Канон 1.x»</h2>
+    <p class="note">
+      Дословный возврат оригинала: таблетка с сегментами под шапкой, прячется по прокрутке вниз.
+      Поиск и 💡 возвращаются плавающими кнопками справа снизу — как Вы их и рисовали.
+    </p>
+    <p class="tradeoff">
+      <b>Плюс:</b> верх экрана занят минимально, всё ровно как в 1.x.
+      <b>Минус:</b> «целого меню» не получается — поиск и «предложить» живут отдельно от
+      переключателя, а плавающие кнопки перекрывают правый край ленты.
+    </p>
+    <div class="phone">
+      <div class="bar">
+        <span class="mark">N</span><span class="wm">Пространство NDim</span>
+        <span class="right"><span class="pill-s">☀</span><span class="pill-s">Ru</span></span>
+      </div>
+      <div class="scroll" data-scroll>
+        <div class="tool" data-tool>
+          <div class="inner">
+            <div class="seg" style="flex:1">
+              <button class="on">Все</button><button>Мой NDim ID</button>
+            </div>
+          </div>
+        </div>
+        <div class="screen-title">Измерения</div>
+        <div class="hintbox">Чтобы пополнить Ваш NDim ID, установите звёзды напротив измерений.</div>
+        <div data-feed></div>
+      </div>
+      <div class="fabs">
+        <div class="fab">💡</div><div class="fab">🔍</div>
+      </div>
+      <div class="bnav">
+        <a><i>⌂</i>Профиль</a><a><i>◎</i>Связи</a><a><i>✳</i>Пространство</a>
+        <a class="on"><i>◈</i>Измерения</a><a><i>☰</i>Меню</a>
+      </div>
+    </div>
+    <p class="legend"><b>Прокрутка вниз</b> — таблетка уезжает; <b>вверх</b> — возвращается.</p>
+  </div>
+
+  <!-- ═══ V2 ═══════════════════════════════════════════════════════════ -->
+  <div class="variant v2">
+    <h2>V2 — «Меню, которое худеет»</h2>
+    <p class="note">
+      Одно целое меню: сегменты в первой строке, поиск и 💡 во второй. При прокрутке вниз
+      вторая строка складывается, остаются только сегменты; вверх — меню разворачивается целиком.
+    </p>
+    <p class="tradeoff">
+      <b>Плюс:</b> ровно то, что Вы просили словами — целое меню с тремя вещами, и оно
+      само отдаёт ленте высоту. <b>Минус:</b> даже в сжатом виде занимает полоску сверху;
+      два состояния — чуть больше движения на экране.
+    </p>
+    <div class="phone">
+      <div class="bar">
+        <span class="mark">N</span><span class="wm">Пространство NDim</span>
+        <span class="right"><span class="pill-s">☀</span><span class="pill-s">Ru</span></span>
+      </div>
+      <div class="scroll" data-scroll>
+        <div class="tool" data-tool data-mode="compact">
+          <div class="row1">
+            <div class="seg" style="flex:1"><button class="on">Все</button><button>Мой NDim ID</button></div>
+          </div>
+          <div class="row2">
+            <div class="field">🔍 Найти измерение</div>
+            <div class="ibtn accent">💡</div>
+          </div>
+        </div>
+        <div class="screen-title">Измерения</div>
+        <div class="hintbox">Чтобы пополнить Ваш NDim ID, установите звёзды напротив измерений.</div>
+        <div data-feed></div>
+      </div>
+      <div class="bnav">
+        <a><i>⌂</i>Профиль</a><a><i>◎</i>Связи</a><a><i>✳</i>Пространство</a>
+        <a class="on"><i>◈</i>Измерения</a><a><i>☰</i>Меню</a>
+      </div>
+    </div>
+    <p class="legend"><b>Вниз</b> — строка поиска складывается; <b>вверх</b> — разворачивается.</p>
+  </div>
+
+  <!-- ═══ V3 ═══════════════════════════════════════════════════════════ -->
+  <div class="variant v3">
+    <h2>V3 — «Панель-ящик»</h2>
+    <p class="note">
+      Всегда одна компактная строка: сегменты + 🔍 + 💡. Тап по 🔍 выдвигает поле поиска
+      ящиком вниз, повторный тап — убирает. Сама панель прячется по прокрутке, как в 1.x.
+    </p>
+    <p class="tradeoff">
+      <b>Плюс:</b> самый экономный по высоте — поиск занимает место только когда нужен;
+      всё в одном меню. <b>Минус:</b> поиск на один тап дальше, чем в V2.
+    </p>
+    <div class="phone">
+      <div class="bar">
+        <span class="mark">N</span><span class="wm">Пространство NDim</span>
+        <span class="right"><span class="pill-s">☀</span><span class="pill-s">Ru</span></span>
+      </div>
+      <div class="scroll" data-scroll>
+        <div class="tool" data-tool data-drawer>
+          <div class="row1">
+            <div class="seg" style="flex:1"><button class="on">Все</button><button>Мой NDim ID</button></div>
+            <div class="ibtn" data-toggle-drawer>🔍</div>
+            <div class="ibtn accent">💡</div>
+          </div>
+          <div class="drawer">
+            <div class="inner"><div class="field">🔍 Найти измерение среди 5111</div></div>
+          </div>
+          <span class="handle"></span>
+        </div>
+        <div class="screen-title">Измерения</div>
+        <div class="hintbox">Чтобы пополнить Ваш NDim ID, установите звёзды напротив измерений.</div>
+        <div data-feed></div>
+      </div>
+      <div class="bnav">
+        <a><i>⌂</i>Профиль</a><a><i>◎</i>Связи</a><a><i>✳</i>Пространство</a>
+        <a class="on"><i>◈</i>Измерения</a><a><i>☰</i>Меню</a>
+      </div>
+    </div>
+    <p class="legend">Тапните <b>🔍</b> — выдвинется поле. Прокрутка прячет панель целиком.</p>
+  </div>
+
+  <!-- ═══ V4 ═══════════════════════════════════════════════════════════ -->
+  <div class="variant v4">
+    <h2>V4 — «Сегменты в шапке»</h2>
+    <p class="note">
+      Переключатель переезжает в саму шапку приложения — она и так прибита. Лента начинается
+      сразу, над ней нет ничего. Поиск и 💡 — плавающими кнопками.
+    </p>
+    <p class="tradeoff">
+      <b>Плюс:</b> верх ленты не занят вообще ничем, переключатель всегда на месте и никогда
+      не прячется. <b>Минус:</b> шапка становится выше на всех экранах или сегменты придётся
+      показывать только на «Измерениях» — шапка перестаёт быть одинаковой.
+    </p>
+    <div class="phone">
+      <div class="bar">
+        <span class="mark">N</span><span class="wm">Пространство NDim</span>
+        <span class="right"><span class="pill-s">☀</span><span class="pill-s">Ru</span></span>
+        <div class="seg"><button class="on">Все</button><button>Мой NDim ID</button></div>
+      </div>
+      <div class="scroll" data-scroll>
+        <div class="screen-title">Измерения</div>
+        <div class="hintbox">Чтобы пополнить Ваш NDim ID, установите звёзды напротив измерений.</div>
+        <div data-feed></div>
+      </div>
+      <div class="fabs">
+        <div class="fab">💡</div><div class="fab">🔍</div>
+      </div>
+      <div class="bnav">
+        <a><i>⌂</i>Профиль</a><a><i>◎</i>Связи</a><a><i>✳</i>Пространство</a>
+        <a class="on"><i>◈</i>Измерения</a><a><i>☰</i>Меню</a>
+      </div>
+    </div>
+    <p class="legend">Прятать нечего — переключатель всегда виден в шапке.</p>
+  </div>
+
+</div>
+
+<script>
+  // Лента-заполнитель: одинаковая во всех четырёх, чтобы сравнивалось поведение, а не контент.
+  const DIMS = [
+    ['Ранние подъёмы', 'Привычки · 2024', 4],
+    ['Классическая музыка', 'Вкусы · 2023', 5],
+    ['Путешествия автостопом', 'Опыт · 2022', 3],
+    ['Научная фантастика', 'Книги · 2021', 5],
+    ['Горные лыжи', 'Спорт · 2020', 2],
+    ['Веганство', 'Образ жизни · 2023', 1],
+    ['Настольные игры', 'Досуг · 2019', 4],
+    ['Медитация', 'Практики · 2024', 3],
+    ['Фотография', 'Творчество · 2018', 5],
+    ['Программирование', 'Ремесло · 2017', 5],
+  ];
+  for (const host of document.querySelectorAll('[data-feed]')) {
+    host.innerHTML = DIMS.map(([t, m, s]) => `
+      <div class="card">
+        <div class="t">${t}</div><div class="m">${m}</div>
+        <div class="stars">${'★'.repeat(s)}${'☆'.repeat(10 - s)}</div>
+      </div>`).join('');
+  }
+
+  // Автопрятание по направлению прокрутки — числа канона 1.x:
+  // всегда показана выше 40px; порог срабатывания 20px; переход 300мс (в CSS).
+  for (const scroll of document.querySelectorAll('[data-scroll]')) {
+    const tool = scroll.querySelector('[data-tool]');
+    if (!tool) continue;
+    let last = 0;
+    scroll.addEventListener('scroll', () => {
+      const y = scroll.scrollTop;
+      if (y < 40) { tool.classList.remove('hidden', 'compact'); last = y; return; }
+      if (Math.abs(y - last) < 20) return;
+      const down = y > last;
+      last = y;
+      // V2 не прячет панель целиком — он её СЖИМАЕТ (в этом и вариант).
+      if (tool.dataset.mode === 'compact') tool.classList.toggle('compact', down);
+      else tool.classList.toggle('hidden', down);
+    });
+  }
+
+  // V3: ящик поиска по тапу.
+  for (const btn of document.querySelectorAll('[data-toggle-drawer]')) {
+    btn.addEventListener('click', () => btn.closest('[data-tool]').classList.toggle('open'));
+  }
+
+  // Сегменты кликаются во всех макетах.
+  for (const seg of document.querySelectorAll('.seg')) {
+    seg.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      seg.querySelectorAll('button').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on');
+    });
+  }
+</script>
+</body>
+</html>
