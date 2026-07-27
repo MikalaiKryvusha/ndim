@@ -77,8 +77,12 @@ test('десктоп: в рельсе нет мёртвых пунктов — �
   await page.goto('/profile');
   const rail = page.locator('nav.rail');
 
+  // `:not(.brand)` — знак продукта тоже ведёт на «Профиль» (владелец 2026-07-27: клик по
+  // логотипу не должен мелькать лендингом), и без этого уточнения на `/profile` в рельсе
+  // находятся ДВЕ ссылки. Страж стережёт ровно то же, что и раньше: каждый ПУНКТ рельса
+  // ведёт на свой экран и ни один не мёртв.
   for (const href of ['/profile', '/relations', '/space', '/dims', '/menu']) {
-    await expect(rail.locator(`a[href="${href}"]`)).toBeVisible();
+    await expect(rail.locator(`a:not(.brand)[href="${href}"]`)).toBeVisible();
   }
 });
 

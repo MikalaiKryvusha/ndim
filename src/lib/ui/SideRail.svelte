@@ -9,6 +9,8 @@
   import Brand from '$lib/ui/Brand.svelte';
   // Тот же авторский набор, что в нижней панели (bugs/17) — рельс и панель обязаны
   // говорить одними иконками, это одна навигация в двух раскладках.
+  // Форма иконки на открытой вкладке НЕ подменяется (слово владельца 2026-07-27):
+  // открытость передаёт синяя плашка и синий цвет, одинаково в рельсе и в панели.
   import Icon from '$lib/ui/Icon.svelte';
 
   let {
@@ -17,28 +19,33 @@
   }: { active: 'profile' | 'relations' | 'space' | 'dims' | 'menu'; lang: 'ru' | 'en' } = $props();
 
   const items = [
-    { key: 'profile', href: '/profile', icon: 'home', iconOn: 'homeOn', label: { ru: 'Профиль', en: 'Profile' } },
-    { key: 'relations', href: '/relations', icon: 'relations', iconOn: 'relationsOn', label: { ru: 'Связи', en: 'Relations' } },
-    { key: 'space', href: '/space', icon: 'space', iconOn: 'space', label: { ru: 'Пространство', en: 'Space' } },
+    { key: 'profile', href: '/profile', icon: 'home', label: { ru: 'Профиль', en: 'Profile' } },
+    { key: 'relations', href: '/relations', icon: 'relations', label: { ru: 'Связи', en: 'Relations' } },
+    { key: 'space', href: '/space', icon: 'space', label: { ru: 'Пространство', en: 'Space' } },
     // «Измерения» — ОТДЕЛЬНЫЙ раздел, как было в 1.x. Требование владельца 2026-07-12:
     // «Очень плохо, что нет вкладки Измерения, и попасть в них можно только через профиль».
-    { key: 'dims', href: '/dims', icon: 'dimensions', iconOn: 'dimensionsOn', label: { ru: 'Измерения', en: 'Dimensions' } },
+    { key: 'dims', href: '/dims', icon: 'dimensions', label: { ru: 'Измерения', en: 'Dimensions' } },
     // Экран «Меню» реализован 2026-07-12, но рельс о нём так и не узнал: здесь оставался
     // href: null со времён заглушки «скоро». На боевом выкате пункт оказался мёртвым —
     // человек жал «Меню», и не происходило ничего.
-    { key: 'menu', href: '/menu', icon: 'menu', iconOn: 'menuOn', label: { ru: 'Меню', en: 'Menu' } },
+    { key: 'menu', href: '/menu', icon: 'menu', label: { ru: 'Меню', en: 'Menu' } },
   ] as const;
 </script>
 
 <nav class="rail" aria-label="NDim Space">
-  <a class="brand" href="/">
+  <!-- Знак ведёт на «Профиль», а НЕ на «/» (слово владельца 2026-07-27: «нажимаю на
+       главное лого — на мгновение мерцает лендинг, это тупо, ведь я уже в приложении»).
+       Корень отдаёт лендинг, который лишь потом уводит вошедшего внутрь: получался
+       лишний кадр чужой страницы. Дом человека внутри продукта — это «Профиль».
+       Само мелькание корня у вошедшего — отдельный дефект, bugs/40. -->
+  <a class="brand" href="/profile">
     <Brand size={26} />
     <span>{lang === 'ru' ? 'Пространство NDim' : 'NDim Space'}</span>
   </a>
 
   {#each items as item (item.key)}
     <a href={item.href} class:on={active === item.key} aria-current={active === item.key ? 'page' : undefined}>
-      <span class="ico"><Icon name={active === item.key ? item.iconOn : item.icon} size={22} /></span>{item.label[lang]}
+      <span class="ico"><Icon name={item.icon} size={22} /></span>{item.label[lang]}
     </a>
   {/each}
 </nav>
