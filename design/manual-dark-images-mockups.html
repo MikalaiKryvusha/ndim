@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Руководство: картинки 1.x в тёмной теме — 4 варианта</title>
+<style>
+  /* Токены — ДОСЛОВНО из src/routes/+layout.svelte (тёмная тема 2.0). */
+  :root {
+    --bg: #060b14;
+    --panel: rgba(10, 21, 38, 0.78);
+    --edge: rgba(77, 159, 255, 0.22);
+    --heading: #eef6ff;
+    --dim: #8299b1;
+    --bg-light: #f6f8fb;
+    --panel-light: #ffffff;
+    --edge-light: #e6eef7;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--heading);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 28px 18px 60px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 6px; }
+  .intro { color: var(--dim); max-width: 72ch; margin-bottom: 26px; }
+  .intro b { color: var(--heading); }
+
+  section { margin-bottom: 34px; }
+  h2 { font-size: 17px; margin-bottom: 4px; }
+  .note { color: var(--dim); font-size: 13.5px; max-width: 78ch; margin-bottom: 14px; }
+  .note b { color: var(--heading); font-weight: 600; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .cell { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .cell small { color: var(--dim); font-size: 11.5px; }
+  .cell img { display: block; height: 150px; width: auto; max-width: 240px; object-fit: contain; }
+  .cell .h90 img { height: 90px; }
+
+  /* Контрольная полоса светлой темы */
+  .light-strip { background: var(--bg-light); border-radius: 16px; padding: 18px; }
+  .light-strip small { color: #6a819a; }
+
+  /* ── V1: светлая карточка-подложка ── */
+  .v1 .shot { background: var(--panel-light); border: 1px solid var(--edge-light); border-radius: 14px; padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+
+  /* ── V2: нативный — по классу картинки ── */
+  .v2 .transparent img { filter: brightness(.92); }                    /* цвет на тёмном — почти как есть */
+  .v2 .whitebg img { border-radius: 12px; filter: brightness(.85); }   /* белый фон приглушён, углы скруглены */
+  .v2 .mono img { filter: invert(1); }                                 /* чёрный рисунок станет светлым */
+  .v2 .plaque img { border-radius: 26%; outline: 1px solid var(--edge); }
+
+  /* ── V3: панель темы ── */
+  .v3 .shot { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 12px; }
+  .v3 .whitebg img { border-radius: 10px; filter: brightness(.8) contrast(1.05); }
+  .v3 .mono img { filter: invert(1); }
+
+  /* ── V4: ночная плёнка ── */
+  .v4 img { filter: brightness(.78) contrast(1.08) saturate(.9); border-radius: 12px; }
+  .v4 .mono img { filter: invert(1) brightness(.82); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Картинки 1.x в тёмной теме — 4 варианта</h1>
+  <p class="intro">Разведка показала: «белыми» картинки были потому, что белым был фон приложения.
+  На деле их четыре класса: <b>цветные с прозрачным фоном</b> (остров), <b>цветные на белом
+  фоне</b> (самолёт, больница), <b>чёрный рисунок на белом фоне</b> (сеть в финале — после
+  инверсии становится белым-на-чёрном, в паре с логотипом) и <b>чёрная плашка логотипа</b>.
+  В светлой теме всё остаётся ровно как в 1.x — вопрос только про тёмную. Страница свёрстана
+  на настоящих токенах тёмной темы 2.0.</p>
+
+  <section>
+    <h2>Контроль: светлая тема (не меняется ни в одном варианте)</h2>
+    <p class="note">Как было в 1.x — и как останется в светлой «Бумаге».</p>
+    <div class="row light-strip">
+      <div class="cell"><img src="../static/img/docs/island.webp" alt=""><small>прозрачный фон</small></div>
+      <div class="cell"><img src="../static/img/docs/airplane.webp" alt=""><small>белый фон</small></div>
+      <div class="cell"><img src="../static/img/docs/network.webp" alt=""><small>чёрный рисунок</small></div>
+      <div class="cell h90"><span class="h90"><img src="../static/img/docs/logo-1x.webp" alt=""></span><small>логотип</small></div>
+    </div>
+  </section>
+
+  <section class="v1">
+    <h2>V1 — «Светлая карточка»</h2>
+    <p class="note">Каждая иллюстрация стоит на белой подложке со скруглением и тенью — как
+    светлые скриншоты в тёмных доках GitHub/Notion. <b>Плюс:</b> ни одна картинка не требует
+    обработки, всё выглядит ровно как в 1.x. <b>Минус:</b> «окна света» в тёмной странице.</p>
+    <div class="row">
+      <div class="cell"><span class="shot"><img src="../static/img/docs/island.webp" alt=""></span><small>остров</small></div>
+      <div class="cell"><span class="shot"><img src="../static/img/docs/airplane.webp" alt=""></span><small>самолёт</small></div>
+      <div class="cell"><span class="shot"><img src="../static/img/docs/network.webp" alt=""></span><small>сеть</small></div>
+      <div class="cell h90"><span class="shot h90"><img src="../static/img/docs/logo-1x.webp" alt=""></span><small>логотип</small></div>
+    </div>
+  </section>
+
+  <section class="v2">
+    <h2>V2 — «Нативный» (обработка по классу картинки)</h2>
+    <p class="note">Цветные с прозрачностью ложатся прямо на тёмный фон; белофонные получают
+    скругление и лёгкое приглушение; чёрный рисунок <b>инвертируется в светлый</b>; логотип —
+    тонкая кайма, чтобы плашка не сливалась. <b>Плюс:</b> темнее и «роднее» всего, ни одного
+    светового пятна. <b>Минус:</b> у белофонных белый фон всё же остаётся (приглушённым).</p>
+    <div class="row">
+      <div class="cell transparent"><img src="../static/img/docs/island.webp" alt=""><small>остров — как есть</small></div>
+      <div class="cell whitebg"><img src="../static/img/docs/airplane.webp" alt=""><small>самолёт — приглушён</small></div>
+      <div class="cell mono"><img src="../static/img/docs/network.webp" alt=""><small>сеть — инверсия</small></div>
+      <div class="cell plaque h90"><span class="h90"><img src="../static/img/docs/logo-1x.webp" alt=""></span><small>логотип — кайма</small></div>
+    </div>
+  </section>
+
+  <section class="v3">
+    <h2>V3 — «Панель темы»</h2>
+    <p class="note">Все картинки на полупрозрачной панели тёмной темы (как виджеты приложения);
+    белофонные приглушены сильнее, рисунок сети инвертирован. <b>Плюс:</b> иллюстрации выглядят
+    «виджетами» продукта, единый ритм со страницей. <b>Минус:</b> вокруг прозрачных картинок
+    появляется рамка, которой в 1.x не было.</p>
+    <div class="row">
+      <div class="cell"><span class="shot"><img src="../static/img/docs/island.webp" alt=""></span><small>остров</small></div>
+      <div class="cell whitebg"><span class="shot"><img src="../static/img/docs/airplane.webp" alt=""></span><small>самолёт</small></div>
+      <div class="cell mono"><span class="shot"><img src="../static/img/docs/network.webp" alt=""></span><small>сеть</small></div>
+      <div class="cell h90"><span class="shot h90"><img src="../static/img/docs/logo-1x.webp" alt=""></span><small>логотип</small></div>
+    </div>
+  </section>
+
+  <section class="v4">
+    <h2>V4 — «Ночная плёнка» (один фильтр на всё)</h2>
+    <p class="note">Единый фильтр затемнения на все картинки без подложек: белые фоны становятся
+    серыми. <b>Плюс:</b> одно правило, ноль разбора по классам (сети всё равно нужна инверсия —
+    универсального фильтра для чёрного рисунка не существует). <b>Минус:</b> белофонные выглядят
+    «серыми экранами», цвета глушатся.</p>
+    <div class="row">
+      <div class="cell"><img src="../static/img/docs/island.webp" alt=""><small>остров</small></div>
+      <div class="cell"><img src="../static/img/docs/airplane.webp" alt=""><small>самолёт</small></div>
+      <div class="cell mono"><img src="../static/img/docs/network.webp" alt=""><small>сеть — инверсия</small></div>
+      <div class="cell h90"><span class="h90"><img src="../static/img/docs/logo-1x.webp" alt=""></span><small>логотип</small></div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
