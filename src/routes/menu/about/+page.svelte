@@ -7,22 +7,21 @@
   import { onMount } from 'svelte';
   import DocBlocks from '$lib/ui/DocBlocks.svelte';
   import DocShell from '$lib/ui/DocShell.svelte';
+  import Versions from '$lib/ui/Versions.svelte';
   import { DOCS, type DocBlock } from '$lib/content/docs';
+  import { currentSession } from '$lib/data/profile';
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
-  import { dateTime, versionLabel } from '$lib/ui/format';
-
-  const APP_VERSION = __APP_VERSION__;
-  const APP_BUILD = __APP_BUILD__;
-  const APP_BUILT_AT = __APP_BUILT_AT__;
 
   let server = $state<SyncServerDoc | null>(null);
 
   onMount(async () => {
-    // Версия сервера синхронизации известна только там, где до него можно дотянуться.
-    // Не дотянулись — просто не показываем строку, а не выдумываем номер.
-    if (!['localhost', '127.0.0.1'].includes(location.hostname)) return;
+    // Версия сервера синхронизации лежит в `space/server`, а правила отдают этот документ
+    // только вошедшим (включая гостя). Раньше здесь стояла проверка на localhost — из-за
+    // неё в БОЮ версию сервера не видел никто и никогда. Теперь спрашиваем ровно тогда,
+    // когда имеем право спросить; не дотянулись — виджет честно скажет «неизвестно».
     try {
+      if ((await currentSession()) === null) return;
       server = await loadSyncServer();
     } catch {
       server = null;
@@ -51,13 +50,10 @@
 
   const t = {
     body: {
-      ru: 'Проект «Пространство NDim» (англ. «NDim Space») создан 05.05.2025 в г. Минск, Беларусь. Сделано для всего Человечества с Любовью ❤ с использованием большого количества кваса в процессе разработки.',
-      en: 'The «NDim Space» project (rus. «Пространство NDim») was created on 05.05.2025 in Minsk, Belarus. Made for all of Humanity with Love ❤ and with a great deal of kvass consumed along the way.',
+      ru: 'Проект «Пространство NDim» (англ. «NDim Space») создан 05.05.2025 в г. Минск, Беларусь. Сделано для всего Человечества с Любовью ❤️ с использованием большого количества кваса в процессе разработки.',
+      en: 'The «NDim Space» project (rus. «Пространство NDim») was created on 05.05.2025 in Minsk, Belarus. Made for all of Humanity with Love ❤️ and with a great deal of kvass consumed along the way.',
     },
     versions: { ru: 'Версии', en: 'Versions' },
-    app: { ru: 'Приложение', en: 'Application' },
-    syncServer: { ru: 'Сервер синхронизации', en: 'Sync server' },
-    builtAt: { ru: 'Собран', en: 'Built' },
     history: { ru: 'История версий', en: 'Version history' },
   } as const;
 </script>
@@ -67,16 +63,9 @@
     <p>{t.body[lang]}</p>
 
     <h2>{t.versions[lang]}</h2>
-    <dl class="vers">
-      <dt>{t.app[lang]}</dt>
-      <dd>{versionLabel(APP_VERSION, APP_BUILD)}</dd>
-      {#if server}
-        <dt>{t.syncServer[lang]}</dt>
-        <dd>{versionLabel(server.version, server.build)}</dd>
-      {/if}
-      <dt>{t.builtAt[lang]}</dt>
-      <dd>{dateTime(Date.parse(APP_BUILT_AT), lang)}</dd>
-    </dl>
+    <!-- Тот же виджет, что в «Меню» (bugs/66): в 1.x подвал версий рисовался ОДНИМ кодом
+         в оба контейнера — `version_container_menu` и `version_container_about`. -->
+    <Versions {server} {lang} />
 
     <details class="history">
       <summary>{t.history[lang]}</summary>
@@ -96,10 +85,6 @@
     font-size: 16px; font-weight: 700; color: var(--heading);
     margin: 24px 0 8px; padding-top: 12px; border-top: 1px solid var(--edge-soft);
   }
-  .vers { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 13.5px; }
-  .vers dt { color: var(--dim); }
-  .vers dd { font-family: var(--mono); color: var(--heading); font-weight: 600; }
-
   /* «История версий» — карточка по канону продукта (bugs/35, кадр app-17: в 1.x это
      выразительный контейнер, а не голый список). Рецепт карточки — как у виджетов
      «Связей»/«Пространства»: --panel + --edge + radius 14 + --card-shadow. */
@@ -120,4 +105,57 @@
   }
   .ver summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--heading); padding: 8px 0; }
   .ver[open] { padding-bottom: 10px; }
+
+  /* ── Анимация раскрытия (bugs/56, слово владельца: «„История версий“ открывается резко,
+     без анимации — некрасиво») ──
+     Раскрывашкой управляет БРАУЗЕР: он показывает и прячет содержимое `<details>` сам,
+     и переход Svelte внутри просто не успевает сыграть. Поэтому здесь встроенный способ
+     платформы, а не самодельная машинерия на состоянии: `::details-content` + разрешение
+     интерполировать `auto` (`interpolate-size`). Разметка остаётся честными вложенными
+     `<details>` — как в 1.x (bugs/30) и как её проверяют оснастки batch3/batch4.
+     `@supports` — чтобы старый браузер просто не анимировал, а не сломался. */
+  @supports (interpolate-size: allow-keywords) and selector(::details-content) {
+    .history,
+    .ver {
+      interpolate-size: allow-keywords;
+    }
+    .history::details-content,
+    .ver::details-content {
+      block-size: 0;
+      overflow: clip;
+      opacity: 0;
+      transition:
+        block-size var(--motion-base) var(--motion-ease),
+        opacity var(--motion-base) var(--motion-ease),
+        content-visibility var(--motion-base) allow-discrete;
+    }
+    .history[open]::details-content,
+    .ver[open]::details-content {
+      block-size: auto;
+      opacity: 1;
+    }
+  }
+
+  /* Стрелка `<summary>` поворачивается вместе с раскрытием — движение начинается там,
+     куда человек нажал, а не только внутри карточки. */
+  .history summary,
+  .ver summary {
+    list-style: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .history summary::-webkit-details-marker,
+  .ver summary::-webkit-details-marker { display: none; }
+  .history summary::before,
+  .ver summary::before {
+    content: '';
+    flex: none;
+    width: 0; height: 0;
+    border-left: 5px solid currentColor;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    color: var(--faint);
+    transition: transform var(--motion-base) var(--motion-ease);
+  }
+  .history[open] > summary::before,
+  .ver[open] > summary::before { transform: rotate(90deg); }
 </style>

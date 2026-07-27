@@ -2,10 +2,11 @@
   // Экран «Пространство» — приборная панель проекта (ideas/06).
   //
   // Макет: design/space-mockups.html, V1 «Приборная панель», утверждён владельцем
-  // 2026-07-12 с правками: в него перенесены виджеты «Сегодня», «Сейчас в Пространстве»
-  // и «Версии». Форма экрана — ВИДЖЕТНАЯ СЕТКА (AGENT_GUIDE → «Дизайн» → «Форма
-  // экранов-сводок»): каждая карточка самостоятельна, чтобы позже её можно было
-  // переставить или убрать, не переписывая экран.
+  // 2026-07-12 с правками: в него перенесены виджеты «Сегодня» и «Сейчас в Пространстве».
+  // Форма экрана — ВИДЖЕТНАЯ СЕТКА (AGENT_GUIDE → «Дизайн» → «Форма экранов-сводок»):
+  // каждая карточка самостоятельна, чтобы позже её можно было переставить или убрать,
+  // не переписывая экран. Виджет «Версии» этой самостоятельностью и воспользовался —
+  // уехал в «Меню» и «О системе» целиком (bugs/66), экран не пришлось переписывать.
   //
   // Тексты — из живого 1.x (design/reference-1x/app-03-пространство.png), не выдуманы:
   // «Сервер синхронизации», «Текущее состояние: Работает», «Пользователей
@@ -39,7 +40,6 @@
     seconds,
     signed,
     starsUnit,
-    versionLabel,
     type Lang,
   } from '$lib/ui/format';
 
@@ -48,12 +48,6 @@
   let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
   let standError = $state('');
   let data = $state<SpaceScreenData | null>(null);
-
-  // Версия приложения вшивается в сборку (vite define): врать о ней нельзя, а тянуть
-  // из сети — незачем. Версию сервера синхронизации сообщает сам сервер.
-  const APP_VERSION = __APP_VERSION__;
-  const APP_BUILD = __APP_BUILD__;
-  const APP_BUILT_AT = __APP_BUILT_AT__;
 
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');
@@ -165,11 +159,6 @@
       en: 'The sync server has not reported yet.',
     },
 
-    // Версии
-    versions: { ru: 'Версии', en: 'Versions' },
-    appVersion: { ru: 'Приложение', en: 'Application' },
-    builtAt: { ru: 'Собран', en: 'Built' },
-    unknown: { ru: '—', en: '—' },
   } as const;
 
   /** Линия динамики плитки: значения последних дней → путь SVG. */
@@ -522,30 +511,11 @@
         {/if}
       </div>
 
-      <!-- ── Виджет «Версии» ── -->
-      <div class="card w-ver" in:fly={widgetIn(5)}>
-        <h3>{t.versions[lang]}</h3>
-        <div class="vers">
-          <div class="ver">
-            <span class="k">{t.appVersion[lang]}</span>
-            <b>{versionLabel(APP_VERSION, APP_BUILD)}</b>
-          </div>
-          <div class="ver">
-            <span class="k">{t.server[lang]}</span>
-            <b>
-              {#if data.server}
-                {versionLabel(data.server.version, data.server.build)}
-              {:else}
-                {t.unknown[lang]}
-              {/if}
-            </b>
-          </div>
-          <div class="ver">
-            <span class="k">{t.builtAt[lang]}</span>
-            <b>{dateTime(Date.parse(APP_BUILT_AT), lang)}</b>
-          </div>
-        </div>
-      </div>
+      <!-- Виджета «Версии» здесь БОЛЬШЕ НЕТ (bugs/66). В 1.x версии показывались только в
+           «Меню» и «О системе» — одним куском кода на два контейнера (app.js:5164-5165);
+           на экране Пространства их не было вовсе. Слово владельца волны 12: «со страницы
+           Пространство убрать виджет Версии. Перенести его в Settings». Виджет уехал в
+           src/lib/ui/Versions.svelte и стоит теперь в обоих каноничных местах. -->
     {/if}
   </main>
 
@@ -632,12 +602,6 @@
   .bar .fl { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #1fa8c9); transition: width 0.35s ease; }
   .bar .pc { font: 600 12px var(--mono); color: var(--heading); width: 40px; text-align: right; }
 
-  /* Версии: три плашки, а не слипшаяся строка */
-  .vers { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-  .ver { padding: 10px 12px; border-radius: 10px; background: var(--edge-soft); border: 1px solid var(--edge); }
-  .ver .k { display: block; font-size: 11.5px; color: var(--dim); }
-  .ver b { display: block; margin-top: 3px; font-family: var(--mono); font-size: 13px; color: var(--heading); }
-
   .btn {
     display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px;
     border-radius: 12px; font: inherit; font-size: 14px; font-weight: 600;
@@ -671,7 +635,7 @@
     }
     /* Виджеты во всю ширину панели; остальные ложатся парами по порядку:
        «Сегодня» | «Сейчас», «Похожесть» | «Сервер синхронизации». */
-    .head, .tiles, .w-ver, .full { grid-column: 1 / -1; }
+    .head, .tiles, .full { grid-column: 1 / -1; }
     .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
 </style>

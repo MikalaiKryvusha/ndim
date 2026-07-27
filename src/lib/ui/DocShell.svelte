@@ -9,6 +9,7 @@
   // собственный переключатель на каждой из восьми страниц.
   import { onMount, type Snippet } from 'svelte';
   import AppBar from '$lib/ui/AppBar.svelte';
+  import Icon from '$lib/ui/Icon.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import type { Lang } from '$lib/ui/format';
@@ -31,7 +32,9 @@
 
   // Смену языка и её persist делает шапка (bugs/39) — оболочка лишь принимает новое значение.
 
-  const back = { ru: '‹ Меню', en: '‹ Menu' } as const;
+  // Стрелка — иконка набора (bugs/17, `back.svg` из 1.x), а не типографский ‹:
+  // у глифа нет ни сетки, ни веса, и он не встаёт в линию с текстом.
+  const back = { ru: 'Меню', en: 'Menu' } as const;
 </script>
 
 <svelte:head>
@@ -44,7 +47,7 @@
   <AppBar {lang} onLang={(next) => (lang = next)} />
 
   <main class="body">
-    <a class="back" href="/menu">{back[lang]}</a>
+    <a class="back" href="/menu"><Icon name="back" size={13} />{back[lang]}</a>
     <h1>{title[lang]}</h1>
     <article class="doc">
       {@render children(lang)}
@@ -65,7 +68,10 @@
     width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
   }
   .back {
-    display: inline-block; font-size: 13px; font-weight: 600; color: var(--primary);
+    /* Флекс, а не inline-block: иконка и подпись стоят в одной линии по центрам —
+       тот же класс дефекта, что чинила волна 11 в профиле. */
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 600; color: var(--primary);
     text-decoration: none; margin-bottom: 10px;
   }
   h1 { font-size: 20px; font-weight: 700; color: var(--heading); margin-bottom: 14px; }

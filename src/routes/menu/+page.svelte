@@ -22,6 +22,7 @@
   // «в Settings полный ужас, иконки маленькие, невзрачные». Эмодзи вдобавок цветные
   // системным шрифтом и тему не слушают вовсе.
   import Icon from '$lib/ui/Icon.svelte';
+  import Versions from '$lib/ui/Versions.svelte';
   import {
     currentEmail,
     currentSession,
@@ -33,7 +34,7 @@
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
   import { MANIFEST } from '$lib/content/manifest';
-  import { dateOnly, dateTime, type Lang, versionLabel } from '$lib/ui/format';
+  import { dateOnly, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
   // Тема — общий источник истины (bugs/53): её же читает и переключает шапка.
@@ -47,10 +48,6 @@
   let server = $state<SyncServerDoc | null>(null);
   let copied = $state(false);
 
-  const APP_VERSION = __APP_VERSION__;
-  const APP_BUILD = __APP_BUILD__;
-  const APP_BUILT_AT = __APP_BUILT_AT__;
-
   onMount(async () => {
     const savedLang = localStorage.getItem('ndim-lang');
     if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
@@ -62,7 +59,10 @@
       const uid = await currentSession();
       if (uid === null) {
         stand = 'signedout';
-        server = await loadSyncServer().catch(() => null);
+        // За версией сервера НЕ ходим: `space/server` правила отдают только вошедшим
+        // (включая гостя). Прежний вызов с `.catch(() => null)` всё равно упирался в
+        // отказ — и печатал ошибку Firestore в консоль каждому гостю лендинга.
+        // Виджет версий честно скажет «неизвестно»: это и есть правда для не вошедшего.
         return;
       }
       guest = isGuestSession();
@@ -159,8 +159,7 @@
     // 2026-07-27: «об этом сказано на самой странице пожертвования». Текст живёт там
     // (src/routes/menu/donate) — в списке разделов он дублировал сам себя.
 
-    app: { ru: 'Приложение', en: 'Application' },
-    syncServer: { ru: 'Сервер синхронизации', en: 'Sync server' },
+    versions: { ru: 'Версии', en: 'Versions' },
     signedOutNote: {
       ru: 'Вы не вошли. Манифест и документы открыты и так — а чтобы увидеть свои измерения и связи, войдите.',
       en: 'You are not signed in. The manifest and the documents are open anyway — sign in to see your dimensions and relations.',
@@ -288,11 +287,14 @@
         <a class="row" href="/menu/author"><span class="ic"><Icon name="author" size={20} /></span><span class="lb">{t.author[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
       </div>
 
-      <p class="versions">
-        {t.app[lang]} {versionLabel(APP_VERSION, APP_BUILD)}<br />
-        {#if server}{t.syncServer[lang]} {versionLabel(server.version, server.build)}<br />{/if}
-        {dateTime(Date.parse(APP_BUILT_AT), lang)}
-      </p>
+      <!-- «Версии» — полноценный виджет, а не подвал мелким серым (bugs/66). Приехал
+           с экрана «Пространство», где его в 1.x не было вовсе, и дорос до того, о чём
+           просил владелец: версия, сборка и дата со временем — по КАЖДОМУ из двух,
+           приложению и серверу синхронизации. -->
+      <div class="card">
+        <h3>{t.versions[lang]}</h3>
+        <div class="pad"><Versions {server} {lang} /></div>
+      </div>
     </section>
   </main>
 
@@ -401,10 +403,9 @@
   .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
   .btn.wide { display: flex; margin: 0 14px 12px; }
 
-  .versions {
-    text-align: center; font-family: var(--mono); font-size: 11.5px;
-    color: var(--faint); line-height: 1.7;
-  }
+  /* Отступ вокруг содержимого карточки: у .card padding нулевой — его строки списка
+     задают сами (`.row`), а виджету версий поля нужны. */
+  .pad { padding: 4px 14px 14px; }
 
   /* ── Десктоп: макет V2 «Рабочий стол». Манифест — виджет РЯДОМ с кнопками меню
      (bugs/38, слово владельца: «в десктопе полно места — два виджета рядышком»):

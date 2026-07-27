@@ -12,6 +12,7 @@
   // обычный share-эндпоинт сети, собранный из адреса сайта. Ничего не грузится, никто не
   // считает наших людей, Lighthouse не страдает.
   import DocShell from '$lib/ui/DocShell.svelte';
+  import Icon from '$lib/ui/Icon.svelte';
   import { SITE_ORIGIN } from '$lib/site';
   import type { Lang } from '$lib/ui/format';
 
@@ -113,7 +114,8 @@
     <p>{t.intro[lang]}</p>
 
     <button type="button" class="btn" onclick={() => void systemShare(lang)}>
-      ↗ {t.share[lang]}
+      <Icon name="share" size={20} />
+      {t.share[lang]}
     </button>
 
     <p class="lead">{t.inSocial[lang]}</p>
@@ -135,7 +137,8 @@
     <p class="lead">{t.directLink[lang]}</p>
     <p class="link">{SITE_ORIGIN.replace('https://', '')}</p>
     <button type="button" class="btn ghost" onclick={() => void copyLink()}>
-      ⧉ {copied ? t.copied[lang] : t.copyLink[lang]}
+      <Icon name="copy" size={18} />
+      {copied ? t.copied[lang] : t.copyLink[lang]}
     </button>
   {/snippet}
 </DocShell>
