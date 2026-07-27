@@ -33,7 +33,7 @@
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
   import { MANIFEST } from '$lib/content/manifest';
-  import { dateOnly, type Lang } from '$lib/ui/format';
+  import { dateOnly, dateTime, type Lang, versionLabel } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
   // Тема — общий источник истины (bugs/53): её же читает и переключает шапка.
@@ -48,6 +48,7 @@
   let copied = $state(false);
 
   const APP_VERSION = __APP_VERSION__;
+  const APP_BUILD = __APP_BUILD__;
   const APP_BUILT_AT = __APP_BUILT_AT__;
 
   onMount(async () => {
@@ -154,14 +155,12 @@
     donate: { ru: 'Пожертвование', en: 'Donation' },
     about: { ru: 'О системе', en: 'About the system' },
     author: { ru: 'Об авторе', en: 'About the author' },
-    donationNote: {
-      ru: 'Пожертвование — добровольное. Все возможности Пространства одинаковы для всех.',
-      en: 'Donations are voluntary. All features of the Space are the same for everyone.',
-    },
+    // Сноска «Пожертвование — добровольное…» из «Меню» убрана по слову владельца
+    // 2026-07-27: «об этом сказано на самой странице пожертвования». Текст живёт там
+    // (src/routes/menu/donate) — в списке разделов он дублировал сам себя.
 
     app: { ru: 'Приложение', en: 'Application' },
     syncServer: { ru: 'Сервер синхронизации', en: 'Sync server' },
-    build: { ru: 'билд', en: 'build' },
     signedOutNote: {
       ru: 'Вы не вошли. Манифест и документы открыты и так — а чтобы увидеть свои измерения и связи, войдите.',
       en: 'You are not signed in. The manifest and the documents are open anyway — sign in to see your dimensions and relations.',
@@ -287,13 +286,12 @@
         <a class="row" href="/menu/donate"><span class="ic"><Icon name="donate" size={20} /></span><span class="lb">{t.donate[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
         <a class="row" href="/menu/about"><span class="ic"><Icon name="about" size={20} /></span><span class="lb">{t.about[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
         <a class="row" href="/menu/author"><span class="ic"><Icon name="author" size={20} /></span><span class="lb">{t.author[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
-        <p class="quiet pad">{t.donationNote[lang]}</p>
       </div>
 
       <p class="versions">
-        {t.app[lang]} {APP_VERSION}<br />
-        {#if server}{t.syncServer[lang]} {server.version} · {t.build[lang]} {server.build}<br />{/if}
-        {dateOnly(Date.parse(APP_BUILT_AT), lang)}
+        {t.app[lang]} {versionLabel(APP_VERSION, APP_BUILD)}<br />
+        {#if server}{t.syncServer[lang]} {versionLabel(server.version, server.build)}<br />{/if}
+        {dateTime(Date.parse(APP_BUILT_AT), lang)}
       </p>
     </section>
   </main>
@@ -403,8 +401,6 @@
   .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
   .btn.wide { display: flex; margin: 0 14px 12px; }
 
-  .quiet { font-size: 11.5px; color: var(--faint); line-height: 1.55; }
-  .quiet.pad { padding: 8px 14px 12px; }
   .versions {
     text-align: center; font-family: var(--mono); font-size: 11.5px;
     color: var(--faint); line-height: 1.7;

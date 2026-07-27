@@ -10,9 +10,10 @@
   import { DOCS, type DocBlock } from '$lib/content/docs';
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
-  import { dateOnly } from '$lib/ui/format';
+  import { dateTime, versionLabel } from '$lib/ui/format';
 
   const APP_VERSION = __APP_VERSION__;
+  const APP_BUILD = __APP_BUILD__;
   const APP_BUILT_AT = __APP_BUILT_AT__;
 
   let server = $state<SyncServerDoc | null>(null);
@@ -56,7 +57,6 @@
     versions: { ru: 'Версии', en: 'Versions' },
     app: { ru: 'Приложение', en: 'Application' },
     syncServer: { ru: 'Сервер синхронизации', en: 'Sync server' },
-    build: { ru: 'билд', en: 'build' },
     builtAt: { ru: 'Собран', en: 'Built' },
     history: { ru: 'История версий', en: 'Version history' },
   } as const;
@@ -69,13 +69,13 @@
     <h2>{t.versions[lang]}</h2>
     <dl class="vers">
       <dt>{t.app[lang]}</dt>
-      <dd>{APP_VERSION}</dd>
+      <dd>{versionLabel(APP_VERSION, APP_BUILD)}</dd>
       {#if server}
         <dt>{t.syncServer[lang]}</dt>
-        <dd>{server.version} · {t.build[lang]} {server.build}</dd>
+        <dd>{versionLabel(server.version, server.build)}</dd>
       {/if}
       <dt>{t.builtAt[lang]}</dt>
-      <dd>{dateOnly(Date.parse(APP_BUILT_AT), lang)}</dd>
+      <dd>{dateTime(Date.parse(APP_BUILT_AT), lang)}</dd>
     </dl>
 
     <details class="history">

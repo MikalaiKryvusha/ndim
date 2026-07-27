@@ -32,6 +32,24 @@ COPY src/lib/similarity/ src/lib/similarity/
 COPY src/lib/model/ src/lib/model/
 COPY calculator/index.mjs calculator/
 
+# Номер сборки и момент сборки вшиваются в образ (требование владельца 2026-07-27:
+# «каждый коммит кода сервера синхронизации повышает номер сборки на +1», и дата сборки
+# нужна с часами и минутами).
+#
+# Считаются СНАРУЖИ и передаются аргументами: внутри образа истории git нет и быть не должно.
+# Готовая команда — `npm run calc:image` (см. package.json), чтобы никому не приходилось
+# помнить эти флаги:
+#   docker build -f calculator/Dockerfile -t ndim-calculator \
+#     --build-arg CALC_BUILD=$(git rev-list --count HEAD -- calculator) \
+#     --build-arg CALC_BUILT_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ) .
+#
+# Аргументы не заданы → номера и даты нет. Экран тогда покажет одну версию, без скобок:
+# отсутствующее честнее выдуманного, а слово `dev` в бою владелец попросил убрать.
+ARG CALC_BUILD
+ARG CALC_BUILT_AT
+ENV CALC_BUILD=$CALC_BUILD
+ENV CALC_BUILT_AT=$CALC_BUILT_AT
+
 USER node
 
 CMD ["node", "calculator/index.mjs"]

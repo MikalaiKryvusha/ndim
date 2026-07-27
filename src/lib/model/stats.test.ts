@@ -195,7 +195,7 @@ describe('Виджет «Сегодня»', () => {
 
 describe('Состояние сервера синхронизации', () => {
   const server: SyncServerDoc = {
-    version: '2.0.0', build: 'dev', builtAt: null,
+    version: '2.0.0', build: 17, builtAt: null,
     lastRunAt: NOW - 60_000, lastSuccessAt: NOW - 60_000, durationMs: 840,
     usersSynced: 4, relationsComputed: 12, intervalSeconds: 60,
   };

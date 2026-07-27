@@ -39,6 +39,7 @@
     seconds,
     signed,
     starsUnit,
+    versionLabel,
     type Lang,
   } from '$lib/ui/format';
 
@@ -51,6 +52,7 @@
   // Версия приложения вшивается в сборку (vite define): врать о ней нельзя, а тянуть
   // из сети — незачем. Версию сервера синхронизации сообщает сам сервер.
   const APP_VERSION = __APP_VERSION__;
+  const APP_BUILD = __APP_BUILD__;
   const APP_BUILT_AT = __APP_BUILT_AT__;
 
   onMount(async () => {
@@ -526,13 +528,13 @@
         <div class="vers">
           <div class="ver">
             <span class="k">{t.appVersion[lang]}</span>
-            <b>{APP_VERSION}</b>
+            <b>{versionLabel(APP_VERSION, APP_BUILD)}</b>
           </div>
           <div class="ver">
             <span class="k">{t.server[lang]}</span>
             <b>
               {#if data.server}
-                {data.server.version} · {lang === 'ru' ? 'билд' : 'build'} {data.server.build}
+                {versionLabel(data.server.version, data.server.build)}
               {:else}
                 {t.unknown[lang]}
               {/if}
@@ -540,7 +542,7 @@
           </div>
           <div class="ver">
             <span class="k">{t.builtAt[lang]}</span>
-            <b>{dateOnly(Date.parse(APP_BUILT_AT), lang)}</b>
+            <b>{dateTime(Date.parse(APP_BUILT_AT), lang)}</b>
           </div>
         </div>
       </div>

@@ -177,3 +177,20 @@ export function dateTime(millis: number, lang: Lang): string {
   });
   return `${dateOnly(millis, lang)} ${lang === 'ru' ? 'в' : 'at'} ${time}`;
 }
+
+/**
+ * Версия для показа человеку: «2.0 (123)» — версия плюс номер сборки в скобках.
+ *
+ * Правила владельца (2026-07-27):
+ *  · патч-цифру не пишем, когда она нулевая: `2.0.0` → `2.0`, а `2.0.3` остаётся целиком;
+ *  · номер сборки — в скобках, целым числом.
+ *
+ * Номера сборки нет (собрано вне git, сервер о нём не сообщил) → скобок нет вовсе.
+ * Раньше в таком случае писалось «билд dev» — владелец попросил это убрать, и он прав:
+ * `dev` в бою — это шум, а не информация (PHILOSOPHY: отсутствующее честнее выдуманного).
+ */
+export function versionLabel(version: string, build?: number | string | null): string {
+  const trimmed = version.replace(/^(\d+\.\d+)\.0$/, '$1');
+  const n = typeof build === 'string' ? Number(build) : build;
+  return Number.isFinite(n) && (n as number) > 0 ? `${trimmed} (${n})` : trimmed;
+}

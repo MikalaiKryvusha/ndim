@@ -9,9 +9,11 @@ declare global {
 		// interface Platform {}
 	}
 
-	// Версия приложения и дата сборки: подставляются Vite при сборке (vite.config.ts → define).
-	// Источник версии — package.json, даты — момент сборки. Экран «Пространство» их показывает.
+	// Версия, номер сборки и дата: подставляются Vite при сборке (vite.config.ts → define).
+	// Источник версии — package.json, номера сборки — число коммитов в истории git,
+	// даты — момент сборки. Экраны «Пространство», «Меню» и «О системе» их показывают.
 	const __APP_VERSION__: string;
+	const __APP_BUILD__: number;
 	const __APP_BUILT_AT__: string;
 }
 

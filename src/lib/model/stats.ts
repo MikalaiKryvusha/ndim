@@ -125,7 +125,13 @@ export interface PartialSyncDoc {
 
 export interface SyncServerDoc {
   readonly version: string;
-  readonly build: string;
+  /**
+   * Номер сборки — число коммитов, тронувших `calculator/` (вычисляет `npm run calc:image`
+   * и вшивает в образ). `null` — образ собран без этого номера; экран тогда покажет одну
+   * версию, без скобок. Раньше здесь лежала строка `'dev'`, и она доезжала до боевого
+   * экрана — владелец попросил её убрать (2026-07-27).
+   */
+  readonly build: number | null;
   readonly builtAt: string | null;
   /** Последний запуск цикла — сердцебиение. */
   readonly lastRunAt: Millis;

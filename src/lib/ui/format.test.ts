@@ -8,7 +8,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { ageAt, bornWithAge, monthYearSince, yearsUnit } from './format.ts';
+import { ageAt, bornWithAge, monthYearSince, versionLabel, yearsUnit } from './format.ts';
 
 // День берём из середины месяца: так перевод UTC → местное время не утащит дату в соседний месяц.
 const midMonth = (year: number, month: number) => new Date(year, month, 15).getTime();
@@ -94,4 +94,28 @@ test('день рождения: только год — показываем г
 
 test('день рождения не заполнен — строки на экране нет вовсе', () => {
   assert.equal(bornWithAge(born(null, null, null), 'ru', at(2026, 7, 26)), null);
+});
+
+/**
+ * Версия на лице продукта. Два правила владельца (2026-07-27), каждое со своим стражем:
+ * патч-ноль не пишем, номер сборки — в скобках. Мутации, которые эти тесты обязаны ловить:
+ * оставить `2.0.0`; потерять скобки; напечатать `dev`; срезать патч у ненулевого `2.0.3`.
+ */
+test('версия: нулевой патч не пишем, номер сборки — в скобках', () => {
+  assert.equal(versionLabel('2.0.0', 123), '2.0 (123)');
+  assert.equal(versionLabel('0.2.0', 17), '0.2 (17)');
+});
+
+test('версия: ненулевой патч остаётся целиком', () => {
+  assert.equal(versionLabel('2.0.3', 7), '2.0.3 (7)');
+  assert.equal(versionLabel('2.10.0', 5), '2.10 (5)');
+});
+
+test('версия: номера сборки нет — нет и скобок (а не слово «dev»)', () => {
+  assert.equal(versionLabel('2.0.0', null), '2.0');
+  assert.equal(versionLabel('2.0.0'), '2.0');
+  assert.equal(versionLabel('2.0.0', 0), '2.0');
+  // Строка из окружения тоже считается числом: Docker передаёт CALC_BUILD строкой.
+  assert.equal(versionLabel('0.2.0', '17'), '0.2 (17)');
+  assert.equal(versionLabel('0.2.0', 'dev'), '0.2');
 });
