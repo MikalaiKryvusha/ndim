@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NDim Space — иконки: 4 варианта набора на утверждение</title>
+
+<!--
+  ВЕКТОРНЫЙ НАБОР ИКОНОК NDim Space 2.0 — 4 варианта владельцу (bugs/17).
+
+  Повод (2026-07-27, слово владельца): «посмотри, как выглядели иконки нижней нав панели
+  старого NDim — нужно взять в работу перерисовку их стильно вектором»; «в Settings в новом
+  NDim 2.0 тоже полный ужас, иконки маленькие, невзрачные».
+
+  🔑 ГЛАВНОЕ, ЧТО ВЫЯСНИЛА РАЗВЕДКА (слово владельца, 2026-07-27):
+    «в старом я многое качал из сети, а для нижней нав панели САМ РИСОВАЛ — чтобы мои
+     иконки репрезентовали мою задумку и смысл страниц».
+  Отсюда два РАЗНЫХ класса иконок, и правила у них разные:
+    · 5 иконок нав-панели — АВТОРСКИЕ. Форма несёт замысел → перерисовываем вектором,
+      СОХРАНЯЯ СМЫСЛ (тот же режим, что у лого N-сети: освежаем исполнение, не метафору).
+    · иконки кнопок — скачанные: это Bootstrap Icons (class="bi bi-*", 16×16,
+      fill="currentColor") + сторонние звёзды 64×64. Авторского замысла в них нет,
+      форму меняем свободно.
+
+  Канон снят с живого архива, а не выдуман:
+    · разметка панели — ndim_old/public/index.html:2958-2997 (5 кнопок: img + <p ru> + <p en>);
+    · файлы иконок   — ndim_old/public/images/{home,relations,space,dimensions,menu}.png
+                       И пара *_active.png (неактивная = контур, активная = заливка);
+                       SVG-исходников НЕТ — ни в архиве, ни в его git-истории (проверено);
+    · размеры        — styles.css:1296 img { height: clamp(24px, 2vw, 28px) },
+                       styles.css:1292 подпись { font-size: clamp(6px, 2vw, 10px) };
+    · кадры          — design/reference-1x/app-01-дом.png, app-04-измерения-все.png,
+                       app-08-меню.png.
+
+  ⚠️ ЗАМЕР, КОТОРЫЙ ОБЪЯСНЯЕТ «МАЛЕНЬКИЕ»: в 1.x иконка панели 24-28px,
+     в 2.0 сейчас .ico { font-size: 17px } (BottomNav.svelte:48) — то есть ПОЛТОРА РАЗА
+     мельче канона. Это факт, а не впечатление.
+
+  ОБЩЕЕ ДЛЯ ВСЕХ ЧЕТЫРЁХ (не предмет выбора):
+    · настоящий вектор (SVG), а не юникод-глифы и не эмодзи;
+    · одна сетка 24×24, один оптический вес, currentColor → обе темы и Ч/Б-инвариант;
+    · размер в панели возвращается к канону 1.x — 26px;
+    · два состояния, как в 1.x: неактивное (контур) и активное (плотное);
+    · смысл пяти авторских иконок сохранён (расшифровка — в таблице ниже, на сверку);
+    · один компонент Icon.svelte на всё приложение: панель, рельс, Меню, кнопки.
+
+  РАЗЛИЧАЮТСЯ варианты ЯЗЫКОМ ФОРМЫ. Смотреть в обеих темах — кнопка справа вверху.
+-->
+
+<style>
+  :root {
+    --bg: #0b1220; --card: #0d1626; --card2: #16233c; --edge: #1e3050; --edge-soft: #1a2942;
+    --text: #dbe6f5; --dim: #7e91ad; --heading: #eaf2ff; --primary: #3b82f6; --cyan: #22d3ee;
+    --gold: #f5a524; --good: #22c55e; --faint: #4d5f7a; --panel: #0f1a2c;
+  }
+  body.light {
+    --bg: #f4f6fa; --card: #ffffff; --card2: #eef2f8; --edge: #dbe3ee; --edge-soft: #e8edf5;
+    --text: #1f2b3d; --dim: #5b6b82; --heading: #0f1a2c; --primary: #2563eb; --cyan: #0891b2;
+    --gold: #b45309; --good: #15803d; --faint: #8c9ab0; --panel: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; }
+  .page { max-width: 1720px; margin: 0 auto; padding: 26px 20px 90px; }
+  h1 { color: var(--heading); font-size: 24px; margin: 0 0 6px; }
+  .lede { color: var(--dim); margin: 0 0 10px; max-width: 96ch; }
+  .lede b { color: var(--cyan); }
+  .note { color: var(--faint); font-size: 13px; margin: 0 0 8px; max-width: 96ch; }
+  code { color: var(--dim); font-size: .92em; }
+  h2.sec { color: var(--heading); font-size: 19px; margin: 40px 0 4px; }
+
+  .themer { position: fixed; top: 14px; right: 16px; z-index: 40; display: flex; gap: 6px;
+    background: var(--card); border: 1px solid var(--edge); border-radius: 999px; padding: 4px; }
+  .themer button { border: 0; background: transparent; color: var(--dim); cursor: pointer;
+    font: inherit; font-size: 13px; padding: 5px 13px; border-radius: 999px; }
+  .themer button.on { background: var(--primary); color: #fff; }
+
+  /* ── канон 1.x ─────────────────────────────────────────────────────────── */
+  .canon { background: var(--card); border: 1px solid var(--edge); border-radius: 18px;
+    padding: 16px 18px; margin: 14px 0 8px; }
+  .canonrow { display: flex; gap: 26px; flex-wrap: wrap; }
+  .cell { text-align: center; min-width: 118px; }
+  .cell img { height: 44px; width: auto; }
+  body:not(.light) .cell img { filter: invert(1); }
+  .cell .nm { font-size: 12px; color: var(--dim); margin-top: 8px; }
+  .cell .mean { font-size: 11.5px; color: var(--faint); max-width: 132px; margin: 3px auto 0; }
+  .pair { display: flex; gap: 10px; justify-content: center; align-items: flex-end; }
+  .pair span { font-size: 10px; color: var(--faint); display: block; margin-top: 2px; }
+
+  .now { background: color-mix(in srgb, #ef4444 8%, var(--card)); border: 1px solid #7f1d1d;
+    border-radius: 18px; padding: 14px 18px; margin: 10px 0 0; }
+  .now .glyphs { font-size: 17px; letter-spacing: 20px; color: var(--dim); }
+
+  /* ── сетка вариантов ───────────────────────────────────────────────────── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(370px, 1fr)); gap: 20px;
+    margin-top: 16px; }
+  .variant { background: var(--card); border: 1px solid var(--edge); border-radius: 20px; padding: 18px; }
+  .vhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+  .vhead h3 { margin: 0; font-size: 17px; color: var(--heading); }
+  .vhead .tag { font-size: 11px; color: var(--primary); border: 1px solid var(--edge);
+    border-radius: 999px; padding: 2px 9px; }
+  .vwhy { color: var(--dim); font-size: 13px; margin: 0 0 14px; min-height: 80px; }
+  .vwhy b { color: var(--text); }
+
+  /* витрина крупно */
+  .show { display: flex; gap: 14px; justify-content: space-between; background: var(--card2);
+    border-radius: 14px; padding: 15px 12px; }
+  .show .i { text-align: center; color: var(--text); flex: 1; }
+  .show .i svg { width: 40px; height: 40px; }
+  .show .i em { display: block; font-size: 10.5px; color: var(--faint); font-style: normal; margin-top: 6px; }
+
+  /* реальная панель */
+  .phoneline { font-size: 11.5px; color: var(--faint); margin: 16px 0 6px; }
+  .bnav { display: flex; background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 14px; overflow: hidden; }
+  .bnav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 0 10px; font-size: 10.5px; color: var(--faint); text-decoration: none; }
+  .bnav a svg { width: 26px; height: 26px; }        /* канон 1.x: 24-28px */
+  .bnav a.on { color: var(--primary); font-weight: 650; }
+
+  /* строки меню */
+  .menucard { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    overflow: hidden; }
+  .mrow { display: flex; align-items: center; gap: 12px; padding: 11px 14px; color: var(--text);
+    font-size: 14px; border-bottom: 1px solid var(--edge-soft); }
+  .mrow:last-child { border-bottom: 0; }
+  .mrow svg { width: 22px; height: 22px; color: var(--dim); flex: none; }
+  .mrow .chev { margin-left: auto; color: var(--faint); }
+
+  /* крупный план */
+  .zoom { display: flex; align-items: center; gap: 20px; padding: 12px 0;
+    border-bottom: 1px solid var(--edge-soft); flex-wrap: wrap; }
+  .zoom:last-child { border-bottom: 0; }
+  .zoom .zl { width: 108px; flex: none; font-size: 13px; color: var(--dim); }
+  .zoom svg { width: 76px; height: 76px; color: var(--text); }
+
+  /* ── стилевые обработки набора ─────────────────────────────────────────── */
+  svg { display: inline-block; vertical-align: middle; }
+  .s-line   svg { fill: none; stroke: currentColor; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round; }
+  .s-net    svg { fill: none; stroke: currentColor; stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round; }
+  .s-net    svg .nd { fill: currentColor; stroke: none; }
+  .s-iso    svg { fill: none; stroke: currentColor; stroke-width: 1.7;
+    stroke-linecap: round; stroke-linejoin: round; }
+  .s-iso    svg .fc { fill: currentColor; fill-opacity: .16; }
+  .s-duo    svg { fill: none; stroke: currentColor; stroke-width: 1.7;
+    stroke-linecap: round; stroke-linejoin: round; }
+  .s-duo    svg .fc { fill: currentColor; fill-opacity: .22; }
+  .s-duo    svg .nd { fill: currentColor; stroke: none; }
+  /* активное состояние (канон 1.x: неактивная контур → активная плотная) */
+  .on .fc, .bnav a.on .fc { fill-opacity: .38; }
+  .on svg, .bnav a.on svg { stroke-width: 2.1; }
+</style>
+</head>
+<body>
+
+<div class="themer">
+  <button id="bd" class="on" type="button">Тёмная</button>
+  <button id="bl" type="button">Светлая</button>
+</div>
+
+<div class="page">
+
+<h1>Иконки NDim Space 2.0 — 4 варианта набора</h1>
+<p class="lede">
+  Повод — Ваши слова: иконки панели надо <b>перерисовать стильно вектором</b>, а в Меню они
+  <b>маленькие и невзрачные</b>. Разведка архива 1.x дала главное: пять иконок нижней панели
+  <b>рисовали Вы сами</b>, «чтобы они репрезентовали задумку и смысл страниц», — а иконки кнопок
+  были скачаны (Bootstrap Icons). Поэтому пять авторских форм я <b>сохраняю по смыслу</b> и меняю
+  только исполнение, а кнопочные — переписываю свободно, одним языком с ними.
+</p>
+<p class="note">
+  Общее у всех четырёх: настоящий SVG вместо юникод-глифов, одна сетка 24×24, единый оптический
+  вес, <code>currentColor</code> (обе темы и Ч/Б-инвариант), два состояния как в 1.x, и размер в
+  панели <b>26px</b> вместо нынешних 17px — канон 1.x был <code>clamp(24px, 2vw, 28px)</code>.
+  Различаются варианты <b>языком формы</b>. Смотреть в обеих темах — переключатель справа вверху.
+</p>
+
+<!-- ══════════ КАНОН 1.x ══════════ -->
+<h2 class="sec">Ваш оригинал 1.x — и как я прочитал смысл (поправьте, если разошлось)</h2>
+<div class="canon">
+  <div class="canonrow">
+    <div class="cell">
+      <div class="pair">
+        <div><img src="reference-1x/nav-icons-1x/home.png" alt="" /><span>обычная</span></div>
+        <div><img src="reference-1x/nav-icons-1x/home_active.png" alt="" /><span>активная</span></div>
+      </div>
+      <div class="nm">Дом</div>
+      <div class="mean">домик — личная страница человека</div>
+    </div>
+    <div class="cell">
+      <div class="pair">
+        <div><img src="reference-1x/nav-icons-1x/relations.png" alt="" /><span>обычная</span></div>
+        <div><img src="reference-1x/nav-icons-1x/relations_active.png" alt="" /><span>активная</span></div>
+      </div>
+      <div class="nm">Связи</div>
+      <div class="mean">люди — и <b>ребро между двумя узлами</b> под ними: связь как граф</div>
+    </div>
+    <div class="cell">
+      <div class="pair">
+        <div><img src="reference-1x/nav-icons-1x/space.png" alt="" /><span>в бою</span></div>
+        <div><img src="reference-1x/nav-icons-1x/space_v2.png" alt="" /><span>Ваш v2, не вышел</span></div>
+      </div>
+      <div class="nm">Пространство</div>
+      <div class="mean">сфера, сплетённая из узлов и рёбер: все люди разом</div>
+    </div>
+    <div class="cell">
+      <div class="pair">
+        <div><img src="reference-1x/nav-icons-1x/dimensions.png" alt="" /><span>обычная</span></div>
+        <div><img src="reference-1x/nav-icons-1x/dimensions_active.png" alt="" /><span>активная</span></div>
+      </div>
+      <div class="nm">Измерения</div>
+      <div class="mean">куб и <b>три координатные оси</b>: измерение = ось пространства</div>
+    </div>
+    <div class="cell">
+      <div class="pair">
+        <div><img src="reference-1x/nav-icons-1x/menu.png" alt="" /><span>обычная</span></div>
+        <div><img src="reference-1x/nav-icons-1x/menu_active.png" alt="" /><span>активная</span></div>
+      </div>
+      <div class="nm">Меню</div>
+      <div class="mean">три плотные полосы — список разделов</div>
+    </div>
+  </div>
+  <p class="note" style="margin:14px 0 0">
+    Файлы лежат только растром (~490–530px), SVG-исходников в архиве нет — я проверил и рабочую
+    копию, и всю git-историю. Значит вектор рисуется заново по этим эталонам.
+    <b>Находка:</b> <code>space_v2.png</code> — Ваш более поздний вариант «Пространства»
+    (шестиугольный граф с центром), который так и не вышел в бой. Он лёг в основу варианта&nbsp;B.
+  </p>
+</div>
+
+<div class="now">
+  <p class="note" style="margin:0 0 8px; color:var(--text)"><b>Что стоит в 2.0 сейчас</b> — юникод-глифы,
+  подставленные мной как временные, и зоопарк эмодзи в Меню. Отсюда «маленькие и невзрачные»:
+  у глифа нет ни веса, ни сетки, а эмодзи ещё и цветные системным шрифтом и не слушают тему.</p>
+  <div class="glyphs">⌂ ◎ ✳ ★ ☰</div>
+  <p class="note" style="margin:8px 0 0">Меню: ⚙ ↪ 🌐 ☾ ↗ ⧉ 📖 § 🔒 ⚠ ✉ ♡ ⓘ N — четырнадцать
+  знаков из трёх разных природ в одном списке.</p>
+</div>
+
+<!-- ══════════ ВАРИАНТЫ ══════════ -->
+<h2 class="sec">Четыре варианта</h2>
+<div class="grid">
+
+  <!-- ─────────── A · Линия ─────────── -->
+  <div class="variant s-line">
+    <div class="vhead"><h3>A · «Линия»</h3><span class="tag">ближе всего к Вашему оригиналу</span></div>
+    <p class="vwhy">Тот же рисунок, что Вы нарисовали, — просто переведённый в чистый вектор:
+      единая сетка, ровный вес штриха, скруглённые концы, оптическая балансировка. <b>Ничего
+      не переосмыслено</b>: домик остаётся домиком, связи — людьми с ребром, пространство —
+      глобусом-сетью, измерения — кубом с тремя осями. Самый безопасный путь: узнаваемость 1.x
+      сохраняется полностью, меняется только качество исполнения.</p>
+
+    <div class="show">
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#a-home"/></svg><em>Профиль</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#a-rel"/></svg><em>Связи</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#a-space"/></svg><em>Простр.</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#a-dims"/></svg><em>Измерения</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#a-menu"/></svg><em>Меню</em></div>
+    </div>
+
+    <p class="phoneline">В панели, 26px — как в 1.x («Измерения» активны):</p>
+    <nav class="bnav">
+      <a href="#a"><svg viewBox="0 0 24 24"><use href="#a-home"/></svg>Профиль</a>
+      <a href="#a"><svg viewBox="0 0 24 24"><use href="#a-rel"/></svg>Связи</a>
+      <a href="#a"><svg viewBox="0 0 24 24"><use href="#a-space"/></svg>Пространство</a>
+      <a href="#a" class="on"><svg viewBox="0 0 24 24"><use href="#a-dims"/></svg>Измерения</a>
+      <a href="#a"><svg viewBox="0 0 24 24"><use href="#a-menu"/></svg>Меню</a>
+    </nav>
+
+    <p class="phoneline">Те же правила — в Меню:</p>
+    <div class="menucard">
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-gear"/></svg>Управлять аккаунтом<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-moon"/></svg>Тема<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-share"/></svg>Пригласить друзей<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-book"/></svg>Руководство пользователя<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-shield"/></svg>Политика конфиденциальности<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-heart"/></svg>Пожертвование<span class="chev">›</span></div>
+    </div>
+  </div>
+
+  <!-- ─────────── B · N-сеть ─────────── -->
+  <div class="variant s-net">
+    <div class="vhead"><h3>B · «N-сеть»</h3><span class="tag">один язык с лого</span></div>
+    <p class="vwhy">Все пять иконок собраны из <b>узлов и рёбер</b> — тем же языком, что бренд-символ
+      N-сети и Ваш неиспользованный <code>space_v2</code>. Продукт про то, что человек — точка в
+      пространстве, а связь — ребро; здесь это говорит каждая иконка, а не только логотип.
+      Дом — граф из пяти вершин, Связи — два узла с ребром и спутниками, Пространство — Ваш
+      шестиугольный граф, Измерения — три оси с узлами, Меню — узлы списком.</p>
+
+    <div class="show">
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#b-home"/></svg><em>Профиль</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#b-rel"/></svg><em>Связи</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#b-space"/></svg><em>Простр.</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#b-dims"/></svg><em>Измерения</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#b-menu"/></svg><em>Меню</em></div>
+    </div>
+
+    <p class="phoneline">В панели, 26px («Измерения» активны):</p>
+    <nav class="bnav">
+      <a href="#b"><svg viewBox="0 0 24 24"><use href="#b-home"/></svg>Профиль</a>
+      <a href="#b"><svg viewBox="0 0 24 24"><use href="#b-rel"/></svg>Связи</a>
+      <a href="#b"><svg viewBox="0 0 24 24"><use href="#b-space"/></svg>Пространство</a>
+      <a href="#b" class="on"><svg viewBox="0 0 24 24"><use href="#b-dims"/></svg>Измерения</a>
+      <a href="#b"><svg viewBox="0 0 24 24"><use href="#b-menu"/></svg>Меню</a>
+    </nav>
+
+    <p class="phoneline">Те же правила — в Меню:</p>
+    <div class="menucard">
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-gear"/></svg>Управлять аккаунтом<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-moon"/></svg>Тема<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-share"/></svg>Пригласить друзей<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-book"/></svg>Руководство пользователя<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-shield"/></svg>Политика конфиденциальности<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-heart"/></svg>Пожертвование<span class="chev">›</span></div>
+    </div>
+  </div>
+
+  <!-- ─────────── C · Объём ─────────── -->
+  <div class="variant s-iso">
+    <div class="vhead"><h3>C · «Объём»</h3><span class="tag">из Вашей иконки «Измерения»</span></div>
+    <p class="vwhy">Ваша иконка «Измерения» уже нарисована в изометрии — этот вариант распространяет
+      её язык на весь набор: всё живёт в <b>трёхмерном пространстве</b>, с гранями и лёгкой
+      заливкой. Самый «математический» из четырёх. Отдельно стоит посмотреть на «Связи»: здесь это
+      <b>две точки над плоскостью, соединённые ребром</b>, — буквально то, чем связь и является
+      в NDim, и это сильнее исходной метафоры «два человечка».</p>
+
+    <div class="show">
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#c-home"/></svg><em>Профиль</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#c-rel"/></svg><em>Связи</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#c-space"/></svg><em>Простр.</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#c-dims"/></svg><em>Измерения</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#c-menu"/></svg><em>Меню</em></div>
+    </div>
+
+    <p class="phoneline">В панели, 26px («Измерения» активны):</p>
+    <nav class="bnav">
+      <a href="#c"><svg viewBox="0 0 24 24"><use href="#c-home"/></svg>Профиль</a>
+      <a href="#c"><svg viewBox="0 0 24 24"><use href="#c-rel"/></svg>Связи</a>
+      <a href="#c"><svg viewBox="0 0 24 24"><use href="#c-space"/></svg>Пространство</a>
+      <a href="#c" class="on"><svg viewBox="0 0 24 24"><use href="#c-dims"/></svg>Измерения</a>
+      <a href="#c"><svg viewBox="0 0 24 24"><use href="#c-menu"/></svg>Меню</a>
+    </nav>
+
+    <p class="phoneline">Те же правила — в Меню:</p>
+    <div class="menucard">
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-gear"/></svg>Управлять аккаунтом<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-moon"/></svg>Тема<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-share"/></svg>Пригласить друзей<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-book"/></svg>Руководство пользователя<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-shield"/></svg>Политика конфиденциальности<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-heart"/></svg>Пожертвование<span class="chev">›</span></div>
+    </div>
+  </div>
+
+  <!-- ─────────── D · Плотный ─────────── -->
+  <div class="variant s-duo">
+    <div class="vhead"><h3>D · «Плотный»</h3><span class="tag">самый заметный</span></div>
+    <p class="vwhy">Контур плюс мягкая заливка тем же цветом — язык современных мобильных систем.
+      Прямее всех отвечает на «маленькие и невзрачные»: у иконки появляется <b>тело</b>, она
+      держит взгляд даже в 22px строки Меню. Активное состояние работает точно как у Вас в 1.x —
+      заливка становится плотной, — только теперь это одна и та же фигура, а не два разных файла.</p>
+
+    <div class="show">
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#d-home"/></svg><em>Профиль</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#d-rel"/></svg><em>Связи</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#d-space"/></svg><em>Простр.</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#d-dims"/></svg><em>Измерения</em></div>
+      <div class="i"><svg viewBox="0 0 24 24"><use href="#d-menu"/></svg><em>Меню</em></div>
+    </div>
+
+    <p class="phoneline">В панели, 26px («Измерения» активны):</p>
+    <nav class="bnav">
+      <a href="#d"><svg viewBox="0 0 24 24"><use href="#d-home"/></svg>Профиль</a>
+      <a href="#d"><svg viewBox="0 0 24 24"><use href="#d-rel"/></svg>Связи</a>
+      <a href="#d"><svg viewBox="0 0 24 24"><use href="#d-space"/></svg>Пространство</a>
+      <a href="#d" class="on"><svg viewBox="0 0 24 24"><use href="#d-dims"/></svg>Измерения</a>
+      <a href="#d"><svg viewBox="0 0 24 24"><use href="#d-menu"/></svg>Меню</a>
+    </nav>
+
+    <p class="phoneline">Те же правила — в Меню:</p>
+    <div class="menucard">
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-gear"/></svg>Управлять аккаунтом<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-moon"/></svg>Тема<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-share"/></svg>Пригласить друзей<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-book"/></svg>Руководство пользователя<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-shield"/></svg>Политика конфиденциальности<span class="chev">›</span></div>
+      <div class="mrow"><svg viewBox="0 0 24 24"><use href="#g-heart"/></svg>Пожертвование<span class="chev">›</span></div>
+    </div>
+  </div>
+
+</div>
+
+<h2 class="sec">Крупный план — рассмотреть штрих</h2>
+<p class="note">Те же наборы при 76px: здесь видно вес линии, скругления и как решена каждая метафора.</p>
+<div class="canon">
+  <div class="zoom s-line"><span class="zl">A · Линия</span>
+    <svg viewBox="0 0 24 24"><use href="#a-home"/></svg><svg viewBox="0 0 24 24"><use href="#a-rel"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#a-space"/></svg><svg viewBox="0 0 24 24"><use href="#a-dims"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#a-menu"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#g-gear"/></svg><svg viewBox="0 0 24 24"><use href="#g-share"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#g-book"/></svg><svg viewBox="0 0 24 24"><use href="#g-shield"/></svg>
+  </div>
+  <div class="zoom s-net"><span class="zl">B · N-сеть</span>
+    <svg viewBox="0 0 24 24"><use href="#b-home"/></svg><svg viewBox="0 0 24 24"><use href="#b-rel"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#b-space"/></svg><svg viewBox="0 0 24 24"><use href="#b-dims"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#b-menu"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#g-gear"/></svg><svg viewBox="0 0 24 24"><use href="#g-share"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#g-book"/></svg><svg viewBox="0 0 24 24"><use href="#g-shield"/></svg>
+  </div>
+  <div class="zoom s-iso"><span class="zl">C · Объём</span>
+    <svg viewBox="0 0 24 24"><use href="#c-home"/></svg><svg viewBox="0 0 24 24"><use href="#c-rel"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#c-space"/></svg><svg viewBox="0 0 24 24"><use href="#c-dims"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#c-menu"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#g-gear"/></svg><svg viewBox="0 0 24 24"><use href="#g-share"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#g-book"/></svg><svg viewBox="0 0 24 24"><use href="#g-shield"/></svg>
+  </div>
+  <div class="zoom s-duo"><span class="zl">D · Плотный</span>
+    <svg viewBox="0 0 24 24"><use href="#d-home"/></svg><svg viewBox="0 0 24 24"><use href="#d-rel"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#d-space"/></svg><svg viewBox="0 0 24 24"><use href="#d-dims"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#d-menu"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#g-gear"/></svg><svg viewBox="0 0 24 24"><use href="#g-share"/></svg>
+    <svg viewBox="0 0 24 24"><use href="#g-book"/></svg><svg viewBox="0 0 24 24"><use href="#g-shield"/></svg>
+  </div>
+</div>
+
+<h2 class="sec">Что дальше</h2>
+<p class="note">
+  Вы выбираете один вариант (можно с правками — «набор B, но домик как в A»). Дальше он становится
+  единственным компонентом <code>Icon.svelte</code>, и я прохожу им по всему приложению: панель,
+  десктопный рельс, Меню, кнопки экранов (лампочка и лупа на «Измерениях», редактировать, сохранить,
+  закрыть, стрелки, подсказки&nbsp;ⓘ). Проверка — скриншоты всех экранов в обеих темах живым Chrome
+  и сверка бок-о-бок с кадрами 1.x: семантика сохранена, вес одинаковый, читаемо в 22px.
+</p>
+
+<!-- ══════════ ГЕОМЕТРИЯ НАБОРОВ ══════════ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+
+  <!-- ── A · Линия: верность оригиналу ──
+       ПЕРЕРИСОВАНО после слова владельца «слишком скомканные, мне мои оригиналы больше
+       нравятся». Диагноз по снимку: дело было НЕ в толщине штриха (он у меня даже толще
+       оригинала), а в том, что форма занимала ~72% поля при том же числе деталей.
+       У автора форма занимает ~95% и деталей минимум — отсюда «воздух».
+       Правка: поля с 3.4 до ~1.6, крупные головы/узлы, у глобуса вместо решётки
+       (2 меридиана + 2 параллели + 5 узлов) — экватор, 2 меридиана и 4 узла. -->
+  <g id="a-home">
+    <path d="M1.5 10.7 10.85 2.2a1.7 1.7 0 0 1 2.3 0l9.35 8.5"/>
+    <path d="M4.2 8.5V19.3a2.1 2.1 0 0 0 2.1 2.1h11.4a2.1 2.1 0 0 0 2.1-2.1V8.5"/>
+    <path d="M9.1 21.4v-5.7a2.1 2.1 0 0 1 2.1-2.1h1.6a2.1 2.1 0 0 1 2.1 2.1v5.7"/>
+  </g>
+  <g id="a-rel">
+    <circle cx="6.6" cy="5.1" r="3.3"/>
+    <path d="M1.3 13.1c0-2.8 2.4-4.3 5.3-4.3s5.3 1.5 5.3 4.3"/>
+    <circle cx="17.4" cy="5.1" r="3.3"/>
+    <path d="M12.1 13.1c0-2.8 2.4-4.3 5.3-4.3s5.3 1.5 5.3 4.3"/>
+    <circle cx="4.5" cy="19.2" r="3"/><circle cx="19.5" cy="19.2" r="3"/>
+    <path d="M7.5 19.2h9"/>
+  </g>
+  <!-- Пространство: у автора сфера сплетена из 8 узлов и рёбер, но сеть нерегулярная.
+       Держим ЕГО смысл и делаем сеть симметричной: сфера + два эллипса-обода, узлы —
+       в 4 точках силуэта и 4 точках пересечения ободов (посчитаны, а не на глаз:
+       x²/4.6² + y²/10.3² = 1 пересекается со вторым при x = y = ±4.2). -->
+  <g id="a-space">
+    <circle cx="12" cy="12" r="10.3"/>
+    <ellipse cx="12" cy="12" rx="4.6" ry="10.3"/>
+    <ellipse cx="12" cy="12" rx="10.3" ry="4.6"/>
+    <circle cx="12" cy="1.7" r="1.85" fill="currentColor" stroke="none"/>
+    <circle cx="12" cy="22.3" r="1.85" fill="currentColor" stroke="none"/>
+    <circle cx="1.7" cy="12" r="1.85" fill="currentColor" stroke="none"/>
+    <circle cx="22.3" cy="12" r="1.85" fill="currentColor" stroke="none"/>
+    <circle cx="7.8" cy="7.8" r="1.6" fill="currentColor" stroke="none"/>
+    <circle cx="16.2" cy="7.8" r="1.6" fill="currentColor" stroke="none"/>
+    <circle cx="7.8" cy="16.2" r="1.6" fill="currentColor" stroke="none"/>
+    <circle cx="16.2" cy="16.2" r="1.6" fill="currentColor" stroke="none"/>
+  </g>
+  <!-- Измерения: наконечники осей — не «уголки на глаз», а честные V, развёрнутые вдоль
+       своей оси (вектор оси повёрнут на ±28°, длина пера 2.4) и зеркальные друг другу. -->
+  <g id="a-dims">
+    <path d="M12 7.7 19.7 12 12 16.3 4.3 12Z"/>
+    <path d="M4.3 12v5.5L12 21.8v-5.5M19.7 12v5.5L12 21.8"/>
+    <path d="M12 7.7V2.4"/><path d="M9.7 4.6 12 2.2l2.3 2.4"/>
+    <path d="M4.3 17.5 1.6 19"/><path d="M4 18.95 1.6 19l1.31-2.01"/>
+    <path d="M19.7 17.5 22.4 19"/><path d="M20 18.95 22.4 19l-1.31-2.01"/>
+  </g>
+  <g id="a-menu">
+    <rect x="1.7" y="3.5" width="20.6" height="4.5" rx="2.25"/>
+    <rect x="1.7" y="9.75" width="20.6" height="4.5" rx="2.25"/>
+    <rect x="1.7" y="16" width="20.6" height="4.5" rx="2.25"/>
+  </g>
+
+  <!-- ── B · N-сеть: узлы и рёбра ── -->
+  <g id="b-home">
+    <path d="M12 3.7 4.9 9.7v9.6h14.2V9.7Z"/>
+    <path d="M9.9 19.3v-4.1h4.2v4.1"/>
+    <circle class="nd" cx="12" cy="3.7" r="1.9"/>
+    <circle class="nd" cx="4.9" cy="9.7" r="1.7"/><circle class="nd" cx="19.1" cy="9.7" r="1.7"/>
+    <circle class="nd" cx="4.9" cy="19.3" r="1.7"/><circle class="nd" cx="19.1" cy="19.3" r="1.7"/>
+  </g>
+  <g id="b-rel">
+    <path d="M9.7 12h4.6"/>
+    <path d="M5.7 9.4 4.6 6.6M18.3 9.4l1.1-2.8M5.7 14.6l-1.1 2.8M18.3 14.6l1.1 2.8"/>
+    <circle class="nd" cx="6.7" cy="12" r="3"/><circle class="nd" cx="17.3" cy="12" r="3"/>
+    <circle class="nd" cx="4.1" cy="5.3" r="1.5"/><circle class="nd" cx="19.9" cy="5.3" r="1.5"/>
+    <circle class="nd" cx="4.1" cy="18.7" r="1.5"/><circle class="nd" cx="19.9" cy="18.7" r="1.5"/>
+  </g>
+  <g id="b-space">
+    <path d="M12 3.6 19.3 7.8v8.4L12 20.4 4.7 16.2V7.8Z"/>
+    <path d="M12 3.6V12M19.3 7.8 12 12M19.3 16.2 12 12M12 20.4V12M4.7 16.2 12 12M4.7 7.8 12 12"/>
+    <circle class="nd" cx="12" cy="12" r="2"/>
+    <circle class="nd" cx="12" cy="3.6" r="1.8"/><circle class="nd" cx="19.3" cy="7.8" r="1.8"/>
+    <circle class="nd" cx="19.3" cy="16.2" r="1.8"/><circle class="nd" cx="12" cy="20.4" r="1.8"/>
+    <circle class="nd" cx="4.7" cy="16.2" r="1.8"/><circle class="nd" cx="4.7" cy="7.8" r="1.8"/>
+  </g>
+  <g id="b-dims">
+    <path d="M12 10.1V4.6M11.2 12.6 6.4 15.4M12.8 12.6l4.8 2.8"/>
+    <circle class="nd" cx="12" cy="12" r="2.2"/>
+    <circle class="nd" cx="12" cy="3.5" r="1.9"/>
+    <circle class="nd" cx="4.8" cy="16.3" r="1.9"/><circle class="nd" cx="19.2" cy="16.3" r="1.9"/>
+  </g>
+  <g id="b-menu">
+    <path d="M9.6 6h9.4M9.6 12h9.4M9.6 18h9.4"/>
+    <circle class="nd" cx="5.1" cy="6" r="2"/><circle class="nd" cx="5.1" cy="12" r="2"/>
+    <circle class="nd" cx="5.1" cy="18" r="2"/>
+  </g>
+
+  <!-- ── C · Объём: изометрия ── -->
+  <g id="c-home">
+    <!-- Дом с ДВУСКАТНОЙ крышей плюс уходящая назад боковая грань: изометрия должна
+         давать объём, но домик обязан остаться домиком (первая версия читалась коробкой). -->
+    <path class="fc" d="M3.6 11.2 10 6l6.4 5.2V20.4H3.6Z"/>
+    <path d="M10 6l2.8-1.6 6.4 5.2-2.8 1.6"/>
+    <path d="M16.4 20.4 19.2 18.8V9.6"/>
+    <path d="M8.2 20.4V16h3.6v4.4"/>
+  </g>
+  <g id="c-rel">
+    <path class="fc" d="M12 14.8 19.8 18.6 12 22.4 4.2 18.6Z"/>
+    <circle cx="7.6" cy="6.6" r="2.6"/><circle cx="16.4" cy="10" r="2.6"/>
+    <path d="M10.1 7.5 13.9 9"/>
+    <path d="M7.6 9.2v7.6M16.4 12.6v4.4" stroke-dasharray="1.5 2.2"/>
+  </g>
+  <g id="c-space">
+    <circle class="fc" cx="12" cy="12" r="8.7"/>
+    <ellipse cx="12" cy="12" rx="8.7" ry="3.4"/>
+    <ellipse cx="12" cy="12" rx="3.4" ry="8.7"/>
+    <circle cx="12" cy="3.3" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="20.7" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="12" cy="20.7" r="1.5" fill="currentColor" stroke="none"/>
+    <circle cx="3.3" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+  </g>
+  <g id="c-dims">
+    <path class="fc" d="M12 8.2 17.9 11.4 12 14.6 6.1 11.4Z"/>
+    <path d="M6.1 11.4v4.9L12 19.5l5.9-3.2v-4.9M12 14.6v4.9"/>
+    <path d="M12 8.2V2.7"/><path d="M9.9 4.8 12 2.6l2.1 2.2"/>
+    <path d="M6.1 16.6 3 18.3"/><path d="M5.7 15.6 2.9 18.4l2.9.5"/>
+    <path d="M17.9 16.6 21 18.3"/><path d="M18.3 15.6 21.1 18.4l-2.9.5"/>
+  </g>
+  <g id="c-menu">
+    <!-- Зазор между плитами был 0.3 — они слипались в кашу; полувысота 2.6, зазор 1.6. -->
+    <path class="fc" d="M12 2.6 19.4 5.2 12 7.8 4.6 5.2Z"/>
+    <path class="fc" d="M12 9.4 19.4 12 12 14.6 4.6 12Z"/>
+    <path class="fc" d="M12 16.2 19.4 18.8 12 21.4 4.6 18.8Z"/>
+  </g>
+
+  <!-- ── D · Плотный: контур + тело ── -->
+  <g id="d-home">
+    <path d="M3.4 11 11.05 4.05a1.4 1.4 0 0 1 1.9 0L20.6 11"/>
+    <path class="fc" d="M5.6 9.4V19a1.7 1.7 0 0 0 1.7 1.7h9.4a1.7 1.7 0 0 0 1.7-1.7V9.4"/>
+    <path d="M9.7 20.7v-5.1a1.7 1.7 0 0 1 1.7-1.7h1.2a1.7 1.7 0 0 1 1.7 1.7v5.1"/>
+  </g>
+  <g id="d-rel">
+    <circle class="fc" cx="7.6" cy="5.7" r="2.7"/>
+    <path class="fc" d="M3.1 12.7c0-2.2 2-3.4 4.5-3.4s4.5 1.2 4.5 3.4"/>
+    <circle class="fc" cx="16.4" cy="5.7" r="2.7"/>
+    <path class="fc" d="M11.9 12.7c0-2.2 2-3.4 4.5-3.4s4.5 1.2 4.5 3.4"/>
+    <path d="M7.6 18.7h8.8"/>
+    <circle class="nd" cx="5.2" cy="18.7" r="2.5"/><circle class="nd" cx="18.8" cy="18.7" r="2.5"/>
+  </g>
+  <g id="d-space">
+    <circle class="fc" cx="12" cy="12" r="8.8"/>
+    <path d="M12 3.2c2.6 2.4 4 5.4 4 8.8s-1.4 6.4-4 8.8"/>
+    <path d="M12 3.2c-2.6 2.4-4 5.4-4 8.8s1.4 6.4 4 8.8"/>
+    <path d="M3.7 9.2h16.6M3.7 14.8h16.6"/>
+    <circle class="nd" cx="12" cy="3.2" r="1.7"/><circle class="nd" cx="16" cy="9.2" r="1.7"/>
+    <circle class="nd" cx="8" cy="14.8" r="1.7"/><circle class="nd" cx="20.8" cy="12" r="1.7"/>
+    <circle class="nd" cx="12" cy="20.8" r="1.7"/>
+  </g>
+  <g id="d-dims">
+    <path class="fc" d="M12 8.2 17.9 11.4 12 14.6 6.1 11.4Z"/>
+    <path class="fc" d="M6.1 11.4v4.9L12 19.5V14.6Z"/>
+    <path d="M17.9 11.4v4.9L12 19.5v-4.9"/>
+    <path d="M12 8.2V2.7"/><path d="M9.9 4.8 12 2.6l2.1 2.2"/>
+    <path d="M6.1 16.6 3 18.3"/><path d="M5.7 15.6 2.9 18.4l2.9.5"/>
+    <path d="M17.9 16.6 21 18.3"/><path d="M18.3 15.6 21.1 18.4l-2.9.5"/>
+  </g>
+  <g id="d-menu">
+    <rect class="fc" x="3.2" y="4.4" width="17.6" height="4" rx="2"/>
+    <rect class="fc" x="3.2" y="10" width="17.6" height="4" rx="2"/>
+    <rect class="fc" x="3.2" y="15.6" width="17.6" height="4" rx="2"/>
+  </g>
+
+  <!-- ── Иконки кнопок: одна геометрия, стиль наследуется от выбранного набора ──
+       (это те самые «скачанные» иконки 1.x — авторского замысла в них нет,
+        поэтому они просто следуют весу и заливке победившего варианта) -->
+  <g id="g-gear">
+    <circle cx="12" cy="12" r="3.1"/>
+    <path d="M19.1 14.2a1.6 1.6 0 0 0 .32 1.77l.06.05a1.9 1.9 0 1 1-2.69 2.69l-.05-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-.97 1.47v.16a1.9 1.9 0 1 1-3.8 0v-.08a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.32l-.05.06a1.9 1.9 0 1 1-2.69-2.69l.06-.05a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-.97H3.3a1.9 1.9 0 1 1 0-3.8h.08a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.32-1.77l-.06-.05A1.9 1.9 0 1 1 7.16 4.9l.5.06a1.6 1.6 0 0 0 1.77.32h.08a1.6 1.6 0 0 0 .97-1.47V3.3a1.9 1.9 0 1 1 3.8 0v.08a1.6 1.6 0 0 0 .97 1.47 1.6 1.6 0 0 0 1.77-.32l.05-.06a1.9 1.9 0 1 1 2.69 2.69l-.06.05a1.6 1.6 0 0 0-.32 1.77v.08a1.6 1.6 0 0 0 1.47.97h.16a1.9 1.9 0 1 1 0 3.8h-.08a1.6 1.6 0 0 0-1.47.97Z"/>
+  </g>
+  <g id="g-moon">
+    <path class="fc" d="M20.4 14.6A8.6 8.6 0 0 1 9.4 3.6a8.6 8.6 0 1 0 11 11Z"/>
+  </g>
+  <g id="g-share">
+    <circle class="nd" cx="17.6" cy="5.4" r="2.7"/><circle class="nd" cx="6.4" cy="12" r="2.7"/>
+    <circle class="nd" cx="17.6" cy="18.6" r="2.7"/>
+    <path d="M8.8 10.6 15.2 6.8M8.8 13.4l6.4 3.8"/>
+  </g>
+  <g id="g-book">
+    <path class="fc" d="M3.6 4.6h4.9a3.5 3.5 0 0 1 3.5 3.5v11.3a2.6 2.6 0 0 0-2.6-2.6H3.6Z"/>
+    <path d="M20.4 4.6h-4.9A3.5 3.5 0 0 0 12 8.1v11.3a2.6 2.6 0 0 1 2.6-2.6h5.8Z"/>
+  </g>
+  <g id="g-shield">
+    <path class="fc" d="M12 2.6 4.5 5.7v5.6c0 4.6 3.2 8.4 7.5 9.8 4.3-1.4 7.5-5.2 7.5-9.8V5.7Z"/>
+    <path d="m9.2 11.8 2 2 3.6-3.7"/>
+  </g>
+  <g id="g-heart">
+    <path class="fc" d="M12 20.4 4.9 13.3a4.4 4.4 0 0 1 0-6.3 4.6 4.6 0 0 1 6.4 0l.7.7.7-.7a4.6 4.6 0 0 1 6.4 0 4.4 4.4 0 0 1 0 6.3Z"/>
+  </g>
+
+</defs></svg>
+
+</div>
+
+<script>
+  // Переключатель темы: Ч/Б-инвариант бренда требует смотреть набор в обеих.
+  const bd = document.getElementById('bd'), bl = document.getElementById('bl');
+  bd.onclick = () => { document.body.classList.remove('light'); bd.classList.add('on'); bl.classList.remove('on'); };
+  bl.onclick = () => { document.body.classList.add('light'); bl.classList.add('on'); bd.classList.remove('on'); };
+</script>
+</body>
+</html>
