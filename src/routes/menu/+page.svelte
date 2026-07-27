@@ -36,9 +36,10 @@
   import { dateOnly, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
+  // Тема — общий источник истины (bugs/53): её же читает и переключает шапка.
+  import { theme, setTheme } from '$lib/ui/theme.svelte';
 
   let lang = $state<Lang>('ru');
-  let theme = $state<'light' | 'dark'>('light');
   let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
   let data = $state<ProfileScreenData | null>(null);
   let email = $state<string | null>(null);
@@ -52,13 +53,8 @@
   onMount(async () => {
     const savedLang = localStorage.getItem('ndim-lang');
     if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
-    theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-
-    // Тему теперь можно менять и из шапки (bugs/39) — сегмент «Вид» обязан не отставать.
-    const observer = new MutationObserver(() => {
-      theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    // Тема живёт в общем источнике (bugs/53) — ни локального состояния, ни наблюдателя
+    // за атрибутом здесь больше нет: сегмент «Вид» и кнопка шапки читают одно значение.
 
     try {
       // Меню работает и без входа: манифест, документы и версии от данных не зависят.
@@ -82,12 +78,6 @@
     lang = next;
     document.documentElement.setAttribute('lang', next);
     localStorage.setItem('ndim-lang', next);
-  }
-
-  function setTheme(next: 'light' | 'dark') {
-    theme = next;
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('ndim-theme', next);
   }
 
   // Системное «поделиться» переехало на страницу «Пригласить друзей» (`/menu/share`,
@@ -256,10 +246,10 @@
           </span>
         </div>
         <div class="row off">
-          <span class="ic"><Icon name={theme === 'dark' ? 'moon' : 'sun'} size={20} /></span><span class="lb">{t.themeLabel[lang]}</span>
+          <span class="ic"><Icon name={theme() === 'dark' ? 'moon' : 'sun'} size={20} /></span><span class="lb">{t.themeLabel[lang]}</span>
           <span class="seg">
-            <button type="button" class:on={theme === 'light'} onclick={() => setTheme('light')}>{t.light[lang]}</button>
-            <button type="button" class:on={theme === 'dark'} onclick={() => setTheme('dark')}>{t.dark[lang]}</button>
+            <button type="button" class:on={theme() === 'light'} onclick={() => setTheme('light')}>{t.light[lang]}</button>
+            <button type="button" class:on={theme() === 'dark'} onclick={() => setTheme('dark')}>{t.dark[lang]}</button>
           </span>
         </div>
       </div>

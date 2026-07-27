@@ -12,6 +12,8 @@
   // На десктопе (от 1024px) знак и водмарк живут в рельсе SideRail — здесь прячутся,
   // чтобы бренд не двоился (макет V2 «Рабочий стол»).
   import Brand from '$lib/ui/Brand.svelte';
+  import Icon from '$lib/ui/Icon.svelte';
+  import { theme, toggleTheme } from '$lib/ui/theme.svelte';
   import type { Lang } from '$lib/ui/format';
 
   let {
@@ -30,24 +32,17 @@
   } = $props();
 
   let open = $state(false);
-  let theme = $state<'light' | 'dark'>('light');
 
-  // Тема читается из документа на клиенте ($effect не исполняется в пререндере).
-  $effect(() => {
-    theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-  });
+  // Тема НЕ хранится здесь: она в общем источнике `theme.svelte.ts` (bugs/53).
+  // Своя копия состояния означала, что переключение темы из «Меню» шапка проспит —
+  // ровно это и увидел владелец: «переключаю тему через Settings, кнопка в хедере
+  // не переключается соответственно».
 
   function pickLang(next: Lang) {
     open = false;
     document.documentElement.setAttribute('lang', next);
     localStorage.setItem('ndim-lang', next);
     onLang(next);
-  }
-
-  function toggleTheme() {
-    theme = theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('ndim-theme', theme);
   }
 
   const LANGS: readonly Lang[] = ['ru', 'en'];
@@ -73,8 +68,11 @@
   {#if badge}
     <button type="button" class="badge" onclick={onBadge}>◌ {badge}</button>
   {/if}
+  <!-- Значок показывает ТЕКУЩУЮ тему (солнце = светлая), как и строка «Тема» в «Меню»:
+       два переключателя одного продукта обязаны говорить об одном одинаково. Здесь
+       стояли глифы ☀/☾ — иконки bugs/17 до шапки не дошли. -->
   <button type="button" class="theme" onclick={toggleTheme} title={lang === 'ru' ? 'Тема' : 'Theme'} aria-label={lang === 'ru' ? 'Тема' : 'Theme'}>
-    {theme === 'dark' ? '☀' : '☾'}
+    <Icon name={theme() === 'dark' ? 'moon' : 'sun'} size={15} />
   </button>
   <span class="lang-wrap">
     <button
@@ -112,9 +110,11 @@
 
   /* Пара контролов справа: тема + язык (bugs/39). */
   .theme {
-    margin-left: auto; font: inherit; font-size: 13px; cursor: pointer; line-height: 1;
+    /* Иконка центрируется флексом, а не базовой линией текста — кнопка ровная в обеих темах. */
+    margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
+    font: inherit; font-size: 13px; cursor: pointer; line-height: 1;
     color: var(--dim); background: transparent; border: 1px solid var(--edge); border-radius: 8px;
-    padding: 4px 8px;
+    padding: 5px 8px;
     transition: color 0.15s ease, border-color 0.15s ease;
   }
   .theme:hover { color: var(--primary); border-color: var(--primary); }

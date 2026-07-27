@@ -21,6 +21,8 @@
   import { hasSession } from '$lib/data/session';
   import { num, peopleUnit } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
+  // Тема — общий источник истины (bugs/53): лендинг, шапка и «Меню» читают одно значение.
+  import { theme, toggleTheme } from '$lib/ui/theme.svelte';
 
   /** Дверь в продукт: вход, гостевой режим и профиль — всё на одном экране. */
   const APP_URL = '/profile';
@@ -34,12 +36,10 @@
   let demoUrl = $state(APP_URL);
 
   type Lang = 'ru' | 'en';
-  type Theme = 'light' | 'dark';
 
   // Стартовые значения совпадают с пререндером (RU + светлая), поэтому гидрация не рвётся.
   // Реальный сохранённый выбор подхватываем в onMount (только в браузере).
   let lang = $state<Lang>('ru');
-  let theme = $state<Theme>('light');
 
   // «С нами уже N человек» — ЖИВОЕ число из space/public_metrics (пишет сервер
   // синхронизации; bugs/07). Пока числа нет — строки нет: выдуманное число хуже
@@ -84,21 +84,11 @@
       void loadPublicPeople().then((people) => (joinedPeople = people));
     });
 
-    // Источник истины темы — атрибут, выставленный инлайн-скриптом app.html.
-    const attr = document.documentElement.getAttribute('data-theme');
-    theme = attr === 'dark' ? 'dark' : 'light';
+    // Тема — общий источник истины (bugs/53), он сам читает атрибут инлайн-скрипта.
     const savedLang = localStorage.getItem('ndim-lang');
     if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
     if (['localhost', '127.0.0.1'].includes(location.hostname)) demoUrl = '/profile?guest=1';
   });
-
-  function toggleTheme() {
-    theme = theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('ndim-theme', theme);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', theme === 'dark' ? '#060b14' : '#f6f8fb');
-  }
 
   function setLang(next: Lang) {
     lang = next;
@@ -220,10 +210,10 @@
     type="button"
     class="toggle"
     onclick={toggleTheme}
-    aria-label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+    aria-label={theme() === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
   >
-    <span class="ico"><Icon name={theme === 'dark' ? 'sun' : 'moon'} size={15} /></span>
-    <span class="lbl">{t.themeLabel[theme][lang]}</span>
+    <span class="ico"><Icon name={theme() === 'dark' ? 'sun' : 'moon'} size={15} /></span>
+    <span class="lbl">{t.themeLabel[theme()][lang]}</span>
   </button>
 </div>
 
