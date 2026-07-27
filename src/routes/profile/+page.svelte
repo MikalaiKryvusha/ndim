@@ -21,6 +21,7 @@
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
   import { dateTime, monthYearSince, num as decimal, starsUnit } from '$lib/ui/format';
+  import { preloadAvatars } from '$lib/data/avatar';
   import { loadRelationsSummary, type RelationsSummary } from '$lib/data/relations';
   import { dimsScaleStep, needsDimsInstruction, relationBands } from '$lib/model/ndimid';
   import { roundedSpaceDiameter } from '$lib/similarity/similarity';
@@ -131,7 +132,12 @@
         guest = isGuestSession();
         guestCard = guest && localStorage.getItem(GUEST_CARD_KEY) !== 'later';
       }
-      data = await loadProfileScreen(uid);
+      const loaded = await loadProfileScreen(uid);
+      // Карточка ждёт фото (канон 1.x, bugs/57): своё лицо качается ПОД лоадером экрана,
+      // и «Дом» появляется сразу с ним. В 1.x ровно так: аватар грузился до отрисовщика
+      // (app.js:4864), лоадер закрывался после. Потолок ожидания — в preloadAvatars.
+      if (loaded.values.avatar === true) await preloadAvatars([loaded.uid]);
+      data = loaded;
       stand = 'ready';
       // Сводка связей грузится ПОСЛЕ профиля и отдельно: экран не должен ждать её, чтобы
       // показаться, и не должен падать, если её ещё нет (сервер синхронизации мог не считать).

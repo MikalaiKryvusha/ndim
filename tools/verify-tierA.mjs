@@ -218,7 +218,9 @@ try {
     const { context, page, errors } = await person(browser, { theme, lang, width: 390 });
     await page.goto(`${BASE}/dims`);
     await page.waitForSelector('article.dim', { timeout: 30000 });
-    await page.locator('button.ghost.wide').click();
+    // Вход «Предложить измерение» переехал К ПОИСКУ (bugs/51, выбор владельца V3):
+    // кнопки под лентой больше нет — страж приведён к текущему канону.
+    await page.locator('button.suggest-btn').click();
     await page.waitForTimeout(300);
 
     const form = await page.locator('.card.sug').innerText();

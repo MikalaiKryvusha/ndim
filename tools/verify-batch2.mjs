@@ -35,6 +35,29 @@ async function person(browser, { theme } = {}) {
 /** Фон элемента непрозрачен? (bugs/22, 23) */
 const isOpaque = (bg) => !/rgba\(/.test(bg) || /rgba\(\d+, \d+, \d+, 1\)/.test(bg);
 
+// ── Прямой доступ к эмулятору Firestore (как в verify-tierA, EXP-0029: нужен Bearer owner) ──
+const FIRESTORE = 'http://127.0.0.1:8181/v1/projects/demo-ndim-dev/databases/(default)/documents';
+
+async function firestoreGet(path) {
+  const response = await fetch(`${FIRESTORE}/${path}?pageSize=300`, { headers: { Authorization: 'Bearer owner' } });
+  return response.ok ? response.json() : null;
+}
+
+/**
+ * Сколько карточек обязана раскрыть лента «Все»: каталог минус оценённые владельцем стенда.
+ * Правда берётся ИЗ ДАННЫХ, а не литералом: зашитое «41» сгнило, когда bugs/50 досеял стенд
+ * тремя сорными осями (45 → 48) — страж с константой краснеет от каждого досева сида.
+ */
+async function expectedUnratedCount() {
+  const dims = await firestoreGet('dims');
+  const dimIds = (dims?.documents ?? []).map((d) => d.name.split('/').pop()).filter((id) => id !== 'dims_list');
+  const points = await firestoreGet('points');
+  const owner = (points?.documents ?? []).map((d) => d.name.split('/').pop()).find((uid) => !uid.startsWith('stand-guest-'));
+  const rated = await firestoreGet(`points/${owner}/dims`);
+  const ratedIds = new Set((rated?.documents ?? []).map((d) => d.name.split('/').pop()));
+  return dimIds.filter((id) => !ratedIds.has(id)).length;
+}
+
 const browser = await chromium.launch();
 await mkdir(SHOTS, { recursive: true });
 
@@ -56,7 +79,8 @@ try {
       await page.waitForTimeout(450);
     }
     const total = await page.locator('.feed article.dim').count();
-    check('доскроллили — раскрылась ВСЯ очередь (41 неоценённое)', total === 41, `карточек: ${total}`);
+    const expected = await expectedUnratedCount();
+    check(`доскроллили — раскрылась ВСЯ очередь (${expected} неоценённых по данным стенда)`, total === expected, `карточек: ${total}`);
 
     // Высоты: карточка с голосами и карточка «ещё без голосов» равны (bugs/15).
     const rated = page.locator('.feed article.dim', { hasText: /\(\d+ голос/ }).first();
@@ -169,7 +193,9 @@ try {
     const peek = page.locator('.head-card .peek');
     await peek.waitFor({ timeout: 10000 });
     const src = await peek.locator('img').getAttribute('src');
-    check('фото на стенде настоящее (эмулятор Storage)', (src ?? '').includes('9199'), src ?? 'нет src');
+    // Канон сменился (bugs/57): фото скачивается ЦЕЛИКОМ до показа, и src — локальный
+    // blob-URL, а не адрес эмулятора. Подлинность пикселей стережёт проверка naturalWidth ниже.
+    check('фото скачано целиком до показа (blob-URL, канон bugs/57)', (src ?? '').startsWith('blob:'), src ?? 'нет src');
     // ПИКСЕЛИ, а не DOM: битая картинка имеет naturalWidth 0 (поймано глазами на скриншоте).
     const drawn = await peek.locator('img').evaluate((img) => img.complete && img.naturalWidth > 0);
     check('фото реально отрисовано (naturalWidth > 0)', drawn);

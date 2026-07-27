@@ -13,7 +13,7 @@
    * тапом в любом месте или Esc. Кружок с буквой не интерактивен — разворачивать нечего.
    */
   import { fade } from 'svelte/transition';
-  import { avatarUrl } from '$lib/data/avatar';
+  import { avatarUrl, cachedAvatarUrl } from '$lib/data/avatar';
   import { MOTION } from '$lib/ui/motion';
   import type { Uid } from '$lib/model/schema';
 
@@ -24,7 +24,17 @@
     size = 54,
   }: { uid: Uid; name: string; has?: boolean; size?: number } = $props();
 
-  let src = $state<string | null>(null);
+  /**
+   * Канон 1.x — карточка появляется СРАЗУ с лицом (bugs/57): экран предзагружает лица до
+   * отрисовки (`preloadAvatars`), поэтому первый рендер берёт готовый blob-URL из кэша
+   * СИНХРОННО. Буква — только пока фото реально нет: не успело за потолок предзагрузки
+   * (доедет фоном и встанет одним кадром — blob локален) или его нет вовсе.
+   *
+   * Захват НАЧАЛЬНОГО значения пропсов тут намеренный (нужен именно первый кадр);
+   * реактивный путь — $effect ниже, он же обслуживает смену uid/has.
+   */
+  // svelte-ignore state_referenced_locally
+  let src = $state<string | null>(has ? cachedAvatarUrl(uid) : null);
   let open = $state(false);
 
   /**

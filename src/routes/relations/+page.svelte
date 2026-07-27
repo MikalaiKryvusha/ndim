@@ -19,6 +19,7 @@
   import Icon from '$lib/ui/Icon.svelte';
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
+  import { preloadAvatars } from '$lib/data/avatar';
   import { currentSession } from '$lib/data/profile';
   import {
     loadRelations,
@@ -58,12 +59,22 @@
   let revealed = $state(REVEAL_PORTION);
   let sentinel: HTMLElement | null = $state(null);
 
+  /** Лица порции карточек — кому предзагружать фото (bugs/57: карточка ждёт фото). */
+  const portionFaces = (cards: readonly RelationCard[], from: number, to: number) =>
+    cards.slice(from, to).filter((card) => card.guestAvatar).map((card) => card.entry.guestUid);
+
   $effect(() => {
     if (sentinel === null || data === null) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && data !== null) {
-          revealed = Math.min(revealed + REVEAL_PORTION, data.cards.length);
+          // Порция раскрывается ГОТОВОЙ: сначала лица, потом карточки (канон 1.x, bugs/57).
+          // Якорь стоит за ~600px до края — предзагрузка успевает за пилюлей «Загрузка».
+          const cards = data.cards;
+          const next = Math.min(revealed + REVEAL_PORTION, cards.length);
+          void preloadAvatars(portionFaces(cards, revealed, next)).then(() => {
+            revealed = next;
+          });
         }
       },
       // Якорь срабатывает за ~600px до края экрана — догрузка невидима (bugs/13).
@@ -83,7 +94,12 @@
         stand = 'signedout';
         return;
       }
-      data = await loadRelations(uid);
+      const loaded = await loadRelations(uid);
+      // Карточка ждёт фото (канон 1.x, bugs/57): лица первой порции качаются ПОД кольцом
+      // загрузки, и экран появляется сразу с ними — без мерцания «буква → лицо». Людей без
+      // фото это не задерживает (им нечего ждать), потолок ожидания — в preloadAvatars.
+      if (loaded !== null) await preloadAvatars(portionFaces(loaded.cards, 0, REVEAL_PORTION));
+      data = loaded;
       stand = 'ready';
     } catch (error) {
       standError = technicalDetail(error);
