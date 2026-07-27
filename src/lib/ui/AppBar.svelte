@@ -82,7 +82,7 @@
       aria-expanded={open}
       onclick={() => (open = !open)}
     >
-      {lang === 'ru' ? 'Ru' : 'En'} <span class="caret">▾</span>
+      {lang === 'ru' ? 'Ru' : 'En'}
     </button>
     {#if open}
       <div class="dd" role="menu">
@@ -109,24 +109,28 @@
   .wm { font-size: 15px; font-weight: 650; color: var(--heading); }
 
   /* Пара контролов справа: тема + язык (bugs/39). */
-  .theme {
-    /* Иконка центрируется флексом, а не базовой линией текста — кнопка ровная в обеих темах. */
-    margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
-    font: inherit; font-size: 13px; cursor: pointer; line-height: 1;
-    color: var(--dim); background: transparent; border: 1px solid var(--edge); border-radius: 8px;
-    padding: 5px 8px;
+  /*
+   * Обе кнопки шапки — КВАДРАТНЫЕ и одинаковые (слово владельца 2026-07-27: «давай кнопки
+   * в хедере сделаем, как ты в макете нарисовал — квадратные и без стрелочки в кнопке
+   * языка»). Раньше они были разной ширины: у темы — иконка, у языка — текст со стрелкой
+   * «▾», и пара выглядела случайной. Стрелка убрана: выпадашка открывается тапом, а знак
+   * «▾» был последним юникод-глифом в шапке (родня bugs/17).
+   *
+   * Размер один на обе, содержимое центрируется флексом — не базовой линией текста.
+   */
+  .theme, .lang {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; padding: 0; flex: none;
+    font: inherit; line-height: 1; cursor: pointer;
+    color: var(--dim); background: transparent;
+    border: 1px solid var(--edge); border-radius: 10px;
     transition: color 0.15s ease, border-color 0.15s ease;
   }
-  .theme:hover { color: var(--primary); border-color: var(--primary); }
+  .theme { margin-left: auto; }
+  .lang { font-size: 12px; font-weight: 700; }
+  .theme:hover, .lang:hover { color: var(--primary); border-color: var(--primary); }
 
-  .lang-wrap { position: relative; }
-  .lang {
-    font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer;
-    color: var(--dim); background: transparent; border: 1px solid var(--edge); border-radius: 8px; padding: 4px 9px;
-    transition: color 0.15s ease, border-color 0.15s ease;
-  }
-  .lang:hover { color: var(--primary); border-color: var(--primary); }
-  .caret { font-size: 9px; color: var(--faint); }
+  .lang-wrap { position: relative; display: inline-flex; }
 
   /* Выпадашка — по канону контекстных меню продукта: непрозрачный фон (bugs/23). */
   .dd {
