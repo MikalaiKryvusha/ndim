@@ -30,6 +30,28 @@ function splitHeading(text) {
 }
 
 /**
+ * Иллюстрации 1.x (bugs/55, выбор владельца — V1 «Как было»): пометки
+ * `*[Изображение: файл — подпись]*` в исследовании становятся img-блоками.
+ * Файлы уже лежат в static/img/docs/ (сняты из архива 1.x); имена местами отличаются.
+ */
+const IMAGE_FILES = {
+  'island_compressed.webp': 'island.webp',
+  'airplane.webp': 'airplane.webp',
+  'hospital.webp': 'hospital.webp',
+  'network.webp': 'network.webp',
+  'NDim_LOGO_v8_196.webp': 'logo-1x.webp',
+};
+
+const IMAGE_NOTE = /\*\[(?:Изображение|Image):\s*([\w.-]+)\s*—\s*([^\]]+)\]\*/;
+
+/** Пометка изображения → img-блок (или null, если файла нет в карте — тогда честный throw). */
+function imageBlock(note, alt) {
+  const file = IMAGE_FILES[note];
+  if (!file) throw new Error(`Неизвестная иллюстрация в пометке: ${note}`);
+  return { type: 'img', src: `/img/docs/${file}`, alt };
+}
+
+/**
  * Разбирает кусок markdown-исследования в блоки контента.
  * Берёт ТОЛЬКО текст владельца: парные цитаты RU и EN, парные списки, парные таблицы и
  * заголовки. Комментарии агента (обычные абзацы) молча пропускаются — они не продукт.
@@ -41,29 +63,33 @@ function parseBlocks(lines) {
   /**
    * Пункты списка. У пункта бывает продолжение с отступом — например пометка об
    * иллюстрации оригинала (`*[Изображение: …]*`). Такие строки не обрывают список:
-   * пометки выбрасываем (картинок 1.x у нас нет), остальное приклеиваем к пункту.
+   * пометка становится картинкой ПУНКТА (в 1.x иллюстрации мысленных экспериментов
+   * стояли внутри пунктов — bugs/55), остальное приклеивается к тексту пункта.
    */
   const listItems = (start) => {
     const items = [];
+    const images = [];
     let j = start;
     while (j < lines.length) {
       const line = lines[j];
       if (line.startsWith('- ')) {
         items.push(line.slice(2).trim());
+        images.push(null);
         j += 1;
         continue;
       }
       const isIndented = /^\s+\S/.test(line);
       if (isIndented && items.length > 0) {
         const tail = line.trim();
-        const isImageNote = /^\*\[(Изображение|Image)/.test(tail);
-        if (!isImageNote) items[items.length - 1] += ` ${tail}`;
+        const note = IMAGE_NOTE.exec(tail);
+        if (note) images[images.length - 1] = imageBlock(note[1], note[2].trim()).src;
+        else items[items.length - 1] += ` ${tail}`;
         j += 1;
         continue;
       }
       break;
     }
-    return [items, j];
+    return [items, images, j];
   };
 
   const tableRows = (start) => {
@@ -160,15 +186,26 @@ function parseBlocks(lines) {
         }
       }
 
-      const [ruItems, afterRu] = listItems(j);
+      const [ruItems, ruImages, afterRu] = listItems(j);
       let k = skipBlank(afterRu);
       if (ruItems.length > 0 && lines[k]?.trim() === '**EN:**') {
         k = skipBlank(k + 1);
-        const [enItems, afterEn] = listItems(k);
-        blocks.push({ type: 'ul', items: { ru: ruItems, en: enItems } });
+        const [enItems, , afterEn] = listItems(k);
+        const block = { type: 'ul', items: { ru: ruItems, en: enItems } };
+        // Картинки пунктов берём из RU-списка: пары RU/EN выровнены по индексам.
+        if (ruImages.some((image) => image !== null)) block.images = ruImages;
+        blocks.push(block);
         i = afterEn;
         continue;
       }
+    }
+
+    // Одиночная пометка иллюстрации (финальная network.webp «Напутствия» и т. п.).
+    const note = IMAGE_NOTE.exec(line.trim());
+    if (note && line.trim().startsWith('*[')) {
+      blocks.push(imageBlock(note[1], note[2].trim()));
+      i += 1;
+      continue;
     }
 
     i += 1; // всё остальное — комментарий исследования, не продукт
@@ -218,8 +255,52 @@ docs.history = {
  */
 const MANUAL_SECTIONS = ['1. Манифест', '2. Идея', '3. Терминология', '5. Звёзды'];
 
-/** Подразделы, объясняющие кнопки версии 1.x («суб-вкладка "Все"») — в 2.0 их нет. */
-const SKIP_SUBHEADINGS = ['Предложение нового измерения', 'Поиск по измерениям'];
+/**
+ * Подразделы про кнопки ВЕРНУЛИСЬ (bugs/55, слово владельца: «кнопки — нужно адаптировать
+ * к текущему виду нашей нынешней реализации»). Раньше пропускались как описание интерфейса
+ * 1.x; теперь переносятся с точечной адаптацией фраз о МЕСТЕ кнопок (см. ADAPT ниже).
+ */
+const SKIP_SUBHEADINGS = [];
+
+/**
+ * [AI] Адаптация фраз о местоположении: в 1.x кнопки жили «внизу справа на суб-вкладке
+ * "Все"», в 2.0 вход «Предложить» — кнопка у строки поиска (bugs/51, выбор владельца V3),
+ * а поиск — сама строка под шапкой (bugs/50). Каждая замена — по ТОЧНОЙ строке оригинала:
+ * если исследование изменится, генератор упадёт, а не промолчит. Изменённые фразы — черновик
+ * агента, ждут вычитки владельца (пометка в bugs/55 → «Решения, принятые без владельца»). [/AI]
+ */
+const ADAPT = new Map([
+  [
+    'На суб-вкладке "Все" вкладки Измерений внизу справа есть кнопка предложения нового измерения.',
+    'На экране "Измерения" в верхней панели есть кнопка предложения нового измерения.',
+  ],
+  [
+    'On the "All" sub-tab of the Dimensions tab, there is a button to suggest a new dimension at the bottom right.',
+    'On the "Dimensions" screen, in the top bar, there is a button to suggest a new dimension.',
+  ],
+  [
+    'Также на суб-вкладке "Все" вкладки Измерений внизу справа есть кнопка поиска.',
+    'Также на экране "Измерения" в верхней панели есть кнопка поиска.',
+  ],
+  [
+    'Also on the "All" sub-tab of the Dimensions tab, there is a search button at the bottom right.',
+    'Also on the "Dimensions" screen, in the top bar, there is a search button.',
+  ],
+]);
+
+/** Применяет ADAPT к абзацу; помнит, какие замены сработали (несработавшая = ошибка). */
+const adaptUsed = new Set();
+function adaptParagraph(block) {
+  if (block.type !== 'p') return block;
+  const swap = (text) => {
+    if (ADAPT.has(text)) {
+      adaptUsed.add(text);
+      return ADAPT.get(text);
+    }
+    return text;
+  };
+  return { ...block, text: { ru: swap(block.text.ru), en: swap(block.text.en) } };
+}
 
 /**
  * Термины, чьё ОПРЕДЕЛЕНИЕ в 1.x описывает устаревшую механику: почасовые «частичные»
@@ -258,11 +339,79 @@ function dropStaleTerms(block) {
 }
 
 const manualBlocks = [];
+
+// Логотип 1.x в шапке руководства (researches/12 → «Вёрстка страниц документов 1.x»):
+// пометка в исследовании стоит вне переносимых разделов, поэтому блок добавляется явно.
+manualBlocks.push({ type: 'img', src: '/img/docs/logo-1x.webp', alt: 'NDim', kind: 'logo' });
+
+/**
+ * В руководстве разделы («## 5. Звёзды…») добавляются вручную как h2, а распарсенные
+ * подразделы («### Шкала оценок…») парсер тоже отдаёт как h2 — понижаем их до h3, чтобы
+ * документ (и пагинатор глав) видел иерархию: глава → подглавы. Юридические документы
+ * этим не трогаются — у них плоская структура.
+ */
+const demoteHeading = (block) => (block.type === 'h2' ? { ...block, type: 'h3' } : block);
+
 for (const name of MANUAL_SECTIONS) {
   const { heading, lines } = section(research07, name);
   manualBlocks.push({ type: 'h2', text: splitHeading(heading.replace(/^\d+\.\s*/, '')) });
-  manualBlocks.push(...dropSkipped(parseBlocks(lines)).map(dropStaleTerms));
+  manualBlocks.push(
+    ...dropSkipped(parseBlocks(lines)).map(dropStaleTerms).map(adaptParagraph).map(demoteHeading),
+  );
 }
+
+if (adaptUsed.size !== ADAPT.size) {
+  throw new Error(`Адаптация фраз: сработало ${adaptUsed.size} из ${ADAPT.size} — оригинал в researches/07 изменился`);
+}
+
+// «Напутствие» + финальная network.webp: подраздел раздела 9 («Меню»), сам раздел — про
+// интерфейс 1.x и не переносится, а напутствие вневременное (мандат: bugs/55, счёт разведки).
+{
+  const { lines } = section(research07, '9. Меню');
+  const from = lines.findIndex((line) => line.startsWith('### ') && line.includes('Напутствие'));
+  if (from < 0) throw new Error('Подраздел «Напутствие» не найден');
+  manualBlocks.push(...parseBlocks(lines.slice(from)));
+}
+
+// Таблица шкалы 0–10 → блок «scale»: в 1.x в колонке «Оценка» стояли звезда, цифра и цветной
+// смайлик (researches/12). Данные — только описания; звёзды и смайлики рисует рендерер
+// текущими средствами 2.0 (слово владельца: «звёзды — адаптировать к нынешней реализации»).
+{
+  const index = manualBlocks.findIndex(
+    (block) => block.type === 'table' && block.head.ru[0] === 'Оценка',
+  );
+  if (index < 0) throw new Error('Таблица шкалы оценок не найдена');
+  const table = manualBlocks[index];
+  const grades = table.rows.ru.map((row) => row[0]);
+  if (grades.join(',') !== '0,1,2,3,4,5,6,7,8,9,10') {
+    throw new Error(`Шкала оценок не 0…10: ${grades.join(',')}`);
+  }
+  manualBlocks[index] = {
+    type: 'scale',
+    head: table.head,
+    descriptions: { ru: table.rows.ru.map((row) => row[1]), en: table.rows.en.map((row) => row[1]) },
+  };
+}
+
+// Кнопки-образцы (bugs/55: в 1.x — круглые кнопки в тексте как ОБРАЗЕЦ; в 2.0 рисуем
+// НАШИ входы): после первого абзаца «Предложения…» — кнопка-лампочка, после первого
+// абзаца «Поиска…» — строка поиска с кнопкой, как они выглядят на экране «Измерения».
+function insertSampleAfterFirstParagraph(headingRu, kind) {
+  const headingIndex = manualBlocks.findIndex(
+    (block) => (block.type === 'h2' || block.type === 'h3') && block.text.ru === headingRu,
+  );
+  if (headingIndex < 0) throw new Error(`Подраздел «${headingRu}» не найден`);
+  const paragraphIndex = manualBlocks.findIndex(
+    (block, at) => at > headingIndex && block.type === 'p',
+  );
+  manualBlocks.splice(paragraphIndex + 1, 0, { type: 'sample', kind });
+}
+insertSampleAfterFirstParagraph('Предложение нового измерения', 'suggest');
+insertSampleAfterFirstParagraph('Поиск по измерениям', 'search');
+
+// Ряд из 11 цветных смайликов (подраздел «Шкала смайликов»): в 1.x здесь стоял визуальный
+// ряд; без него текст ссылается на невидимое. Цвета замерены с живого 1.x (EXP-0057).
+insertSampleAfterFirstParagraph('Шкала смайликов', 'emojiscale');
 
 docs.manual = {
   slug: 'manual',
@@ -293,12 +442,27 @@ export interface DocText {
 
 export type DocBlock =
   | { readonly type: 'h2' | 'h3' | 'p'; readonly text: DocText }
-  | { readonly type: 'ul'; readonly items: { readonly ru: readonly string[]; readonly en: readonly string[] } }
+  | {
+      readonly type: 'ul';
+      readonly items: { readonly ru: readonly string[]; readonly en: readonly string[] };
+      /** Иллюстрация пункта (1.x: картинки мысленных экспериментов стояли ВНУТРИ пунктов). */
+      readonly images?: readonly (string | null)[];
+    }
   | {
       readonly type: 'table';
       readonly head: { readonly ru: readonly string[]; readonly en: readonly string[] };
       readonly rows: { readonly ru: readonly string[][]; readonly en: readonly string[][] };
-    };
+    }
+  /** Иллюстрация 1.x; kind 'logo' — маленький логотип в шапке руководства. */
+  | { readonly type: 'img'; readonly src: string; readonly alt: string; readonly kind?: 'logo' }
+  /** Шкала оценок 0…10: звезду, цифру и цветной смайлик рисует рендерер (канон 1.x). */
+  | {
+      readonly type: 'scale';
+      readonly head: { readonly ru: readonly string[]; readonly en: readonly string[] };
+      readonly descriptions: { readonly ru: readonly string[]; readonly en: readonly string[] };
+    }
+  /** Образец интерфейса в тексте: кнопка «Предложить», строка поиска, ряд смайликов. */
+  | { readonly type: 'sample'; readonly kind: 'suggest' | 'search' | 'emojiscale' };
 
 export interface Doc {
   readonly slug: string;

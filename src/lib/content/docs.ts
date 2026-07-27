@@ -21,12 +21,27 @@ export interface DocText {
 
 export type DocBlock =
   | { readonly type: 'h2' | 'h3' | 'p'; readonly text: DocText }
-  | { readonly type: 'ul'; readonly items: { readonly ru: readonly string[]; readonly en: readonly string[] } }
+  | {
+      readonly type: 'ul';
+      readonly items: { readonly ru: readonly string[]; readonly en: readonly string[] };
+      /** Иллюстрация пункта (1.x: картинки мысленных экспериментов стояли ВНУТРИ пунктов). */
+      readonly images?: readonly (string | null)[];
+    }
   | {
       readonly type: 'table';
       readonly head: { readonly ru: readonly string[]; readonly en: readonly string[] };
       readonly rows: { readonly ru: readonly string[][]; readonly en: readonly string[][] };
-    };
+    }
+  /** Иллюстрация 1.x; kind 'logo' — маленький логотип в шапке руководства. */
+  | { readonly type: 'img'; readonly src: string; readonly alt: string; readonly kind?: 'logo' }
+  /** Шкала оценок 0…10: звезду, цифру и цветной смайлик рисует рендерер (канон 1.x). */
+  | {
+      readonly type: 'scale';
+      readonly head: { readonly ru: readonly string[]; readonly en: readonly string[] };
+      readonly descriptions: { readonly ru: readonly string[]; readonly en: readonly string[] };
+    }
+  /** Образец интерфейса в тексте: кнопка «Предложить», строка поиска, ряд смайликов. */
+  | { readonly type: 'sample'; readonly kind: 'suggest' | 'search' | 'emojiscale' };
 
 export interface Doc {
   readonly slug: string;
@@ -995,6 +1010,12 @@ export const DOCS: Readonly<Record<string, Doc>> = {
     },
     "blocks": [
       {
+        "type": "img",
+        "src": "/img/docs/logo-1x.webp",
+        "alt": "NDim",
+        "kind": "logo"
+      },
+      {
         "type": "h2",
         "text": {
           "ru": "Манифест",
@@ -1116,7 +1137,7 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         }
       },
       {
-        "type": "h2",
+        "type": "h3",
         "text": {
           "ru": "Шкала оценок 0–10",
           "en": "The 0–10 grade scale"
@@ -1130,7 +1151,7 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         }
       },
       {
-        "type": "table",
+        "type": "scale",
         "head": {
           "ru": [
             "Оценка",
@@ -1141,103 +1162,37 @@ export const DOCS: Readonly<Record<string, Doc>> = {
             "Description"
           ]
         },
-        "rows": {
+        "descriptions": {
           "ru": [
-            [
-              "0",
-              "**Абсолютная безусловная ненависть.** Вам это не просто не нравится, Вы ненавидите это всей своей душой, оно — Ваш враг. Вы хотели бы, чтобы этого никогда не сущестовало в мире и чтобы вы никогда этого не знали. Вызывает в Вас очень сильные негативные эмоции отвращения и ненависти. Вы видите в этом одни сплошные минусы и негативные стороны, и ни одного плюса, и ни одного положительного момента."
-            ],
-            [
-              "1",
-              "**Отвращение.** Вам очень сильно это не нравится, Вы это глубоко презираете. Вы хотели бы, чтобы ни Вы, ни кто бы то ни было другой никогда этого не видел. Вызывает в Вас сильные негативные эмоции отвращения и ненависти. Вы видите в этом огромное количество минусов и негативных сторон, Вы можете через силу назвать один или два позитивных момента, и не более."
-            ],
-            [
-              "2",
-              "**Глубокая неприязнь.** Вам сильно это не нравится, Вы это глубоко презираете. Вы жалеете, что когда-то с этим столкнулись, и Ваша жизнь была бы лучше без этого знакомства. Вызывает в Вас глубокие негативные эмоции отвращения и негодования. Вы видите в этом очень много минусов и негативных сторон, хотя Вы можете назвать несколько позитивных моментов."
-            ],
-            [
-              "3",
-              "**Неприязнь.** Вам это не нравится, Вы смотрите на это с недоумением. Вы думаете, что потраченное на это время можно было бы потратить значительно лучше на что-нибудь другое. Вызывает в Вас негативные эмоции негодования и недоумения. Вы видите в этом много минусов и негативных сторон, Вы можете назвать несколько позитивных моментов, но минусов значительно больше."
-            ],
-            [
-              "4",
-              "**Лёгкая неприязнь.** Вам это кажется странным и нелепым, Вы смотрите на это с сомнением. Вы думаете, что это могло бы быть лучше, но оно выглядит не очень хорошо. Вызывает в Вас лёгкие негативные эмоции недоумения. Вы видите в этом много минусов и негативных сторон, но Вы также можете выделить некоторое количество позитивных моментов и плюсов."
-            ],
-            [
-              "5",
-              "**Нейтрально.** Вам это кажется \"никаким\", ни хорошим, ни плохим, Вы смотрите на это со смешенными чувствами. Вы думаете, что оно такое, какое есть, со своими достоинствами и недостатками. Не вызывает в Вас ни восторга, ни разочарования. Вы видите в этом как минусы, так и плюсы. Негативные стороны уравновешены позитивными моментами."
-            ],
-            [
-              "6",
-              "**Лёгкая симпатия.** Вам это кажется приятным, Вы смотрите на это с лёгким умилением. Вы думаете, что это могло бы быть хуже, но оно выглядит вполне хорошо. Вызывает в Вас лёгкие позитивные эмоции радости. Вы видите в этом значительное количество плюсов, хотя и негативных моментов тоже хватает."
-            ],
-            [
-              "7",
-              "**Симпатия.** Вам это нравится, Вы смотрите на это с умилением. Вы думаете, что затраченного времени не жалко, и время точно потрачено не зря. Вызывает в Вас позитивные эмоции радости и уважения. Вы видите в этом много плюсов и положительных сторон, Вы можете назвать несколько негативных моментов, но плюсов значительно больше."
-            ],
-            [
-              "8",
-              "**Глубокая симпатия.** Вам это сильно нравится, Вы этим восторгаетесь. Вы рады, что когда-то с этим столкнулись, и Ваша жизнь стала благодаря этому лучше. Вызывает в Вас глубокие позитивные эмоции радости и уважения. Вы видите в этом очень много плюсов и положительных сторон, хотя Вы можете назвать несколько негативных моментов."
-            ],
-            [
-              "9",
-              "**Обожание.** Вам это очень сильно нравится, Вы этим глубоко восторгаетесь. Вы хотели бы видеть это часто, и хотели бы чтобы все люди это увидели. Вызывает в Вас сильные позитивные эмоции радости и уважения. Вы видите в этом огромное количество плюсов и положительных сторон, Вы можете назвать лишь один или два негативных момента, и не более."
-            ],
-            [
-              "10",
-              "**Абсолютная безусловная любовь.** Вам это не просто нравится, Вы любите это всей своей душой, это одна из лучших вещей, которые случались с Вами в жизни. Вы всегда готовы к этому возвращаться, да хоть каждый день, и Вы бесконечно рады, что это является частью Вашей жизни. Вызывает в Вас очень сильные позитивные эмоции радости и уважения. Вы видите в этом одни сплошные плюсы и положительные стороны, и ни одного минуса, и ни одного негативного момента."
-            ]
+            "**Абсолютная безусловная ненависть.** Вам это не просто не нравится, Вы ненавидите это всей своей душой, оно — Ваш враг. Вы хотели бы, чтобы этого никогда не сущестовало в мире и чтобы вы никогда этого не знали. Вызывает в Вас очень сильные негативные эмоции отвращения и ненависти. Вы видите в этом одни сплошные минусы и негативные стороны, и ни одного плюса, и ни одного положительного момента.",
+            "**Отвращение.** Вам очень сильно это не нравится, Вы это глубоко презираете. Вы хотели бы, чтобы ни Вы, ни кто бы то ни было другой никогда этого не видел. Вызывает в Вас сильные негативные эмоции отвращения и ненависти. Вы видите в этом огромное количество минусов и негативных сторон, Вы можете через силу назвать один или два позитивных момента, и не более.",
+            "**Глубокая неприязнь.** Вам сильно это не нравится, Вы это глубоко презираете. Вы жалеете, что когда-то с этим столкнулись, и Ваша жизнь была бы лучше без этого знакомства. Вызывает в Вас глубокие негативные эмоции отвращения и негодования. Вы видите в этом очень много минусов и негативных сторон, хотя Вы можете назвать несколько позитивных моментов.",
+            "**Неприязнь.** Вам это не нравится, Вы смотрите на это с недоумением. Вы думаете, что потраченное на это время можно было бы потратить значительно лучше на что-нибудь другое. Вызывает в Вас негативные эмоции негодования и недоумения. Вы видите в этом много минусов и негативных сторон, Вы можете назвать несколько позитивных моментов, но минусов значительно больше.",
+            "**Лёгкая неприязнь.** Вам это кажется странным и нелепым, Вы смотрите на это с сомнением. Вы думаете, что это могло бы быть лучше, но оно выглядит не очень хорошо. Вызывает в Вас лёгкие негативные эмоции недоумения. Вы видите в этом много минусов и негативных сторон, но Вы также можете выделить некоторое количество позитивных моментов и плюсов.",
+            "**Нейтрально.** Вам это кажется \"никаким\", ни хорошим, ни плохим, Вы смотрите на это со смешенными чувствами. Вы думаете, что оно такое, какое есть, со своими достоинствами и недостатками. Не вызывает в Вас ни восторга, ни разочарования. Вы видите в этом как минусы, так и плюсы. Негативные стороны уравновешены позитивными моментами.",
+            "**Лёгкая симпатия.** Вам это кажется приятным, Вы смотрите на это с лёгким умилением. Вы думаете, что это могло бы быть хуже, но оно выглядит вполне хорошо. Вызывает в Вас лёгкие позитивные эмоции радости. Вы видите в этом значительное количество плюсов, хотя и негативных моментов тоже хватает.",
+            "**Симпатия.** Вам это нравится, Вы смотрите на это с умилением. Вы думаете, что затраченного времени не жалко, и время точно потрачено не зря. Вызывает в Вас позитивные эмоции радости и уважения. Вы видите в этом много плюсов и положительных сторон, Вы можете назвать несколько негативных моментов, но плюсов значительно больше.",
+            "**Глубокая симпатия.** Вам это сильно нравится, Вы этим восторгаетесь. Вы рады, что когда-то с этим столкнулись, и Ваша жизнь стала благодаря этому лучше. Вызывает в Вас глубокие позитивные эмоции радости и уважения. Вы видите в этом очень много плюсов и положительных сторон, хотя Вы можете назвать несколько негативных моментов.",
+            "**Обожание.** Вам это очень сильно нравится, Вы этим глубоко восторгаетесь. Вы хотели бы видеть это часто, и хотели бы чтобы все люди это увидели. Вызывает в Вас сильные позитивные эмоции радости и уважения. Вы видите в этом огромное количество плюсов и положительных сторон, Вы можете назвать лишь один или два негативных момента, и не более.",
+            "**Абсолютная безусловная любовь.** Вам это не просто нравится, Вы любите это всей своей душой, это одна из лучших вещей, которые случались с Вами в жизни. Вы всегда готовы к этому возвращаться, да хоть каждый день, и Вы бесконечно рады, что это является частью Вашей жизни. Вызывает в Вас очень сильные позитивные эмоции радости и уважения. Вы видите в этом одни сплошные плюсы и положительные стороны, и ни одного минуса, и ни одного негативного момента."
           ],
           "en": [
-            [
-              "0",
-              "**Absolute unconditional hatred.** You don't just dislike it, you hate it with all your soul, it is your enemy. You wish it never existed in the world and that you never knew about it. It evokes very strong negative emotions of disgust and hatred in you. You see in this only minuses and negative sides, and not a single plus, and not a single positive moment."
-            ],
-            [
-              "1",
-              "**Disgust.** You really don't like it, you despise it deeply. You wish that neither you nor anyone else ever saw it. It evokes strong negative emotions of disgust and hatred in you. You see a huge number of minuses and negative aspects in this, you can barely name one or two positive moments, and no more."
-            ],
-            [
-              "2",
-              "**Deep dislike.** You strongly dislike it, you deeply despise it. You regret that you ever encountered it, and your life would be better without this acquaintance. It causes in you deep negative emotions of disgust and indignation. You see a lot of downsides and negative aspects to this, although you can name a few positive aspects."
-            ],
-            [
-              "3",
-              "**Dislike.** You don't like it, you look at it with bewilderment. You think that the time spent on it could have been spent much better on something else. It causes negative emotions of indignation and bewilderment in you. You see many downsides and negative aspects in this, you can name several positive aspects, but there are significantly more downsides."
-            ],
-            [
-              "4",
-              "**Mild dislike.** It seems strange and ridiculous to you, you look at it with doubt. You think it could be better, but the way it is doesn't look very good. It causes mild negative emotions of bewilderment in you. You see many minuses and negative sides in it, but you can also highlight a number of positive moments and pluses."
-            ],
-            [
-              "5",
-              "**Neutral.** It seems \"nothing\" to you, neither good nor bad, you look at it with mixed feelings. You think that it is what it is, with its advantages and disadvantages. It does not cause you either delight or disappointment. You see both minuses and pluses in it. The negative aspects are balanced by positive moments."
-            ],
-            [
-              "6",
-              "**Mild sympathy.** You find it pleasant, you look at it with slight affection. You think that it could be worse, but it looks quite good. It evokes in you light positive emotions of joy. You see a significant number of advantages in this, although there are also enough negative aspects."
-            ],
-            [
-              "7",
-              "**Sympathy.** You like it, you look at it with affection. You think that the time spent is not a pity, and the time was definitely not wasted. It evokes positive emotions of joy and respect in you. You see many advantages and positive sides in this, you can name several negative points, but there are significantly more advantages."
-            ],
-            [
-              "8",
-              "**Deep sympathy.** You really like it, you admire it. You are glad that you once encountered it, and your life became better thanks to it. It evokes in you deep positive emotions of joy and respect. You see in it a lot of pluses and positive sides, although you can name several negative points."
-            ],
-            [
-              "9",
-              "**Adoration.** You like it very much, you are deeply delighted by it. You would like to see it often, and you would like all people to see it. It evokes in you strong positive emotions of joy and respect. You see in it a huge number of advantages and positive sides, you can name only one or two negative moments, and no more."
-            ],
-            [
-              "10",
-              "**Absolute unconditional love.** You don't just like it, you love it with all your soul, it's one of the best things that have ever happened to you in life. You are always ready to return to it, even every day, and you are infinitely glad that it is a part of your life. It evokes very strong positive emotions of joy and respect in you. You see in it only solid pluses and positive sides, and not a single minus, and not a single negative moment."
-            ]
+            "**Absolute unconditional hatred.** You don't just dislike it, you hate it with all your soul, it is your enemy. You wish it never existed in the world and that you never knew about it. It evokes very strong negative emotions of disgust and hatred in you. You see in this only minuses and negative sides, and not a single plus, and not a single positive moment.",
+            "**Disgust.** You really don't like it, you despise it deeply. You wish that neither you nor anyone else ever saw it. It evokes strong negative emotions of disgust and hatred in you. You see a huge number of minuses and negative aspects in this, you can barely name one or two positive moments, and no more.",
+            "**Deep dislike.** You strongly dislike it, you deeply despise it. You regret that you ever encountered it, and your life would be better without this acquaintance. It causes in you deep negative emotions of disgust and indignation. You see a lot of downsides and negative aspects to this, although you can name a few positive aspects.",
+            "**Dislike.** You don't like it, you look at it with bewilderment. You think that the time spent on it could have been spent much better on something else. It causes negative emotions of indignation and bewilderment in you. You see many downsides and negative aspects in this, you can name several positive aspects, but there are significantly more downsides.",
+            "**Mild dislike.** It seems strange and ridiculous to you, you look at it with doubt. You think it could be better, but the way it is doesn't look very good. It causes mild negative emotions of bewilderment in you. You see many minuses and negative sides in it, but you can also highlight a number of positive moments and pluses.",
+            "**Neutral.** It seems \"nothing\" to you, neither good nor bad, you look at it with mixed feelings. You think that it is what it is, with its advantages and disadvantages. It does not cause you either delight or disappointment. You see both minuses and pluses in it. The negative aspects are balanced by positive moments.",
+            "**Mild sympathy.** You find it pleasant, you look at it with slight affection. You think that it could be worse, but it looks quite good. It evokes in you light positive emotions of joy. You see a significant number of advantages in this, although there are also enough negative aspects.",
+            "**Sympathy.** You like it, you look at it with affection. You think that the time spent is not a pity, and the time was definitely not wasted. It evokes positive emotions of joy and respect in you. You see many advantages and positive sides in this, you can name several negative points, but there are significantly more advantages.",
+            "**Deep sympathy.** You really like it, you admire it. You are glad that you once encountered it, and your life became better thanks to it. It evokes in you deep positive emotions of joy and respect. You see in it a lot of pluses and positive sides, although you can name several negative points.",
+            "**Adoration.** You like it very much, you are deeply delighted by it. You would like to see it often, and you would like all people to see it. It evokes in you strong positive emotions of joy and respect. You see in it a huge number of advantages and positive sides, you can name only one or two negative moments, and no more.",
+            "**Absolute unconditional love.** You don't just like it, you love it with all your soul, it's one of the best things that have ever happened to you in life. You are always ready to return to it, even every day, and you are infinitely glad that it is a part of your life. It evokes very strong positive emotions of joy and respect in you. You see in it only solid pluses and positive sides, and not a single minus, and not a single negative moment."
           ]
         }
       },
       {
-        "type": "h2",
+        "type": "h3",
         "text": {
           "ru": "Мысленные эксперименты",
           "en": "Thought experiments"
@@ -1263,10 +1218,15 @@ export const DOCS: Readonly<Record<string, Doc>> = {
             "Imagine that you are on board an airplane on a very long flight. Try to estimate with what probability on an 11-point scale you would like this particular cultural object that you are currently evaluating to be with you during this long boring flight. On this scale 10 (ten) points mean that you are immensely glad that this cultural object is here with you, and you will enjoy it with great pleasure during the flight. And 0 (zero) points mean that you are infinitely disappointed that this cultural object is here with you, and you understand that it is absolutely uninteresting to you, you will not touch it, but will sadly look out the window the entire flight.",
             "Imagine that you happen to be in a hospital and you are forced to spend the next month lying in a hospital ward, undergoing a long recovery procedure. Imagine that you only have this cultural object that you are evaluating with you, and you understand that this is your only entertainment for the next month. Rate on an 11-point scale how happy you are that this cultural object is here with you and that you will be able to while away the time in its company. 10 (ten) points mean that you are immensely happy that this cultural object is here with you, and you will be able to enjoy it every minute of every day. And 0 (zero) points mean that you are infinitely disappointed that this cultural object is here with you, and you understand that you are absolutely not interested in it, You will not touch it, but will be bored and staring out the window for the whole month."
           ]
-        }
+        },
+        "images": [
+          "/img/docs/island.webp",
+          "/img/docs/airplane.webp",
+          "/img/docs/hospital.webp"
+        ]
       },
       {
-        "type": "h2",
+        "type": "h3",
         "text": {
           "ru": "Шкала смайликов",
           "en": "The emoji scale"
@@ -1280,6 +1240,10 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         }
       },
       {
+        "type": "sample",
+        "kind": "emojiscale"
+      },
+      {
         "type": "p",
         "text": {
           "ru": "В центре этой шкалы расположен нейтральный жёлтый смайлик, что соответствует звезде со значением 5 (пять) баллов. Это отражает Ваше безразличное нейтральное отношение к оцениваемому объекту культуры, то есть, он Вас не радует, но и не огорчает. В направлении влево от нейтрального смайлика (в направлении от звезды 5 (пять) балллов к звезде 0 (ноль) баллов) цвет смайликов становится всё более насыщенным красным и выражение их лица всё боллее грустное — это соответствует увеличению Вашего негативного отрицательного отношения к данному объекту культуры. В направлении вправо от нейтрального смайлика (в направлении от звезды 5 (пять) балллов к звезде 10 (десять) баллов) цвет смайликов становится всё более насыщенным зелёным и выражение их лица всё боллее радостное — это соответствует увеличению Вашего позитивного положительного отношения к данному объекту культуры.",
@@ -1287,7 +1251,7 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         }
       },
       {
-        "type": "h2",
+        "type": "h3",
         "text": {
           "ru": "Оценивайте «на свежую память»",
           "en": "Rate \"for fresh memory\""
@@ -1301,7 +1265,57 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         }
       },
       {
-        "type": "h2",
+        "type": "h3",
+        "text": {
+          "ru": "Предложение нового измерения",
+          "en": "Suggesting a new dimension"
+        }
+      },
+      {
+        "type": "p",
+        "text": {
+          "ru": "На экране \"Измерения\" в верхней панели есть кнопка предложения нового измерения.",
+          "en": "On the \"Dimensions\" screen, in the top bar, there is a button to suggest a new dimension."
+        }
+      },
+      {
+        "type": "sample",
+        "kind": "suggest"
+      },
+      {
+        "type": "p",
+        "text": {
+          "ru": "Нажав по ней Вы можете открыть форму предложения нового измерения. Вы можете кратко описать интересующий Вас объект культуры и отправить предложение на добавление его в Пространство NDim. Ваше предложение будет принято в работу, и вскоре измерение будет добавлено в Пространство NDim.",
+          "en": "By clicking on it you can open the form for suggesting a new dimension. You can briefly describe the cultural object you are interested in and send a suggestion to add it to the NDim Space. Your suggestion will be accepted for processing, and soon the dimension will be added to the NDim Space."
+        }
+      },
+      {
+        "type": "h3",
+        "text": {
+          "ru": "Поиск по измерениям",
+          "en": "Searching dimensions"
+        }
+      },
+      {
+        "type": "p",
+        "text": {
+          "ru": "Также на экране \"Измерения\" в верхней панели есть кнопка поиска.",
+          "en": "Also on the \"Dimensions\" screen, in the top bar, there is a search button."
+        }
+      },
+      {
+        "type": "sample",
+        "kind": "search"
+      },
+      {
+        "type": "p",
+        "text": {
+          "ru": "Нажав по ней Вы можете открыть поиск по измерениям. Вы можете ввести частичное или полное название интересующего Вас объекта культуры и, если он есть в Пространстве NDim, то он появится в поисковой выдаче, и Вы сможете его оценить.",
+          "en": "By clicking on it, you can open a search by dimensions. You can enter a partial or full name of the cultural object you are interested in, and if it is in the NDim Space, it will appear in the search results, and you will be able to rate it."
+        }
+      },
+      {
+        "type": "h3",
         "text": {
           "ru": "Полезный совет",
           "en": "Helpful tip"
@@ -1313,6 +1327,25 @@ export const DOCS: Readonly<Record<string, Doc>> = {
           "ru": "**Полезный совет:** Как правило, люди лучше всего запоминат те вещи, которые им очень нравятся. Из этого следует, что люди склонны чаще добавлять в свои NDim ID измерения по тем объектам культуры, которые им наиболее нравятся, соответственно, выставляя таким измерениям более высокие оценки в диапазоне от 7 (семи) до 10 (десяти) звёзд. Пространство NDim расчитывает связи между пользователями на основании **общего пространства** пользователей. Чтобы повысить шансы того, что ваше NDim ID пространство будет иметь пересечение с пространствами других пользователей, рекомендуется чаще добавлять в Ваш NDim ID измерения по тем объектам культуры, которые Вам нравятся больше всего и которые Вы считаете наиболее важными для Вас. Такая стратегия заполнения Вашего NDim ID также повышает шансы того, что Пространство NDim будет находить для Вас похожих людей, с которыми Вас объединяют позитивные эмоции: симпатия, любовь, радость, восторг, уважение, интерес и так далее.",
           "en": "**Helpful tip:** As a rule, people remember things best when they really like them. It follows that people tend to add more dimensions to their NDim IDs for the cultural objects they like most, accordingly, giving such dimensions higher ratings in the range from 7 (seven) to 10 (ten) stars. The NDim Space calculates relations between users based on the users **common space**. To increase the chances that your NDim ID space will overlap with other users' spaces, it is recommended to add more often to your NDim ID dimensions for those cultural objects which ones do you like the most and which you consider the most important to you. This strategy of filling your NDim ID also increases the chances that the NDim Space will find similar to you people, with whom you share positive emotions: sympathy, love, joy, delight, awe, interest, etc."
         }
+      },
+      {
+        "type": "h2",
+        "text": {
+          "ru": "Напутствие",
+          "en": "Closing words"
+        }
+      },
+      {
+        "type": "p",
+        "text": {
+          "ru": "Теперь вы знаете как работать с Пространством NDim и можете смело приступать к поиску похожих на Вас людей! Приятного поиска!",
+          "en": "Now you know how to work with the NDim Space and can confidently start searching for people similar to you! Enjoy your search!"
+        }
+      },
+      {
+        "type": "img",
+        "src": "/img/docs/network.webp",
+        "alt": "сеть людей"
       }
     ]
   }
