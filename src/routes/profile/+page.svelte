@@ -1021,7 +1021,11 @@
               <span class="v">
                 {visible ? formatValue(property, (previewValues as Record<string, unknown>)[property] ?? data.values[property]) : `— ${t.hidden[lang]} (${chip.label})`}
               </span>
-              <span class="aud {chip.kind}">{chip.icon}{chip.icon ? ' ' : ''}{chip.label}</span>
+              <!-- Иконка рисуется КОМПОНЕНТОМ. Здесь стояло `{chip.icon}` — и на экран
+                   печаталось само имя иконки: «globe Все» (поймано владельцем в бою). -->
+              <span class="aud {chip.kind}">
+                {#if chip.icon}<Icon name={chip.icon} size={13} />{/if}{chip.label}
+              </span>
             </div>
           {/each}
         </div>
@@ -1085,7 +1089,15 @@
   .prop:last-of-type { border-bottom: 0; }
   .prop .k { font-size: 12px; color: var(--dim); width: 96px; flex: none; }
   .prop .v { font-size: 14px; color: var(--heading); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* «Мы отправили Вам письмо» — конверт и текст в одну линию (тот же класс дефекта). */
+  .sent { display: flex; align-items: center; gap: 7px; }
+
   .aud {
+    /* Иконка + подпись выравниваются ФЛЕКСОМ, а не базовой линией текста: у <svg>
+       с `vertical-align: middle` середина равняется на середину строчной буквы, и
+       рядом с заглавными кириллицы иконка заметно проваливается вниз (слово
+       владельца 2026-07-27: «выравнивание иконки и текста ужасное»). */
+    display: inline-flex; align-items: center; gap: 5px;
     flex: none; font-size: 11px; padding: 4px 9px; border-radius: 999px;
     background: var(--edge-soft); color: var(--primary); white-space: nowrap;
     border: 0; font-family: inherit; cursor: pointer;
@@ -1159,6 +1171,8 @@
 
   .seg { display: flex; gap: 6px; flex-wrap: wrap; }
   .seg button {
+    /* См. комментарий у `.aud`: иконка и подпись центрируются флексом, а не базовой линией. */
+    display: inline-flex; align-items: center; gap: 6px;
     font: inherit; font-size: 12px; padding: 6px 11px; cursor: pointer;
     border-radius: 999px; border: 1px solid var(--edge); color: var(--dim); background: var(--panel);
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
