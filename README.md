@@ -115,7 +115,7 @@ Node ≥ 24 (исполняет TypeScript нативно), npm. Для тест
 npm install
 npm run dev        # разработка: http://localhost:5173
 npm run stand      # живой стенд: эмуляторы + тестовые данные + вычислитель → /profile, /relations
-npm test           # 173 юнит-теста: ядро, модель данных, статистика NDim ID
+npm test           # 185 юнит-тестов: ядро, модель данных, статистика NDim ID, кэш сессии
 npm run test:rules # 87 тестов правил Firestore на эмуляторе (проверяют ОТКАЗЫ)
 npm run test:calc  # 30 тестов сервера синхронизации на эмуляторе
 npm run e2e        # 70 браузерных e2e-проверок (Playwright, продакшен-сборка)
