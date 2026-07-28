@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NDim Space — принудительное обновление: 4 макета на утверждение</title>
+
+<!--
+  КАК ЧЕЛОВЕК ПРОСИТ СВЕЖИЕ ДАННЫЕ — 4 варианта владельцу.
+
+  Повод (2026-07-28, интервью №005, В4, слово владельца):
+    «ТОП обновляется очень редко. Нет смысла его обновлять. Пользователь зайдёт в приложение —
+     получит свежие данные. Этого хватит. Можем сделать pull-to-refresh на главных страницах
+     приложения, начать например с Связи — прошаренные пользователи будут знать, что можно
+     потянуть и выполнить принудительное обновление».
+
+  Решение В4 уже В КОДЕ: топ связей и статистика Пространства внутри сеанса не перечитываются
+  вовсе (`FRESH.server` = вся сессия). Значит принудительное обновление — единственный способ
+  получить свежее, не перезаходя. Это и есть предмет выбора ниже.
+
+  ОБЗОР ИНДУСТРИИ ДО МАКЕТОВ — `researches/18` (шаг 7б канона). Оттуда три факта, которые
+  определили набор вариантов, и ни один из них не выдуман:
+    · жест В ВЕБЕ ЗАНЯТ браузером (Chrome/Android и Safari/iOS сами перезагружают страницу).
+      Свой жест не добавляется — он ОТБИРАЕТСЯ через `overscroll-behavior`, и в Safari это
+      возможно только с версии 16.0 (2022);
+    · WCAG 2.2, критерий 2.5.7 (AA): как только обновление стало НАШЕЙ функциональностью,
+      у жеста обязан быть равноценный путь без перетаскивания. Плюс на десктопе тянуть нечем
+      вовсе — а десктопная раскладка у нас в бою (ideas/17);
+    · Nielsen Norman Group: спрятанное находят почти вдвое реже видимого. Владелец сказал это
+      сам («прошаренные пользователи будут знать») — здесь это названо ценой, а не возражением.
+
+  ОБЩЕЕ ДЛЯ ВСЕХ ЧЕТЫРЁХ (не предмет выбора):
+    · у жеста ОБЯЗАТЕЛЕН порог (Material): обновление только если потянули дальше метки —
+      иначе жест сработает при обычном пролистывании вверх;
+    · во время обновления жест заблокирован, второй раз подряд дёрнуть нельзя;
+    · экран НЕ обнуляется: старые данные остаются на месте, новые заменяют их, когда пришли
+      (никакой карточки «Загрузка» поверх уже показанного — канон ideas/18);
+    · обновление = `invalidate()` + перечтение. Механизм уже есть, нового слоя данных не нужно;
+    · графика и цифры не появляются «на горячую» (глобальное правило владельца, bugs/69).
+
+  РАЗЛИЧАЮТСЯ варианты тем, ЧТО ЧЕЛОВЕК ВИДИТ и КАК просит обновление.
+  Нарисовано в тёмной теме (как остальные макеты); в светлой берутся те же токены.
+  Экран для примера — «Связи» (владелец назвал его первым).
+-->
+
+<style>
+  :root {
+    --bg: #0b1220; --card: #111c30; --card2: #16233c; --edge: #1e3050; --edge-soft: #1a2942;
+    --text: #dbe6f5; --dim: #7e91ad; --heading: #eaf2ff; --primary: #3b82f6; --cyan: #22d3ee;
+    --gold: #f5a524; --good: #22c55e; --faint: #4d5f7a; --panel: #0f1a2c;
+    --r: 16px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; }
+  .page { max-width: 1700px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1 { color: var(--heading); font-size: 24px; margin: 0 0 6px; }
+  .lede { color: var(--dim); margin: 0 0 8px; max-width: 92ch; }
+  .lede b { color: var(--cyan); }
+  .quote { border-left: 3px solid var(--edge); padding: 4px 0 4px 14px; margin: 0 0 14px;
+    color: var(--text); max-width: 92ch; font-style: italic; }
+  .note { color: var(--faint); font-size: 13px; margin: 0 0 26px; max-width: 92ch; }
+  .note code { color: var(--dim); }
+  .note b { color: var(--dim); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 22px; }
+
+  .variant { background: #0d1626; border: 1px solid var(--edge); border-radius: 20px; padding: 16px; }
+  .variant.fav { border-color: #2f5c9e; box-shadow: 0 0 0 1px rgba(59,130,246,.25); }
+  .vhead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+  .vhead h2 { margin: 0; font-size: 17px; color: var(--heading); }
+  .vhead .tag { font-size: 11px; color: var(--primary); border: 1px solid var(--edge);
+    border-radius: 999px; padding: 2px 8px; }
+  .vhead .tag.own { color: var(--gold); border-color: #4a3a1a; }
+  .vwhy { color: var(--dim); font-size: 13px; margin: 0 0 12px; min-height: 96px; }
+  .vwhy b { color: var(--text); }
+  .vcost { color: var(--faint); font-size: 12.5px; margin: 12px 0 0; border-top: 1px solid var(--edge-soft);
+    padding-top: 10px; }
+  .vcost b { color: var(--gold); font-weight: 600; }
+
+  /* ── телефон ─────────────────────────────────────────────────────────── */
+  .phone { position: relative; width: 330px; height: 600px; margin: 0 auto;
+    background: var(--bg); border: 1px solid var(--edge); border-radius: 26px; overflow: hidden; }
+  .bar { position: absolute; inset: 0 0 auto 0; height: 56px; z-index: 5;
+    background: var(--panel); border-bottom: 1px solid var(--edge);
+    display: flex; align-items: center; gap: 10px; padding: 0 14px; }
+  .brand { width: 22px; height: 22px; border-radius: 7px; flex: none;
+    background: linear-gradient(135deg, var(--primary), var(--cyan)); }
+  .bar .title { font-size: 14px; color: var(--heading); font-weight: 600; }
+  .bar .spacer { flex: 1; }
+  .glyph { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center;
+    color: var(--dim); font-size: 14px; border: 1px solid transparent; }
+
+  /* полотно, которое «уезжает» вниз при жесте */
+  .canvas { position: absolute; inset: 56px 0 52px 0; overflow: hidden; }
+  .sheet { position: absolute; inset: 0; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .h1s { font-size: 17px; color: var(--heading); font-weight: 700; margin: 2px 0 0; }
+  .row { background: var(--card); border: 1px solid var(--edge-soft); border-radius: 14px;
+    padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .face { width: 34px; height: 34px; border-radius: 50%; flex: none;
+    background: linear-gradient(135deg, #24405f, #1a2c45); }
+  .who { flex: 1; min-width: 0; }
+  .who .nm { font-size: 13px; color: var(--heading); }
+  .pct { font-size: 15px; color: var(--cyan); font-weight: 700; }
+  .barline { height: 4px; border-radius: 4px; background: var(--edge); overflow: hidden; margin-top: 4px; }
+  .barline i { display: block; height: 100%; background: var(--primary); }
+
+  /* нижняя панель */
+  .tabs { position: absolute; inset: auto 0 0 0; height: 52px; z-index: 5;
+    background: var(--panel); border-top: 1px solid var(--edge);
+    display: flex; align-items: center; justify-content: space-around; color: var(--faint); font-size: 11px; }
+  .tabs span.on { color: var(--primary); }
+
+  /* ── индикатор жеста ─────────────────────────────────────────────────── */
+  .puck { position: absolute; left: 50%; top: 10px; width: 34px; height: 34px; margin-left: -17px;
+    border-radius: 50%; background: var(--card2); border: 1px solid var(--edge);
+    display: grid; place-items: center; color: var(--cyan); font-size: 15px; z-index: 4;
+    box-shadow: 0 4px 14px rgba(0,0,0,.45); }
+  /* Кольцо крутится ПОВЕРХ стрелки: стрелка — «тяните», кольцо — «идёт обновление». */
+  .ring { position: absolute; inset: 7px; border-radius: 50%; border: 2px solid var(--edge);
+    border-top-color: var(--cyan); opacity: 0; }
+  .arrow { font-size: 15px; line-height: 1; }
+
+  /* строка свежести (V2) */
+  .fresh { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--faint);
+    padding: 0 2px 2px; }
+  .fresh .dotm { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex: none; }
+  .fresh .act { margin-left: auto; color: var(--primary); border: 1px solid var(--edge);
+    border-radius: 999px; padding: 2px 9px; }
+
+  /* кнопка в шапке (V3) */
+  .glyph.act { color: var(--cyan); border-color: var(--edge); background: var(--card2); }
+
+  /* фрагмент экрана «Меню» (V1): путь без жеста живёт там, а не в выдуманном «⋯» */
+  .mini { width: 330px; margin: 10px auto 0; background: var(--panel);
+    border: 1px solid var(--edge); border-radius: 14px; padding: 10px 12px; }
+  .mini .cap { font-size: 11px; color: var(--faint); margin-bottom: 8px; }
+  .mini .mrow { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--dim);
+    padding: 8px 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--edge-soft); }
+  .mini .mrow.hi { color: var(--heading); border-color: var(--edge); }
+  .mini .mrow .ago { margin-left: auto; font-size: 11px; color: var(--faint); }
+
+  /* большая кнопка обновления (V4) */
+  .bigbtn { display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--card2); border: 1px solid var(--edge); border-radius: 12px;
+    padding: 9px; color: var(--cyan); font-size: 13px; }
+
+  /* ── анимации: жест проигрывается сам, по кругу ──────────────────────── */
+  /* Полотно уезжает вниз, задерживается на пороге, отпускается и возвращается. */
+  @keyframes pull {
+    0%, 6%   { transform: translateY(0); }
+    26%, 34% { transform: translateY(64px); }   /* потянули дальше порога */
+    46%      { transform: translateY(34px); }   /* отпустили — встали на индикатор */
+    78%      { transform: translateY(34px); }   /* идёт обновление */
+    92%,100% { transform: translateY(0); }      /* готово, полотно вернулось */
+  }
+  @keyframes puckIn {
+    0%, 6%   { opacity: 0; transform: translateY(-26px) scale(.7); }
+    26%, 34% { opacity: 1; transform: translateY(30px) scale(1); }
+    46%, 78% { opacity: 1; transform: translateY(6px) scale(1); }
+    92%,100% { opacity: 0; transform: translateY(-26px) scale(.7); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes flip {
+    0%, 20%  { transform: rotate(0deg); color: var(--faint); }   /* до порога — вниз, тускло */
+    26%,100% { transform: rotate(180deg); color: var(--cyan); }  /* порог пройден — стрелка вверх */
+  }
+  /* Отпустили — стрелка уступает место кольцу, пока идёт обновление. */
+  @keyframes arrowHide { 0%, 42% { opacity: 1; } 48%, 100% { opacity: 0; } }
+  @keyframes ringShow  { 0%, 42% { opacity: 0; } 48%, 80% { opacity: 1; } 88%, 100% { opacity: 0; } }
+  @keyframes fadeSwap {
+    0%, 74%  { opacity: 1; }
+    80%      { opacity: .35; }
+    88%,100% { opacity: 1; }
+  }
+  @keyframes tapGlow {
+    0%, 62%  { box-shadow: 0 0 0 0 rgba(34,211,238,0); }
+    70%      { box-shadow: 0 0 0 7px rgba(34,211,238,.18); }
+    84%,100% { box-shadow: 0 0 0 0 rgba(34,211,238,0); }
+  }
+  @keyframes spinBurst {
+    0%, 62%   { transform: rotate(0deg); }
+    62.1%, 92% { transform: rotate(720deg); }
+    100%      { transform: rotate(720deg); }
+  }
+
+  .demo .sheet { animation: pull 6s cubic-bezier(.22,.9,.3,1) infinite; }
+  .demo .puck  { animation: puckIn 6s cubic-bezier(.22,.9,.3,1) infinite; }
+  .demo .ring  { animation: spin .9s linear infinite, ringShow 6s ease infinite; }
+  .demo .arrow { animation: flip 6s ease infinite, arrowHide 6s ease infinite; }
+  .demo .swap  { animation: fadeSwap 6s ease infinite; }
+  .btnDemo     { animation: tapGlow 6s ease infinite; }
+  .spinDemo    { animation: spinBurst 6s cubic-bezier(.2,.8,.2,1) infinite; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .demo .sheet, .demo .puck, .demo .arrow, .demo .swap, .btnDemo, .spinDemo { animation: none; }
+    .demo .ring { animation: none; }
+  }
+
+  /* ── таблица выбора ──────────────────────────────────────────────────── */
+  .after { margin-top: 34px; }
+  .after h2 { color: var(--heading); font-size: 19px; margin: 0 0 10px; }
+  table { border-collapse: collapse; width: 100%; max-width: 1200px; font-size: 13px; }
+  th, td { border: 1px solid var(--edge); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { color: var(--heading); background: #0d1626; font-weight: 600; }
+  td { color: var(--dim); }
+  td b { color: var(--text); }
+  .ask { background: #0d1626; border: 1px solid var(--edge); border-radius: 16px;
+    padding: 14px 16px; margin-top: 22px; max-width: 1200px; }
+  .ask h3 { margin: 0 0 8px; font-size: 15px; color: var(--gold); }
+  .ask ol { margin: 0; padding-left: 20px; color: var(--dim); font-size: 13.5px; }
+  .ask li { margin-bottom: 7px; }
+  .ask b { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Принудительное обновление — 4 варианта на Ваше утверждение</h1>
+  <p class="lede">
+    Вы решили (интервью №005, В4): внутри сеанса топ и статистику <b>не освежаем вовсе</b> — свежесть
+    даёт вход в приложение. Это уже в коде. Значит нужен способ сказать «дай свежее прямо сейчас»
+    — и вот четыре формы, в которых мир это делает.
+  </p>
+  <p class="quote">
+    «Можем сделать pull-to-refresh на главных страницах приложения, начать например с Связи —
+    прошаренные пользователи будут знать, что можно потянуть и выполнить принудительное обновление».
+  </p>
+  <p class="note">
+    Жест во всех четырёх (кроме V4) один и тот же и рисуется одинаково — <b>тянем, проходим порог,
+    отпускаем</b>. Различаются варианты тем, что человек ВИДИТ, когда не тянет, и чем обновление
+    доступно на десктопе, где тянуть нечем. Обзор индустрии со ссылками — <code>researches/18</code>.
+    Три факта оттуда: жест в вебе <b>занят браузером</b> и его придётся отбирать (в Safari — только
+    с версии 16); WCAG 2.2 требует у жеста равноценной кнопки; спрятанное находят почти вдвое реже
+    видимого (Nielsen Norman Group) — Вы это и назвали словом «прошаренные».
+    Макеты живые: жест проигрывается сам, по кругу.
+  </p>
+
+  <div class="grid">
+
+    <!-- ─────────────────────────── V1 ─────────────────────────── -->
+    <div class="variant">
+      <div class="vhead"><h2>V1 · «Как в системе»</h2><span class="tag">чистый жест</span></div>
+      <p class="vwhy">
+        Ровно то, что делают Android и iOS: <b>ничего лишнего на экране</b>, жест и круглый индикатор
+        под шапкой. Обновление есть, но его не видно, пока не потянешь. Путь для десктопа и для тех,
+        кто тянуть не может, — <b>строка в «Меню»</b> (показана под телефоном): на самих экранах
+        нового места не занимает вовсе.
+      </p>
+      <div class="phone demo">
+        <div class="bar">
+          <span class="brand"></span><span class="title">Связи</span><span class="spacer"></span>
+          <span class="glyph">RU</span><span class="glyph">☾</span>
+        </div>
+        <div class="canvas">
+          <div class="puck"><span class="arrow">↓</span><span class="ring"></span></div>
+          <div class="sheet">
+            <p class="h1s">Ваши связи</p>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Анна</span>
+              <span class="barline"><i style="width:86%"></i></span></span><span class="pct">86</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Дмитрий</span>
+              <span class="barline"><i style="width:74%"></i></span></span><span class="pct">74</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Мария</span>
+              <span class="barline"><i style="width:61%"></i></span></span><span class="pct">61</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Игорь</span>
+              <span class="barline"><i style="width:52%"></i></span></span><span class="pct">52</span></div>
+          </div>
+        </div>
+        <div class="tabs"><span>Дом</span><span class="on">Связи</span><span>Пространство</span><span>Измерения</span><span>Меню</span></div>
+      </div>
+      <div class="mini">
+        <p class="cap">…и то же самое на экране «Меню» — для десктопа и для тех, кто тянуть не может:</p>
+        <div class="mrow hi btnDemo"><span class="spinDemo">↻</span> Обновить данные
+          <span class="ago">12 минут назад</span></div>
+      </div>
+      <p class="vcost"><b>Цена:</b> самый чистый экран — и самая низкая находимость. Человек, не
+        знающий про жест, никогда не узнает, что данные можно обновить, и не поймёт, что видит
+        цифры из памяти: чтобы это выяснить, надо зайти в «Меню».</p>
+    </div>
+
+    <!-- ─────────────────────────── V2 ─────────────────────────── -->
+    <div class="variant fav">
+      <div class="vhead"><h2>V2 · «Жест + строка свежести»</h2><span class="tag own">рекомендую</span></div>
+      <p class="vwhy">
+        Тот же жест — плюс <b>одна тонкая строка над списком</b>: «Обновлено 12 минут назад ·
+        Обновить». Она честно говорит то, что стало правдой после Вашего решения: цифры показаны
+        из памяти. Тап по «Обновить» делает то же, что жест, — и работает на десктопе, где тянуть
+        нечем.
+      </p>
+      <div class="phone demo">
+        <div class="bar">
+          <span class="brand"></span><span class="title">Связи</span><span class="spacer"></span>
+          <span class="glyph">RU</span><span class="glyph">☾</span>
+        </div>
+        <div class="canvas">
+          <div class="puck"><span class="arrow">↓</span><span class="ring"></span></div>
+          <div class="sheet">
+            <p class="h1s">Ваши связи</p>
+            <div class="fresh"><span class="dotm"></span><span class="swap">Обновлено 12 минут назад</span>
+              <span class="act btnDemo">↻ Обновить</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Анна</span>
+              <span class="barline"><i style="width:86%"></i></span></span><span class="pct">86</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Дмитрий</span>
+              <span class="barline"><i style="width:74%"></i></span></span><span class="pct">74</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Мария</span>
+              <span class="barline"><i style="width:61%"></i></span></span><span class="pct">61</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Игорь</span>
+              <span class="barline"><i style="width:52%"></i></span></span><span class="pct">52</span></div>
+          </div>
+        </div>
+        <div class="tabs"><span>Дом</span><span class="on">Связи</span><span>Пространство</span><span>Измерения</span><span>Меню</span></div>
+      </div>
+      <p class="vcost"><b>Цена:</b> одна строка занимает место в контенте, и её надо перевести
+        (RU/EN). Взамен закрывает всё разом: находимость, десктоп, доступность и честность
+        «данные из памяти».</p>
+    </div>
+
+    <!-- ─────────────────────────── V3 ─────────────────────────── -->
+    <div class="variant">
+      <div class="vhead"><h2>V3 · «Жест + значок в шапке»</h2><span class="tag">видно всегда</span></div>
+      <p class="vwhy">
+        Жест плюс <b>значок ↻ в шапке</b>, рядом с языком и темой. Виден всегда и на всех экранах,
+        не занимает места в содержимом, на десктопе работает мышью. Во время обновления
+        <b>крутится</b> — состояние видно там же, где кнопка.
+      </p>
+      <div class="phone demo">
+        <div class="bar">
+          <span class="brand"></span><span class="title">Связи</span><span class="spacer"></span>
+          <span class="glyph act btnDemo"><span class="spinDemo">↻</span></span>
+          <span class="glyph">RU</span><span class="glyph">☾</span>
+        </div>
+        <div class="canvas">
+          <div class="puck"><span class="arrow">↓</span><span class="ring"></span></div>
+          <div class="sheet">
+            <p class="h1s">Ваши связи</p>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Анна</span>
+              <span class="barline"><i style="width:86%"></i></span></span><span class="pct">86</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Дмитрий</span>
+              <span class="barline"><i style="width:74%"></i></span></span><span class="pct">74</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Мария</span>
+              <span class="barline"><i style="width:61%"></i></span></span><span class="pct">61</span></div>
+            <div class="row swap"><span class="face"></span><span class="who"><span class="nm">Игорь</span>
+              <span class="barline"><i style="width:52%"></i></span></span><span class="pct">52</span></div>
+          </div>
+        </div>
+        <div class="tabs"><span>Дом</span><span class="on">Связи</span><span>Пространство</span><span>Измерения</span><span>Меню</span></div>
+      </div>
+      <p class="vcost"><b>Цена:</b> ещё один значок в шапке — а шапку Вы уже утверждали отдельно
+        (ideas/17). Значок будет виден и на экранах, где обновлять нечего, — либо гаснуть на них,
+        что само по себе ещё одно правило.</p>
+    </div>
+
+    <!-- ─────────────────────────── V4 ─────────────────────────── -->
+    <div class="variant">
+      <div class="vhead"><h2>V4 · «Без жеста, только кнопка»</h2><span class="tag">проще всего</span></div>
+      <p class="vwhy">
+        Жест <b>не трогаем вовсе</b> — пусть браузер и дальше перезагружает страницу, как привык
+        человек (это, кстати, тоже даёт свежие данные — с нуля). А в конце списка стоит явная
+        кнопка <b>«Обновить связи»</b>. Ноль конфликтов с браузером, работает везде, включая старый
+        Safari.
+      </p>
+      <div class="phone">
+        <div class="bar">
+          <span class="brand"></span><span class="title">Связи</span><span class="spacer"></span>
+          <span class="glyph">RU</span><span class="glyph">☾</span>
+        </div>
+        <div class="canvas">
+          <div class="sheet">
+            <p class="h1s">Ваши связи</p>
+            <div class="row"><span class="face"></span><span class="who"><span class="nm">Анна</span>
+              <span class="barline"><i style="width:86%"></i></span></span><span class="pct">86</span></div>
+            <div class="row"><span class="face"></span><span class="who"><span class="nm">Дмитрий</span>
+              <span class="barline"><i style="width:74%"></i></span></span><span class="pct">74</span></div>
+            <div class="row"><span class="face"></span><span class="who"><span class="nm">Мария</span>
+              <span class="barline"><i style="width:61%"></i></span></span><span class="pct">61</span></div>
+            <div class="row"><span class="face"></span><span class="who"><span class="nm">Игорь</span>
+              <span class="barline"><i style="width:52%"></i></span></span><span class="pct">52</span></div>
+            <div class="bigbtn btnDemo"><span class="spinDemo">↻</span> Обновить связи</div>
+            <div class="fresh"><span class="dotm"></span><span>Обновлено 12 минут назад</span></div>
+          </div>
+        </div>
+        <div class="tabs"><span>Дом</span><span class="on">Связи</span><span>Пространство</span><span>Измерения</span><span>Меню</span></div>
+      </div>
+      <p class="vcost"><b>Цена:</b> нет того самого жеста, который Вы назвали. Зато нет и работы по
+        отъёму жеста у браузера, и ни одного браузера, где решение не работает.</p>
+    </div>
+
+  </div>
+
+  <div class="after">
+    <h2>Чем варианты различаются на самом деле</h2>
+    <table>
+      <tr>
+        <th>&nbsp;</th><th>V1 «Как в системе»</th><th>V2 «Жест + строка»</th>
+        <th>V3 «Жест + значок»</th><th>V4 «Только кнопка»</th>
+      </tr>
+      <tr><td><b>Жест «потянуть»</b></td><td>да</td><td>да</td><td>да</td><td>нет</td></tr>
+      <tr><td><b>Видно, что данные из памяти</b></td><td>нет</td><td><b>да, словами</b></td><td>нет</td><td>да, словами</td></tr>
+      <tr><td><b>Работает на десктопе</b></td><td>через «Меню»</td><td>да</td><td>да</td><td>да</td></tr>
+      <tr><td><b>WCAG 2.5.7 (кнопка без перетаскивания)</b></td><td>формально да</td><td>да</td><td>да</td><td>да, по построению</td></tr>
+      <tr><td><b>Отбираем жест у браузера</b></td><td>да</td><td>да</td><td>да</td><td><b>нет</b></td></tr>
+      <tr><td><b>Работает в Safari младше 16</b></td><td>нет жеста</td><td>нет жеста, кнопка есть</td><td>нет жеста, значок есть</td><td>полностью</td></tr>
+      <tr><td><b>Новых элементов на экране</b></td><td>0 (строка живёт в «Меню»)</td><td>1 строка</td><td>1 значок в шапке</td><td>1 кнопка</td></tr>
+      <tr><td><b>Находимость</b></td><td>низкая</td><td>высокая</td><td>высокая</td><td>высокая</td></tr>
+    </table>
+
+    <div class="ask">
+      <h3>Что мне нужно от Вас, кроме выбора варианта</h3>
+      <ol>
+        <li><b>Где живёт жест.</b> Только «Связи» (Вы назвали их первыми) или сразу все главные
+          экраны — «Связи», «Пространство», «Профиль», «Измерения»?</li>
+        <li><b>Отбирать ли у браузера «резинку».</b> Можно отобрать только обновление, оставив
+          пружинящий отскок в конце списка (привычно), — или убрать и его, чтобы экран ощущался
+          как приложение, а не как страница.</li>
+        <li><b>Что делать в браузере, который жест отдать не умеет</b> (Safari младше 16). Моё
+          предложение: жест там просто не включается, а видимый путь работает везде. Если это для
+          Вас неприемлемо — скажите, будем городить обходной путь (он будет хрупким).</li>
+        <li><b>Текст строки свежести</b>, если выберете V2: «Обновлено 12 минут назад» — или
+          иначе. Формулировка на лице продукта — Ваше слово, не моё.</li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
