@@ -47,11 +47,22 @@ export interface SpaceScreenData {
 }
 
 /**
- * Только сердцебиение и версия сервера синхронизации — для подвала «Меню».
+ * Цифры Пространства без пульса — то, что живёт в кэше ВСЮ сессию (интервью №005, В4).
+ * Пульс сюда не входит намеренно: у него своя, минутная свежесть (`FRESH.pulse`).
+ */
+type SpaceFacts = Omit<SpaceScreenData, 'server' | 'serverState'>;
+
+/**
+ * Только сердцебиение и версия сервера синхронизации — для подвала «Меню» и для лампочки
+ * «Пространства».
+ *
  * `null` — сервер ещё ни разу не отчитывался; врать про его версию мы не будем.
+ *
+ * Одна запись кэша на весь продукт: «Меню», «О системе» и «Пространство» спрашивают пульс
+ * ОДНИМ ключом, поэтому переход между ними не стоит лишнего чтения.
  */
 export async function loadSyncServer(): Promise<SyncServerDoc | null> {
-  return cached(KEYS.syncServer, FRESH.server, async () => {
+  return cached(KEYS.syncServer, FRESH.pulse, async () => {
     const snapshot = await getDoc(doc(db(), 'space', 'server'));
     return snapshot.exists() ? (snapshot.data() as SyncServerDoc) : null;
   });
@@ -60,33 +71,41 @@ export async function loadSyncServer(): Promise<SyncServerDoc | null> {
 /**
  * Загружает всё, что показывает экран. `null` — сервер синхронизации ещё ни разу не считал:
  * показывать нули как «состояние Пространства» было бы враньём.
+ *
+ * Двумя записями кэша, а не одной: цифры — на сессию, пульс — на минуту (см. {@link FRESH}).
  */
 export async function loadSpace(now: number = Date.now()): Promise<SpaceScreenData | null> {
-  const data = await cached(KEYS.space, FRESH.server, fetchSpace);
-  if (data === null) return null;
+  const [facts, server] = await Promise.all([
+    cached<SpaceFacts | null>(KEYS.space, FRESH.server, fetchSpaceFacts),
+    loadSyncServer(),
+  ]);
+  if (facts === null) return null;
 
   /*
-   * ⚠️ Состояние сервера пересчитываем НА КАЖДЫЙ вызов, хотя всё остальное отдаём из кэша.
-   * `syncServerState` выводится из сердцебиения ОТНОСИТЕЛЬНО «сейчас» — заморозь его вместе с
-   * данными, и умолкший сервер минуту показывался бы как «Работает». Лампочка обязана
-   * выводиться из наблюдения, а не из памяти (канон `AGENT_GUIDE` → «Словарь продукта»).
+   * ⚠️ Состояние сервера выводим НА КАЖДЫЙ вызов, хотя цифры отдаём из кэша.
+   * `syncServerState` считается из сердцебиения ОТНОСИТЕЛЬНО «сейчас» — заморозь его вместе с
+   * цифрами, и умолкший сервер весь сеанс показывался бы как «Работает» (а живой, что хуже, —
+   * как умерший). Лампочка обязана выводиться из наблюдения, а не из памяти (канон
+   * `AGENT_GUIDE` → «Словарь продукта»).
    */
-  return { ...data, serverState: syncServerState(data.server, now) };
+  return { ...facts, server, serverState: syncServerState(server, now) };
 }
 
 /** Что лежит в памяти прямо сейчас — для первого кадра «Пространства», без лоадера. */
 export function peekSpace(now: number = Date.now()): SpaceScreenData | null | undefined {
-  const data = peek<SpaceScreenData | null>(KEYS.space);
-  if (data === undefined || data === null) return data;
-  return { ...data, serverState: syncServerState(data.server, now) };
+  const facts = peek<SpaceFacts | null>(KEYS.space);
+  if (facts === undefined || facts === null) return facts;
+  // Пульс лежит своей записью; его нет в памяти — честно считаем сервер молчащим, а через
+  // мгновение `loadSpace` перечитает его и лампочка встанет на место.
+  const server = peek<SyncServerDoc | null>(KEYS.syncServer) ?? null;
+  return { ...facts, server, serverState: syncServerState(server, now) };
 }
 
-async function fetchSpace(): Promise<SpaceScreenData | null> {
+async function fetchSpaceFacts(): Promise<SpaceFacts | null> {
   const store = db();
 
-  const [statsSnap, serverSnap, historySnap] = await Promise.all([
+  const [statsSnap, historySnap] = await Promise.all([
     getDoc(doc(store, 'space', 'stats')),
-    getDoc(doc(store, 'space', 'server')),
     getDocs(
       query(
         collection(store, 'space', 'stats', 'daily'),
@@ -99,7 +118,6 @@ async function fetchSpace(): Promise<SpaceScreenData | null> {
   if (!statsSnap.exists()) return null;
 
   const stats = statsSnap.data() as SpaceStatsDoc;
-  const server = serverSnap.exists() ? (serverSnap.data() as SyncServerDoc) : null;
 
   // Снимки приходят от свежих к старым (так их отдаёт индекс) — разворачиваем в хронологию.
   const history = historySnap.docs
@@ -110,9 +128,6 @@ async function fetchSpace(): Promise<SpaceScreenData | null> {
 
   return {
     stats,
-    server,
-    // Заглушка: и `loadSpace`, и `peekSpace` пересчитывают состояние относительно «сейчас».
-    serverState: syncServerState(server, Date.now()),
     week: trendSince(stats, snapshotOnOrBefore(history, dayBefore(today, 7))),
     // Вчерашний снимок, а не «предпоследний в списке»: сегодняшний день в истории уже есть,
     // и сравнивать его с самим собой — значит всегда показывать «ничего не изменилось».
