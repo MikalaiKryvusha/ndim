@@ -14,16 +14,33 @@
   let { lang }: { lang: Lang } = $props();
 </script>
 
-<div class="load-card" role="status">
-  <span>{lang === 'ru' ? 'Загрузка' : 'Loading'}</span>
-  <i class="ring" aria-hidden="true"></i>
+<!-- Обёртка центрирует карточку и ЗАБИРАЕТ на себя растяжение раскладки: сама карточка
+     остаётся по размеру содержимого, где бы ни стояла (bugs/70). -->
+<div class="load-wrap">
+  <div class="load-card" role="status">
+    <span>{lang === 'ru' ? 'Загрузка' : 'Loading'}</span>
+    <i class="ring" aria-hidden="true"></i>
+  </div>
 </div>
 
 <style>
+  /**
+   * Карточка загрузки ВСЕГДА лаконичная и компактная (слово владельца, волна 13, bugs/70):
+   * она растягивалась на всю рабочую область — блочный flex занимал всю ширину ячейки, а на
+   * «Пространстве» ячейка ещё и `grid-column: 1 / -1` (1129px при рабочей области 1193px).
+   * Лечение формой, в одном месте: обёртка тянется, карточка — нет. Экраны не правятся.
+   */
+  .load-wrap {
+    display: flex;
+    justify-content: center;
+  }
   .load-card {
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Размер по содержимому: как бы широка ни была обёртка, карточка не растягивается. */
+    width: max-content;
+    max-width: 100%;
     gap: 11px;
     background: var(--panel);
     border: 1px solid var(--edge);
