@@ -50,3 +50,8 @@ calculator/secrets/*
 # client_secret_*.json, и он падает прямо в проект. Внутри — живой client secret.
 google/
 client_secret_*.json
+.kaif/install/
+KAIF.md
+KAIF-LOADER.mjs
+KAIF_ADAPTATION_TASK.md
+KAIF_UPDATE_TASK.md

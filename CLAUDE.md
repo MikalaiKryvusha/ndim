@@ -36,10 +36,13 @@
 
 ## Скиллы
 
-Сессия: `/resume` · `/pause` — Автономия: `/autoloop` · `/dayloop` · `/nightloop`
+Сессия: `/resume` · `/pause` (мягкая парковка — чат продолжится) · `/end-chat` (полное завершение
+с передачей эстафеты) — Автономия: `/autoloop` · `/dayloop` · `/nightloop`
 Гигиена: `/refresh-context` · `/check-backlog` — Знание: `/experience` · `/report-bug` ·
 `/bug-research` · `/propose-idea`
 Владелец: `/interview` · `/fix-vision` — Планирование: `/revision` · `/what-next`
-Помощь: `/help-kaif` — Выпуск: `/release`
+Стражи качества: `/derive-styleguide` — Помощь: `/help-kaif` — Выпуск: `/release`
 Дисциплина исполнения: `/fable-method` · `/fable-loop` · `/fable-judge` · `/fable-domain`
 Жизненный цикл KAIF: `/kaif-version` · `/kaif-update` · `/kaif-fork` · `/kaif-switch-origin` · `/kaif-remove`
+
+Полная механика развёрнутой версии — `.kaif/KAIF_REFERENCE.md` (справочник §1–16).

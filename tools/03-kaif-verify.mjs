@@ -86,9 +86,9 @@ if (!placeholderHits) pass(`плейсхолдеров не осталось (п
 // --- 3. Скиллы: канонический name, локализованный description -------------------
 const SKILLS_DIR = '.claude/skills';
 const EXPECTED_SKILLS = [
-  'resume', 'pause', 'autoloop', 'dayloop', 'nightloop', 'refresh-context', 'check-backlog',
-  'experience', 'report-bug', 'bug-research', 'propose-idea', 'interview', 'revision',
-  'fix-vision', 'what-next', 'help-kaif', 'release',
+  'resume', 'pause', 'end-chat', 'autoloop', 'dayloop', 'nightloop', 'refresh-context',
+  'check-backlog', 'experience', 'report-bug', 'bug-research', 'propose-idea', 'interview',
+  'revision', 'fix-vision', 'what-next', 'help-kaif', 'release', 'derive-styleguide',
   'kaif-version', 'kaif-update', 'kaif-fork', 'kaif-switch-origin', 'kaif-remove',
   'fable-method', 'fable-loop', 'fable-judge', 'fable-domain',
 ];

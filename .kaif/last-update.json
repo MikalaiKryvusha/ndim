@@ -1,0 +1,15 @@
+{
+  "from": "1.6",
+  "to": "2.0",
+  "route": "legacy-bootstrap",
+  "counters": {
+    "replaced": 0,
+    "mergedModules": 161,
+    "added": 5,
+    "kept": 27,
+    "adopted": 2
+  },
+  "classified": true,
+  "date": "2026-07-28",
+  "verifiedAt": "2026-07-28"
+}
