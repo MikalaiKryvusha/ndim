@@ -53,6 +53,8 @@ D:\work\ai_sandbox\ndim\
 │   ├── menu/{support,donate,about,author}/  # поддержка · пожертвование · о системе · об авторе
 │   └── sitemap.xml/+server.ts   # пререндеренный sitemap: только публичные страницы
 ├── src/lib/site.ts              # единая константа боевого домена (canonical + sitemap)
+├── src/lib/data/cache.ts        # ★ кэш данных экранов на сессию (ideas/18): stale-while-revalidate,
+│                                #   контракт свежести, инвалидация, очистка при выходе из аккаунта
 ├── src/lib/ui/format.ts         # числа, даты, русская морфология («714,9 звезды») — одна на все экраны
 ├── src/lib/ui/AppBar.svelte     # шапка продукта: на десктопе — ВО ВСЮ ШИРИНУ поверх рельса (V3-А, ideas/17)
 ├── src/lib/ui/SideRail.svelte   # десктопный рельс навигации: чистые 5 пунктов, липнет к низу шапки
