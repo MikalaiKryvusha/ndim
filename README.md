@@ -1,10 +1,14 @@
 <p align="center">
-  <img src="static/favicon.svg" alt="NDim Space" width="96">
+  <a href="https://ndimspace.app"><img src="static/favicon.svg" alt="NDim Space" width="96"></a>
+</p>
+
+<p align="center">
+  🌍 NDim Space 2.0: <b><a href="https://ndimspace.app">ndimspace.app</a></b>
 </p>
 
 <a id="russian"></a>
 
-# NDim Space
+# Пространство NDim
 
 <p align="center">
   <a href="#russian"><img src="https://img.shields.io/badge/Русский-C0392B?style=for-the-badge" alt="Русский"></a>
@@ -18,10 +22,11 @@
 [![Stack](https://img.shields.io/badge/Stack-SvelteKit%20%2B%20TypeScript-FF3E00.svg)](#сборка-и-стенд)
 [![Live 2.0](https://img.shields.io/badge/Live%202.0-ndimspace.app-1467D6.svg)](https://ndimspace.app)
 
+
 **Честный поиск похожих людей в многомерном пространстве самооценок.**
 Платформа знакомств, которая ищет вам человека, а не удерживает вас ради подписки.
 
-> 🇷🇺 Русский (основной) ниже. · 🇬🇧 [English below](#english)
+> Русский (основной) ниже. · [English below](#english)
 > 🧮 Вся идея — в ста строках математики: [`researches/03`](researches/03_similarity_core_1x_source.md).
 
 ---
@@ -147,7 +152,15 @@ npm run build      # статическая сборка в build/ — весь 
 
 <a id="english"></a>
 
-## English
+<p align="center">
+  <a href="https://ndimspace.app"><img src="static/favicon.svg" alt="NDim Space" width="96"></a>
+</p>
+
+<p align="center">
+  🌍 NDim Space 2.0: <b><a href="https://ndimspace.app">ndimspace.app</a></b>
+</p>
+
+## NDim Space
 
 ### What this is
 
