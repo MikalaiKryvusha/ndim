@@ -1,3 +1,5 @@
+<a id="russian"></a>
+
 <p align="center">
   <a href="https://ndimspace.app"><img src="static/favicon.svg" alt="NDim Space" width="96"></a>
 </p>
@@ -5,8 +7,6 @@
 <p align="center">
   🌍 NDim Space 2.0: <b><a href="https://ndimspace.app">ndimspace.app</a></b>
 </p>
-
-<a id="russian"></a>
 
 # Пространство NDim
 
