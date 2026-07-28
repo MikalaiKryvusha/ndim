@@ -118,7 +118,10 @@
     .history::details-content,
     .ver::details-content {
       block-size: 0;
-      overflow: clip;
+      /* Именно `hidden`, а не `clip`: `hidden` создаёт блочный контекст, и внешние отступы
+         содержимого остаются ВНУТРИ анимируемой коробки. С `clip` они протекали наружу и
+         добавлялись разом в конце пути — это и было подёргивание в конце (bugs/68). */
+      overflow: hidden;
       opacity: 0;
       transition:
         block-size var(--motion-base) var(--motion-ease),
@@ -129,6 +132,16 @@
     .ver[open]::details-content {
       block-size: auto;
       opacity: 1;
+    }
+
+    /* ── Подёргивание в НАЧАЛЕ пути (bugs/68, слово владельца) ──
+       Отступ `[open]` включался МГНОВЕННО, пока высота ещё ехала: карточка дёргалась на
+       4px (внешняя) и 6px (вложенная) до начала плавного хода. Отступ обязан ехать тем же
+       хронометражем, что и высота. Причина рывка в КОНЦЕ — строкой выше (`overflow`).
+       Обе НАМЕРЕНЫ покадровой трассой, а не угаданы: `node tools/verify-bug68.mjs --trace`. */
+    .history,
+    .ver {
+      transition: padding-bottom var(--motion-base) var(--motion-ease);
     }
   }
 
