@@ -13,6 +13,8 @@ import { signInAnonymously, signInWithEmailAndPassword, signOut } from 'firebase
 import { addDoc, collection, doc, getDoc, getDocs, setDoc, writeBatch } from 'firebase/firestore';
 import { DEV_USER, db, devAuth, isStand } from '../firebase.ts';
 import { waitForSession } from './account.ts';
+import { FRESH, KEYS, cached, forgetAll, invalidate, own, peek } from './cache.ts';
+import { forgetAvatars } from './avatar.ts';
 import {
   bucketsForAudience,
   distribute,
@@ -102,9 +104,17 @@ export function currentEmail(): string | null {
   return devAuth().currentUser?.email ?? null;
 }
 
-/** Выход из аккаунта («Меню» → «Выйти»). Данные остаются в Пространстве, уходит только сессия. */
+/**
+ * Выход из аккаунта («Меню» → «Выйти»). Данные остаются в Пространстве, уходит только сессия.
+ *
+ * ⚠️ И вместе с сессией уходит ВСЁ, что кэш сессии успел накопить (`ideas/18`). Без этой строки
+ * кэш стал бы дырой приватности: человек вышел, за той же вкладкой сел другой — а в памяти
+ * лежат профиль, оценки и связи ушедшего. Лица чистим тем же движением: в них чужие люди.
+ */
 export async function signOutUser(): Promise<void> {
   await signOut(devAuth());
+  forgetAll();
+  forgetAvatars();
 }
 
 /**
@@ -136,8 +146,25 @@ function dirtyStamp(): Record<string, unknown> {
   return isGuestSession() ? { ...stamp, guest: true } : stamp;
 }
 
-/** Загружает всё содержимое экрана профиля за четыре чтения-коллекции. */
+/**
+ * Загружает всё содержимое экрана профиля за четыре чтения-коллекции.
+ *
+ * Результат живёт в кэше сессии (`ideas/18`, `data/cache.ts`): это МОИ данные, менять их могу
+ * только я и только в этой же вкладке, поэтому перечитывать их при каждом возврате на экран
+ * незачем. Свежесть держат записи: {@link saveRating}, {@link removeRating}, {@link saveProfile}
+ * помечают кэш устаревшим сами.
+ */
 export async function loadProfileScreen(uid: Uid): Promise<ProfileScreenData> {
+  own(uid); // сменился человек — прежний кэш уничтожен (приватность, см. cache.ts)
+  return cached(KEYS.profile, FRESH.mine, () => fetchProfileScreen(uid));
+}
+
+/** Что лежит в памяти прямо сейчас — для первого кадра экрана, без лоадера. */
+export function peekProfileScreen(): ProfileScreenData | undefined {
+  return peek<ProfileScreenData>(KEYS.profile);
+}
+
+async function fetchProfileScreen(uid: Uid): Promise<ProfileScreenData> {
   const store = db();
 
   // ⚠️ Каталога `dims` здесь НЕТ и быть не должно: это 5111 документов на каждое открытие
@@ -176,6 +203,7 @@ export async function saveRating(uid: Uid, dimId: string, value: number): Promis
   batch.set(doc(store, 'points', uid, 'dims', dimId), { value });
   batch.set(doc(store, 'points', uid), dirtyStamp(), { merge: true });
   await batch.commit();
+  afterMyRatingChanged();
 }
 
 /** Удаляет оценку (крестик на карточке) и тоже помечает точку «грязной». */
@@ -185,6 +213,19 @@ export async function removeRating(uid: Uid, dimId: string): Promise<void> {
   batch.delete(doc(store, 'points', uid, 'dims', dimId));
   batch.set(doc(store, 'points', uid), dirtyStamp(), { merge: true });
   await batch.commit();
+  afterMyRatingChanged();
+}
+
+/**
+ * Что устарело от МОЕЙ оценки (`ideas/18`): мои оценки и профиль, где показано их число,
+ * — сразу; связи — потому что топ теперь пересчитает сервер синхронизации, и старый показывать
+ * как истину нельзя. Статистику Пространства не трогаем: одна оценка её витрину не меняет,
+ * а её свежесть и без того минутная.
+ */
+function afterMyRatingChanged(): void {
+  invalidate(KEYS.profile);
+  invalidate(KEYS.ratings);
+  invalidate(KEYS.relations);
 }
 
 /**
@@ -245,6 +286,8 @@ export async function saveProfile(
   }
 
   await batch.commit();
+  // Я только что переписал свой профиль — кэш экрана обязан это узнать (`ideas/18`).
+  invalidate(KEYS.profile);
 }
 
 /** Отправляет заявку на новую ось. Правила требуют authorUid == auth.uid и длину 5…300. */

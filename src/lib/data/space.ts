@@ -13,6 +13,8 @@
  */
 
 import { collection, doc, getDoc, getDocs, limit, orderBy, query } from 'firebase/firestore';
+
+import { FRESH, KEYS, cached, peek } from './cache.ts';
 import { db } from '../firebase.ts';
 import {
   dayBefore,
@@ -49,8 +51,10 @@ export interface SpaceScreenData {
  * `null` — сервер ещё ни разу не отчитывался; врать про его версию мы не будем.
  */
 export async function loadSyncServer(): Promise<SyncServerDoc | null> {
-  const snapshot = await getDoc(doc(db(), 'space', 'server'));
-  return snapshot.exists() ? (snapshot.data() as SyncServerDoc) : null;
+  return cached(KEYS.syncServer, FRESH.server, async () => {
+    const snapshot = await getDoc(doc(db(), 'space', 'server'));
+    return snapshot.exists() ? (snapshot.data() as SyncServerDoc) : null;
+  });
 }
 
 /**
@@ -58,6 +62,26 @@ export async function loadSyncServer(): Promise<SyncServerDoc | null> {
  * показывать нули как «состояние Пространства» было бы враньём.
  */
 export async function loadSpace(now: number = Date.now()): Promise<SpaceScreenData | null> {
+  const data = await cached(KEYS.space, FRESH.server, fetchSpace);
+  if (data === null) return null;
+
+  /*
+   * ⚠️ Состояние сервера пересчитываем НА КАЖДЫЙ вызов, хотя всё остальное отдаём из кэша.
+   * `syncServerState` выводится из сердцебиения ОТНОСИТЕЛЬНО «сейчас» — заморозь его вместе с
+   * данными, и умолкший сервер минуту показывался бы как «Работает». Лампочка обязана
+   * выводиться из наблюдения, а не из памяти (канон `AGENT_GUIDE` → «Словарь продукта»).
+   */
+  return { ...data, serverState: syncServerState(data.server, now) };
+}
+
+/** Что лежит в памяти прямо сейчас — для первого кадра «Пространства», без лоадера. */
+export function peekSpace(now: number = Date.now()): SpaceScreenData | null | undefined {
+  const data = peek<SpaceScreenData | null>(KEYS.space);
+  if (data === undefined || data === null) return data;
+  return { ...data, serverState: syncServerState(data.server, now) };
+}
+
+async function fetchSpace(): Promise<SpaceScreenData | null> {
   const store = db();
 
   const [statsSnap, serverSnap, historySnap] = await Promise.all([
@@ -87,7 +111,8 @@ export async function loadSpace(now: number = Date.now()): Promise<SpaceScreenDa
   return {
     stats,
     server,
-    serverState: syncServerState(server, now),
+    // Заглушка: и `loadSpace`, и `peekSpace` пересчитывают состояние относительно «сейчас».
+    serverState: syncServerState(server, Date.now()),
     week: trendSince(stats, snapshotOnOrBefore(history, dayBefore(today, 7))),
     // Вчерашний снимок, а не «предпоследний в списке»: сегодняшний день в истории уже есть,
     // и сравнивать его с самим собой — значит всегда показывать «ничего не изменилось».

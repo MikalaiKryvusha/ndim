@@ -33,6 +33,7 @@
     isGuestSession,
     loadProfileScreen,
     previewAs,
+    peekProfileScreen,
     saveProfile,
     signInGuest,
     type ProfileScreenData,
@@ -70,9 +71,17 @@
   // Состояние стенда — честное: подключаемся / готово / стенда нет / публичный хост.
   // На публичном домене экраны 2.0 ещё не открыты (данные 2.0 появятся с миграцией) —
   // показываем честную заглушку со ссылкой на живое приложение, а не дев-сообщение.
-  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
+  /*
+   * ТЁПЛЫЙ ПЕРВЫЙ КАДР (`ideas/18`). Если экран уже открывали в этой сессии, его данные лежат
+   * в памяти приложения — берём их СИНХРОННО, до всякого `onMount`, и рисуем сразу готовым.
+   * Карточки «Загрузка» человек при возврате не видит вовсе; `onMount` ниже всё равно
+   * отработает и тихо освежит данные, если они устарели (stale-while-revalidate,
+   * `researches/17`). Пусто — значит заход первый, и лоадер честен.
+   */
+  const warm = peekProfileScreen();
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>(warm ? 'ready' : 'connecting');
   let standError = $state('');
-  let data = $state<ProfileScreenData | null>(null);
+  let data = $state<ProfileScreenData | null>(warm ?? null);
 
   // Гостевой режим (plans/03 этап 2, макет V1 «Тихий бейдж» утверждён 2026-07-11):
   // ?guest в адресе → мгновенный анонимный вход. Карточка гостя показана при первом

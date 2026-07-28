@@ -10,6 +10,8 @@
  */
 
 import { doc, getDoc } from 'firebase/firestore';
+
+import { FRESH, KEYS, cached, own, peek } from './cache.ts';
 import { db } from '../firebase.ts';
 import type {
   BirthDate,
@@ -53,8 +55,24 @@ export interface RelationsScreenData {
   readonly cards: readonly RelationCard[];
 }
 
-/** Загружает топ связей владельца. `null` — вычислитель ещё ни разу не считал. */
+/**
+ * Загружает топ связей владельца. `null` — вычислитель ещё ни разу не считал.
+ *
+ * Кэшируется на сессию с МИНУТНОЙ свежестью (`ideas/18`, `FRESH.server`): топ производит сервер
+ * синхронизации, а он ходит циклом в минуту — спрашивать чаще нечего. Возврат на экран внутри
+ * этого окна не стоит ни одного чтения, а за окном топ освежается тихо, поверх уже показанного.
+ */
 export async function loadRelations(uid: Uid): Promise<RelationsScreenData | null> {
+  own(uid);
+  return cached(KEYS.relations, FRESH.server, () => fetchRelations(uid));
+}
+
+/** Что лежит в памяти прямо сейчас — для первого кадра экрана «Связи», без лоадера. */
+export function peekRelations(): RelationsScreenData | null | undefined {
+  return peek<RelationsScreenData | null>(KEYS.relations);
+}
+
+async function fetchRelations(uid: Uid): Promise<RelationsScreenData | null> {
   const store = db();
   const snapshot = await getDoc(doc(store, 'relations', uid));
   if (!snapshot.exists()) return null;
@@ -116,6 +134,16 @@ export interface RelationsSummary {
  * `null` — сервер синхронизации ещё ни разу не считал связи этого человека.
  */
 export async function loadRelationsSummary(uid: Uid): Promise<RelationsSummary | null> {
+  own(uid);
+  return cached(KEYS.relationsSummary, FRESH.server, () => fetchRelationsSummary(uid));
+}
+
+/** Сводка из памяти — синхронно, для первого кадра профиля. */
+export function peekRelationsSummary(): RelationsSummary | null | undefined {
+  return peek<RelationsSummary | null>(KEYS.relationsSummary);
+}
+
+async function fetchRelationsSummary(uid: Uid): Promise<RelationsSummary | null> {
   const store = db();
   const [top, point] = await Promise.all([
     getDoc(doc(store, 'relations', uid)),

@@ -23,6 +23,7 @@
   import { currentSession } from '$lib/data/profile';
   import {
     loadRelations,
+    peekRelations,
     strengthLevel,
     type RelationCard,
     type RelationsScreenData,
@@ -34,9 +35,14 @@
 
   let lang = $state<Lang>('ru');
   // 'prod' — публичный домен: экраны 2.0 ещё не открыты, показываем заглушку со ссылкой на 1.x.
-  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
+  // Тёплый первый кадр (`ideas/18`): экран уже открывали в этой сессии — рисуем сразу из
+  // памяти, без карточки «Загрузка». `onMount` тихо освежит топ, если минута свежести истекла.
+  const warm = peekRelations();
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>(
+    warm === undefined ? 'connecting' : 'ready',
+  );
   let standError = $state('');
-  let data = $state<RelationsScreenData | null>(null);
+  let data = $state<RelationsScreenData | null>(warm ?? null);
   let expanded = $state<string | null>(null);
 
   /**

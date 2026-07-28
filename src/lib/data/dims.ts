@@ -22,6 +22,7 @@
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 
 import { db } from '../firebase.ts';
+import { FRESH, KEYS, cached, own, peek, remember } from './cache.ts';
 import { buildUnratedFeed, parseDimsIndex, sortMyDims, type DimsIndex } from '../model/feed.ts';
 import { assertValidRating, DIMS_INDEX_ID, type DimDoc, type Uid } from '../model/schema.ts';
 
@@ -81,13 +82,27 @@ export async function loadDimCards(ids: readonly string[]): Promise<DimCard[]> {
  * запрос — это лишние деньги.
  */
 export async function loadMyRatings(uid: Uid): Promise<Map<string, number>> {
-  const snapshot = await getDocs(collection(db(), 'points', uid, 'dims'));
+  own(uid);
+  return cached(KEYS.ratings, FRESH.mine, async () => {
+    const snapshot = await getDocs(collection(db(), 'points', uid, 'dims'));
 
-  const ratings = new Map<string, number>();
-  for (const rating of snapshot.docs) {
-    ratings.set(rating.id, (rating.data() as { value: number }).value);
-  }
-  return ratings;
+    const ratings = new Map<string, number>();
+    for (const rating of snapshot.docs) {
+      ratings.set(rating.id, (rating.data() as { value: number }).value);
+    }
+    return ratings;
+  });
+}
+
+/**
+ * Мои оценки из памяти — синхронно, для первого кадра экрана «Измерения» (`ideas/18`).
+ *
+ * Свежесть держат сами записи: {@link saveRating} и {@link removeRating} помечают этот ключ
+ * устаревшим, поэтому «всю сессию» здесь не означает «до посинения» — означает «пока я сам
+ * ничего не менял».
+ */
+export function peekMyRatings(): Map<string, number> | undefined {
+  return peek<Map<string, number>>(KEYS.ratings);
 }
 
 /** Всё, что нужно экрану «Измерения», кроме самих карточек (их берём порциями). */
@@ -109,15 +124,51 @@ export async function loadDimsScreen(
   uid: Uid,
   ratings: ReadonlyMap<string, number>,
 ): Promise<DimsScreenData> {
-  const index = await loadDimsIndex();
-  const rated = new Set(ratings.keys());
+  own(uid);
+  /*
+   * Кэшируем СОБРАННЫЙ экран, а не только его части (`ideas/18`). Причина не в запросах —
+   * индекс и так читается один раз, — а в том, что очередь вкладки «Все» строится В СЛУЧАЙНОМ
+   * ПОРЯДКЕ: пересборка при каждом возврате перетасовывала бы ленту под руками у человека, и
+   * экран выглядел бы загруженным заново, даже читая ноль документов. Свежесть держит моя же
+   * оценка: она гасит весь префикс `ratings`, и очередь пересобирается уже без оценённого.
+   */
+  return cached(KEYS.dimsScreen, FRESH.mine, async () => {
+    const index = await loadDimsIndex();
+    const rated = new Set(ratings.keys());
 
-  return {
-    index,
-    ratings,
-    feed: buildUnratedFeed(index, rated),
-    mine: sortMyDims(ratings),
-  };
+    return {
+      index,
+      ratings,
+      feed: buildUnratedFeed(index, rated),
+      mine: sortMyDims(ratings),
+    };
+  });
+}
+
+/** Собранный экран «Измерений» из памяти — синхронно, для первого кадра. */
+export function peekDimsScreen(): DimsScreenData | undefined {
+  return peek<DimsScreenData>(KEYS.dimsScreen);
+}
+
+/**
+ * Докуда человек долистал ленту «Все» (`ideas/18`).
+ *
+ * Одного кэша данных мало: очередь и каталог могут лежать в памяти, но если лента при
+ * каждом возврате начинается с пустоты и добирает первую порцию, человек всё равно видит
+ * загрузку. Запоминаем ПОКАЗАННЫЕ идентификаторы — сами карточки уже лежат в {@link cache}.
+ */
+export function rememberShownFeed(ids: readonly string[]): void {
+  remember(KEYS.dimsShown, [...ids]);
+}
+
+/** Идентификаторы показанных карточек из памяти. */
+export function peekShownFeed(): readonly string[] | undefined {
+  return peek<readonly string[]>(KEYS.dimsShown);
+}
+
+/** Карточки каталога, которые УЖЕ скачаны, — синхронно, для первого кадра ленты. */
+export function peekDimCards(ids: readonly string[]): DimCard[] {
+  return ids.map((id) => cache.get(id)).filter((card): card is DimCard => card !== undefined);
 }
 
 /**

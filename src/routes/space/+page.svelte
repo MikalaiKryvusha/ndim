@@ -25,7 +25,7 @@
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession } from '$lib/data/profile';
-  import { loadSpace, type SpaceScreenData } from '$lib/data/space';
+  import { loadSpace, peekSpace, type SpaceScreenData } from '$lib/data/space';
   import { nextRunAt, type DailySnapshotDoc, type SpaceEvent } from '$lib/model/stats';
   import { technicalDetail } from '$lib/ui/errors';
   import { MOTION } from '$lib/ui/motion';
@@ -45,9 +45,14 @@
 
   let lang = $state<Lang>('ru');
   // 'prod' — публичный домен: экраны 2.0 ещё не открыты, показываем заглушку со ссылкой на 1.x.
-  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
+  // Тёплый первый кадр (`ideas/18`). Состояние сервера `peekSpace` пересчитывает относительно
+  // «сейчас», поэтому из памяти приходят цифры, а лампочка остаётся живой, а не замороженной.
+  const warm = peekSpace();
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>(
+    warm === undefined ? 'connecting' : 'ready',
+  );
   let standError = $state('');
-  let data = $state<SpaceScreenData | null>(null);
+  let data = $state<SpaceScreenData | null>(warm ?? null);
 
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');

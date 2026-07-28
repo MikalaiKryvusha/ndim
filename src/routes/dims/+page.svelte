@@ -43,6 +43,11 @@
     loadDimCards,
     loadDimsScreen,
     loadMyRatings,
+    peekDimCards,
+    peekDimsScreen,
+    peekMyRatings,
+    peekShownFeed,
+    rememberShownFeed,
     removeRating,
     saveRating,
     PAGE_SIZE,
@@ -68,12 +73,18 @@
   type Tab = 'all' | 'mine';
 
   let lang = $state<Lang>('ru');
-  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
+  // Тёплый первый кадр (`ideas/18`): собранный экран и мои оценки уже в памяти приложения —
+  // берём их синхронно, и возврат на «Измерения» перестаёт выглядеть загрузкой с нуля.
+  // Очередь ленты приходит ТА ЖЕ САМАЯ (она случайная — пересборка перетасовала бы её).
+  const warm = peekDimsScreen();
+  /** Карточки, которые человек уже видел на этом экране, — они скачаны и лежат в памяти. */
+  const warmShown = warm ? peekDimCards(peekShownFeed() ?? []) : [];
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>(warm ? 'ready' : 'connecting');
   let standError = $state('');
 
   let uid = $state<string | null>(null);
-  let data = $state<DimsScreenData | null>(null);
-  let ratings = $state<Map<string, number>>(new Map());
+  let data = $state<DimsScreenData | null>(warm ?? null);
+  let ratings = $state<Map<string, number>>(peekMyRatings() ?? new Map());
 
   let tab = $state<Tab>('all');
   let search = $state('');
@@ -121,10 +132,17 @@
    */
   let submitted = $state('');
 
-  /** Очередь ещё не показанных id (вкладка «Все»). Из неё карточки достаются порциями. */
-  let queue = $state<string[]>([]);
+  /**
+   * Очередь ещё не показанных id (вкладка «Все»). Из неё карточки достаются порциями.
+   * При тёплом старте (`ideas/18`) наполняем её сразу, иначе первая порция не начала бы
+   * добираться до `onMount` — и «Измерения» показали бы пустую ленту вместо своих карточек.
+   */
+  // Очередь — это то, чего человек ещё НЕ видел. Множество, а не поиск по массиву:
+  // в каталоге 5111 измерений, и перебор внутри перебора обошёлся бы в миллионы сравнений.
+  const warmShownIds = new Set(warmShown.map((card) => card.id));
+  let queue = $state<string[]>(warm ? warm.feed.filter((id) => !warmShownIds.has(id)) : []);
   /** Карточки, уже отрисованные на экране. */
-  let shown = $state<DimCard[]>([]);
+  let shown = $state<DimCard[]>(warmShown);
   let loadingMore = $state(false);
   let exhausted = $state(false);
 
@@ -171,10 +189,21 @@
         }
         uid = session;
         ratings = await loadMyRatings(session);
-        data = await loadDimsScreen(session, ratings);
-        queue = [...data.feed];
+        const screen = await loadDimsScreen(session, ratings);
+        /*
+         * Тёплый старт (`ideas/18`): если кэш отдал ТО ЖЕ САМОЕ значение (сравнение по ссылке),
+         * лента на экране уже верна — сбрасывать её нельзя, иначе восстановленные карточки
+         * стёрлись бы и человек снова увидел загрузку. Значение другое — значит экран собран
+         * заново (первый заход либо моя оценка сделала кэш несвежим), и лента пересобирается.
+         */
+        const rebuilt = screen !== data;
+        data = screen;
+        if (rebuilt) {
+          queue = [...screen.feed];
+          shown = [];
+        }
         stand = 'ready';
-        await loadMore();
+        if (shown.length === 0) await loadMore();
       } catch (error) {
         standError = technicalDetail(error);
         stand = 'down';
@@ -185,6 +214,14 @@
       if (ticker !== null) clearInterval(ticker);
       if (undoTimer !== null) clearTimeout(undoTimer);
     };
+  });
+
+  /**
+   * Докуда долистали — в кэш сессии (`ideas/18`), одним зеркалом вместо ручных вызовов
+   * в каждом месте, где лента меняется. Возврат на экран восстановит ровно этот список.
+   */
+  $effect(() => {
+    if (stand === 'ready') rememberShownFeed(shown.map((card) => card.id));
   });
 
   /**

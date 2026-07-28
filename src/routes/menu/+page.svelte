@@ -28,6 +28,7 @@
     currentSession,
     isGuestSession,
     loadProfileScreen,
+    peekProfileScreen,
     signOutUser,
     type ProfileScreenData,
   } from '$lib/data/profile';
@@ -41,8 +42,11 @@
   import { theme, setTheme } from '$lib/ui/theme.svelte';
 
   let lang = $state<Lang>('ru');
-  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>('connecting');
-  let data = $state<ProfileScreenData | null>(null);
+  // Тёплый первый кадр (`ideas/18`): «Меню» показывает те же данные профиля, что и «Профиль», —
+  // повторно читать их при каждом заходе незачем, они уже в памяти приложения.
+  const warm = peekProfileScreen();
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>(warm ? 'ready' : 'connecting');
+  let data = $state<ProfileScreenData | null>(warm ?? null);
   let email = $state<string | null>(null);
   let guest = $state(false);
   let server = $state<SyncServerDoc | null>(null);
