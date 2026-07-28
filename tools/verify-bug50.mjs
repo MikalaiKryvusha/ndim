@@ -40,13 +40,69 @@ async function person(browser, { theme = 'light', width = 390, lang } = {}) {
 /** Идентификаторы карточек, ОТРИСОВАННЫХ прямо сейчас (лента показывает порцию из 12). */
 const shownIds = (page) => page.$$eval('article.dim[data-dim]', (nodes) => nodes.map((n) => n.dataset.dim));
 
-/** Ввод в строку поиска + ожидание, пока экран перестанет быть «в поиске». */
-async function search(page, query) {
+/**
+ * Панель «Измерений» на экране (а не уехала прокруткой).
+ *
+ * ⚠️ Панель прячется ПО НАПРАВЛЕНИЮ прокрутки (канон 1.x, bugs/52), и возвращает её
+ * обработчик события `scroll`. Если страница уже наверху, событие не придёт вовсе — и
+ * панель останется уехавшей: её кнопки формально «видимы», но клик по ним перехватывает
+ * лента, и страж падает таймаутом вместо проверки. Поэтому прокрутку именно ШЕВЕЛИМ.
+ */
+async function showToolbar(page) {
+  const hidden = () => page.evaluate(() => document.querySelector('.toolbar')?.classList.contains('hidden') ?? false);
+  if (!(await hidden())) return;
+  await page.evaluate(() => window.scrollTo({ top: 200, behavior: 'instant' }));
+  await page.waitForTimeout(150);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await page.waitForTimeout(450); // возвращается переходом 300 мс
+}
+
+/**
+ * Ящик поиска выдвинут? Поле живёт в нём с макета V3 (bugs/51) и до нажатия 🔍 скрыто.
+ *
+ * ⚠️ Открытость определяем ПО РАЗМЕТКЕ (`.toolbar.open`), а не по видимости поля.
+ * Закрытый ящик — это `max-height: 0; overflow: hidden` у родителя, а Playwright считает
+ * обрезанный родителем элемент ВИДИМЫМ (у него свой ненулевой бокс). Проверка через
+ * `isVisible()` поэтому врала: страж решал, что ящик открыт, печатал в схлопнутое поле
+ * (это проходило) и падал только на клике по кнопке «Искать» — обрезанной и недоступной.
+ */
+async function openSearch(page) {
+  const isOpen = () => page.evaluate(() => document.querySelector('.toolbar')?.classList.contains('open') ?? false);
+  if (await isOpen()) return;
+  await showToolbar(page);
+  await page.locator('.tools .ibtn').first().click();
+  await page.waitForFunction(() => document.querySelector('.toolbar')?.classList.contains('open'), { timeout: 10000 });
+  await page.waitForTimeout(350); // ящик едет 280 мс — жать по нему раньше нельзя
+}
+
+/**
+ * Ввод в строку поиска + ЯВНАЯ ОТПРАВКА + ожидание, пока экран перестанет быть «в поиске».
+ *
+ * ⚠️ Отправка обязательна с ideas/20: поиск больше не стартует по набору букв. Раньше эта
+ * функция только заполняла поле — после смены канона она молча ждала бы выдачи, которой
+ * никогда не будет (класс EXP-0056: страж гниёт не от регрессии, а от смены канона).
+ */
+async function search(page, query, { via = 'enter' } = {}) {
+  await openSearch(page);
   const input = page.locator('input.search');
   await input.fill('');
   await input.fill(query);
-  // Пауза дребезга (250 мс) + догрузка карточек из базы. Ждём НАБЛЮДАЕМОГО исхода:
-  // либо появились карточки, либо экран сказал «ничего не найдено» / показал ошибку.
+  if (via === 'button') {
+    // Кнопка живёт в той же панели — её тоже нельзя жать «вслепую», если панель уехала.
+    await showToolbar(page);
+    await page.locator('.sform .go').click();
+  } else {
+    await input.press('Enter');
+  }
+  await settled(page);
+}
+
+/**
+ * Барьер «экран больше не в поиске»: догрузка карточек из базы закончилась.
+ * Ждём НАБЛЮДАЕМОГО исхода — либо появились карточки, либо экран честно сказал
+ * «ничего не найдено» / показал ошибку.
+ */
+async function settled(page) {
   await page.waitForFunction(
     () => {
       const body = document.querySelector('main.body');
@@ -98,7 +154,50 @@ try {
     const [targetId, targetEntry] = notLoaded[0];
     // Ищем по «сырому» имени из индекса, как это делает живой человек, — без кавычек и года.
     const targetQuery = targetEntry.ru.replace(/[«»"]/g, '').replace(/\s*\(\d{4}\)\s*$/, '').trim();
-    await search(page, targetQuery);
+
+    /*
+     * ЭКОНОМИЯ (ideas/20): набор букв НЕ порождает запросов к Firestore.
+     *
+     * Слово владельца: «поиск делать только по явному вводу… Сейчас ищет по каждой букве —
+     * это неуважение к ограниченному ресурсу Firestore». Стережём ПОВЕДЕНИЕ, а не литерал
+     * (класс EXP-0061): считаем реальные обращения к эмулятору базы, пока человек печатает.
+     *
+     * Замер живёт ИМЕННО ЗДЕСЬ, на измерении, которого нет в DOM: его карточка заведомо не
+     * в кеше `data/dims.ts`, поэтому отправка обязана сходить в базу. Если поставить замер
+     * после других поисков, «0 запросов» было бы зелёным от прогретого кеша, а не от фикса
+     * (поймано наблюдением: на разогретом кеше и Enter давал 0 запросов — и это правильно).
+     */
+    await openSearch(page);
+    let dbCalls = 0;
+    const countCall = (request) => {
+      if (request.url().includes('127.0.0.1:8181')) dbCalls += 1;
+    };
+    page.on('request', countCall);
+
+    /*
+     * Печатаем ПОСИМВОЛЬНО — именно так, как человек, иначе проверять было бы нечего:
+     * `fill()` ставит строку разом и не порождает того потока событий, на который раньше
+     * реагировал поиск.
+     *
+     * ⚠️ Само содержимое поля после такого ввода на стенде оказывается перевёрнутым
+     * (`bugs/72`: каретка возвращается в начало — дефект СТАРШЕ этой работы, доказано
+     * прогоном на HEAD). Замеру это не мешает: мы считаем ЗАПРОСЫ, а их нет при любом
+     * порядке букв. Отправку ниже делаем через `fill()`, чтобы страж не зависел от
+     * чужого дефекта и не покраснел вместо него.
+     */
+    await page.locator('input.search').fill('');
+    await page.locator('input.search').pressSequentially(targetQuery, { delay: 60 });
+    await page.waitForTimeout(1500);
+    check('набор букв БЕЗ отправки не стоит ни одного запроса к базе', dbCalls === 0, `запросов: ${dbCalls}`);
+    check('и выдачи на экране ещё нет — лента на месте', !(await shownIds(page)).includes(targetId));
+
+    // Отправка — и вот теперь запросы обязаны пойти, иначе «0 при наборе» ничего не значит.
+    await page.locator('input.search').fill(targetQuery);
+    await page.locator('input.search').press('Enter');
+    await page.waitForSelector(`article.dim[data-dim="${targetId}"]`, { timeout: 20000 });
+    check('отправка запускает поиск: запросы к базе пошли', dbCalls > 0, `запросов после Enter: ${dbCalls}`);
+    page.off('request', countCall);
+
     const found = await shownIds(page);
     check(`НАЙДЕНО измерение, которого не было в DOM: «${targetQuery}»`, found.includes(targetId),
       `искали ${targetId}, выдача: ${found.join(', ') || 'пусто'}`);
@@ -130,6 +229,14 @@ try {
     check('показано не больше 20 карточек', manyIds.length <= 20, `${manyIds.length}`);
     check('сказано, что показаны первые 20', manyText.includes('первые 20'),
       manyText.split('\n').find((line) => line.includes('первые')) ?? '—');
+
+    // ── 4б. Кнопка «Искать» — вторая дверь из слова владельца, и она обязана работать так же ──
+    await search(page, 'таксист', { via: 'button' });
+    check('кнопка «Искать» запускает поиск', (await shownIds(page)).includes('taxi-driver-1976'));
+
+    // Пустой ввод не ищет (канон 1.x): кнопка погашена, нажимать нечего.
+    await page.locator('input.search').fill('');
+    check('пустой ввод: кнопка «Искать» погашена', await page.locator('.sform .go').isDisabled());
 
     // ── 5. Возврат к ленте: поиск очищен — вкладка «Все» на месте ──
     await page.locator('input.search').fill('');

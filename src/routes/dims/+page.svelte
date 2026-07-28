@@ -101,14 +101,25 @@
   let searchError = $state('');
 
   /**
-   * Таймер устранения дребезга и метка запроса — намеренно ОБЫЧНЫЕ переменные, не `$state`:
-   * их читает эффект поиска, и реактивность здесь означала бы бесконечный цикл.
+   * Метка запроса — намеренно ОБЫЧНАЯ переменная, не `$state`: её читает эффект поиска,
+   * и реактивность здесь означала бы бесконечный цикл.
    */
-  let searchTimer: ReturnType<typeof setTimeout> | null = null;
   let searchToken = 0;
 
-  /** Пауза перед запросом: человек печатает, а не ищет каждую букву (в 1.x искали по Enter). */
-  const SEARCH_DEBOUNCE_MS = 250;
+  /**
+   * ЗАПРОС, ПО КОТОРОМУ ИЩЕМ — отдельно от того, что человек печатает (`search`), ideas/20.
+   *
+   * Слово владельца: «поиск делать только по явному вводу по кнопке ИСКАТЬ, или по вводу с
+   * Android клавиатуры, или Enter на десктопе… Сейчас ищет по каждой букве — это неуважение
+   * к ограниченному ресурсу Firestore». В 1.x поиск тоже начинался только по явному
+   * действию (`researches/12` → «Поиск измерений»).
+   *
+   * Разделение и есть вся суть фикса: набор букв больше не порождает НИ ОДНОГО запроса,
+   * а выдача на экране показывается ровно для того запроса, который человек отправил.
+   * Пауза против дребезга (250 мс) здесь больше не нужна и удалена: гасить дребезг нечего,
+   * когда запрос ровно один на нажатие.
+   */
+  let submitted = $state('');
 
   /** Очередь ещё не показанных id (вкладка «Все»). Из неё карточки достаются порциями. */
   let queue = $state<string[]>([]);
@@ -181,7 +192,7 @@
    * Ровно так работал 1.x (`IntersectionObserver` + `allDimsLoader`).
    */
   $effect(() => {
-    if (sentinel === null || stand !== 'ready' || search.trim() !== '') return;
+    if (sentinel === null || stand !== 'ready' || submitted !== '') return;
 
     const anchor = sentinel;
     let pumping = false;
@@ -234,18 +245,16 @@
   });
 
   /**
-   * Поиск: запрос изменился → пауза → ищем по индексу → догружаем найденное (bugs/50).
+   * Поиск: человек ОТПРАВИЛ запрос → ищем по индексу → догружаем найденное (bugs/50, ideas/20).
    *
-   * Эффект читает ТОЛЬКО `search` и `data` — записи в `searchCards`/`searchBusy` его не
-   * перезапускают. Метка `searchToken` отбрасывает ответ на устаревший запрос: человек
-   * печатает быстрее, чем отвечает сеть, и без неё результат «Тако» мог бы прилететь
-   * поверх результата «Такси».
+   * Эффект читает ТОЛЬКО `submitted` и `data` — набор букв в поле его не будит, поэтому
+   * промежуточные запросы к Firestore не уходят вовсе. Записи в `searchCards`/`searchBusy`
+   * эффект тоже не перезапускают. Метка `searchToken` по-прежнему отбрасывает ответ на
+   * устаревший запрос: человек может отправить второй поиск, пока отвечает первый.
    */
   $effect(() => {
-    const query = search.trim();
+    const query = submitted;
     const index = data?.index ?? null;
-
-    if (searchTimer !== null) clearTimeout(searchTimer);
 
     if (query === '' || index === null) {
       searchToken += 1; // ответ на прошлый запрос уже никому не нужен
@@ -260,12 +269,32 @@
     searchError = '';
 
     searchToken += 1;
-    const token = searchToken;
-    searchTimer = setTimeout(() => void runSearch(index, query, token), SEARCH_DEBOUNCE_MS);
+    void runSearch(index, query, searchToken);
+  });
 
-    return () => {
-      if (searchTimer !== null) clearTimeout(searchTimer);
-    };
+  /**
+   * Отправка запроса — единственная дверь к поиску (ideas/20).
+   *
+   * Зовётся сабмитом формы, а значит покрывает разом все три способа из слова владельца:
+   * кнопку «Искать», Enter на десктопе и клавишу поиска Android-клавиатуры
+   * (`enterkeyhint="search"` превращает её в кнопку отправки формы).
+   *
+   * Пустой ввод не ищет — как в 1.x (тост «Введите текст для поиска», `app.js:9230`);
+   * здесь он просто возвращает ленту, что честнее тоста: человек и так видит пустое поле.
+   */
+  function submitSearch(event: SubmitEvent): void {
+    event.preventDefault();
+    submitted = search.trim();
+  }
+
+  /**
+   * Опустело поле — вернули ленту. Запросов это не порождает: сброс целиком локальный.
+   *
+   * Без этого стёртое поле оставляло бы на экране выдачу прошлого запроса — то самое
+   * «лента врёт, а почему — не видно», от которого уводит закрытие ящика поиска ниже.
+   */
+  $effect(() => {
+    if (search.trim() === '') submitted = '';
   });
 
   /** Один заход поиска: индекс даёт id, база — карточки. Каталог целиком не читается. */
@@ -358,6 +387,33 @@
   function pick(dimId: string, value: number): void {
     if (uid === null) return;
 
+    /*
+     * ПОВТОРНЫЙ ТАП ПО ГОРЯЩЕЙ ЗВЕЗДЕ — ОТМЕНА (канон 1.x, bugs/54).
+     *
+     * Слово владельца: «когда установил звезду, не могу её снять и отменить счётчик
+     * автосохранения… в старом NDim повторный тап по выбранной звезде отменял выделение».
+     *
+     * Разведка 1.x (researches/12 → «Жест звезды: повторный тап») ответила на главный
+     * вопрос: сохранённых данных этот жест НЕ трогал никогда. На вкладке «Все» он снимал
+     * выделение и прятал кнопку Save (app.js:3759), а на «Мой NDim ID» по уже выделенной
+     * звезде не делал НИЧЕГО — все ветки закрыты условием `checked != "checked"`
+     * (app.js:3856/3870/3884). Удаление оценки было отдельной операцией (deleteField,
+     * app.js:8955) — в 2.0 это «Убрать оценку» в меню карточки и тост «Отменить оценку».
+     *
+     * Отсюда обе половины поведения:
+     */
+    if (starValue(dimId) === value) {
+      // Идёт отсчёт по ЭТОЙ карточке — человек передумал: отменяем, записи не будет.
+      // (Роль `hideSaveButton` из 1.x играет отмена отсчёта: сохраняла кнопка — теперь время.)
+      if (pending?.dimId === dimId) {
+        stopCountdown();
+        pending = null;
+      }
+      // Оценка уже сохранена — жест звезды её не удаляет. Заодно не платим Firestore за
+      // запись того же значения (канон «экономить запросы», AGENT_GUIDE → «Модель данных»).
+      return;
+    }
+
     // Передумал на другой карточке — прежний отсчёт отменяем: сохраняем только то, на что смотрят.
     stopCountdown();
     pending = { dimId, value, left: COUNTDOWN_SECONDS };
@@ -415,7 +471,7 @@
     queue = queue.filter((id) => id !== dimId);
     shown = shown.filter((item) => item.id !== dimId);
 
-    if (search.trim() !== '') {
+    if (submitted !== '') {
       // В ВЫДАЧЕ ПОИСКА карточка ОСТАЁТСЯ со своими звёздами. Человек искал именно её —
       // если она исчезнет в момент оценки, он решит, что что-то сломалось.
       showUndo(dimId, card ? dimCardTitle(loc(card.title), card.year).name : '');
@@ -502,7 +558,7 @@
   const visible = $derived.by((): DimCard[] => {
     if (data === null) return [];
 
-    if (search.trim() !== '') return searchCards;
+    if (submitted !== '') return searchCards;
     if (tab === 'mine') return mineVisible;
     return shown;
   });
@@ -512,7 +568,7 @@
    * Иначе animate:flip тянул общие карточки через весь экран при переключении вкладок —
    * та самая «пляска». Пересоздание контейнера мгновенно и локальных переходов не запускает.
    */
-  const feedKey = $derived(search.trim() !== '' ? 'search' : tab);
+  const feedKey = $derived(submitted !== '' ? 'search' : tab);
 
   /** Сколько измерений человек оценил — цифра на вкладке. */
   const myCount = $derived(ratings.size);
@@ -550,6 +606,7 @@
     const target = tabScroll[next];
     tab = next;
     search = '';
+    submitted = '';
     // Первую порцию «моих» тянем сразу: не ждём срабатывания якоря под пустой лентой.
     if (next === 'mine' && mineCount === 0) void loadMoreMine();
     void tick().then(() => restoreScroll(target));
@@ -713,6 +770,7 @@
       queueMicrotask(() => searchInput?.focus());
     } else {
       search = '';
+      submitted = ''; // закрыли поиск — вернулись к ленте (ideas/20)
     }
   }
 
@@ -769,6 +827,8 @@
     // Текст задан владельцем дословно (2026-07-27, при утверждении макета V3).
     searchPlaceholder: { ru: 'Введите искомое название', en: 'Enter the name you are looking for' },
     searchTitle: { ru: 'Поиск измерения', en: 'Search a dimension' },
+    // Кнопка явного запуска поиска (ideas/20). Слово владельца — «кнопке ИСКАТЬ».
+    searchGo: { ru: 'Искать', en: 'Search' },
     loading: { ru: 'Загрузка', en: 'Loading' },
     allDone: {
       ru: 'Вы оценили все измерения Пространства. Это по-настоящему редкое достижение.',
@@ -884,10 +944,10 @@
   >
     <div class="trow">
       <div class="segs" role="group">
-        <button type="button" class:on={tab === 'all' && search.trim() === ''} onclick={() => switchTab('all')}>
+        <button type="button" class:on={tab === 'all' && submitted === ''} onclick={() => switchTab('all')}>
           {t.tabAll[lang]}
         </button>
-        <button type="button" class:on={tab === 'mine' && search.trim() === ''} onclick={openMyTab}>
+        <button type="button" class:on={tab === 'mine' && submitted === ''} onclick={openMyTab}>
           {t.tabMine[lang]}
         </button>
       </div>
@@ -912,15 +972,21 @@
       </div>
     </div>
 
-    <!-- Ящик: поле поиска занимает высоту только когда человек его вызвал (макет V3). -->
+    <!-- Ящик: поле поиска занимает высоту только когда человек его вызвал (макет V3).
+         ФОРМА, а не голое поле (ideas/20): сабмит — единственная дверь к поиску, и он же
+         разом даёт Enter на десктопе и клавишу «поиск» Android-клавиатуры. -->
     <div class="drawer">
-      <input
-        bind:this={searchInput}
-        class="search"
-        type="search"
-        placeholder={t.searchPlaceholder[lang]}
-        bind:value={search}
-      />
+      <form class="sform" onsubmit={submitSearch}>
+        <input
+          bind:this={searchInput}
+          class="search"
+          type="search"
+          enterkeyhint="search"
+          placeholder={t.searchPlaceholder[lang]}
+          bind:value={search}
+        />
+        <button type="submit" class="go" disabled={search.trim() === ''}>{t.searchGo[lang]}</button>
+      </form>
     </div>
   </div>
   {/if}
@@ -988,7 +1054,7 @@
         </div>
       {/if}
 
-      {#if search.trim() !== ''}
+      {#if submitted !== ''}
         <!-- Поиск идёт по ВСЕМУ Пространству и догружает найденное (bugs/50). Пока карточки
              летят из базы — каноничное кольцо 1.x; «Ничего не найдено» говорим ТОЛЬКО когда
              поиск действительно закончен, иначе витрина врёт о каталоге. -->
@@ -1113,7 +1179,7 @@
       </div>
       {/key}
 
-      {#if search.trim() === ''}
+      {#if submitted === ''}
         <!--
           Догрузка ленты показывается ТОЙ ЖЕ каноничной карточкой 1.x, что и все загрузки
           продукта (`Loading.svelte`, bugs/21: кольцо «( )»). Здесь висел самодельный глиф
@@ -1246,13 +1312,30 @@
   }
   .toolbar.open .drawer { max-height: 64px; opacity: 1; }
 
+  /* Поле и кнопка «Искать» — одна строка (ideas/20): поиск начинается только по явному вводу. */
+  .sform { display: flex; gap: 8px; align-items: stretch; }
+
   .search {
-    width: 100%; margin-top: 8px;
+    flex: 1; min-width: 0; margin-top: 8px;
     padding: 11px 14px; border-radius: 12px; background: var(--panel);
     border: 1px solid var(--edge); color: var(--text); font: inherit;
     transition: border-color 0.15s ease;
   }
   .search:focus { outline: none; border-color: var(--primary); }
+
+  /*
+   * Кнопка запуска. Пока запроса нет — она погашена: нажимать нечего, и это честнее,
+   * чем кнопка, которая молча ничего не делает (пустой ввод не ищет — канон 1.x).
+   */
+  .go {
+    flex: none; margin-top: 8px; padding: 0 16px; border-radius: 12px; cursor: pointer;
+    background: var(--primary); border: 1px solid var(--primary); color: #fff;
+    font: inherit; font-weight: 600; white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+  }
+  .go:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 88%, #000); }
+  .go:active:not(:disabled) { transform: scale(0.96); }
+  .go:disabled { opacity: 0.45; cursor: default; }
 
   /*
    * Пара кнопок панели: 🔍 и 💡 — соседи, как в 1.x (`extra_tools_container`).
