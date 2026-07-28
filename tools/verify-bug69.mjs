@@ -19,14 +19,19 @@
  *   4) консоль чиста.
  *
  * Требует поднятый `npm run stand`. Скриншоты — test-results/bug69/.
- * Запуск: node tools/verify-bug69.mjs [--quick]
+ * Запуск: node tools/verify-bug69.mjs [--quick] [--prod]
+ *
+ * Флаг `--prod` гонит тот же прогон по БОЕВОМУ сайту (как `--prod` у verify-icons.mjs):
+ * правило «графика не появляется на горячую» проверяется там, где его видит владелец.
+ * Стенд для этого не нужен — придержка роутом добавляется поверх реальной сети.
  */
 
 import { mkdir } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 
-const BASE = 'http://localhost:5173';
-const SHOTS = 'test-results/bug69';
+const PROD = process.argv.includes('--prod');
+const BASE = PROD ? 'https://ndimspace.app' : 'http://localhost:5173';
+const SHOTS = PROD ? 'test-results/bug69-prod' : 'test-results/bug69';
 const QUICK = process.argv.includes('--quick');
 
 /** Продовая латентность картинки: столько добавляем каждому запросу за графикой. */
