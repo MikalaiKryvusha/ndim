@@ -7,6 +7,7 @@
   // напоминаний. Пожертвование ни на что не влияет — и об этом сказано прямо.
   import DocShell from '$lib/ui/DocShell.svelte';
   import Icon from '$lib/ui/Icon.svelte';
+  import { ready } from '$lib/ui/ready';
 
   const DONATION_URL = 'https://donationalerts.com/r/mikalai_kryvusha';
 
@@ -46,7 +47,7 @@
 
     <!-- Иллюстрация 1.x (`images/donation.png`, кадр app-11): страница благодарности без
          неё выглядела казённой формой. -->
-    <img class="art" src="/img/docs/donation.png" width="150" height="150" alt="" loading="lazy" decoding="async" />
+    <img use:ready class="art" src="/img/docs/donation.png" width="150" height="150" alt="" loading="lazy" decoding="async" />
 
     <!-- Знак на кнопке — ТОТ САМЫЙ `donate-heart.svg` из 1.x (набор иконок, bugs/17),
          а не типографский ♡: у глифа нет ни сетки, ни веса. -->
@@ -75,7 +76,13 @@
      они и не центрировались: их читают глазами построчно. */
   p { text-align: center; }
   .thanks { margin-top: 14px; color: var(--heading); font-weight: 600; }
-  .art { display: block; margin: 22px auto 0; width: 150px; height: auto; }
+  /* Проявляется ГОТОВОЙ (правило владельца о графике, bugs/69): место занято w/h,
+     прозрачность снимается классом ok. */
+  .art {
+    display: block; margin: 22px auto 0; width: 150px; height: auto;
+    opacity: 0; transition: opacity var(--motion-base) var(--motion-ease);
+  }
+  .art:global(.ok) { opacity: 1; }
   .btn {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     margin-top: 22px; padding: 14px; border-radius: 12px;

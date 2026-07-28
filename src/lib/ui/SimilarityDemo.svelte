@@ -9,6 +9,9 @@
   // Ничего не сохраняется и не отправляется: состояние живёт в памяти страницы.
   import { computeRelation, MAX_RATING } from '$lib/similarity/similarity';
   import { track } from '$lib/data/funnel';
+  // Правило владельца «графика не появляется на горячую» (bugs/69): лица персонажей
+  // проявляются готовыми — и в кружках карточек, и на карте, и в оверлее.
+  import { ready } from '$lib/ui/ready';
 
   type Lang = 'ru' | 'en';
   let { lang, appUrl }: { lang: Lang; appUrl: string } = $props();
@@ -185,6 +188,7 @@
           <g class="grow">
             <circle r={NODE_R} fill="var(--panel)" stroke={pt.p.color} stroke-width="3" />
             <image
+              use:ready
               href={avatarFace(pt.p.id)}
               x={-(NODE_R - 2.5)} y={-(NODE_R - 2.5)}
               width={(NODE_R - 2.5) * 2} height={(NODE_R - 2.5) * 2}
@@ -209,7 +213,7 @@
           style="--ring:{p.color}"
           aria-label="{p.name[lang]} — {t.zoom[lang]}"
           onclick={() => (zoomed = p)}>
-          <img src={avatarFace(p.id)} alt={p.name[lang]} loading="lazy" />
+          <img use:ready src={avatarFace(p.id)} alt={p.name[lang]} loading="lazy" />
         </button>
         <div class="titles">
           <div class="who">{p.name[lang]}{idx === 0 ? t.closest[lang] : ''}</div>
@@ -245,7 +249,7 @@
       onclick={() => (zoomed = null)}
       onkeydown={(e) => (e.key === 'Enter' || e.key === 'Escape') && (zoomed = null)}>
       <figure class="sheet" style="--ring:{zoomed.color}">
-        <img src={avatarFull(zoomed.id)} alt={zoomed.name[lang]} />
+        <img use:ready src={avatarFull(zoomed.id)} alt={zoomed.name[lang]} />
         <figcaption>
           <b>{zoomed.name[lang]}</b>
           <span>{zoomed.note[lang]}</span>
@@ -371,6 +375,13 @@
   svg .node:focus-visible .grow {
     transform: scale(1.6);
   }
+  /* Лицо в точке карты — та же готовность, что и в кружках карточек (bugs/69):
+     место держит круг персонажа, лицо проявляется скачанным. */
+  svg image {
+    opacity: 0;
+    transition: opacity var(--motion-base) var(--motion-ease);
+  }
+  svg image:global(.ok) { opacity: 1; }
 
   /* ── Карточки персонажей ── */
   .persona .head {
@@ -401,7 +412,12 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* Лицо проявляется ГОТОВЫМ (правило владельца о графике, bugs/69). Место держит сама
+       кнопка-кружок с кольцом персонажа — раскладка не шевелится, пустого кадра нет. */
+    opacity: 0;
+    transition: opacity var(--motion-base) var(--motion-ease);
   }
+  .ava img:global(.ok) { opacity: 1; }
   .ava:hover,
   .ava:focus-visible {
     animation: none;
@@ -543,7 +559,11 @@
     height: auto;
     border-radius: 12px;
     border: 2px solid var(--ring);
+    /* Полный портрет тоже проявляется готовым (bugs/69): оверлей не мигает пустой рамкой. */
+    opacity: 0;
+    transition: opacity var(--motion-base) var(--motion-ease);
   }
+  .sheet img:global(.ok) { opacity: 1; }
   .sheet figcaption {
     display: flex;
     align-items: baseline;

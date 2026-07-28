@@ -4,6 +4,7 @@
   // владелец при желании поправит.
   import DocShell from '$lib/ui/DocShell.svelte';
   import Icon from '$lib/ui/Icon.svelte';
+  import { ready } from '$lib/ui/ready';
 
   /** Почта поддержки NDim Space — она же была в 1.x. */
   const SUPPORT_EMAIL = 'ndimspace@yandex.ru';
@@ -31,8 +32,9 @@
   {#snippet children(lang)}
     <p>{t.body[lang]}</p>
     <p class="thanks">{t.thanks[lang]}</p>
-    <!-- Иллюстрация 1.x (`images/support.png`, кадр app-10). -->
-    <img class="art" src="/img/docs/support.png" width="150" height="150" alt="" loading="lazy" decoding="async" />
+    <!-- Иллюстрация 1.x (`images/support.png`, кадр app-10). Проявляется ГОТОВОЙ
+         (правило владельца о графике, bugs/69) — место под неё занято w/h. -->
+    <img use:ready class="art" src="/img/docs/support.png" width="150" height="150" alt="" loading="lazy" decoding="async" />
 
     <!-- Знак на кнопке — тот же `support.svg`, что стоял на ней в 1.x (bugs/17). -->
     <a class="btn" href="mailto:{SUPPORT_EMAIL}?subject={encodeURIComponent(subject[lang])}">
@@ -47,7 +49,13 @@
      см. researches/12. Владелец волны 12: «центровки важных текстов нет». */
   p { text-align: center; }
   .thanks { margin-top: 14px; color: var(--heading); font-weight: 600; }
-  .art { display: block; margin: 22px auto 0; width: 150px; height: auto; }
+  /* Прозрачна до готовности — проявляется, когда картинка ГОТОВА (bugs/69). Прозрачность
+     задана стилем, а не кодом: стиль действует с первого кадра пререндеренной страницы. */
+  .art {
+    display: block; margin: 22px auto 0; width: 150px; height: auto;
+    opacity: 0; transition: opacity var(--motion-base) var(--motion-ease);
+  }
+  .art:global(.ok) { opacity: 1; }
   .btn {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     margin-top: 22px; padding: 14px; border-radius: 12px;

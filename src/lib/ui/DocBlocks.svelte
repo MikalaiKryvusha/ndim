@@ -13,22 +13,13 @@
   import Icon from '$lib/ui/Icon.svelte';
   import { FACE_PATHS, GRADE_FACES, LOVE_FACE } from '$lib/ui/emojiscale';
   import { richText, type Lang } from '$lib/ui/format';
+  import { ready } from '$lib/ui/ready';
   import type { DocBlock } from '$lib/content/docs';
 
   let { blocks, lang }: { blocks: readonly DocBlock[]; lang: Lang } = $props();
 
-  /**
-   * Глобальное правило владельца (2026-07-27): графика НИГДЕ не «доезжает на горячую».
-   * Блок картинки резервирует место атрибутами w/h (раскладка не прыгает), а сама она
-   * ПРОЯВЛЯЕТСЯ готовой: класс ok ставится по факту загрузки. Пререндер + гидрация:
-   * к моменту действия картинка из кэша может быть уже загружена — тогда onload не
-   * сыграет никогда, поэтому сперва проверяем complete (класс EXP-0049).
-   */
-  function ready(img: HTMLImageElement) {
-    const ok = () => img.classList.add('ok');
-    if (img.complete && img.naturalWidth > 0) ok();
-    else img.addEventListener('load', ok, { once: true });
-  }
+  // Правило владельца «графика не появляется на горячую» — общий приём проекта
+  // (`$lib/ui/ready.ts`, bugs/69). Здесь он и родился (bugs/55), отсюда и вынесен.
 </script>
 
 <!-- Цветной смайлик оценки (шкала 1.x): «десятка» — многоцветный авторский файл. -->

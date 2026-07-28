@@ -12,6 +12,7 @@
   import DocShell from '$lib/ui/DocShell.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import { AUTHOR_LINKS } from '$lib/ui/brands';
+  import { ready } from '$lib/ui/ready';
 
   const DONATION_URL = 'https://donationalerts.com/r/mikalai_kryvusha';
 
@@ -38,8 +39,10 @@
     <figure>
       <!-- Портрет 1.x: 260×260 в исходнике, показываем 132 — retina без размытия.
            width/height проставлены, чтобы место под фото было занято ДО загрузки и
-           страница не прыгала (тот же класс дефекта, что bugs/57). -->
+           страница не прыгала (тот же класс дефекта, что bugs/57), а видимым портрет
+           становится ГОТОВЫМ (правило владельца о графике, bugs/69). -->
       <img
+        use:ready
         class="ava"
         src="/img/author.webp"
         width="132"
@@ -83,7 +86,12 @@
     /* Тонкий фирменный ободок — портрет читается как портрет и в тёмной теме,
        где светлый фон снимка иначе висел бы в пустоте. */
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent), var(--card-shadow);
+    /* Портрет проявляется ГОТОВЫМ (правило владельца о графике, bugs/69): место под него
+       занято w/h, ободок держит композицию, а сам снимок не въезжает скачком. */
+    opacity: 0;
+    transition: opacity var(--motion-base) var(--motion-ease);
   }
+  .ava:global(.ok) { opacity: 1; }
   figcaption { font-size: 16px; font-weight: 700; color: var(--heading); }
 
   /* Сетка площадок — та же форма, что у «Пригласить друзей» (одна семья экранов),
