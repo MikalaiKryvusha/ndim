@@ -7,7 +7,15 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
 		<!-- Тема и язык применяются ДО отрисовки, чтобы не было мигания:
 		     читаем сохранённый выбор (дефолт — светлая тема, русский язык) и
-		     выставляем атрибуты на <html>. CSS-переменные тем ключуются на data-theme. -->
+		     выставляем атрибуты на <html>. CSS-переменные тем ключуются на data-theme.
+
+		     Здесь же поднимается ЗАГРУЗОЧНЫЙ ЩИТ (bugs/40, канон 1.x — researches/12
+		     → «Boot-экран: механика целиком»). Почему именно здесь, а не в компоненте:
+		     корень — пререндеренный лендинг, его HTML отдаётся готовым, и любой щит,
+		     который рисует Svelte, опаздывает на гидратацию — ровно те 4–5 кадров
+		     мелькающего лендинга, что намерил `tools/measure-bug40.mjs`. В 1.x щит по
+		     той же причине лежал статической разметкой в index.html и был виден с
+		     первого кадра. -->
 		<script>
 			(function () {
 				try {
@@ -18,12 +26,184 @@
 					d.setAttribute('lang', l);
 					var m = document.querySelector('meta[name="theme-color"]');
 					if (m) m.setAttribute('content', t === 'dark' ? '#060b14' : '#f6f8fb');
+
+					// ── Щит поднимается ТОЛЬКО на корне и ТОЛЬКО при признаке сессии ──
+					// Гость и поисковый робот маркера не имеют и получают лендинг сразу:
+					// накрывать щитом единственную индексируемую страницу нельзя.
+					// Маркер ведём сами (src/lib/data/session.ts): Firebase хранит сессию
+					// в IndexedDB, а её нельзя прочитать синхронно — то есть к первому кадру
+					// правды от SDK не существует в принципе.
+					var p = location.pathname;
+					if ((p === '/' || p === '/index.html') && localStorage.getItem('ndim-session')) {
+						d.setAttribute('data-booting', '');
+						// Потолок 15 секунд (канон 1.x): щит держится до РЕШЕНИЯ, а решение
+						// может не прийти — сеть легла, Auth молчит. Без потолка это вечный
+						// экран без выхода.
+						setTimeout(function () {
+							if (!d.hasAttribute('data-booting')) return;
+							var long = document.getElementById('boot-long');
+							if (long) long.hidden = false;
+							var again = document.getElementById('boot-reload');
+							// Обработчик вешаем кодом, а не атрибутом onclick: инлайн-обработчик
+							// первым падает под Content-Security-Policy, если её однажды введут.
+							if (again)
+								again.addEventListener('click', function () {
+									location.reload();
+								});
+						}, 15000);
+					}
 				} catch (e) {}
 			})();
 		</script>
+		<style>
+			/* Щит существует в разметке всегда и невидим по умолчанию: показывает его
+			   только атрибут data-booting. Стили инлайн — CSS приложения приезжает
+			   отдельным файлом и к первому кадру может ещё не примениться. */
+			#boot {
+				display: none;
+			}
+			html[data-booting] #boot {
+				position: fixed;
+				top: 0;
+				left: 0;
+				/* Ширину берём у ОКНА (100vw), а не у раскладки: `inset: 0` оставлял справа
+				   непокрытую полосу в 15px — ровно ширину `scrollbar-gutter: stable`
+				   (он введён bugs/59), сквозь которую просвечивал лендинг. Тот же дефект
+				   класса, что и bugs/65 у лайтбокса; замер щита показывал 1425 против 1440. */
+				width: 100vw;
+				height: 100dvh;
+				z-index: 200;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 14px;
+				padding: 24px;
+				text-align: center;
+				background: #f6f8fb;
+				font-family:
+					system-ui,
+					-apple-system,
+					'Segoe UI',
+					Roboto,
+					sans-serif;
+			}
+			html[data-theme='dark'][data-booting] #boot {
+				background: #060b14;
+			}
+			/* Пока щит поднят, страница под ним не прокручивается. */
+			html[data-booting] {
+				overflow: hidden;
+			}
+			#boot-name {
+				font-size: 17px;
+				font-weight: 600;
+				color: #12263c;
+			}
+			html[data-theme='dark'] #boot-name {
+				color: #eef6ff;
+			}
+			/* Кольцо «( )» — канон 1.x: закрашены две противоположные дуги, пол-оборота
+			   каждые 1.5 с. Тот же приём, что в src/lib/ui/Loading.svelte. */
+			#boot-ring {
+				width: 22px;
+				aspect-ratio: 1;
+				border-radius: 50%;
+				border: 3px solid;
+				border-color: #1467d6 transparent;
+				animation: boot-half-turn 1.5s infinite;
+			}
+			@keyframes boot-half-turn {
+				to {
+					transform: rotate(0.5turn);
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				#boot-ring {
+					animation: none;
+				}
+			}
+			/* ⚠️ Правило `display: flex` по id ПЕРЕБИВАЕТ браузерное `[hidden] { display: none }`
+			   (специфичность id выше), и совет о долгой загрузке показывался с первой
+			   миллисекунды вместо пятнадцатой секунды. Поймано глазами на скриншоте —
+			   страж этого не увидел, потому что спрашивал АТРИБУТ `hidden`, а не видимость. */
+			#boot-long[hidden] {
+				display: none;
+			}
+			#boot-long {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 12px;
+				margin-top: 10px;
+				font-size: 14px;
+				line-height: 1.5;
+				color: #6a819a;
+			}
+			html[data-theme='dark'] #boot-long {
+				color: #8299b1;
+			}
+			#boot-reload {
+				font: inherit;
+				padding: 9px 18px;
+				border-radius: 10px;
+				border: 1px solid rgba(20, 103, 214, 0.35);
+				background: transparent;
+				color: #1a63c4;
+				cursor: pointer;
+			}
+			html[data-theme='dark'] #boot-reload {
+				border-color: rgba(63, 217, 255, 0.45);
+				color: #a8e2ff;
+			}
+			/* Двуязычие щита — приёмом 1.x: обе строки лежат в разметке, лишнюю прячет
+			   язык документа (его выставил скрипт выше). Никакого JS на подстановку. */
+			html[lang='ru'] #boot [data-lang='en'],
+			html[lang='en'] #boot [data-lang='ru'] {
+				display: none;
+			}
+		</style>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
+
+		<!-- ЗАГРУЗОЧНЫЙ ЩИТ (bugs/40). Состав — канон 1.x: знак + «Пространство NDim» +
+		     кольцо; после долгого ожидания — совет перезагрузить.
+		     Знак ВСТАВЛЕН РАЗМЕТКОЙ, а не <img>: правило владельца «графика нигде не
+		     появляется на горячую» (bugs/69) здесь невыполнимо иначе — щит рисуется
+		     раньше, чем успел бы догрузиться любой файл. -->
+		<div id="boot" role="status" aria-live="polite">
+			<svg width="72" height="72" viewBox="0 0 96 96" aria-hidden="true">
+				<!-- N-сеть V3 «Диагональ», как в static/favicon.svg (утверждена 2026-07-11) -->
+				<defs>
+					<linearGradient id="bootg" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70">
+						<stop offset="0" stop-color="#4d9fff" />
+						<stop offset="1" stop-color="#3fd9ff" />
+					</linearGradient>
+				</defs>
+				<rect width="96" height="96" rx="22" fill="#060b14" />
+				<g stroke="url(#bootg)" stroke-width="6.7" fill="none">
+					<line x1="36.5" y1="29" x2="30" y2="66" />
+					<line x1="36.5" y1="29" x2="59.5" y2="66" />
+					<line x1="59.5" y1="66" x2="66" y2="29" />
+				</g>
+				<g fill="url(#bootg)">
+					<circle cx="36.5" cy="29" r="9.3" />
+					<circle cx="30" cy="66" r="9.3" />
+					<circle cx="59.5" cy="66" r="9.3" />
+					<circle cx="66" cy="29" r="9.3" />
+				</g>
+			</svg>
+			<p id="boot-name"><span data-lang="ru">Пространство NDim</span><span data-lang="en">NDim Space</span></p>
+			<i id="boot-ring" aria-hidden="true"></i>
+			<div id="boot-long" hidden>
+				<p data-lang="ru">Загрузка выполняется необычно долго.<br />Попробуйте перезагрузить страницу.</p>
+				<p data-lang="en">Loading takes an unusually long time.<br />Try to reload the page.</p>
+				<button id="boot-reload" type="button">
+					<span data-lang="ru">Перезагрузить</span><span data-lang="en">Reload</span>
+				</button>
+			</div>
+		</div>
 	</body>
 </html>

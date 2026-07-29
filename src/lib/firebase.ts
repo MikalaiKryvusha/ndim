@@ -18,9 +18,10 @@
  */
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth';
+import { connectAuthEmulator, getAuth, onAuthStateChanged, type Auth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore';
 import { connectStorageEmulator, getStorage, type FirebaseStorage } from 'firebase/storage';
+import { rememberSession } from './data/session.ts';
 
 /** Идентификатор дев-проекта. Префикс `demo-` = только эмуляторы, никакого прода. */
 export const DEV_PROJECT_ID = 'demo-ndim-dev';
@@ -115,5 +116,18 @@ export function devAuth(): Auth {
 
   auth = getAuth(ensureApp());
   if (isStand()) connectAuthEmulator(auth, AUTH_EMULATOR_URL, { disableWarnings: true });
+
+  /*
+   * Признак сессии для загрузочного щита (bugs/40) держим ЗДЕСЬ — в единственной точке,
+   * где рождается Auth, и подпиской БЕЗ отписки.
+   *
+   * Почему не у вызывающих: сессия появляется и исчезает многими путями — вход Google,
+   * ссылка из письма, анонимный гость, апгрейд гостя в аккаунт, выход, а на стенде ещё и
+   * `signInDev()` в обход общей дороги. Первая версия расставляла отметку по местам и
+   * пропустила ровно эту ветку: на стенде щит не поднимался вовсе, и замер показал 0
+   * кадров щита при исправном коде. Слушатель у самого источника правды не может
+   * разойтись с ней по построению — любой новый способ входа учтётся сам.
+   */
+  onAuthStateChanged(auth, (user) => rememberSession(user !== null));
   return auth;
 }

@@ -18,7 +18,7 @@
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
   import { loadPublicPeople } from '$lib/data/metrics';
-  import { hasSession } from '$lib/data/session';
+  import { endBoot, hasSession } from '$lib/data/session';
   import { num, peopleUnit } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   // Тема — общий источник истины (bugs/53): лендинг, шапка и «Меню» читают одно значение.
@@ -74,9 +74,15 @@
     //   · чтение, оборванное редиректом, роняло бы шум Firestore в консоль.
     void hasSession().then((inside) => {
       if (inside) {
+        // Щит НЕ опускаем: человек уходит внутрь, и под щитом он не увидит ни кадра
+        // лендинга (bugs/40, канон 1.x — гасить только после того, как открыт нужный экран).
         location.replace(APP_URL);
         return;
       }
+      // Сессии нет — лендинг и есть нужный экран, щит своё отработал. Сюда попадают только
+      // те, у кого маркер соврал (вышел в другой вкладке, сессия истекла): у гостя щита
+      // не было вовсе, и вызов для него — безобидная холостая работа.
+      endBoot();
       // Первый шаг воронки (plans/03 этап 4). Ничего персонального не пишет и
       // ничего не ждёт: аналитика не имеет права тормозить лендинг.
       void track('landing_view');

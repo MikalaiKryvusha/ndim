@@ -115,6 +115,8 @@ export async function signOutUser(): Promise<void> {
   await signOut(devAuth());
   forgetAll();
   forgetAvatars();
+  // Признак сессии снимать здесь не нужно: `signOut` разбудит слушателя в `firebase.ts`,
+  // и маркер загрузочного щита погаснет сам (bugs/40).
 }
 
 /**

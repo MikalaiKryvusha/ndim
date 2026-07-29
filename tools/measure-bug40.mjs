@@ -8,7 +8,17 @@
  * Метод — покадровая rAF-трасса (EXP-0060): «дёрганость» одиночным замером неизмерима,
  * её видно только по кадрам.
  *
- * Что считается кадром лендинга: на странице виден заголовок приветствия лендинга.
+ * Что считается кадром лендинга: приветствие лендинга не только есть в разметке, но и
+ * НЕ НАКРЫТО загрузочным щитом — что физически в центре экрана, спрашиваем у браузера
+ * (`elementFromPoint`), а не выводим из наличия текста.
+ *
+ * ⚠️ Почему признак именно такой (уточнён 2026-07-29 вместе с фиксом): лендинг
+ * пререндерен и лежит в DOM ВСЕГДА, щит лишь накрывает его сверху. Прибор, судящий по
+ * `innerText`, после фикса продолжал бы рапортовать «человек видит лендинг», когда тот
+ * закрыт непрозрачным щитом, — и намерил бы провал на исправном продукте. На замере «до»
+ * уточнение ничего не меняет: щита тогда не существовало, `shield` там всегда false, —
+ * поэтому числа «до» и «после» сравнимы.
+ *
  * Что считается кадром приложения: адрес уже /profile.
  */
 import { chromium } from 'playwright';
@@ -43,13 +53,23 @@ for (const round of [1, 2]) {
   for (let i = 0; i < 120; i++) {
     let frame;
     try {
-      frame = await page.evaluate(() => ({
-        path: location.pathname,
-        // Приветствие лендинга — надёжный признак, что человек видит именно его.
-        landing: /Добро пожаловать|Welcome to/.test(document.body.innerText || ''),
-        // Кольцо загрузки 1.x (Loading.svelte) — то, чего в этом месте пока нет.
-        ring: !!document.querySelector('.loading, .loader, [data-loading]'),
-      }));
+      frame = await page.evaluate(() => {
+        // Что человек РЕАЛЬНО видит в этот кадр: спрашиваем браузер, какой элемент
+        // лежит в центре вьюпорта. Непрозрачный щит перекрывает лендинг физически.
+        const top = document.elementFromPoint(innerWidth / 2, innerHeight / 2);
+        const shield = !!(top && top.closest && top.closest('#boot'));
+        return {
+          path: location.pathname,
+          shield,
+          // Приветствие лендинга видно, только если его ничем не накрыли.
+          landing: !shield && /Добро пожаловать|Welcome to/.test(document.body.innerText || ''),
+          // Кольцо загрузки: карточка «Загрузка» (Loading.svelte) либо кольцо щита.
+          // ⚠️ Щит лежит в разметке ВСЕГДА и прячется стилем, поэтому его кольцо нельзя
+          // искать селектором — `querySelector` нашёл бы его и на погашенном щите.
+          // Видно оно ровно тогда, когда щит поднят.
+          ring: shield || !!document.querySelector('.loading, .loader, [data-loading]'),
+        };
+      });
     } catch {
       continue; // контекст снесён навигацией — это сам переход, пропускаем кадр
     }
@@ -60,6 +80,7 @@ for (const round of [1, 2]) {
 
   const landingFrames = trace.filter((f) => f.landing).length;
   const ringFrames = trace.filter((f) => f.ring).length;
+  const shieldFrames = trace.filter((f) => f.shield).length;
   const redirected = trace.some((f) => f.path === '/profile');
   const firstRedirect = trace.findIndex((f) => f.path === '/profile');
 
@@ -67,7 +88,8 @@ for (const round of [1, 2]) {
   console.log(`  кадров всего снято            : ${trace.length}`);
   console.log(`  редирект вошедшего произошёл  : ${redirected ? 'ДА, на кадре ' + firstRedirect : 'НЕТ'}`);
   console.log(`  кадров, где человек видит ЛЕНДИНГ: ${landingFrames}  ← это и есть «мелькание»`);
-  console.log(`  кадров с кольцом загрузки     : ${ringFrames}  ← boot-экрана пока нет, ожидаем 0`);
+  console.log(`  кадров под ЗАГРУЗОЧНЫМ ЩИТОМ  : ${shieldFrames}  ← щит bugs/40 накрыл лендинг`);
+  console.log(`  кадров с кольцом загрузки     : ${ringFrames}  ← до фикса было 0`);
 
   await page.screenshot({ path: `${OUT}/round${round}-final.png` });
   await ctx.close();
