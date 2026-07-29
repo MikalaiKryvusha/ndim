@@ -12,6 +12,10 @@
   // Прод-шелл пререндерится; Firebase трогаем только в onMount (в браузере).
   import { onMount } from 'svelte';
   import { fade, slide } from 'svelte/transition';
+  // Неглубокое маршрутирование SvelteKit — окно «Как меня видят» получает запись в истории,
+  // не меняя адреса (ideas/21 п. 3). Первое применение `$app/*` в проекте.
+  import { pushState } from '$app/navigation';
+  import { page } from '$app/state';
   import AppBar from '$lib/ui/AppBar.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
@@ -59,7 +63,34 @@
   // аудиторий — не таба, а ОКНО за кнопкой «Как меня видят»; «Назад» возвращает в профиль.
 
   let lang = $state<Lang>('ru');
-  let seeMeOpen = $state(false);
+
+  /**
+   * Окно «Как меня видят» живёт В ИСТОРИИ БРАУЗЕРА (ideas/21 п. 3).
+   *
+   * Владелец: «с "Как меня видят" навигация работает некорректно, закрыло приложение, словно
+   * родительский Профиль не был в стеке навигации». Так и было: окно выглядело дочерней
+   * страницей (полный экран, заголовок, стрелка «Назад») — но записи в истории у него не было,
+   * и системная «Назад» уводила из приложения. Спецификация лежала прямо в комментарии выше:
+   * «„Назад“ возвращает в профиль», — реализована она была только экранной кнопкой.
+   *
+   * Лечение — ШТАТНОЕ неглубокое маршрутирование SvelteKit (`pushState` + `page.state`), а не
+   * самодельный `popstate`: адрес не меняется, окно остаётся окном, но «Назад» обслуживает
+   * настоящий роутер. Своего перехвата истории в приложении не появляется — при трёх похожих
+   * слоях (лайтбокс фото, панель глав) самодельный вариант быстро стал бы роутером поверх
+   * роутера.
+   *
+   * Точка закрытия ОДНА — `history.back()`. Экранная стрелка и Escape зовут её же, поэтому
+   * состояние не может разъехаться с историей.
+   */
+  const seeMeOpen = $derived(page.state.seeMe === true);
+
+  function openSeeMe(): void {
+    pushState('', { seeMe: true });
+  }
+
+  function closeSeeMe(): void {
+    if (seeMeOpen) history.back();
+  }
 
   // Пока окно предпросмотра открыто — страница под ним не прокручивается (как лайтбокс).
   $effect(() => {
@@ -776,7 +807,7 @@
 
 <svelte:window
   onkeydown={(event) => {
-    if (seeMeOpen && event.key === 'Escape') seeMeOpen = false;
+    if (seeMeOpen && event.key === 'Escape') closeSeeMe();
   }}
 />
 
@@ -977,7 +1008,7 @@
             <div class="duo">
               <button type="button" class="btn ghost" onclick={startEdit}>{t.edit[lang]}</button>
               <!-- Предпросмотр аудиторий — окно за кнопкой, не таба (слово владельца). -->
-              <button type="button" class="btn ghost" onclick={() => (seeMeOpen = true)}>{t.seeMe[lang]}</button>
+              <button type="button" class="btn ghost" onclick={openSeeMe}>{t.seeMe[lang]}</button>
             </div>
           </div>
           <!-- Виджет «Мой NDim ID» — канон «Дома» 1.x (кадр app-01, bugs/43): человек видит,
@@ -1062,7 +1093,7 @@
   {#if seeMeOpen && data}
     <div class="seeme" transition:fade={{ duration: MOTION.base }}>
       <div class="seeme-head">
-        <button type="button" class="back-btn" onclick={() => (seeMeOpen = false)}>
+        <button type="button" class="back-btn" onclick={closeSeeMe}>
           <Icon name="back" size={13} />{t.backBtn[lang]}
         </button>
         <h2>{t.seeMe[lang]}</h2>
