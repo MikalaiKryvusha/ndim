@@ -79,7 +79,33 @@ export async function signInDev(): Promise<Uid> {
  * `null` — это не ошибка, а состояние «человек не вошёл».
  */
 export async function currentSession(): Promise<Uid | null> {
-  if (isStand()) return signInDev();
+  if (isStand()) {
+    /*
+     * ⚠️ СТЕНДОВАЯ ДВЕРЬ `?as=…` (ideas/21 п. 13, 2026-07-29).
+     *
+     * До неё на стенде существовало РОВНО ОДНО состояние человека — вошедший
+     * `dev@ndim.space`. Значит `isGuestSession()` был вечно ложным, а `currentSession()`
+     * никогда не возвращал `null`: ни гостевые ветки интерфейса, ни карточка входа не
+     * проверялись ни человеком, ни автоматикой. Ровно поэтому дефект «гость заперт — у него
+     * нет даже кнопки „Выйти“» дожил до боя, где в него упёрся владелец.
+     *
+     *   `?as=guest` — анонимная сессия (гость). Документ человека заводит `/profile?guest=1`.
+     *   `?as=none`  — сессии нет вовсе: экран обязан предложить войти. Это состояние 331
+     *                 человека из 1.x при первом заходе в 2.0 — самое важное и самое
+     *                 непроверяемое.
+     *
+     * Дверь открыта ТОЛЬКО на стенде (`isStand()` — localhost/127.0.0.1), в бою параметр
+     * не читается вовсе. Приём не новый: так же устроен `?db=` для выбора базы.
+     */
+    const as = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('as');
+    if (as === 'none') return null;
+    if (as === 'guest') {
+      const user = await waitForSession();
+      if (user?.isAnonymous) return user.uid;
+      return signInGuest();
+    }
+    return signInDev();
+  }
 
   const user = await waitForSession();
   return user?.uid ?? null;
