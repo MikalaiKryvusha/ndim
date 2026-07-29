@@ -26,6 +26,9 @@
   import SideRail from '$lib/ui/SideRail.svelte';
   import { currentSession } from '$lib/data/profile';
   import { loadSpace, peekSpace, type SpaceScreenData } from '$lib/data/space';
+  // Жест «потянуть вниз» (интервью №006, В1=А — все четыре главных экрана).
+  import PullToRefresh from '$lib/ui/PullToRefresh.svelte';
+  import { noteFirstLoad } from '$lib/data/refresh.svelte';
   import { nextRunAt, type DailySnapshotDoc, type SpaceEvent } from '$lib/model/stats';
   import { technicalDetail } from '$lib/ui/errors';
   import { MOTION } from '$lib/ui/motion';
@@ -54,6 +57,20 @@
   let standError = $state('');
   let data = $state<SpaceScreenData | null>(warm ?? null);
 
+  /**
+   * Перечитать цифры Пространства. Отдельной функцией: её зовут `onMount` при заходе и жест
+   * «потянуть вниз» по требованию человека (интервью №006).
+   */
+  async function loadScreen(): Promise<void> {
+    data = await loadSpace();
+    noteFirstLoad();
+  }
+
+  /** Обновление по жесту: кэш гасит `refreshNow`, здесь — только перечитывание экрана. */
+  async function refreshScreen(): Promise<void> {
+    if ((await currentSession()) !== null) await loadScreen();
+  }
+
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');
     if (saved === 'en' || saved === 'ru') lang = saved;
@@ -65,7 +82,7 @@
         stand = 'signedout';
         return;
       }
-      data = await loadSpace();
+      await loadScreen();
       stand = 'ready';
     } catch (error) {
       standError = technicalDetail(error);
@@ -331,6 +348,7 @@
   <SideRail active="space" {lang} />
 
   <AppBar {lang} onLang={(next) => (lang = next)} />
+  <PullToRefresh onRefresh={refreshScreen} />
 
   <main class="body">
     <div class="head">

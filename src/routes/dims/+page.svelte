@@ -54,6 +54,9 @@
     type DimCard,
     type DimsScreenData,
   } from '$lib/data/dims';
+  // Жест «потянуть вниз» (интервью №006, В1=А — все четыре главных экрана).
+  import PullToRefresh from '$lib/ui/PullToRefresh.svelte';
+  import { noteFirstLoad } from '$lib/data/refresh.svelte';
   import {
     dimCardTitle,
     isNewDim,
@@ -176,6 +179,41 @@
   // независимых замера одного и того же неизбежно разошлись бы. Прежний локальный замер искал
   // `.bar` по всему документу — при смене класса он молча оставался бы с дефолтом.
 
+  /**
+   * Перечитать «Измерения». Отдельной функцией: её зовут `onMount` при заходе и жест
+   * «потянуть вниз» по требованию человека (интервью №006).
+   */
+  async function loadScreen(session: string): Promise<void> {
+    ratings = await loadMyRatings(session);
+    const screen = await loadDimsScreen(session, ratings);
+    /*
+     * Тёплый старт (`ideas/18`): если кэш отдал ТО ЖЕ САМОЕ значение (сравнение по ссылке),
+     * лента на экране уже верна — сбрасывать её нельзя, иначе восстановленные карточки
+     * стёрлись бы и человек снова увидел загрузку. Значение другое — значит экран собран
+     * заново (первый заход, моя оценка сделала кэш несвежим либо человек обновил жестом),
+     * и лента пересобирается.
+     */
+    const rebuilt = screen !== data;
+    data = screen;
+    if (rebuilt) {
+      queue = [...screen.feed];
+      shown = [];
+    }
+    noteFirstLoad();
+  }
+
+  /**
+   * Обновление по жесту: кэш гасит `refreshNow`, здесь — только перечитывание экрана.
+   * После обновления лента заведомо пересобрана (кэш погашен), поэтому первую порцию
+   * добираем сразу — иначе человек увидел бы пустоту вместо карточек.
+   */
+  async function refreshScreen(): Promise<void> {
+    const session = await currentSession();
+    if (session === null) return;
+    await loadScreen(session);
+    if (shown.length === 0) await loadMore();
+  }
+
   onMount(() => {
     const saved = localStorage.getItem('ndim-lang');
     if (saved === 'en' || saved === 'ru') lang = saved;
@@ -188,20 +226,7 @@
           return;
         }
         uid = session;
-        ratings = await loadMyRatings(session);
-        const screen = await loadDimsScreen(session, ratings);
-        /*
-         * Тёплый старт (`ideas/18`): если кэш отдал ТО ЖЕ САМОЕ значение (сравнение по ссылке),
-         * лента на экране уже верна — сбрасывать её нельзя, иначе восстановленные карточки
-         * стёрлись бы и человек снова увидел загрузку. Значение другое — значит экран собран
-         * заново (первый заход либо моя оценка сделала кэш несвежим), и лента пересобирается.
-         */
-        const rebuilt = screen !== data;
-        data = screen;
-        if (rebuilt) {
-          queue = [...screen.feed];
-          shown = [];
-        }
+        await loadScreen(session);
         stand = 'ready';
         if (shown.length === 0) await loadMore();
       } catch (error) {
@@ -964,6 +989,7 @@
 <div class="screen">
   <SideRail active="dims" {lang} />
   <AppBar {lang} onLang={(next) => (lang = next)} />
+  <PullToRefresh onRefresh={refreshScreen} />
 
   <!--
     Верхнее меню живёт ВНЕ колонки контента, сразу под шапкой (слово владельца 2026-07-27:

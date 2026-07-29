@@ -35,7 +35,12 @@
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
   import { MANIFEST } from '$lib/content/manifest';
-  import { dateOnly, type Lang } from '$lib/ui/format';
+  // Путь обновления БЕЗ жеста (интервью №006, В4=А). Он здесь не для красоты: как только жест
+  // забран у браузера, WCAG 2.2 SC 2.5.7 требует равноценный путь без перетаскивания — а на
+  // десктопе тянуть нечем вовсе. Это единственное место, где человек узнаёт, что видит цифры
+  // из памяти сеанса (осознанная цена макета V1 — самая низкая находимость).
+  import { lastRefreshAt, refreshNow, refreshing } from '$lib/data/refresh.svelte';
+  import { agoLabel, dateOnly, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
   // Тема — общий источник истины (bugs/53): её же читает и переключает шапка.
@@ -51,6 +56,22 @@
   let guest = $state(false);
   let server = $state<SyncServerDoc | null>(null);
   let copied = $state(false);
+
+  /**
+   * Перечитать данные этого экрана. Отдельной функцией, потому что её зовут двое: `onMount`
+   * при заходе и строка «Обновить данные» по требованию человека.
+   */
+  async function loadScreen(uid: string): Promise<void> {
+    [data, server] = await Promise.all([loadProfileScreen(uid), loadSyncServer()]);
+  }
+
+  /** Обновление по требованию: кэш гаснет в `refreshNow`, здесь — только перечитывание. */
+  async function refreshData(): Promise<void> {
+    await refreshNow(async () => {
+      const uid = await currentSession();
+      if (uid !== null) await loadScreen(uid);
+    });
+  }
 
   onMount(async () => {
     const savedLang = localStorage.getItem('ndim-lang');
@@ -71,7 +92,7 @@
       }
       guest = isGuestSession();
       email = currentEmail();
-      [data, server] = await Promise.all([loadProfileScreen(uid), loadSyncServer()]);
+      await loadScreen(uid);
       stand = 'ready';
     } catch {
       // Меню обязано работать и без стенда: документы, манифест и версии не зависят от данных.
@@ -132,6 +153,11 @@
     leave: { ru: 'Выйти', en: 'Sign out' },
     since: { ru: 'В Пространстве с', en: 'In the Space since' },
     noName: { ru: 'Без имени', en: 'No name' },
+
+    // Текст строки обновления — слово владельца (интервью №006, В4=А), менять его агенту нельзя.
+    dataSection: { ru: 'Данные', en: 'Data' },
+    refresh: { ru: 'Обновить данные', en: 'Refresh data' },
+    refreshingLabel: { ru: 'обновляем…', en: 'refreshing…' },
 
     view: { ru: 'Вид', en: 'View' },
     language: { ru: 'Язык', en: 'Language' },
@@ -237,6 +263,28 @@
           <p class="note">{t.signedOutNote[lang]}</p>
         {/if}
       </div>
+
+      <!-- ── Обновление данных (интервью №006, макет V1) ──
+           Единственный видимый путь обновиться: жест есть только на телефоне и только там, где
+           браузер отдаёт его нам (В3=А). Строка работает везде — десктоп, Safari младше 16,
+           и любой, кто тянуть не может (WCAG 2.2 SC 2.5.7). Гостю и не вошедшему её не
+           показываем: обновлять нечего, данные с сервера синхронизации у них не читаются. -->
+      {#if stand === 'ready'}
+        <div class="card">
+          <h3>{t.dataSection[lang]}</h3>
+          <button type="button" class="row" onclick={refreshData} disabled={refreshing()}>
+            <span class="ic" class:spinning={refreshing()}><Icon name="reload" size={20} /></span>
+            <span class="lb">{t.refresh[lang]}</span>
+            <span class="val">
+              {#if refreshing()}
+                {t.refreshingLabel[lang]}
+              {:else if lastRefreshAt() !== null}
+                {agoLabel(lastRefreshAt()!, lang)}
+              {/if}
+            </span>
+          </button>
+        </div>
+      {/if}
 
       <div class="card">
         <h3>{t.view[lang]}</h3>
@@ -364,6 +412,17 @@
   .row .lb { flex: 1; }
   .row .val { font-size: 12px; color: var(--faint); font-family: var(--mono); }
   .row .chev { color: var(--faint); }
+
+  /* Строка обновления данных (интервью №006). Пока идёт чтение — повторный тап не проходит,
+     а иконка крутится: то же состояние, что у кольца в жесте, только в списке. */
+  .row:disabled { cursor: default; opacity: 0.7; }
+  .row .ic.spinning { animation: menu-spin 0.7s linear infinite; }
+  @keyframes menu-spin {
+    to { transform: rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row .ic.spinning { animation: none; }
+  }
 
   /* Кто я */
   .who { display: flex; align-items: center; gap: 11px; padding: 2px 14px 10px; }

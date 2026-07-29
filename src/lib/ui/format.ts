@@ -71,6 +71,38 @@ export function seconds(millis: number, lang: Lang): string {
 }
 
 /**
+ * «Сколько времени назад» — для строки обновления данных в «Меню» (интервью №006, В4=А:
+ * справа от «Обновить данные» стоит `12 минут назад`).
+ *
+ * Считаем сами, а не через `Intl.RelativeTimeFormat`: тот даёт «12 мин. назад» с точкой
+ * сокращения и не знает нашей формы. Форма здесь — та же, что во всём продукте.
+ *
+ * Меньше минуты — «только что»: показывать «0 минут назад» человеку незачем.
+ */
+export function agoLabel(millis: number, lang: Lang): string {
+  const minutes = Math.floor((Date.now() - millis) / 60_000);
+  if (minutes < 1) return lang === 'ru' ? 'только что' : 'just now';
+
+  if (minutes < 60) {
+    return lang === 'ru'
+      ? `${minutes} ${unitRu(minutes, ['минуту', 'минуты', 'минут'])} назад`
+      : `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return lang === 'ru'
+      ? `${hours} ${unitRu(hours, ['час', 'часа', 'часов'])} назад`
+      : `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  return lang === 'ru'
+    ? `${days} ${unitRu(days, ['день', 'дня', 'дней'])} назад`
+    : `${days} ${days === 1 ? 'day' : 'days'} ago`;
+}
+
+/**
  * Разметка внутри текстов документов: `**жирный**` и `*курсив*` → HTML.
  *
  * Тексты приходят ИЗ РЕПОЗИТОРИЯ (сгенерированы из исследований), а не от пользователей, —

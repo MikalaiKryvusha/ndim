@@ -20,6 +20,9 @@
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { preloadAvatars } from '$lib/data/avatar';
+  // Жест «потянуть вниз» (интервью №006, В1=А — все четыре главных экрана).
+  import PullToRefresh from '$lib/ui/PullToRefresh.svelte';
+  import { noteFirstLoad } from '$lib/data/refresh.svelte';
   import { currentSession } from '$lib/data/profile';
   import {
     loadRelations,
@@ -90,6 +93,26 @@
     return () => observer.disconnect();
   });
 
+  /**
+   * Перечитать топ. Отдельной функцией, потому что её зовут двое: `onMount` при заходе и
+   * жест «потянуть вниз» по требованию человека (интервью №006).
+   */
+  async function loadScreen(uid: string): Promise<void> {
+    const loaded = await loadRelations(uid);
+    // Карточка ждёт фото (канон 1.x, bugs/57): лица первой порции качаются ПОД кольцом
+    // загрузки, и экран появляется сразу с ними — без мерцания «буква → лицо». Людей без
+    // фото это не задерживает (им нечего ждать), потолок ожидания — в preloadAvatars.
+    if (loaded !== null) await preloadAvatars(portionFaces(loaded.cards, 0, REVEAL_PORTION));
+    data = loaded;
+    noteFirstLoad();
+  }
+
+  /** Обновление по жесту: кэш гасит `refreshNow`, здесь — только перечитывание экрана. */
+  async function refreshScreen(): Promise<void> {
+    const uid = await currentSession();
+    if (uid !== null) await loadScreen(uid);
+  }
+
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');
     if (saved === 'en' || saved === 'ru') lang = saved;
@@ -100,12 +123,7 @@
         stand = 'signedout';
         return;
       }
-      const loaded = await loadRelations(uid);
-      // Карточка ждёт фото (канон 1.x, bugs/57): лица первой порции качаются ПОД кольцом
-      // загрузки, и экран появляется сразу с ними — без мерцания «буква → лицо». Людей без
-      // фото это не задерживает (им нечего ждать), потолок ожидания — в preloadAvatars.
-      if (loaded !== null) await preloadAvatars(portionFaces(loaded.cards, 0, REVEAL_PORTION));
-      data = loaded;
+      await loadScreen(uid);
       stand = 'ready';
     } catch (error) {
       standError = technicalDetail(error);
@@ -237,6 +255,7 @@
   <SideRail active="relations" {lang} />
 
   <AppBar {lang} onLang={(next) => (lang = next)} />
+  <PullToRefresh onRefresh={refreshScreen} />
 
   <main class="body">
     <h1 class="screen-title">{t.title[lang]}</h1>
