@@ -693,8 +693,18 @@
    * мы уходим.
    */
   function restoreScroll(target: number): void {
+    // Форс показа панели — канон 1.x (см. `restoringScroll`). Ставим ДО прокрутки, чтобы
+    // человек не увидел даже кадра с уехавшей панелью.
+    restoringScroll = true;
+    toolbarHidden = false;
+
     if (target <= 0) {
       window.scrollTo({ top: 0, behavior: 'instant' });
+      // Ранний путь тоже обязан снять признак — иначе панель перестанет реагировать на
+      // прокрутку до самой следующей смены вкладки.
+      requestAnimationFrame(() => {
+        restoringScroll = false;
+      });
       return;
     }
     /*
@@ -715,6 +725,14 @@
 
     const stop = () => {
       for (const type of events) window.removeEventListener(type, giveUp);
+      // Панель показана — это и есть `showTopStickyToolbar()` владельца после
+      // восстановления позиции. Снимаем признак СЛЕДУЮЩИМ кадром: событие `scroll` от
+      // последнего `scrollTo` прилетает уже после `stop()`, и снятие в тот же момент
+      // вернуло бы дефект в миниатюре.
+      toolbarHidden = false;
+      requestAnimationFrame(() => {
+        restoringScroll = false;
+      });
     };
 
     const step = () => {
@@ -770,6 +788,21 @@
 
   /** Панель спрятана прокруткой вниз. Возвращается прокруткой вверх — канон 1.x. */
   let toolbarHidden = $state(false);
+
+  /**
+   * Идёт ПРОГРАММНОЕ восстановление прокрутки (ideas/21 п. 2).
+   *
+   * Обработчик прокрутки не умеет отличать руку человека от нашего же `scrollTo` — и
+   * восстановление позиции при смене вкладки читалось им как «листают вниз», после чего
+   * панель уезжала. Владелец описал это точно: «словно разные глубины скрола на этих
+   * суб страницах вынуждают панель скрыться (она думает, что страницу листали)».
+   *
+   * В 1.x той же болезни не было, потому что владелец ЗАСТАВЛЯЛ панель показаться сразу
+   * после восстановления позиции — `showTopStickyToolbar()` стоял и в
+   * `scrollToLastPagePosition()` (app.js:1157-1161), и в `openPageSegment()` (:1478), и в
+   * `openPage()` (:1235). Три места — потому что там было три входа; у нас вход один.
+   */
+  let restoringScroll = false;
   /** Ящик поиска выдвинут (V3): поле занимает место только когда оно нужно. */
   let searchOpen = $state(false);
   let searchInput: HTMLInputElement | null = $state(null);
@@ -783,6 +816,13 @@
     let last = window.scrollY;
     const onScroll = () => {
       const y = window.scrollY;
+      // Прокрутку двигаем МЫ — решать по ней ничего нельзя, иначе панель уедет от
+      // собственного `scrollTo` (ideas/21 п. 2). Опорную точку всё же обновляем, чтобы
+      // после восстановления первое движение руки считалось от нового места.
+      if (restoringScroll) {
+        last = y;
+        return;
+      }
       if (y < TOOLBAR_ALWAYS_BELOW) {
         toolbarHidden = false;
         last = y;

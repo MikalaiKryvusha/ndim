@@ -169,7 +169,11 @@ if (!(await bar())) {
   await page.waitForTimeout(800);
   const scrolled = await bar();
   say('       после прокрутки «Все» вниз: ' + JSON.stringify(scrolled));
-  fact('панель держится при прокрутке', `top=${scrolled.top}, видна=${scrolled.inView}`, 'панель прибита под шапкой и видна всегда', scrolled.inView);
+  // ⚠️ Прятание панели при прокрутке ВНИЗ — это КАНОН 1.x, а не дефект: там
+  // `top_sticky_toolbar` уезжал `translateY(-200%)` вниз и возвращался вверх. Первая
+  // редакция прибора ждала «видна всегда» и объявила бы дефектом задуманное поведение.
+  // Дефект владельца — в другом: панель пропадает при СМЕНЕ ВКЛАДКИ, где он не листал.
+  say(`       (прокрутка вниз прячет панель НАМЕРЕННО — канон 1.x; сейчас видна=${scrolled.inView})`);
 
   await page.locator('button:visible', { hasText: /^Мой NDim ID$/ }).first().click();
   await page.waitForTimeout(1300);
