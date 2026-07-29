@@ -155,7 +155,9 @@
   }
   .theme { margin-left: auto; }
   .lang { font-size: 12px; font-weight: 700; }
-  .theme:hover, .lang:hover { color: var(--primary); border-color: var(--primary); }
+  @media (hover: hover) {
+    .theme:hover, .lang:hover { color: var(--primary); border-color: var(--primary); }
+  }
 
   .lang-wrap { position: relative; display: inline-flex; }
 
@@ -172,7 +174,9 @@
     color: var(--text); background: transparent; border: 0; border-radius: 8px; padding: 8px 10px;
     transition: background 0.15s ease;
   }
-  .dd button:hover { background: var(--edge-soft); }
+  @media (hover: hover) {
+    .dd button:hover { background: var(--edge-soft); }
+  }
   .dd button.on { color: var(--heading); font-weight: 650; }
   .tick { width: 14px; color: var(--primary); }
 

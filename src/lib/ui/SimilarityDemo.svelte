@@ -322,8 +322,10 @@
   .stars button.on {
     color: var(--star, #e8a516);
   }
-  .stars button:hover {
-    transform: scale(1.25);
+  @media (hover: hover) {
+    .stars button:hover {
+      transform: scale(1.25);
+    }
   }
   .axis .val {
     font-family: var(--mono);
@@ -371,9 +373,16 @@
     transform-origin: center;
     transition: transform 0.18s;
   }
-  svg .node:hover .grow,
+  /* Клавиатурный фокус защите не подлежит: он существует и на тач-устройстве
+     (внешняя клавиатура, программа чтения с экрана). Под `@media (hover: hover)`
+     уходит ТОЛЬКО ховер (ideas/21 п. 7). */
   svg .node:focus-visible .grow {
     transform: scale(1.6);
+  }
+  @media (hover: hover) {
+    svg .node:hover .grow {
+      transform: scale(1.6);
+    }
   }
   /* Лицо в точке карты — та же готовность, что и в кружках карточек (bugs/69):
      место держит круг персонажа, лицо проявляется скачанным. */
@@ -418,12 +427,20 @@
     transition: opacity var(--motion-base) var(--motion-ease);
   }
   .ava img:global(.ok) { opacity: 1; }
-  .ava:hover,
+  /* Клавиатурный фокус — вне защиты по ховеру (см. пояснение у карты выше). */
   .ava:focus-visible {
     animation: none;
     transform: scale(2.2);
     z-index: 3;
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  }
+  @media (hover: hover) {
+    .ava:hover {
+      animation: none;
+      transform: scale(2.2);
+      z-index: 3;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+    }
   }
   @keyframes ava-pulse {
     0%,
@@ -440,12 +457,23 @@
     .ava {
       animation: none;
     }
-    .ava:hover,
     .ava:focus-visible {
       transform: none;
     }
-    svg .node:hover .grow {
+    @media (hover: hover) {
+      .ava:hover {
+        transform: none;
+      }
+    }
+    /* Разделив ховер и фокус, стало видно, что клавиатурный фокус на точке карты
+       выпадал из «уменьшенного движения» и до этой правки. Дописано ради связности. */
+    svg .node:focus-visible .grow {
       transform: none;
+    }
+    @media (hover: hover) {
+      svg .node:hover .grow {
+        transform: none;
+      }
     }
   }
   .who {
@@ -518,8 +546,10 @@
     box-shadow: 0 0 22px color-mix(in srgb, var(--primary) 35%, transparent);
     transition: filter 0.15s;
   }
-  .cta a:hover {
-    filter: brightness(1.1);
+  @media (hover: hover) {
+    .cta a:hover {
+      filter: brightness(1.1);
+    }
   }
   .trust {
     margin-top: 10px;

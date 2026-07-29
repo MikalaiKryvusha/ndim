@@ -348,8 +348,10 @@
     -webkit-backdrop-filter: blur(8px);
     transition: border-color 0.2s;
   }
-  .toggle:hover {
-    border-color: var(--accent);
+  @media (hover: hover) {
+    .toggle:hover {
+      border-color: var(--accent);
+    }
   }
   .toggle .lbl {
     font-size: 12px;
@@ -446,16 +448,20 @@
     color: var(--primary-ink);
     box-shadow: 0 0 22px color-mix(in srgb, var(--primary) 35%, transparent);
   }
-  .btn.primary:hover {
-    filter: brightness(1.1);
+  @media (hover: hover) {
+    .btn.primary:hover {
+      filter: brightness(1.1);
+    }
   }
   .btn.ghost {
     background: transparent;
     border: 1px solid var(--ghost-brd);
     color: var(--ghost-ink);
   }
-  .btn.ghost:hover {
-    background: var(--ghost-bg-hover);
+  @media (hover: hover) {
+    .btn.ghost:hover {
+      background: var(--ghost-bg-hover);
+    }
   }
 
   .joined {

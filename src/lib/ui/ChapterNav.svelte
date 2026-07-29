@@ -151,6 +151,8 @@
     transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
   }
   .item.h3 { padding-left: 24px; font-size: 12.5px; color: var(--dim); }
-  .item:hover { background: color-mix(in srgb, var(--primary) 7%, transparent); }
+  @media (hover: hover) {
+    .item:hover { background: color-mix(in srgb, var(--primary) 7%, transparent); }
+  }
   .item.on { color: var(--primary); font-weight: 600; background: color-mix(in srgb, var(--primary) 9%, transparent); }
 </style>

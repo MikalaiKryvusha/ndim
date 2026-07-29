@@ -1396,7 +1396,9 @@
     font: inherit; font-weight: 600; white-space: nowrap;
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
   }
-  .go:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 88%, #000); }
+  @media (hover: hover) {
+    .go:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 88%, #000); }
+  }
   .go:active:not(:disabled) { transform: scale(0.96); }
   .go:disabled { opacity: 0.45; cursor: default; }
 
@@ -1414,7 +1416,9 @@
     line-height: 1; color: var(--primary);
     transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, color 0.15s ease;
   }
-  .ibtn:hover { border-color: color-mix(in srgb, var(--primary) 55%, var(--edge)); background: color-mix(in srgb, var(--primary) 6%, var(--panel)); }
+  @media (hover: hover) {
+    .ibtn:hover { border-color: color-mix(in srgb, var(--primary) 55%, var(--edge)); background: color-mix(in srgb, var(--primary) 6%, var(--panel)); }
+  }
   .ibtn:active { transform: scale(0.94); }
   .ibtn.on {
     color: var(--primary);
@@ -1435,9 +1439,11 @@
     color: var(--star);
     border-color: color-mix(in srgb, var(--star) 32%, var(--edge));
   }
-  .suggest-btn:hover {
-    border-color: color-mix(in srgb, var(--star) 60%, var(--edge));
-    background: color-mix(in srgb, var(--star) 8%, var(--panel));
+  @media (hover: hover) {
+    .suggest-btn:hover {
+      border-color: color-mix(in srgb, var(--star) 60%, var(--edge));
+      background: color-mix(in srgb, var(--star) 8%, var(--panel));
+    }
   }
   .suggest-btn.on {
     color: var(--star);
@@ -1461,9 +1467,11 @@
     padding: 14px;
     transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   }
-  .dim:hover {
-    border-color: color-mix(in srgb, var(--primary) 30%, var(--edge));
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    .dim:hover {
+      border-color: color-mix(in srgb, var(--primary) 30%, var(--edge));
+      transform: translateY(-1px);
+    }
   }
 
   .top { display: flex; align-items: flex-start; gap: 8px; }
@@ -1492,7 +1500,9 @@
     display: block; width: 100%; text-align: left; background: none; border: 0; padding: 0;
     font: inherit; font-weight: 650; font-size: 16px; color: var(--heading); cursor: pointer;
   }
-  .name:hover { color: var(--primary); }
+  @media (hover: hover) {
+    .name:hover { color: var(--primary); }
+  }
   .year { color: var(--faint); font-weight: 400; margin-left: 5px; }
 
   .menu { position: relative; }
@@ -1500,7 +1510,9 @@
     background: none; border: 0; color: var(--faint); font-size: 18px; cursor: pointer;
     padding: 0 4px; line-height: 1;
   }
-  .dots:hover { color: var(--text); }
+  @media (hover: hover) {
+    .dots:hover { color: var(--text); }
+  }
   .drop {
     position: absolute; right: 0; top: 24px; z-index: 5; min-width: 190px;
     /* Непрозрачный фон (bugs/23): сквозь полупрозрачное меню читался текст карточки. */
@@ -1511,7 +1523,9 @@
     background: none; border: 0; color: var(--text); font: inherit; font-size: 13px;
     text-align: left; padding: 8px 10px; border-radius: 8px; cursor: pointer;
   }
-  .drop button:hover { background: var(--edge-soft); }
+  @media (hover: hover) {
+    .drop button:hover { background: var(--edge-soft); }
+  }
 
   /* min-height = высота строки С КРУПНОЙ ЦИФРОЙ (.rval, 21px/800): без неё вариант
      «ещё без голосов» был на 7px ниже, и карточки шли вразнобой (bugs/15). */
@@ -1530,7 +1544,9 @@
     background: none; border: 0; cursor: pointer; border-radius: 9px; padding: 4px 0;
     transition: background .15s ease, transform .12s ease;
   }
-  .st:hover { background: var(--edge-soft); transform: translateY(-2px); }
+  @media (hover: hover) {
+    .st:hover { background: var(--edge-soft); transform: translateY(-2px); }
+  }
   .st i {
     font-style: normal; font-size: 27px; line-height: 1;
     color: color-mix(in srgb, var(--faint) 55%, transparent);
@@ -1599,7 +1615,9 @@
     font-size: 13px; border-radius: 999px; padding: 9px 16px; cursor: pointer;
     transition: border-color .15s ease, color .15s ease;
   }
-  .ghost:hover { border-color: var(--primary); color: var(--primary); }
+  @media (hover: hover) {
+    .ghost:hover { border-color: var(--primary); color: var(--primary); }
+  }
   .ghost.wide { display: block; width: 100%; margin-top: 14px; }
   .now:disabled { opacity: .5; cursor: default; }
 
@@ -1622,7 +1640,9 @@
     font-size: 13px; border-radius: 999px; padding: 6px 14px; cursor: pointer; white-space: nowrap;
     transition: background 0.15s ease, color 0.15s ease;
   }
-  .toast button:hover { background: var(--primary); color: var(--primary-ink); }
+  @media (hover: hover) {
+    .toast button:hover { background: var(--primary); color: var(--primary-ink); }
+  }
 
   /* ── Десктоп: V2 «Рабочий стол», как у остальных вкладок. Медиа-блок стоит В КОНЦЕ
      таблицы стилей осознанно: при равной специфичности выигрывает последнее правило,

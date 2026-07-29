@@ -389,7 +389,9 @@
     padding: 11px 14px; font-size: 13.5px; color: var(--text);
     text-decoration: none; transition: background 0.15s ease;
   }
-  .manifest-link:hover { background: var(--edge-soft); }
+  @media (hover: hover) {
+    .manifest-link:hover { background: var(--edge-soft); }
+  }
   /* Иконка теперь SVG, а не знак шрифта: центрируем флексом, размер задаёт сам <Icon>. */
   .manifest-link .ic { width: 24px; display: flex; justify-content: center; }
   .manifest-link .lb { flex: 1; display: flex; flex-direction: column; gap: 2px; }
@@ -405,9 +407,13 @@
     text-align: left; text-decoration: none; cursor: pointer;
     transition: background 0.15s ease;
   }
-  .row:hover { background: var(--edge-soft); }
+  @media (hover: hover) {
+    .row:hover { background: var(--edge-soft); }
+  }
   .row.off { cursor: default; }
-  .row.off:hover { background: transparent; }
+  @media (hover: hover) {
+    .row.off:hover { background: transparent; }
+  }
   .row .ic { width: 24px; display: flex; justify-content: center; color: var(--accent); }
   .row .lb { flex: 1; }
   .row .val { font-size: 12px; color: var(--faint); font-family: var(--mono); }
@@ -458,8 +464,12 @@
     cursor: pointer;
     transition: border-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
   }
-  .btn:hover { border-color: var(--primary); color: var(--primary); }
-  .btn.primary:hover { color: var(--primary-ink); filter: brightness(1.08); }
+  @media (hover: hover) {
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+  }
+  @media (hover: hover) {
+    .btn.primary:hover { color: var(--primary-ink); filter: brightness(1.08); }
+  }
   .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
   .btn.wide { display: flex; margin: 0 14px 12px; }
 

@@ -103,9 +103,11 @@
       color: var(--dim);
       transition: background 0.15s, color 0.15s;
     }
-    .rail > a:hover {
-      background: var(--edge-soft);
-      color: var(--text);
+    @media (hover: hover) {
+      .rail > a:hover {
+        background: var(--edge-soft);
+        color: var(--text);
+      }
     }
     .rail > a.on {
       background: color-mix(in srgb, var(--primary) 12%, transparent);

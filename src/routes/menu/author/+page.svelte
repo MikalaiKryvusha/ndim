@@ -106,7 +106,9 @@
     border: 1px solid transparent;
     transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
   }
-  .net:hover { border-color: var(--edge); background: var(--edge-soft); transform: translateY(-1px); }
+  @media (hover: hover) {
+    .net:hover { border-color: var(--edge); background: var(--edge-soft); transform: translateY(-1px); }
+  }
   .tile {
     width: 40px; height: 40px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -122,5 +124,7 @@
     font-size: 15px; font-weight: 600; text-decoration: none;
     transition: filter 0.15s ease;
   }
-  .btn:hover { filter: brightness(1.08); }
+  @media (hover: hover) {
+    .btn:hover { filter: brightness(1.08); }
+  }
 </style>

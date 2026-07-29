@@ -1177,7 +1177,9 @@
     border: 0; font-family: inherit; cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
   }
-  button.aud:hover { background: color-mix(in srgb, var(--primary) 14%, var(--edge-soft)); }
+  @media (hover: hover) {
+    button.aud:hover { background: color-mix(in srgb, var(--primary) 14%, var(--edge-soft)); }
+  }
   .aud.lock { color: var(--dim); }
   .aud.circ { color: var(--accent); }
   span.aud { cursor: default; }
@@ -1232,9 +1234,13 @@
     background: var(--primary); color: var(--primary-ink); border: 0; text-decoration: none;
     transition: filter 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
-  .btn:hover:not(:disabled) { filter: brightness(1.08); }
+  @media (hover: hover) {
+    .btn:hover:not(:disabled) { filter: brightness(1.08); }
+  }
   .btn.ghost { background: transparent; border: 1px solid var(--ghost-brd); color: var(--ghost-ink); }
-  .btn.ghost:hover:not(:disabled) { filter: none; border-color: var(--primary); color: var(--primary); }
+  @media (hover: hover) {
+    .btn.ghost:hover:not(:disabled) { filter: none; border-color: var(--primary); color: var(--primary); }
+  }
   .btn:disabled { opacity: 0.55; cursor: default; }
 
   .search {

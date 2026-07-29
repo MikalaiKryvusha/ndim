@@ -441,9 +441,11 @@
     box-shadow: var(--card-shadow);
     transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   }
-  .card:hover {
-    border-color: color-mix(in srgb, var(--primary) 30%, var(--edge));
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    .card:hover {
+      border-color: color-mix(in srgb, var(--primary) 30%, var(--edge));
+      transform: translateY(-1px);
+    }
   }
   .head { display: flex; align-items: center; gap: 12px; width: 100%; }
   /* кружок с лицом живёт в Avatar.svelte (там же лайтбокс, bugs/14);
@@ -453,7 +455,9 @@
     background: transparent; border: 0; padding: 0; font: inherit; cursor: pointer;
   }
   .who b { font-size: 16px; color: var(--heading); transition: color 0.15s ease; }
-  .who:hover b { color: var(--primary); }
+  @media (hover: hover) {
+    .who:hover b { color: var(--primary); }
+  }
   .reveal-anchor { height: 1px; }
 
   /* тройка метрик — все три видны в свёрнутом состоянии (правка владельца, как в 1.x);
@@ -465,7 +469,9 @@
   }
   /* Подсказка теперь SVG-иконка, а не знак ⓘ: у знака размер зависел от шрифта. */
   .ihint { display: inline-flex; vertical-align: -1px; color: var(--faint); }
-  .cell:hover .ihint { color: var(--primary); }
+  @media (hover: hover) {
+    .cell:hover .ihint { color: var(--primary); }
+  }
   .hintbox {
     margin-top: 9px; padding: 9px 12px; border-radius: 10px;
     background: var(--edge-soft); color: var(--text); font-size: 12.5px; line-height: 1.5;
@@ -515,11 +521,15 @@
     background: var(--primary); color: var(--primary-ink); border: 0; text-decoration: none;
     transition: filter 0.15s ease;
   }
-  .btn:hover:not(:disabled) { filter: brightness(1.08); }
+  @media (hover: hover) {
+    .btn:hover:not(:disabled) { filter: brightness(1.08); }
+  }
   .btn:disabled { opacity: 0.55; cursor: default; }
   .linkish {
     display: block; margin: 8px auto 0; font: inherit; font-size: 11px; color: var(--primary);
     background: transparent; border: 0; cursor: pointer;
   }
-  .linkish:hover { text-decoration: underline; }
+  @media (hover: hover) {
+    .linkish:hover { text-decoration: underline; }
+  }
 </style>

@@ -348,21 +348,53 @@ const tp = await touchCtx.newPage();
 await tp.addInitScript(() => localStorage.setItem('ndim-theme', 'dark'));
 await tp.goto(BASE + '/menu', { waitUntil: 'domcontentloaded' });
 await tp.waitForTimeout(3000);
-for (const label of ['Скопировать ссылку', 'Пригласить друзей']) {
-  const b = tp.locator('button', { hasText: new RegExp(label) }).first();
-  if (!(await b.count())) {
-    say(`       «${label}» — кнопки нет`);
+const readBg = (loc) =>
+  loc.evaluate((e) => ({ bg: getComputedStyle(e).backgroundColor, focused: document.activeElement === e, fv: e.matches(':focus-visible') }));
+
+// ⚠️ Мерим только кнопки ДЕЙСТВИЯ. «Пригласить друзей» — строка навигации: тап уводит на
+// другой экран, и читать её стиль «после» уже не у чего.
+for (const label of ['Скопировать ссылку']) {
+  const b = tp.locator('button:visible, a:visible', { hasText: new RegExp(label) }).first();
+  if (!(await b.count().catch(() => 0))) {
+    say(`       «${label}» — не нашёл`);
     continue;
   }
-  await b.scrollIntoViewIfNeeded();
-  const read = () => b.evaluate((e) => ({ bg: getComputedStyle(e).backgroundColor, focused: document.activeElement === e, fv: e.matches(':focus-visible') }));
-  const was = await read();
+  await b.scrollIntoViewIfNeeded().catch(() => {});
+  const was = await readBg(b).catch(() => null);
+  if (!was) {
+    say(`       «${label}» — не смог прочитать стиль`);
+    continue;
+  }
   await b.tap();
   await tp.waitForTimeout(1500);
-  const now = await read();
+  const now = await readBg(b);
   await tp.screenshot({ path: `${OUT}/07-dark-tap-${label.slice(0, 10)}.png` });
   say(`       «${label}»: ${was.bg} → ${now.bg} · фокус=${now.focused} · focus-visible=${now.fv}`);
   fact(`«${label}» отщёлкивается после тапа (тёмная тема)`, `${was.bg} → ${now.bg}`, 'фон возвращается к исходному', was.bg === now.bg);
+}
+
+// ⚠️ Вторая кандидатка, названная разведкой: «Искать» на «Измерениях» — ЕДИНСТВЕННАЯ кнопка
+// проекта, которая по ховеру буквально ТЕМНЕЕТ (`color-mix(… var(--primary) 88%, #000)`).
+// Слово владельца «цвет кнопки остаётся тёмным» ложится на неё точнее, чем на «Скопировать
+// ссылку», и в этом же проходе он много раз тыкал именно в неё (пп. 4 и 5 той же волны).
+await tp.goto(BASE + '/dims', { waitUntil: 'domcontentloaded' });
+await tp.waitForTimeout(3000);
+const openSearchT = tp.locator('button[aria-label="Поиск измерения"]').first();
+if (await openSearchT.count()) {
+  await openSearchT.tap();
+  await tp.waitForTimeout(700);
+  await tp.locator('input.search').first().fill('кино');
+  await tp.waitForTimeout(500);
+  const go = tp.locator('button.go').first();
+  const was = await readBg(go);
+  await go.tap();
+  await tp.waitForTimeout(1500);
+  const now = await readBg(go);
+  await tp.screenshot({ path: `${OUT}/07-dark-tap-go.png` });
+  say(`       «Искать»: ${was.bg} → ${now.bg} · фокус=${now.focused}`);
+  fact('«Искать» не остаётся затемнённой после тапа', `${was.bg} → ${now.bg}`, 'фон возвращается к исходному', was.bg === now.bg);
+} else {
+  say('       «Искать» — ящика поиска нет');
 }
 await touchCtx.close();
 
