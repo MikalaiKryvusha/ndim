@@ -347,6 +347,12 @@
   function submitSearch(event: SubmitEvent): void {
     event.preventDefault();
     submitted = search.trim();
+    // Снимаем фокус с поля — этим Android закрывает экранную клавиатуру (ideas/21 п. 5).
+    // Канон 1.x: там после запуска поиска стояло ровно то же точечное снятие фокуса
+    // с самого поля, а не глобальное гашение активного элемента.
+    // ⚠️ До появления СВОЕЙ кнопки очистки эта строка была невыполнима: нативный крестик
+    // браузера живёт только при фокусе, и снятие фокуса убивало п. 4.
+    searchInput?.blur();
   }
 
   /**
@@ -891,6 +897,9 @@
     searchTitle: { ru: 'Поиск измерения', en: 'Search a dimension' },
     // Кнопка явного запуска поиска (ideas/20). Слово владельца — «кнопке ИСКАТЬ».
     searchGo: { ru: 'Искать', en: 'Search' },
+    // Своя кнопка очистки поля (ideas/21 п. 4). Нативный крестик браузера показать
+    // принудительно нельзя — он живёт только при фокусе, а фокус мы снимаем ради п. 5.
+    searchClear: { ru: 'Очистить поле поиска', en: 'Clear the search field' },
     loading: { ru: 'Загрузка', en: 'Loading' },
     allDone: {
       ru: 'Вы оценили все измерения Пространства. Это по-настоящему редкое достижение.',
@@ -1040,14 +1049,33 @@
          разом даёт Enter на десктопе и клавишу «поиск» Android-клавиатуры. -->
     <div class="drawer">
       <form class="sform" onsubmit={submitSearch}>
-        <input
-          bind:this={searchInput}
-          class="search"
-          type="search"
-          enterkeyhint="search"
-          placeholder={t.searchPlaceholder[lang]}
-          bind:value={search}
-        />
+        <!-- Поле и СВОЯ кнопка очистки (ideas/21 п. 4). Нативным крестиком браузера управлять
+             нельзя: он живёт ровно пока поле в фокусе, а фокус мы снимаем на отправке ради
+             п. 5 (Android-клавиатура). Поэтому нативный погашен стилем, а этот — наш. -->
+        <div class="swrap">
+          <input
+            bind:this={searchInput}
+            class="search"
+            type="search"
+            enterkeyhint="search"
+            placeholder={t.searchPlaceholder[lang]}
+            bind:value={search}
+          />
+          {#if search !== ''}
+            <button
+              type="button"
+              class="clear"
+              aria-label={t.searchClear[lang]}
+              title={t.searchClear[lang]}
+              onclick={() => {
+                search = '';
+                // Ленту вернёт $effect по пустому полю; ящик не закрываем — для этого
+                // есть отдельная кнопка панели. Фокус возвращаем: чистят, чтобы набрать другое.
+                searchInput?.focus();
+              }}
+            ><Icon name="close" size={15} /></button>
+          {/if}
+        </div>
         <button type="submit" class="go" disabled={search.trim() === ''}>{t.searchGo[lang]}</button>
       </form>
     </div>
@@ -1378,13 +1406,37 @@
   /* Поле и кнопка «Искать» — одна строка (ideas/20): поиск начинается только по явному вводу. */
   .sform { display: flex; gap: 8px; align-items: stretch; }
 
+  /* Обёртка нужна только чтобы прижать свой крестик к правому краю поля (ideas/21 п. 4).
+     Раскладка панели V3 не меняется: обёртка занимает ровно место, где раньше стояло поле. */
+  .swrap { flex: 1; min-width: 0; margin-top: 8px; position: relative; display: flex; }
+
   .search {
-    flex: 1; min-width: 0; margin-top: 8px;
+    flex: 1; min-width: 0;
     padding: 11px 14px; border-radius: 12px; background: var(--panel);
     border: 1px solid var(--edge); color: var(--text); font: inherit;
     transition: border-color 0.15s ease;
   }
   .search:focus { outline: none; border-color: var(--primary); }
+
+  /* Нативный крестик гасим — иначе на десктопе их будет ДВА. Управлять его видимостью
+     браузер не даёт, поэтому единственный способ выполнить слово владельца («должна
+     оставаться, пока в поле что-либо введено») — рисовать свой. */
+  .search::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+  /* Место под крестик, чтобы текст не заезжал под него. */
+  .swrap:has(.clear) .search { padding-right: 40px; }
+
+  .clear {
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    /* 28px — зона нажатия не меньше 24×24 (WCAG 2.2 SC 2.5.8, AA). */
+    width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+    padding: 0; border: 0; border-radius: 8px; cursor: pointer;
+    background: transparent; color: var(--dim);
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  @media (hover: hover) {
+    .clear:hover { color: var(--text); background: var(--edge-soft); }
+  }
 
   /*
    * Кнопка запуска. Пока запроса нет — она погашена: нажимать нечего, и это честнее,

@@ -226,7 +226,14 @@ if (!(await openBtn.count())) {
       page.evaluate(() => {
         const el = document.querySelector('input.search');
         if (!el) return null;
-        return { value: el.value, focused: document.activeElement === el };
+        const own = document.querySelector('button.clear');
+        return {
+          value: el.value,
+          focused: document.activeElement === el,
+          // Своя кнопка очистки появилась при починке bugs/77. Пока её не было, крестик был
+          // нативный, и спросить о нём было не у кого — отсюда пиксельная полоса ниже.
+          ownClear: !!own && own.getBoundingClientRect().width > 1,
+        };
       });
     const before = await readCancel();
     const stripBefore = await strip(`04-strip-${how}-before`);
@@ -243,11 +250,18 @@ if (!(await openBtn.count())) {
   };
   const byClick = await probeSearch('click');
   await shot('04-search-after-click');
+  // ⚠️ ИСПРАВЛЕНО ПОСЛЕ ПОЧИНКИ bugs/77, и прежнее толкование было НЕВЕРНЫМ.
+  // Первая редакция считала «полоса изменилась» доказательством пропавшего крестика. На самом
+  // деле встроенный Chromium `::-webkit-search-cancel-button` НЕ РИСУЕТ ВООБЩЕ (проверено
+  // кадром: в настоящем Chrome крестик есть, в Chromium полоса пуста), а менялся цвет РАМКИ:
+  // снятие фокуса возвращает `--edge` вместо `--primary`. Наблюдение владельца верно, но
+  // подтверждено оно его устройством, а не этим прибором.
+  // Теперь спрашиваем прямо о СВОЕЙ кнопке очистки — она узел разметки, и врать тут нечему.
   fact(
     'крестик очистки не пропадает при отправке кнопкой',
-    `поле="${byClick.after.value}", картинка правой полосы изменилась=${byClick.stripChanged}`,
-    'полоса не меняется — крестик там же, пока поле непустое',
-    byClick.after.value !== '' && byClick.stripChanged === false,
+    `поле="${byClick.after.value}", своя кнопка очистки видна=${byClick.after.ownClear}`,
+    'кнопка очистки на месте, пока поле непустое',
+    byClick.after.value !== '' && byClick.after.ownClear === true,
   );
   fact(
     'после отправки поле теряет фокус (Android закроет клавиатуру)',
