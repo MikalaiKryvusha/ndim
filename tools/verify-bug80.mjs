@@ -221,6 +221,131 @@ try {
     const worst = Math.max(...offsets);
     check('каждое лицо под своей звездой (≤1px)', worst <= 1, `худшее расхождение ${worst.toFixed(2)}px`);
 
+    /*
+     * ── 4а. СВЕЧЕНИЕ ОБЯЗАНО БЫТЬ СВЕТЛЕЕ ТОГО, ЧТО ЗА НИМ ──
+     *
+     * Жалоба владельца, прожившая три захода: «тёмное вокруг смайлика при выборе звезды…
+     * для меня это выглядит как ореол вокруг смайлика, или как тень» (2026-07-30, десктоп,
+     * СВЕТЛАЯ тема, снято им на камеру).
+     *
+     * Почему сторожится ПРАВИЛО, а не цвет. Заходы 1 и 2 меняли цвет ореола и базу
+     * непрозрачности ряда, и оба раза проверка шла в тёмной теме, где золото действительно
+     * светится. Дефект же не в цвете: ореол светлый или тёмный ТОЛЬКО ОТНОСИТЕЛЬНО ФОНА.
+     * На «Бумаге» карточка — чистый #ffffff, и золото `--star` (светлота 0.44) рисует по
+     * ней тень. Замер пикселями (`tools/measure-bug80-halo.mjs`): кольцо вокруг выбранного
+     * лица 0.912 при фоне 1.000 и соседях 0.997…0.999; вокруг выбранной звезды — 0.893.
+     *
+     * Поэтому здесь сверяются СВЕТЛОТЫ: светлота цвета свечения против светлоты реального
+     * фона под элементом (фон композитится по предкам, потому что `--panel` в тёмной теме
+     * полупрозрачен). Свечение либо отсутствует (альфа 0), либо не темнее фона. Такой страж
+     * поймал бы дефект в обеих темах и на любой ширине, а проверка «ореол золотой» —
+     * зеленела бы на сломанном продукте.
+     */
+    /* Курсор уводится: после `click()` мышь остаётся на звезде, и `.st:hover` подставляет
+       под неё СВОЙ фон (`--edge-soft`). Сравнивать свечение надо с фоном КАРТОЧКИ, то есть
+       в состоянии покоя, а не с подсветкой наведения. Тот же ожог однажды заставил прибор
+       замера объявить починенного близнеца сломанным. */
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(250); // переход фона плашки — .15s
+
+    const glows = await page.evaluate((selector) => {
+      /** `rgb()`, `rgba()` и `color(srgb …)` — Chrome отдаёт последний для `color-mix`. */
+      const parse = (raw) => {
+        if (!raw || raw === 'none' || raw === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
+        const srgb = raw.match(/color\(srgb\s+([^)]+)\)/);
+        if (srgb) {
+          const [rgbPart, alphaPart] = srgb[1].split('/');
+          const [r, g, b] = rgbPart.trim().split(/\s+/).map(Number);
+          return { r: r * 255, g: g * 255, b: b * 255, a: alphaPart === undefined ? 1 : Number(alphaPart) };
+        }
+        const rgb = raw.match(/rgba?\(([^)]+)\)/);
+        if (!rgb) return null;
+        const parts = rgb[1].split(',').map((v) => Number(v.trim()));
+        return { r: parts[0], g: parts[1], b: parts[2], a: parts[3] === undefined ? 1 : parts[3] };
+      };
+      /** Относительная светлота WCAG — та же шкала, по которой судят контраст. */
+      const lum = (c) => {
+        const ch = (v) => {
+          const s = v / 255;
+          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b);
+      };
+      /**
+       * Реальный фон ПОД элементом: идём по предкам и композитим полупрозрачные фоны, пока
+       * не наберём непрозрачный. Без этого в тёмной теме сравнение шло бы с `rgba(10,21,38,.78)`
+       * вместо того, что человек видит на экране.
+       */
+      const backdrop = (el) => {
+        let acc = null;
+        for (let node = el.parentElement; node; node = node.parentElement) {
+          const c = parse(getComputedStyle(node).backgroundColor);
+          if (!c || c.a === 0) continue;
+          acc = acc === null
+            ? c
+            : { r: acc.r + (1 - acc.a) * c.r, g: acc.g + (1 - acc.a) * c.g, b: acc.b + (1 - acc.a) * c.b,
+                a: acc.a + (1 - acc.a) * c.a };
+          if (acc.a >= 0.999) break;
+        }
+        return acc ?? { r: 255, g: 255, b: 255, a: 1 };
+      };
+      /** Цвет из `filter: drop-shadow(<цвет> 0px 0px 7px)`. */
+      const glowOf = (el) => {
+        const raw = getComputedStyle(el).filter;
+        const hit = raw.match(/color\(srgb[^)]*\)|rgba?\([^)]*\)/);
+        return hit ? parse(hit[0]) : { r: 0, g: 0, b: 0, a: 0 };
+      };
+
+      const root = document.querySelector(selector);
+      return [
+        ['лицо выбранной оценки', root.querySelector('.faces .fc.picked')],
+        ['выбранная звезда', root.querySelector('.stars .st.peak i')],
+      ].map(([name, el]) => {
+        if (!el) return { name, missing: true };
+        const g = glowOf(el);
+        const b = backdrop(el);
+        return { name, alpha: g.a, glow: lum(g), back: lum(b) };
+      });
+    }, card);
+
+    for (const g of glows) {
+      if (g.missing) { check(`${g.name}: элемент найден`, false); continue; }
+      const ok = g.alpha === 0 || g.glow >= g.back - 0.005;
+      check(
+        `свечение НЕ темнее фона — ${g.name}`,
+        ok,
+        g.alpha === 0
+          ? 'свечения нет (на светлом фоне его и не бывает)'
+          : `свечение ${g.glow.toFixed(3)} против фона ${g.back.toFixed(3)}`,
+      );
+    }
+
+    /*
+     * Обратный риск той же правки: убрав ореол, легко оставить выбор НИЧЕМ не помеченным.
+     * Выбранное лицо обязано отличаться от соседей насыщенностью и размером — иначе
+     * «тёмного нет» было бы достигнуто ценой «непонятно, что выбрано».
+     */
+    const marked = await page.evaluate((selector) => {
+      const root = document.querySelector(selector);
+      const picked = root.querySelector('.faces .fc.picked');
+      const other = [...root.querySelectorAll('.faces .fc')].find((el) => el !== picked);
+      const scaleOf = (el) => {
+        const tr = getComputedStyle(el).transform;
+        if (!tr || tr === 'none') return 1;
+        return Number(tr.slice(tr.indexOf('(') + 1, -1).split(',')[0]);
+      };
+      return {
+        opacity: Number(getComputedStyle(picked).opacity),
+        otherOpacity: Number(getComputedStyle(other).opacity),
+        scale: scaleOf(picked),
+      };
+    }, card);
+    check(
+      'выбранное лицо всё ещё выделено (насыщенность и размер, а не ореол)',
+      marked.opacity > marked.otherOpacity + 0.05 && marked.scale > 1.05,
+      `непрозрачность ${marked.opacity} против ${marked.otherOpacity}, масштаб ${marked.scale.toFixed(2)}`,
+    );
+
     // ── 5. Снял выбор — ряд ИСЧЕЗ (слово владельца буквально) ──
     await tapStar(page, dimId, 7);
     check('повторный тап по звезде → ряд смайликов исчез', !(await facesVisible(page, dimId, false)));
