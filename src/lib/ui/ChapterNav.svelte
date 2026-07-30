@@ -10,7 +10,15 @@
    *
    * Текущая глава выводится ИЗ ПРОКРУТКИ (последний заголовок выше трети экрана), а не
    * запоминается по кликам: человек, листающий руками, видит честную позицию.
+   *
+   * РАЗВЁРНУТУЮ ПАНЕЛЬ ЗАКРЫВАЕТ И СИСТЕМНАЯ «НАЗАД» (интервью №007, В12б; слово владельца:
+   * «навигация должна быть честной, фиксим»). Близнец `bugs/76`: панель накрывает документ
+   * подложкой на всю страницу, человек читает её как слой — и жмёт «Назад», а без записи в
+   * истории это уводило со страницы руководства. Приём тот же штатный, что у окна «Как меня
+   * видят»: `pushState` + `page.state` (`profile/+page.svelte:76`), без своего `popstate`.
    */
+  import { pushState } from '$app/navigation';
+  import { page } from '$app/state';
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import { MOTION } from '$lib/ui/motion';
@@ -24,7 +32,8 @@
 
   let { chapters, lang }: { chapters: readonly Chapter[]; lang: Lang } = $props();
 
-  let open = $state(false);
+  /** Точка закрытия ОДНА — `history.back()`; её же зовут Esc, тап мимо и переход к главе. */
+  const open = $derived(page.state.chapters === true);
   let active = $state<string>('');
 
   const label = { ru: 'Главы', en: 'Chapters' } as const;
@@ -74,22 +83,30 @@
     };
   });
 
+  function openPanel(): void {
+    pushState('', { chapters: true });
+  }
+
+  function closePanel(): void {
+    if (open) history.back();
+  }
+
   function go(id: string): void {
     // Плавность слушает канон движения: при reduced-motion едем мгновенно, как MOTION.
     document.getElementById(id)?.scrollIntoView({ behavior: MOTION.base ? 'smooth' : 'auto', block: 'start' });
-    open = false;
+    closePanel();
   }
 </script>
 
 <svelte:window
   onkeydown={(event) => {
-    if (open && event.key === 'Escape') open = false;
+    if (open && event.key === 'Escape') closePanel();
   }}
 />
 
 {#if open}
   <!-- Тап мимо панели сворачивает её (тот же жест, что у контекстных меню, волна 11). -->
-  <button type="button" class="backdrop" aria-label={label[lang]} onclick={() => (open = false)}></button>
+  <button type="button" class="backdrop" aria-label={label[lang]} onclick={closePanel}></button>
   <nav class="panel" aria-label={label[lang]} transition:fade={{ duration: MOTION.fast }}>
     {#each chapters as chapter (chapter.id)}
       <button
@@ -109,7 +126,7 @@
     aria-label={label[lang]}
     title={label[lang]}
     transition:fade={{ duration: MOTION.fast }}
-    onclick={() => (open = true)}
+    onclick={openPanel}
   >
     {#each majors as chapter (chapter.id)}
       <span class="dot" class:on={chapter.id === activeMajor}></span>

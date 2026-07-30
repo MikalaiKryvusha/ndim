@@ -1,3 +1,8 @@
+<script lang="ts" module>
+  /** Счётчик экземпляров: каждому кружку — свой id слоя истории (см. `lightboxId` ниже). */
+  let instances = 0;
+</script>
+
 <script lang="ts">
   /**
    * Лицо человека: фотография, если она есть, иначе — первая буква имени.
@@ -10,8 +15,11 @@
    * 250 человек устроил бы 250 заведомо пустых запросов в Storage.
    *
    * Тап по фотографии открывает её ВО ВЕСЬ ЭКРАН (bugs/14): лайтбокс-оверлей, закрывается
-   * тапом в любом месте или Esc. Кружок с буквой не интерактивен — разворачивать нечего.
+   * тапом в любом месте, Esc — и системной кнопкой «Назад» (близнец bugs/76, см. ниже).
+   * Кружок с буквой не интерактивен — разворачивать нечего.
    */
+  import { pushState } from '$app/navigation';
+  import { page } from '$app/state';
   import { fade } from 'svelte/transition';
   import { avatarUrl, cachedAvatarUrl } from '$lib/data/avatar';
   import { MOTION } from '$lib/ui/motion';
@@ -35,7 +43,26 @@
    */
   // svelte-ignore state_referenced_locally
   let src = $state<string | null>(has ? cachedAvatarUrl(uid) : null);
-  let open = $state(false);
+
+  /*
+   * «НАЗАД» ЗАКРЫВАЕТ ЛАЙТБОКС (интервью №007, В12б; слово владельца: «навигация должна быть
+   * честной, фиксим»). Близнец `bugs/76`: полноэкранный слой без записи в истории уводит
+   * человека ИЗ ПРИЛОЖЕНИЯ вместо того, чтобы закрыться.
+   *
+   * Приём — тот же штатный `pushState` + `page.state`, что и у окна «Как меня видят»
+   * (`profile/+page.svelte:76`), а не свой перехват `popstate`: адрес не меняется, слой
+   * остаётся слоем, историю обслуживает настоящий роутер.
+   *
+   * Ключ в состоянии — id ЭТОГО кружка, а не «открыт/закрыт»: на «Связях» лиц много, и от
+   * общего признака развернулись бы все сразу. Счётчик модуля даёт каждому экземпляру свой
+   * id; на uid опираться нельзя — одно лицо бывает на странице дважды (свой аватар в
+   * «Профиле» и он же внутри окна «Как меня видят»).
+   *
+   * Точка закрытия ОДНА — `history.back()`; тап и Escape зовут её же, поэтому состояние не
+   * может разъехаться с историей.
+   */
+  const lightboxId = `ava-${(instances += 1)}`;
+  const open = $derived(page.state.photo === lightboxId);
 
   /**
    * Портал: выносит лайтбокс в document.body (bugs/36). Внутри карточки ему жить нельзя:
@@ -58,6 +85,14 @@
     };
   });
 
+  function openPhoto(): void {
+    pushState('', { photo: lightboxId });
+  }
+
+  function closePhoto(): void {
+    if (open) history.back();
+  }
+
   $effect(() => {
     if (!has) {
       src = null;
@@ -75,12 +110,12 @@
 
 <svelte:window
   onkeydown={(event) => {
-    if (open && event.key === 'Escape') open = false;
+    if (open && event.key === 'Escape') closePhoto();
   }}
 />
 
 {#if src}
-  <button type="button" class="peek" style="--size:{size}px" title={name} onclick={() => (open = true)}>
+  <button type="button" class="peek" style="--size:{size}px" title={name} onclick={openPhoto}>
     <img class="ava" {src} alt={name} style="--size:{size}px" />
   </button>
   {#if open}
@@ -91,7 +126,7 @@
       aria-label={name}
       use:portal
       transition:fade={{ duration: MOTION.base }}
-      onclick={() => (open = false)}
+      onclick={closePhoto}
     >
       <img {src} alt={name} />
     </button>
