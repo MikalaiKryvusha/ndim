@@ -11,7 +11,8 @@
   // Заголовки несут id (`sec-<номер блока>`) — по ним ходит плавающий пагинатор глав
   // (ChapterNav) на странице руководства.
   import Icon from '$lib/ui/Icon.svelte';
-  import { FACE_PATHS, GRADE_FACES, LOVE_FACE } from '$lib/ui/emojiscale';
+  import GradeFace from '$lib/ui/GradeFace.svelte';
+  import { GRADE_FACES } from '$lib/ui/emojiscale';
   import { richText, type Lang } from '$lib/ui/format';
   import { ready } from '$lib/ui/ready';
   import type { DocBlock } from '$lib/content/docs';
@@ -22,19 +23,8 @@
   // (`$lib/ui/ready.ts`, bugs/69). Здесь он и родился (bugs/55), отсюда и вынесен.
 </script>
 
-<!-- Цветной смайлик оценки (шкала 1.x): «десятка» — многоцветный авторский файл. -->
-{#snippet face(grade: number, size: number)}
-  {@const entry = GRADE_FACES[grade]}
-  <svg viewBox="0 0 16 16" width={size} height={size} aria-hidden="true">
-    {#if entry.face === 'love'}
-      <rect {...LOVE_FACE.rect} />
-      <path d={LOVE_FACE.path} fill={LOVE_FACE.pathFill} />
-    {:else}
-      <path d={FACE_PATHS[entry.face]} fill={entry.color} />
-    {/if}
-  </svg>
-{/snippet}
-
+<!-- Цветной смайлик оценки — общий компонент продукта (`GradeFace.svelte`, bugs/80):
+     ту же шкалу показывает карточка «Измерений», и копии разметки здесь больше нет. -->
 {#each blocks as block, index (index)}
   {#if block.type === 'h2'}
     <h2 id="sec-{index}">{block.text[lang]}</h2>
@@ -75,7 +65,7 @@
                 <span class="mark" class:zero={grade === 0}>
                   <i aria-hidden="true">★</i>
                   <b>{grade}</b>
-                  {@render face(grade, 18)}
+                  <GradeFace {grade} size={18} />
                 </span>
               </td>
               <td>{@html richText(description)}</td>
@@ -90,7 +80,7 @@
       <span class="sample row">
         {#each GRADE_FACES as _, grade (grade)}
           <span class="cell">
-            {@render face(grade, 22)}
+            <GradeFace {grade} size={22} />
             <small>{grade}</small>
           </span>
         {/each}

@@ -66,7 +66,9 @@
     type DimsIndex,
   } from '$lib/model/feed';
   import { technicalDetail } from '$lib/ui/errors';
+  import { GRADE_FACES } from '$lib/ui/emojiscale';
   import { votesUnit, type Lang } from '$lib/ui/format';
+  import GradeFace from '$lib/ui/GradeFace.svelte';
   import { MOTION } from '$lib/ui/motion';
   import type { Localized } from '$lib/model/schema';
 
@@ -1219,7 +1221,7 @@
             data-dim={card.id}
             in:fly={{ y: 14, duration: MOTION.base, easing: cubicOut }}
             out:fly={leaving === card.id
-              ? { x: 480, duration: MOTION.slow, easing: cubicOut }
+              ? { x: 480, duration: MOTION.gesture, easing: cubicOut }
               : { y: 8, duration: MOTION.fast }}
             animate:flip={{ duration: MOTION.slow, easing: cubicOut }}
           >
@@ -1286,6 +1288,28 @@
             </div>
 
             {#if pending?.dimId === card.id}
+              <!--
+                РЯД СМАЙЛИКОВ (bugs/80, интервью №007 В9). Слово владельца дословно:
+                «не один смайлик, а появляется весь ряд смайликов, если звезда выбрана и ждёт
+                сохранения. Снимаешь выбор — исчезает ряд смайликов.»
+
+                Поэтому условие ровно одно и то же, что у строки отсчёта: `pending` и есть
+                «выбрана и ждёт сохранения». Повторный тап по горящей звезде гасит `pending`
+                (bugs/54) — ряд исчезает тем же движением, отдельной механики не нужно.
+
+                Лица берутся общим компонентом `GradeFace` (формы и ЗАМЕРЕННЫЕ цвета 1.x,
+                EXP-0057) и стоят ПОД звёздами, как в 1.x (`.dim_card_emojis_container`,
+                researches/12:346-352). Ячейка — та же flex-раскладка, что у звёзд, поэтому
+                смайлик стоит точно под своей оценкой, а не «примерно рядом».
+              -->
+              <div class="faces" aria-hidden="true" transition:slide={{ duration: MOTION.fast }}>
+                {#each GRADE_FACES as _, grade (grade)}
+                  <span class="fc" class:picked={pending.value === grade}>
+                    <GradeFace {grade} size={22} />
+                  </span>
+                {/each}
+              </div>
+
               <div class="countdown" transition:slide={{ duration: MOTION.fast }}>
                 <span>{t.savingIn[lang]} {pending.left} {t.sec[lang]}…</span>
                 <button type="button" class="now" onclick={() => void commit()}>{t.saveNow[lang]}</button>
@@ -1655,6 +1679,22 @@
   /* Ноль — это осознанная оценка «ноль», а не «золото». Он серый. */
   .st.zero i { color: var(--faint); filter: none; transform: scale(1.08); }
   .st.zero b { color: var(--faint); }
+
+  /* Ряд из 11 смайликов под звёздами (bugs/80). Раскладка ОДНА И ТА ЖЕ со `.stars`
+     (flex + gap 3px + `flex: 1` у ячейки) — только так смайлик стоит точно под своей
+     звездой на любой ширине, без подобранных отступов. */
+  .faces { display: flex; gap: 3px; margin-top: 2px; }
+  .fc {
+    flex: 1; display: flex; justify-content: center;
+    /* Невыбранные чуть тише — ряд остаётся шкалой, но не спорит с выбором за внимание. */
+    opacity: .55; transition: opacity .15s ease, transform .15s ease, filter .15s ease;
+  }
+  /* Выбранная оценка выделена ТЕМ ЖЕ языком, что и её звезда (`.st.peak`): подрастает и
+     светится. Иначе ряд читался бы как украшение, а не как ответ «какое это настроение». */
+  .fc.picked {
+    opacity: 1; transform: scale(1.15);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--faint) 45%, transparent));
+  }
 
   .countdown {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
