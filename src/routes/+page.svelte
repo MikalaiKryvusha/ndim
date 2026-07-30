@@ -12,15 +12,13 @@
   // TODO(SEO): полноценный per-URL i18n (RU/EN как отдельные адреса) — решение на потом;
   //            сейчас RU пререндерится, EN переключается на клиенте (паритет с 1.x).
   import { onMount } from 'svelte';
-  import { fade } from 'svelte/transition';
   import { SITE_ORIGIN } from '$lib/site';
   import Icon from '$lib/ui/Icon.svelte';
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
-  import { loadPublicPeople } from '$lib/data/metrics';
+  import { landingPeople } from '$lib/data/metrics';
   import { endBoot, hasSession } from '$lib/data/session';
   import { num, peopleUnit } from '$lib/ui/format';
-  import { MOTION } from '$lib/ui/motion';
   // Тема — общий источник истины (bugs/53): лендинг, шапка и «Меню» читают одно значение.
   import { theme, toggleTheme } from '$lib/ui/theme.svelte';
 
@@ -41,10 +39,20 @@
   // Реальный сохранённый выбор подхватываем в onMount (только в браузере).
   let lang = $state<Lang>('ru');
 
-  // «С нами уже N человек» — ЖИВОЕ число из space/public_metrics (пишет сервер
-  // синхронизации; bugs/07). Пока числа нет — строки нет: выдуманное число хуже
-  // отсутствующего (здесь стоял литерал «2 184 человека» при 331 живом).
-  let joinedPeople = $state<number | null>(null);
+  /*
+   * «С нами уже N человек» — число ГОТОВО К ПЕРВОМУ КАДРУ (bugs/81).
+   *
+   * Слово владельца (`ideas/21` п. 10): строка «открывается на горячую поверх уже
+   * отображаемого лендинга — неправильно». Так и было, и иначе быть не могло: число читалось
+   * из Firestore уже после того, как лендинг показан (замер: кадр 0 — строки нет, кадр 17 —
+   * есть). Теперь оно приходит из снимка, взятого перед выкатом (`data/metrics.ts` →
+   * `landingPeople`), то есть лежит в пререндеренном HTML — доезжать нечему.
+   *
+   * Обычная константа, а не `$state`: значение не меняется в течение жизни страницы, и
+   * реактивность здесь означала бы, что оно может измениться на глазах у человека — ровно то,
+   * от чего мы уходим.
+   */
+  const joinedPeople = landingPeople();
 
   onMount(() => {
     // ── Человек пришёл по ссылке из письма, но попал на ЛЕНДИНГ — уводим его в профиль ──
@@ -86,8 +94,7 @@
       // Первый шаг воронки (plans/03 этап 4). Ничего персонального не пишет и
       // ничего не ждёт: аналитика не имеет права тормозить лендинг.
       void track('landing_view');
-      // Живой счётчик людей — тоже не ждём: строка тихо появится, когда число придёт.
-      void loadPublicPeople().then((people) => (joinedPeople = people));
+      // Витрину людей здесь больше не читаем — она в пререндере (bugs/81, см. `joinedPeople`).
     });
 
     // Тема — общий источник истины (bugs/53), он сам читает атрибут инлайн-скрипта.
@@ -233,11 +240,12 @@
       <a class="btn primary" href={APP_URL}>{t.create[lang]}</a>
       <a class="btn ghost" href={APP_URL}>{t.login[lang]}</a>
     </div>
-    {#if joinedPeople !== null}
-      <p class="joined" in:fade={{ duration: MOTION.base }}>
-        {t.joinedPre[lang]}<b>{num(joinedPeople, lang)} {peopleUnit(joinedPeople, lang)}</b>{t.joinedPost[lang]}
-      </p>
-    {/if}
+    <!-- Строка витрины стоит БЕЗ условия и БЕЗ перехода появления: она часть страницы, а не
+         новость, приехавшая позже (bugs/81). Условие `{#if}` и `in:fade` здесь и были тем
+         самым «на горячую»: сначала вставлялся узел, потом он ещё и проявлялся 240 мс. -->
+    <p class="joined">
+      {t.joinedPre[lang]}<b>{num(joinedPeople, lang)} {peopleUnit(joinedPeople, lang)}</b>{t.joinedPost[lang]}
+    </p>
   </section>
 
   <section class="feats" aria-label="Как устроено Пространство NDim">

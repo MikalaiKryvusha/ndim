@@ -1,29 +1,34 @@
+import { PUBLIC_PEOPLE_SNAPSHOT } from '../content/landing-metric.ts';
+
 /**
- * Публичная витрина лендинга: «С нами уже N человек» (bugs/07).
+ * Публичная витрина лендинга: «С нами уже N человек» (bugs/07, bugs/81).
  *
- * Число пишет сервер синхронизации в `space/public_metrics` — РОВНО тот же счёт людей,
- * что на экране «Пространство» (`space/stats.people`): лендинг не имеет права хвастаться
- * другой цифрой. Документ читается БЕЗ авторизации — как это работало в 1.x
- * (`researches/05_onboarding_texts_1x.md`); в нём нет ничего, кроме агрегата.
+ * Число пишет сервер синхронизации в `space/public_metrics` — РОВНО тот же счёт людей, что на
+ * экране «Пространство» (`space/stats.people`): лендинг не имеет права хвастаться другой
+ * цифрой. Документ читается БЕЗ авторизации — как это работало в 1.x
+ * (`researches/05_onboarding_texts_1x.md`).
  *
- * Динамический импорт Firebase — канон лендинга (см. `data/funnel.ts`): SDK не имеет
- * права попадать в его главный бандл (Lighthouse 100).
+ * ⚠️ **ЧИТАЕТ ЕГО ТЕПЕРЬ СБОРКА, А НЕ БРАУЗЕР** (bugs/81). Раньше здесь жил
+ * `loadPublicPeople()` — динамический импорт SDK и `getDoc` из onMount лендинга. Пока число
+ * приезжало из базы, строка физически не могла попасть в первый кадр: лендинг пререндерен, и
+ * замер это показал (кадр 0 — строки нет, кадр 17 — есть). Владелец назвал это дефектом
+ * дословно: *«открывается на горячую поверх уже отображаемого лендинга — неправильно»*.
  *
- * Никогда не бросает: нет числа — лендинг просто не показывает строку.
+ * Теперь снимок метрики берётся ПЕРЕД ВЫКАТОМ (`node tools/snapshot-landing-metric.mjs` →
+ * `content/landing-metric.ts`) и попадает в пререндер. Три следствия, все в плюс: строка есть
+ * в первом кадре; её видят поисковики (боль индексации из `GOAL.md`); лендинг больше не стоит
+ * ни одного чтения Firestore на визит (принцип владельца «экономить запросы»).
+ *
+ * Цена — число стареет между выкатами. Она названа честно в шапке инструмента и видна датой
+ * снимка; для витрины, которая и так умножается на множитель, точность декоративна.
  */
-export async function loadPublicPeople(): Promise<number | null> {
-  try {
-    const [{ db }, { doc, getDoc }] = await Promise.all([
-      import('../firebase.ts'),
-      import('firebase/firestore'),
-    ]);
-    const snapshot = await getDoc(doc(db(), 'space', 'public_metrics'));
-    const people = (snapshot.data() as { people?: unknown } | undefined)?.people;
-    if (!(typeof people === 'number' && Number.isFinite(people) && people > 0)) return null;
-    return people * JOINED_MULTIPLIER;
-  } catch {
-    return null;
-  }
+export function landingPeople(): number {
+  return PUBLIC_PEOPLE_SNAPSHOT.people * JOINED_MULTIPLIER;
+}
+
+/** Когда взят снимок витрины (ISO-день) — чтобы возраст числа был виден, а не угадывался. */
+export function landingPeopleTakenAt(): string {
+  return PUBLIC_PEOPLE_SNAPSHOT.takenAt;
 }
 
 /**

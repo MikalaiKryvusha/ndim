@@ -170,7 +170,7 @@
 | 7 | Кнопки залипают тёмными | [`bugs/79`](../bugs/79_buttons_stick_in_pressed_state.md) | замером | агент |
 | 8 | Шкала 0–10: звёзды, смайлики, адаптив | [`bugs/80`](../bugs/80_rating_scale_stars_emoji_and_fluid_size.md) | кодом | ⛔ владелец (макеты) |
 | 9 | Позиции прокрутки не сохраняются | [`plans/08`](../plans/08_DONE_screen_state_memory_on_navigation.md) | замером 5 из 5 | ✅ **ПОЧИНЕНО** (В11=А) |
-| 10 | Счётчик лендинга доезжает на горячую | [`bugs/81`](../bugs/81_landing_counter_pops_in.md) | замером | агент |
+| 10 | Счётчик лендинга доезжает на горячую | [`bugs/81`](../bugs/81_DONE_landing_counter_pops_in.md) | замером | ✅ **ПОЧИНЕНО** |
 | 10 | Захардкодить число «на тысячи» | [`ideas/22`](22_landing_counter_hardcoded_number.md) | — | ⛔ владелец (отменяет `bugs/07`) |
 | 11 | Персонажи не отображаются | [`bugs/82`](../bugs/82_landing_persona_faces_invisible.md) | замером | ✅ **ПОЧИНЕНО** |
 | 12 | Ссылка из письма мимо PWA | [`bugs/83`](../bugs/83_email_link_opens_browser_not_pwa.md) | кодом (PWA нет вовсе) | ⛔ владелец + обзор индустрии |

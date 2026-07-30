@@ -1,0 +1,149 @@
+/**
+ * Страж витрины лендинга — `bugs/81` (волна `ideas/21`, п. 10).
+ *
+ * Слово владельца дословно:
+ *   «„С нами уже 94 человека — и каждый день приходят новые“ — открывается на горячую поверх
+ *    уже отображаемого лендинга — неправильно.»
+ *
+ * ⚠️ ГОНЯЕТСЯ ПО СОБРАННОМУ САЙТУ, а не по стенду:
+ *   `npm run build`, затем `npx vite preview --port 4173 --strictPort`, затем этот страж.
+ * Причина принципиальная: чинили мы именно ПРЕРЕНДЕР, и проверять надо тот артефакт, который
+ * уезжает в бой. ⚠️ После пересборки `build/` preview надо ПЕРЕЗАПУСТИТЬ — он кеширует список
+ * файлов при старте.
+ *
+ * ⚠️ **`--strictPort` обязателен, и это не придирка.** Без него `vite preview` при занятом
+ * 4173 молча уезжает на 4174/4175, а на 4173 продолжает отвечать ПРЕЖНИЙ сервер со списком
+ * файлов от старой сборки. Страж тогда краснеет «консоль чиста — 404 на _app/immutable/...»
+ * и выглядит как дефект продукта: файлы в `build/` есть, HTML просит именно их, а 404 всё
+ * равно. Это случилось 2026-07-30 и стоило разбора.
+ *
+ * Что стережём:
+ *   1. Строка есть в СЫРОМ HTML — до всякого JavaScript. Это и есть «готово к первому кадру»
+ *      в самой сильной форме: её видят и человек на медленной сети, и поисковик (боль
+ *      индексации из `GOAL.md`).
+ *   2. Покадровая rAF-трасса (метод EXP-0060): состояние строки на кадре 0 равно итоговому и
+ *      НЕ меняется 240 кадров. До фикса трасса давала `[{f:0,v:null},{f:17,v:"4"}]`.
+ *   3. Раскладка не прыгает: верхняя кромка блока `.feats` на кадре 0 и в конце совпадает.
+ *   4. КОНТРОЛЬ САМОГО ПРИБОРА (обязателен по EXP-0082, иначе зелёное может быть от
+ *      неисправности трассы): в отдельном заходе мы САМИ меняем текст строки через ~30 кадров
+ *      и требуем, чтобы трасса это УВИДЕЛА. Не увидела — прибор слеп, и его зелёный ничего
+ *      не значит.
+ *   5. Число не ноль и не пустое: страж, которому «строки нет» сошло бы за успех, охранял бы
+ *      потерю контента.
+ */
+import { chromium } from 'playwright';
+import { mkdirSync } from 'node:fs';
+
+const BASE = process.env.PROBE_BASE ?? 'http://localhost:4173';
+const OUT = 'test-results/bug81';
+const QUICK = process.argv.includes('--quick');
+mkdirSync(OUT, { recursive: true });
+
+const COMBOS = QUICK
+  ? [['light', 390]]
+  : [['light', 390], ['light', 1440], ['dark', 390], ['dark', 1440]];
+
+/** Сколько кадров смотрим. 240 при 60 Гц ≈ 4 с — как в замере до кода. */
+const FRAMES = 240;
+
+let pass = 0;
+const fails = [];
+function check(ok, what, detail = '') {
+  if (ok) pass++;
+  else {
+    fails.push(`${what}${detail ? ' — ' + detail : ''}`);
+    console.log(`  ❌ ${what}${detail ? ' — ' + detail : ''}`);
+  }
+}
+
+/**
+ * Трасса строки витрины по кадрам. Возвращает список изменений `{f, v}` — только моменты, когда
+ * значение стало ДРУГИМ. Одна запись = строка не менялась ни разу.
+ *
+ * ⚠️ Значение берём из `<b>` внутри `.joined`, а не из текста всей страницы: так `null`
+ * означает «строки нет вовсе», и переход `null → «2 820 человек»` виден как ИЗМЕНЕНИЕ. Первая
+ * редакция прибора волны считала такой переход «одним значением» и красила дефект зелёным
+ * (EXP-0082).
+ */
+const traceScript = (frames, mutateAtFrame) => `
+  new Promise((done) => {
+    const seen = [];
+    let f = 0;
+    const value = () => {
+      const b = document.querySelector('.joined b');
+      return b === null ? null : (b.textContent || '').replace(/\\s+/g, ' ').trim();
+    };
+    const featsTop = () => {
+      const el = document.querySelector('.feats');
+      return el === null ? null : Math.round(el.getBoundingClientRect().top);
+    };
+    const tick = () => {
+      const v = value();
+      const last = seen[seen.length - 1];
+      if (!last || last.v !== v) seen.push({ f, v, feats: featsTop() });
+      if (${mutateAtFrame} > 0 && f === ${mutateAtFrame}) {
+        const b = document.querySelector('.joined b');
+        if (b) b.textContent = 'КОНТРОЛЬ ПРИБОРА';
+      }
+      if (++f < ${frames}) requestAnimationFrame(tick);
+      else done({ seen, endFeats: featsTop() });
+    };
+    requestAnimationFrame(tick);
+  })
+`;
+
+const browser = await chromium.launch();
+try {
+  for (const [theme, width] of COMBOS) {
+    const tag = `${theme}-${width}`;
+    console.log(`\n╔══ Витрина лендинга (${theme}, ${width}) ══╗`);
+    const ctx = await browser.newContext({ viewport: { width, height: 820 }, locale: 'ru-RU' });
+    await ctx.addInitScript((v) => localStorage.setItem('ndim-theme', v), theme);
+
+    // 1 · СЫРОЙ HTML — до всякого JavaScript.
+    const raw = await ctx.request.get(`${BASE}/`);
+    const html = await raw.text();
+    const inHtml = /С нами уже\s*<b[^>]*>\s*([\d\s  ]+)\s*челов/.exec(html);
+    check(inHtml !== null, 'строка витрины есть в СЫРОМ HTML (пререндер, до JS)');
+    const rawNumber = inHtml ? inHtml[1].replace(/[\s  ]/g, '') : '';
+    check(Number(rawNumber) > 0, 'в пререндере стоит настоящее число, а не пустота', `«${rawNumber}»`);
+
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+
+    // 2+3 · Трасса по кадрам с самого начала загрузки (`commit` — не ждём ничего лишнего).
+    await page.goto(`${BASE}/`, { waitUntil: 'commit' });
+    const { seen, endFeats } = await page.evaluate(traceScript(FRAMES, 0));
+    console.log('       трасса: ' + JSON.stringify(seen));
+    check(seen.length === 1, 'строка не менялась ни разу за 240 кадров', JSON.stringify(seen));
+    check(seen[0]?.f === 0 && seen[0]?.v !== null, 'на кадре 0 строка уже на месте', JSON.stringify(seen[0]));
+    check(
+      seen[0]?.feats !== null && seen[0]?.feats === endFeats,
+      'раскладка не прыгнула: кромка «фич» та же в начале и в конце',
+      `кадр 0: ${seen[0]?.feats}, конец: ${endFeats}`,
+    );
+    await page.screenshot({ path: `${OUT}/landing-${tag}.png` });
+    check(errors.length === 0, 'консоль чиста', errors.join(' | ').slice(0, 160));
+    await page.close();
+
+    // 4 · КОНТРОЛЬ ПРИБОРА: трасса обязана УМЕТЬ увидеть изменение.
+    const control = await ctx.newPage();
+    await control.goto(`${BASE}/`, { waitUntil: 'commit' });
+    const { seen: controlSeen } = await control.evaluate(traceScript(120, 30));
+    check(
+      controlSeen.length >= 2 && controlSeen.some((s) => s.v === 'КОНТРОЛЬ ПРИБОРА'),
+      'КОНТРОЛЬ: трасса видит изменение строки, когда оно есть',
+      JSON.stringify(controlSeen),
+    );
+    await control.close();
+    await ctx.close();
+  }
+} finally {
+  await browser.close();
+}
+
+console.log(`\nИтог: ${pass} зелёных, ${fails.length} провалов`);
+if (fails.length) fails.forEach((f) => console.log('  ❌ ' + f));
+process.exit(fails.length ? 1 : 0);
