@@ -116,10 +116,10 @@ const { lastScheduledFullPass, nextScheduledFullPass } = await import('./index.m
 describe('расписание ночного полного прохода', () => {
   const DAY = 24 * 60 * 60 * 1000;
 
-  // Час взят из окружения теста (CALC_FULL_SYNC_AT_HOUR не задан → 0, полночь).
+  // Час берётся по UTC — паритет с 1.x (см. FULL_SYNC_AT_HOUR в index.mjs).
   const midnightOf = (date) => {
     const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
+    d.setUTCHours(0, 0, 0, 0);
     return d.getTime();
   };
 
@@ -148,7 +148,7 @@ describe('расписание ночного полного прохода', ()
     const next = nextScheduledFullPass(at1303);
     assert.equal(next, midnightOf(at1303) + DAY, 'следующая полночь');
     assert.notEqual(next, at1303 + DAY, 'а НЕ «сейчас плюс сутки» — это и был дефект');
-    assert.equal(new Date(next).getHours(), 0, 'ровно в заданный час');
+    assert.equal(new Date(next).getUTCHours(), 0, 'ровно в заданный час по UTC');
   });
 
   test('проход, сделанный в текущих сутках, повторно НЕ просрочен — рестарт не гонит его заново', () => {

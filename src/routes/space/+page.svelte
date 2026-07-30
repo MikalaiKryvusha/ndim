@@ -177,7 +177,17 @@
     lastSuccess: { ru: 'Последняя успешная', en: 'Last successful' },
     took: { ru: 'Выполнена за', en: 'Completed in' },
     usersChecked: { ru: 'Пользователей проверено', en: 'Users checked' },
-    usersUpdated: { ru: 'Из них обновлено', en: 'Of them updated' },
+    /*
+     * Подписи блока полной синхронизации переименованы по слову владельца
+     * (интервью №007, В5=А). Цифры под ними были ВЕРНЫ и раньше — врали именно подписи,
+     * и владелец прочитал их как поломку дважды (ideas/21 п. 14).
+     *   · «Из них обновлено» → «Записано изменений»: ноль читается как норма
+     *     («ничьи связи за сутки не изменились»), а не как несделанная работа;
+     *   · «Связей рассчитано» → «Связей в Пространстве»: это СТОЯЧИЙ ИТОГ, а не объём
+     *     проделанной работы. Считается в памяти и не стоит ни одного запроса.
+     */
+    usersUpdated: { ru: 'Записано изменений', en: 'Changes written' },
+    relationsInSpace: { ru: 'Связей в Пространстве', en: 'Relations in the Space' },
     partialUpdated: { ru: 'Пользователей обновлено', en: 'Users updated' },
     scheduled: { ru: 'Запланированная', en: 'Scheduled' },
     notYet: { ru: 'ещё не было', en: 'none yet' },
@@ -528,7 +538,7 @@
             <div class="kv"><span class="k">{t.took[lang]}</span><span class="v">{seconds(full.durationMs, lang)}</span></div>
             <div class="kv"><span class="k">{t.usersChecked[lang]}</span><span class="v">{num(full.checked, lang)}</span></div>
             <div class="kv"><span class="k">{t.usersUpdated[lang]}</span><span class="v">{num(full.updated, lang)}</span></div>
-            <div class="kv"><span class="k">{t.relationsCount[lang]}</span><span class="v">{num(full.relationsComputed, lang)}</span></div>
+            <div class="kv"><span class="k">{t.relationsInSpace[lang]}</span><span class="v">{num(full.relationsComputed, lang)}</span></div>
             <div class="kv"><span class="k">{t.scheduled[lang]}</span><span class="v">{dateTime(full.nextAt, lang)}</span></div>
 
             <p class="sub-h">{t.partialSync[lang]}</p>

@@ -36,12 +36,7 @@
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
   import { MANIFEST } from '$lib/content/manifest';
-  // Путь обновления БЕЗ жеста (интервью №006, В4=А). Он здесь не для красоты: как только жест
-  // забран у браузера, WCAG 2.2 SC 2.5.7 требует равноценный путь без перетаскивания — а на
-  // десктопе тянуть нечем вовсе. Это единственное место, где человек узнаёт, что видит цифры
-  // из памяти сеанса (осознанная цена макета V1 — самая низкая находимость).
-  import { lastRefreshAt, refreshNow, refreshing } from '$lib/data/refresh.svelte';
-  import { agoLabel, dateOnly, type Lang } from '$lib/ui/format';
+  import { dateOnly, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
   // Тема — общий источник истины (bugs/53): её же читает и переключает шапка.
@@ -87,13 +82,6 @@
     server = syncServer;
   }
 
-  /** Обновление по требованию: кэш гаснет в `refreshNow`, здесь — только перечитывание. */
-  async function refreshData(): Promise<void> {
-    await refreshNow(async () => {
-      const uid = await currentSession();
-      if (uid !== null) await loadScreen(uid);
-    });
-  }
 
   onMount(async () => {
     const savedLang = localStorage.getItem('ndim-lang');
@@ -176,10 +164,6 @@
     since: { ru: 'В Пространстве с', en: 'In the Space since' },
     noName: { ru: 'Без имени', en: 'No name' },
 
-    // Текст строки обновления — слово владельца (интервью №006, В4=А), менять его агенту нельзя.
-    dataSection: { ru: 'Данные', en: 'Data' },
-    refresh: { ru: 'Обновить данные', en: 'Refresh data' },
-    refreshingLabel: { ru: 'обновляем…', en: 'refreshing…' },
 
     view: { ru: 'Вид', en: 'View' },
     language: { ru: 'Язык', en: 'Language' },
@@ -319,27 +303,18 @@
         {/if}
       </div>
 
-      <!-- ── Обновление данных (интервью №006, макет V1) ──
-           Единственный видимый путь обновиться: жест есть только на телефоне и только там, где
-           браузер отдаёт его нам (В3=А). Строка работает везде — десктоп, Safari младше 16,
-           и любой, кто тянуть не может (WCAG 2.2 SC 2.5.7). Гостю и не вошедшему её не
-           показываем: обновлять нечего, данные с сервера синхронизации у них не читаются. -->
-      {#if stand === 'ready'}
-        <div class="card">
-          <h3>{t.dataSection[lang]}</h3>
-          <button type="button" class="row" onclick={refreshData} disabled={refreshing()}>
-            <span class="ic" class:spinning={refreshing()}><Icon name="reload" size={20} /></span>
-            <span class="lb">{t.refresh[lang]}</span>
-            <span class="val">
-              {#if refreshing()}
-                {t.refreshingLabel[lang]}
-              {:else if lastRefreshAt() !== null}
-                {agoLabel(lastRefreshAt()!, lang)}
-              {/if}
-            </span>
-          </button>
-        </div>
-      {/if}
+      <!-- ── Блока «Данные» здесь БОЛЬШЕ НЕТ (ideas/21 п. 6, интервью №007 В1) ──
+           Слово владельца дословно: «ВЕСЬ БЛОК НАХУЙ УБРАТЬ, НЕ НУЖЕН ОН И КНОПКА ОБНОВЛЕНИЯ
+           ДАННЫХ, МЫ СДЕЛАЛИ ЖЕСТ ПУЛ ТУ РЕФРЕШ».
+
+           ⚠️ ЦЕНА, НАЗВАННАЯ ВЛАДЕЛЬЦУ ДО РЕШЕНИЯ И ПРИНЯТАЯ ИМ (не «забытая» — записана здесь,
+           чтобы следующая сессия не «чинила» это как регрессию):
+           · строка была путём обновления БЕЗ жеста — требованием WCAG 2.2 SC 2.5.7, которое
+             включается ровно потому, что жест у браузера мы забрали (интервью №006, В2=А);
+           · на десктопе жеста нет вовсе — там остаётся только перезагрузка страницы;
+           · это было единственное место, где человек узнавал, что видит цифры ИЗ ПАМЯТИ сеанса.
+           Сам жест pull-to-refresh и весь механизм обновления (`refresh.svelte.ts`) НЕ тронуты —
+           убрана только эта строка. -->
 
       <div class="card">
         <h3>{t.view[lang]}</h3>
@@ -477,12 +452,10 @@
   /* Строка обновления данных (интервью №006). Пока идёт чтение — повторный тап не проходит,
      а иконка крутится: то же состояние, что у кольца в жесте, только в списке. */
   .row:disabled { cursor: default; opacity: 0.7; }
-  .row .ic.spinning { animation: menu-spin 0.7s linear infinite; }
   @keyframes menu-spin {
     to { transform: rotate(360deg); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .row .ic.spinning { animation: none; }
   }
 
   /* Кто я */
