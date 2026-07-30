@@ -157,8 +157,13 @@
     currentState: { ru: 'Текущее состояние', en: 'Current state' },
     running: { ru: 'Работает', en: 'Running' },
     silent: { ru: 'Не отвечает', en: 'Not responding' },
+    // ⚠️ «Последний запуск» — про ПОДЪЁМ сервера, а не про последний цикл (bugs/86, слово
+    // владельца). Значение берётся из `startedUpAt`, а сердцебиение `lastRunAt` на экран
+    // больше не выходит вовсе: из него выводится лампочка состояния, и показывать его
+    // человеку под этой подписью значило бы отвечать не на тот вопрос.
     lastRun: { ru: 'Последний запуск', en: 'Last run' },
     nextCycle: { ru: 'Следующий цикл', en: 'Next cycle' },
+    unknownTime: { ru: 'неизвестно', en: 'unknown' },
     fullSync: { ru: 'Полная синхронизация', en: 'Full synchronisation' },
     fullSyncHint: {
       ru: 'Сверка связей всех людей Пространства.',
@@ -502,8 +507,14 @@
               {data.serverState === 'running' ? t.running[lang] : t.silent[lang]}
             </span>
           </div>
-          <div class="kv"><span class="k">{t.lastRun[lang]}</span><span class="v">{dateTime(server.lastRunAt, lang)}</span></div>
-          <div class="kv"><span class="k">{t.nextCycle[lang]}</span><span class="v">{dateTime(nextRunAt(server), lang)}</span></div>
+          <!-- ПОДЪЁМ сервера, а не последний цикл (bugs/86). Старая сборка сервера поля
+               не пишет — тогда честное «неизвестно», а не подстановка сердцебиения. -->
+          <div class="kv">
+            <span class="k">{t.lastRun[lang]}</span>
+            <span class="v">
+              {server.startedUpAt === undefined ? t.unknownTime[lang] : dateTime(server.startedUpAt, lang)}
+            </span>
+          </div>
 
           <!-- Полная и частичная — РАЗДЕЛЬНО, как в 1.x (bugs/42): раньше минутное
                сердцебиение склеивалось с числами суточного прохода, и виджет читался как
@@ -530,6 +541,10 @@
             {:else}
               <div class="kv"><span class="k">{t.lastSuccess[lang]}</span><span class="v">{t.notYet[lang]}</span></div>
             {/if}
+            <!-- Время СЛЕДУЮЩЕЙ частичной переехало сюда из блока «Статус» (bugs/86, слово
+                 владельца: времена частичной и полной синхронизации должны стоять в СВОИХ
+                 разделах). Считается всё тем же `nextRunAt` — сердцебиение плюс интервал. -->
+            <div class="kv"><span class="k">{t.scheduled[lang]}</span><span class="v">{dateTime(nextRunAt(server), lang)}</span></div>
           {/if}
         {/if}
       </div>

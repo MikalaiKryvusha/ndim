@@ -6,8 +6,10 @@
 // периоде и лечит записи, разошедшиеся с реальностью. Без него ленивый контракт превратился
 // бы в «никогда».
 //
-// CALC_FULL_SYNC_HOURS=0 превращает КАЖДЫЙ цикл в полный проход — так суточная логика
-// проверяется без ожидания суток.
+// CALC_FULL_SYNC_EVERY_CYCLE=1 превращает КАЖДЫЙ цикл в ночной полный проход — так суточная
+// логика проверяется без ожидания суток. Ручка сменилась вместе с расписанием (bugs/85):
+// раньше проход был «раз в CALC_FULL_SYNC_HOURS от старта процесса», теперь — в заданный ЧАС
+// СУТОК (CALC_FULL_SYNC_AT_HOUR), и period-ручки больше не существует.
 //
 // Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
 
@@ -21,7 +23,7 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
 // СВОЙ ПРОЕКТ = своя база в эмуляторе (см. space_stats.test.mjs). Обе переменные читаются
 // при загрузке модуля — ставим ДО импорта index.mjs.
 process.env.FIREBASE_PROJECT_ID = 'demo-ndim-calc-fullpass';
-process.env.CALC_FULL_SYNC_HOURS = '0';
+process.env.CALC_FULL_SYNC_EVERY_CYCLE = '1';
 
 const { runCycle } = await import('./index.mjs');
 const { getFirestore } = await import('firebase-admin/firestore');
@@ -99,5 +101,62 @@ describe('Полный проход — суточная страховка ле
     const snapshot = (await db.doc(`space/stats/daily/${dayKey(Date.now())}`).get()).data();
     assert.ok(snapshot, 'снимок дня существует');
     assert.equal(snapshot.people, 4, 'анна, борис, вера, гриша');
+  });
+});
+
+/**
+ * РАСПИСАНИЕ ночного прохода (bugs/85) — чистые функции, без базы.
+ *
+ * Стерегут ровно то, что было сломано: якорем суток должен быть ЧАС СУТОК, а не момент
+ * старта процесса. Владелец видел «Запланированная 30 июля в 13:03» — час подъёма
+ * контейнера, — и справедливо прочитал это как отсутствие ночного прохода.
+ */
+const { lastScheduledFullPass, nextScheduledFullPass } = await import('./index.mjs');
+
+describe('расписание ночного полного прохода', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+
+  // Час взят из окружения теста (CALC_FULL_SYNC_AT_HOUR не задан → 0, полночь).
+  const midnightOf = (date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  };
+
+  test('ближайший прошедший проход — полночь ТЕКУЩИХ суток, а не «минус 24 часа»', () => {
+    // 13:03 — ровно тот час, который владелец видел в виджете.
+    const at1303 = new Date(2026, 6, 29, 13, 3, 0).getTime();
+    assert.equal(
+      lastScheduledFullPass(at1303),
+      midnightOf(at1303),
+      'якорь суток — полночь, а не момент старта процесса',
+    );
+  });
+
+  test('до наступления часа якорь — ВЧЕРАШНИЙ, иначе проход «просрочен» каждую полночь дважды', () => {
+    const at0030 = new Date(2026, 6, 29, 0, 30, 0).getTime();
+    assert.equal(lastScheduledFullPass(at0030), midnightOf(at0030));
+
+    // 23:59 предыдущих суток: полночь ЭТИХ суток ещё не наступила → якорь вчерашний.
+    const at2359 = new Date(2026, 6, 28, 23, 59, 0).getTime();
+    assert.equal(lastScheduledFullPass(at2359), midnightOf(at2359));
+    assert.ok(lastScheduledFullPass(at2359) < at2359, 'якорь всегда в прошлом');
+  });
+
+  test('«Запланированная» — следующая полночь, а не «сейчас + сутки»', () => {
+    const at1303 = new Date(2026, 6, 29, 13, 3, 0).getTime();
+    const next = nextScheduledFullPass(at1303);
+    assert.equal(next, midnightOf(at1303) + DAY, 'следующая полночь');
+    assert.notEqual(next, at1303 + DAY, 'а НЕ «сейчас плюс сутки» — это и был дефект');
+    assert.equal(new Date(next).getHours(), 0, 'ровно в заданный час');
+  });
+
+  test('проход, сделанный в текущих сутках, повторно НЕ просрочен — рестарт не гонит его заново', () => {
+    const now = new Date(2026, 6, 29, 13, 3, 0).getTime();
+    const doneToday = midnightOf(now) + 5 * 60 * 1000; // прошёл в 00:05
+    assert.ok(doneToday >= lastScheduledFullPass(now), 'сделан после якоря — просрочки нет');
+
+    const doneYesterday = midnightOf(now) - 60 * 1000; // 23:59 вчера
+    assert.ok(doneYesterday < lastScheduledFullPass(now), 'сделан до якоря — просрочен');
   });
 });
