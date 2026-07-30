@@ -24,7 +24,7 @@
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
-  import { dateTime, monthYearSince, num as decimal, starsUnit } from '$lib/ui/format';
+  import { dateTime, num as decimal, starsUnit } from '$lib/ui/format';
   import { preloadAvatars } from '$lib/data/avatar';
   // Жест «потянуть вниз» (интервью №006, В1=А — все четыре главных экрана).
   import PullToRefresh from '$lib/ui/PullToRefresh.svelte';
@@ -294,15 +294,6 @@
     localStorage.setItem(GUEST_CARD_KEY, 'later');
   }
 
-  /**
-   * «В Пространстве с <месяц год>» — из настоящей даты создания профиля.
-   *
-   * Раньше здесь стояла жёстко вписанная строка «с мая 2025»: свежесозданному гостю продукт
-   * врал про его же возраст. А затем месяц брался прямо из локали браузера — и выходило
-   * «с феврал**ь** 2025 г.»: после «с» русскому нужен родительный падеж, но браузер про
-   * предлог ничего не знает. Морфология живёт в одном месте — `format.ts`.
-   */
-  const sinceMonth = (created: number): string => monthYearSince(created, lang);
 
   async function startGoogle() {
     signupError = '';
@@ -459,7 +450,6 @@
         },
       },
     },
-    inSpaceSince: { ru: 'В Пространстве с', en: 'In the Space since' },
     personalInfo: { ru: 'Личная информация', en: 'Personal information' },
     defaultHidden: {
       ru: 'Новое свойство скрыто от всех, пока Вы сами его не откроете.',
@@ -940,7 +930,12 @@
             has={data.values.avatar === true}
             size={54}
           />
-          <span><b>{formatValue('name', data.values.name)}</b><small>{t.inSpaceSince[lang]} {sinceMonth(data.root.time.created)}</small></span>
+          <!-- Строки «В Пространстве с …» здесь БОЛЬШЕ НЕТ (ideas/21 п. 16, интервью №007 В10).
+               Слово владельца: «В Пространстве с февраля 2025 г. — убрать из профиля. Это место
+               освобождаем под поле "Статус"». Само поле «Статус» пока НЕ делается (В10=В):
+               по нему написан план `plans/09_profile_status_field.md`, ждущий очереди.
+               Место под именем освобождено — оно и есть будущее место статуса. -->
+          <span><b>{formatValue('name', data.values.name)}</b></span>
         </div>
         {#if editing}
           <div class="card" in:fade={{ duration: MOTION.base }}>
@@ -1188,7 +1183,9 @@
   .head-card { display: flex; align-items: center; gap: 12px; }
   /* кружок с лицом теперь живёт в Avatar.svelte — один на все экраны */
   .head-card b { font-size: 17px; color: var(--heading); display: block; }
-  .head-card small { font-size: 12px; color: var(--dim); }
+  /* Правило для строки под именем осиротело вместе с «В Пространстве с …» (интервью №007 В10)
+     и снято. Когда сюда встанет «Статус» (`plans/09`), стиль пишется под него, а не
+     переиспользуется вслепую. */
 
   .prop { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--edge-soft); }
   .prop:last-of-type { border-bottom: 0; }
