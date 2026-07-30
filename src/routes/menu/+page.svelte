@@ -39,6 +39,8 @@
   import { dateOnly, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
+  // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
+  import { useViewMemory } from '$lib/ui/view-memory';
   // Тема — общий источник истины (bugs/53): её же читает и переключает шапка.
   import { theme, setTheme } from '$lib/ui/theme.svelte';
 
@@ -52,6 +54,13 @@
   let guest = $state(false);
   let server = $state<SyncServerDoc | null>(null);
   let copied = $state(false);
+
+  /**
+   * ПАМЯТЬ ВИДА ЭКРАНА (`plans/08`, ответ владельца В11=А). Помним только прокрутку: список
+   * разделов «Меню» одинаков всегда, и его высота от данных не зависит — поэтому `warm: true`,
+   * позиция осмысленна и при холодном заходе.
+   */
+  useViewMemory({ path: '/menu', warm: true });
 
   /**
    * Перечитать данные этого экрана. Отдельной функцией, потому что её зовут двое: `onMount`

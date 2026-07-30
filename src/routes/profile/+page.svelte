@@ -34,6 +34,8 @@
   import { roundedSpaceDiameter } from '$lib/similarity/similarity';
   import { RELATIONS_TOP_LIMIT } from '$lib/model/schema';
   import { MOTION } from '$lib/ui/motion';
+  // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
+  import { useViewMemory } from '$lib/ui/view-memory';
   import {
     currentSession,
     ensureSpaceExists,
@@ -118,6 +120,14 @@
   let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>(warm ? 'ready' : 'connecting');
   let standError = $state('');
   let data = $state<ProfileScreenData | null>(warm ?? null);
+
+  /**
+   * ПАМЯТЬ ВИДА ЭКРАНА (`plans/08`, ответ владельца В11=А): возврат туда, где человек его
+   * оставил. Помним ТОЛЬКО прокрутку. Окно «Как меня видят» (`seeMeOpen`) сознательно НЕ
+   * помним: у него своя запись истории (bugs/76), и открывать его за человека — не память
+   * состояния, а сюрприз.
+   */
+  useViewMemory({ path: '/profile', warm: warm !== undefined });
 
   // Гостевой режим (plans/03 этап 2, макет V1 «Тихий бейдж» утверждён 2026-07-11):
   // ?guest в адресе → мгновенный анонимный вход. Карточка гостя показана при первом

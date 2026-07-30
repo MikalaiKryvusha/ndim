@@ -70,6 +70,8 @@
   import { votesUnit, type Lang } from '$lib/ui/format';
   import GradeFace from '$lib/ui/GradeFace.svelte';
   import { MOTION } from '$lib/ui/motion';
+  // Память вида экрана и общий возврат прокрутки (plans/08, ответ владельца В11=А).
+  import { restoreScroll, restoringScroll, useViewMemory } from '$lib/ui/view-memory';
   import type { Localized } from '$lib/model/schema';
 
   /** Сколько секунд человек может передумать, прежде чем оценка уедет в базу. */
@@ -667,6 +669,49 @@
   }
 
   /**
+   * ПАМЯТЬ ВИДА ЭКРАНА (`plans/08`, ответ владельца В11=А): человек возвращается на «Измерения»
+   * туда же, откуда ушёл, — и на ТУ ЖЕ вкладку.
+   *
+   * Что помним: вкладку, позицию КАЖДОЙ вкладки (`tabScroll` ниже) и сколько порций раскрыто у
+   * «Мой NDim ID». Чего НЕ помним сознательно: раскрытую карточку и отправленный поиск —
+   * возврат в чужое раскрытое состояние дезориентирует сильнее, чем помогает (рекомендация
+   * агента к вопросу Б плана; ждёт вычитки владельца).
+   *
+   * `warm` — тёплый ли экран: лента «Все» случайная, и после пересборки прежняя позиция
+   * указывает в НИКУДА. Холодный экран честно открывается сверху.
+   */
+  useViewMemory<{ tab: Tab; tabScroll: Record<Tab, number>; mineCount: number }>({
+    path: '/dims',
+    warm: warm !== undefined,
+    capture: () => ({
+      tab,
+      // Позицию активной вкладки берём с окна: в `tabScroll` она попадает только при смене.
+      tabScroll: { ...tabScroll, [tab]: window.scrollY },
+      mineCount,
+    }),
+    restore: async (view) => {
+      tab = view.tab;
+      tabScroll.all = view.tabScroll.all;
+      tabScroll.mine = view.tabScroll.mine;
+      // «Мой NDim ID» раскрывается порциями, и без прежнего числа порций документ окажется
+      // короче — прокрутке некуда возвращаться (bugs/64, bugs/88).
+      if (view.tab === 'mine') await restoreMine(view.mineCount);
+    },
+    // Канон 1.x: после возврата позиции панель показана (`showTopStickyToolbar`).
+    onScrollStart: () => (toolbarHidden = false),
+    onScrollEnd: () => (toolbarHidden = false),
+  });
+
+  /** Добрать «Мой NDim ID» до прежнего числа карточек. Карточки уже в памяти — это 0 чтений. */
+  async function restoreMine(target: number): Promise<void> {
+    while (mineCount < target) {
+      const before = mineCount;
+      await loadMoreMine();
+      if (mineCount === before) return; // добирать больше нечего — не крутим вечно
+    }
+  }
+
+  /**
    * СВОЯ ПАМЯТЬ ПРОКРУТКИ У КАЖДОЙ ВКЛАДКИ (слово владельца 2026-07-27).
    *
    * Дословно: «Загрузка на Измерениях ломается при переключении между ВСЕ и МОЙ NDIM ID…
@@ -693,71 +738,21 @@
     submitted = '';
     // Первую порцию «моих» тянем сразу: не ждём срабатывания якоря под пустой лентой.
     if (next === 'mine' && mineCount === 0) void loadMoreMine();
-    void tick().then(() => restoreScroll(target));
-  }
-
-  /**
-   * Вернуть прокрутку на запомненное место.
-   *
-   * Одного `scrollTo` мало: сразу после переключения документ ещё не набрал прежнюю
-   * высоту (лента перерисовывается заново), и браузер ПРИЖИМАЕТ прокрутку к текущему
-   * концу — человек оказывается не там, где был. Поймано QA-прогоном: просили 7658px,
-   * получали 7191px. Поэтому повторяем по кадрам, пока не сядем ровно или пока не станет
-   * ясно, что документ уже не растёт.
-   *
-   * `instant` обязателен: плавный переход здесь и был бы тем самым «съездом», от которого
-   * мы уходим.
-   */
-  function restoreScroll(target: number): void {
-    // Форс показа панели — канон 1.x (см. `restoringScroll`). Ставим ДО прокрутки, чтобы
-    // человек не увидел даже кадра с уехавшей панелью.
-    restoringScroll = true;
-    toolbarHidden = false;
-
-    if (target <= 0) {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      // Ранний путь тоже обязан снять признак — иначе панель перестанет реагировать на
-      // прокрутку до самой следующей смены вкладки.
-      requestAnimationFrame(() => {
-        restoringScroll = false;
-      });
-      return;
-    }
     /*
-     * Держимся ПО ВРЕМЕНИ, а не по числу кадров: лента перерисовывается не мгновенно, и
-     * прежняя высота документа набирается постепенно. Отсчёт в кадрах (30 ≈ полсекунды)
-     * сдавался раньше — QA-прогон ловил промах ровно на 469px, то есть прокрутка
-     * оставалась прижатой к тогдашнему концу документа.
+     * Возврат позиции — ОБЩЕЙ механикой (`$lib/ui/view-memory`), а не своей копией: то же
+     * самое делает память вида при заходе на экран, и двух приёмов возврата прокрутки на
+     * одном экране быть не должно (`plans/08`, шаг 7). Оттуда же признак программной
+     * прокрутки, который читает обработчик панели ниже.
      *
-     * И уважаем человека: если он за это время сам тронул прокрутку, мы немедленно
-     * отступаем — бороться с рукой пользователя недопустимо.
+     * Форс показа панели — канон 1.x (`showTopStickyToolbar()` владельца): ставим и ДО
+     * прокрутки (чтобы человек не увидел кадра с уехавшей панелью), и ПОСЛЕ неё.
      */
-    const DEADLINE_MS = 1200;
-    const until = performance.now() + DEADLINE_MS;
-    let cancelled = false;
-    const giveUp = () => { cancelled = true; };
-    const events = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const;
-    for (const type of events) window.addEventListener(type, giveUp, { once: true, passive: true });
-
-    const stop = () => {
-      for (const type of events) window.removeEventListener(type, giveUp);
-      // Панель показана — это и есть `showTopStickyToolbar()` владельца после
-      // восстановления позиции. Снимаем признак СЛЕДУЮЩИМ кадром: событие `scroll` от
-      // последнего `scrollTo` прилетает уже после `stop()`, и снятие в тот же момент
-      // вернуло бы дефект в миниатюре.
-      toolbarHidden = false;
-      requestAnimationFrame(() => {
-        restoringScroll = false;
-      });
-    };
-
-    const step = () => {
-      if (cancelled) return stop();
-      window.scrollTo({ top: target, behavior: 'instant' });
-      if (Math.abs(window.scrollY - target) <= 2 || performance.now() > until) return stop();
-      requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
+    void tick().then(() =>
+      restoreScroll(target, {
+        onStart: () => (toolbarHidden = false),
+        onEnd: () => (toolbarHidden = false),
+      }),
+    );
   }
 
   function openMyTab(): void {
@@ -805,20 +800,14 @@
   /** Панель спрятана прокруткой вниз. Возвращается прокруткой вверх — канон 1.x. */
   let toolbarHidden = $state(false);
 
-  /**
-   * Идёт ПРОГРАММНОЕ восстановление прокрутки (ideas/21 п. 2).
-   *
-   * Обработчик прокрутки не умеет отличать руку человека от нашего же `scrollTo` — и
-   * восстановление позиции при смене вкладки читалось им как «листают вниз», после чего
-   * панель уезжала. Владелец описал это точно: «словно разные глубины скрола на этих
-   * суб страницах вынуждают панель скрыться (она думает, что страницу листали)».
-   *
-   * В 1.x той же болезни не было, потому что владелец ЗАСТАВЛЯЛ панель показаться сразу
-   * после восстановления позиции — `showTopStickyToolbar()` стоял и в
-   * `scrollToLastPagePosition()` (app.js:1157-1161), и в `openPageSegment()` (:1478), и в
-   * `openPage()` (:1235). Три места — потому что там было три входа; у нас вход один.
+  /*
+   * Признак «идёт ПРОГРАММНОЕ восстановление прокрутки» (ideas/21 п. 2) живёт теперь в общей
+   * механике — `$lib/ui/view-memory` → `restoringScroll()`. Причина переезда: программная
+   * прокрутка бывает не только при смене вкладки, но и при заходе на ЛЮБОЙ экран (память вида,
+   * `plans/08`). Останься признак здесь — дефект панели родился бы заново на каждом новом
+   * экране с прибитой шапкой. Историю и канон 1.x см. в шапке модуля.
    */
-  let restoringScroll = false;
+
   /** Ящик поиска выдвинут (V3): поле занимает место только когда оно нужно. */
   let searchOpen = $state(false);
   let searchInput: HTMLInputElement | null = $state(null);
@@ -835,7 +824,7 @@
       // Прокрутку двигаем МЫ — решать по ней ничего нельзя, иначе панель уедет от
       // собственного `scrollTo` (ideas/21 п. 2). Опорную точку всё же обновляем, чтобы
       // после восстановления первое движение руки считалось от нового места.
-      if (restoringScroll) {
+      if (restoringScroll()) {
         last = y;
         return;
       }

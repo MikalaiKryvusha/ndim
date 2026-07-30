@@ -32,6 +32,8 @@
   import { nextRunAt, type DailySnapshotDoc, type SpaceEvent } from '$lib/model/stats';
   import { technicalDetail } from '$lib/ui/errors';
   import { MOTION } from '$lib/ui/motion';
+  // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
+  import { useViewMemory } from '$lib/ui/view-memory';
   import {
     dateOnly,
     dateTime,
@@ -56,6 +58,12 @@
   );
   let standError = $state('');
   let data = $state<SpaceScreenData | null>(warm ?? null);
+
+  /**
+   * ПАМЯТЬ ВИДА ЭКРАНА (`plans/08`, ответ владельца В11=А): возврат туда, где человек его
+   * оставил. Здесь помнить нечего кроме прокрутки — экран собран из виджетов, ленты нет.
+   */
+  useViewMemory({ path: '/space', warm: warm !== undefined });
 
   /**
    * Перечитать цифры Пространства. Отдельной функцией: её зовут `onMount` при заходе и жест

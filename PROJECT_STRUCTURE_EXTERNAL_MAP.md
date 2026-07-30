@@ -59,6 +59,9 @@ D:\work\ai_sandbox\ndim\
 ├── src/lib/ui/AppBar.svelte     # шапка продукта: на десктопе — ВО ВСЮ ШИРИНУ поверх рельса (V3-А, ideas/17)
 ├── src/lib/ui/SideRail.svelte   # десктопный рельс навигации: чистые 5 пунктов, липнет к низу шапки
 ├── src/lib/ui/barheight.svelte.ts # ОДИН замер высоты шапки: число для JS + `--bar-h` для вёрстки
+├── src/lib/ui/view-memory.ts    # ★ память ВИДА экранов (plans/08, В11=А): снимок по пути маршрута
+│                                #   + ЕДИНСТВЕННЫЙ возврат прокрутки в проекте и признак того,
+│                                #   что прокрутка сейчас программная (его читает панель /dims)
 ├── src/lib/content/docs.ts      # ★ ГЕНЕРИРУЕТСЯ (`node tools/extract-docs.mjs`) — тексты владельца из 1.x
 ├── src/app.html                 # HTML-оболочка (lang=ru, theme-color, скрипт темы до отрисовки)
 ├── src/app.d.ts

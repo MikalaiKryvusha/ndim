@@ -34,6 +34,8 @@
   import { technicalDetail } from '$lib/ui/errors';
   import { bornWithAge, dateOnly, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
+  // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
+  import { useViewMemory } from '$lib/ui/view-memory';
   import type { Localized } from '$lib/model/schema';
 
   let lang = $state<Lang>('ru');
@@ -71,6 +73,29 @@
   /** Лица порции карточек — кому предзагружать фото (bugs/57: карточка ждёт фото). */
   const portionFaces = (cards: readonly RelationCard[], from: number, to: number) =>
     cards.slice(from, to).filter((card) => card.guestAvatar).map((card) => card.entry.guestUid);
+
+  /**
+   * ПАМЯТЬ ВИДА ЭКРАНА (`plans/08`, ответ владельца В11=А).
+   *
+   * Кроме прокрутки помним ДОКУДА РАСКРЫТ топ: без этого документ окажется короче прежнего
+   * (порция 24 вместо, скажем, 96), и возвращать позицию будет некуда — браузер прижмёт её
+   * к новому концу (bugs/64, bugs/88). Раскрытую карточку и подсказку метрики НЕ помним:
+   * возврат в чужое раскрытое состояние дезориентирует (рекомендация агента к вопросу Б плана).
+   */
+  useViewMemory<{ revealed: number }>({
+    path: '/relations',
+    warm: warm !== undefined,
+    capture: () => ({ revealed }),
+    restore: async (view) => {
+      const cards = data?.cards;
+      if (cards === undefined) return;
+      const upto = Math.min(view.revealed, cards.length);
+      // Канон 1.x «карточка ждёт фото» (bugs/57) действует и на возврате: лица порций,
+      // которые сейчас появятся, забираем из кэша сессии ДО отрисовки.
+      await preloadAvatars(portionFaces(cards, REVEAL_PORTION, upto));
+      revealed = upto;
+    },
+  });
 
   $effect(() => {
     if (sentinel === null || data === null) return;
