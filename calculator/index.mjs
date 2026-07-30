@@ -165,6 +165,29 @@ if (projectId.startsWith('demo-') && !process.env.FIRESTORE_EMULATOR_HOST) {
   process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8181';
 }
 
+// Пустая переменная (наследие compose-подстановки `${VAR:-}`) означает «не задана»:
+// Admin SDK пустую строку игнорирует, но наш страж ниже обязан читать её так же.
+if (process.env.FIRESTORE_EMULATOR_HOST === '') delete process.env.FIRESTORE_EMULATOR_HOST;
+
+// ДВУСТОРОННИЙ страж (bugs/94). Выше: demo-* не должен утечь в бой. Здесь — обратное:
+// НЕ-demo проект не должен молча писать в эмулятор. Ровно это чуть не случилось при
+// перевыкате «по документации» compose-файла (researches/14: спасла ручная сверка
+// docker inspect, а не страж). Осознанный запуск против эмулятора с реальным именем
+// проекта — только через явный NDIM_ALLOW_EMULATOR=1.
+if (
+  !projectId.startsWith('demo-') &&
+  process.env.FIRESTORE_EMULATOR_HOST &&
+  process.env.NDIM_ALLOW_EMULATOR !== '1'
+) {
+  console.error(
+    `[calc] СТОП: проект ${projectId} совмещён с эмулятором (FIRESTORE_EMULATOR_HOST=` +
+      `${process.env.FIRESTORE_EMULATOR_HOST}). Боевой запуск с эмулятором — почти наверняка ` +
+      'ошибка (bugs/94): топы ушли бы в дев-базу, бой остался бы без синхронизации. ' +
+      'Если это осознанно — задай NDIM_ALLOW_EMULATOR=1.',
+  );
+  process.exit(1);
+}
+
 initializeApp({ projectId });
 const db = getFirestore();
 
@@ -438,8 +461,27 @@ async function reportServer(now, success = null) {
   );
 }
 
+/**
+ * Дверь для тестов устойчивости (bugs/91): взведённая, роняет БЛИЖАЙШИЙ commitInChunks
+ * ровно один раз — так тест воспроизводит транзиентный сбой Firestore посреди ночного
+ * прохода без ковыряния в сети. В бою дверь никогда не взводится (ничего не экспортирует
+ * её наружу процесса), это тот же приём, что стендовые двери `?as=` клиента.
+ */
+export const _testFailNextCommit = { armed: false };
+
+/**
+ * Дверь для теста гонки dirty (bugs/93): хук исполняется внутри runCycle между коммитом
+ * топов и снятием флага — ровно там, где в бою успевает вклиниться запись человека.
+ * В бою всегда null.
+ */
+export const _testBetweenCommitAndRelease = { hook: null };
+
 /** Пишет операции пачками по BATCH_LIMIT: полный проход большого Пространства не влезает в один батч. */
 async function commitInChunks(writes) {
+  if (_testFailNextCommit.armed) {
+    _testFailNextCommit.armed = false;
+    throw new Error('тестовый сбой коммита (дверь bugs/91)');
+  }
   for (let start = 0; start < writes.length; start += BATCH_LIMIT) {
     const batch = db.batch();
     for (const write of writes.slice(start, start + BATCH_LIMIT)) write(batch);
@@ -482,7 +524,8 @@ export async function runCycle() {
     if (nightly) await cleanupStaleGuests(startedAt); // до перечитки: сироты не должны попасть в кэш
     pointsCache = await loadAllPoints();
     if (writtenTops === null) writtenTops = await seedWrittenTops();
-    if (nightly) lastFullPassAt = startedAt;
+    // ⚠️ lastFullPassAt здесь НЕ трогаем: отметка «проход сделан» ставится только после
+    // успешного конца цикла (bugs/91) — см. низ runCycle, симметрично writtenTops.
     log(
       `${nightly ? 'ночной полный проход' : 'прогрев кэша при старте'}: в Пространстве точек — ${pointsCache.size}`,
     );
@@ -557,19 +600,28 @@ export async function runCycle() {
   let written = 0;
   let checked = 0; // пользователей, чьи топы пересчитаны и сверены в этом цикле
   for (const [uid, point] of pointsCache) {
-    if (Object.keys(point.ratings).length === 0) continue;
+    /*
+     * Опустевшая точка (человек удалил ВСЕ оценки) не пропускается: ей положен честный
+     * ПУСТОЙ топ, иначе relations/{uid} навсегда хранит топ из уже не существующих оценок
+     * (bugs/92 — `continue` был безобиден, пока топы переписывались каждый цикл, и стал
+     * дырой после перехода на diff-запись). Но заводить пустой документ тому, у кого топа
+     * никогда не было (новичок без оценок), незачем — оплаченная запись без смысла: пустой
+     * топ пишется только ПОВЕРХ существующего документа (см. условие записи ниже).
+     */
+    const emptied = Object.keys(point.ratings).length === 0;
     // Гость в Пространстве не виден (интервью №004, В3), и в счётчик «проверено» он попадать
     // не должен: иначе на одном экране «Пользователей проверено» и «Всего людей» означают
     // РАЗНЫЕ популяции, и разница читается как поломка (ideas/21 п. 14, часть В).
-    if (!point.anonymous) checked += 1;
-    const top = topFor(uid, pointsCache);
+    // Опустевшие тоже не в счёте — как и до bugs/92: их некому сверять.
+    if (!point.anonymous && !emptied) checked += 1;
+    const top = emptied ? [] : topFor(uid, pointsCache);
     // «Связей рассчитано» и средняя похожесть — про Пространство, а гостя в Пространстве
     // не видно (В3). Его собственный топ мы считаем и пишем, но в статистику не пускаем.
     if (!point.anonymous) similarities.push(...top.map((entry) => entry.similarity));
 
     const fingerprint = topFingerprint(top);
     const changed = writtenTops.get(uid) !== fingerprint;
-    if (changed && (fullPass || readySet.has(uid))) {
+    if (changed && (fullPass || readySet.has(uid)) && (!emptied || writtenTops.has(uid))) {
       writes.push((batch) =>
         batch.set(db.doc(`relations/${uid}`), { computedAt: now, version: RELATIONS_VERSION, top }),
       );
@@ -578,12 +630,8 @@ export async function runCycle() {
     }
   }
 
-  for (const uid of readyUids) {
-    const firstSeen = pointsCache.get(uid)?.firstSeen ?? now;
-    writes.push((batch) =>
-      batch.set(db.doc(`points/${uid}`), { dirty: false, lastSync: now, firstSeen }, { merge: true }),
-    );
-  }
+  // ⚠️ Снятие dirty из этого батча ИЗЪЯТО (bugs/93): оно происходит после коммита топов,
+  // транзакцией с проверкой updated — см. ниже.
 
   // Статистика Пространства и снимок дня — в том же цикле, что и топы: цифры на витрине
   // обязаны описывать ровно ту синхронизацию, которая только что случилась.
@@ -617,6 +665,40 @@ export async function runCycle() {
   for (const [uid, fingerprint] of writtenNow) writtenTops.set(uid, fingerprint);
   if (publishPeople) lastPublishedPeople = stats.people;
 
+  /*
+   * Флаг dirty снимается ПОСЛЕ коммита топов и ТРАНЗАКЦИЕЙ с проверкой updated (bugs/93):
+   * человек мог поставить оценку, ПОКА цикл считал, и безусловное dirty:false затёрло бы
+   * его свежий dirty:true — оценка ждала бы ночного прохода вместо минуты (больнее всего
+   * новичку, ideas/05). Транзакция сверяет updated с тем, который цикл ЧИТАЛ: изменился —
+   * флаг не трогаем, точка честно пересчитается следующим циклом. Цена: +1 чтение на
+   * грязную точку за цикл; грязных единицы — канон экономии не страдает. Порядок (сначала
+   * топы, потом флаг) безопасен и при падении между ними: dirty останется, пересчёт
+   * повторится, diff подавит лишние записи.
+   */
+  // Дверь для теста гонки (bugs/93): даёт тесту записать оценку «во время цикла» — между
+  // коммитом топов и снятием dirty. В бою всегда null (взводится только импортом из теста).
+  if (_testBetweenCommitAndRelease.hook) await _testBetweenCommitAndRelease.hook();
+
+  let dirtyKept = 0;
+  for (const uid of readyUids) {
+    const point = pointsCache.get(uid);
+    const seenUpdated = point?.updated ?? null;
+    const firstSeen = point?.firstSeen ?? now;
+    const ref = db.doc(`points/${uid}`);
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const current = snap.exists && typeof snap.data().updated === 'number' ? snap.data().updated : null;
+      if (current !== seenUpdated) {
+        dirtyKept += 1; // человек успел оценить во время цикла — dirty остаётся
+        return;
+      }
+      tx.set(ref, { dirty: false, lastSync: now, firstSeen }, { merge: true });
+    });
+  }
+  if (dirtyKept > 0) {
+    log(`оценка во время цикла: dirty оставлен у ${dirtyKept} — пересчёт следующим циклом`);
+  }
+
   // Полная и частичная синхронизации отчитываются РАЗДЕЛЬНЫМИ блоками — как в 1.x
   // (researches/13 §6: last_full_sync_* / last_partial_sync_*). Виджет «Пространства»
   // склеивал минутное сердцебиение с числами суточного прохода и врал владельцу (bugs/42).
@@ -645,8 +727,15 @@ export async function runCycle() {
     ...syncBlock,
   });
 
+  // Отметка «ночной проход сделан» — ТОЛЬКО когда весь цикл дошёл до конца (bugs/91),
+  // симметрично writtenTops выше. Упади цикл на любом шаге — отметка останется старой, и
+  // следующий 60-секундный цикл честно повторит проход (повтор дёшев: diff подавит записи).
+  // При стабильно падающем Firestore проход будет пробоваться каждый цикл — это и есть
+  // желаемое самолечение, а не зацикливание: каждая попытка отражена строкой «ошибка цикла».
+  if (nightly) lastFullPassAt = startedAt;
+
   log(
-    `готово: записано топов — ${written}${nightly ? ' (ночной проход)' : warmup ? ' (прогрев кэша)' : ''}, флаг dirty снят у ${readyUids.length}; ` +
+    `готово: записано топов — ${written}${nightly ? ' (ночной проход)' : warmup ? ' (прогрев кэша)' : ''}, флаг dirty снят у ${readyUids.length - dirtyKept}; ` +
       `в Пространстве людей ${stats.people}, измерений ${stats.dims}, связей рассчитано ${stats.relations}`,
   );
   return written;
