@@ -43,6 +43,7 @@
     peekProfileScreen,
     saveProfile,
     signInGuest,
+    signOutUser,
     type ProfileScreenData,
   } from '$lib/data/profile';
   import {
@@ -50,6 +51,7 @@
     continueWithGoogle,
     isLoginLink,
     linkGoogle,
+    pendingIntent,
     sendLoginLink,
     waitForSession,
   } from '$lib/data/account';
@@ -126,16 +128,36 @@
 
   // Аккаунт без пароля (plans/03 этап 3, макет V4 «Врезка»): гостевая карточка
   // разворачивается в вход прямо на месте, ничего не перекрывая.
-  //   facts   — три честных факта про гостя и кнопка [Сохранить результаты];
-  //   choose  — Google или почта;
+  //   facts   — три честных факта про гостя и ДВЕ ДВЕРИ (bugs/84, интервью №007 В4);
+  //   leave?  — врезка подтверждения: вход в свой аккаунт отпускает труд гостя;
+  //   choose  — Google или почта (дверь «сохранить мои результаты»);
+  //   signin  — форма почты для двери «у меня уже есть аккаунт»;
   //   sending — письмо отправляется;
   //   sent    — «Мы отправили Вам письмо»;
   //   linking — человек вернулся по ссылке, привязываем;
+  //   mine?   — почта занята ДРУГИМ профилем: развилка «это мой аккаунт» / «другая почта»;
   //   done    — «Профиль сохранён».
-  type SignupStep = 'facts' | 'choose' | 'sending' | 'sent' | 'linking' | 'done';
+  type SignupStep =
+    | 'facts'
+    | 'leave?'
+    | 'choose'
+    | 'signin'
+    | 'sending'
+    | 'sent'
+    | 'linking'
+    | 'mine?'
+    | 'done';
   let signupStep = $state<SignupStep>('facts');
   let signupEmail = $state('');
   let signupError = $state('');
+
+  /**
+   * Человек вошёл в дверь «У меня уже есть аккаунт» — то есть его НАМЕРЕНИЕ `signin`.
+   * Признак держится до отправки письма и уезжает в `sendLoginLink`, где переживает и
+   * закрытие вкладки (`account.ts` → `PENDING_INTENT_KEY`). Раньше намерение выбрасывалось,
+   * и путь входа угадывался по сессии — корень bugs/84.
+   */
+  let signinDoor = $state(false);
 
 
   // Вкладка «Видимость»: выбранная аудитория предпросмотра
@@ -259,6 +281,25 @@
     signupStep = 'linking';
 
     const session = await waitForSession();
+
+    /*
+     * ПУТЬ ВЫБИРАЕТ НАМЕРЕНИЕ, А НЕ СЕССИЯ (bugs/84, интервью №007 В4).
+     *
+     * Человек нажал «У меня уже есть аккаунт» — значит он идёт ДОМОЙ, а не превращает гостя
+     * в аккаунт. Гостевую сессию отпускаем здесь, до `completeLoginLink`: тогда та уходит в
+     * ветку `signInWithEmailLink`, и почта, которая «уже связана с другим профилем», это
+     * просто его собственная почта.
+     *
+     * Выход делаем именно `signOutUser()`, а не голым `signOut`: он же чистит кэш экранов и
+     * скачанные лица. Без этого в памяти вкладки остались бы данные гостя, а войти в неё
+     * собирается другой человек — прямая дыра приватности (`cache.ts` → «ПРИВАТНОСТЬ»).
+     *
+     * Труд гостя при этом отпускается осознанно: слить два профиля нельзя, чьи-то оценки
+     * пришлось бы выбросить. Именно поэтому дверь спрашивает подтверждение ДО письма.
+     */
+    const intent = pendingIntent();
+    if (intent === 'signin' && session?.isAnonymous === true) await signOutUser();
+
     const result = await completeLoginLink();
     history.replaceState(null, '', '/profile');
 
@@ -279,6 +320,24 @@
       return result.uid;
     }
 
+    /*
+     * ОТКАЗ «ПОЧТА УЖЕ ЗАНЯТА» — ЭТО НЕ ОШИБКА, А ОБНАРУЖЕННЫЙ ФАКТ (bugs/84, половина «б»).
+     *
+     * Раньше он дописывался КРАСНОЙ СТРОКОЙ внутрь карточки под заголовком «Сейчас Вы гость —
+     * Ваши результаты не сохранены», и владелец видел один экран, который не решил, что он
+     * такое: «не понимает разницы между гостем и попыткой использовать чужой email».
+     *
+     * Теперь карточка переходит в ОТДЕЛЬНОЕ состояние `mine?` с развилкой: «это мой аккаунт —
+     * войти в него» или «указать другую почту». Двух состояний в одной карточке больше нет.
+     */
+    if (result.reason === 'already-in-use') {
+      signupStep = 'mine?';
+      if (session) return session.uid;
+      const uid = await signInGuest();
+      await ensureSpaceExists(uid, lang);
+      return uid;
+    }
+
     signupError = t.account.errors[result.reason][lang];
     signupStep = 'choose';
     // Ссылка не сработала, но человек всё ещё в своей гостевой сессии — показываем
@@ -292,6 +351,51 @@
   function guestLater() {
     guestCard = false;
     localStorage.setItem(GUEST_CARD_KEY, 'later');
+  }
+
+  /*
+   * ── ДВЕ ДВЕРИ ГОСТЕВОЙ КАРТОЧКИ (bugs/84, интервью №007, В3=А и В4=А) ──
+   *
+   * Слово владельца дословно: «не понимает разницы между гостем и попыткой использовать чужой
+   * email — это разные состояния, и должны быть разные поведения приложения, а не всё смешивать
+   * в кучу». По В4 он выбрал вариант А: две кнопки в карточке гостя — «Сохранить мои результаты»
+   * и «У меня уже есть аккаунт». По В3 — врезка подтверждения прямо в карточке, без модального
+   * окна (модальных окон в продукте нет вовсе).
+   *
+   * Вторая дверь спрашивает подтверждение ДО письма, а не показывает ошибку ПОСЛЕ: труд гостя
+   * с человеком не переедет, слить два профиля нельзя.
+   */
+
+  /** Дверь «у меня уже есть аккаунт» — сначала честная врезка о судьбе труда гостя. */
+  function askSignIn() {
+    signupError = '';
+    signupStep = 'leave?';
+  }
+
+  /** Человек подтвердил: идём вводить почту уже с намерением `signin`. */
+  function confirmSignIn() {
+    signinDoor = true;
+    signupStep = 'signin';
+  }
+
+  /** Отказался — возвращаемся к фактам, ничего не потеряв. */
+  function cancelSignIn() {
+    signinDoor = false;
+    signupStep = 'facts';
+  }
+
+  /**
+   * «Это мой аккаунт — войти в него» из состояния `mine?`.
+   *
+   * ⚠️ Просим НОВОЕ письмо, а не переиспользуем код из ссылки. Годится ли тот же одноразовый
+   * код после неудачного `linkWithCredential` — гипотеза, которую кодом не проверить (bugs/84,
+   * «Непроверенная ловушка»). Честнее попросить новое письмо, чем молча упереться в сожжённый
+   * код: человек уже один раз получил невнятный отказ, второго он не заслужил.
+   */
+  function claimAccount() {
+    signinDoor = true;
+    signupError = '';
+    signupStep = 'signin';
   }
 
 
@@ -316,14 +420,16 @@
       return;
     }
     signupError = '';
+    const door: SignupStep = signinDoor ? 'signin' : 'choose';
     signupStep = 'sending';
-    const result = await sendLoginLink(email);
+    // Намерение уезжает вместе с почтой — на возврате по ссылке путь выберет ОНО (bugs/84).
+    const result = await sendLoginLink(email, signinDoor ? 'signin' : 'upgrade');
     if (result.ok) {
       signupStep = 'sent';
       return;
     }
     signupError = t.account.errors[result.reason][lang];
-    signupStep = 'choose';
+    signupStep = door; // возвращаем В ТУ ЖЕ дверь, а не сваливаем оба намерения в одну
   }
 
   // ── Двуязычные строки интерфейса ──
@@ -373,8 +479,22 @@
         ru: 'Если Вы не вернётесь в течение 30 дней, мы удалим эти данные без следа.',
         en: 'If you do not come back within 30 days, we erase this data without a trace.',
       },
-      save: { ru: 'Сохранить результаты', en: 'Save my results' },
+      save: { ru: 'Сохранить мои результаты', en: 'Save my results' },
       later: { ru: 'позже', en: 'later' },
+      // Вторая дверь и врезка подтверждения — интервью №007, В4=А и В3=А. Формулировку
+      // «Ваши оценки исчезнут» владелец дал сам (его слово в В3); остальное — минимум факта.
+      // [AI] Расширенная фраза врезки ждёт вычитки владельца (bugs/84 → «Ждёт владельца», п. 3).
+      haveAccount: { ru: 'У меня уже есть аккаунт', en: 'I already have an account' },
+      leaveTitle: {
+        ru: 'Войти в свой аккаунт? Ваши оценки исчезнут',
+        en: 'Sign in to your account? Your ratings will be gone',
+      },
+      leaveBody: {
+        ru: 'Оценки, поставленные гостем, с Вами не переедут: два профиля мы не сливаем — иначе пришлось бы выбросить чьи-то оценки.',
+        en: 'The ratings you gave as a guest will not move with you: we do not merge two profiles — someone’s ratings would have to be thrown away.',
+      },
+      leaveYes: { ru: 'Войти в свой аккаунт', en: 'Sign in to my account' },
+      leaveNo: { ru: 'Отмена', en: 'Cancel' },
       audienceLocked: {
         ru: 'Пока Вы гость, Вас не видит никто, поэтому открывать свойство некому. Настройки аудитории появятся после создания аккаунта.',
         en: 'While you are a guest nobody sees you, so there is nobody to open the property to. Audience settings arrive after you create an account.',
@@ -426,6 +546,24 @@
       },
       close: { ru: 'Продолжить', en: 'Continue' },
       retry: { ru: 'Попробовать снова', en: 'Try again' },
+      // Состояние «почта занята другим профилем» — отдельный вид карточки, а не красная
+      // строка под заголовком «Сейчас Вы гость» (bugs/84, половина «б»).
+      mineTitle: {
+        ru: 'Эта почта уже Ваша',
+        en: 'This email is already yours',
+      },
+      mineBody: {
+        ru: 'На эту почту уже есть профиль в Пространстве NDim. Это не ошибка: похоже, Вы хотите войти в свой аккаунт. Оценки, поставленные гостем, с Вами не переедут.',
+        en: 'There is already an NDim Space profile on this email. This is not an error: it looks like you want to sign in to your account. The ratings you gave as a guest will not move with you.',
+      },
+      mineYes: { ru: 'Это мой аккаунт — войти в него', en: 'This is my account — sign in' },
+      mineNo: { ru: 'Указать другую почту', en: 'Use a different email' },
+      // Форма почты в двери «у меня уже есть аккаунт»: та же форма, другой заголовок.
+      signinTitle: { ru: 'Вход в Ваш аккаунт', en: 'Sign in to your account' },
+      signinLead: {
+        ru: 'Введите почту Вашего аккаунта — мы пришлём ссылку для входа. Пароль не нужен.',
+        en: 'Enter the email of your account — we will send a sign-in link. No password needed.',
+      },
       errors: {
         'already-in-use': {
           ru: 'Этот способ входа уже связан с другим профилем NDim. Чтобы сохранить текущие результаты, создайте аккаунт на другую почту.',
@@ -884,7 +1022,16 @@
             </div>
           {:else}
             <span class="guest-ava"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
-            <h2>{t.guest.title[lang]}</h2>
+            <!--
+              ⚠️ ЗАГОЛОВОК «Сейчас Вы гость» ЖИВЁТ ТОЛЬКО В СВОИХ СОСТОЯНИЯХ (bugs/84, половина «б»).
+              Раньше он стоял безусловно, и поверх него дописывалась красная строка «этот способ
+              входа уже связан с другим профилем» — владелец увидел «один экран, который не решил,
+              что он такое». Двери входа и врезки — это ДРУГИЕ состояния карточки, со своими
+              заголовками, а не приписки к гостевому.
+            -->
+            {#if signupStep === 'facts' || signupStep === 'choose' || signupStep === 'sending'}
+              <h2>{t.guest.title[lang]}</h2>
+            {/if}
 
             {#if signupStep === 'facts'}
               <ul class="guest-facts">
@@ -892,9 +1039,54 @@
                 <li>💾 {t.guest.fact2[lang]}</li>
                 <li>🍂 {t.guest.fact3[lang]}</li>
               </ul>
+              <!-- ДВЕ ДВЕРИ (интервью №007, В4=А): оба намерения названы словами ДО письма,
+                   а не разбираются по ошибке после него. -->
               <div class="guest-cta">
                 <button type="button" class="btn" onclick={() => (signupStep = 'choose')}>{t.guest.save[lang]}</button>
+                <button type="button" class="btn ghost door" onclick={askSignIn}>{t.guest.haveAccount[lang]}</button>
                 <button type="button" class="guest-later" onclick={guestLater}>{t.guest.later[lang]}</button>
+              </div>
+            {:else if signupStep === 'leave?'}
+              <!-- ВРЕЗКА ПОДТВЕРЖДЕНИЯ (интервью №007, В3=А): прямо в карточке, без модального
+                   окна — модальных окон в продукте нет, и владелец выбрал именно врезку. -->
+              <div class="warn" transition:slide={{ duration: MOTION.fast }}>
+                <h3>{t.guest.leaveTitle[lang]}</h3>
+                <p>{t.guest.leaveBody[lang]}</p>
+                <div class="guest-cta">
+                  <button type="button" class="btn" onclick={confirmSignIn}>{t.guest.leaveYes[lang]}</button>
+                  <button type="button" class="btn ghost" onclick={cancelSignIn}>{t.guest.leaveNo[lang]}</button>
+                </div>
+              </div>
+            {:else if signupStep === 'mine?'}
+              <!-- Почта занята ДРУГИМ профилем. Это не ошибка связывания, а обнаруженный факт:
+                   карточка меняет состояние целиком, а не дописывает красную строку (bugs/84). -->
+              <div class="warn" transition:slide={{ duration: MOTION.fast }}>
+                <h3>{t.account.mineTitle[lang]}</h3>
+                <p>{t.account.mineBody[lang]}</p>
+                <div class="guest-cta">
+                  <button type="button" class="btn" onclick={claimAccount}>{t.account.mineYes[lang]}</button>
+                  <button type="button" class="btn ghost" onclick={() => { signinDoor = false; signupStep = 'choose'; }}>
+                    {t.account.mineNo[lang]}
+                  </button>
+                </div>
+              </div>
+            {:else if signupStep === 'signin'}
+              <!-- Дверь «у меня уже есть аккаунт»: та же форма почты, но своим заголовком и
+                   БЕЗ Google-кнопки апгрейда — здесь человек не превращает гостя, а входит. -->
+              <h3 class="door-title">{t.account.signinTitle[lang]}</h3>
+              <p class="acc-lead">{t.account.signinLead[lang]}</p>
+              <input
+                class="inp acc-email"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                placeholder={t.account.emailPlaceholder[lang]}
+                bind:value={signupEmail}
+              />
+              <button type="button" class="btn" onclick={requestLink}>{t.account.sendLink[lang]}</button>
+              {#if signupError}<p class="err">{signupError}</p>{/if}
+              <div class="guest-cta">
+                <button type="button" class="btn ghost" onclick={cancelSignIn}>{t.guest.leaveNo[lang]}</button>
               </div>
             {:else}
               <p class="acc-lead">{t.account.lead[lang]}</p>
@@ -1305,7 +1497,13 @@
   .guest-ava :global(svg) { width: 72%; height: 72%; margin-top: 22%; fill: var(--accent); opacity: 0.7; }
   .guest-facts { list-style: none; margin: 0 0 4px; padding: 0; text-align: left; }
   .guest-facts li { font-size: 13.5px; line-height: 1.5; color: var(--text); padding: 3px 0; }
-  .guest-cta { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 10px; }
+  /* Две двери не встают в строку на 390px, поэтому ряд переносится: кнопки шириной 100%
+     (`.guest-card .btn` ниже) занимают по строке каждая, а «позже» садится под ними.
+     Это следствие второй двери (интервью №007 В4=А), а не переделка макета V4. */
+  .guest-cta {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    align-items: center; justify-content: center; margin-top: 10px;
+  }
   .guest-later {
     font: inherit; font-size: 13px; color: var(--dim); background: transparent; border: 0;
     cursor: pointer; text-decoration: underline dotted; padding: 0;
@@ -1329,6 +1527,30 @@
   .btn.google { display: flex; align-items: center; justify-content: center; gap: 9px; }
   .btn.google :global(svg) { width: 18px; height: 18px; flex: none; fill: currentColor; }
   .guest-card .err { margin-top: 8px; }
+
+  /* ── Врезка подтверждения и состояние «эта почта уже Ваша» (bugs/84, В3=А и В4=А) ──
+     Врезка, а НЕ модальное окно: модальных окон в продукте нет ни для чего, и владелец
+     выбрал именно врезку. Тон — предупреждение, а не ошибка: человек ничего не сломал. */
+  .warn {
+    margin-top: 12px; padding: 12px 14px; text-align: left;
+    border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  /* text-transform: none — в карточке `h3` это ярлык раздела и потому прописными; здесь же
+     это ВОПРОС человеку («Войти в свой аккаунт? Ваши оценки исчезнут»), и капс на нём кричит.
+     Заодно снимается расхождение с врезкой «Меню», где тот же вопрос стоит абзацем. */
+  .warn h3 {
+    margin: 0 0 6px; font-size: 14px; line-height: 1.35; color: var(--text);
+    text-transform: none; letter-spacing: normal;
+  }
+  .warn p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--dim); }
+  .warn .guest-cta { margin-top: 12px; }
+  /* Заголовок двери входа — тем же кеглем, что и врезка: это одна и та же ступень пути. */
+  .door-title {
+    margin: 0 0 2px; font-size: 14px; color: var(--text);
+    text-transform: none; letter-spacing: normal;
+  }
 
   /* ── Десктоп: макет V2 «Рабочий стол» (утверждён владельцем 2026-07-11) ──
      Блок стоит В КОНЦЕ файла намеренно: он переопределяет базовые (мобильные)

@@ -59,6 +59,40 @@ function loginLinkOrigin(): string {
 const PENDING_EMAIL_KEY = 'ndim-pending-email';
 
 /**
+ * Ключ, под которым помним НАМЕРЕНИЕ — зачем человек ввёл почту (bugs/84, интервью №007 В4).
+ *
+ * Слово владельца: «не понимает разницы между гостем и попыткой использовать чужой email —
+ * это разные состояния, и должны быть разные поведения приложения, а не всё смешивать в кучу».
+ *
+ * Корень был именно здесь: продукт хранил почту и ВЫБРАСЫВАЛ намерение, а путь входа выбирал
+ * по сессии (`if (user.isAnonymous)`). Один раз нажав «Осмотреться гостем» в этом браузере,
+ * человек навсегда получал чтение «привяжи почту к гостю» — и своя же почта возвращалась
+ * ошибкой «уже связан с другим профилем». Теперь намерение живёт рядом с почтой и переживает
+ * тот же путь: отправку письма, закрытие вкладки, возврат по ссылке.
+ *
+ * `upgrade` — «сохранить мои результаты» (гость становится аккаунтом, UID и труд сохраняются);
+ * `signin` — «у меня уже есть аккаунт» (человек идёт домой, труд гостя с ним не переезжает).
+ */
+const PENDING_INTENT_KEY = 'ndim-pending-intent';
+
+/** Зачем человек ввёл почту. По умолчанию — апгрейд: так вёл себя продукт до bugs/84. */
+export type LoginIntent = 'upgrade' | 'signin';
+
+/**
+ * Намерение, с которым запрашивали письмо. Читается ДО {@link completeLoginLink}: от него
+ * зависит, надо ли сперва отпустить гостевую сессию (это делает экран — см. `finishEmailLink`).
+ */
+export function pendingIntent(): LoginIntent {
+  return localStorage.getItem(PENDING_INTENT_KEY) === 'signin' ? 'signin' : 'upgrade';
+}
+
+/** Забыть почту и намерение — обе половины одной записи, снимаются вместе. */
+function forgetPending(): void {
+  localStorage.removeItem(PENDING_EMAIL_KEY);
+  localStorage.removeItem(PENDING_INTENT_KEY);
+}
+
+/**
  * Чем закончился апгрейд. Ошибки — не исключения: экран обязан показать их человеку.
  *
  * `created` — аккаунт создан ИМЕННО СЕЙЧАС (апгрейд гостя или первый вход новичка).
@@ -170,13 +204,15 @@ export const linkGoogle = continueWithGoogle;
  * при переходе по ссылке Firebase обязан сверить её, иначе ссылку можно было бы
  * перехватить и войти в чужой профиль.
  */
-export async function sendLoginLink(email: string): Promise<UpgradeResult> {
+export async function sendLoginLink(email: string, intent: LoginIntent = 'upgrade'): Promise<UpgradeResult> {
   try {
     await sendSignInLinkToEmail(devAuth(), email, {
       url: `${loginLinkOrigin()}${LINK_RETURN_PATH}`,
       handleCodeInApp: true,
     });
     localStorage.setItem(PENDING_EMAIL_KEY, email);
+    // Намерение кладём РЯДОМ с почтой и в тот же момент: они бессмысленны по отдельности.
+    localStorage.setItem(PENDING_INTENT_KEY, intent);
     // Письмо отправлено — аккаунта это ещё не создало.
     return { ok: true, uid: devAuth().currentUser?.uid ?? '', created: false };
   } catch (error) {
@@ -216,6 +252,12 @@ export function waitForSession(): Promise<User | null> {
  *     их дверь: у них аккаунты с паролем, а паролей в 2.0 нет. Вход по ссылке ЗАОДНО
  *     подтверждает почту — а без подтверждённой почты правила 2.0 не показали бы им ничего
  *     (в боевой базе 109 неподтверждённых). То есть этот шаг чинит их сам, без нашего вмешательства.
+ *
+ * ⚠️ РАЗВИЛКУ РЕШАЕТ НАМЕРЕНИЕ, А НЕ ТОЛЬКО СЕССИЯ (bugs/84). Сессия отвечает на вопрос «кто
+ * сейчас в браузере», а нужен ответ на «чего человек хотел». Гостевая сессия при намерении
+ * `signin` обязана быть отпущена ДО этого вызова — это делает экран (`finishEmailLink` в
+ * `profile/+page.svelte`), потому что выход тянет за собой очистку кэшей и лиц (`signOutUser`),
+ * а тащить их сюда значило бы замкнуть импорты `account` ↔ `profile`.
  */
 export async function completeLoginLink(href: string = location.href): Promise<UpgradeResult> {
   const email = localStorage.getItem(PENDING_EMAIL_KEY);
@@ -226,12 +268,12 @@ export async function completeLoginLink(href: string = location.href): Promise<U
   try {
     if (user && user.isAnonymous) {
       await linkWithCredential(user, EmailAuthProvider.credentialWithLink(email, href));
-      localStorage.removeItem(PENDING_EMAIL_KEY);
+      forgetPending();
       return await finishUpgrade();
     }
 
     const credentials = await signInWithEmailLink(devAuth(), email, href);
-    localStorage.removeItem(PENDING_EMAIL_KEY);
+    forgetPending();
     // Для 331 человека из 1.x это обычный вход (created: false); для новичка, начавшего
     // с почты на экране входа, — рождение аккаунта. Firebase различает это за нас.
     return { ok: true, uid: credentials.user.uid, created: isNewUser(credentials) };

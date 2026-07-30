@@ -13,7 +13,7 @@
   // «премиума», ни «плюса», ни счётчиков-крючков здесь не будет никогда.
   import { onMount } from 'svelte';
   import { cubicOut } from 'svelte/easing';
-  import { fly } from 'svelte/transition';
+  import { fly, slide } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
@@ -131,6 +131,17 @@
     location.href = '/';
   }
 
+  /**
+   * Гость подтверждает выход (интервью №007, В3=А).
+   *
+   * Слово владельца: врезка прямо в карточке, «Выйти? Ваши оценки исчезнут» + две кнопки.
+   * Модальное окно он отверг сам — в продукте их нет ни для чего.
+   *
+   * ⚠️ Ступень нужна ТОЛЬКО гостю: его выход отрезает несохранённый труд. Выход вошедшего
+   * человека не теряет ничего, и лишний тап там был бы придиркой, а не заботой.
+   */
+  let confirmLeave = $state(false);
+
   /** Имя человека — как он сам его записал; у гостя имени нет. */
   const displayName = $derived.by(() => {
     const first = data?.values.name?.first;
@@ -161,6 +172,9 @@
     manageAccount: { ru: 'Управление аккаунтом', en: 'Manage account' },
     soon: { ru: 'скоро', en: 'soon' },
     leave: { ru: 'Выйти', en: 'Sign out' },
+    // Слово владельца дословно (интервью №007, В3=А): «Выйти? Ваши оценки исчезнут».
+    leaveConfirm: { ru: 'Выйти? Ваши оценки исчезнут', en: 'Sign out? Your ratings will be gone' },
+    leaveCancel: { ru: 'Отмена', en: 'Cancel' },
     since: { ru: 'В Пространстве с', en: 'In the Space since' },
     noName: { ru: 'Без имени', en: 'No name' },
 
@@ -275,13 +289,24 @@
             предупреждением и подтверждением) — это UI-решение владельца, оно вынесено
             макетами; здесь снят только замок.
 
-            ⚠️ Выход гостя необратим: несохранённый труд пропадает. Человека об этом уже
-            предупреждает `guestNote` строкой выше («Ваши результаты пока не сохранены…»).
-            Нужна ли отдельная ступень подтверждения — вопрос владельца, он в баге.
+            ⚠️ Выход гостя необратим: несохранённый труд пропадает. Владелец ответил на этот
+            вопрос (интервью №007, В3=А): нужна врезка подтверждения прямо в карточке, без
+            модального окна. Она ниже; вошедшему человеку такая ступень не показывается —
+            его выход ничего не теряет.
           -->
-          <button type="button" class="row" onclick={leave}>
-            <span class="ic"><Icon name="logout" size={20} /></span><span class="lb">{t.leave[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
-          </button>
+          {#if confirmLeave}
+            <div class="warn" transition:slide={{ duration: MOTION.fast }}>
+              <p class="warn-title">{t.leaveConfirm[lang]}</p>
+              <div class="warn-cta">
+                <button type="button" class="btn primary wide" onclick={leave}>{t.leave[lang]}</button>
+                <button type="button" class="btn wide" onclick={() => (confirmLeave = false)}>{t.leaveCancel[lang]}</button>
+              </div>
+            </div>
+          {:else}
+            <button type="button" class="row" onclick={() => (confirmLeave = true)}>
+              <span class="ic"><Icon name="logout" size={20} /></span><span class="lb">{t.leave[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
+            </button>
+          {/if}
         {:else if stand === 'ready'}
           <div class="who">
             <span class="ava" aria-hidden="true">{(displayName ?? 'N').slice(0, 1)}</span>
@@ -500,6 +525,21 @@
   }
   .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
   .btn.wide { display: flex; margin: 0 14px 12px; }
+
+  /* ── Врезка подтверждения выхода гостя (интервью №007, В3=А) ──
+     Врезка внутри карточки, а не модальное окно: модальных окон в продукте нет ни для чего.
+     Кнопки — те же `.btn.wide`, что и «Сохранить результаты» выше, поэтому ряд читается как
+     продолжение карточки, а не как чужой элемент. */
+  .warn {
+    margin: 0 14px 12px; padding: 11px 13px;
+    border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .warn-title { margin: 0; font-size: 13.5px; line-height: 1.4; color: var(--text); }
+  .warn-cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  /* Внутри врезки у кнопок своих полей нет — их держит сама врезка. */
+  .warn-cta .btn.wide { margin: 0; flex: 1 1 auto; }
 
   /* ── Десктоп: макет V2 «Рабочий стол». Манифест — виджет РЯДОМ с кнопками меню
      (bugs/38, слово владельца: «в десктопе полно места — два виджета рядышком»):
