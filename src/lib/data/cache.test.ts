@@ -21,7 +21,19 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { FRESH, cacheOwner, cacheSize, cached, forgetAll, invalidate, own, peek, remember } from './cache.ts';
+import {
+  FRESH,
+  KEYS,
+  cacheOwner,
+  cacheSize,
+  cached,
+  forgetAll,
+  invalidate,
+  invalidateRefreshable,
+  own,
+  peek,
+  remember,
+} from './cache.ts';
 import { HEARTBEAT_TOLERANCE } from '../model/stats.ts';
 
 /** Счётчик обращений: каждая «загрузка» отмечается, чтобы видеть, был ли поход в базу. */
@@ -172,6 +184,82 @@ describe('кэш данных экранов', () => {
     assert.equal(cacheSize(), 0);
     assert.equal(cacheOwner(), null, 'после выхода кэш ничей — следующий вход начнётся начисто');
     assert.equal(peek('profile'), undefined);
+  });
+
+  /*
+   * ── МЕХАНИЗМ ОБНОВЛЕНИЯ ПО ТРЕБОВАНИЮ ЧЕЛОВЕКА (`bugs/78`) ──────────────────────────────
+   *
+   * Эти три теста существуют потому, что судья нашёл дыру: после решения владельца В1=Б строка
+   * «Обновить данные» убрана из «Меню», и `refreshNow` стал достижим ТОЛЬКО жестом — а жест
+   * стражами намеренно не эмулируется (синтетический `touchmove` доказывал бы работу прибора).
+   * Инвалидация осталась без единой исполняемой проверки. Здесь она появляется.
+   */
+  test('bugs/78: обновление по требованию гасит ВСЕ пять семейств ключей', async () => {
+    forgetAll();
+    own('человек-А');
+    // Кладём по одному ключу каждого семейства + родню, которая гаснет по началу ключа.
+    for (const key of [
+      KEYS.profile,
+      KEYS.ratings,
+      KEYS.dimsScreen,
+      KEYS.dimsShown,
+      KEYS.relations,
+      KEYS.relationsSummary,
+      KEYS.space,
+      KEYS.syncServer,
+      `${KEYS.view}:/dims`,
+    ]) {
+      remember(key, 'значение');
+    }
+    // ПАРНАЯ проверка: чужой ключ обязан выжить — иначе тест был бы доволен и `store.clear()`,
+    // то есть не отличал бы «погасили нужное» от «снесли всё» (EXP-0070).
+    remember('посторонний-ключ', 'не трогать');
+
+    invalidateRefreshable();
+
+    for (const key of [
+      KEYS.profile,
+      KEYS.ratings,
+      KEYS.dimsScreen,
+      KEYS.dimsShown,
+      KEYS.relations,
+      KEYS.relationsSummary,
+      KEYS.space,
+      KEYS.syncServer,
+      `${KEYS.view}:/dims`,
+    ]) {
+      assert.equal(peek(key), undefined, `${key} обязан погаснуть по требованию «дай свежее»`);
+    }
+    assert.equal(peek('посторонний-ключ'), 'не трогать', 'обновление — не тотальная очистка');
+  });
+
+  test('bugs/78: обновление гасит и ПАМЯТЬ ВИДА — иначе позиция укажет в другой список', () => {
+    /*
+     * Не дубль теста выше: тот перечисляет ключи, этот стережёт ПРИЧИНУ (`plans/08`). Лента
+     * «Все» собирается в случайном порядке, и после обновления те же 900px — это другое место.
+     */
+    forgetAll();
+    remember(`${KEYS.view}:/dims`, { scroll: 900, view: { tab: 'mine' } });
+    remember(`${KEYS.view}:/relations`, { scroll: 240, view: { revealed: 72 } });
+
+    invalidateRefreshable();
+
+    assert.equal(peek(`${KEYS.view}:/dims`), undefined);
+    assert.equal(peek(`${KEYS.view}:/relations`), undefined);
+  });
+
+  test('ПРИВАТНОСТЬ: смена человека уносит и память вида — чужую позицию показать нельзя', () => {
+    /*
+     * `plans/08` обещает это свойство «бесплатно» — тем, что память вида лежит в этом же кэше.
+     * Обещание без теста — просто фраза в комментарии; вот тест.
+     */
+    forgetAll();
+    own('человек-А');
+    remember(`${KEYS.view}:/profile`, { scroll: 500, view: undefined });
+
+    own('человек-Б');
+
+    assert.equal(peek(`${KEYS.view}:/profile`), undefined, 'позиция человека А не переживает смену');
   });
 
   test('контракт свежести: мои данные и цифры сервера — всю сессию, пульс — минуту', () => {

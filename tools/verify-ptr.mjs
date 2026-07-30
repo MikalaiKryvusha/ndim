@@ -254,6 +254,44 @@ async function run() {
         `прочитано документов: ${warmReads}`,
       );
 
+      /*
+       * ── МЕХАНИЗМ ОБНОВЛЕНИЯ РЕАЛЬНО ИДЁТ В БАЗУ (`bugs/78`, дыра, найденная судьёй) ──────
+       *
+       * Вход — ДВЕРЬ СТЕНДА `window.__ndimRefresh` (`ui/PullToRefresh.svelte`, только
+       * localhost). Она дёргает РОВНО тот же `refreshNow(onRefresh)`, что и отпущенный палец,
+       * поэтому проверяется продукт, а не копия логики. Сам жест по-прежнему не эмулируется —
+       * и это записано выше в шапке.
+       *
+       * Проверка ПАРНАЯ, и пара обязательна: строкой выше доказано, что тёплый заход стоит
+       * НОЛЬ чтений. Значит любое число больше нуля здесь — это работа обновления, а не
+       * случайный фон. Без первой половины «стало больше нуля» ничего не доказывало бы.
+       */
+      const doorExists = await page.evaluate(() => typeof window.__ndimRefresh === 'function');
+      check(doorExists, `дверь стенда для обновления на месте (${label})`);
+
+      if (doorExists) {
+        reads.reset();
+        await page.evaluate(() => window.__ndimRefresh());
+        await page.waitForTimeout(1200);
+        const refreshReads = reads.get();
+        check(
+          refreshReads > 0,
+          `обновление по требованию РЕАЛЬНО перечитывает базу (${label})`,
+          `прочитано документов: ${refreshReads} — механизм не сходил в базу`,
+        );
+
+        // И память вида погашена вместе с данными (`plans/08`, вопрос В): после обновления
+        // возврат на экран не имеет права вернуть человека на прежние 900px другого списка.
+        reads.reset();
+        await navigate(page, '/space');
+        const afterRefresh = reads.get();
+        check(
+          afterRefresh > 0,
+          `после обновления СОСЕДНИЙ экран тоже перечитывается (${label})`,
+          `прочитано документов: ${afterRefresh} — инвалидация не задела соседа`,
+        );
+      }
+
       await page.screenshot({ path: `${SHOTS}/menu-${theme}-${width}.png`, fullPage: false });
       await context.close();
     }
