@@ -32,7 +32,7 @@
     type RelationsScreenData,
   } from '$lib/data/relations';
   import { technicalDetail } from '$lib/ui/errors';
-  import { bornWithAge, dateOnly, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
+  import { bornWithAge, dateOnly, dateTime, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
   import { useViewMemory } from '$lib/ui/view-memory';
@@ -227,6 +227,10 @@
     },
     bornLabel: { ru: 'День рождения', en: 'Date of birth' },
     aboutLabel: { ru: 'О себе', en: 'About myself' },
+    // Последний блок канона 1.x в раскрытой связи (bugs/46, кадр app-16): когда человек
+    // последний раз менял свой NDim ID. Число кладёт вычислитель в саму запись топа —
+    // `points/{uid}` соседа зрителю по правилам недоступен.
+    ndimUpdated: { ru: 'Последнее обновление NDim ID', en: 'NDim ID last updated' },
     youAnd: { ru: 'Вы ↔', en: 'You ↔' },
     computedAt: { ru: 'Связи посчитаны', en: 'Relations computed' },
     write: { ru: 'Написать', en: 'Message' },
@@ -354,6 +358,15 @@
                   <div class="kv about"><span class="k3">{t.aboutLabel[lang]}</span></div>
                   <p class="abouttext">{about}</p>
                 {/if}
+              {/if}
+
+              <!-- Строки нет вовсе, если вычислитель её не положил (старые боевые relations):
+                   «неизвестно» на месте даты было бы выдумкой (канон bugs/86). -->
+              {#if entry.updated !== undefined}
+                <div class="kv">
+                  <span class="k3">{t.ndimUpdated[lang]}</span>
+                  <span class="v3">{dateTime(entry.updated, lang)}</span>
+                </div>
               {/if}
 
               <h3>{t.guestSpace[lang]}</h3>

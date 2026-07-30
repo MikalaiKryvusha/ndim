@@ -356,7 +356,21 @@ function topFor(ownerUid, points) {
     if (otherUid === ownerUid) continue;
     if (other.anonymous) continue; // гостя не видит никто — даже другой гость
     const relation = computeRelation(ownerDims, other.ratings);
-    if (relation !== null) top.push({ ...relation, guestUid: otherUid });
+    if (relation === null) continue;
+    /*
+     * «Последнее обновление NDim ID» — последний блок канона 1.x в раскрытой связи
+     * (`bugs/46`, кадр app-16). Кладём его ЗДЕСЬ, а не читаем экраном, потому что
+     * `points/{uid}` чужого человека зрителю по правилам недоступен (его читают только
+     * владелец и вычислитель). Число у нас уже есть — оно загружено для статистики
+     * Пространства, так что ни одного нового чтения базы это не стоит.
+     *
+     * Поле НЕОБЯЗАТЕЛЬНОЕ: в боевых `relations`, записанных прежними сборками, его нет, и
+     * экран обязан честно молчать, а не показывать «неизвестно» (тот же приём, что
+     * `startedUpAt` в `bugs/86`). Пишем только настоящее число — `null` в топе не место.
+     */
+    const row = { ...relation, guestUid: otherUid };
+    if (typeof other.updated === 'number') row.updated = other.updated;
+    top.push(row);
   }
   // Тай-брейк по uid обязателен: без него порядок людей с равной похожестью зависел бы от
   // порядка чтения точек (он недетерминирован), diff видел бы «изменение» и переписывал
