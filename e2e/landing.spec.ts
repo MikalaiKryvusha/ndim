@@ -31,6 +31,41 @@ test('пререндер: русские тексты и скрипт темы �
 	expect(html).toContain('ndim-lang');
 });
 
+test('пререндер: витрина людей стоит в HTML и НЕ выдумана', async ({ request }) => {
+	/*
+	 * Хвост `plans/05` (п. 2), полтора месяца стоявший ненаписанным, и приёмка `bugs/81`.
+	 *
+	 * Две вещи разом, и обе — в СЫРОМ HTML, до всякого JS:
+	 *   1. строка витрины ЕСТЬ (это `bugs/81`: раньше число приезжало из Firestore уже после
+	 *      показа лендинга, и в HTML его не было вовсе — ни для человека, ни для поисковика);
+	 *   2. число РАВНО снимку боевой метрики, умноженному на целое (это `bugs/07`: «лендинг
+	 *      врёт — 2 184 зашито в код»). Выдуманному литералу это равенство не удовлетворяет.
+	 *
+	 * Снимок импортируется из того же сгенерированного файла, что использует продукт, — иначе
+	 * тест сравнивал бы одну догадку с другой.
+	 */
+	const { PUBLIC_PEOPLE_SNAPSHOT } = await import('../src/lib/content/landing-metric.ts');
+
+	const res = await request.get('/');
+	const html = (await res.text()).replace(/ |&nbsp;/g, ' ');
+
+	const shown = /С нами уже\s*<b[^>]*>\s*([\d\s]+)\s*челов/.exec(html);
+	expect(shown, 'строки витрины нет в пререндеренном HTML — это дефект bugs/81').not.toBeNull();
+
+	const value = Number(shown![1]!.replace(/\s/g, ''));
+	expect(value).toBeGreaterThan(0);
+	const factor = value / PUBLIC_PEOPLE_SNAPSHOT.people;
+	expect(
+		Number.isInteger(factor) && factor >= 1,
+		`витрина (${value}) обязана быть кратна снимку (${PUBLIC_PEOPLE_SNAPSHOT.people}); ` +
+			`отношение ${factor} — похоже на выдуманное число (bugs/07)`,
+	).toBe(true);
+
+	// Исторический литерал из bugs/07 — при 331 живом человеке на лендинге стояло 2 184.
+	expect(html).not.toContain('2 184');
+	expect(html).not.toContain('2,184');
+});
+
 test('дефолт: светлая тема «Бумага», русский язык, три фичи', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
