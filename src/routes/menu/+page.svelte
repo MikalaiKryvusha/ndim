@@ -29,6 +29,7 @@
     isGuestSession,
     loadProfileScreen,
     peekProfileScreen,
+    ProfileMissingError,
     signOutUser,
     type ProfileScreenData,
   } from '$lib/data/profile';
@@ -62,7 +63,28 @@
    * при заходе и строка «Обновить данные» по требованию человека.
    */
   async function loadScreen(uid: string): Promise<void> {
-    [data, server] = await Promise.all([loadProfileScreen(uid), loadSyncServer()]);
+    /*
+     * ⚠️ У ГОСТЯ ДОКУМЕНТА МОЖЕТ НЕ БЫТЬ, И ЭТО НОРМА (bugs/87). Он появляется с первой
+     * оценкой; до неё `loadProfileScreen` честно бросает `ProfileMissingError`. Раньше это
+     * исключение валило ВЕСЬ экран в состояние `down`, и вошедший гость читал про себя
+     * «Вы не вошли».
+     *
+     * Гостевой ветке «Меню» документ не нужен вовсе — ей хватает пилюли, пояснения и двух
+     * кнопок. Поэтому пустоту переносим ТОЛЬКО для гостя: у не-гостя отсутствие документа —
+     * настоящая поломка, и глушить её нельзя.
+     *
+     * Виджет версий грузим отдельным обещанием: в `Promise.all` отказ профиля утянул бы за
+     * собой и его, хотя к профилю он отношения не имеет.
+     */
+    const [profile, syncServer] = await Promise.all([
+      loadProfileScreen(uid).catch((error: unknown) => {
+        if (isGuestSession() && error instanceof ProfileMissingError) return null;
+        throw error;
+      }),
+      loadSyncServer(),
+    ]);
+    data = profile;
+    server = syncServer;
   }
 
   /** Обновление по требованию: кэш гаснет в `refreshNow`, здесь — только перечитывание. */
@@ -195,6 +217,20 @@
       en: 'You are not signed in. The manifest and the documents are open anyway — sign in to see your dimensions and relations.',
     },
     signIn: { ru: 'Войти', en: 'Sign in' },
+    /*
+     * Состояние «данные не поднялись» — СВОЙ текст (bugs/87).
+     *
+     * До этого ветки `down` и `signedout` печатали ОДНУ фразу «Вы не вошли», и экран врал о
+     * состоянии человека неотличимо от честного ответа. Владелец в этой же волне отдельно
+     * потребовал не смешивать состояния (`ideas/21` п. 13: «это разные состояния, и должны
+     * быть разные поведения приложения, а не всё смешивать в кучу»).
+     *
+     * [AI] Формулировка — черновик агента, ЖДЁТ ВЫЧИТКИ ВЛАДЕЛЬЦА (интервью №007). [/AI]
+     */
+    standDownNote: {
+      ru: 'Не удалось загрузить Ваши данные. Проверьте соединение и обновите страницу.',
+      en: 'We could not load your data. Check your connection and reload the page.',
+    },
   } as const;
 </script>
 
@@ -278,7 +314,8 @@
             <span class="ic"><Icon name="logout" size={20} /></span><span class="lb">{t.leave[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
           </button>
         {:else}
-          <p class="note">{t.signedOutNote[lang]}</p>
+          <!-- `down` — данные не поднялись. СВОЯ фраза, а не «Вы не вошли» (bugs/87). -->
+          <p class="note">{t.standDownNote[lang]}</p>
         {/if}
       </div>
 

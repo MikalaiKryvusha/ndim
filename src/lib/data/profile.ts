@@ -192,6 +192,21 @@ export function peekProfileScreen(): ProfileScreenData | undefined {
   return peek<ProfileScreenData>(KEYS.profile);
 }
 
+/**
+ * Документа человека в базе нет (`bugs/87`).
+ *
+ * ⚠️ ОТДЕЛЬНЫЙ ТИП, а не строка сообщения, и это принципиально: для НЕ-гостя отсутствие
+ * документа — настоящая поломка, а для только что заведённого гостя — НОРМА (он ещё ничего не
+ * оценил, документ появится с первой оценкой). Различать эти два случая по тексту ошибки
+ * значило бы завязать поведение экрана на формулировку.
+ *
+ * До этого типа экраны ловили пустоту в общий `catch` и печатали «Вы не вошли» ВОШЕДШЕМУ
+ * гостю — то есть врали ему о его же состоянии.
+ */
+export class ProfileMissingError extends Error {
+  readonly kind = 'profile-missing';
+}
+
 async function fetchProfileScreen(uid: Uid): Promise<ProfileScreenData> {
   const store = db();
 
@@ -205,7 +220,7 @@ async function fetchProfileScreen(uid: Uid): Promise<ProfileScreenData> {
   ]);
 
   if (!rootSnap.exists()) {
-    throw new Error(`Профиль не найден: документа users/${uid} нет в базе.`);
+    throw new ProfileMissingError(`Профиль не найден: документа users/${uid} нет в базе.`);
   }
 
   const values = mergeBuckets(bucketsSnap.docs.map((bucket) => bucket.data())) as Partial<ProfileData>;
