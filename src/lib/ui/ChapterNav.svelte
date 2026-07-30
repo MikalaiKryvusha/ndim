@@ -91,9 +91,54 @@
     if (open) history.back();
   }
 
+  /**
+   * К какой главе едем, как только запись истории панели будет снята (`bugs/90`).
+   *
+   * ⚠️ ПОРЯДОК ЗДЕСЬ — ЭТО И ЕСТЬ ФИКС. Панель живёт записью истории (В12б), и закрывается она
+   * системным `history.back()`, то есть **popstate**. А SvelteKit на popstate ВОЗВРАЩАЕТ
+   * прокрутку той записи — ту, что была в момент открытия панели, обычно 0. Пока переход к
+   * главе стоял ДО закрытия, платформа тут же отменяла его: панель схлопывалась, а человек
+   * оставался на месте. Поймано стражем `verify-manual-v1` (12 провалов, замер: документ
+   * 13 956px, `scrollY` после тапа — 0).
+   *
+   * Поэтому едем ПОСЛЕ навигации, в `afterNavigate`: он вызывается, когда платформа со своей
+   * прокруткой уже закончила, и наш переход остаётся последним. Своего слушателя `popstate`
+   * не заводим — это запрещено каноном `bugs/76` (самодельный роутер поверх штатного).
+   */
+  let pendingChapter: string | null = null;
+
+  /**
+   * Едем к главе, КОГДА ПАНЕЛЬ УЖЕ ЗАКРЫЛАСЬ, а не до этого.
+   *
+   * Порядок здесь — и есть весь фикс. Признак закрытия — `open` стало ложным, то есть запись
+   * истории панели снята и SvelteKit со своей прокруткой уже отработал. Два кадра ожидания —
+   * не суеверие: восстановление позиции платформой прилетает следующим кадром после popstate,
+   * и переход, начатый раньше, она отменяет (замер: `scrollY` оставался 0 при документе
+   * 13 956px).
+   *
+   * ⚠️ `afterNavigate` здесь НЕ подходит, и это проверено живым замером: на НЕГЛУБОКОМ
+   * маршрутировании (`pushState` + `history.back()`) он не вызывается вовсе — сработал ровно
+   * один раз, при монтировании. Свой слушатель `popstate` заводить нельзя (канон `bugs/76`:
+   * самодельный роутер поверх штатного), поэтому слушаем состояние, а не событие.
+   */
+  $effect(() => {
+    if (open || pendingChapter === null) return;
+    const id = pendingChapter;
+    pendingChapter = null;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        // Плавность слушает канон движения: при reduced-motion едем мгновенно, как MOTION.
+        document.getElementById(id)?.scrollIntoView({ behavior: MOTION.base ? 'smooth' : 'auto', block: 'start' });
+      }),
+    );
+  });
+
   function go(id: string): void {
-    // Плавность слушает канон движения: при reduced-motion едем мгновенно, как MOTION.
-    document.getElementById(id)?.scrollIntoView({ behavior: MOTION.base ? 'smooth' : 'auto', block: 'start' });
+    if (!open) {
+      document.getElementById(id)?.scrollIntoView({ behavior: MOTION.base ? 'smooth' : 'auto', block: 'start' });
+      return;
+    }
+    pendingChapter = id;
     closePanel();
   }
 </script>
