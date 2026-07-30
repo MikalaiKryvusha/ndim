@@ -75,7 +75,7 @@
     --motion-fast: 140ms;
     --motion-base: 240ms;
     --motion-slow: 320ms;
-    --motion-gesture: 1200ms;
+    --motion-gesture: 900ms;
     --motion-ease: cubic-bezier(0.33, 1, 0.68, 1);
   }
 

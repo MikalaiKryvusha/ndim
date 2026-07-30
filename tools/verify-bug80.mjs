@@ -352,8 +352,30 @@ try {
     await page.screenshot({ path: `${SHOTS}/faces-gone-${theme}-${width}.png` });
 
     // ── 6. Улёт карточки — покадровая трасса, а не константа из кода ──
+    /*
+     * Карточка ставится ЦЕЛИКОМ в окно перед замером. Иначе при её удалении срабатывает
+     * scroll anchoring: браузер подкручивает страницу, чтобы видимое не прыгало, и соседняя
+     * карточка выглядит НЕПОДВИЖНОЙ — проверка «соседи дождались» зеленела бы по неверной
+     * причине, вообще не наблюдая движения.
+     */
+    await page.locator(card).evaluate((el) => {
+      window.scrollTo({ top: Math.max(0, el.offsetTop - 220), behavior: 'instant' });
+    });
+    await page.waitForTimeout(300);
+    /** Карточка, которая займёт освободившееся место: вверх на телефоне, влево на десктопе. */
+    const nextId = await page.locator('article.dim[data-dim]').nth(1).getAttribute('data-dim');
+    const nextCard = `article.dim[data-dim="${nextId}"]`;
+
     await tapStar(page, dimId, 8);
     await facesVisible(page, dimId, true);
+    /* Раскладка обязана УСТОЯТЬСЯ до старта трассы. Ряд смайликов и строка отсчёта приезжают
+       переходом `slide`, то есть РАСТАЛКИВАЮТ соседку вниз на те же ~81px. Трасса, начатая
+       посреди этого движения, брала сдвинутое положение за исходное и печатала «соседка
+       тронулась на 983 мс РАНЬШЕ улёта» — то есть краснела на исправном коде, показывая
+       чужую анимацию. `facesVisible` возвращается, едва высота стала больше нуля, и одного
+       его мало. */
+    await settled(page, `${card} .faces`);
+    await page.waitForTimeout(350);
     /*
      * Мерим СМЕЩЕНИЕ ВПРАВО по кадрам, а не «есть ли вообще transform».
      *
@@ -365,8 +387,8 @@ try {
      * привязана к САМОМУ ЖЕСТУ — первый кадр, где карточка сдвинулась вправо больше чем
      * на 4px, и последний перед её исчезновением.
      */
-    await page.evaluate((selector) => {
-      window.__fly = { first: null, last: null, gone: null, frames: 0, peak: 0, trace: [] };
+    await page.evaluate(([selector, neighbour]) => {
+      window.__fly = { first: null, last: null, gone: null, frames: 0, peak: 0, trace: [], nb: [] };
       const t0 = performance.now();
       const shiftX = (el) => {
         const tr = getComputedStyle(el).transform;
@@ -377,7 +399,25 @@ try {
       const step = () => {
         const el = document.querySelector(selector);
         const now = performance.now() - t0;
-        if (!el) { window.__fly.gone = now; return; }
+
+        // Соседка пишется на КАЖДОМ кадре, в том числе после удаления уезжающей: её движение
+        // и начинается там, а трасса, обрывающаяся на удалении, его бы не увидела.
+        const nb = document.querySelector(neighbour);
+        if (nb) {
+          /* Координата берётся В ДОКУМЕНТЕ (`top + scrollY`), а не в окне. При удалении
+             карточки браузер подкручивает страницу (scroll anchoring), чтобы видимое не
+             прыгало, — и оконный `top` соседки меняется без всякой переверстки, а иногда,
+             наоборот, НЕ меняется, когда переверстка была. Положение в документе меняется
+             ровно тогда, когда место действительно освободилось. */
+          const r = nb.getBoundingClientRect();
+          window.__fly.nb.push([Math.round(now), Math.round(r.top + window.scrollY), Math.round(r.left)]);
+        }
+
+        if (!el) {
+          window.__fly.gone ??= now;
+          if (now - window.__fly.gone < 700) requestAnimationFrame(step);
+          return;
+        }
         const x = shiftX(el);
         const o = Number(getComputedStyle(el).opacity);
         window.__fly.trace.push([Math.round(now), Math.round(x), +o.toFixed(2)]);
@@ -390,7 +430,7 @@ try {
         requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
-    }, card);
+    }, [card, nextCard]);
     await page.locator(`${card} .countdown .now`).click();
     await page.waitForTimeout(2500);
     const fly = await page.evaluate(() => window.__fly);
@@ -429,6 +469,53 @@ try {
         ? 'кадра на середине пути не поймано — мерить нечем'
         : `непрозрачность на ${Math.round(half)}px: ${midOpacity}`,
     );
+
+    /*
+     * ── СОСЕДИ ДОЖИДАЮТСЯ УХОДА ──
+     *
+     * Слово владельца 2026-07-30, дословно: «Соседние слишком быстро занимают её место, не
+     * дожидаются, пока она уедет — баг».
+     *
+     * Замер до фикса (`tools/measure-bug80-flight.mjs`, 1440, лента в две колонки): соседка
+     * проезжала ПОЛОВИНУ своих 577px на 0 мс — когда уезжающая прошла 4px из 480, то есть 1%
+     * пути, — а трогалась на 77 мс РАНЬШЕ, чем уезжающая вообще начинала двигаться. Причина:
+     * `animate:flip` перестраивает ленту в момент изменения списка, а улёт длится втрое дольше.
+     *
+     * Ось движения выбирается замером, а не допущением: на телефоне соседка едет ВВЕРХ, на
+     * десктопе — ВЛЕВО (две колонки). Редакция прибора, следившая только за `top`, печатала
+     * «сосед не двигался» и не видела дефекта вовсе.
+     */
+    const nb = fly.nb ?? [];
+    if (nb.length < 4 || fly.first === null || fly.gone === null) {
+      check('соседняя карточка снята трассой', false, `кадров соседки: ${nb.length}`);
+    } else {
+      const dTop = nb[0][1] - nb.at(-1)[1];
+      const dLeft = nb[0][2] - nb.at(-1)[2];
+      const axis = Math.abs(dTop) >= Math.abs(dLeft) ? 1 : 2;
+      const from = nb[0][axis];
+      const rise = from - nb.at(-1)[axis];
+      /* Порог выше ДРОЖАНИЯ: карточка укорачивается (ряд смайликов и отсчёт уходят), лента
+         переверстывается, и соседка смещается на 2px, никуда не уезжая. Порог 2px принимал
+         это за начало движения и краснел на исправном коде. */
+      const JITTER = 10;
+      const startedRow = nb.find((row) => Math.abs(row[axis] - from) > JITTER);
+      const startedAt = startedRow ? startedRow[0] - fly.first : null;
+      const goneAt = fly.gone - fly.first;
+
+      // Контроль проверки: без реального движения соседки «дождалась» было бы пустым словом.
+      check(
+        'соседняя карточка ДЕЙСТВИТЕЛЬНО занимает освободившееся место',
+        rise > 20 && startedAt !== null,
+        `сместилась на ${Math.round(rise)}px по ${axis === 1 ? 'вертикали' : 'горизонтали'}`,
+      );
+      check(
+        'соседи ДОЖИДАЮТСЯ ухода карточки, а не занимают место сразу',
+        startedAt !== null && startedAt >= goneAt - 16, // допуск в один кадр: трасса дискретна
+        `уезжающая исчезла на ${Math.round(goneAt)} мс, соседка тронулась на ${
+          startedAt === null ? '—' : Math.round(startedAt)
+        } мс`,
+      );
+    }
 
     check('консоль чиста', errors.length === 0, errors.slice(0, 3).join(' · '));
     await context.close();
