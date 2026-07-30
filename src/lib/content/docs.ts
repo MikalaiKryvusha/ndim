@@ -32,9 +32,19 @@ export type DocBlock =
       readonly head: { readonly ru: readonly string[]; readonly en: readonly string[] };
       readonly rows: { readonly ru: readonly string[][]; readonly en: readonly string[][] };
     }
-  /** Иллюстрация 1.x (w/h резервируют место — графика не «доезжает на горячую»);
-      kind 'logo' — маленький логотип в шапке руководства. */
-  | { readonly type: 'img'; readonly src: string; readonly alt: string; readonly w: number; readonly h: number; readonly kind?: 'logo' }
+  /** Иллюстрация 1.x (w/h резервируют место — графика не «доезжает на горячую»).
+      kind 'small' — размерный класс 1.x small_image (потолок 100px вместо 300px): знак в
+      шапке руководства и финальная картинка «Напутствия» (researches/12:320, :323).
+      eager — грузить сразу; ставится только тому, что лежит на первом экране. */
+  | {
+      readonly type: 'img';
+      readonly src: string;
+      readonly alt: string;
+      readonly w: number;
+      readonly h: number;
+      readonly kind?: 'small';
+      readonly eager?: boolean;
+    }
   /** Шкала оценок 0…10: звезду, цифру и цветной смайлик рисует рендерер (канон 1.x). */
   | {
       readonly type: 'scale';
@@ -1014,7 +1024,8 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         "type": "img",
         "src": "/img/docs/logo-1x.webp",
         "alt": "NDim",
-        "kind": "logo",
+        "kind": "small",
+        "eager": true,
         "w": 196,
         "h": 196
       },
@@ -1362,7 +1373,8 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         "src": "/img/docs/network.webp",
         "alt": "сеть людей",
         "w": 516,
-        "h": 520
+        "h": 520,
+        "kind": "small"
       }
     ]
   }

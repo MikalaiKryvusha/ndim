@@ -22,6 +22,12 @@ function check(name, ok, detail = '') {
   console.log(`${ok ? '  ✅' : '  ❌'} ${name}${detail ? ` — ${detail}` : ''}`);
 }
 
+/** Размеры шкалы по каждому сочетанию: адаптивность видна только в СРАВНЕНИИ ширин. */
+const scaleByWidth = new Map();
+
+/** Звезда карточки «Измерений» (`dims/+page.svelte`) — потолок для звезды руководства. */
+const PRODUCT_STAR_PX = 27;
+
 const browser = await chromium.launch();
 await mkdir(SHOTS, { recursive: true });
 
@@ -67,6 +73,79 @@ try {
     const insideLi = await page.$$eval('.doc li .art img', (nodes) => nodes.length);
     check('картинки экспериментов внутри пунктов списка', insideLi === 3, `внутри li: ${insideLi}`);
 
+    /*
+     * ── ФИНАЛЬНАЯ КАРТИНКА «НАПУТСТВИЯ» — МАЛЕНЬКАЯ, КАК В 1.x ──
+     * Канон: researches/12:323 — `.in_page_image.small_image.last_image → network.webp`,
+     * то есть тот же размерный класс, что у знака в шапке (потолок 100px), а не общий
+     * потолок иллюстраций (300px). В 2.0 она рисовалась обычной иллюстрацией; слово
+     * владельца 2026-07-30: «а это слишком огромное. в оригинале было маленькое»
+     * (замер на десктопе: 298×300px против 100px у знака в шапке).
+     */
+    const artSizes = await page.$$eval('.doc .art img', (nodes) =>
+      nodes.map((img) => ({ src: img.getAttribute('src'), h: Math.round(img.getBoundingClientRect().height) })),
+    );
+    const heightOf = (name) => artSizes.find((a) => a.src?.includes(name))?.h ?? 0;
+    check(
+      'финальная сеть — МАЛЕНЬКАЯ, как знак в шапке (класс small_image 1.x)',
+      heightOf('network') > 0 && heightOf('network') === heightOf('logo-1x'),
+      `сеть ${heightOf('network')}px · знак в шапке ${heightOf('logo-1x')}px`,
+    );
+    check(
+      'финальная сеть ЗАМЕТНО меньше иллюстраций-экспериментов',
+      heightOf('network') > 0 && heightOf('network') * 1.5 < heightOf('island'),
+      `сеть ${heightOf('network')}px · остров ${heightOf('island')}px`,
+    );
+
+    /*
+     * ── ФОН У ИЛЛЮСТРАЦИЙ УДАЛЁН ПОЛНОСТЬЮ ──
+     * Слово владельца 2026-07-30: «И белый не весь удалён, в кружках остался».
+     * Замер файла подтвердил: в `network.webp` было 4398 НЕПРОЗРАЧНЫХ белых пикселей —
+     * ровно площадь четырёх колец знака (удаление фона шло снаружи и внутрь замкнутых
+     * областей не добралось), а в `island.webp` — белая полоса во всю ширину.
+     *
+     * Сторожатся ДВЕ вещи, и обе — по наблюдаемому дефекту, а не по выдуманному бюджету:
+     *   · у знака сети непрозрачного белого не может быть НИ ОДНОГО (он чёрный на прозрачном);
+     *   · ни у одной картинки не должно быть белой строки во всю ширину — это и есть
+     *     недоудалённая подложка, а законные белые детали (пена, облака) такой строки не дают.
+     * Пиксели читаются с УЖЕ ЗАГРУЖЕННОЙ картинки через canvas — это то, что реально уехало
+     * в бой, а не то, что лежит в репозитории.
+     */
+    const whiteness = await page.$$eval('.doc .art img', (nodes) =>
+      nodes.map((img) => {
+        const canvas = new OffscreenCanvas(img.naturalWidth, img.naturalHeight);
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(img, 0, 0);
+        const { data, width, height } = ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight);
+        let opaqueWhite = 0;
+        let widestRun = 0;
+        for (let y = 0; y < height; y += 1) {
+          let run = 0;
+          for (let x = 0; x < width; x += 1) {
+            const i = (y * width + x) * 4;
+            const isWhite =
+              data[i + 3] >= 250 && data[i] >= 245 && data[i + 1] >= 245 && data[i + 2] >= 245;
+            if (!isWhite) { run = 0; continue; }
+            opaqueWhite += 1;
+            run += 1;
+            if (run > widestRun) widestRun = run;
+          }
+        }
+        return { src: img.getAttribute('src'), opaqueWhite, runShare: widestRun / width };
+      }),
+    );
+    const net = whiteness.find((w) => w.src?.includes('network'));
+    check(
+      'у знака сети не осталось НИ ОДНОГО непрозрачного белого пикселя',
+      net !== undefined && net.opaqueWhite === 0,
+      `${net?.opaqueWhite ?? '—'} px (было 4398 — кружки)`,
+    );
+    const banded = whiteness.filter((w) => w.runShare > 0.5);
+    check(
+      'ни у одной иллюстрации нет белой полосы во всю ширину (недоудалённый фон)',
+      banded.length === 0,
+      banded.map((w) => `${w.src?.split('/').pop()} ${Math.round(w.runShare * 100)}%`).join(' · '),
+    );
+
     // ── Тёмная тема: светлая карточка с бирюзовым оттенком (слово владельца) ──
     const bg = await page.$eval('.doc .art img', (img) => getComputedStyle(img).backgroundColor);
     if (theme === 'dark') {
@@ -97,6 +176,13 @@ try {
     check('«десятка» — многоцветный смайлик 1.x (сердечки)', marks[10]?.rects === 1);
     check('звезда нуля погашена, остальные — токеном --star', marks[0]?.starColor !== marks[5]?.starColor,
       `0: ${marks[0]?.starColor} · 5: ${marks[5]?.starColor}`);
+
+    // Размеры шкалы копятся по ширинам — сравнить их можно только ПОСЛЕ обхода (см. хвост).
+    scaleByWidth.set(`${theme}-${width}`, await page.$eval('.doc table.grades .mark', (mark) => ({
+      star: Number.parseFloat(getComputedStyle(mark.querySelector('i')).fontSize),
+      digit: Number.parseFloat(getComputedStyle(mark.querySelector('b')).fontSize),
+      face: Math.round(mark.querySelector('svg').getBoundingClientRect().width),
+    })));
 
     // ── Ряд из 11 смайликов (подраздел «Шкала смайликов») ──
     const rowFaces = await page.$$eval('.doc .sample.row .cell', (nodes) => nodes.length);
@@ -186,6 +272,43 @@ try {
 
     check('консоль чиста', errors.length === 0, errors.join(' | ').slice(0, 200));
     await context.close();
+  }
+  /*
+   * ── ШКАЛА АДАПТИВНА: НА ДЕСКТОПЕ ОНА КРУПНЕЕ, ЧЕМ НА ТЕЛЕФОНЕ ──
+   *
+   * Слово владельца 2026-07-30: «на десктопе малые элементы в таблице в руководстве».
+   * Замер боя объяснил, почему: колонка документа растёт с 347 до 768px (в 2.21 раза), а
+   * звезда, цифра и смайлик были КОНСТАНТАМИ 17/13/18px на обеих ширинах — рос
+   * контейнер, а не содержимое.
+   *
+   * Проверка живёт ЗДЕСЬ, а не внутри обхода: адаптивности не существует «на одной
+   * ширине», её видно только в сравнении двух. Проверка внутри цикла могла бы лишь
+   * прочитать число и сверить его с зашитым — то есть сторожила бы константу вместо
+   * поведения и зеленела бы на любом наборе цифр.
+   */
+  console.log('\nАдаптивность шкалы (сравнение ширин):');
+  for (const theme of ['light', 'dark']) {
+    const small = scaleByWidth.get(`${theme}-390`);
+    const big = scaleByWidth.get(`${theme}-1440`);
+    if (!small || !big) {
+      check(`${theme}: размеры шкалы сняты на обеих ширинах`, false);
+      continue;
+    }
+    check(
+      `${theme}: шкала РАСТЁТ с шириной (звезда, цифра и смайлик)`,
+      big.star > small.star && big.digit > small.digit && big.face > small.face,
+      `звезда ${small.star}→${big.star} · цифра ${small.digit}→${big.digit} · смайлик ${small.face}→${big.face}`,
+    );
+    check(
+      `${theme}: телефон НЕ изменился (жалоба была про десктоп)`,
+      small.star === 17 && small.digit === 13 && small.face === 18,
+      `${small.star}/${small.digit}/${small.face}`,
+    );
+    check(
+      `${theme}: на десктопе шкала догоняет продукт, но не перерастает его (${PRODUCT_STAR_PX}px)`,
+      big.star <= PRODUCT_STAR_PX && big.star >= PRODUCT_STAR_PX - 3,
+      `звезда руководства ${big.star}px против ${PRODUCT_STAR_PX}px в карточке «Измерений»`,
+    );
   }
 } finally {
   await browser.close();

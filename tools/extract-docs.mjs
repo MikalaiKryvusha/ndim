@@ -41,8 +41,13 @@ const IMAGE_FILES = {
   'island_compressed.webp': { file: 'island.webp', w: 737, h: 600 },
   'airplane.webp': { file: 'airplane.webp', w: 582, h: 459 },
   'hospital.webp': { file: 'hospital.webp', w: 653, h: 500 },
-  'network.webp': { file: 'network.webp', w: 516, h: 520 },
-  'NDim_LOGO_v8_196.webp': { file: 'logo-1x.webp', w: 196, h: 196 },
+  // ⚠️ `small: true` — размерный класс 1.x `small_image` (потолок 100px вместо 300px).
+  // Финальная картинка «Напутствия» несла в 1.x именно его:
+  // researches/12:323 — «.in_page_image.small_image.last_image → network.webp».
+  // В 2.0 она рисовалась обычной иллюстрацией и вырастала до 300px; слово владельца
+  // 2026-07-30: «а это слишком огромное. в оригинале было маленькое».
+  'network.webp': { file: 'network.webp', w: 516, h: 520, small: true },
+  'NDim_LOGO_v8_196.webp': { file: 'logo-1x.webp', w: 196, h: 196, small: true },
 };
 
 const IMAGE_NOTE = /\*\[(?:Изображение|Image):\s*([\w.-]+)\s*—\s*([^\]]+)\]\*/;
@@ -51,7 +56,9 @@ const IMAGE_NOTE = /\*\[(?:Изображение|Image):\s*([\w.-]+)\s*—\s*([
 function imageBlock(note, alt) {
   const entry = IMAGE_FILES[note];
   if (!entry) throw new Error(`Неизвестная иллюстрация в пометке: ${note}`);
-  return { type: 'img', src: `/img/docs/${entry.file}`, alt, w: entry.w, h: entry.h };
+  const block = { type: 'img', src: `/img/docs/${entry.file}`, alt, w: entry.w, h: entry.h };
+  if (entry.small) block.kind = 'small';
+  return block;
 }
 
 /**
@@ -347,7 +354,9 @@ const manualBlocks = [];
 
 // Логотип 1.x в шапке руководства (researches/12 → «Вёрстка страниц документов 1.x»):
 // пометка в исследовании стоит вне переносимых разделов, поэтому блок добавляется явно.
-manualBlocks.push({ type: 'img', src: '/img/docs/logo-1x.webp', alt: 'NDim', kind: 'logo', w: 196, h: 196 });
+// `eager` — ТОЛЬКО у этой: она на первом экране руководства. Финальная картинка несёт тот же
+// размерный класс, но грузится лениво, как и положено тому, что лежит в самом низу.
+manualBlocks.push({ type: 'img', src: '/img/docs/logo-1x.webp', alt: 'NDim', kind: 'small', eager: true, w: 196, h: 196 });
 
 /**
  * В руководстве разделы («## 5. Звёзды…») добавляются вручную как h2, а распарсенные
@@ -458,9 +467,19 @@ export type DocBlock =
       readonly head: { readonly ru: readonly string[]; readonly en: readonly string[] };
       readonly rows: { readonly ru: readonly string[][]; readonly en: readonly string[][] };
     }
-  /** Иллюстрация 1.x (w/h резервируют место — графика не «доезжает на горячую»);
-      kind 'logo' — маленький логотип в шапке руководства. */
-  | { readonly type: 'img'; readonly src: string; readonly alt: string; readonly w: number; readonly h: number; readonly kind?: 'logo' }
+  /** Иллюстрация 1.x (w/h резервируют место — графика не «доезжает на горячую»).
+      kind 'small' — размерный класс 1.x small_image (потолок 100px вместо 300px): знак в
+      шапке руководства и финальная картинка «Напутствия» (researches/12:320, :323).
+      eager — грузить сразу; ставится только тому, что лежит на первом экране. */
+  | {
+      readonly type: 'img';
+      readonly src: string;
+      readonly alt: string;
+      readonly w: number;
+      readonly h: number;
+      readonly kind?: 'small';
+      readonly eager?: boolean;
+    }
   /** Шкала оценок 0…10: звезду, цифру и цветной смайлик рисует рендерер (канон 1.x). */
   | {
       readonly type: 'scale';
