@@ -9,13 +9,15 @@
  * как только `--bar-h` заполнена — расхождение исчезает. Заполненная `--bar-h` при
  * расхождении 1px версию ОПРОВЕРГАЕТ.
  *
- * ⚠️⚠️ ИЗВЕСТНАЯ СЛАБОСТЬ ЭТОГО ПРИБОРА — НЕ ВЕРЬ ЕГО ЗЕЛЁНОМУ БЕЗ `npm run e2e`.
- * Он меряет два состояния ПО ОТДЕЛЬНОСТИ: «до гидратации, без прокрутки» (трасса кадров) и
- * «после гидратации, с прокруткой» (блок ниже). Их ПЕРЕСЕЧЕНИЕ — «до гидратации И с прокруткой» —
- * он не посещает, и 2026-07-29 именно там пряталась цена запасного нуля: зонд напечатал 0/42
- * («фикс держит»), а `desktop-shell.spec.ts:70` тут же дал `Expected: 55, Received: 0` — рельс
- * заезжал под шапку. Прибор, проверяющий два измерения по отдельности, слеп к их углу.
- * Кто будет чинить bugs/67 — сначала научи зонд прокручивать страницу ВНУТРИ трассы.
+ * ✅ СЛАБОСТЬ ЗАКРЫТА 2026-07-30 — зонд ходит и в ПЕРЕСЕЧЕНИЕ состояний.
+ * Раньше он мерил два состояния ПО ОТДЕЛЬНОСТИ: «до гидратации, без прокрутки» (трасса кадров) и
+ * «после гидратации, с прокруткой». Их угол — «до гидратации И с прокруткой» — не посещался, и
+ * 2026-07-29 именно там пряталась цена запасного нуля: зонд напечатал 0/42 («фикс держит»), а
+ * `desktop-shell.spec.ts:70` тут же дал `Expected: 55, Received: 0` — рельс заезжал ПОД шапку.
+ * Теперь третий блок трассы прокручивает страницу СРАЗУ, на первом же кадре, и снимает рельс
+ * покадрово ДО публикации `--bar-h`: запасное значение, при котором рельс уезжает под шапку,
+ * краснеет здесь, а не в e2e через сутки. `npm run e2e` всё равно прогоняй — но теперь зонд
+ * умнее прибора, который однажды его обманул.
  *
  * Не через `npm run e2e` намеренно: тот прогон выжигает `test-results/` целиком (EXP-0062),
  * а там лежат кадры выката. Зонд ходит по уже собранному build/ через vite preview.
@@ -29,6 +31,8 @@ const REPEATS = 3;
 const browser = await chromium.launch();
 const rows = [];
 const scrolled = [];
+/** Пересечение: кадры «до гидратации И с прокруткой» — прежнее слепое пятно зонда. */
+const earlyScrolled = [];
 
 for (let round = 1; round <= REPEATS; round++) {
   for (const route of ROUTES) {
@@ -95,6 +99,101 @@ for (let round = 1; round <= REPEATS; round++) {
 }
 await browser.close();
 
+/*
+ * 🔴 ПЕРЕСЕЧЕНИЕ СОСТОЯНИЙ — «до гидратации И с прокруткой». Ровно здесь пряталась цена
+ * запасного нуля (попытка фикса №1, 2026-07-29), и ровно сюда прежний зонд не заходил.
+ *
+ * ⚠️ Маршруты здесь ДРУГИЕ, и это главное в блоке. На `/profile` и соседях пререндеренный
+ * шелл КОРОЧЕ окна (данных ещё нет), прокрутка физически невозможна, и блок был бы вакуумным —
+ * он и оказался таким в первой редакции: 36 кадров, из них реально прокрученных 0. Берём
+ * страницы, чей пререндер длинный САМ ПО СЕБЕ: список «Меню» и руководство (≈14 000px).
+ */
+const EARLY_ROUTES = ['/menu', '/menu/manual'];
+{
+  const browser2 = await chromium.launch();
+  for (let round = 1; round <= REPEATS; round++) {
+    for (const route of EARLY_ROUTES) {
+      const ctx = await browser2.newContext({ viewport: { width: 1440, height: 900 } });
+      const page = await ctx.newPage();
+      await page.goto(BASE + route, { waitUntil: 'commit' });
+      const early = await page.evaluate(async () => {
+        const out = [];
+        window.scrollTo(0, 3000); // прокручиваем ДО всякой гидратации
+        for (let i = 0; i < 60; i++) {
+          await new Promise((r) => requestAnimationFrame(r));
+          const bar = document.querySelector('header.bar');
+          const rail = document.querySelector('nav.rail');
+          if (!bar || !rail) continue;
+          window.scrollTo(0, 3000); // держим прокрутку: документ мог дорасти
+          out.push({
+            i,
+            barVar: getComputedStyle(document.documentElement).getPropertyValue('--bar-h').trim(),
+            barBottom: +bar.getBoundingClientRect().bottom.toFixed(2),
+            railY: +rail.getBoundingClientRect().y.toFixed(2),
+            y: Math.round(window.scrollY),
+          });
+        }
+        return out;
+      });
+      for (const f of early) {
+        // Рельс НЕ ИМЕЕТ ПРАВА оказаться выше низа шапки — это и есть «заехал под шапку».
+        earlyScrolled.push({ route, round, ...f, under: +(f.barBottom - f.railY).toFixed(2) });
+      }
+      await ctx.close();
+    }
+  }
+  await browser2.close();
+}
+
+
+/*
+ * БЛОК «ЗАПАСНОЕ ЗНАЧЕНИЕ ПРОТИВ ЗАМЕРА» (bugs/67, фикс 2026-07-30).
+ *
+ * Запасная высота шапки живёт переменной `--bar-h-fallback` с медиазапросом по 1024px. Числа в
+ * ней — снятые замером (61px на узких, 55px от 1024px), и именно поэтому `sticky`-рельс больше
+ * не съезжает на 1px до гидратации. Но числа могут устареть от любого редизайна шапки, и тогда
+ * флейк вернётся ТИХО. Здесь он перестаёт быть тихим: сверяем запасное значение с фактической
+ * высотой на каждой ширине.
+ */
+const fallbackRows = [];
+{
+  const browser3 = await chromium.launch();
+  for (const width of [390, 800, 1024, 1440]) {
+    const ctx = await browser3.newContext({ viewport: { width, height: 900 } });
+    const page = await ctx.newPage();
+    await page.goto(BASE + '/menu/manual', { waitUntil: 'commit' });
+    const measured = await page.evaluate(async () => {
+      // Первый кадр, где шапка уже есть, но `--bar-h` ещё не опубликована.
+      for (let i = 0; i < 30; i++) {
+        await new Promise((r) => requestAnimationFrame(r));
+        const bar = document.querySelector('header.bar');
+        if (!bar) continue;
+        const style = getComputedStyle(document.documentElement);
+        if (style.getPropertyValue('--bar-h').trim() !== '') continue;
+        return {
+          fallback: style.getPropertyValue('--bar-h-fallback').trim(),
+          height: +bar.getBoundingClientRect().height.toFixed(2),
+        };
+      }
+      return null;
+    });
+    fallbackRows.push({ width, ...(measured ?? { fallback: null, height: null }) });
+    await ctx.close();
+  }
+  await browser3.close();
+}
+console.log('\nЗАПАСНОЕ ЗНАЧЕНИЕ ПРОТИВ ЗАМЕРА (до публикации --bar-h):');
+let fallbackBad = 0;
+for (const r of fallbackRows) {
+  if (r.fallback === null) {
+    console.log(`  ${r.width}px: окно до публикации не поймано — проверить нечем`);
+    continue;
+  }
+  const ok = Math.abs(parseFloat(r.fallback) - r.height) < 0.5;
+  if (!ok) fallbackBad += 1;
+  console.log(`  ${ok ? '✅' : '❌'} ${r.width}px: запасное ${r.fallback}, замер ${r.height}px`);
+}
+
 const published = rows.filter((r) => r.barVar !== '');
 const unpublished = rows.filter((r) => r.barVar === '');
 const bad = rows.filter((r) => Math.abs(r.diff) >= 0.5); // порог теста: toBeCloseTo(…, 0)
@@ -118,6 +217,25 @@ if (bad.length) {
 }
 
 // Инвариант bugs/49: шапка прибита к нулю, рельс липнет к её низу, последний пункт виден.
+const earlyUnder = earlyScrolled.filter((s) => s.barVar === '' && s.under >= 0.5);
+const earlyUnpub = earlyScrolled.filter((s) => s.barVar === '');
+console.log(
+  `
+ПЕРЕСЕЧЕНИЕ «до гидратации И с прокруткой»: кадров ${earlyUnpub.length}, ` +
+    `из них рельс УШЁЛ ПОД шапку: ${earlyUnder.length}`,
+);
+// ПАРНАЯ проверка самого блока (EXP-0070): «0 кадров под шапкой» имеет смысл только если
+// кадры действительно были И до гидратации, И с ненулевой прокруткой.
+const earlyReal = earlyScrolled.filter((s) => s.barVar === '' && s.y > 0);
+console.log(
+  `    из них РЕАЛЬНО прокручено (y > 0): ${earlyReal.length}` +
+    (earlyReal.length === 0 ? '  ⚠️ БЛОК ВАКУУМЕН — мерить нечем' : ''),
+);
+if (earlyUnder.length) {
+  const s = earlyUnder[0];
+  console.log(`    пример: ${s.route} кадр${s.i} низ шапки=${s.barBottom} railY=${s.railY} под шапкой на ${s.under}px`);
+}
+
 const railSlipped = scrolled.filter((s) => Math.abs(s.railY - s.barH) >= 0.5 || s.barY !== 0);
 const itemLost = scrolled.filter((s) => s.lastBottom > s.vh + 0.5);
 console.log(`\nПОСЛЕ ПРОКРУТКИ (инвариант bugs/49), заходов: ${scrolled.length}`);
@@ -130,7 +248,8 @@ if (railSlipped.length) {
 
 const falsified = published.filter((r) => Math.abs(r.diff) >= 0.5);
 console.log('\nВЕРДИКТ:');
-const shellOk = railSlipped.length === 0 && itemLost.length === 0;
+const shellOk =
+  railSlipped.length === 0 && itemLost.length === 0 && earlyUnder.length === 0 && fallbackBad === 0;
 if (bad.length === 0) {
   console.log(
     shellOk

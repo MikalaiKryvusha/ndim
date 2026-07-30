@@ -86,10 +86,10 @@
              (замер 2026-07-29: `Expected: 55, Received: 0`) — регрессия bugs/49.
          1px невидим человеку, заезд под шапку — виден. Поэтому здесь остаётся завышенное
          значение, а настоящее лечение — убрать асинхронную публикацию, а не крутить константу. */
-      top: var(--bar-h, 56px);
+      top: var(--bar-h, var(--bar-h-fallback));
       align-self: start;
-      height: calc(100vh - var(--bar-h, 56px));
-      height: calc(100dvh - var(--bar-h, 56px));
+      height: calc(100vh - var(--bar-h, var(--bar-h-fallback)));
+      height: calc(100dvh - var(--bar-h, var(--bar-h-fallback)));
       overflow-y: auto;
     }
     .rail > a {

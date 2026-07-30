@@ -123,7 +123,7 @@
   h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
   h3 { font-size: 14.5px; font-weight: 700; color: var(--heading); margin: 16px 0 6px; }
   /* Якорная прокрутка (пагинатор глав): заголовок не должен нырять под прибитую шапку. */
-  h2, h3 { scroll-margin-top: calc(var(--bar-h, 56px) + 10px); }
+  h2, h3 { scroll-margin-top: calc(var(--bar-h, var(--bar-h-fallback)) + 10px); }
   p { margin: 10px 0; }
   ul { margin: 10px 0 10px 18px; }
   li { margin: 8px 0; }
