@@ -182,8 +182,11 @@ service cloud.firestore {
       allow read: if participant() || isAdmin();
 
       // Запрос создаёт один из двоих. Идентификатор документа обязан совпадать с парой:
-      // иначе можно было бы подсунуть документ по чужому пути.
+      // иначе можно было бы подсунуть документ по чужому пути. Состав полей закрыт
+      // списком (bugs/99): в документ дружбы нельзя вложить посторонние поля — правило
+      // пишет недоверенная сторона, как в suggestions и funnel.
       allow create: if verified()
+                    && request.resource.data.keys().hasOnly(['a', 'b', 'requestedBy', 'status', 'created', 'acceptedAt'])
                     && request.resource.data.status == 'pending'
                     && request.resource.data.acceptedAt == null
                     && request.resource.data.requestedBy == request.auth.uid
@@ -192,15 +195,19 @@ service cloud.firestore {
                     && (request.auth.uid == request.resource.data.a || request.auth.uid == request.resource.data.b);
 
       // Принять может ТОЛЬКО адресат, ТОЛЬКО из статуса pending, и никогда — отправитель.
-      // Стороны и отправитель неизменны: иначе принявший мог бы переписать историю.
+      // Стороны, отправитель И ДАТА ЗАПРОСА неизменны, состав полей закрыт списком
+      // (bugs/99): иначе принявший мог бы переписать историю — ровно то, что этот
+      // комментарий обещал всегда, а правило до аудита держало лишь наполовину.
       allow update: if verified()
                     && participant()
                     && resource.data.status == 'pending'
                     && request.auth.uid != resource.data.requestedBy
+                    && request.resource.data.keys().hasOnly(['a', 'b', 'requestedBy', 'status', 'created', 'acceptedAt'])
                     && request.resource.data.status == 'accepted'
                     && request.resource.data.a == resource.data.a
                     && request.resource.data.b == resource.data.b
-                    && request.resource.data.requestedBy == resource.data.requestedBy;
+                    && request.resource.data.requestedBy == resource.data.requestedBy
+                    && request.resource.data.created == resource.data.created;
 
       // Расторгнуть или отозвать запрос может любой из двоих.
       allow delete: if participant();
@@ -209,9 +216,12 @@ service cloud.firestore {
     // ── points/{uid} — точка человека в пространстве измерений ──────────────
     // Оценки не видит никто, кроме владельца и вычислителя. Вычислитель работает через
     // Admin SDK, а он правила не применяет, — поэтому здесь его упоминать не нужно.
+    // АДМИН — НЕ ИСКЛЮЧЕНИЕ (bugs/100): интервью №002 В4 и ideas/13 прямо запрещают
+    // админ-доступ к оценкам; isAdmin() стоял здесь с первого коммита правил вопреки
+    // собственному описанию того коммита и убран аудитом 2026-07-31.
 
     match /points/{ownerId} {
-      allow read: if isSelf(ownerId) || isAdmin();
+      allow read: if isSelf(ownerId);
 
       // Клиент помечает свою точку «грязной», чтобы вычислитель пересчитал связи.
       // Снять флаг клиент не может: это делает вычислитель. Флаг `guest` — честный
@@ -221,7 +231,7 @@ service cloud.firestore {
       allow delete: if isSelf(ownerId);
 
       match /dims/{dimId} {
-        allow read: if isSelf(ownerId) || isAdmin();
+        allow read: if isSelf(ownerId);
 
         // Единственная валидация значения. Целое 0…10 — как в schema.ts.
         // Ось = отдельный документ именно поэтому: правила не умеют перебирать значения map,

@@ -233,11 +233,32 @@
       if (isLoginLink()) {
         uid = await finishEmailLink();
       } else if (new URLSearchParams(location.search).has('guest')) {
-        uid = await signInGuest();
-        await ensureSpaceExists(uid, lang);
-        guest = true;
-        guestCard = localStorage.getItem(GUEST_CARD_KEY) !== 'later';
-        void track('guest_start'); // третий шаг воронки (plans/03 этап 4)
+        /*
+         * Дверь «Продолжить гостем» УВАЖАЕТ живую сессию (bugs/95). Раньше ветка звала
+         * signInAnonymously ПЕРВОЙ, и у вошедшего человека (F5 сразу после апгрейда,
+         * закладка /profile?guest=1) Firebase заводил НОВОГО анонима, молча выбрасывая
+         * настоящий аккаунт из сессии. Порядок — как у стендовой двери `?as=guest`:
+         * сначала смотрим, кто за экраном.
+         */
+        const session = await waitForSession();
+        if (session !== null && !session.isAnonymous) {
+          uid = session.uid; // живой аккаунт: параметр гостя игнорируется, это обычный заход
+          guest = false;
+        } else {
+          // Анонимная сессия переиспользуется (труд гостя не теряется); новый гость
+          // заводится только когда сессии нет вовсе — и только он шаг воронки.
+          uid = session?.uid ?? (await signInGuest());
+          await ensureSpaceExists(uid, lang);
+          guest = true;
+          guestCard = localStorage.getItem(GUEST_CARD_KEY) !== 'later';
+          if (session === null) void track('guest_start'); // третий шаг воронки (plans/03 этап 4)
+        }
+        // Параметр одноразовый: F5 и закладка не должны нести его дальше (тот же приём,
+        // что очистка адреса в finishEmailLink). Остальные параметры (?db=, двери стенда)
+        // не трогаем — вырезается только guest.
+        const url = new URL(location.href);
+        url.searchParams.delete('guest');
+        history.replaceState(null, '', url.pathname + url.search + url.hash);
       } else {
         // Стенд входит сам; в бою — только существующая сессия. Её нет — предлагаем войти,
         // а не заводим человеку анонимную сессию за его спиной.

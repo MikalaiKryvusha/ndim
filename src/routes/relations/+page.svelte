@@ -519,15 +519,18 @@
   .mini { display: block; height: 4px; border-radius: 2px; background: var(--edge-soft); position: relative; margin-top: 4px; }
   .mini i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; transition: width 0.35s ease; }
 
-  /* «яркость связи»: слабая гаснет, средняя синяя, сильная — циан и светится */
+  /* «яркость связи»: слабая гаснет, средняя синяя, сильная — циан и светится.
+     Свечение lv3 идёт через токен темы --glow-strong (bugs/101, близнец bugs/80): на белой
+     «Бумаге» цветной ореол ТЕМНЕЕ фона и читается тенью, поэтому в светлой теме его нет;
+     в тёмной — прежний циан той же силы (45%/55% — бывшие альфы rgba). */
   .lv1 b { color: var(--faint); }
   .lv1 .mini i { background: color-mix(in srgb, var(--faint) 55%, transparent); }
   .lv2 b { color: var(--primary); }
   .lv2 .mini i { background: linear-gradient(90deg, var(--primary), #3f8fe0); }
-  .lv3 b { color: #1298bd; text-shadow: 0 0 14px rgba(31, 168, 201, 0.45); }
+  .lv3 b { color: #1298bd; text-shadow: 0 0 14px color-mix(in srgb, var(--glow-strong) 45%, transparent); }
   .lv3 .mini i {
     background: linear-gradient(90deg, var(--primary), #1fa8c9);
-    box-shadow: 0 0 8px rgba(31, 168, 201, 0.55);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--glow-strong) 55%, transparent);
   }
 
   .deep { border-top: 1px solid var(--edge-soft); margin-top: 12px; padding-top: 10px; }

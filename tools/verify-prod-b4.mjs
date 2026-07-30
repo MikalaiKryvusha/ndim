@@ -27,8 +27,13 @@ const SIZES = [
 ];
 const THEMES = ['light', 'dark'];
 
-/** Отказы правил гостю — ожидаемое поведение, а не дефект. */
-const EXPECTED = /permission|insufficient|Missing or insufficient|FirebaseError|auth\/|unauthenticated/i;
+/**
+ * Отказы правил гостю — ожидаемое поведение, а не дефект. Фильтр УЗКИЙ, как у сестёр
+ * verify-bug84/87 (bugs/97): прежний прощал весь класс FirebaseError и любой код auth/…,
+ * то есть выкат с битым Firebase-конфигом прошёл бы смоук зелёным. Любая НЕ-правовая
+ * ошибка Firebase (unavailable, invalid-api-key…) обязана краснить прогон.
+ */
+const EXPECTED = /permission|insufficient|Missing or insufficient/i;
 
 mkdirSync(OUT, { recursive: true });
 
@@ -71,11 +76,21 @@ for (const theme of THEMES) {
       const text = (await page.evaluate(() => document.body.innerText)).trim();
       ok(text.length > 50, `${tag}: на странице есть текст (${text.length} симв.)`);
 
-      // Фон соответствует теме — доказывает, что тема реально применилась.
+      /*
+       * Фон соответствует теме — доказывает, что тема реально применилась. Сначала
+       * ПРИМЕНЁННОСТЬ, потом светлота (bugs/98): непримененный CSS оставляет у body
+       * прозрачный 'rgba(0, 0, 0, 0)', и старый разбор превращал его в [0,0,0] —
+       * «тёмная тема применена» зеленела ровно на том дефекте, который сторожила.
+       * Прозрачный или неразобранный фон — провал ВСЕГДА, в обеих темах.
+       */
       const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-      const rgb = bg.match(/\d+/g)?.slice(0, 3).map(Number) ?? [0, 0, 0];
-      const lum = (rgb[0] + rgb[1] + rgb[2]) / 3;
-      ok(theme === 'light' ? lum > 140 : lum < 120, `${tag}: тема ${theme} применена (фон ${bg})`);
+      const parsed = bg.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/);
+      const alpha = parsed ? (parsed[4] === undefined ? 1 : Number(parsed[4])) : 0;
+      const lum = parsed ? (Number(parsed[1]) + Number(parsed[2]) + Number(parsed[3])) / 3 : NaN;
+      ok(
+        parsed !== null && alpha === 1 && (theme === 'light' ? lum > 140 : lum < 120),
+        `${tag}: тема ${theme} применена непрозрачным фоном (${bg})`,
+      );
 
       ok(noise.length === 0, `${tag}: консоль чиста${noise.length ? ' — ' + noise.join(' | ') : ''}`);
 

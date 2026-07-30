@@ -404,6 +404,37 @@ describe('Дружба: взаимное согласие обеспечивае
     );
   });
 
+  test('🔒 принявший не может переписать дату создания запроса (bugs/99)', async () => {
+    // Комментарий правила всегда обещал «принявший не может переписать историю» —
+    // до аудита 2026-07-31 он держался только для requestedBy, а created был переписываем.
+    await seedFriendship('pending', BOB);
+    const db = verified(ALICE).firestore();
+    await assertFails(
+      updateDoc(doc(db, 'friendships/alice_bob'), { status: 'accepted', acceptedAt: 2, created: 0 }),
+    );
+  });
+
+  test('🔒 посторонние поля не вкладываются ни при создании, ни при принятии (bugs/99)', async () => {
+    const create = verified(BOB).firestore();
+    await assertFails(
+      setDoc(doc(create, 'friendships/alice_bob'), {
+        a: ALICE,
+        b: BOB,
+        requestedBy: BOB,
+        status: 'pending',
+        created: 1,
+        acceptedAt: null,
+        extra: 'мусор',
+      }),
+    );
+
+    await seedFriendship('pending', BOB);
+    const accept = verified(ALICE).firestore();
+    await assertFails(
+      updateDoc(doc(accept, 'friendships/alice_bob'), { status: 'accepted', acceptedAt: 2, extra: 'мусор' }),
+    );
+  });
+
   test('🔒 посторонний не читает чужую дружбу', async () => {
     await seedFriendship('accepted');
     const db = verified(EVE).firestore();
@@ -439,6 +470,15 @@ describe('Оценки по осям — не видит никто, кроме 
   test('🔒 подтверждённый друг НЕ видит оценок — только общий результат', async () => {
     await seedFriendship('accepted');
     const db = verified(BOB).firestore();
+    await assertFails(getDoc(doc(db, 'points/alice/dims/calm')));
+  });
+
+  test('🔒 админ НЕ читает чужие оценки — админ не исключение (bugs/100)', async () => {
+    // Интервью №002 В4 и ideas/13 дословно: «оценки не видит никто, кроме тебя и
+    // вычислителя», «админ не исключение». isAdmin() в points стоял с первого коммита
+    // правил вопреки его же описанию и убран аудитом 2026-07-31.
+    const db = admin('root').firestore();
+    await assertFails(getDoc(doc(db, 'points/alice')));
     await assertFails(getDoc(doc(db, 'points/alice/dims/calm')));
   });
 
