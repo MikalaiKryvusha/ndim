@@ -702,6 +702,41 @@
     onScrollEnd: () => (toolbarHidden = false),
   });
 
+  /**
+   * УЛЁТ ОЦЕНЁННОЙ КАРТОЧКИ ВПРАВО — свой переход вместо `fly` (правка владельца 2026-07-30:
+   * «карточка когда уезжает по автосейву — плохо уезжает, быстро и быстро растворяется; по
+   * кнопке СОХРАНИТЬ СЕЙЧАС лучше, но всё равно слишком быстро»).
+   *
+   * Замер до правки объяснил обе половины жалобы. `fly` гасит непрозрачность ТЕМ ЖЕ
+   * прогрессом, что и сдвиг, а прогресс идёт по `cubicOut` — то есть быстро в начале.
+   * Покадровая трасса: за первые ~230 мс непрозрачность падала 1 → 0.2, а карточка проходила
+   * едва половину пути. Человек видел, как она РАСТВОРЯЕТСЯ на месте, и лишь потом невидимо
+   * доезжала до края.
+   *
+   * Здесь движение и растворение РАЗВЕДЕНЫ: карточка держит полную непрозрачность бо́льшую
+   * часть пути и гаснет в последней трети, уже у самого края. Плюс сам путь стал длиннее по
+   * времени — канон `MOTION.gesture` поднят с 640 до 900 мс.
+   *
+   * `t` у out-перехода Svelte идёт от 1 к 0 (с применённым easing): при `t = 1` карточка на
+   * месте и видна, при `t = 0` — за краем и прозрачна.
+   */
+  function flyAway(_node: Element, { away }: { away: boolean }) {
+    // Обычное исчезновение (фильтр, смена вкладки) осталось прежним: короткий уход вниз.
+    // Меняем ТОЛЬКО жест «оценил — уехала вправо», о котором говорил владелец.
+    if (!away) {
+      return {
+        duration: MOTION.fast,
+        css: (t: number) => `transform: translateY(${(1 - t) * 8}px); opacity: ${t}`,
+      };
+    }
+    return {
+      duration: MOTION.gesture,
+      easing: cubicOut,
+      css: (t: number) =>
+        `transform: translateX(${(1 - t) * 480}px); opacity: ${Math.min(1, t * 2.6)}`,
+    };
+  }
+
   /** Добрать «Мой NDim ID» до прежнего числа карточек. Карточки уже в памяти — это 0 чтений. */
   async function restoreMine(target: number): Promise<void> {
     while (mineCount < target) {
@@ -1223,9 +1258,7 @@
             class="card dim"
             data-dim={card.id}
             in:fly={{ y: 14, duration: MOTION.base, easing: cubicOut }}
-            out:fly={leaving === card.id
-              ? { x: 480, duration: MOTION.gesture, easing: cubicOut }
-              : { y: 8, duration: MOTION.fast }}
+            out:flyAway={{ away: leaving === card.id }}
             animate:flip={{ duration: MOTION.slow, easing: cubicOut }}
           >
             <div class="top">
@@ -1305,7 +1338,9 @@
                 researches/12:346-352). Ячейка — та же flex-раскладка, что у звёзд, поэтому
                 смайлик стоит точно под своей оценкой, а не «примерно рядом».
               -->
-              <div class="faces" aria-hidden="true" transition:slide={{ duration: MOTION.fast }}>
+              <!-- Появление/уход ряда — в темпе `base`, а не `fast`: на 140 мс это читалось
+                   как подёргивание («странно пульсирует», слово владельца 2026-07-30). -->
+              <div class="faces" aria-hidden="true" transition:slide={{ duration: MOTION.base }}>
                 {#each GRADE_FACES as _, grade (grade)}
                   <span class="fc" class:picked={pending.value === grade}>
                     <GradeFace {grade} size={22} />
@@ -1313,7 +1348,7 @@
                 {/each}
               </div>
 
-              <div class="countdown" transition:slide={{ duration: MOTION.fast }}>
+              <div class="countdown" transition:slide={{ duration: MOTION.base }}>
                 <span>{t.savingIn[lang]} {pending.left} {t.sec[lang]}…</span>
                 <button type="button" class="now" onclick={() => void commit()}>{t.saveNow[lang]}</button>
               </div>
@@ -1690,13 +1725,31 @@
   .fc {
     flex: 1; display: flex; justify-content: center;
     /* Невыбранные чуть тише — ряд остаётся шкалой, но не спорит с выбором за внимание. */
-    opacity: .55; transition: opacity .15s ease, transform .15s ease, filter .15s ease;
+    opacity: .55;
+    /*
+     * МЕДЛЕННЕЕ, ЧЕМ МИКРОРЕАКЦИЯ (правка владельца 2026-07-30: «странно пульсирует тёмный
+     * смайлик внизу — нужно более медленное и светлое пульсирование»).
+     *
+     * Замер до правки: у смайлика НЕТ анимации вовсе — «пульсацией» читается его появление
+     * и подсветка за 140–150 мс (покадровая трасса: ряд вырастает с 6.9px до 22px за 8
+     * кадров и дальше не меняется ни одного из 280). На таком хронометраже подсветка
+     * успевает мигнуть, а не проявиться. Берём канон `--motion-base` (240 мс) — темп
+     * «появление и уход контента», а не «микрореакция».
+     */
+    transition:
+      opacity var(--motion-base) var(--motion-ease),
+      transform var(--motion-base) var(--motion-ease),
+      filter var(--motion-base) var(--motion-ease);
   }
   /* Выбранная оценка выделена ТЕМ ЖЕ языком, что и её звезда (`.st.peak`): подрастает и
-     светится. Иначе ряд читался бы как украшение, а не как ответ «какое это настроение». */
+     светится. Иначе ряд читался бы как украшение, а не как ответ «какое это настроение».
+     ⚠️ Ореол СВЕТЛЫЙ — золото звезды, а не серо-синий `--faint`. Прежний цвет в тёмной теме
+     давал буквально тёмное пятно вокруг лица (замер: `color(srgb 0.43 0.52 0.63 / 0.45)` на
+     фоне #060b14), и владелец прочитал его как «тёмный смайлик». Золото светлее фона в обеих
+     темах и роднит лицо с его же звездой. */
   .fc.picked {
     opacity: 1; transform: scale(1.15);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--faint) 45%, transparent));
+    filter: drop-shadow(0 0 7px color-mix(in srgb, var(--star) 60%, transparent));
   }
 
   .countdown {

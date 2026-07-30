@@ -254,7 +254,8 @@ try {
         const now = performance.now() - t0;
         if (!el) { window.__fly.gone = now; return; }
         const x = shiftX(el);
-        window.__fly.trace.push([Math.round(now), Math.round(x)]);
+        const o = Number(getComputedStyle(el).opacity);
+        window.__fly.trace.push([Math.round(now), Math.round(x), +o.toFixed(2)]);
         if (x > 4) {
           window.__fly.first ??= now;
           window.__fly.last = now;
@@ -281,6 +282,28 @@ try {
 
     // Убираем за собой: оценка ушла в базу, возвращаем стенд в исходное состояние.
     await dropRating(uid, dimId);
+
+    /*
+     * КАРТОЧКА УЕЗЖАЕТ, А НЕ РАСТВОРЯЕТСЯ НА МЕСТЕ (правка владельца 2026-07-30: «плохо
+     * уезжает, быстро и быстро растворяется»).
+     *
+     * Одной длительности мало: прежний `fly` гасил непрозрачность ТЕМ ЖЕ прогрессом, что и
+     * сдвиг, и по `cubicOut` она падала 1 → 0.2 за ~230 мс, пока карточка прошла едва половину
+     * пути. Формально «улёт длился 640 мс», а человек видел растворение. Поэтому судим по
+     * СВЯЗИ пути и непрозрачности: на середине пути карточка обязана быть ещё видимой.
+     */
+    // Берём ПЕРВЫЙ кадр, где карточка прошла половину пути, и смотрим её непрозрачность там.
+    // (Не минимум по всей второй половине: у края карточка обязана гаснуть — это и есть уход.)
+    const half = fly.peak / 2;
+    const midFrame = fly.trace.find(([, x]) => x >= half);
+    const midOpacity = midFrame ? midFrame[2] : null;
+    check(
+      'на середине пути карточка ещё ВИДНА (уезжает, а не растворяется)',
+      midOpacity !== null && midOpacity >= 0.7,
+      midOpacity === null
+        ? 'кадра на середине пути не поймано — мерить нечем'
+        : `непрозрачность на ${Math.round(half)}px: ${midOpacity}`,
+    );
 
     check('консоль чиста', errors.length === 0, errors.slice(0, 3).join(' · '));
     await context.close();
