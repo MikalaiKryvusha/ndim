@@ -34,5 +34,5 @@ export const MOTION = {
   fast: reduced ? 0 : 140,
   base: reduced ? 0 : 240,
   slow: reduced ? 0 : 320,
-  gesture: reduced ? 0 : 900,
+  gesture: reduced ? 0 : 1200,
 } as const;
