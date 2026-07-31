@@ -75,13 +75,15 @@ try {
     const mark = () => page.evaluate(() => localStorage.getItem('ndim-session'));
     check((await mark()) !== null, 'признак сессии ndim-session поднят у гостя', String(await mark()));
 
-    // ── 2 · КЛЮЧЕВОЕ: у гостя в «Меню» есть «Выйти». До починки замок стоял здесь.
-    await page.goto(`${BASE}/menu?as=guest`, { waitUntil: 'domcontentloaded' });
+    // ── 2 · КЛЮЧЕВОЕ: у гостя есть «Выйти». До починки замок стоял здесь.
+    // Виджет «Аккаунт» переехал из «Меню» на «Профиль» (ideas/19, слово владельца
+    // 2026-07-31) — сценарий идёт туда же, суть проверки не изменилась.
+    await page.goto(`${BASE}/profile?as=guest`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(4500);
-    const menu = await text();
-    check(/◌ гость/.test(menu), '«Меню» показывает гостевое состояние');
-    check(/Выйти/.test(menu), '🔑 у ГОСТЯ есть «Выйти» — замок снят (п. 13)');
-    await page.screenshot({ path: `${OUT}/guest-menu-${tag}.png` });
+    const home = await text();
+    check(/◌ гость/.test(home), '«Профиль» показывает гостевое состояние');
+    check(/Выйти/.test(home), '🔑 у ГОСТЯ есть «Выйти» — замок снят (п. 13)');
+    await page.screenshot({ path: `${OUT}/guest-profile-${tag}.png` });
 
     // ── 3 · выходим и убеждаемся, что сессии больше нет
     //
@@ -89,14 +91,14 @@ try {
     // врезку «Выйти? Ваши оценки исчезнут», выходит ВТОРОЙ. Этот страж поймал изменение сам —
     // «признак сессии снят» покраснел ровно на том, что сессия и не должна была сниматься с
     // одного тапа. Проверяем обе ступени: врезка обязана появиться, и только потом выход.
-    await page.locator('button.row', { hasText: /Выйти/ }).first().click();
+    await page.locator('button.arow', { hasText: /Выйти/ }).first().click();
     await page.waitForTimeout(600);
     check(/Выйти\? Ваши оценки исчезнут/.test(await text()),
       '🔑 первый тап по «Выйти» разворачивает врезку подтверждения (В3=А)');
     check((await mark()) !== null, 'до подтверждения человек НЕ вышел — труд гостя цел');
     await page.screenshot({ path: `${OUT}/guest-leave-confirm-${tag}.png` });
 
-    await page.locator('.warn-cta button', { hasText: /^Выйти$/ }).first().click();
+    await page.locator('.awarn-cta button', { hasText: /^Выйти$/ }).first().click();
     await page.waitForTimeout(2500);
     check((await mark()) === null, 'после подтверждения признак сессии снят');
 
@@ -131,15 +133,16 @@ try {
     check(!/Сейчас Вы гость/.test(after), 'экран больше не считает человека гостем');
 
     check((await mark()) !== null, 'сессия есть — признак поднят');
-    // Чья это сессия — спрашиваем ЭКРАН, а не внутренности SDK: «Меню» печатает почту
-    // вошедшего. Так же это видит владелец.
-    await page.goto(`${BASE}/menu`, { waitUntil: 'domcontentloaded' });
+    // Чья это сессия — спрашиваем ЭКРАН, а не внутренности SDK: почту вошедшего печатает
+    // виджет «Аккаунт», который теперь живёт на «Профиле» (ideas/19). Так видит владелец.
+    await page.goto(`${BASE}/profile`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(4000);
-    const menuAfter = await text();
-    await page.screenshot({ path: `${OUT}/menu-after-${tag}.png` });
-    const acc = menuAfter.slice(menuAfter.indexOf('АККАУНТ'), menuAfter.indexOf('АККАУНТ') + 120).replace(/\n/g, ' | ');
-    check(menuAfter.includes(EXISTING), `🔑 вошли ИМЕННО в свой аккаунт (${EXISTING})`, `в «Меню»: ${acc}`);
-    check(!/◌ гость/.test(menuAfter), 'сессия не гостевая');
+    const profileAfter = await text();
+    await page.screenshot({ path: `${OUT}/profile-after-${tag}.png` });
+    const accAt = profileAfter.search(/Аккаунт/i);
+    const acc = accAt >= 0 ? profileAfter.slice(accAt, accAt + 120).replace(/\n/g, ' | ') : '(заголовок не найден)';
+    check(profileAfter.includes(EXISTING), `🔑 вошли ИМЕННО в свой аккаунт (${EXISTING})`, `в «Профиле»: ${acc}`);
+    check(!/◌ гость/.test(profileAfter), 'сессия не гостевая');
 
     // Отказы правил Firestore гостю ожидаемы и в консоли встречаются — отсекаем их,
     // остальное обязано быть чисто.
@@ -231,13 +234,15 @@ try {
       '🔑 пилюля «гость» в шапке ПОГАСЛА — сессия больше не гостевая',
       `пилюль: ${await p2.locator('.badge').count()}`);
 
-    await p2.goto(`${BASE}/menu`, { waitUntil: 'domcontentloaded' });
+    // Смоук личности — на «Профиле»: виджет «Аккаунт» с почтой переехал туда (ideas/19).
+    await p2.goto(`${BASE}/profile`, { waitUntil: 'domcontentloaded' });
     await p2.waitForTimeout(4000);
-    const menu2 = await text2();
-    await p2.screenshot({ path: `${OUT}/door2-menu-${tag}.png` });
-    check(menu2.includes(EXISTING), `🔑 через ВТОРУЮ ДВЕРЬ вошли в свой аккаунт (${EXISTING})`,
-      `в «Меню»: ${menu2.slice(menu2.indexOf('АККАУНТ'), menu2.indexOf('АККАУНТ') + 110).replace(/\n/g, ' | ')}`);
-    check(!/◌ гость/.test(menu2), 'сессия не гостевая');
+    const home2 = await text2();
+    await p2.screenshot({ path: `${OUT}/door2-profile-${tag}.png` });
+    const acc2At = home2.search(/Аккаунт/i);
+    check(home2.includes(EXISTING), `🔑 через ВТОРУЮ ДВЕРЬ вошли в свой аккаунт (${EXISTING})`,
+      `в «Профиле»: ${acc2At >= 0 ? home2.slice(acc2At, acc2At + 110).replace(/\n/g, ' | ') : '(заголовок не найден)'}`);
+    check(!/◌ гость/.test(home2), 'сессия не гостевая');
 
     const real2 = err2.filter(
       (e) => !/permission|insufficient|Missing or insufficient/i.test(e) && !/WebSocket connection to 'ws:\/\/localhost:5173/.test(e),

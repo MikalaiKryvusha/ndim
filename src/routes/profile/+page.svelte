@@ -24,7 +24,7 @@
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
-  import { dateTime, num as decimal, starsUnit } from '$lib/ui/format';
+  import { dateOnly, dateTime, num as decimal, starsUnit } from '$lib/ui/format';
   import { preloadAvatars } from '$lib/data/avatar';
   // Жест «потянуть вниз» (интервью №006, В1=А — все четыре главных экрана).
   import PullToRefresh from '$lib/ui/PullToRefresh.svelte';
@@ -37,12 +37,14 @@
   // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
   import { useViewMemory } from '$lib/ui/view-memory';
   import {
+    currentEmail,
     currentSession,
     ensureSpaceExists,
     isGuestSession,
     loadProfileScreen,
     previewAs,
     peekProfileScreen,
+    ProfileMissingError,
     saveProfile,
     signInGuest,
     signOutUser,
@@ -208,6 +210,7 @@
     if (loaded.values.avatar === true) await preloadAvatars([loaded.uid]);
     data = loaded;
     stand = 'ready';
+    acctEmail = currentEmail(); // для виджета «Аккаунт» (ideas/19): почта уже в сессии
     noteFirstLoad();
     try {
       relations = await loadRelationsSummary(uid);
@@ -222,6 +225,44 @@
     const uid = await currentSession();
     if (uid !== null) await loadScreen(uid);
   }
+
+  /*
+   * ── Виджет «Аккаунт» (ideas/19, повторное слово владельца 2026-07-31) ─────────────
+   * Переехал сюда с экрана «Меню» ЦЕЛИКОМ — и это возврат канона 1.x: кнопки
+   * «⚙ Управлять аккаунтом» и «Выйти из аккаунта» жили внизу «Дома» (researches/12 →
+   * «Дом», строка «Кнопки внизу»). Прежний канон «выход — в /menu» (bugs/29) отменён
+   * новым словом владельца — пометка стоит и в researches/12.
+   */
+  let acctEmail = $state<string | null>(null);
+
+  /**
+   * Гость подтверждает выход (интервью №007, В3=А): врезка прямо в карточке, без
+   * модального окна. Ступень нужна ТОЛЬКО гостю — его выход отрезает несохранённый труд;
+   * выход вошедшего не теряет ничего, и лишний тап там был бы придиркой, а не заботой.
+   */
+  let confirmLeave = $state(false);
+
+  async function leave(): Promise<void> {
+    await signOutUser();
+    location.href = '/';
+  }
+
+  /** Имя человека — как он сам его записал; у гостя имени нет. */
+  const displayName = $derived.by(() => {
+    const first = data?.values.name?.first;
+    const nick = data?.values.name?.nick;
+    return first?.[lang] ?? first?.ru ?? nick?.[lang] ?? nick?.ru ?? null;
+  });
+
+  /**
+   * Подпись под именем: почта и «В Пространстве с 12 июля 2026 г.». Дата — настоящая, из
+   * документа человека: однажды такую строку уже поймали на вранье, когда она была вписана
+   * в вёрстку руками.
+   */
+  const accountLine = $derived.by(() => {
+    const since = data ? `${t.acctSince[lang]} ${dateOnly(data.root.time.created, lang)}` : null;
+    return [acctEmail, since].filter(Boolean).join(' · ');
+  });
 
   onMount(async () => {
     try {
@@ -272,6 +313,18 @@
       }
       await loadScreen(uid);
     } catch (error) {
+      /*
+       * У ГОСТЯ ДОКУМЕНТА МОЖЕТ НЕ БЫТЬ, И ЭТО НОРМА (bugs/87; обработка переехала сюда
+       * из «Меню» вместе с виджетом «Аккаунт», ideas/19). В бою гость всегда с документом
+       * (?guest=1 заводит его сразу) — это стендовая дверь ?as=guest; но «Выйти» обязан
+       * быть доступен гостю и здесь, иначе реплей замка bugs/84.
+       */
+      if (isGuestSession() && error instanceof ProfileMissingError) {
+        guest = true;
+        acctEmail = currentEmail();
+        stand = 'ready';
+        return;
+      }
       standError = technicalDetail(error);
       stand = 'down';
     }
@@ -469,6 +522,16 @@
     tabs: {
       dims: { ru: 'Измерения', en: 'Dimensions' },
     },
+    // Виджет «Аккаунт» (ideas/19) — тексты переехали из «Меню» дословно.
+    acctTitle: { ru: 'Аккаунт', en: 'Account' },
+    acctManage: { ru: 'Управление аккаунтом', en: 'Manage account' },
+    acctSoon: { ru: 'скоро', en: 'soon' },
+    acctLeave: { ru: 'Выйти', en: 'Sign out' },
+    // Слово владельца дословно (интервью №007, В3=А): «Выйти? Ваши оценки исчезнут».
+    acctLeaveConfirm: { ru: 'Выйти? Ваши оценки исчезнут', en: 'Sign out? Your ratings will be gone' },
+    acctLeaveCancel: { ru: 'Отмена', en: 'Cancel' },
+    acctSince: { ru: 'В Пространстве с', en: 'In the Space since' },
+    acctNoName: { ru: 'Без имени', en: 'No name' },
     seeMe: { ru: 'Как меня видят', en: 'How others see me' },
     backBtn: { ru: 'Назад', en: 'Back' },
     connecting: { ru: 'Подключаюсь…', en: 'Connecting…' },
@@ -983,6 +1046,45 @@
 
 
   <main class="body">
+    <!-- ── Виджет «Аккаунт» (ideas/19, повторное слово владельца 2026-07-31): переехал из
+         «Меню» целиком — возврат канона 1.x, где кнопки «⚙ Управлять аккаунтом» и «Выйти»
+         жили внизу «Дома». Сниппетом, потому что рендерится в ДВУХ ветках: обычной (data)
+         и у гостя без документа (стендовая дверь ?as=guest) — «Выйти» обязан быть доступен
+         гостю в ЛЮБОМ состоянии (иначе реплей замка bugs/84). Гостю здесь только «Выйти» с
+         врезкой (В3=А): двери сохранения уже стоят в его гостевой карточке. ── -->
+    {#snippet acctCard()}
+      <div class="card acct" in:fade={{ duration: MOTION.base }}>
+        <h3>{t.acctTitle[lang]}</h3>
+        {#if !guest}
+          <div class="awho">
+            <span class="aava" aria-hidden="true">{(displayName ?? 'N').slice(0, 1)}</span>
+            <span class="aidn">
+              <b>{displayName ?? t.acctNoName[lang]}</b>
+              <span class="ameta">{accountLine}</span>
+            </span>
+          </div>
+          <span class="arow off">
+            <span class="ic"><Icon name="gear" size={20} /></span><span class="lb">{t.acctManage[lang]}</span>
+            <span class="val">{t.acctSoon[lang]}</span>
+          </span>
+          <button type="button" class="arow" onclick={leave}>
+            <span class="ic"><Icon name="logout" size={20} /></span><span class="lb">{t.acctLeave[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
+          </button>
+        {:else if confirmLeave}
+          <div class="awarn" transition:slide={{ duration: MOTION.fast }}>
+            <p class="awarn-title">{t.acctLeaveConfirm[lang]}</p>
+            <div class="awarn-cta">
+              <button type="button" class="btn primary" onclick={leave}>{t.acctLeave[lang]}</button>
+              <button type="button" class="btn" onclick={() => (confirmLeave = false)}>{t.acctLeaveCancel[lang]}</button>
+            </div>
+          </div>
+        {:else}
+          <button type="button" class="arow" onclick={() => (confirmLeave = true)}>
+            <span class="ic"><Icon name="logout" size={20} /></span><span class="lb">{t.acctLeave[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
+          </button>
+        {/if}
+      </div>
+    {/snippet}
     {#if stand === 'connecting'}
       <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
       <div class="state"><Loading {lang} /></div>
@@ -1302,6 +1404,13 @@
             <a class="btn ghost" href="/relations">{t.toRelations[lang]}</a>
           </div>
         {/if}
+
+        {@render acctCard()}
+    {:else if guest}
+      <!-- Гость БЕЗ документа (в бою недостижимо: ?guest=1 заводит документ сразу; это
+           стендовая дверь ?as=guest в свежем контексте). Данных у экрана нет, и это норма —
+           но «Выйти» обязан быть доступен и здесь (bugs/84, bugs/87). -->
+      {@render acctCard()}
     {/if}
   </main>
 
@@ -1619,4 +1728,40 @@
       grid-column: 1 / -1;
     }
   }
+
+  /* ── Виджет «Аккаунт» (ideas/19): стили переехали из «Меню» вместе с блоком. Ряды и
+     личность — те же формы, что были там; имена с префиксом a-, чтобы не столкнуться с
+     профильными .warn/.row. ── */
+  .acct .awho { display: flex; align-items: center; gap: 11px; padding: 2px 2px 10px; }
+  .aava {
+    width: 46px; height: 46px; border-radius: 50%; flex: none;
+    display: grid; place-items: center; font-size: 18px; font-weight: 700;
+    color: var(--primary); border: 2px solid var(--primary);
+  }
+  .aidn { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .aidn b { font-size: 16px; color: var(--heading); }
+  .ameta { font-size: 12px; color: var(--faint); word-break: break-word; }
+  .arow {
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    padding: 9px 2px; border: 0; border-top: 1px solid var(--edge-soft);
+    background: transparent; font: inherit; font-size: 13.5px; color: var(--text);
+    text-align: left;
+  }
+  @media (hover: hover) {
+    .arow:hover { background: var(--edge-soft); }
+    .arow.off:hover { background: transparent; }
+  }
+  .arow.off { cursor: default; }
+  .arow .ic { width: 24px; display: flex; justify-content: center; color: var(--accent); }
+  .arow .lb { flex: 1; }
+  .arow .val { font-size: 12px; color: var(--faint); font-family: var(--mono); }
+  .arow .chev { color: var(--faint); }
+  .awarn {
+    margin: 0 0 4px; padding: 11px 13px;
+    border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+    border-radius: 12px;
+  }
+  .awarn-title { margin: 0; font-size: 13.5px; line-height: 1.4; color: var(--text); }
+  .awarn-cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .awarn-cta .btn { flex: 1 1 auto; margin: 0; }
 </style>

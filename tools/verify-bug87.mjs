@@ -29,10 +29,16 @@ mkdirSync(OUT, { recursive: true });
 
 const COMBOS = QUICK ? [['light', 390]] : [['light', 390], ['light', 1440], ['dark', 390], ['dark', 1440]];
 
-/** Признаки, по которым состояния обязаны РАЗЛИЧАТЬСЯ на экране. */
+/**
+ * Признаки, по которым состояния обязаны РАЗЛИЧАТЬСЯ на экране.
+ *
+ * ⚠️ Экран состояний — «ПРОФИЛЬ» (ideas/19, слово владельца 2026-07-31): виджет «Аккаунт»
+ * переехал туда из «Меню» вместе со всеми ветками состояний; «Меню» о состоянии человека
+ * больше не говорит вовсе — и это стережёт отдельная проверка ниже.
+ */
 const GUEST_MARK = /◌ гость/;
-const SIGNED_OUT_MARK = /Вы не вошли/;
-const DOWN_MARK = /Не удалось загрузить Ваши данные/;
+const SIGNED_OUT_MARK = /Войдите в Пространство/;
+const DOWN_MARK = /Не удалось загрузить данные/;
 
 let pass = 0;
 const fails = [];
@@ -66,12 +72,11 @@ try {
 
     // ── 1 · СВЕЖИЙ ГОСТЬ БЕЗ ДОКУМЕНТА — сам дефект bugs/87
     {
-      const { ctx, page, text, errors } = await open('/menu?as=guest');
+      const { ctx, page, text, errors } = await open('/profile?as=guest');
       await page.screenshot({ path: `${OUT}/guest-fresh-${tag}.png` });
       check(GUEST_MARK.test(text), '🔑 свежий гость БЕЗ документа видит гостевое состояние');
-      check(!SIGNED_OUT_MARK.test(text), '🔑 свежий гость НЕ читает про себя «Вы не вошли» (bugs/87)');
+      check(!SIGNED_OUT_MARK.test(text), '🔑 свежий гость НЕ читает про себя карточку входа (bugs/87)');
       check(!DOWN_MARK.test(text), 'свежему гостю не показывают ошибку загрузки — пустота у него норма');
-      check(/Сохранить результаты/.test(text), 'гостю предложено сохранить результаты');
       check(/Выйти/.test(text), 'гостю доступен выход (bugs/84)');
       const real = errors.filter((e) => !/permission|insufficient/i.test(e) && !/ws:\/\/localhost:5173/.test(e));
       check(real.length === 0, 'консоль чиста у гостя', real.join(' | ').slice(0, 140));
@@ -80,9 +85,9 @@ try {
 
     // ── 2 · НЕ ВОШЁЛ — дверь 331 человека из 1.x
     {
-      const { ctx, page, text } = await open('/menu?as=none');
+      const { ctx, page, text } = await open('/profile?as=none');
       await page.screenshot({ path: `${OUT}/signed-out-${tag}.png` });
-      check(SIGNED_OUT_MARK.test(text), 'не вошедший видит «Вы не вошли»');
+      check(SIGNED_OUT_MARK.test(text), 'не вошедший видит карточку входа');
       check(!GUEST_MARK.test(text), 'не вошедшего не выдают за гостя');
       check(!DOWN_MARK.test(text), 'не вошедшему не показывают ошибку загрузки');
       check(/Войти/.test(text), 'не вошедшему предложен вход');
@@ -91,11 +96,11 @@ try {
 
     // ── 3 · ПОЛНОЦЕННЫЙ АККАУНТ — контроль прибора: если и здесь всё «гость», страж сломан
     {
-      const { ctx, page, text } = await open('/menu');
+      const { ctx, page, text } = await open('/profile');
       await page.screenshot({ path: `${OUT}/signed-in-${tag}.png` });
-      check(/dev@ndim\.space/.test(text), 'вошедший видит свою почту');
+      check(/dev@ndim\.space/.test(text), 'вошедший видит свою почту (виджет «Аккаунт»)');
       check(!GUEST_MARK.test(text), 'вошедшего не выдают за гостя');
-      check(!SIGNED_OUT_MARK.test(text), 'вошедшему не говорят «Вы не вошли»');
+      check(!SIGNED_OUT_MARK.test(text), 'вошедшему не показывают карточку входа');
       await ctx.close();
     }
 
@@ -106,12 +111,24 @@ try {
       const page = await ctx.newPage();
       await page.goto(`${BASE}/profile?guest=1`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(5500);
-      await page.goto(`${BASE}/menu?as=guest`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${BASE}/profile?as=guest`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(5000);
       const text = await page.evaluate(() => document.body.innerText || '');
       await page.screenshot({ path: `${OUT}/guest-with-doc-${tag}.png` });
       check(GUEST_MARK.test(text), 'гость С документом тоже видит гостевое состояние');
-      check(!SIGNED_OUT_MARK.test(text), 'гость С документом не читает «Вы не вошли»');
+      check(!SIGNED_OUT_MARK.test(text), 'гость С документом не видит карточку входа');
+      check(/Сохранить результаты|Сейчас Вы гость/.test(text), 'гостю С документом предложено сохранение');
+      await ctx.close();
+    }
+
+    // ── 5 · «МЕНЮ» О СОСТОЯНИИ БОЛЬШЕ НЕ ГОВОРИТ (страж переезда, ideas/19): карточки
+    //        «Аккаунт» там нет ни вошедшему, ни гостю — некому и лгать (сам класс bugs/87).
+    {
+      const { ctx, page, text } = await open('/menu');
+      await page.screenshot({ path: `${OUT}/menu-no-account-${tag}.png` });
+      check(!/Управление аккаунтом/.test(text), 'в «Меню» нет строки «Управление аккаунтом»');
+      check(!/dev@ndim\.space/.test(text), 'в «Меню» нет почты человека');
+      check(!SIGNED_OUT_MARK.test(text) && !DOWN_MARK.test(text), '«Меню» не печатает состояний входа');
       await ctx.close();
     }
   }

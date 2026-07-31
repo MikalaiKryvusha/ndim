@@ -205,7 +205,8 @@ for (const theme of THEMES) {
       );
 
       // ── 3. ВЫХОД. Маркер обязан погаснуть сам, иначе вышедшего встретит щит ────────
-      await page.goto(BASE + '/menu', { waitUntil: 'domcontentloaded' });
+      // «Выйти» живёт в виджете «Аккаунт» на «Профиле» (ideas/19, переезд из «Меню»).
+      await page.goto(BASE + '/profile', { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => document.body.innerText.length > 200, null, { timeout: 30000 });
       // Виджет аккаунта появляется после загрузки данных — кнопку ЖДЁМ, а не спрашиваем
       // мгновенно: мгновенная проверка врала «кнопки нет» на исправном экране.

@@ -23,20 +23,11 @@
   // системным шрифтом и тему не слушают вовсе.
   import Icon from '$lib/ui/Icon.svelte';
   import Versions from '$lib/ui/Versions.svelte';
-  import {
-    currentEmail,
-    currentSession,
-    isGuestSession,
-    loadProfileScreen,
-    peekProfileScreen,
-    ProfileMissingError,
-    signOutUser,
-    type ProfileScreenData,
-  } from '$lib/data/profile';
+  import { currentSession } from '$lib/data/profile';
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
   import { MANIFEST } from '$lib/content/manifest';
-  import { dateOnly, type Lang } from '$lib/ui/format';
+  import type { Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
   // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
@@ -45,13 +36,9 @@
   import { theme, setTheme } from '$lib/ui/theme.svelte';
 
   let lang = $state<Lang>('ru');
-  // Тёплый первый кадр (`ideas/18`): «Меню» показывает те же данные профиля, что и «Профиль», —
-  // повторно читать их при каждом заходе незачем, они уже в памяти приложения.
-  const warm = peekProfileScreen();
-  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>(warm ? 'ready' : 'connecting');
-  let data = $state<ProfileScreenData | null>(warm ?? null);
-  let email = $state<string | null>(null);
-  let guest = $state(false);
+  // Данные профиля «Меню» больше НЕ читает (ideas/19): единственным их потребителем была
+  // карточка «Аккаунт», а она переехала на «Профиль». Экрану остались манифест, разделы и
+  // виджет версий — из данных ему нужен только `space/server` (и то лишь вошедшему).
   let server = $state<SyncServerDoc | null>(null);
   let copied = $state(false);
 
@@ -62,36 +49,6 @@
    */
   useViewMemory({ path: '/menu', warm: true });
 
-  /**
-   * Перечитать данные этого экрана. Отдельной функцией, потому что её зовут двое: `onMount`
-   * при заходе и строка «Обновить данные» по требованию человека.
-   */
-  async function loadScreen(uid: string): Promise<void> {
-    /*
-     * ⚠️ У ГОСТЯ ДОКУМЕНТА МОЖЕТ НЕ БЫТЬ, И ЭТО НОРМА (bugs/87). Он появляется с первой
-     * оценкой; до неё `loadProfileScreen` честно бросает `ProfileMissingError`. Раньше это
-     * исключение валило ВЕСЬ экран в состояние `down`, и вошедший гость читал про себя
-     * «Вы не вошли».
-     *
-     * Гостевой ветке «Меню» документ не нужен вовсе — ей хватает пилюли, пояснения и двух
-     * кнопок. Поэтому пустоту переносим ТОЛЬКО для гостя: у не-гостя отсутствие документа —
-     * настоящая поломка, и глушить её нельзя.
-     *
-     * Виджет версий грузим отдельным обещанием: в `Promise.all` отказ профиля утянул бы за
-     * собой и его, хотя к профилю он отношения не имеет.
-     */
-    const [profile, syncServer] = await Promise.all([
-      loadProfileScreen(uid).catch((error: unknown) => {
-        if (isGuestSession() && error instanceof ProfileMissingError) return null;
-        throw error;
-      }),
-      loadSyncServer(),
-    ]);
-    data = profile;
-    server = syncServer;
-  }
-
-
   onMount(async () => {
     const savedLang = localStorage.getItem('ndim-lang');
     if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
@@ -100,22 +57,13 @@
 
     try {
       // Меню работает и без входа: манифест, документы и версии от данных не зависят.
+      // За версией сервера ходим только вошедшим: `space/server` правила отдают лишь им,
+      // и прежний вызов с `.catch(() => null)` печатал отказ Firestore в консоль каждому
+      // гостю лендинга. Не вошедшему виджет версий честно скажет «неизвестно».
       const uid = await currentSession();
-      if (uid === null) {
-        stand = 'signedout';
-        // За версией сервера НЕ ходим: `space/server` правила отдают только вошедшим
-        // (включая гостя). Прежний вызов с `.catch(() => null)` всё равно упирался в
-        // отказ — и печатал ошибку Firestore в консоль каждому гостю лендинга.
-        // Виджет версий честно скажет «неизвестно»: это и есть правда для не вошедшего.
-        return;
-      }
-      guest = isGuestSession();
-      email = currentEmail();
-      await loadScreen(uid);
-      stand = 'ready';
+      if (uid !== null) server = await loadSyncServer();
     } catch {
       // Меню обязано работать и без стенда: документы, манифест и версии не зависят от данных.
-      stand = 'down';
     }
   });
 
@@ -135,58 +83,11 @@
     setTimeout(() => (copied = false), 2000);
   }
 
-  async function leave() {
-    await signOutUser();
-    location.href = '/';
-  }
-
-  /**
-   * Гость подтверждает выход (интервью №007, В3=А).
-   *
-   * Слово владельца: врезка прямо в карточке, «Выйти? Ваши оценки исчезнут» + две кнопки.
-   * Модальное окно он отверг сам — в продукте их нет ни для чего.
-   *
-   * ⚠️ Ступень нужна ТОЛЬКО гостю: его выход отрезает несохранённый труд. Выход вошедшего
-   * человека не теряет ничего, и лишний тап там был бы придиркой, а не заботой.
-   */
-  let confirmLeave = $state(false);
-
-  /** Имя человека — как он сам его записал; у гостя имени нет. */
-  const displayName = $derived.by(() => {
-    const first = data?.values.name?.first;
-    const nick = data?.values.name?.nick;
-    return first?.[lang] ?? first?.ru ?? nick?.[lang] ?? nick?.ru ?? null;
-  });
-
-  /**
-   * Подпись под именем: почта и «В Пространстве с 12 июля 2026 г.».
-   * Дата — настоящая, из документа человека: однажды такую строку уже поймали на вранье,
-   * когда она была вписана в вёрстку руками.
-   */
-  const accountLine = $derived.by(() => {
-    const since = data ? `${t.since[lang]} ${dateOnly(data.root.time.created, lang)}` : null;
-    return [email, since].filter(Boolean).join(' · ');
-  });
-
+  // Тексты и логика карточки «Аккаунт» (личность, «Управление аккаунтом», «Выйти» с
+  // врезкой гостя) переехали на «Профиль» вместе с самой карточкой — ideas/19.
   const t = {
     title: { ru: 'Меню', en: 'Menu' },
     manifestBtn: { ru: 'Манифест', en: 'Manifesto' },
-    account: { ru: 'Аккаунт', en: 'Account' },
-    guestPill: { ru: 'гость', en: 'guest' },
-    guestNote: {
-      ru: 'Ваши результаты пока не сохранены: гостя не видят другие люди, а без входа его данные удаляются через 30 дней.',
-      en: 'Your results are not saved yet: other people do not see a guest, and without signing in the data is deleted after 30 days.',
-    },
-    saveResults: { ru: 'Сохранить результаты', en: 'Save my results' },
-    manageAccount: { ru: 'Управление аккаунтом', en: 'Manage account' },
-    soon: { ru: 'скоро', en: 'soon' },
-    leave: { ru: 'Выйти', en: 'Sign out' },
-    // Слово владельца дословно (интервью №007, В3=А): «Выйти? Ваши оценки исчезнут».
-    leaveConfirm: { ru: 'Выйти? Ваши оценки исчезнут', en: 'Sign out? Your ratings will be gone' },
-    leaveCancel: { ru: 'Отмена', en: 'Cancel' },
-    since: { ru: 'В Пространстве с', en: 'In the Space since' },
-    noName: { ru: 'Без имени', en: 'No name' },
-
 
     view: { ru: 'Вид', en: 'View' },
     language: { ru: 'Язык', en: 'Language' },
@@ -219,25 +120,8 @@
     // (src/routes/menu/donate) — в списке разделов он дублировал сам себя.
 
     versions: { ru: 'Версии', en: 'Versions' },
-    signedOutNote: {
-      ru: 'Вы не вошли. Манифест и документы открыты и так — а чтобы увидеть свои измерения и связи, войдите.',
-      en: 'You are not signed in. The manifest and the documents are open anyway — sign in to see your dimensions and relations.',
-    },
-    signIn: { ru: 'Войти', en: 'Sign in' },
-    /*
-     * Состояние «данные не поднялись» — СВОЙ текст (bugs/87).
-     *
-     * До этого ветки `down` и `signedout` печатали ОДНУ фразу «Вы не вошли», и экран врал о
-     * состоянии человека неотличимо от честного ответа. Владелец в этой же волне отдельно
-     * потребовал не смешивать состояния (`ideas/21` п. 13: «это разные состояния, и должны
-     * быть разные поведения приложения, а не всё смешивать в кучу»).
-     *
-     * [AI] Формулировка — черновик агента, ЖДЁТ ВЫЧИТКИ ВЛАДЕЛЬЦА (интервью №007). [/AI]
-     */
-    standDownNote: {
-      ru: 'Не удалось загрузить Ваши данные. Проверьте соединение и обновите страницу.',
-      en: 'We could not load your data. Check your connection and reload the page.',
-    },
+    // Тексты состояний «Вы не вошли…»/«данные не поднялись» уехали вместе с карточкой
+    // «Аккаунт» (ideas/19): о входе и состоянии данных теперь говорит «Профиль».
   } as const;
 </script>
 
@@ -270,72 +154,14 @@
       {/each}
     </section>
 
-    <!-- ── Левая колонка: аккаунт, вид, поделиться ── -->
+    <!-- ── Левая колонка: вид, поделиться ── -->
+    <!-- Карточки «Аккаунт» здесь БОЛЬШЕ НЕТ (ideas/19, повторное слово владельца
+         2026-07-31: «вот это я просил убрать с экрана Settings и перенести в Профиль»).
+         Блок переехал ЦЕЛИКОМ вниз экрана «Профиль» — это возврат канона 1.x, где кнопки
+         аккаунта жили внизу «Дома»; прежний канон «выход — в /menu» (bugs/29) отменён
+         новым словом, пометка стоит в researches/12. Вместе с блоком уехали и состояния
+         «Вы не вошли…»/«данные не поднялись»: о входе теперь говорит «Профиль». -->
     <section class="col" in:fly={{ y: 10, duration: MOTION.base, delay: 45, easing: cubicOut }}>
-      <div class="card">
-        <h3>{t.account[lang]}</h3>
-
-        {#if stand === 'signedout'}
-          <p class="note">{t.signedOutNote[lang]}</p>
-          <a class="btn primary wide" href="/profile">{t.signIn[lang]}</a>
-        {:else if stand === 'ready' && guest}
-          <div class="who guest">
-            <span class="ava guest" aria-hidden="true">◌</span>
-            <span class="idn">
-              <span class="pill">◌ {t.guestPill[lang]}</span>
-              <span class="note">{t.guestNote[lang]}</span>
-            </span>
-          </div>
-          <a class="btn primary wide" href="/profile">{t.saveResults[lang]}</a>
-          <!--
-            «Выйти» ГОСТЮ (ideas/21 п. 13). До этой строки гость был заперт: выйти он мог
-            только став не-гостем, то есть заведя мусорный аккаунт на чужую почту. Из-за
-            этого владелец не мог войти в СВОЙ аккаунт из браузера, где однажды зашёл гостем.
-
-            Строка переиспользована один в один из ветки не-гостя ниже — ни нового элемента,
-            ни нового текста здесь не придумано (правило четырёх макетов, `AGENT_GUIDE.md`).
-            Полное решение (две двери «сохранить результаты» / «у меня уже есть аккаунт» с
-            предупреждением и подтверждением) — это UI-решение владельца, оно вынесено
-            макетами; здесь снят только замок.
-
-            ⚠️ Выход гостя необратим: несохранённый труд пропадает. Владелец ответил на этот
-            вопрос (интервью №007, В3=А): нужна врезка подтверждения прямо в карточке, без
-            модального окна. Она ниже; вошедшему человеку такая ступень не показывается —
-            его выход ничего не теряет.
-          -->
-          {#if confirmLeave}
-            <div class="warn" transition:slide={{ duration: MOTION.fast }}>
-              <p class="warn-title">{t.leaveConfirm[lang]}</p>
-              <div class="warn-cta">
-                <button type="button" class="btn primary wide" onclick={leave}>{t.leave[lang]}</button>
-                <button type="button" class="btn wide" onclick={() => (confirmLeave = false)}>{t.leaveCancel[lang]}</button>
-              </div>
-            </div>
-          {:else}
-            <button type="button" class="row" onclick={() => (confirmLeave = true)}>
-              <span class="ic"><Icon name="logout" size={20} /></span><span class="lb">{t.leave[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
-            </button>
-          {/if}
-        {:else if stand === 'ready'}
-          <div class="who">
-            <span class="ava" aria-hidden="true">{(displayName ?? 'N').slice(0, 1)}</span>
-            <span class="idn">
-              <b>{displayName ?? t.noName[lang]}</b>
-              <span class="meta">{accountLine}</span>
-            </span>
-          </div>
-          <span class="row off">
-            <span class="ic"><Icon name="gear" size={20} /></span><span class="lb">{t.manageAccount[lang]}</span>
-            <span class="val">{t.soon[lang]}</span>
-          </span>
-          <button type="button" class="row" onclick={leave}>
-            <span class="ic"><Icon name="logout" size={20} /></span><span class="lb">{t.leave[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
-          </button>
-        {:else}
-          <!-- `down` — данные не поднялись. СВОЯ фраза, а не «Вы не вошли» (bugs/87). -->
-          <p class="note">{t.standDownNote[lang]}</p>
-        {/if}
-      </div>
 
       <!-- ── Блока «Данные» здесь БОЛЬШЕ НЕТ (ideas/21 п. 6, интервью №007 В1) ──
            Слово владельца дословно: «ВЕСЬ БЛОК НАХУЙ УБРАТЬ, НЕ НУЖЕН ОН И КНОПКА ОБНОВЛЕНИЯ
@@ -492,24 +318,8 @@
   @media (prefers-reduced-motion: reduce) {
   }
 
-  /* Кто я */
-  .who { display: flex; align-items: center; gap: 11px; padding: 2px 14px 10px; }
-  .ava {
-    width: 46px; height: 46px; border-radius: 50%; flex: none;
-    display: grid; place-items: center; font-size: 18px; font-weight: 700;
-    color: var(--primary); border: 2px solid var(--primary);
-    background: color-mix(in srgb, var(--primary) 10%, transparent);
-  }
-  .ava.guest { border-style: dashed; border-color: var(--accent); color: var(--accent); }
-  .idn { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-  .idn b { font-size: 16px; color: var(--heading); }
-  .meta { font-size: 12px; color: var(--faint); word-break: break-word; }
-  .note { font-size: 12.5px; color: var(--dim); line-height: 1.5; padding: 0 14px 10px; }
-  .who .note { padding: 0; }
-  .pill {
-    align-self: flex-start; font-size: 11.5px; font-weight: 650; padding: 3px 10px; border-radius: 999px;
-    border: 1px dashed var(--accent); color: var(--accent);
-  }
+  /* Стили «кто я»/кнопок/врезки выхода УЕХАЛИ на «Профиль» вместе с карточкой «Аккаунт»
+     (ideas/19) — там они живут с префиксом a- (.awho/.arow/.awarn…). */
 
   .seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; }
   .seg button {
@@ -518,37 +328,6 @@
     transition: background 0.15s ease, color 0.15s ease;
   }
   .seg button.on { background: var(--primary); color: var(--primary-ink); }
-
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    padding: 10px 16px; border-radius: 10px; font: inherit; font-size: 13.5px; font-weight: 600;
-    border: 1px solid var(--edge); background: var(--panel); color: var(--heading); text-decoration: none;
-    cursor: pointer;
-    transition: border-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
-  }
-  @media (hover: hover) {
-    .btn:hover { border-color: var(--primary); color: var(--primary); }
-  }
-  @media (hover: hover) {
-    .btn.primary:hover { color: var(--primary-ink); filter: brightness(1.08); }
-  }
-  .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
-  .btn.wide { display: flex; margin: 0 14px 12px; }
-
-  /* ── Врезка подтверждения выхода гостя (интервью №007, В3=А) ──
-     Врезка внутри карточки, а не модальное окно: модальных окон в продукте нет ни для чего.
-     Кнопки — те же `.btn.wide`, что и «Сохранить результаты» выше, поэтому ряд читается как
-     продолжение карточки, а не как чужой элемент. */
-  .warn {
-    margin: 0 14px 12px; padding: 11px 13px;
-    border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
-  }
-  .warn-title { margin: 0; font-size: 13.5px; line-height: 1.4; color: var(--text); }
-  .warn-cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  /* Внутри врезки у кнопок своих полей нет — их держит сама врезка. */
-  .warn-cta .btn.wide { margin: 0; flex: 1 1 auto; }
 
   /* ── Десктоп: макет V2 «Рабочий стол». Манифест — виджет РЯДОМ с кнопками меню
      (bugs/38, слово владельца: «в десктопе полно места — два виджета рядышком»):
