@@ -31,7 +31,8 @@
  * стирал измеряемое). Каждый экран открывается начисто — так замер не зависит от порядка.
  *
  * Запуск: `npm run stand`, затем `node tools/measure-ideas24.mjs`
- *         `--quick` — только светлая тема × 1440
+ *         `--quick`    — только светлая тема × 1440
+ *         `--variants` — шаг Ш4: замер САМИХ ТЕХНИК (что достижимо, а что нет)
  * Выход:  test-results/ideas24/ (report.txt + скриншоты раскладки)
  */
 import { chromium } from 'playwright';
@@ -41,6 +42,7 @@ import { writeFile } from 'node:fs/promises';
 const BASE = process.env.PROBE_BASE ?? 'http://localhost:5173';
 const OUT = 'test-results/ideas24';
 const QUICK = process.argv.includes('--quick');
+const VARIANTS = process.argv.includes('--variants');
 mkdirSync(OUT, { recursive: true });
 
 /** Экраны с двухколоночной виджетной сеткой (`researches/22` §2.4 — их ДВА, а не один). */
@@ -107,8 +109,27 @@ const READ_LAYOUT = () => {
     for (const it of row.items) it.hole = row.bottom - it.bottom;
   }
 
+  const box = body.getBoundingClientRect();
+
   return {
     display: cs.display,
+    /*
+     * ⚠️ ТЕХНИКО-НЕЗАВИСИМАЯ МЕРА — она, а не «дыра», сравнивает РАЗНЫЕ раскладки.
+     * Метрика «дыра» определена через СТРОКИ сетки; в многоколоночной раскладке строк нет,
+     * соседи по вертикали друг друга не ждут, и группировка по `top` насчитывает пустоту,
+     * которой на экране не существует. Первая редакция прибора напечатала так «306 → 104»,
+     * и это выглядело сравнимым, не будучи им.
+     *
+     * Вторая редакция взяла высоту КОНТЕЙНЕРА — и тоже соврала: `.body` это строка `1fr` в
+     * сетке экрана, её высота прибита к вьюпорту, а не к содержимому (986 и 945px при окне
+     * 1000px — то есть мерился вьюпорт). Обе ошибки одного класса: величина, которая выглядит
+     * сравнимой, но управляется не тем, что мы изучаем.
+     *
+     * Честная мера — РАЗМАХ СОДЕРЖИМОГО: от верха самого верхнего виджета до низа самого
+     * нижнего. Он не ограничен снизу ничем посторонним и падает ровно тогда, когда раскладка
+     * становится плотнее.
+     */
+    containerHeight: Math.round(box.height), // печатается для сведения, в сравнении НЕ участвует
     columns: cs.gridTemplateColumns,
     // ИСПОЛЬЗОВАННЫЕ высоты строк — независимая сверка нашего вывода из соседей.
     rowsUsed: cs.gridTemplateRows,
@@ -117,6 +138,13 @@ const READ_LAYOUT = () => {
     columnCount: cs.gridTemplateColumns.split(' ').filter(Boolean).length,
     rows: rows.map((r) => ({ top: r.top, bottom: r.bottom, items: r.items })),
     items,
+    // Сумма высот виджетов — не мера качества сама по себе, но она показывает, что при
+    // сравнении техник содержимое не изменилось (иначе «стало ниже» значило бы «стало меньше»).
+    contentSum: items.reduce((sum, i) => sum + i.height, 0),
+    // ★ Главная сравнительная величина: размах содержимого, от верха первого до низа последнего.
+    contentExtent: items.length
+      ? Math.round(Math.max(...items.map((i) => i.bottom)) - Math.min(...items.map((i) => i.top)))
+      : 0,
     totalHole: items.reduce((sum, i) => sum + (i.hole ?? 0), 0),
     maxHole: items.reduce((m, i) => Math.max(m, i.hole ?? 0), 0),
   };
@@ -155,6 +183,7 @@ function report(seen, indent = '  ') {
     return;
   }
   say(`${indent}display: ${seen.display} · колонок: ${seen.columnCount} · flow: ${seen.flow} · row-gap: ${seen.rowGap}px`);
+  say(`${indent}размах содержимого: ${seen.contentExtent}px  (сумма высот виджетов ${seen.contentSum}px · панель растянута до ${seen.containerHeight}px)`);
   say(`${indent}колонки : ${seen.columns}`);
   say(`${indent}строки  : ${seen.rowsUsed}`);
   for (const row of seen.rows) {
@@ -284,6 +313,95 @@ try {
       }
       say('');
     }
+  }
+
+  // ─────────────────── Ш4 · замер САМИХ ТЕХНИК (что достижимо) ───────────────────
+  if (VARIANTS) {
+    say('╔══ Ш4 · ТЕХНИКИ ════════════════════════════════════════════════════════');
+    say('Макеты обязаны рисовать достижимое, а не желаемое. Для каждой техники —');
+    say('осталась ли дыра · совпал ли визуальный порядок с DOM · цела ли карточка.');
+    say('');
+
+    /* Техники, которые можно ПРИМЕНИТЬ ИНЪЕКЦИЕЙ, не трогая разметку. Раскладку из двух
+       самостоятельных DOM-колонок инъекцией не получить (нужны контейнеры) — она меряется
+       в макете `design/widget-layout-mockups.html`, и это сказано в отчёте прямым текстом. */
+    const TECHNIQUES = [
+      {
+        key: 'lanes',
+        title: '(б) `display: grid-lanes` — нативная masonry',
+        css: 'main.body { display: grid-lanes !important; }',
+      },
+      {
+        key: 'columns',
+        title: '(а) многоколоночная раскладка `columns: 2`',
+        css: `
+          main.body { display: block !important; columns: 2 !important; column-gap: 12px !important; }
+          main.body > * { break-inside: avoid !important; margin-bottom: 12px !important; }
+          main.body > .head, main.body > .tiles, main.body > .intro,
+          main.body > .head-card, main.body > .full { column-span: all !important; }
+        `,
+      },
+      {
+        key: 'span',
+        title: '(в) великан занимает две строки (`grid-row: span 2`)',
+        css: null, // считается по месту: нужен nth самого высокого виджета
+      },
+    ];
+
+    for (const screen of SCREENS) {
+      const before = base.get(`${screen.path}|light|1440`);
+      if (!before || before.error) continue;
+      const giant = before.items.reduce((a, b) => (b.height > a.height ? b : a));
+
+      say(`── ${screen.name} · 1440px · дыра «до» ${before.totalHole}px ──`);
+
+      for (const tech of TECHNIQUES) {
+        const { context, page } = await openScreen(browser, { theme: 'light', width: 1440, path: screen.path });
+
+        // Знает ли движок стенда эту раскладку вообще — спрашиваем ДО применения,
+        // иначе «дыра не изменилась» читалось бы как свойство техники, а не как её отсутствие.
+        const support = await page.evaluate(() => ({
+          lanes: CSS.supports('display', 'grid-lanes'),
+          masonry: CSS.supports('display', 'masonry'),
+          rowsMasonry: CSS.supports('grid-template-rows', 'masonry'),
+        }));
+
+        const css = tech.css ?? `main.body > :nth-child(${giant.nth}) { grid-row: span 2 !important; }`;
+        await page.addStyleTag({ content: css });
+        await page.waitForTimeout(250);
+        const after = await page.evaluate(READ_LAYOUT);
+
+        // Совпал ли визуальный порядок (сверху вниз, слева направо) с порядком DOM —
+        // цена, о которой предупреждает researches/22 §3.2.
+        const visual = [...after.items].sort((a, b) => a.top - b.top || a.nth - b.nth);
+        const orderKept = visual.every((it, i) => it.nth === i + 1);
+
+        // Целость карточки: в многоколоночной раскладке карточка может разорваться.
+        const torn = await page.evaluate(() =>
+          [...document.querySelectorAll('main.body > .card')].filter((el) => el.getClientRects().length > 1).length,
+        );
+
+        await page.screenshot({ path: `${OUT}/tech-${tech.key}-${screen.path.slice(1)}.png`, fullPage: true });
+        await context.close();
+
+        say(`   ${tech.title}`);
+        if (tech.key === 'lanes' && !support.lanes && !support.masonry && !support.rowsMasonry) {
+          say(`      ⚠️ движок стенда НЕ ЗНАЕТ этой раскладки (grid-lanes: нет · masonry: нет · rows:masonry: нет)`);
+          say(`      ⇒ замерить нечем; подтверждает researches/22 §3.1 — только прогрессивным улучшением`);
+        } else {
+          const saved = before.contentExtent - after.contentExtent;
+          const sameContent = Math.abs(after.contentSum - before.contentSum) < 40;
+          say(`      РАЗМАХ СОДЕРЖИМОГО ${before.contentExtent}px → ${after.contentExtent}px  (${saved > 0 ? `КОРОЧЕ на ${saved}px` : saved === 0 ? 'без изменений' : `ВЫШЕ на ${-saved}px`})`);
+          say(`      содержимое то же: ${sameContent ? '✔' : `✘ сумма высот ${before.contentSum} → ${after.contentSum} — сравнение недействительно`}`);
+          say(`      порядок DOM ↔ визуальный: ${orderKept ? '✔ совпал' : '✘ РАЗОШЁЛСЯ (цена §3.2)'}`);
+          say(`      разорванных карточек: ${torn}${torn ? '  ✘' : '  ✔'}`);
+        }
+      }
+      say('');
+    }
+    say('Раскладка из двух самостоятельных DOM-колонок инъекцией недостижима (нужны');
+    say('контейнеры в разметке) — она показана и замерена в design/widget-layout-mockups.html.');
+    say('');
   }
 
   // ─────────────────────────────── Итог ───────────────────────────────

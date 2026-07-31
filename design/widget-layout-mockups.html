@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — автораскладка виджетов, 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — АВТОРАСКЛАДКА ВИДЖЕТОВ. Шаг Ш5 плана `plans/11` (фаза 1 эпика `ideas/24`).
+
+     СЛОВО ВЛАДЕЛЬЦА (ideas/24, дословно):
+       «Виджетам выделено фиксированное место, и они его держатся. Из-за этого появляются
+        „дыры“ в рабочем пространстве — это некрасиво. Виджеты должны уметь перемещаться
+        по рабочему пространству, чтобы схлопывать дыры.»
+
+     ЧТО РЕШАЮТ ЭТИ МАКЕТЫ: КАКОЙ ФОРМОЙ убрать дыру. Ручное перетаскивание — вторая
+     половина заказа, она идёт отдельной фазой (метаплан `plans/10`, фазы 3–5) и здесь
+     НЕ рисуется.
+
+     ═══ ЧТО УЖЕ ИЗМЕРЕНО (tools/measure-ideas24.mjs, 2026-07-31) — макеты рисуют
+         достижимое, а не желаемое ═══
+
+       · Дыра «до»: «Пространство» 389px на 1024 и 306px на 1440; «Профиль» 71 и 98px.
+         Телефон 390px — 0px (одна колонка), и его ни один вариант не трогает.
+       · Дыра БОЛЬШЕ на узком десктопе (1024), чем на широком. Проверять правку надо
+         сначала на 1024.
+       · Тема на геометрию не влияет ни на пиксель — все 8 замеров совпали.
+       · `grid-auto-flow: dense` (кандидат из самой идеи) — 4/4 замеров БЕЗ ЕДИНОГО
+         ПИКСЕЛЯ РАЗНИЦЫ. Дыра у нас — это синхронизация ВЫСОТ СТРОК сетки, а не пустые
+         ячейки; подбирать `dense` нечего. Кандидат опровергнут числом.
+       · `display: grid-lanes` (нативная masonry) — движок ещё не знает её (в июле 2026
+         она не Baseline). Годится ТОЛЬКО прогрессивным улучшением поверх работающей базы —
+         ровно как предписывает сам WebKit. См. researches/22 §3.1.
+       · `columns: 2` — «Пространство» короче на 103px, но «Профиль» ВЫШЕ на 33px, и
+         порядок чтения расходится с DOM. Дешёвая техника с непредсказуемым результатом.
+       · «великан на две строки» (`grid-row: span 2`) — «Пространство» без изменений,
+         «Профиль» ВЫШЕ на 163px. Хуже, чем сейчас.
+
+     ⚠️ ЧЕСТНОСТЬ МАКЕТА. Содержимое виджетов — с боевого экрана «Пространство» в том
+     состоянии, в каком его увидел владелец (короткий «Сегодня»: «ничего не изменилось»).
+     Цифры правдоподобные, но не боевые. Токены обеих тем скопированы из
+     src/routes/+layout.svelte дословно, поэтому цвета настоящие.
+
+     ВАРИАНТЫ (кнопки сверху):
+       · V0 «Как сейчас»    — эталон. Дыра обведена пунктиром, чтобы её было видно.
+       · V1 «Две колонны»   — колонки пакуются НЕЗАВИСИМО друг от друга. Дыра невозможна
+                              по построению. Классический ответ индустрии до masonry.
+       · V2 «Равные соседи» — дыры нет, потому что нет короткого виджета: соседи по строке
+                              равной высоты, содержимое распределено. Обратная философия:
+                              не паковать плотнее, а убрать саму пустоту.
+       · V3 «Кладка»        — нативная masonry там, где движок её знает, и V1 запасным
+                              вариантом везде остальном. Прогрессивное улучшение.
+       · V4 «Поток»         — многоколоночная раскладка. Самая дешёвая и самая своевольная:
+                              порядок чтения становится колоночным.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Токены светлой темы «Бумага» (дословно из src/routes/+layout.svelte) ── */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --card-shadow: 0 16px 40px rgba(29, 50, 71, 0.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --up: #0ea578; --down: #d6544f;
+    --hole: rgba(214, 84, 79, 0.5);
+    --hole-bg: rgba(214, 84, 79, 0.06);
+  }
+  /* ── Токены тёмной темы (дословно оттуда же) ── */
+  :root[data-theme='dark'] {
+    --bg: #060b14; --panel: rgba(10, 21, 38, 0.78); --edge: rgba(77, 159, 255, 0.22);
+    --edge-soft: rgba(77, 159, 255, 0.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --card-shadow: 0 0 0 1px rgba(63, 217, 255, 0.06), 0 24px 60px rgba(2, 8, 20, 0.6);
+    --up: #34d399; --down: #f87171;
+    --hole: rgba(248, 113, 113, 0.55);
+    --hole-bg: rgba(248, 113, 113, 0.08);
+  }
+
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  /* ── Панель выбора (дом стиля макетов проекта) ── */
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  /* ── Пояснение к текущему варианту ── */
+  .note {
+    padding: 12px 18px; background: #0d1c2c; color: #b8cee2; font-size: 12.5px; line-height: 1.6;
+    border-bottom: 1px solid #1d3550;
+  }
+  .note h4 { color: #fff; font-size: 13.5px; margin-bottom: 5px; }
+  .note .cost { color: #ffb4a8; }
+  .note .win { color: #7ee0b8; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: #9fd2ff; }
+
+  /* ── Сцена: имитация десктопной оболочки продукта ── */
+  .stage { background: var(--bg); padding: 22px 0 40px; }
+  .shell { margin: 0 auto; display: grid; grid-template-columns: 232px minmax(0, 1fr); }
+  .stage[data-w='1024'] .shell { width: 1024px; }
+  .stage[data-w='1440'] .shell { width: 1440px; }
+
+  .rail {
+    border-right: 1px solid var(--edge); padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .rail i {
+    display: block; height: 38px; border-radius: 10px; background: var(--edge-soft);
+  }
+  .rail i.on { background: color-mix(in srgb, var(--primary) 16%, transparent); }
+
+  /* ── Панель виджетов. ВСЁ различие вариантов живёт ЗДЕСЬ. ── */
+  .body {
+    padding: 20px 26px 34px; max-width: 1280px; margin: 0 auto; width: 100%;
+  }
+
+  /* Общий вид карточки — одинаков во всех вариантах, чтобы сравнивалась РАСКЛАДКА. */
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 14px;
+    box-shadow: var(--card-shadow);
+  }
+  .card h3 {
+    font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--dim); font-weight: 600; margin-bottom: 10px;
+  }
+  .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); }
+  .lede { font-size: 12.5px; color: var(--dim); margin-top: 3px; }
+  .kv { display: flex; align-items: baseline; gap: 10px; padding: 5px 0; font-size: 13px; }
+  .kv .k { color: var(--dim); flex: 1; }
+  .kv .v { font-family: var(--mono); color: var(--heading); font-weight: 600; }
+  .sub-h { margin: 12px 0 4px; font-size: 13px; font-weight: 700; color: var(--heading); }
+  .card h3 + .sub-h { margin-top: 0; }
+  .hint { font-size: 11.5px; color: var(--dim); line-height: 1.5; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: currentColor; }
+  .kv .v.running { color: var(--up); display: inline-flex; align-items: center; gap: 7px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .tile b { display: block; font: 700 24px var(--mono); color: var(--heading); }
+  .tile .k { display: block; font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .trend { display: inline-flex; gap: 4px; font-size: 12px; font-weight: 650; margin-top: 6px; }
+  .trend.up { color: var(--up); } .trend.down { color: var(--down); }
+  .spark { display: block; width: 100%; height: 34px; margin-top: 8px; }
+  .spark path { fill: none; stroke: var(--primary); stroke-width: 2; }
+
+  .bar { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .bar .lb { flex: 0 0 68px; font-size: 12.5px; color: var(--dim); }
+  .bar .tk { flex: 1; height: 8px; border-radius: 99px; background: var(--edge-soft); overflow: hidden; }
+  .bar .fl { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #1fa8c9); }
+  .bar .pc { font: 600 12px var(--mono); color: var(--heading); width: 40px; text-align: right; }
+
+  /* ═══════════════ V0 · КАК СЕЙЧАС (эталон) ═══════════════
+     Ровно то, что стоит в src/routes/space/+page.svelte:684 сегодня. */
+  .body.v0 {
+    display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-content: start; align-items: start; gap: 12px;
+  }
+  .body.v0 > .full { grid-column: 1 / -1; }
+  /* ── Подсветка дыры в эталоне ──
+     ⚠️ Рисуется ЗАМЕРОМ (функция paintHoles ниже), а не константой в CSS. Первая редакция
+     задавала высоту вручную (`--hole-h: 268px`) — и наехала на соседнюю карточку, то есть
+     показывала владельцу пустоту не там, где она есть. Тот же класс ошибки, что и метрика,
+     которую пришлось переписывать дважды: величина, назначенная вместо измеренной. */
+  .hole-mark {
+    position: absolute; border: 1.5px dashed var(--hole); border-radius: 10px;
+    background: var(--hole-bg); color: var(--hole); pointer-events: none;
+    font-size: 11px; font-weight: 600; display: grid; place-items: center; letter-spacing: .04em;
+  }
+  .body.v0 { position: relative; }
+
+  /* ═══════════════ V1 · ДВЕ КОЛОННЫ ═══════════════
+     Колонки — САМОСТОЯТЕЛЬНЫЕ контейнеры. Виджеты внутри колонки идут стопкой и НИКОГО
+     не ждут: строк, чьи высоты надо синхронизировать, просто не существует. Дыра здесь
+     невозможна по построению, а не «схлопнута алгоритмом».
+     Цена: порядок чтения — «вниз по левой колонке, затем вниз по правой». Он связный
+     (как в газете) и мы им управляем сами, раскладывая виджеты по колоннам осознанно. */
+  .body.v1 { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 12px; align-content: start; }
+  .body.v1 > .full { grid-column: 1 / -1; }
+  .body.v1 .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+  /* ═══════════════ V2 · РАВНЫЕ СОСЕДИ ═══════════════
+     Сетка остаётся прежней, но `align-items: stretch` вместо `start`: короткий виджет
+     дорастает до высоты соседа, и пустоты не остаётся — она превращается в воздух ВНУТРИ
+     карточки. Это отмена прежнего осознанного решения (комментарий в коде и EXP-0026
+     объясняют, почему там стоит `start`), поэтому решать владельцу.
+     Цена: карточка с малым содержимым выглядит просторной. Выигрыш: ноль риска,
+     работает везде, порядок DOM не трогается вовсе. */
+  .body.v2 {
+    display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-content: start; align-items: stretch; gap: 12px;
+  }
+  .body.v2 > .full { grid-column: 1 / -1; }
+  .body.v2 .card { display: flex; flex-direction: column; }
+  /* Содержимое короткой карточки встаёт по центру свободной высоты, а не липнет к верху:
+     иначе «растянули» читалось бы как «забыли заполнить», и дыра просто переехала бы
+     внутрь карточки. */
+  .body.v2 .w-today .hint { margin: auto 0; }
+
+  /* ═══════════════ V3 · КЛАДКА ═══════════════
+     `display: grid-lanes` — нативная masonry уровня 3 CSS Grid. Движок, который её знает,
+     поднимает виджеты вверх сам. Движок, который не знает, берёт V1 (две колонны) —
+     объявление стоит ПЕРЕД `grid-lanes`, и старый браузер просто не увидит второго.
+     Это форма прогрессивного улучшения, предписанная самим WebKit: «построй сегодня так,
+     чтобы в будущем не пришлось делать ничего». */
+  .body.v3 { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 12px; align-content: start; }
+  .body.v3 { display: grid-lanes; }
+  .body.v3 > .full { grid-column: 1 / -1; }
+  .body.v3 .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+  /* ═══════════════ V4 · ПОТОК ═══════════════
+     Многоколоночная раскладка: браузер сам разливает виджеты по колонкам и балансирует
+     их высоту. Самая дешёвая техника — и самая своевольная: раскладку решает браузер,
+     а не мы. Замер: «Пространство» короче на 103px, «Профиль» — ВЫШЕ на 33px. */
+  .body.v4 { columns: 2; column-gap: 12px; }
+  .body.v4 > * { break-inside: avoid; margin-bottom: 12px; }
+  .body.v4 > .full { column-span: all; }
+
+  /* ── Переключение вариантов ──
+     ⚠️ Правило гасящее, а не показывающее, и стоит ПОСЛЕДНИМ осознанно. Первая редакция
+     писала `.body { display: none }` выше вариантов — и не работала: у `.body.v0`
+     специфичность выше, чем у `.body`, поэтому её `display: grid` выигрывал всегда и
+     все пять панелей были видны разом. Селектор `:not(.show)` уравнивает специфичность,
+     а последняя позиция в файле решает спор (тот же приём, что в медиа-блоках продукта,
+     EXP-0026). */
+  .body:not(.show) { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Автораскладка:</b>
+  <button data-v="v0" class="active">V0 · Как сейчас</button>
+  <button data-v="v1">V1 · Две колонны</button>
+  <button data-v="v2">V2 · Равные соседи</button>
+  <button data-v="v3">V3 · Кладка</button>
+  <button data-v="v4">V4 · Поток</button>
+  <span class="sp"></span>
+  <button id="w">1440px</button>
+  <button id="t">☾ тёмная</button>
+  <span class="hint">ideas/24 · фаза 1, Ш5</span>
+</div>
+
+<div class="note" id="note"></div>
+
+<div class="stage" data-w="1440">
+  <div class="shell">
+    <nav class="rail"><i></i><i></i><i class="on"></i><i></i><i></i></nav>
+    <div id="panels"></div>
+  </div>
+</div>
+
+<script>
+/*
+ * Виджеты объявлены ОДИН раз и печатаются во все варианты. Так сравнивается именно
+ * раскладка: если бы каждый вариант нёс свою разметку, разница могла бы прийти из неё.
+ *
+ * Состояние содержимого — то, в каком владелец увидел экран: «Сегодня» короткий
+ * («в Пространстве ничего не изменилось»), «Сервер синхронизации» самый длинный.
+ */
+const HEAD = `
+  <div class="full">
+    <h1 class="screen-title">Пространство</h1>
+    <p class="lede">Ниже представлены текущие метрики и статистика Пространства NDim.</p>
+  </div>`;
+
+const spark = 'M0 26 L24 21 L48 23 L72 14 L96 11 L120 6';
+const tile = (n, k, d, cls) => `
+  <div class="card tile">
+    <b>${n}</b><span class="k">${k}</span>
+    <span class="trend ${cls}">${cls === 'up' ? '▲' : '▼'} ${d} за неделю</span>
+    <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><path d="${spark}"/></svg>
+  </div>`;
+
+const TILES = `
+  <div class="full tiles">
+    ${tile('331', 'человек в Пространстве', '+7', 'up')}
+    ${tile('5 112', 'измерений в Пространстве', '+18', 'up')}
+    ${tile('48 903', 'оценок поставлено', '+412', 'up')}
+    ${tile('37%', 'средняя похожесть', '−1 п.п.', 'down')}
+  </div>`;
+
+const TODAY = `
+  <div class="card w-today">
+    <h3>Сегодня</h3>
+    <p class="hint">Сегодня в Пространстве ничего не изменилось.</p>
+  </div>`;
+
+const NOW = `
+  <div class="card w-now">
+    <h3>Сейчас в Пространстве</h3>
+    <div class="kv"><span class="k">Всего людей</span><span class="v">331</span></div>
+    <div class="kv"><span class="k">Новых за последние 30 дней</span><span class="v">12</span></div>
+    <div class="kv"><span class="k">Активных за последние 7 дней</span><span class="v">44</span></div>
+    <div class="kv"><span class="k">Количество измерений</span><span class="v">5 112</span></div>
+    <div class="kv"><span class="k">Диаметр Пространства NDim</span><span class="v">714,9 звезды</span></div>
+    <div class="kv"><span class="k">Оценок поставлено</span><span class="v">48 903</span></div>
+    <div class="kv"><span class="k">Связей рассчитано</span><span class="v">54 615</span></div>
+  </div>`;
+
+const bar = (l, v) => `<div class="bar"><span class="lb">${l}</span><span class="tk"><span class="fl" style="width:${v}%"></span></span><span class="pc">${v}%</span></div>`;
+const DIST = `
+  <div class="card w-dist">
+    <h3>Как распределена похожесть</h3>
+    ${bar('80–100 %', 2)}${bar('60–79 %', 11)}${bar('40–59 %', 34)}${bar('0–39 %', 53)}
+    <p class="hint">Считается по всем рассчитанным связям. Похожесть 100 % — огромная редкость.</p>
+  </div>`;
+
+const SERVER = `
+  <div class="card w-server">
+    <h3>Сервер синхронизации</h3>
+    <p class="sub-h">Статус</p>
+    <div class="kv"><span class="k">Текущее состояние</span><span class="v running"><span class="dot"></span>Работает</span></div>
+    <div class="kv"><span class="k">Последний запуск</span><span class="v">31 июля, 03:00</span></div>
+    <p class="sub-h">Полная синхронизация</p>
+    <p class="hint">Сверка связей всех людей Пространства.</p>
+    <div class="kv"><span class="k">Последняя успешная</span><span class="v">31 июля, 03:00</span></div>
+    <div class="kv"><span class="k">Выполнена за</span><span class="v">42 с</span></div>
+    <div class="kv"><span class="k">Пользователей проверено</span><span class="v">331</span></div>
+    <div class="kv"><span class="k">Записано изменений</span><span class="v">0</span></div>
+    <div class="kv"><span class="k">Связей в Пространстве</span><span class="v">54 615</span></div>
+    <div class="kv"><span class="k">Запланированная</span><span class="v">1 августа, 03:00</span></div>
+    <p class="sub-h">Частичная синхронизация</p>
+    <p class="hint">Между полными сервер обновляет тех, кто менял оценки.</p>
+    <div class="kv"><span class="k">Последняя успешная</span><span class="v">31 июля, 16:41</span></div>
+    <div class="kv"><span class="k">Выполнена за</span><span class="v">1,2 с</span></div>
+    <div class="kv"><span class="k">Пользователей обновлено</span><span class="v">3</span></div>
+    <div class="kv"><span class="k">Запланированная</span><span class="v">31 июля, 16:42</span></div>
+  </div>`;
+
+/* Плоский порядок — как в продукте сегодня. */
+const FLAT = HEAD + TILES + TODAY + NOW + DIST + SERVER;
+/*
+ * Колоночный порядок — виджеты разложены по колоннам ОСОЗНАННО, и в этом вся цена техники:
+ * колонны надо БАЛАНСИРОВАТЬ, иначе короткая кончится раньше и внизу останется тот же пустырь.
+ *
+ * ⚠️ Первая редакция этого макета клала обоих великанов («Сейчас» + «Сервер») в правую
+ * колонну — замер показал 512px хвоста, то есть ровно ту дыру, от которой уходим. Ошибка
+ * была не в технике, а в раскладке; исправлено переносом «Сейчас» влево. Это и есть то
+ * управление, которым мы платим за V1/V3: браузер колонны не балансирует, балансируем мы.
+ */
+const COLS = HEAD + TILES +
+  `<div class="col">${TODAY}${NOW}${DIST}</div>` +
+  `<div class="col">${SERVER}</div>`;
+
+/*
+ * Числа в подписях — ЗАМЕРЕНЫ на этом самом макете (обе темы дали одно и то же):
+ *
+ *   вариант            размах 1440   размах 1024   дыра
+ *   V0 как сейчас          966px        1000px     512px  (172 внутри колонки + 340 хвост)
+ *   V1 две колонны         710px         743px       0
+ *   V2 равные соседи       966px         999px       0
+ *   V3 кладка              710px         744px       0    (сегодня работает как V1)
+ *   V4 поток               710px         743px       0…17px
+ *
+ * «Дыра» считается технико-независимо: пустота внутри колонки сверх обычного зазора плюс
+ * хвост, на который короткая колонка не дотягивает до низа блока.
+ */
+const NOTES = {
+  v0: `<h4>V0 · Как сейчас — эталон, не вариант</h4>
+    Двухколоночная сетка, <code>align-items: start</code>. Высота строки — максимум из её детей,
+    поэтому под коротким виджетом остаётся пустое место до конца строки.
+    <span class="cost">Замерено В ПРОДУКТЕ: 389px на 1024 и 306px на 1440 («Пространство»),
+    71 и 98px («Профиль»). В этом макете — 512px, потому что здесь «Сегодня» пуст, как на
+    вашем скриншоте.</span> Дыра обведена пунктиром.`,
+  v1: `<h4>V1 · Две колонны — размах 710px (было 966), дыра 0</h4>
+    Колонки — самостоятельные контейнеры, виджеты внутри идут стопкой и никого не ждут.
+    <span class="win">Экран короче на 256px, дыры нет ни внутри колонн, ни в хвосте. Работает
+    во всех браузерах, ничего не считает JS — раскладка верна уже в пререндеренном HTML,
+    то есть не нарушает правило «ничего не появляется на горячую».</span>
+    <span class="cost">Цена: колонны надо БАЛАНСИРОВАТЬ руками — браузер этого не делает.
+    Первая редакция этого макета сложила обоих великанов в одну колонну и дала те же 512px
+    пустоты. И порядок чтения становится «вниз по левой, затем вниз по правой».</span>`,
+  v2: `<h4>V2 · Равные соседи — размах 966px (не изменился), дыра 0</h4>
+    Ничего не переставляем: <code>align-items: stretch</code> вместо <code>start</code> — короткий
+    виджет дорастает до соседа, и пустота превращается в воздух внутри карточки.
+    <span class="win">Одна строка CSS. Порядок DOM не тронут вовсе — значит порядок чтения с
+    экрана и порядок табуляции совпадают, и проверять тут нечего. Ноль риска.</span>
+    <span class="cost">Цена: экран НЕ становится короче — пустота не исчезает, а переезжает
+    внутрь карточки. И это отмена прежнего осознанного решения: в коде стоит комментарий,
+    почему там <code>start</code>.</span>`,
+  v3: `<h4>V3 · Кладка — сегодня работает ровно как V1</h4>
+    <code>display: grid-lanes</code> — нативная masonry. Движок, который её знает, поднимает виджеты
+    сам; который не знает — берёт V1.
+    <span class="win">Единственный вариант, который в будущем не придётся переделывать: когда
+    браузеры доедут, раскладка станет лучше сама, без нашего участия.</span>
+    <span class="cost">Цена: сегодня (июль 2026) grid-lanes НЕ Baseline — движок этого макета
+    её не знает, и вы сейчас смотрите на запасной V1. То есть платим сложностью двух раскладок
+    за выигрыш, которого пока не видно.</span>`,
+  v4: `<h4>V4 · Поток — размах 710px, дыра 0…17px</h4>
+    Многоколоночная раскладка: браузер сам разливает виджеты и балансирует колонки.
+    <span class="win">Самая дешёвая — три строки CSS, разметка не меняется, колонны балансирует
+    браузер, а не мы.</span>
+    <span class="cost">Цена: раскладку решает браузер. На «Профиле» в продукте эта же техника
+    дала экран ВЫШЕ на 33px — то есть на одном экране выигрыш, на другом проигрыш, и
+    предсказать это нельзя. Порядок чтения расходится с DOM.</span>`,
+};
+
+const panels = document.getElementById('panels');
+panels.innerHTML = ['v0', 'v1', 'v2', 'v3', 'v4']
+  .map((v) => `<main class="body ${v}">${v === 'v1' || v === 'v3' ? COLS : FLAT}</main>`)
+  .join('');
+
+/*
+ * Подсветка пустоты в эталоне — ПО ЗАМЕРУ. Виджеты разбираются по колонкам, и рисуются
+ * ровно два вида пустоты, которые видит глаз: разрыв между соседями по колонке сверх
+ * обычного зазора и хвост, на который короткая колонка не дотягивает до низа блока.
+ * Ничего не назначается константой: перерисовывается при смене темы и ширины.
+ */
+function paintHoles() {
+  const body = document.querySelector('.body.v0');
+  body.querySelectorAll('.hole-mark').forEach((el) => el.remove());
+  if (!body.classList.contains('show')) return;
+
+  const GAP = 12;
+  const base = body.getBoundingClientRect();
+  const items = [...body.children]
+    .filter((el) => !el.classList.contains('hole-mark'))
+    .map((el) => {
+      const r = el.getBoundingClientRect();
+      return {
+        top: r.top - base.top, bottom: r.bottom - base.top,
+        left: r.left - base.left, right: r.right - base.left,
+        cx: (r.left + r.right) / 2, full: r.width > base.width * 0.9,
+      };
+    });
+  const bottom = Math.max(...items.map((i) => i.bottom));
+
+  const cols = [];
+  for (const it of items.filter((i) => !i.full)) {
+    const col = cols.find((c) => Math.abs(c.cx - it.cx) < 60);
+    if (col) col.items.push(it); else cols.push({ cx: it.cx, items: [it] });
+  }
+
+  const mark = (top, height, left, width, text) => {
+    if (height < 24) return; // мельче — не пустота, а зазор
+    const el = document.createElement('div');
+    el.className = 'hole-mark';
+    el.style.cssText = `top:${top}px;height:${height}px;left:${left}px;width:${width}px`;
+    el.textContent = text;
+    body.appendChild(el);
+  };
+
+  for (const col of cols) {
+    col.items.sort((a, b) => a.top - b.top);
+    const left = Math.min(...col.items.map((i) => i.left));
+    const width = Math.max(...col.items.map((i) => i.right)) - left;
+    for (let i = 1; i < col.items.length; i++) {
+      const from = col.items[i - 1].bottom + GAP / 2;
+      const size = col.items[i].top - col.items[i - 1].bottom - GAP;
+      mark(from, size, left, width, `дыра ${Math.round(size)}px`);
+    }
+    const tail = bottom - col.items.at(-1).bottom;
+    mark(col.items.at(-1).bottom + GAP, tail - GAP, left, width, `пустой хвост ${Math.round(tail)}px`);
+  }
+}
+
+function show(v) {
+  document.querySelectorAll('.body').forEach((el) => el.classList.toggle('show', el.classList.contains(v)));
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => b.classList.toggle('active', b.dataset.v === v));
+  document.getElementById('note').innerHTML = NOTES[v];
+  location.hash = v;
+  requestAnimationFrame(paintHoles);
+}
+document.querySelectorAll('.picker button[data-v]').forEach((b) => (b.onclick = () => show(b.dataset.v)));
+
+const wBtn = document.getElementById('w');
+wBtn.onclick = () => {
+  const stage = document.querySelector('.stage');
+  const next = stage.dataset.w === '1440' ? '1024' : '1440';
+  stage.dataset.w = next;
+  wBtn.textContent = `${next}px`;
+  requestAnimationFrame(paintHoles);
+};
+
+const tBtn = document.getElementById('t');
+tBtn.onclick = () => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  tBtn.textContent = dark ? '☾ тёмная' : '☀ светлая';
+};
+
+show((location.hash || '#v0').slice(1));
+</script>
+</body>
+</html>
