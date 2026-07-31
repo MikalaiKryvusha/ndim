@@ -268,8 +268,10 @@ async function run(browser, { theme, width }) {
     await page.waitForFunction(() => location.pathname === '/dims', { timeout: 15000 });
     await settle(page, counter);
 
-    const star = page.locator('article.dim .stars .st[aria-label="7"]').first();
+    const card = page.locator('article.dim').first();
+    const star = card.locator('.stars .st[aria-label="7"]');
     if ((await star.count()) > 0) {
+      const ratedDim = await card.getAttribute('data-dim');
       await star.click();
       await page.waitForTimeout(COUNTDOWN_MS); // ждём дольше отсчёта: до записи гасить нечего
 
@@ -278,6 +280,46 @@ async function run(browser, { theme, width }) {
 
       const backToDims = await visit(page, counter, SCREENS[3]);
       check('после МОЕЙ оценки «Измерения» перечитываются', backToDims.db > 0, `обращений: ${backToDims.db}`);
+
+      /*
+       * УБОРКА СЛЕДА (bugs/103). Оценка ставилась ради замера инвалидации, и оставить её —
+       * значит изменить общую базу стенда для всех последующих стражей: verify-bug64 считает
+       * длину ленты «Все» от числа оценённых, и два прогона этого файла (две конфигурации)
+       * укорачивали её на две карточки — свип красил bug64 «42 из 44» на исправном продукте.
+       * Убираем тем же путём, каким чистит `removeRating`: документ оценки удаляется, точка
+       * помечается dirty (сервер синхронизации стенда пересчитает честно).
+       */
+      if (ratedDim) {
+        const base = `http://${DB_HOST}/v1/projects/${PROJECT}/databases/(default)/documents`;
+        const who = await fetch(
+          `${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-api-key`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ email: 'dev@ndim.space', password: 'ndim-dev-stand', returnSecureToken: true }),
+          },
+        ).then((r) => r.json());
+        await fetch(`${base}/points/${who.localId}/dims/${ratedDim}`, {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer owner' },
+        });
+        await fetch(
+          `${base}/points/${who.localId}?updateMask.fieldPaths=dirty&updateMask.fieldPaths=updated`,
+          {
+            method: 'PATCH',
+            headers: { Authorization: 'Bearer owner', 'content-type': 'application/json' },
+            body: JSON.stringify({
+              fields: { dirty: { booleanValue: true }, updated: { integerValue: String(Date.now()) } },
+            }),
+          },
+        );
+        const gone = await fetch(`${base}/points/${who.localId}/dims/${ratedDim}`, {
+          headers: { Authorization: 'Bearer owner' },
+        });
+        check('след оценки убран: база стенда возвращена в исходное', gone.status === 404, `статус ${gone.status}`);
+      } else {
+        check('след оценки убран: база стенда возвращена в исходное', false, 'data-dim не прочитан');
+      }
     } else {
       check('нашлась карточка измерения для оценки', false, 'сид стенда изменился?');
     }

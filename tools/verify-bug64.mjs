@@ -102,10 +102,24 @@ for (const width of [390, 1440]) {
   }
 
   // 1–2. Главное: глубокая прокрутка «Все» не ломает подгрузку и не тянется на «Мой NDim ID».
-  // На стенде каталог 48 измерений, 4 уже оценены → лента «Все» обязана дойти до 44.
   // Именно ЭТО и ломалось: якорь подгрузки, оставшийся в поле зрения, больше не давал
   // пересечений, и лента вставала (на 1440px — на первых 12 карточках).
-  const FEED_TOTAL = 44;
+  //
+  // ⚠️ Ожидание СЧИТАЕТСЯ ИЗ ДАННЫХ (bugs/103), а не константой «44»: лента «Все» — это
+  // каталог минус оценённые, и зашитое число делало вердикт зависимым от ПОРЯДКА прогона
+  // стражей — сосед, оставивший в базе стенда пару оценок, красил этот страж «42 из 44»
+  // на исправном продукте (ровно так свип 2026-07-31 объявил ложную регрессию).
+  const who = await (await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-api-key`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email: 'dev@ndim.space', password: 'ndim-dev-stand', returnSecureToken: true }),
+  })).json();
+  const FS_BASE = `http://127.0.0.1:8181/v1/projects/${PROJECT}/databases/(default)/documents`;
+  const catalog = ((await (await fetch(`${FS_BASE}/dims?pageSize=300`, { headers: { Authorization: 'Bearer owner' } })).json()).documents ?? [])
+    .filter((d) => !d.name.endsWith('/dims_list')).length;
+  const rated = ((await (await fetch(`${FS_BASE}/points/${who.localId}/dims?pageSize=300`, { headers: { Authorization: 'Bearer owner' } })).json()).documents ?? []).length;
+  const FEED_TOTAL = catalog - rated;
+  console.log(`  · ожидание ленты «Все»: каталог ${catalog} − оценено ${rated} = ${FEED_TOTAL}`);
   await scrollToBottom(page);
   // Человек не может нажать переключатель, пока панель спрятана прокруткой вниз: он
   // сначала прокручивает ВВЕРХ, панель возвращается, и только тогда жмёт. Воспроизводим
