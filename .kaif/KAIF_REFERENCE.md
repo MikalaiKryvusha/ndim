@@ -1,6 +1,6 @@
 # KAIF Reference — the explanatory note
 
-This document is the COMPLETE technical reference of the Krinik AI Framework (KAIF): every module
+This document is the COMPLETE technical reference of Krinik AI Framework (KAIF): every module
 of the framework is named, defined and located here, and the internal terminology is established
 here. It is written for two readers at once: the human who wants to understand what is deployed in
 their project, and the AI agent that must answer such questions precisely (`/help-kaif` reads this
@@ -69,7 +69,7 @@ Each release attaches five artifacts (their roles are machine-readable in `kaif-
 
 ## 5. The document system
 
-Twelve key documents ship with a deployment (eleven project documents plus this reference):
+Thirteen key documents ship with a deployment (twelve project documents plus this reference):
 
 | Document | Purpose | Written by |
 |---|---|---|
@@ -79,7 +79,8 @@ Twelve key documents ship with a deployment (eleven project documents plus this 
 | `TESTING_FRAMEWORK.md` | Nothing raw is trusted: the `[NOT-TESTED]`/`[TESTED: …]` contract, observation gates. | Deployed verbatim. |
 | `GOAL.md` | The owner's vision. | **The owner.** |
 | `MASTER_PLAN.md` | The phased road from the current state to the GOAL. | Agent derives (`/revision`). |
-| `STATUS.md` | The living state and the baton between sessions. | Agent, after every task. |
+| `STATUS.md` | The living SUMMARY of now and the baton between sessions (soft target ~200 lines; closed work moves to the chronicle — the bonsai trim). | Agent, after every task. |
+| `PROJECT_HISTORY.md` | The append-only chronicle: closed sessions/phases/releases, newest first; NOT in `/resume`'s canon set — archaeology on demand (2.1, epic H). | Agent, at `/end-chat`'s trim. |
 | `EXPERIENCE.md` | The grep-friendly journal of lessons with trigger tags. | Agent (`/experience`). |
 | `PROJECT_STRUCTURE_EXTERNAL_MAP.md` | The external map: directories, files. | Agent maintains. |
 | `PROJECT_ARCHITECTURE_INTERNAL_MAP.md` | The internal map: abstractions and interactions. | Agent maintains. |
@@ -91,17 +92,31 @@ Knowledge directories, each with its own README: `plans/` `ideas/` `bugs/` `rese
 
 ## 6. The skill system
 
-Twenty-eight skills — the verbs of project work — deploy to `.claude/skills/` (canonical) and are
+Thirty-four skills — the verbs of project work — deploy to `.claude/skills/` (canonical) and are
 mirrored into every declared agent system (§7.3). Groups:
 
 - **Session:** `resume` (read ALL canon documents, pick one main thing) · `pause` (soft-park the
   chat: logical stopping point, green tree, local commit, NO pushes) · `end-chat` (full closure:
   STATUS baton, judge, commit AND push) · `refresh-context` · `check-backlog`.
 - **Autonomy loops:** `autoloop` · `dayloop` · `nightloop` — grind the backlog; every item ends
-  with a mandatory judge pass; an owner's drive-by note is filed to the backlog, not a task switch.
+  with a mandatory judge pass; an owner's drive-by note is filed to the backlog, not a task switch —
+  plus `guarded-loop` (2.1): the same loop under a WATCHDOG (external wake-ups every N minutes,
+  a work-proving heartbeat file, a restart policy with an escalation cap).
 - **Knowledge:** `experience` · `report-bug` · `bug-research` · `propose-idea` · `interview`.
+- **Owner contour (2.1):** `owner-voice` (a stylometric portrait of the owner's written voice from
+  their own texts; portrait and rewrite modes, the skeleton ships as
+  `.kaif/_owner-voice-template.md`) · `owner-reviews` (the optional review contour: interviews and
+  outbound drafts as local HTML pages, decisions recorded with `by`/`at`, sends gated fail-closed;
+  the hard place-of-questions rule itself lives in AGENT_GUIDE).
+- **Planning:** `plan-task` (one operational plan for an ordinary task; runs the heaviness test) ·
+  `plan-epic` (the full ladder for heavy work: industry web-recon + local recon → research doc →
+  meta-plan with phases → operational plan of the NEXT phase only).
 - **Vision:** `revision` · `fix-vision` · `what-next` · `help-kaif` (reads THIS reference).
 - **Canon writing:** `derive-styleguide` (§13.4).
+- **Code quality (2.1):** `code-revision` — the periodic reading revision of the codebase by the
+  strongest model: zoned parallel reviewers armed with the project's paid-for failure classes
+  (EXPERIENCE + bugs), verbatim quote per finding, adversarial skeptic with the default verdict
+  "not a defect"; survivors become bug docs and feed the guardrails.
 - **Shipping:** `release` (owner-confirmed only).
 - **Execution discipline (vendored from fable-method, MIT):** `fable-method` · `fable-loop` ·
   `fable-judge` · `fable-domain`.
@@ -229,9 +244,18 @@ meta block's `policyChanges`, keyed by version. The update task prints them in a
 ### 10.7 Commands
 
 `update` (mechanical pass) · `diff` (audit: protected vs replace-eligible; `--source`: per-module
-preview against another version) · `adopt-current` (after a MANUAL migration: re-adopt reality so
+preview against another version — a v1 manifest gets a synthetic baseline of the deployed version,
+`--baseline` overrides its source) · `adopt-current` (after a MANUAL migration: re-adopt reality so
 the mechanical road stays alive) · `sync` (re-mirror skills) · `modules` (print the machinery's
 module cut) · `checkpoint` · `update-verify` · `check` · `version`.
+
+### 10.8 Predicting a pass
+
+The cheapest *exact* prediction is a **sandbox copy**: export the tree (`git archive`), re-init git
+in the copy, run the REAL update or bootstrap there and read its diff. This is not a model of the
+pass but the pass itself — field-proven byte-identical to the subsequent live run. Recommended
+before the first-ever update and on heavily localized deployments; `diff --source` remains the
+lighter per-module preview.
 
 ## 11. Trust and provenance
 
@@ -280,8 +304,10 @@ only through commands (`sphere`, updates) — never by hand.
 
 `manifestVersion: 2` · `paths` (deployed files) · `agents` (per-system artifacts) · `shas` (disk
 snapshot) · `templateShas` (deployed-template snapshot) · `moduleShas` (per-module cut:
-signature/class/sha per markdown file) · `kept` (adoption provenance) · `marker` (pristine marker
-snapshot backing self-heal).
+signature/class/sha per markdown file) · `kept` (adoption provenance) · `values` (the deploy-time
+placeholder snapshot — every later pass fills templates with THESE values, so signatures never
+drift when the environment changes; to rename the project deliberately, edit this snapshot and
+reconcile the canon by hand) · `marker` (pristine marker snapshot backing self-heal).
 
 ### 12.3 The receipt (`.kaif/last-update.json`)
 

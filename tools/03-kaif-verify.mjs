@@ -31,7 +31,7 @@ const exists = (p) => existsSync(p) && statSync(p).size > 0;
 // --- 1. Ключевые документы на месте и непустые ---------------------------------
 const ROOT_DOCS = [
   'AGENT_GUIDE.md', 'PHILOSOPHY.md', 'BUG_FIXING_FRAMEWORK.md', 'GOAL.md',
-  'STATUS.md', 'EXPERIENCE.md', 'MASTER_PLAN.md',
+  'STATUS.md', 'PROJECT_HISTORY.md', 'EXPERIENCE.md', 'MASTER_PLAN.md',
   'PROJECT_STRUCTURE_EXTERNAL_MAP.md', 'PROJECT_ARCHITECTURE_INTERNAL_MAP.md',
   'KAIF_FRAMEWORK.md',
 ];
@@ -63,7 +63,9 @@ const placeholderRe = new RegExp(`<(${PLACEHOLDERS.map((p) => p.replace('/', '\\
 //   * GOAL.md — документ владельца, агент его не заполнял;
 //   * EXPERIENCE.md — журнал уроков; в шаблоне плейсхолдеров нет, а записи законно их цитируют
 //     (например, урок о том, как проверять, что плейсхолдеры заполнены).
-const NOT_TEMPLATES = ['GOAL.md', 'EXPERIENCE.md'];
+//   * PROJECT_HISTORY.md — летопись: записи переезжают в неё ДОСЛОВНО из STATUS и законно цитируют
+//     что угодно, включая старые шаблонные строки. Правило то же, что у EXPERIENCE.md.
+const NOT_TEMPLATES = ['GOAL.md', 'EXPERIENCE.md', 'PROJECT_HISTORY.md'];
 
 const skillFiles = existsSync('.claude/skills')
   ? readdirSync('.claude/skills', { withFileTypes: true })
@@ -96,6 +98,8 @@ const EXPECTED_SKILLS = [
   'revision', 'fix-vision', 'what-next', 'help-kaif', 'release', 'derive-styleguide',
   'kaif-version', 'kaif-update', 'kaif-fork', 'kaif-switch-origin', 'kaif-remove',
   'fable-method', 'fable-loop', 'fable-judge', 'fable-domain',
+  // Приехали с KAIF 2.1: лестница планирования, защищённый цикл, читающая ревизия, голос владельца.
+  'plan-task', 'plan-epic', 'guarded-loop', 'code-revision', 'owner-voice', 'owner-reviews',
 ];
 const hasCyrillic = (s) => /[а-яёА-ЯЁ]/.test(s);
 

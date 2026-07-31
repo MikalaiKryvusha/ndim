@@ -32,9 +32,9 @@ description: Дать человеку-оператору ясное, струк
 
 2. **Ключевые документы — что читать и вести, и чей каждый.** Кратко, списком:
    `AGENT_GUIDE.md` (канон), `PHILOSOPHY.md` (как агент мыслит), `BUG_FIXING_FRAMEWORK.md`,
-   **`GOAL.md`** (видение владельца — *твой* документ), `STATUS.md` (живое состояние),
-   `MASTER_PLAN.md` (дорожная карта), внешняя и внутренняя карты, `KAIF_FRAMEWORK.md` (эта сводка «что
-   развёрнуто»).
+   **`GOAL.md`** (видение владельца — *твой* документ), `STATUS.md` (живая сводка «сейчас»),
+   `PROJECT_HISTORY.md` (летопись — археология по запросу), `MASTER_PLAN.md` (дорожная карта),
+   внешняя и внутренняя карты, `KAIF_FRAMEWORK.md` (эта сводка «что развёрнуто»).
 
 3. **Директории — где живёт знание и где действует владелец.** `plans/`, `ideas/` (в основном твои),
    `bugs/`, `researches/`, `interviews/` (здесь отвечаешь ты), `homeworks/` (задачи тебе). Одной
@@ -43,10 +43,11 @@ description: Дать человеку-оператору ясное, струк
 4. **Скиллы — команды, которые ты набираешь.** Перечисли их группами, у каждой — одна строка о
    назначении, и **строй группы по ФАКТИЧЕСКОМУ составу `.claude/skills/`, а не по этому примеру
    дословно**: сессия (`/resume`, `/pause` — мягкая парковка, чат продолжится; `/end-chat` — полное
-   завершение с передачей эстафеты), автономия (`/autoloop`, `/dayloop`, `/nightloop`), гигиена
-   (`/refresh-context`, `/check-backlog`), знание и память (`/experience`, `/report-bug`,
-   `/bug-research`, `/propose-idea`), владелец (`/interview`, `/fix-vision`, `/what-next`),
-   планирование (`/revision`), стражи качества (`/derive-styleguide`), дисциплина исполнения
+   завершение с передачей эстафеты), автономия (`/autoloop`, `/dayloop`, `/nightloop`,
+   `/guarded-loop`), гигиена (`/refresh-context`, `/check-backlog`), знание и память (`/experience`,
+   `/report-bug`, `/bug-research`, `/propose-idea`), владелец (`/interview`, `/fix-vision`,
+   `/what-next`, `/owner-voice`, `/owner-reviews`), планирование (`/plan-task`, `/plan-epic`,
+   `/revision`), стражи качества (`/derive-styleguide`, `/code-revision`), дисциплина исполнения
    (`/fable-method`, `/fable-loop`, `/fable-judge`, `/fable-domain`), помощь (`/help-kaif`), выпуск
    (`/release`) и жизненный цикл (`/kaif-version`, `/kaif-update`, `/kaif-fork`,
    `/kaif-switch-origin`, `/kaif-remove`).
