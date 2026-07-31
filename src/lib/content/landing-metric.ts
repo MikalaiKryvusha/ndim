@@ -13,5 +13,5 @@
 /** Сколько людей было в Пространстве на момент снимка, и когда снимок взят. */
 export const PUBLIC_PEOPLE_SNAPSHOT = {
   people: 94,
-  takenAt: '2026-07-30',
+  takenAt: '2026-07-31',
 } as const;
