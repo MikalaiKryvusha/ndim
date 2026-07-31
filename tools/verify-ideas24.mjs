@@ -67,20 +67,33 @@ mkdirSync(OUT, { recursive: true });
  *
  * Порог, поднятый выше «было», перестаёт быть стражем — это проверять мутацией `--mutant`.
  */
-const EMPTY_LIMIT = { 1024: 29, 1440: 24 };
+const EMPTY_LIMIT = {
+  '/space': { 1024: 29, 1440: 24 },
+  // «Профиль» пришёл в сетку позже (слово владельца «на профиле нужно сделать то же самое.
+  // Там сейчас дыры») и вместе со слиянием аккаунта в шапку. Замер после: 10.9% на 1440,
+  // 13.9% на 1024; до — 16%. Пороги так же между «до» и «после».
+  '/profile': { 1024: 15, 1440: 13 },
+};
 /** Зазор десктопной сетки «Пространства». Больше него между соседями по колонне — дыра. */
 const GAP = 12;
 /** Допуск на дробные пиксели раскладки. */
 const EPS = 2;
 
-/** Мутация: возврат старой двухколоночной сетки без колонн-контейнеров. */
-const MUTATION = `
+/** Мутация: возврат старой сетки БЕЗ колонн-контейнеров — своя на каждый экран. */
+const MUTATION = {
+  '/space': `
   @media (min-width: 1024px) {
     main.body { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) !important; }
     main.body > .col { display: contents !important; }
     main.body > .tiles { display: grid !important; grid-column: 1 / -1 !important;
                          grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-  }`;
+  }`,
+  '/profile': `
+  @media (min-width: 1024px) {
+    main.body { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) !important; }
+    main.body > .col { display: contents !important; }
+  }`,
+};
 
 const COMBOS = QUICK ? [['light', 1440]] : [['light', 1024], ['light', 1440], ['dark', 1024], ['dark', 1440]];
 
@@ -191,41 +204,55 @@ try {
   say(`база: ${BASE} · потолки пустоты: ${Object.entries(EMPTY_LIMIT).map(([w, v]) => `${w}px→${v}%`).join(' · ')}`);
   say('');
 
-  // ── Десктоп: «Пространство» ──
+  // ── Десктоп: ОБА сводных экрана ──
+  for (const screen of [
+    { path: '/space', name: 'Пространство', ready: 'main.body .card', min: 5, gap: 12, tiles: true },
+    { path: '/profile', name: 'Профиль', ready: 'main.body .card', min: 4, gap: 14, tiles: false },
+  ])
   for (const [theme, width] of COMBOS) {
     const ctx = await browser.newContext({ viewport: { width, height: 1000 }, locale: 'ru-RU' });
     await ctx.addInitScript((v) => localStorage.setItem('ndim-theme', v), theme);
     const page = await ctx.newPage();
-    await page.goto(`${BASE}/space`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${BASE}${screen.path}`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(
-      () => document.querySelector('.load-card') === null && document.querySelectorAll('main.body .card').length >= 5,
-      undefined, { timeout: 30000 },
+      (m) => document.querySelector('.load-card') === null && document.querySelectorAll('main.body .card').length >= m,
+      screen.min, { timeout: 30000 },
     );
-    if (MUTANT) await page.addStyleTag({ content: MUTATION });
+    if (MUTANT) await page.addStyleTag({ content: MUTATION[screen.path] });
     await page.waitForTimeout(700);
 
-    const seen = await page.evaluate(READ, GAP);
-    say(`── Пространство · ${theme} · ${width}px ──`);
+    const seen = await page.evaluate(READ, screen.gap);
+    say(`── ${screen.name} · ${theme} · ${width}px ──`);
     say(`   пустоты ${seen.empty}% · колонки ${seen.columns.join('/')} · виджетов ${seen.count}`);
 
-    const limit = EMPTY_LIMIT[width];
-    check(seen.empty <= limit, `пустоты ${seen.empty}% ≤ ${limit}% (${theme}/${width})`);
+    const limit = EMPTY_LIMIT[screen.path][width];
+    const w = `${screen.name} ${theme}/${width}`;
+    check(seen.empty <= limit, `пустоты ${seen.empty}% ≤ ${limit}% (${w})`);
     check(seen.gaps.length === 0,
-      `нет дыр между соседями по колонне (${theme}/${width})${seen.gaps.length ? ' — ' + seen.gaps.map((g) => `после «${g.after}» ${g.size}px`).join(', ') : ''}`);
+      `нет дыр между соседями по колонне (${w})${seen.gaps.length ? ' — ' + seen.gaps.map((g) => `после «${g.after}» ${g.size}px`).join(', ') : ''}`);
     check(seen.columns.length === 4 && new Set(seen.columns).size === 1,
-      `сетка — ЧЕТЫРЕ равных шага (${theme}/${width}): ${seen.columns.join('/')}`);
-    // Плитка — один шаг, колонна — два: ширина колонны вдвое больше плитки (±зазор).
-    const step = seen.tiles[0] ?? 0;
-    check(seen.tiles.length === 4 && seen.tiles.every((w) => Math.abs(w - step) <= EPS),
-      `четыре плитки по одному шагу (${theme}/${width}): ${seen.tiles.join('/')}`);
-    const twoSteps = step * 2 + GAP;
+      `сетка — ЧЕТЫРЕ равных шага (${w}): ${seen.columns.join('/')}`);
+    /*
+     * Шаг сетки. На «Пространстве» его ВИДНО глазами прибора — это ширина плитки-метрики,
+     * и заодно проверяется, что плиток ровно четыре и они равны. На «Профиле» малых виджетов
+     * пока нет вовсе, поэтому шаг берётся из самой сетки (`grid-template-columns`).
+     * Проверять там «четыре плитки» — значит требовать от экрана то, чего он не обещал:
+     * первая редакция так и делала и краснела на здоровом продукте.
+     */
+    const step = screen.tiles ? (seen.tiles[0] ?? 0) : (seen.columns[0] ?? 0);
+    if (screen.tiles) {
+      check(seen.tiles.length === 4 && seen.tiles.every((x) => Math.abs(x - step) <= EPS),
+        `четыре плитки по одному шагу (${w}): ${seen.tiles.join('/')}`);
+    }
+    // Колонна — два шага: две ширины шага плюс зазор между ними.
+    const twoSteps = step * 2 + screen.gap;
     check(seen.colWidths.length === 2 && seen.colWidths.every((w) => Math.abs(w - twoSteps) <= 4),
-      `колонн ровно две, каждая в два шага (${theme}/${width}): ${seen.colWidths.join('/')} против ${twoSteps}`);
+      `колонн ровно две, каждая в два шага (${w}): ${seen.colWidths.join('/')} против ${twoSteps}`);
     check(seen.stretched.length === 0,
-      `карточки не растянуты под соседа (${theme}/${width})${seen.stretched.length ? ' — ' + seen.stretched.join(', ') : ''}`);
-    check(seen.orderOk, `внутри каждой колонны порядок DOM идёт сверху вниз — фокус не прыгает (${theme}/${width})`);
+      `карточки не растянуты под соседа (${w})${seen.stretched.length ? ' — ' + seen.stretched.join(', ') : ''}`);
+    check(seen.orderOk, `внутри каждой колонны порядок DOM идёт сверху вниз — фокус не прыгает (${w})`);
 
-    await page.screenshot({ path: `${OUT}/space-${theme}-${width}${MUTANT ? '-mutant' : ''}.png`, fullPage: true });
+    await page.screenshot({ path: `${OUT}/${screen.path.slice(1)}-${theme}-${width}${MUTANT ? '-mutant' : ''}.png`, fullPage: true });
     await ctx.close();
   }
 
@@ -241,7 +268,7 @@ try {
       () => document.querySelector('.load-card') === null && document.querySelectorAll('main.body .card').length >= 5,
       undefined, { timeout: 30000 },
     );
-    if (MUTANT) await page.addStyleTag({ content: MUTATION });
+    if (MUTANT) await page.addStyleTag({ content: MUTATION['/space'] });
     await page.waitForTimeout(500);
 
     const phone = await page.evaluate(() => {
