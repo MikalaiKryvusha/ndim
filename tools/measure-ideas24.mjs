@@ -70,10 +70,18 @@ const READ_LAYOUT = () => {
   if (!body) return { error: 'нет main.body' };
 
   const cs = getComputedStyle(body);
-  const kids = [...body.children].filter((el) => {
-    const r = el.getBoundingClientRect();
-    return r.height > 0 && getComputedStyle(el).display !== 'none';
-  });
+  /*
+   * Виджеты берутся И внутри колонн (`ideas/24`, фаза 2): колонна — контейнер, а не виджет.
+   * Без этого прибор мерил бы колонну целиком и не видел, что происходит ВНУТРИ неё —
+   * ровно та ошибка, из-за которой метрику пришлось переписывать четырежды (EXP-0104).
+   * `.tiles` на десктопе `display: contents`, поэтому её дети и так прямые.
+   */
+  const kids = [...body.querySelectorAll(':scope > *, :scope > .col > *, :scope > .tiles > *')]
+    .filter((el) => {
+      if (el.classList.contains('col') || el.classList.contains('tiles')) return false;
+      const r = el.getBoundingClientRect();
+      return r.height > 0 && getComputedStyle(el).display !== 'none';
+    });
 
   const label = (el, i) => {
     const h3 = el.querySelector('h3, h1, h2');
@@ -83,7 +91,15 @@ const READ_LAYOUT = () => {
     return cls || `${el.tagName.toLowerCase()}#${i + 1}`;
   };
 
+  const box = body.getBoundingClientRect();
   const items = kids.map((el, i) => {
+    /*
+     * Метка на измеренном элементе. Опыты контроля (Ш2) раньше целились в
+     * `main.body > :nth-child(N)` — и промахнулись, как только виджеты переехали ВНУТРЬ
+     * колонн: стиль ложился на колонну, а не на виджет, и контроль честно покраснел 2/4.
+     * Метка адресует ровно тот элемент, который посчитан, независимо от вложенности.
+     */
+    el.setAttribute('data-m24', String(i + 1));
     const r = el.getBoundingClientRect();
     return {
       nth: i + 1, // 1-based — им же адресуются опыты контроля
@@ -92,8 +108,20 @@ const READ_LAYOUT = () => {
       bottom: Math.round(r.bottom),
       height: Math.round(r.height),
       width: Math.round(r.width),
+      cx: Math.round((r.left + r.right) / 2),
     };
   });
+
+  /*
+   * ★ ГЛАВНАЯ МЕРА — доля площади, не покрытая карточками. Она МОДЕЛЬ-НЕЗАВИСИМА и потому
+   * сравнивает любые раскладки между собой: строковая метрика (ниже) определена только для
+   * сетки без колонн и врёт, как только техника меняется (EXP-0104 — четыре переписывания).
+   * Строковая оставлена как подробность «где именно», а судить надо по этой.
+   */
+  const covered = items.reduce((sum, i) => sum + i.width * i.height, 0);
+  const spanTop = Math.min(...items.map((i) => i.top));
+  const spanBottom = Math.max(...items.map((i) => i.bottom));
+  const emptyShare = Math.round((1 - covered / (box.width * (spanBottom - spanTop))) * 1000) / 10;
 
   // Группировка по строкам: дети одной строки начинаются на одной высоте (допуск 2px).
   const rows = [];
@@ -108,8 +136,6 @@ const READ_LAYOUT = () => {
     row.bottom = Math.max(...row.items.map((i) => i.bottom));
     for (const it of row.items) it.hole = row.bottom - it.bottom;
   }
-
-  const box = body.getBoundingClientRect();
 
   return {
     display: cs.display,
@@ -129,6 +155,7 @@ const READ_LAYOUT = () => {
      * нижнего. Он не ограничен снизу ничем посторонним и падает ровно тогда, когда раскладка
      * становится плотнее.
      */
+    emptyShare, // ★ судить по нему
     containerHeight: Math.round(box.height), // печатается для сведения, в сравнении НЕ участвует
     columns: cs.gridTemplateColumns,
     // ИСПОЛЬЗОВАННЫЕ высоты строк — независимая сверка нашего вывода из соседей.
@@ -183,7 +210,7 @@ function report(seen, indent = '  ') {
     return;
   }
   say(`${indent}display: ${seen.display} · колонок: ${seen.columnCount} · flow: ${seen.flow} · row-gap: ${seen.rowGap}px`);
-  say(`${indent}размах содержимого: ${seen.contentExtent}px  (сумма высот виджетов ${seen.contentSum}px · панель растянута до ${seen.containerHeight}px)`);
+  say(`${indent}★ ПУСТОТЫ: ${seen.emptyShare}% площади · размах содержимого ${seen.contentExtent}px  (виджетов ${seen.items.length})`);
   say(`${indent}колонки : ${seen.columns}`);
   say(`${indent}строки  : ${seen.rowsUsed}`);
   for (const row of seen.rows) {
@@ -244,7 +271,7 @@ try {
     {
       const { context, page } = await openScreen(browser, { theme: 'light', width: 1440, path: screen.path });
       await page.addStyleTag({
-        content: `main.body > :nth-child(${holed.nth}) { min-height: ${rowHeight}px !important; }`,
+        content: `[data-m24="${holed.nth}"] { min-height: ${rowHeight}px !important; }`,
       });
       await page.waitForTimeout(200);
       const after = await page.evaluate(READ_LAYOUT);
@@ -260,7 +287,7 @@ try {
     {
       const { context, page } = await openScreen(browser, { theme: 'light', width: 1440, path: screen.path });
       await page.addStyleTag({
-        content: `main.body > :nth-child(${giant.nth}) { max-height: ${Math.round(giant.height / 2)}px !important; overflow: hidden !important; }`,
+        content: `[data-m24="${giant.nth}"] { max-height: ${Math.round(giant.height / 2)}px !important; overflow: hidden !important; }`,
       });
       await page.waitForTimeout(200);
       const after = await page.evaluate(READ_LAYOUT);
@@ -366,7 +393,7 @@ try {
           rowsMasonry: CSS.supports('grid-template-rows', 'masonry'),
         }));
 
-        const css = tech.css ?? `main.body > :nth-child(${giant.nth}) { grid-row: span 2 !important; }`;
+        const css = tech.css ?? `[data-m24="${giant.nth}"] { grid-row: span 2 !important; }`;
         await page.addStyleTag({ content: css });
         await page.waitForTimeout(250);
         const after = await page.evaluate(READ_LAYOUT);
