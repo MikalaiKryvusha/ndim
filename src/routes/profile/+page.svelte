@@ -24,7 +24,8 @@
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
-  import { dateOnly, dateTime, num as decimal, starsUnit } from '$lib/ui/format';
+  // `dateOnly` ушла вместе со строкой «В Пространстве с …» (см. `accountLine`).
+  import { dateTime, num as decimal, starsUnit } from '$lib/ui/format';
   import { preloadAvatars } from '$lib/data/avatar';
   // Жест «потянуть вниз» (интервью №006, В1=А — все четыре главных экрана).
   import PullToRefresh from '$lib/ui/PullToRefresh.svelte';
@@ -255,14 +256,20 @@
   });
 
   /**
-   * Подпись под именем: почта и «В Пространстве с 12 июля 2026 г.». Дата — настоящая, из
-   * документа человека: однажды такую строку уже поймали на вранье, когда она была вписана
-   * в вёрстку руками.
+   * Подпись под именем — ТОЛЬКО почта.
+   *
+   * ⚠️ «В Пространстве с …» отсюда УБРАНА ДВАЖДЫ, и второй раз — по моей вине.
+   * Первый раз её убрал сам владелец (интервью №007 В10, `ideas/21` п. 16): «В Пространстве
+   * с февраля 2025 г. — убрать из профиля. Это место освобождаем под поле "Статус"».
+   * Второй раз она вернулась 2026-07-31, когда ряды аккаунта слили с карточкой-шапкой: вместе
+   * с ними приехала эта подпись, и отменённое решение тихо ожило в новом месте. Владелец
+   * поймал это в тот же час: «В Пространстве с 28 февраля 2025 г - убрать».
+   *
+   * Урок класса: **перенося блок, проверяй не только что он выглядит как раньше, а и то, что
+   * он не тащит за собой отменённое.** Место под именем принадлежит будущему полю «Статус»
+   * (`plans/09`), а не дате регистрации.
    */
-  const accountLine = $derived.by(() => {
-    const since = data ? `${t.acctSince[lang]} ${dateOnly(data.root.time.created, lang)}` : null;
-    return [acctEmail, since].filter(Boolean).join(' · ');
-  });
+  const accountLine = $derived(acctEmail);
 
   onMount(async () => {
     try {
@@ -530,7 +537,9 @@
     // Слово владельца дословно (интервью №007, В3=А): «Выйти? Ваши оценки исчезнут».
     acctLeaveConfirm: { ru: 'Выйти? Ваши оценки исчезнут', en: 'Sign out? Your ratings will be gone' },
     acctLeaveCancel: { ru: 'Отмена', en: 'Cancel' },
-    acctSince: { ru: 'В Пространстве с', en: 'In the Space since' },
+    // `acctSince` удалён: строка «В Пространстве с …» убрана из профиля по слову владельца
+    // (интервью №007 В10, повторно 2026-07-31). Оставленный перевод — приглашение вернуть её
+    // обратно следующей сессии.
     acctNoName: { ru: 'Без имени', en: 'No name' },
     seeMe: { ru: 'Как меня видят', en: 'How others see me' },
     backBtn: { ru: 'Назад', en: 'Back' },
