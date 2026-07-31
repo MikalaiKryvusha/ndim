@@ -209,7 +209,10 @@ try {
   for (const width of [390, 800, 1023]) {
     console.log(`bugs/41 · нижняя панель прилегает к низу (ширина ${width}):`);
     const { context, page, errors } = await person(browser, { width });
-    await page.goto(`${BASE}/menu/manifesto`);
+    // ⚠️ Страница-образец сменена с `/menu/manifesto` на `/menu/manual` 2026-07-31:
+    // манифест удалён (отсебятина агента, слово владельца). Проверяется ТО ЖЕ САМОЕ —
+    // оболочка DocShell, общая всем страницам раздела, — просто на живом документе.
+    await page.goto(`${BASE}/menu/manual`);
     await page.waitForSelector('nav.tabs, .tabs, footer, [class*="nav"]', { timeout: 10000 }).catch(() => {});
     const gap = await page.evaluate(() => {
       const nav = document.querySelector('.screen > :last-child');
@@ -217,39 +220,31 @@ try {
       return Math.round(window.innerHeight - nav.getBoundingClientRect().bottom);
     });
     check('панель прилегает к низу вьюпорта (зазор 0px)', gap !== null && Math.abs(gap) <= 1, `зазор: ${gap}px`);
-    if (width === 800) await page.screenshot({ path: `${SHOTS}/manifesto-bottom-${width}.png` });
-    check(`консоль чиста (manifesto, ${width})`, errors.length === 0, errors.join(' | ').slice(0, 200));
+    if (width === 800) await page.screenshot({ path: `${SHOTS}/docshell-bottom-${width}.png` });
+    check(`консоль чиста (manual, ${width})`, errors.length === 0, errors.join(' | ').slice(0, 200));
     await context.close();
   }
 
-  // ── bugs/38: манифест — кнопкой на телефоне, виджетом рядом с кнопками на десктопе ──
-  console.log('bugs/38 · манифест: телефон — кнопка, десктоп — виджет рядом:');
-  {
-    const { context, page, errors } = await person(browser);
-    await page.goto(`${BASE}/menu`);
-    await page.waitForSelector('a.manifest-link', { timeout: 10000 });
-    check('телефон: полный манифест скрыт', !(await page.locator('section.manifest').isVisible()));
-    check('телефон: кнопка манифеста видна', await page.locator('a.manifest-link').isVisible());
-    await page.locator('a.manifest-link').click();
-    await page.waitForURL('**/menu/manifesto');
-    check('кнопка ведёт на полный манифест', (await page.textContent('article')).includes('объединять людей'));
-    await page.screenshot({ path: `${SHOTS}/manifesto-page-mobile.png` });
-    check('консоль чиста (манифест, телефон)', errors.length === 0, errors.join(' | ').slice(0, 200));
-    await context.close();
-  }
+  // ── bugs/38 ЗАКРЫТ УДАЛЕНИЕМ: манифеста больше нет ни в каком виде ──
+  //
+  // Проверки «телефон — кнопка, десктоп — виджет рядом» удалены 2026-07-31 вместе с самим
+  // манифестом, а НЕ ослаблены ради зелёного. Слово владельца: «и виджет и страницу удаляем -
+  // это была отсебятина ИИ, я этого не делал в оригинальном НДим».
+  //
+  // 🔴 Взамен стережём ОБРАТНОЕ: удалённая сущность не должна вернуться незаметно. Текст
+  // манифеста при этом никуда не делся — он раздел «1. Манифест» руководства пользователя,
+  // и его стережёт e2e (`{ path: '/menu/manual', marker: 'Манифест' }`).
+  console.log('bugs/38 · манифест удалён и не возвращается:');
   {
     const { context, page, errors } = await person(browser, { width: 1440 });
     await page.goto(`${BASE}/menu`);
-    await page.waitForSelector('section.manifest', { timeout: 10000 });
-    check('десктоп: манифест-виджет виден', await page.locator('section.manifest').isVisible());
-    check('десктоп: кнопка манифеста скрыта', !(await page.locator('a.manifest-link').isVisible()));
-    // «Рядышком»: виджет и первая карточка кнопок стоят на одной высоте, в разных колонках.
-    const m = await page.locator('section.manifest').boundingBox();
-    const c = await page.locator('.col .card').first().boundingBox();
-    check('виджеты стоят рядом', m !== null && c !== null && Math.abs(m.y - c.y) < 8 && c.x > m.x + m.width - 1,
-      `manifest y=${m?.y} x=${m?.x} · card y=${c?.y} x=${c?.x}`);
-    await page.screenshot({ path: `${SHOTS}/menu-desktop-manifest.png` });
-    check('консоль чиста (манифест, десктоп)', errors.length === 0, errors.join(' | ').slice(0, 200));
+    await page.waitForSelector('.col .card', { timeout: 10000 });
+    check('виджета манифеста нет', (await page.locator('section.manifest').count()) === 0);
+    check('строки-ссылки манифеста нет', (await page.locator('a.manifest-link').count()) === 0);
+    const res = await page.request.get(`${BASE}/menu/manifesto`);
+    check('страницы /menu/manifesto нет', !res.ok(), `код ответа: ${res.status()}`);
+    await page.screenshot({ path: `${SHOTS}/menu-desktop-no-manifest.png` });
+    check('консоль чиста (Меню, десктоп)', errors.length === 0, errors.join(' | ').slice(0, 200));
     await context.close();
   }
 
