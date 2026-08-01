@@ -32,7 +32,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { getBytes, ref, uploadBytes } from 'firebase/storage';
+import { deleteObject, getBytes, ref, uploadBytes } from 'firebase/storage';
 
 const PROJECT_ID = 'ndim-storage-rules-test';
 
@@ -72,6 +72,13 @@ const avatarPath = (uid: string) => `users/${uid}/avatar/avatar.webp`;
 
 /** Крошечный «файл»: правилам всё равно, что внутри, а тесту важна только реакция. */
 const bytes = new Uint8Array([1, 2, 3, 4]);
+/*
+ * ⚠️ ТИП ОБЯЗАТЕЛЕН С 2026-08-01. Правило пускает только image/webp и image/jpeg (В8), поэтому
+ * загрузка «просто байтов» теперь законно отвергается: без contentType Firebase считает файл
+ * application/octet-stream. Первый прогон после ужесточения покраснел ровно на этом — и это
+ * не дефект теста, а его работа.
+ */
+const PHOTO = { contentType: 'image/webp' } as const;
 
 before(async () => {
   const { host, port } = emulatorAddress();
@@ -89,7 +96,7 @@ beforeEach(async () => {
   await testEnv.clearStorage();
   // Фотография Алисы кладётся В ОБХОД правил — иначе проверки ЧТЕНИЯ проверяли бы запись.
   await testEnv.withSecurityRulesDisabled(async (context) => {
-    await uploadBytes(ref(context.storage(), avatarPath(ALICE)), bytes);
+    await uploadBytes(ref(context.storage(), avatarPath(ALICE)), bytes, PHOTO);
   });
 });
 
@@ -101,17 +108,17 @@ describe('правила Storage: фотографии людей', () => {
   });
 
   test('🔒 НЕ ВОШЕДШИЙ не может записать фотографию — ни свою, ни чужую', async () => {
-    await assertFails(uploadBytes(ref(anonymous().storage(), avatarPath(ALICE)), bytes));
-    await assertFails(uploadBytes(ref(anonymous().storage(), avatarPath(BOB)), bytes));
+    await assertFails(uploadBytes(ref(anonymous().storage(), avatarPath(ALICE)), bytes, PHOTO));
+    await assertFails(uploadBytes(ref(anonymous().storage(), avatarPath(BOB)), bytes, PHOTO));
   });
 
   test('🔒 ГЛАВНОЕ: человек не может перезаписать ЧУЖУЮ фотографию', async () => {
     // Тот самый отказ, который не видно, пока он не сломан: Боб вошёл честно, но путь не его.
-    await assertFails(uploadBytes(ref(signedIn(BOB).storage(), avatarPath(ALICE)), bytes));
+    await assertFails(uploadBytes(ref(signedIn(BOB).storage(), avatarPath(ALICE)), bytes, PHOTO));
   });
 
   test('🔒 гость тоже не может перезаписать чужую фотографию', async () => {
-    await assertFails(uploadBytes(ref(guest(GHOST).storage(), avatarPath(ALICE)), bytes));
+    await assertFails(uploadBytes(ref(guest(GHOST).storage(), avatarPath(ALICE)), bytes, PHOTO));
   });
 
   test('🔒 закрыто ВСЁ, кроме папки фотографий — умолчанием, а не перечислением', async () => {
@@ -128,7 +135,7 @@ describe('правила Storage: фотографии людей', () => {
       `users/${ALICE}/avatar-old.webp`,
       'avatar.webp',
     ]) {
-      await assertFails(uploadBytes(ref(alice, path), bytes));
+      await assertFails(uploadBytes(ref(alice, path), bytes, PHOTO));
       await assertFails(getBytes(ref(alice, path)));
     }
   });
@@ -136,7 +143,7 @@ describe('правила Storage: фотографии людей', () => {
   // ── РАЗРЕШЕНИЯ. Их немного, но каждое держит работающую функцию продукта ─────────────────
 
   test('человек записывает СВОЮ фотографию', async () => {
-    await assertSucceeds(uploadBytes(ref(signedIn(ALICE).storage(), avatarPath(ALICE)), bytes));
+    await assertSucceeds(uploadBytes(ref(signedIn(ALICE).storage(), avatarPath(ALICE)), bytes, PHOTO));
   });
 
   test('ПАРИТЕТ С 1.x: любой ВОШЕДШИЙ видит фотографию другого человека', async () => {
@@ -148,5 +155,54 @@ describe('правила Storage: фотографии людей', () => {
      */
     await assertSucceeds(getBytes(ref(signedIn(BOB).storage(), avatarPath(ALICE))));
     await assertSucceeds(getBytes(ref(guest(GHOST).storage(), avatarPath(ALICE))));
+  });
+});
+
+/*
+ * Потолок размера и типа — решение владельца В8 (2026-08-01): 5 МБ, только webp и jpeg.
+ *
+ * Раньше правила не ограничивали НИЧЕГО: человек мог положить в свой путь файл любого размера
+ * и любого типа. Дыра была теоретической, пока не было загрузки фото; теперь она есть.
+ */
+describe('правила Storage: потолок размера и типа (В8)', () => {
+  test('🔒 файл больше 5 МБ отвергнут', async () => {
+    const big = new Uint8Array(5 * 1024 * 1024 + 1);
+    await assertFails(uploadBytes(ref(signedIn(ALICE).storage(), avatarPath(ALICE)), big, PHOTO));
+  });
+
+  test('🔒 не-картинка отвергнута', async () => {
+    for (const contentType of ['application/pdf', 'text/html', 'application/octet-stream']) {
+      await assertFails(
+        uploadBytes(ref(signedIn(ALICE).storage(), avatarPath(ALICE)), bytes, { contentType }),
+      );
+    }
+  });
+
+  test('🔒 PNG отвергнут — это молчаливый откат Safari, а не наш формат', async () => {
+    /*
+     * Safari не кодирует WebP из canvas и при отказе МОЛЧА отдаёт PNG (`researches/23` §4).
+     * Продукт на Safari сознательно пишет JPEG (В7), поэтому PNG здесь означает ровно одно:
+     * логика выбора формата сломалась. Правило — её страховка: 300 КБ вместо 12 не пройдут.
+     */
+    await assertFails(
+      uploadBytes(ref(signedIn(ALICE).storage(), avatarPath(ALICE)), bytes, { contentType: 'image/png' }),
+    );
+  });
+
+  test('оба формата продукта проходят: webp и jpeg', async () => {
+    for (const contentType of ['image/webp', 'image/jpeg']) {
+      await assertSucceeds(
+        uploadBytes(ref(signedIn(ALICE).storage(), avatarPath(ALICE)), bytes, { contentType }),
+      );
+    }
+  });
+
+  test('УДАЛЕНИЕ своей фотографии потолком НЕ запрещено', async () => {
+    /*
+     * ⚠️ Удаление — тоже `write`, а `request.resource` при нём пуст: правило, написанное
+     * без оглядки на это, запретило бы человеку удалять собственное фото — и удаление
+     * аккаунта (фаза 8) встало бы на первом же шаге.
+     */
+    await assertSucceeds(deleteObject(ref(signedIn(ALICE).storage(), avatarPath(ALICE))));
   });
 });
