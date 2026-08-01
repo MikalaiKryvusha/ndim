@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — управление аккаунтом, 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — УПРАВЛЕНИЕ АККАУНТОМ. Фаза 3 эпика `plans/15` (план `plans/17`).
+
+     ЗАКАЗ ВЛАДЕЛЬЦА (дословно, 2026-07-31):
+       «нужно реализовать "Управление аккаунтом" на Профиле. Это было в оригинальном Ndim,
+        а в 2,0 до сих пор нет. Нужна смена Email, сброс пароля, смена пароля, управление
+        аватаром пользователя.»   + «"Удалить аккаунт" тоже надо»
+
+     ═══ ЧТО РЕШАЮТ ЭТИ МАКЕТЫ — ОДИН вопрос ═══
+     ГДЕ ЖИВЁТ управление аккаунтом и как оно связано с карточкой-шапкой «Профиля».
+     Каждый вариант — цельный ответ, а не набор опций.
+
+     ═══ ЧТО ИМИ НЕ РЕШАЕТСЯ (уже закрыто — не выбирайте это дважды) ═══
+       · Состав действий над фото — ЧЕТЫРЕ, ваше слово (bugs/44).
+       · Точка входа в управление фото — САМО ФОТО. Индустрия единогласна (GitHub, Slack,
+         Notion, Google — researches/24 §3), поэтому во всех четырёх вариантах ОДИНАКОВО.
+       · Подтверждение удаления — почта в поле + повторный вход (ваш ответ В2).
+       · Раздел пароля виден только тем, у кого пароль есть (ваш ответ В1).
+       · Слово «безвозвратно» остаётся (В4), опечатки 1.x исправлены (В5).
+
+     ═══ ЧЕСТНОСТЬ МАКЕТА ═══
+       · Токены обеих тем скопированы из src/routes/+layout.svelte дословно — цвета настоящие.
+       · Карточка-шапка нарисована по ВЫКАЧЕННОМУ коду (.head-card / .head-who / .arow).
+       · Тексты экрана управления — из 1.x дословно (researches/24 §2): «Управлять аккаунтом»,
+         «Мой аккаунт», «Поменять пароль», «Поменять Email», «Удалить аккаунт», предупреждение
+         об удалении. Формат даты «28 февраля 2025 г. в 20:48» — формула 1.x.
+       · Почта и цифры ПРАВДОПОДОБНЫЕ, но не боевые: настоящие — это ПДн.
+       · Строка «Способы входа» — НОВОЕ (её в 1.x не было). Взята у Vercel/Google, где раздел
+         называется по способу входа, а не по учётным данным (researches/24 §3).
+       · Кнопки «выйти на всех устройствах» НЕТ ни в одном варианте: без сервера её честно
+         сделать нельзя (researches/24 §1.6). Макет не обещает невыполнимого.
+
+     ВАРИАНТЫ:
+       · V1 «Экран как в 1.x»    — отдельный маршрут, карточка «Мой аккаунт» + строки-двери,
+                                   каждая дверь ведёт на свой подэкран. Максимальный паритет.
+       · V2 «Одна страница»      — отдельный маршрут, но подэкранов нет: секции раскрываются
+                                   на месте. Модель GitHub и Vercel.
+       · V3 «Внутри Профиля»     — нового маршрута нет вовсе: карточка-шапка сама
+                                   разворачивается в управление. Модель Slack.
+       · V4 «Лист снизу»         — дверь поднимает лист поверх «Профиля»; на десктопе это
+                                   диалог по центру. Контекст не теряется.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Токены светлой темы «Бумага» (дословно из src/routes/+layout.svelte) ── */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1467d6; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --card-shadow: 0 16px 40px rgba(29, 50, 71, 0.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --danger: #d6544f; --danger-ink: #ffffff;
+    --ghost: rgba(20, 103, 214, 0.28);
+  }
+  /* ── Токены тёмной темы (дословно оттуда же) ── */
+  :root[data-theme='dark'] {
+    --bg: #060b14; --panel: rgba(10, 21, 38, 0.78); --edge: rgba(77, 159, 255, 0.22);
+    --edge-soft: rgba(77, 159, 255, 0.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #4d9fff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --card-shadow: 0 0 0 1px rgba(63, 217, 255, 0.06), 0 24px 60px rgba(2, 8, 20, 0.6);
+    --danger: #f87171; --danger-ink: #12060a;
+    --ghost: rgba(77, 159, 255, 0.34);
+  }
+
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  /* ── Панель выбора (дом стиля макетов проекта) ── */
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  /* ── Пояснение к текущему варианту ── */
+  .note {
+    padding: 12px 18px; background: #0d1c2c; color: #b8cee2; font-size: 12.5px; line-height: 1.6;
+    border-bottom: 1px solid #1d3550;
+  }
+  .note h4 { color: #fff; font-size: 13.5px; margin-bottom: 5px; }
+  .note .cost { color: #ffb4a8; }
+  .note .win { color: #7ee0b8; }
+  .note code { font-family: var(--mono); font-size: 11.5px; color: #9fd2ff; }
+
+  /* ── Сцена ── */
+  .stage { background: var(--bg); padding: 22px 0 44px; }
+  .panes { display: flex; gap: 22px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+  .pane { width: 390px; flex: none; }
+  .pane > h5 {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--faint); margin: 0 0 8px 4px; font-weight: 600;
+  }
+  .frame {
+    background: var(--bg); border: 1px solid var(--edge); border-radius: 18px;
+    padding: 14px 12px 18px; min-height: 300px; position: relative; overflow: hidden;
+  }
+
+  /* ── Десктоп 1440: настоящая оболочка продукта, а не колонка пошире ──────────
+     Рельс слева от 1024px и контент в две колонны — утверждённый V2 «Рабочий стол»
+     (MEMORY: desktop-layout-v2-workdesk). Экраны идут СТОПКОЙ, чтобы каждый был
+     показан в честную ширину 1440, а не сжат в треть. */
+  .stage[data-w='1440'] .panes { flex-direction: column; align-items: center; gap: 30px; }
+  .stage[data-w='1440'] .pane { width: 1440px; }
+  .stage[data-w='1440'] .frame { padding: 0; overflow: visible; }
+  .shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 380px; }
+  .rail { border-right: 1px solid var(--edge); padding: 16px 12px; display: flex; flex-direction: column; gap: 3px; }
+  .rail i {
+    display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 10px;
+    font-style: normal; font-size: 13.5px; color: var(--dim);
+  }
+  .rail i.on { background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent); font-weight: 600; }
+  .rail i span.dot { width: 17px; height: 17px; border-radius: 5px; background: currentColor; opacity: .5; flex: none; }
+  .work { padding: 18px 22px 24px; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  .col { display: flex; flex-direction: column; }
+  .stub { color: var(--faint); font-size: 12.5px; line-height: 1.6; }
+  .desk-host { position: relative; }
+  /* Диалог V4 на десктопе — по центру рабочей области, а не лист снизу */
+  .stage[data-w='1440'] .scrim { border-radius: 0; }
+  .stage[data-w='1440'] .sheet {
+    left: 50%; right: auto; top: 40px; bottom: auto; transform: translateX(-50%);
+    width: 520px; border-radius: 18px;
+  }
+  .stage[data-w='1440'] .grip { display: none; }
+
+  /* ── Шапка приложения (схематична — она утверждена и не обсуждается) ── */
+  .appbar {
+    display: flex; align-items: center; gap: 9px; padding: 0 4px 12px;
+    border-bottom: 1px solid var(--edge-soft); margin-bottom: 12px;
+  }
+  .appbar .mark {
+    width: 26px; height: 26px; border-radius: 8px; background: #12263c; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+  }
+  :root[data-theme='dark'] .appbar .mark { background: #eef6ff; color: #060b14; }
+  .appbar .ttl { font-size: 13px; color: var(--heading); font-weight: 600; }
+  .appbar .sp { flex: 1; }
+  .appbar .back {
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    color: var(--accent);
+  }
+
+  /* ── Карточки продукта ── */
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    padding: 14px; margin-bottom: 12px; box-shadow: var(--card-shadow);
+  }
+  .card h3 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--dim); margin-bottom: 10px; font-weight: 600;
+  }
+
+  /* ── Карточка-шапка (по выкаченному коду .head-card) ── */
+  .head-card { display: flex; flex-direction: column; }
+  .head-who { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; }
+  .head-idn { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .head-card b { font-size: 17px; color: var(--heading); display: block; }
+  .ameta { font-size: 12px; color: var(--faint); word-break: break-word; }
+
+  /* Фото + его меню — ОДИНАКОВО во всех вариантах */
+  .ava-wrap { position: relative; flex: none; }
+  .ava {
+    width: 54px; height: 54px; border-radius: 50%; background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 21px; font-weight: 600;
+    cursor: pointer; border: 0;
+  }
+  .ava-edit {
+    position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--panel); border: 1px solid var(--edge); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; box-shadow: var(--card-shadow);
+  }
+  /* Меню фото показано ОТДЕЛЬНЫМ блоком, а не всплывающим поверх карточки: наложением оно
+     закрывало ряды аккаунта — а именно их и надо сравнивать между вариантами (поймано на
+     кадрах Ш3, дважды). В продукте это, разумеется, всплывающее меню у самого фото. */
+  .menu-demo { margin: -4px 0 12px; }
+  .menu-cap { font-size: 11px; color: var(--faint); margin: 0 0 6px 4px; line-height: 1.45; }
+  .photo-menu {
+    width: 244px; background: var(--panel); border: 1px solid var(--edge); border-radius: 13px;
+    box-shadow: var(--card-shadow); padding: 5px;
+  }
+  .photo-menu i {
+    display: flex; align-items: center; gap: 9px; padding: 8px 9px; border-radius: 9px;
+    font-size: 13px; font-style: normal; color: var(--text);
+  }
+  .photo-menu i.del { color: var(--danger); }
+  .photo-menu i + i { border-top: 1px solid var(--edge-soft); }
+
+  /* Место будущего «Статуса» (plans/09) — пунктиром, чтобы было видно, что оно занято */
+  .slot {
+    font-size: 11.5px; color: var(--faint); border: 1px dashed var(--ghost);
+    border-radius: 7px; padding: 2px 7px; display: inline-block; margin-top: 2px;
+  }
+
+  /* ── Строки-двери (по выкаченному .arow) ── */
+  .arow {
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    padding: 9px 2px; border: 0; border-top: 1px solid var(--edge-soft);
+    background: transparent; font: inherit; font-size: 13.5px; color: var(--text);
+    text-align: left;
+  }
+  .arow .ic { width: 24px; display: flex; justify-content: center; color: var(--accent); flex: none; }
+  .arow .lb { flex: 1; }
+  .arow .val { font-size: 12px; color: var(--faint); font-family: var(--mono); }
+  .arow .chev { color: var(--faint); flex: none; }
+  .arow.danger .lb { color: var(--danger); }
+  .arow.danger .ic { color: var(--danger); }
+
+  /* ── Свойство «ключ — значение» (карточка «Мой аккаунт») ── */
+  .prop { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--edge-soft); }
+  .prop:last-of-type { border-bottom: 0; }
+  .prop .k { font-size: 12px; color: var(--dim); width: 108px; flex: none; }
+  .prop .v { font-size: 14px; color: var(--heading); flex: 1; min-width: 0; word-break: break-word; }
+  .prop .v small { display: block; font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+  .badge {
+    font-size: 11px; padding: 1px 7px; border-radius: 999px; margin-left: 6px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent);
+  }
+
+  /* ── Заголовок экрана (канон 1.x — по центру, со стрелкой назад) ── */
+  .page-title { font-size: 17px; font-weight: 700; color: var(--heading); text-align: center; flex: 1; }
+
+  /* ── Раскрывашка (V2 и V3) ── */
+  .acc { border-top: 1px solid var(--edge-soft); }
+  .acc-head {
+    display: flex; align-items: center; gap: 11px; padding: 10px 2px;
+    font-size: 13.5px; color: var(--text);
+  }
+  .acc-head .ic { width: 24px; display: flex; justify-content: center; color: var(--accent); flex: none; }
+  .acc-head .lb { flex: 1; }
+  .acc-head .caret { color: var(--faint); transition: transform .18s; }
+  .acc.open .acc-head .caret { transform: rotate(90deg); }
+  .acc-body { display: none; padding: 2px 2px 12px 37px; }
+  .acc.open .acc-body { display: block; }
+
+  /* ── Поля и кнопки ── */
+  .field { display: block; margin-bottom: 10px; }
+  .field span { display: block; font-size: 12px; color: var(--dim); margin-bottom: 4px; }
+  .inp {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--edge); border-radius: 10px;
+    background: var(--bg); color: var(--heading); font: inherit; font-size: 13.5px;
+  }
+  .lede { font-size: 12.5px; color: var(--text); line-height: 1.55; margin-bottom: 11px; }
+  .hint { font-size: 11.5px; color: var(--faint); line-height: 1.5; margin-top: 8px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 9px 15px; border-radius: 11px; border: 1px solid var(--edge);
+    background: var(--panel); color: var(--text); font: inherit; font-size: 13.5px; cursor: pointer;
+  }
+  .btn.primary { background: var(--primary); border-color: transparent; color: var(--primary-ink); }
+  .btn.warn { background: var(--danger); border-color: transparent; color: var(--danger-ink); font-weight: 600; }
+  .cta { display: flex; gap: 9px; margin-top: 12px; flex-wrap: wrap; }
+  .cta .btn { flex: 1 1 auto; }
+
+  /* ── Блок удаления (отдельная секция внизу — GitHub/Vercel) ── */
+  .zone {
+    border: 1px solid color-mix(in srgb, var(--danger) 38%, transparent);
+    border-radius: 16px; padding: 14px; margin-top: 16px;
+  }
+  .zone h3 { color: var(--danger); }
+  .loss { margin: 10px 0 0; padding-left: 17px; font-size: 12.5px; color: var(--text); line-height: 1.75; }
+  /* Виджет удаления идёт ВО ВСЮ ПАНЕЛЬ (отделение положением), но его СОДЕРЖИМОЕ — нет:
+     иначе на 1440 «Удалить аккаунт» становится самой широкой мишенью экрана. NN/g требует
+     обратного — опасное действие должно быть труднее в попадании, а не легче (закон Фиттса).
+     Поймано на кадрах утверждённого V2. */
+  .zone .lede, .zone .loss, .zone .field, .zone .cta, .zone .hint { max-width: 620px; }
+  .zone .cta .btn { flex: 0 0 auto; }
+
+  /* ── Лист снизу / диалог (V4) ── */
+  .sheet-host { position: relative; }
+  .scrim { position: absolute; inset: 0; background: rgba(6, 11, 20, .55); border-radius: 18px; }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 18px 18px 0 0; padding: 8px 14px 16px; box-shadow: var(--card-shadow);
+  }
+  .grip { width: 38px; height: 4px; border-radius: 3px; background: var(--edge); margin: 2px auto 12px; }
+  /* Раскладка листа на десктопе задаётся ОДИН раз — в блоке «Десктоп 1440» выше.
+     Второе правило здесь конфликтовало с ним по left/right и уводило диалог за край
+     (поймано на кадрах Ш3). */
+
+  .flag { font-size: 11.5px; color: var(--faint); margin: 9px 4px 0; line-height: 1.5; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Макет:</b>
+  <button data-v="1" class="active">V1 «Экран как в 1.x»</button>
+  <button data-v="2">V2 «Одна страница»</button>
+  <button data-v="3">V3 «Внутри Профиля»</button>
+  <button data-v="4">V4 «Лист снизу»</button>
+  <span class="sp"></span>
+  <button id="theme">☾ тёмная</button>
+  <button id="width">Телефон 390</button>
+  <span class="hint">Управление аккаунтом · фаза 3 эпика plans/15</span>
+</div>
+
+<div class="note" id="note"></div>
+
+<div class="stage" id="stage" data-w="390">
+  <div class="panes" id="panes"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Разметка вариантов собирается кодом: три состояния у каждого, и общие куски
+   (карточка-шапка, меню фото, карточка «Мой аккаунт») обязаны быть ОДНИМИ И ТЕМИ
+   ЖЕ во всех четырёх — иначе сравнивались бы не формы, а случайные различия.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const ICON = {
+  gear: '<svg width="19" height="19" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zM8 10a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/><path d="M6.8.5a.5.5 0 0 0-.49.4l-.26 1.3a5.5 5.5 0 0 0-1.02.6l-1.25-.43a.5.5 0 0 0-.59.22l-1.2 2.08a.5.5 0 0 0 .1.62l1 .86a5.6 5.6 0 0 0 0 1.18l-1 .86a.5.5 0 0 0-.1.62l1.2 2.08a.5.5 0 0 0 .59.22l1.25-.42c.32.23.66.43 1.02.59l.26 1.3a.5.5 0 0 0 .49.4h2.4a.5.5 0 0 0 .49-.4l.26-1.3c.36-.16.7-.36 1.02-.6l1.25.43a.5.5 0 0 0 .59-.22l1.2-2.08a.5.5 0 0 0-.1-.62l-1-.86a5.6 5.6 0 0 0 0-1.18l1-.86a.5.5 0 0 0 .1-.62l-1.2-2.08a.5.5 0 0 0-.59-.22l-1.25.42a5.5 5.5 0 0 0-1.02-.59L9.69.9a.5.5 0 0 0-.49-.4H6.8z" opacity=".55"/></svg>',
+  mail: '<svg width="19" height="19" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.6" y="3.4" width="12.8" height="9.2" rx="1.6"/><path d="m2.4 4.6 5.6 4 5.6-4"/></svg>',
+  lock: '<svg width="19" height="19" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3.2" y="7" width="9.6" height="6.6" rx="1.6"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7"/></svg>',
+  trash: '<svg width="19" height="19" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.8 4.2h10.4M6.4 4.2V2.9h3.2v1.3M4.4 4.2l.6 8.4h6l.6-8.4"/></svg>',
+  out: '<svg width="19" height="19" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6.2 2.6H3.4a1 1 0 0 0-1 1v8.8a1 1 0 0 0 1 1h2.8M10 5l3 3-3 3M13 8H6.4"/></svg>',
+  chev: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 3.5 4.5 4.5L6 12.5"/></svg>',
+  back: '<svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>',
+  pen: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.2 2.6 13.4 4.8 5.6 12.6l-3 .8.8-3z"/></svg>',
+  eye: '<svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.4 8s2.4-4 6.6-4 6.6 4 6.6 4-2.4 4-6.6 4S1.4 8 1.4 8z"/><circle cx="8" cy="8" r="1.8"/></svg>',
+  up: '<svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 12.4V4M4.8 7.2 8 4l3.2 3.2M3 13.4h10"/></svg>',
+  swap: '<svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.8 5.6h9l-2.4-2.4M13.2 10.4h-9l2.4 2.4"/></svg>',
+};
+
+/* Меню фотографии — ОДИНАКОВОЕ во всех вариантах (индустрия единогласна: точка входа
+   в управление фото это само фото; researches/24 §3). Показано раскрытым, чтобы состав
+   действий был виден: их четыре, как просил владелец (bugs/44). */
+const photoMenu = `
+  <div class="menu-demo">
+    <p class="menu-cap">▲ Тап по фото открывает это меню. Оно ОДИНАКОВО во всех четырёх вариантах —
+    выбирать его не нужно.</p>
+    <div class="photo-menu">
+      <i>${ICON.eye}<span>Открыть на весь экран</span></i>
+      <i>${ICON.swap}<span>Заменить фото</span></i>
+      <i>${ICON.up}<span>Загрузить фото</span></i>
+      <i class="del">${ICON.trash}<span>Удалить фото</span></i>
+    </div>
+  </div>`;
+
+/* Карточка-шапка «Профиля» — выкачена в бой 2026-07-31, здесь воспроизведена по коду.
+   `tail` — то, чем вариант её продолжает (в этом и разница между макетами). */
+const headCard = (tail, menu = true) => `
+  <div class="card head-card">
+    <div class="head-who">
+      <div class="ava-wrap">
+        <button class="ava">Н</button>
+        <span class="ava-edit">${ICON.pen}</span>
+      </div>
+      <span class="head-idn">
+        <b>Николай</b>
+        <span class="ameta">kot@example.com</span>
+        <span class="slot">место «Статуса» — plans/09</span>
+      </span>
+    </div>
+    ${tail}
+  </div>
+  ${menu ? photoMenu : ''}`;
+
+const rowLeave = `
+  <button class="arow"><span class="ic">${ICON.out}</span><span class="lb">Выйти</span><span class="chev">${ICON.chev}</span></button>`;
+
+/* Карточка «Мой аккаунт» — состав 1.x (Email, Создан) + строка «Способы входа»,
+   которой в 1.x не было: она отвечает на вопрос «чем я вообще вхожу». */
+const myAccount = `
+  <div class="card">
+    <h3>Мой аккаунт</h3>
+    <div class="prop"><span class="k">Email</span><span class="v">kot@example.com<span class="badge">подтверждён</span></span></div>
+    <div class="prop"><span class="k">Создан</span><span class="v">28 февраля 2025 г. в 20:48</span></div>
+    <div class="prop"><span class="k">Способы входа</span><span class="v">Google · ссылка на почту<small>Пароль не задан</small></span></div>
+  </div>`;
+
+const doorsCard = `
+  <div class="card" style="padding-top:4px">
+    <button class="arow"><span class="ic">${ICON.lock}</span><span class="lb">Поменять пароль</span><span class="chev">${ICON.chev}</span></button>
+    <button class="arow"><span class="ic">${ICON.mail}</span><span class="lb">Поменять Email</span><span class="chev">${ICON.chev}</span></button>
+    <button class="arow danger"><span class="ic">${ICON.trash}</span><span class="lb">Удалить аккаунт</span><span class="chev">${ICON.chev}</span></button>
+  </div>`;
+
+/* Секция смены почты — порядок полей ДОСЛОВНО как в 1.x: пояснение → подтверждение
+   личности → новый адрес → «Выслать письмо» (researches/24 §2.3). */
+const emailBody = `
+  <p class="lede">Для изменения Вашего текущего Email на новый запросите письмо верификации
+  на Ваш новый Email и пройдите по ссылке в полученном письме.</p>
+  <label class="field"><span>Введите новый Email:</span><input class="inp" value="" placeholder="новый@адрес.ru"></label>
+  <div class="cta"><button class="btn primary">Выслать письмо</button></div>
+  <p class="hint">Мы попросим Вас войти заново — это защита аккаунта.
+  Проверьте адрес: почта — Ваш ключ к аккаунту.</p>`;
+
+const passwordBody = `
+  <p class="lede">Пароль есть только у тех, кто заходил в NDim до перехода на вход по ссылке.
+  У Вас он не задан, поэтому менять нечего.</p>
+  <div class="cta"><button class="btn">Сбросить пароль</button></div>`;
+
+/* Шаг подтверждения удаления. Красная кнопка ТОЛЬКО здесь (GOV.UK), кнопки-глаголы,
+   у деструктивной нет фокуса по умолчанию (NN/g). Потери названы конкретикой (Google). */
+const deleteBody = `
+  <p class="lede">Ваша учётная запись и все её данные будут безвозвратно удалены. Удалить?</p>
+  <ul class="loss">
+    <li>Ваш NDim ID и 47 оценок по Измерениям</li>
+    <li>фотографию</li>
+    <li>связи с 250 людьми</li>
+  </ul>
+  <label class="field" style="margin-top:12px"><span>Введите Вашу почту, чтобы подтвердить:</span><input class="inp" placeholder="kot@example.com"></label>
+  <div class="cta">
+    <button class="btn">Отмена</button>
+    <button class="btn warn">Удалить аккаунт</button>
+  </div>
+  <p class="hint">Мы не сможем восстановить Ваши данные. Из чужих списков связей Вы исчезнете
+  в течение суток.</p>`;
+
+const appbar = (title, back) => `
+  <div class="appbar">
+    ${back ? `<span class="back">${ICON.back}</span>` : `<span class="mark">N</span>`}
+    ${back ? `<span class="page-title">${title}</span><span class="back" style="opacity:0">${ICON.back}</span>`
+           : `<span class="ttl">${title}</span><span class="sp"></span>`}
+  </div>`;
+
+const pane = (label, inner, host) => `
+  <div class="pane"><h5>${label}</h5><div class="frame ${host || ''}">${inner}</div></div>`;
+
+/* ── Десктоп 1440: рельс слева + две колонны (утверждённый V2 «Рабочий стол») ── */
+const rail = `
+  <div class="rail">
+    <i><span class="dot"></span>Пространство</i>
+    <i><span class="dot"></span>Связи</i>
+    <i><span class="dot"></span>Измерения</i>
+    <i class="on"><span class="dot"></span>Профиль</i>
+    <i><span class="dot"></span>Меню</i>
+  </div>`;
+
+const shell = (work, host = '') => `<div class="shell ${host}">${rail}<div class="work">${work}</div></div>`;
+
+/* «Профиль» на десктопе — виджетная сетка в две колонны (эпик ideas/24, в бою с 31.07). */
+const deskProfile = (tail, menu = true) => shell(`
+  <div class="cols">
+    <div class="col">
+      ${headCard(tail, menu)}
+      <div class="card"><h3>Личная информация</h3><p class="stub">Имя · Дата рождения · О себе — остальные виджеты «Профиля» не меняются.</p></div>
+    </div>
+    <div class="col">
+      <div class="card"><h3>Мой NDim ID</h3><p class="stub">47 оценок по Измерениям</p></div>
+      <div class="card"><h3>Похожесть</h3><p class="stub">Близость × Общность</p></div>
+    </div>
+  </div>`);
+
+/* Страница управления на десктопе — одна колонка ограниченной ширины: формы шире 620px
+   читаются хуже, и все изученные продукты держат настройки узкой колонкой. */
+const deskPage = (inner) => shell(`<div style="max-width:620px">${inner}</div>`);
+
+const deskTitle = (t) => `<h2 style="font-size:19px;color:var(--heading);margin:0 0 14px">${t}</h2>`;
+
+/* ── Виджеты страницы «Управлять аккаунтом» (правка владельца к V2: «с виджетами») ──
+   Каждый — самостоятельная карточка, как на «Пространстве» и «Профиле». Шаг по модели
+   `ideas/24`: содержательные — 2, «Удаление» — 4 (во всю панель), потому что отделяется
+   ПОЛОЖЕНИЕМ, а в сетке из двух колонн «низа страницы» не существует. */
+const wEmail = (open) => `
+  <div class="card" style="padding-top:4px">
+    <div class="acc ${open ? 'open' : ''}">
+      <div class="acc-head"><span class="ic">${ICON.mail}</span><span class="lb">Поменять Email</span><span class="caret">${ICON.chev}</span></div>
+      <div class="acc-body">${emailBody}</div>
+    </div>
+  </div>`;
+
+const wDeleteClosed = `
+  <div class="zone">
+    <h3>Удаление аккаунта</h3>
+    <p class="lede" style="margin:0">Мы не сможем восстановить Ваши данные.</p>
+    <div class="cta"><button class="btn" style="flex:0 0 auto">Удалить аккаунт</button></div>
+  </div>`;
+
+const wDeleteOpen = `<div class="zone"><h3>Удаление аккаунта</h3>${deleteBody}</div>`;
+
+const pwdFlag = `<p class="flag">У 331 человека из 1.x здесь будет ещё виджет «Пароль» (2 шага) —
+  остальным его не показываем (В1). Колонны пакуются независимо, поэтому его отсутствие дыры не делает.</p>`;
+
+/* ── Четыре варианта ────────────────────────────────────────────────────── */
+const VARIANTS = {
+  1: {
+    name: 'V1 «Экран как в 1.x»',
+    note: `<h4>V1 «Экран как в 1.x» — максимальный паритет</h4>
+      Отдельный маршрут <code>/account</code>, заголовок «Управлять аккаунтом» со стрелкой назад,
+      карточка «Мой аккаунт» и три строки-двери. Каждая дверь ведёт на СВОЙ подэкран — ровно как
+      в 1.x (кадр app-14).
+      <span class="win">Выигрыш:</span> человек из 1.x узнаёт экран мгновенно; каждый шаг
+      сфокусирован на одном действии; удаление физически далеко от всего остального.
+      <span class="cost">Цена:</span> самый «глубокий» вариант — до удаления три перехода;
+      новый маршрут и новые кнопки «назад», которые надо стеречь (<code>verify-back-twins</code>).`,
+    panes: [
+      ['1 · Профиль', appbar('Профиль') + headCard(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`) + `<p class="flag">Фото управляется меню у самого фото — одинаково во всех вариантах.</p>`],
+      ['2 · Управлять аккаунтом', appbar('Управлять аккаунтом', true) + myAccount + doorsCard],
+      ['3 · Удалить аккаунт', appbar('Удалить аккаунт', true) + `<div class="card">${deleteBody}</div>`],
+    ],
+    desk: [
+      ['1 · Профиль — десктоп 1440', deskProfile(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`)],
+      ['2 · Отдельная страница /account', deskPage(deskTitle('Управлять аккаунтом') + myAccount + doorsCard)],
+      ['3 · Подстраница удаления', deskPage(deskTitle('Удалить аккаунт') + `<div class="card">${deleteBody}</div>`)],
+    ],
+  },
+  2: {
+    name: 'V2 «Одна страница»',
+    note: `<h4>✅ V2 «Одна страница» — УТВЕРЖДЁН владельцем 2026-08-01, правка «с виджетами»</h4>
+      Отдельный маршрут, подэкранов нет: секции раскрываются на месте. <b>Страница собрана
+      виджетной сеткой</b> — канон сводных экранов проекта и модель «шага» (<code>ideas/24</code>):
+      «Мой аккаунт», «Поменять Email» и «Пароль» — по 2 шага, <b>«Удаление аккаунта» — во всю
+      панель (4 шага), последним</b>.
+      <span class="win">Почему во всю панель:</span> в сетке из двух колонн «низа страницы» нет,
+      а удаление отделяется именно ПОЛОЖЕНИЕМ (GitHub, Vercel, GOV.UK). Виджет на всю ширину
+      сохраняет и сетку, и отделение.
+      <span class="cost">Цена:</span> страница длиннее; на телефоне до удаления надо прокручивать;
+      раскрывашки требуют аккуратной анимации (<code>verify-bug68</code> уже стережёт этот класс).`,
+    panes: [
+      ['1 · Профиль', appbar('Профиль') + headCard(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`)],
+      ['2 · Управлять аккаунтом (виджеты)',
+        appbar('Управлять аккаунтом', true) + myAccount + wEmail(true) + wDeleteClosed + pwdFlag],
+      ['3 · Подтверждение', appbar('Управлять аккаунтом', true) + myAccount + wEmail(false) + wDeleteOpen],
+    ],
+    desk: [
+      ['1 · Профиль — десктоп 1440', deskProfile(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`)],
+      ['2 · Страница виджетами — 2 шага + 2 шага, «Удаление» во всю панель', shell(
+        deskTitle('Управлять аккаунтом') +
+        `<div class="cols"><div class="col">${myAccount}</div><div class="col">${wEmail(true)}</div></div>` +
+        wDeleteClosed + pwdFlag)],
+      ['3 · Подтверждение в том же виджете', shell(
+        deskTitle('Управлять аккаунтом') +
+        `<div class="cols"><div class="col">${myAccount}</div><div class="col">${wEmail(false)}</div></div>` +
+        wDeleteOpen)],
+    ],
+  },
+  3: {
+    name: 'V3 «Внутри Профиля»',
+    note: `<h4>V3 «Внутри Профиля» — нового маршрута нет вовсе (модель Slack)</h4>
+      Строка «Управление аккаунтом» разворачивается прямо в карточке-шапке. Человек никуда не
+      уходит: фото, имя, Статус и управление — один блок.
+      <span class="win">Выигрыш:</span> ноль переходов, ноль новых маршрутов, ничего не надо
+      стеречь на «Назад»; заказ владельца «на Профиле» исполнен буквально.
+      <span class="cost">Цена:</span> карточка-шапка сильно вырастает — а её только что специально
+      уплотняли (<code>ideas/24</code>: «Профиль» 776 → 619px). Удаление оказывается в одном блоке
+      с фото и именем, то есть <b>рядом с безобидным</b> — NN/g относит это к главным ошибкам.`,
+    panes: [
+      ['1 · Профиль (свёрнуто)', appbar('Профиль') + headCard(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`)],
+      ['2 · Профиль (развёрнуто)', appbar('Профиль') + headCard(`
+        <div class="acc open">
+          <div class="acc-head"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="caret">${ICON.chev}</span></div>
+          <div class="acc-body">
+            <div class="prop"><span class="k">Email</span><span class="v">kot@example.com</span></div>
+            <div class="prop"><span class="k">Создан</span><span class="v">28 февраля 2025 г.</span></div>
+            <div class="prop"><span class="k">Способы входа</span><span class="v">Google · ссылка на почту</span></div>
+            <button class="arow"><span class="ic">${ICON.mail}</span><span class="lb">Поменять Email</span><span class="chev">${ICON.chev}</span></button>
+            <button class="arow"><span class="ic">${ICON.lock}</span><span class="lb">Поменять пароль</span><span class="chev">${ICON.chev}</span></button>
+            <button class="arow danger"><span class="ic">${ICON.trash}</span><span class="lb">Удалить аккаунт</span><span class="chev">${ICON.chev}</span></button>
+          </div>
+        </div>
+        ${rowLeave}`, false)],
+      ['3 · Подтверждение', appbar('Профиль') + `<div class="card">${deleteBody}</div>`],
+    ],
+    desk: [
+      ['1 · Профиль — десктоп 1440 (свёрнуто)', deskProfile(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`)],
+      ['2 · Развёрнуто прямо в колонне', deskProfile(`
+        <div class="acc open">
+          <div class="acc-head"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="caret">${ICON.chev}</span></div>
+          <div class="acc-body">
+            <div class="prop"><span class="k">Email</span><span class="v">kot@example.com</span></div>
+            <div class="prop"><span class="k">Создан</span><span class="v">28 февраля 2025 г. в 20:48</span></div>
+            <div class="prop"><span class="k">Способы входа</span><span class="v">Google · ссылка на почту</span></div>
+            <button class="arow"><span class="ic">${ICON.mail}</span><span class="lb">Поменять Email</span><span class="chev">${ICON.chev}</span></button>
+            <button class="arow"><span class="ic">${ICON.lock}</span><span class="lb">Поменять пароль</span><span class="chev">${ICON.chev}</span></button>
+            <button class="arow danger"><span class="ic">${ICON.trash}</span><span class="lb">Удалить аккаунт</span><span class="chev">${ICON.chev}</span></button>
+          </div>
+        </div>
+        ${rowLeave}`, false)],
+      ['3 · Подтверждение в той же колонне', deskProfile(`
+        <div class="acc open">
+          <div class="acc-head"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="caret">${ICON.chev}</span></div>
+          <div class="acc-body">${deleteBody}</div>
+        </div>
+        ${rowLeave}`, false)],
+    ],
+  },
+  4: {
+    name: 'V4 «Лист снизу»',
+    note: `<h4>V4 «Лист снизу» — управление поднимается поверх «Профиля»</h4>
+      Дверь поднимает лист снизу (на десктопе — диалог по центру). «Профиль» остаётся на месте,
+      за листом; закрытие возвращает ровно туда, откуда пришли.
+      <span class="win">Выигрыш:</span> контекст не теряется, маршрута нет, глубина один жест;
+      этот приём в продукте уже есть (гостевая врезка V4, лайтбокс фото).
+      <span class="cost">Цена:</span> лист — слой, а слои у нас обязаны честно жить в истории
+      («Назад» закрывает слой — <code>verify-back-twins</code>); длинное содержимое в листе на
+      телефоне прокручивается внутри, и это надо делать аккуратно.`,
+    panes: [
+      ['1 · Профиль', appbar('Профиль') + headCard(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`)],
+      ['2 · Лист управления', `
+        ${appbar('Профиль')}
+        ${headCard(`<button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>${rowLeave}`, false)}
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="grip"></div>
+          <h3 style="font-size:15px;color:var(--heading);text-transform:none;letter-spacing:0;margin-bottom:10px">Управлять аккаунтом</h3>
+          <div class="prop"><span class="k">Email</span><span class="v">kot@example.com</span></div>
+          <div class="prop"><span class="k">Создан</span><span class="v">28 февраля 2025 г.</span></div>
+          <div class="prop"><span class="k">Способы входа</span><span class="v">Google · ссылка на почту</span></div>
+          <button class="arow"><span class="ic">${ICON.mail}</span><span class="lb">Поменять Email</span><span class="chev">${ICON.chev}</span></button>
+          <button class="arow"><span class="ic">${ICON.lock}</span><span class="lb">Поменять пароль</span><span class="chev">${ICON.chev}</span></button>
+          <button class="arow danger"><span class="ic">${ICON.trash}</span><span class="lb">Удалить аккаунт</span><span class="chev">${ICON.chev}</span></button>
+        </div>`, 'sheet-host'],
+      ['3 · Подтверждение в листе', `
+        ${appbar('Профиль')}
+        ${headCard(`<button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>${rowLeave}`, false)}
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="grip"></div>
+          <h3 style="font-size:15px;color:var(--heading);text-transform:none;letter-spacing:0;margin-bottom:10px">Удалить аккаунт</h3>
+          ${deleteBody}
+        </div>`, 'sheet-host'],
+    ],
+    desk: [
+      ['1 · Профиль — десктоп 1440', deskProfile(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`)],
+      ['2 · Диалог по центру рабочей области', `<div class="desk-host">${deskProfile(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`, false)}
+        <div class="scrim"></div>
+        <div class="sheet">
+          <h3 style="font-size:16px;color:var(--heading);text-transform:none;letter-spacing:0;margin-bottom:10px">Управлять аккаунтом</h3>
+          <div class="prop"><span class="k">Email</span><span class="v">kot@example.com</span></div>
+          <div class="prop"><span class="k">Создан</span><span class="v">28 февраля 2025 г. в 20:48</span></div>
+          <div class="prop"><span class="k">Способы входа</span><span class="v">Google · ссылка на почту</span></div>
+          <button class="arow"><span class="ic">${ICON.mail}</span><span class="lb">Поменять Email</span><span class="chev">${ICON.chev}</span></button>
+          <button class="arow"><span class="ic">${ICON.lock}</span><span class="lb">Поменять пароль</span><span class="chev">${ICON.chev}</span></button>
+          <button class="arow danger"><span class="ic">${ICON.trash}</span><span class="lb">Удалить аккаунт</span><span class="chev">${ICON.chev}</span></button>
+        </div></div>`],
+      ['3 · Подтверждение в диалоге', `<div class="desk-host">${deskProfile(`
+        <button class="arow"><span class="ic">${ICON.gear}</span><span class="lb">Управление аккаунтом</span><span class="chev">${ICON.chev}</span></button>
+        ${rowLeave}`, false)}
+        <div class="scrim"></div>
+        <div class="sheet">
+          <h3 style="font-size:16px;color:var(--heading);text-transform:none;letter-spacing:0;margin-bottom:10px">Удалить аккаунт</h3>
+          ${deleteBody}
+        </div></div>`],
+    ],
+  },
+};
+
+const stage = document.getElementById('stage');
+const panes = document.getElementById('panes');
+const note = document.getElementById('note');
+let current = '1';
+
+function render() {
+  const v = VARIANTS[current];
+  note.innerHTML = v.note;
+  const set = stage.dataset.w === '1440' ? v.desk : v.panes;
+  panes.innerHTML = set.map(([label, inner, host]) => pane(label, inner, host)).join('');
+}
+
+document.querySelectorAll('.picker button[data-v]').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    current = b.dataset.v;
+    render();
+  };
+});
+
+document.getElementById('theme').onclick = (e) => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  e.target.textContent = dark ? '☾ тёмная' : '☀ светлая';
+};
+
+document.getElementById('width').onclick = (e) => {
+  const wide = stage.dataset.w === '1440';
+  stage.dataset.w = wide ? '390' : '1440';
+  e.target.textContent = wide ? 'Телефон 390' : 'Десктоп 1440';
+  render();
+};
+
+render();
+</script>
+</body>
+</html>
