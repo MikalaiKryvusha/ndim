@@ -377,7 +377,20 @@ export async function completeLoginLink(href: string = location.href): Promise<U
    больше комментариев, чем кода — каждая развилка стоила отдельного замера.
    ═══════════════════════════════════════════════════════════════════════════════════════════ */
 
-/** Куда возвращает ссылка ПОДТВЕРЖДЕНИЯ ЛИЧНОСТИ — на тот же экран, откуда человек ушёл. */
+/**
+ * Куда возвращает ссылка ПОДТВЕРЖДЕНИЯ ЛИЧНОСТИ — на тот же экран, откуда человек ушёл.
+ *
+ * 🔴 Комментарий говорил это и раньше, а код — нет: путь был зашит константой `/account`, и
+ * человек, начавший удаление на ПУБЛИЧНОЙ странице `/delete-account`, возвращался письмом в
+ * приватный экран «Управлять аккаунтом». Удаление там доводилось до конца, поэтому дефект был
+ * невидим, — но: (а) обещание «вернётесь СЮДА» не исполнялось; (б) ветка `isReauthLink()` на
+ * самой публичной странице оказывалась мёртвым кодом, который никто никогда не исполнял;
+ * (в) требование Google Play звучит как «не отсылая человека обратно в приложение», а мы делали
+ * ровно это. Найдено живым прогоном 2026-08-01 (`tools/verify-delete-door.mjs`).
+ *
+ * Теперь путь передаётся вызывающим экраном, а константа осталась умолчанием для «Управлять
+ * аккаунтом» — того единственного места, где она и была верна.
+ */
 const REAUTH_RETURN_PATH = '/account';
 
 /** Ключ: на какую почту ушла ссылка подтверждения. Живёт отдельно от ключей ВХОДА
@@ -596,7 +609,10 @@ export async function reauthWithGoogle(): Promise<AccountResult> {
  * ⚠️ `auth.languageCode` — без него письмо приходит по-английски. Деталь из 1.x, которую легко
  * потерять (`researches/24` §2.5).
  */
-export async function sendReauthLink(lang: 'ru' | 'en' = 'ru'): Promise<AccountResult> {
+export async function sendReauthLink(
+  lang: 'ru' | 'en' = 'ru',
+  returnPath: string = REAUTH_RETURN_PATH,
+): Promise<AccountResult> {
   const user = devAuth().currentUser;
   const email = user?.email ?? null;
   if (user === null || email === null) return { ok: false, reason: 'no-session' };
@@ -605,7 +621,7 @@ export async function sendReauthLink(lang: 'ru' | 'en' = 'ru'): Promise<AccountR
     const auth = devAuth();
     auth.languageCode = lang;
     await sendSignInLinkToEmail(auth, email, {
-      url: `${loginLinkOrigin()}${REAUTH_RETURN_PATH}`,
+      url: `${loginLinkOrigin()}${returnPath}`,
       handleCodeInApp: true,
     });
     localStorage.setItem(REAUTH_EMAIL_KEY, email);

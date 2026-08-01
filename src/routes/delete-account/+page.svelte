@@ -27,16 +27,20 @@
   import Loading from '$lib/ui/Loading.svelte';
   import {
     accountErrorText,
+    completeLoginLink,
     completeReauthLink,
     continueWithGoogle,
     currentAccount,
     forgetPendingOp,
+    isLoginLink,
     isReauthLink,
     pendingOp,
     sendLoginLink,
+    waitForSession,
     type AccountFacts,
+    type AccountFailure,
   } from '$lib/data/account';
-  import { currentSession } from '$lib/data/profile';
+  import { currentSession, signOutUser } from '$lib/data/profile';
   import { technicalDetail } from '$lib/ui/errors';
   import { MOTION } from '$lib/ui/motion';
   import type { Lang } from '$lib/ui/format';
@@ -54,6 +58,30 @@
   let email = $state('');
   let signStep = $state<'idle' | 'sending' | 'sent'>('idle');
   let signError = $state('');
+
+  /*
+   * Два словаря отказов встречаются здесь впервые: вход по ссылке отвечает `UpgradeFailure`
+   * (словарь входа, живёт на «Профиле»), а вся эта страница говорит словами `AccountFailure`
+   * (словарь операций над аккаунтом, тексты дословно из 1.x). Приведение типа было бы враньём
+   * компилятору, поэтому сопоставление явное — и каждая строка объяснена.
+   */
+  function asAccountFailure(reason: 'already-in-use' | 'cancelled' | 'expired-link' | 'unknown'): AccountFailure {
+    switch (reason) {
+      // Сюда попасть не должны: гостевую сессию отпускаем ДО разбора ссылки, а без неё вход
+      // идёт `signInWithEmailLink`, который про «занято» не знает. Оставлено ради полноты:
+      // молчаливый `unknown` вместо внятного текста — худший вид «на всякий случай».
+      case 'already-in-use':
+        return 'email-in-use';
+      case 'cancelled':
+        return 'cancelled';
+      // Разные слова об одном: ссылка отслужила. Текст 1.x — «срок действия истёк или она уже
+      // использована. Запросите новую» — здесь ровно то, что нужно человеку.
+      case 'expired-link':
+        return 'expired-code';
+      default:
+        return 'unknown';
+    }
+  }
 
   async function byEmail(): Promise<void> {
     signError = '';
@@ -84,6 +112,54 @@
     if (saved === 'en' || saved === 'ru') lang = saved;
 
     try {
+      /*
+       * 🔴 ВХОД ПО ССЫЛКЕ РАЗБИРАЕТСЯ ЗДЕСЬ — И ОБЯЗАН БЫТЬ ПЕРВЫМ.
+       *
+       * Дефект, который это чинит (найден состязательной проверкой 01.08.2026, в бою прожил
+       * один день): страница отправляла письмо через `sendLoginLink(..., RETURN_PATH)` и
+       * обещала человеку «перейдите по ссылке — и вернётесь сюда, чтобы завершить удаление»,
+       * но возврат не разбирал НИКТО. `completeLoginLink` во всём продукте звался только с
+       * «Профиля». Человек возвращался по ссылке, `currentSession()` отдавал `null` (Firebase
+       * сам по ссылке не входит — вход делает только `signInWithEmailLink` внутри
+       * `completeLoginLink`), выполнение уходило в `return` четырьмя строками ниже — и он
+       * снова видел ту же форму почты. Цикл замыкался: удалить аккаунт со страницы, созданной
+       * ровно для этого, было НЕЛЬЗЯ.
+       *
+       * ⚠️ Почему это не поймал ни один страж: на стенде дефекта НЕТ. Стендовая ветка
+       * `currentSession()` входит сама (`signInDev`), поэтому после возврата по ссылке сессия
+       * там есть всегда и страница открывает шаг удаления. Проверка «прошёл по ссылке — попал
+       * куда обещано» зелёная на стенде при любом состоянии этого кода (`EXP-0113`).
+       *
+       * Бьёт дефект по тем, у кого почта — единственный способ входа, то есть по 331 человеку
+       * из 1.x: паролей в 2.0 нет, а Google-путь на этой странице работал.
+       */
+      /*
+       * ⚠️ `&& !isReauthLink()` — НЕ перестраховка, а различитель двух писем.
+       *
+       * Оба письма этой страницы — один и тот же вид ссылки Firebase, и `isLoginLink()` это
+       * просто `isSignInWithEmailLink(href)`: он матчит ЛЮБОЕ из них. Различает их только
+       * ключ `ndim-reauth-email`, то есть `isReauthLink()` — случай более узкий.
+       *
+       * Без этой оговорки блок съедал ВТОРОЕ письмо (подтверждение личности) и обрабатывал
+       * его как вход: человек возвращался, видел пустую форму подтверждения заново и удалить
+       * аккаунт не мог. Поймано живым прогоном стража, а не рассуждением — первая редакция
+       * правки выглядела безупречно и была неверна.
+       */
+      if (isLoginLink() && !isReauthLink()) {
+        /*
+         * Намерение здесь всегда `signin` (см. `byEmail`), поэтому живую гостевую сессию надо
+         * отпустить ДО разбора: иначе `completeLoginLink` уйдёт в ветку `linkWithCredential`
+         * и вернёт «почта уже связана с другим профилем» — реплей замка `bugs/84` на новой
+         * странице. Тот же порядок, что на «Профиле».
+         */
+        const before = await waitForSession();
+        if (before?.isAnonymous === true) await signOutUser();
+
+        const entered = await completeLoginLink();
+        history.replaceState(null, '', RETURN_PATH);
+        if (!entered.ok) signError = accountErrorText(asAccountFailure(entered.reason), lang);
+      }
+
       const uid = await currentSession();
       myUid = uid;
       if (uid === null) {
@@ -212,7 +288,19 @@
       {#if standError}<p class="err">{standError}</p>{/if}
       <div in:fade={{ duration: MOTION.base }}>
         <!-- Заголовок у страницы свой, крупнее — компонент свой не рисует. -->
-        <DeleteAccount bind:this={deleter} {lang} email={facts.email} uid={myUid} heading={false} />
+        <!--
+          `returnPath` обязателен здесь: письмо подтверждения должно вернуть человека НА ЭТУ
+          страницу, а не в приватный экран «Управлять аккаунтом». Именно так звучит и обещание
+          над кнопкой, и требование Google Play — не отсылать человека обратно в приложение.
+        -->
+        <DeleteAccount
+          bind:this={deleter}
+          {lang}
+          email={facts.email}
+          uid={myUid}
+          heading={false}
+          returnPath={RETURN_PATH}
+        />
       </div>
       <a class="back" href="/profile"><Icon name="back" size={13} />{t.toApp[lang]}</a>
     {/if}

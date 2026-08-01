@@ -280,6 +280,12 @@
       // ЗАОДНО подтверждает им почту.
       if (isLoginLink()) {
         uid = await finishEmailLink();
+        // Вход не состоялся, а гостевую сессию под него уже отпустили: показываем экран
+        // входа с причиной, а не идём читать базу от имени никого (см. `released` ниже).
+        if (uid === null) {
+          stand = 'signedout';
+          return;
+        }
       } else if (new URLSearchParams(location.search).has('guest')) {
         /*
          * Дверь «Продолжить гостем» УВАЖАЕТ живую сессию (bugs/95). Раньше ветка звала
@@ -366,7 +372,7 @@
    * привязывает почту к текущей (гостевой) сессии и чистит адрес: коды из ссылки
    * одноразовые, при перезагрузке страницы они дали бы ложную ошибку.
    */
-  async function finishEmailLink(): Promise<string> {
+  async function finishEmailLink(): Promise<string | null> {
     guest = true;
     guestCard = true;
     signupStep = 'linking';
@@ -388,8 +394,21 @@
      * Труд гостя при этом отпускается осознанно: слить два профиля нельзя, чьи-то оценки
      * пришлось бы выбросить. Именно поэтому дверь спрашивает подтверждение ДО письма.
      */
+    /*
+     * 🔴 `released` — не украшение, а память о том, что `session` УЖЕ МЁРТВА.
+     *
+     * `session` объявлена `const` и хранит снимок ДО выхода. Ветки отказа ниже возвращали
+     * `session.uid` не глядя — то есть UID сессии, которую эта же функция строкой выше и
+     * отпустила. Дальше `loadScreen()` шёл читать данные от имени никого, правила отвечали
+     * отказом, и человек с протухшей ссылкой видел «Не удалось загрузить данные» вместо
+     * честного «ссылка устарела, запросите новую». Дефект ложного диагноза: настоящая
+     * причина (ссылка) подменялась выдуманной (база).
+     *
+     * Поймано состязательной проверкой 01.08.2026, живьём не воспроизводилось.
+     */
     const intent = pendingIntent();
-    if (intent === 'signin' && session?.isAnonymous === true) await signOutUser();
+    const released = intent === 'signin' && session?.isAnonymous === true;
+    if (released) await signOutUser();
 
     const result = await completeLoginLink();
     history.replaceState(null, '', '/profile');
@@ -423,7 +442,10 @@
      */
     if (result.reason === 'already-in-use') {
       signupStep = 'mine?';
-      if (session) return session.uid;
+      // При отпущенной сессии этот отказ не рождается (без гостя идёт `signInWithEmailLink`,
+      // а он про «занято» не знает) — но возвращать мёртвый UID нельзя и здесь.
+      if (session && !released) return session.uid;
+      if (released) return null;
       const uid = await signInGuest();
       await ensureSpaceExists(uid, lang);
       return uid;
@@ -433,7 +455,14 @@
     signupStep = 'choose';
     // Ссылка не сработала, но человек всё ещё в своей гостевой сессии — показываем
     // ему его же профиль, а не выкидываем на пустой экран.
-    if (session) return session.uid;
+    if (session && !released) return session.uid;
+    /*
+     * Сессию отпустили, а ссылка не сработала. Заводить взамен НОВОГО гостя нельзя: человек
+     * шёл ВХОДИТЬ в существующий аккаунт, и пустая анонимная сессия снова соврала бы ему о
+     * том, кто он. `null` уводит экран в `signedout`, где уже стоят и форма почты, и красная
+     * строка `signupError` — то есть честная причина и возможность запросить письмо заново.
+     */
+    if (released) return null;
     const uid = await signInGuest();
     await ensureSpaceExists(uid, lang);
     return uid;

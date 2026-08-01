@@ -34,11 +34,21 @@
     uid,
     /** Показывать ли собственный заголовок. На публичной странице он свой, крупнее. */
     heading = true,
+    /*
+     * Куда письмо подтверждения обязано вернуть человека — адрес ТОГО экрана, где он сейчас.
+     *
+     * 🔴 Раньше адрес был зашит в `account.ts` как `/account`, и человек, начавший удаление на
+     * публичной двери, возвращался письмом в приватный экран. Удаление доходило до конца, и
+     * потому дефект не был виден; невидимым он и остался бы, если бы страж не пошёл по второму
+     * письму (`tools/verify-delete-door.mjs`, 2026-08-01).
+     */
+    returnPath = '/account',
   }: {
     lang: Lang;
     email: string | null;
     uid: string | null;
     heading?: boolean;
+    returnPath?: string;
   } = $props();
 
   /*
@@ -131,7 +141,7 @@
 
     phase = 'working';
     rememberPendingOp({ op: 'delete-account' });
-    const sent = await sendReauthLink(lang);
+    const sent = await sendReauthLink(lang, returnPath);
     if (!sent.ok) {
       forgetPendingOp();
       error = accountErrorText(sent.reason, lang);
