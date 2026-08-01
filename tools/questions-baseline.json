@@ -1,0 +1,162 @@
+{
+	"_комментарий": "Унаследованный долг «место вопросов». Страж краснеет только на НОВЫХ строках; этот список обязан УБЫВАТЬ. Строка выбывает, когда вопрос переехал в interviews/ или когда её текст изменился. Пополнять этот файл руками — значит обмануть себя.",
+	"снят": "2026-08-01",
+	"entries": [
+		{
+			"key": "bugs/00_backlog_batches.md#7872e0c60214",
+			"file": "bugs/00_backlog_batches.md",
+			"rule": "заголовок-очереди",
+			"text": "## Пачка 4 — ⏸ ЖДЁТ ВЛАДЕЛЬЦА (развилки и макеты) — ЕДИНСТВЕННАЯ ОТКРЫТАЯ ПАЧКА ВОЛН"
+		},
+		{
+			"key": "bugs/00_backlog_batches.md#dc0c83e390c2",
+			"file": "bugs/00_backlog_batches.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "⚠️ один вопрос владельцу о формате почты (целиком / маскированная)"
+		},
+		{
+			"key": "bugs/20_gap_below_bottom_nav.md#1f75cd804588",
+			"file": "bugs/20_gap_below_bottom_nav.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "**Вопрос владельцу:** на каком экране и каком устройстве/браузере видна пустота? Скрин"
+		},
+		{
+			"key": "bugs/74_dims_cold_reload_and_lost_scroll.md#2ed64517c069",
+			"file": "bugs/74_dims_cold_reload_and_lost_scroll.md",
+			"rule": "заголовок-очереди",
+			"text": "## ⛔ Ждёт владельца"
+		},
+		{
+			"key": "bugs/80_rating_scale_stars_emoji_and_fluid_size.md#2ed64517c069",
+			"file": "bugs/80_rating_scale_stars_emoji_and_fluid_size.md",
+			"rule": "заголовок-очереди",
+			"text": "## ⛔ Ждёт владельца"
+		},
+		{
+			"key": "bugs/83_email_link_opens_browser_not_pwa.md#2ed64517c069",
+			"file": "bugs/83_email_link_opens_browser_not_pwa.md",
+			"rule": "заголовок-очереди",
+			"text": "## ⛔ Ждёт владельца"
+		},
+		{
+			"key": "bugs/84_cannot_sign_in_to_own_account_guest_trap.md#2ed64517c069",
+			"file": "bugs/84_cannot_sign_in_to_own_account_guest_trap.md",
+			"rule": "заголовок-очереди",
+			"text": "## ⛔ Ждёт владельца"
+		},
+		{
+			"key": "bugs/84_cannot_sign_in_to_own_account_guest_trap.md#f87988aee9bb",
+			"file": "bugs/84_cannot_sign_in_to_own_account_guest_trap.md",
+			"rule": "заголовок-очереди",
+			"text": "### Что осталось и ждёт владельца"
+		},
+		{
+			"key": "bugs/85_sync_full_pass_not_nightly.md#2ed64517c069",
+			"file": "bugs/85_sync_full_pass_not_nightly.md",
+			"rule": "заголовок-очереди",
+			"text": "## ⛔ Ждёт владельца"
+		},
+		{
+			"key": "bugs/85_sync_full_pass_not_nightly.md#7032f21bd3c7",
+			"file": "bugs/85_sync_full_pass_not_nightly.md",
+			"rule": "заголовок-очереди",
+			"text": "### Что ЖДЁТ ВЛАДЕЛЬЦА"
+		},
+		{
+			"key": "plans/07_owner_pain_tiers.md#d4a392833469",
+			"file": "plans/07_owner_pain_tiers.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "- [ ] Спросить владельца контрольным взглядом на `/dims` (фикс в бою с 2026-07-12)."
+		},
+		{
+			"key": "plans/13_avatar_in_profile_head_widget.md#86cac53a6f27",
+			"file": "plans/13_avatar_in_profile_head_widget.md",
+			"rule": "заголовок-очереди",
+			"text": "### Фаза 2 — Четыре макета верхнего виджета ⛔ ЖДЁТ ВЛАДЕЛЬЦА"
+		},
+		{
+			"key": "plans/13_avatar_in_profile_head_widget.md#ba2c6a843020",
+			"file": "plans/13_avatar_in_profile_head_widget.md",
+			"rule": "заголовок-очереди",
+			"text": "### Фаза 3 — Правила Storage в бою ⛔ ЖДЁТ ВЛАДЕЛЬЦА (`bugs/04` шаг 4)"
+		},
+		{
+			"key": "plans/20_account_epic_phase8_delete.md#341a18455bf5",
+			"file": "plans/20_account_epic_phase8_delete.md",
+			"rule": "заголовок-очереди",
+			"text": "### ❓ Вопрос владельцу (В11) — до реализации"
+		},
+		{
+			"key": "plans/24_seo_and_i18n_epic.md#2380d42bc043",
+			"file": "plans/24_seo_and_i18n_epic.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "адресах автоматически. Вопрос владельцу."
+		},
+		{
+			"key": "plans/25_reviews_epic.md#3f89ee68a8ab",
+			"file": "plans/25_reviews_epic.md",
+			"rule": "заголовок-очереди",
+			"text": "## ❓ Вопросы владельцу"
+		},
+		{
+			"key": "ideas/13_sync_server_installer_and_admin_webui.md#d4f2ddf8ed7e",
+			"file": "ideas/13_sync_server_installer_and_admin_webui.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "Открытый вопрос владельцу: инсталлятор — это скрипт (`npm run server:install`), `docker compose`"
+		},
+		{
+			"key": "ideas/13_sync_server_installer_and_admin_webui.md#530497ebf5a0",
+			"file": "ideas/13_sync_server_installer_and_admin_webui.md",
+			"rule": "заголовок-очереди",
+			"text": "## Открытые вопросы владельцу"
+		},
+		{
+			"key": "ideas/16_user_settings_in_profile_with_debounce.md#3bcec860f0ac",
+			"file": "ideas/16_user_settings_in_profile_with_debounce.md",
+			"rule": "заголовок-очереди",
+			"text": "## Открытый вопрос владельцу"
+		},
+		{
+			"key": "ideas/23_profile_status_field.md#2ed64517c069",
+			"file": "ideas/23_profile_status_field.md",
+			"rule": "заголовок-очереди",
+			"text": "## ⛔ Ждёт владельца"
+		},
+		{
+			"key": "ideas/24_widget_autolayout_and_user_pinning.md#d0a500de697b",
+			"file": "ideas/24_widget_autolayout_and_user_pinning.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "**Вопросы владельцу (не блокируют обзор индустрии, спросить при заходе на реализацию):**"
+		},
+		{
+			"key": "researches/11_dims_screen_1x.md#02289c5e0d66",
+			"file": "researches/11_dims_screen_1x.md",
+			"rule": "заголовок-очереди",
+			"text": "## 6. Открытые вопросы владельцу"
+		},
+		{
+			"key": "researches/12_1x_behavior_inventory.md#c7e54a8b5dc5",
+			"file": "researches/12_1x_behavior_inventory.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "(не заведён: сначала спросить владельца, была ли в 1.x видимая плашка «нет сети»)."
+		},
+		{
+			"key": "researches/22_widget_layout_and_dashboard_customisation.md#6bb1d35b7d68",
+			"file": "researches/22_widget_layout_and_dashboard_customisation.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "висит собственный вопрос владельцу и требуется правка `schema.ts`, правил Firestore и тестов"
+		},
+		{
+			"key": "researches/23_photo_upload_in_browser.md#f14a03891515",
+			"file": "researches/23_photo_upload_in_browser.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "устройстве — прибора у нас нет, это вопрос владельцу (§7)."
+		},
+		{
+			"key": "researches/24_account_management_industry_review.md#3d749539b8da",
+			"file": "researches/24_account_management_industry_review.md",
+			"rule": "обращение-в-начале-строки",
+			"text": "вызов — вопрос к владельцу."
+		}
+	]
+}

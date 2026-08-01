@@ -1,0 +1,786 @@
+#!/usr/bin/env node
+/**
+ * review.mjs — КОНТУР ВЫЧИТКИ ВЛАДЕЛЬЦА: страница вопросов, запись решений, сигнал, очередь.
+ *
+ * Регламент — `.claude/skills/owner-reviews/SKILL.md`; операционный план — `plans/27`.
+ * Главная мысль регламента, которую легко потерять: **HTML — не цель, а транспорт; цель — страж.**
+ * Жёсткое правило («место вопросов — только `interviews/`») живёт в `AGENT_GUIDE.md` и стережётся
+ * `tools/questions-guard.mjs`. Этот инструмент — необязательная надстройка сверху, делающая ответ
+ * делом одного клика. Сила ответа от транспорта не зависит: **HTML = md = чат**.
+ *
+ * Команды:
+ *   node tools/review.mjs open  <документ.md>   поднять страницу, открыть браузер, позвать владельца
+ *   node tools/review.mjs render <документ.md>  снять страницу в файл (самодостаточный, офлайн)
+ *   node tools/review.mjs list                  все интервью, ждущие владельца
+ *   node tools/review.mjs queue <документ.md>   поставить в очередь (для автономных циклов)
+ *   node tools/review.mjs batch                 одна страница «накопилось N» на всю очередь
+ *   node tools/review.mjs --selftest            самотест ядра и стражей контура
+ *
+ * Флаги: --by "Имя" · --voice "Имя голоса" · --no-signal · --no-open · --timeout МИН · --port N
+ */
+
+import { createServer } from 'node:http';
+import { spawn, spawnSync } from 'node:child_process';
+import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync } from 'node:fs';
+import { join, relative, resolve, basename } from 'node:path';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+
+import {
+	ROOT,
+	DECISIONS_DIR,
+	QUEUE_FILE,
+	readMd,
+	parseMeta,
+	parseInterview,
+	mdToHtml,
+	bodyHash,
+	artifactsOf,
+	writeDecision,
+	isQuiet,
+	selftest,
+} from './lib/review-core.mjs';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Разбор аргументов
+// ─────────────────────────────────────────────────────────────────────────────
+
+const argv = process.argv.slice(2);
+const flag = (name) => argv.includes(name);
+const opt = (name, dflt = null) => {
+	const i = argv.indexOf(name);
+	return i >= 0 && argv[i + 1] ? argv[i + 1] : dflt;
+};
+const positional = argv.filter((a, i) => !a.startsWith('--') && !argv[i - 1]?.startsWith('--'));
+
+/** Кто отвечает. Параметр, а не догадка: `by` — это то, что делает архив читаемым месяцы спустя. */
+const BY = opt('--by', process.env.NDIM_OWNER || 'Николай Кривуша');
+/**
+ * Голос — ПАРАМЕТР, а не меню (регламент: в поле у машины оказался ровно один пригодный голос
+ * из 185).
+ *
+ * 🎙 У проекта ДВА тракта, и первый взят взаймы у соседнего проекта KLAS (слово владельца
+ * 2026-08-01: «голос нужно поприятнее, есть соседний проект KLAS — там есть голосовой контур,
+ * можно позаимствовать»):
+ *
+ *   1. **Silero v5 ru** — `F:\KLAS\tools\voice-say.mjs` (локально, офлайн, CPU; голоса `aidar`,
+ *      `baya`, `kseniya`, `xenia`, `eugene`). Звучит по-человечески, а не роботом.
+ *      Умолчание `eugene` — **выбор владельца** слепым прослушиванием пяти образцов на одном
+ *      материале (интервью №011, В1 = Д). Менять его может только он.
+ *   2. **SAPI** Windows — запасной путь, если тракта KLAS на машине нет.
+ *
+ * 🔴 ВЗАЙМЫ, А НЕ КОПИЕЙ. Модель 145 МБ, venv с torch и весь тракт остаются жить в KLAS: копия
+ * означала бы две правды и два места починки. NDim берёт КОМАНДУ, а не содержимое — и честно
+ * откатывается на SAPI, когда диска KLAS нет. Путь переопределяется `NDIM_VOICE_TOOL`.
+ *
+ * ⚠️ Уроки, УЖЕ ОПЛАЧЕННЫЕ KLAS, — не переоткрывать (`F:\KLAS\bugs\`): `06` текст без букв и цифр
+ * произносить нечего (код 2 — это не поломка) · `08` кракозябры cp1251 · `13` тракт молча глотал
+ * цифры, пока не появилась нормализация «56 → пятьдесят шесть» · `14` разметка утекала в речь,
+ * поэтому в голос уходит ЧИСТЫЙ текст, без markdown.
+ */
+const VOICE = opt('--voice', process.env.NDIM_VOICE || 'eugene');
+const SAPI_VOICE = process.env.NDIM_SAPI_VOICE || 'Microsoft Irina Desktop';
+const VOICE_TOOL = opt('--voice-tool', process.env.NDIM_VOICE_TOOL || 'F:\\KLAS\\tools\\voice-say.mjs');
+const TIMEOUT_MIN = Number(opt('--timeout', '30'));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// СТРАНИЦА
+// ─────────────────────────────────────────────────────────────────────────────
+
+const esc = (s) =>
+	String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/**
+ * Стиль страницы. Обе темы ОС обязательны: полевые грабли №6 — «тёмное на тёмном поймал владелец,
+ * а не самопроверки». Поэтому цвета заданы переменными и переопределяются медиазапросом, а не
+ * подбираются на глаз в одной теме.
+ */
+const STYLE = `
+:root{
+	--bg:#f7f7f5; --card:#fff; --ink:#1a1a1a; --dim:#5b5b57; --line:#e2e2dd;
+	--accent:#1a6fd4; --accent-ink:#fff; --ok:#1f7a3d; --warn:#b06000; --bad:#b3261e;
+	--code-bg:#f0f0ec;
+}
+@media (prefers-color-scheme: dark){
+	:root{
+		--bg:#14161a; --card:#1b1e24; --ink:#e8e8e6; --dim:#a0a4ad; --line:#2c313a;
+		--accent:#4d9bff; --accent-ink:#0b1220; --ok:#5fd08a; --warn:#e0a34a; --bad:#ff6b60;
+		--code-bg:#232830;
+	}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+	font:16px/1.6 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:920px;margin:0 auto;padding:24px 18px 120px}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+	padding:14px 0;margin-bottom:18px}
+h1{font-size:1.45rem;line-height:1.3;margin:0 0 6px}
+h2{font-size:1.2rem;margin:1.6em 0 .5em}
+h3{font-size:1.05rem;margin:1.4em 0 .4em}
+h4{font-size:1rem;margin:1.2em 0 .4em}
+p{margin:.6em 0}
+a{color:var(--accent)}
+code{background:var(--code-bg);padding:.1em .35em;border-radius:4px;font-size:.9em}
+pre{background:var(--code-bg);padding:12px;border-radius:8px;overflow:auto}
+pre code{background:none;padding:0}
+blockquote{margin:.8em 0;padding:.1em 0 .1em 14px;border-left:3px solid var(--line);color:var(--dim)}
+hr{border:0;border-top:1px solid var(--line);margin:1.6em 0}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:.92em}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code-bg)}
+.meta{color:var(--dim);font-size:.86rem}
+.q{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:20px 0}
+.q.done{opacity:.72}
+.qhead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.tag{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;
+	border:1px solid var(--line);color:var(--dim)}
+.tag.open{color:var(--warn);border-color:var(--warn)}
+.tag.ok{color:var(--ok);border-color:var(--ok)}
+.opts{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);
+	border-radius:10px;cursor:pointer;background:transparent}
+.opt:hover{border-color:var(--accent)}
+.opt input{margin-top:4px}
+.opt b{white-space:nowrap}
+.opt.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+textarea{width:100%;min-height:70px;padding:10px;border:1px solid var(--line);border-radius:10px;
+	background:var(--bg);color:var(--ink);font:inherit;font-size:.95rem;resize:vertical}
+label.f{display:block;margin:10px 0 4px;font-size:.85rem;color:var(--dim)}
+.prev{background:var(--code-bg);border-radius:8px;padding:10px 12px;margin:.5em 0;font-size:.95em}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);
+	padding:12px 18px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+button{font:inherit;padding:10px 18px;border-radius:10px;border:1px solid var(--line);
+	background:var(--card);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.bad{color:var(--bad);border-color:var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+.note{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);
+	margin:14px 0;font-size:.92rem}
+.audio{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:.3em 0}
+.audio audio{height:34px;max-width:100%}
+.note.ok{border-color:var(--ok);color:var(--ok)}
+.note.bad{border-color:var(--bad);color:var(--bad)}
+.art{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:20px 0}
+.art pre{max-height:420px}
+.hash{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;color:var(--dim);word-break:break-all}
+@media (max-width:560px){ .wrap{padding:16px 12px 140px} h1{font-size:1.2rem} }
+`;
+
+/**
+ * Ссылка на звуковой файл превращается в проигрыватель, а сам файл ВШИВАЕТСЯ в страницу.
+ *
+ * Зачем вшивать, а не ссылаться: страница обязана быть самодостаточной и открываться офлайн
+ * (регламент), а ссылка `file://` из страницы, отданной по http, браузером блокируется — владелец
+ * увидел бы мёртвый проигрыватель и решил, что сломан контур.
+ *
+ * Зачем вообще звук: есть класс критериев, который агент измерить не может — «красиво», «приятно»
+ * (`AGENT_GUIDE` → «Класс вкуса»). Судящему звук нужен ЗВУК, а не описание звука.
+ */
+function inlineAudio(html) {
+	return html.replace(/<a href="([^"]+\.(wav|mp3|ogg))">([^<]*)<\/a>/g, (_, src, ext, label) => {
+		const p = resolve(ROOT, decodeURIComponent(src));
+		if (!existsSync(p)) return `<span class="meta">нет файла: ${esc(src)}</span>`;
+		const mime = ext === 'mp3' ? 'audio/mpeg' : ext === 'ogg' ? 'audio/ogg' : 'audio/wav';
+		const b64 = readFileSync(p).toString('base64');
+		return `<span class="audio">${esc(label)}<audio controls preload="metadata" src="data:${mime};base64,${b64}"></audio></span>`;
+	});
+}
+
+/** Карточка одного вопроса интервью: тело + варианты + поля ввода. */
+function questionCard(q, bodyMd) {
+	const opts = q.options
+		.map(
+			(o) => `
+			<label class="opt" data-l="${esc(o.letter)}">
+				<input type="radio" name="ch-${esc(q.label)}" value="${esc(o.letter)}">
+				<span><b>${esc(o.letter)})</b> ${esc(o.label)}</span>
+			</label>`,
+		)
+		.join('');
+
+	const existing = q.answered
+		? `<div class="prev"><b>Уже отвечено:</b><br>${mdToHtml(q.answer)}</div>`
+		: '';
+
+	return `
+	<section class="q ${q.answered ? 'done' : ''}" data-q="${esc(q.label)}">
+		<div class="qhead">
+			<span class="tag ${q.answered ? 'ok' : 'open'}">${q.answered ? 'отвечено' : 'ждёт вас'}</span>
+			<h3 style="margin:0">${esc(q.title)}</h3>
+		</div>
+		${mdToHtml(bodyMd)}
+		${existing}
+		${opts ? `<div class="opts">${opts}</div>` : ''}
+		<label class="f">${q.answered ? 'Уточнение (старый ответ останется дословно)' : 'Ответ своими словами'}</label>
+		<textarea data-text="${esc(q.label)}" placeholder="можно только букву выше, можно только текст, можно оба"></textarea>
+		<label class="f">Пометка для агента (необязательно)</label>
+		<textarea data-comment="${esc(q.label)}" style="min-height:44px"></textarea>
+	</section>`;
+}
+
+/** Карточка исходящего артефакта: полная полезная нагрузка + промышленная четвёрка действий. */
+function artifactCard(a, bodyText, hash) {
+	return `
+	<section class="art" data-art="${esc(a.id)}" data-hash="${esc(hash)}">
+		<div class="qhead">
+			<span class="tag open">на одобрение</span>
+			<h3 style="margin:0">${esc(a.id)} → ${esc(a.target || 'адресат не указан')}</h3>
+		</div>
+		<p class="meta">Файл тела: <code>${esc(a.body_file)}</code> · формат: ${esc(a.format || 'text')}</p>
+		<p class="meta">Уйдёт ровно это, байт в байт:</p>
+		<pre><code>${esc(bodyText)}</code></pre>
+		<p class="hash">SHA-256 тела: ${esc(hash)}</p>
+		<div class="opts">
+			<label class="opt"><input type="radio" name="st-${esc(a.id)}" value="approved"><span><b>Одобрить</b> — отправлять как есть</span></label>
+			<label class="opt"><input type="radio" name="st-${esc(a.id)}" value="rejected"><span><b>Отклонить</b> — с причиной ниже</span></label>
+			<label class="opt"><input type="radio" name="st-${esc(a.id)}" value="edit"><span><b>Поправить</b> — что именно, ниже</span></label>
+			<label class="opt"><input type="radio" name="st-${esc(a.id)}" value="reply"><span><b>Ответить</b> — вопрос агенту, решения пока нет</span></label>
+		</div>
+		<label class="f">Причина / правка / вопрос</label>
+		<textarea data-text="${esc(a.id)}"></textarea>
+	</section>`;
+}
+
+/**
+ * Собирает страницу документа.
+ * @param live — живая страница (можно ответить) или снимок в файл (только чтение).
+ */
+export function buildPage({ docPath, live }) {
+	const relPath = relative(ROOT, docPath).split('\\').join('/');
+	const text = readMd(docPath);
+	const meta = parseMeta(text);
+	const parsed = parseInterview(docPath, text);
+	const lines = parsed.lines;
+
+	// Сегменты в исходном порядке: карточки вопросов и всё, что между ними, — ничего не теряем.
+	const chunks = [];
+	let cursor = 0;
+	for (const q of parsed.questions) {
+		if (q.startLine > cursor) chunks.push(mdToHtml(lines.slice(cursor, q.startLine).join('\n')));
+		const bodyEnd = q.answerLine >= 0 ? q.answerLine : q.endLine;
+		chunks.push(questionCard(q, lines.slice(q.startLine + 1, bodyEnd).join('\n')));
+		cursor = q.endLine;
+	}
+	if (cursor < lines.length) chunks.push(mdToHtml(lines.slice(cursor).join('\n')));
+
+	// Исходящие артефакты (черновики отправки): тело берётся ССЫЛКОЙ на файл, не копипастой —
+	// страница показывает ровно те байты, что уйдут, и хеш считается по ним же (I3).
+	const arts = [];
+	for (const a of meta.artifacts) {
+		const p = resolve(ROOT, a.body_file || '');
+		if (!a.body_file || !existsSync(p)) {
+			arts.push(
+				`<section class="art"><div class="note bad">Артефакт <b>${esc(a.id)}</b>: файл тела
+				<code>${esc(a.body_file || '—')}</code> не найден. Одобрять нечего.</div></section>`,
+			);
+			continue;
+		}
+		arts.push(artifactCard(a, readFileSync(p, 'utf8'), bodyHash(p)));
+	}
+
+	const open = parsed.questions.filter((q) => !q.answered).length;
+
+	const page = `<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(meta.title)}</title>
+<style>${STYLE}</style></head>
+<body data-doc="${esc(relPath)}" data-kind="${esc(meta.kind)}">
+<div class="wrap">
+	<header class="top">
+		<h1>${esc(meta.title)}</h1>
+		<div class="meta">
+			${esc(relPath)} · ${parsed.questions.length} вопрос(ов), ждут вас ${open}
+			${meta.artifacts.length ? ` · артефактов на одобрение: ${meta.artifacts.length}` : ''}
+		</div>
+		${parsed.statusRaw ? `<div class="meta">${mdToHtml(parsed.statusRaw)}</div>` : ''}
+	</header>
+
+	${live ? '' : '<div class="note">Это СНИМОК страницы в файл. Отвечать можно на живой: <code>node tools/review.mjs open ' + esc(relPath) + '</code></div>'}
+
+	${arts.join('\n')}
+	${chunks.join('\n')}
+</div>
+
+${
+	live
+		? `<div class="bar">
+	<button class="primary" id="save">Сохранить ответы</button>
+	<span class="meta" id="status"></span>
+</div>`
+		: ''
+}
+
+<script>
+// Выбор варианта. Единственная «логика» страницы — всё остальное собирает сервер.
+//
+// 🔑 ПОВТОРНЫЙ КЛИК ПО ВЫБРАННОМУ ПУНКТУ СНИМАЕТ ВЫБОР (слово владельца 2026-08-01). Радиокнопка
+// такого не умеет по природе: раз выбрав, передумать «ни один» уже нельзя — а в интервью это
+// нужно постоянно, потому что вопрос можно начать отвечать и отложить.
+// Механика: состояние запоминается на mousedown (ДО того, как браузер применит активацию), а
+// снимается на клике САМОГО поля — к этому моменту браузер свою активацию уже сделал, и наш
+// «отжим» её не перетрёт. События с целью-подписью пропускаем: клик по тексту порождает ВТОРОЕ,
+// синтетическое событие на поле, и обработай мы оба — выбор снимался бы дважды, то есть никогда.
+let wasChecked = false;
+const paint = (box) => {
+	for (const l of box.querySelectorAll('.opt'))
+		l.classList.toggle('sel', !!l.querySelector('input[type=radio]')?.checked);
+};
+document.addEventListener('mousedown', (e) => {
+	wasChecked = !!e.target.closest?.('.opt')?.querySelector('input[type=radio]')?.checked;
+});
+document.addEventListener('keydown', () => { wasChecked = false; });
+document.addEventListener('click', (e) => {
+	const radio = e.target.closest?.('.opt')?.querySelector('input[type=radio]');
+	if (!radio || e.target !== radio) return;
+	if (wasChecked) radio.checked = false;
+	wasChecked = false;
+	paint(radio.closest('.opts'));
+});
+document.addEventListener('change', (e) => {
+	if (e.target.type === 'radio') paint(e.target.closest('.opts'));
+});
+
+const saveBtn = document.getElementById('save');
+if (saveBtn) saveBtn.addEventListener('click', async () => {
+	const answers = {};
+	for (const sec of document.querySelectorAll('[data-q]')) {
+		const label = sec.dataset.q;
+		const choice = sec.querySelector('input[type=radio]:checked')?.value || '';
+		const text = sec.querySelector('[data-text]')?.value.trim() || '';
+		const comment = sec.querySelector('[data-comment]')?.value.trim() || '';
+		if (choice || text) answers[label] = { choice, text, comment };
+	}
+	const artifacts = {};
+	for (const sec of document.querySelectorAll('[data-art]')) {
+		const id = sec.dataset.art;
+		const status = sec.querySelector('input[type=radio]:checked')?.value || '';
+		const text = sec.querySelector('[data-text]')?.value.trim() || '';
+		// Хеш едет ТОТ, что страница показала. Сервер сверит его с файлом заново: если текст
+		// изменился, пока владелец читал, одобрять нечего — он видел не то (I3).
+		if (status) artifacts[id] = { status, comment: text, sha256: sec.dataset.hash };
+	}
+	if (!Object.keys(answers).length && !Object.keys(artifacts).length) {
+		document.getElementById('status').textContent = 'Ничего не отмечено — нечего сохранять.';
+		return;
+	}
+	saveBtn.disabled = true;
+	document.getElementById('status').textContent = 'Записываю…';
+	// Поле «кто отвечает» со страницы убрано по слову владельца 2026-08-01: «убрать это поле
+	// вообще полностью, я всегда отвечаю». На проекте владелец ровно один, и спрашивать его имя
+	// каждый раз — трение без выгоды. Само поле "by" при этом никуда не делось: его проставляет
+	// сервер (параметр --by, умолчание — владелец), потому что архив решений без «кто» нечитаем
+	// месяцы спустя (I2). Убрали ВОПРОС, а не ЗАПИСЬ.
+	// ⚠️ Внутри этого <script> живут ШАБЛОННЫЕ СТРОКИ — обратная кавычка здесь обрывает всю
+	// страницу и роняет модуль синтаксической ошибкой. В комментариях кавычки только «ёлочки».
+	const res = await fetch('/decision', {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({ answers, artifacts }),
+	});
+	const out = await res.json();
+	if (out.ok) {
+		document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
+			'<div class="note ok"><b>Записано.</b> Ответ лёг в три места: сам документ, файл решения и архив. ' +
+			'Вкладку можно закрыть — агент уже видит ваш ответ.</div>');
+		document.getElementById('status').textContent = 'готово';
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	} else {
+		document.getElementById('status').textContent = 'ОШИБКА: ' + (out.error || 'неизвестно');
+		saveBtn.disabled = false;
+	}
+});
+</script>
+</body></html>`;
+
+	return inlineAudio(page);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// СИГНАЛ (I5, I6)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Зовёт владельца. Вызывается ТОЛЬКО после успешно поднятой страницы (I5) — иначе получается
+ * класс «позвали, а показать нечего».
+ *
+ * 🔴 Грабли №3 регламента: `exit 0` ≠ человек услышал. Системные уведомления Windows глушатся
+ * настройками фокуса МОЛЧА и с успешным кодом возврата. Поэтому сигнал идёт звуком через звуковую
+ * карту (`[console]::beep`) и голосом, а доставка подтверждается ЧЕЛОВЕКОМ, а не кодом возврата, —
+ * инструмент прямо об этом печатает.
+ *
+ * ⚠️ Текст едет ФАЙЛОМ, не аргументом командной строки: кириллица в аргументе PowerShell 5.1
+ * превращается в мусор (`EXP-0002`, `EXP-0069`, канон «Гигиена текста»). Сама команда — только ASCII.
+ */
+export async function signal(say, { voice = VOICE, quiet = null } = {}) {
+	const now = new Date();
+	if (quiet ?? isQuiet(now)) {
+		console.log('🔇 Тихие часы (23:00–09:00) — сигнал подавлен. Страница ждёт владельца молча.');
+		return { signalled: false, reason: 'тихие часы' };
+	}
+	if (process.platform !== 'win32') {
+		console.log('🔔 (сигнал звуком реализован для Windows; здесь — только текстом)');
+		return { signalled: false, reason: 'не Windows' };
+	}
+
+	// Разметка в голос не уходит (урок KLAS bugs/14): произносится чистый текст.
+	const clean = String(say).replace(/[*_`#>\[\]()]/g, ' ').replace(/\s+/g, ' ').trim();
+
+	// Короткий звук — первым и всегда: он не зависит от настроек уведомлений ОС, которые глушат
+	// системные всплывашки МОЛЧА и с успешным кодом возврата (грабли №3 регламента).
+	spawnSync(
+		'powershell',
+		['-NoProfile', '-NonInteractive', '-Command', '[console]::beep(880,160); [console]::beep(660,160); [console]::beep(990,260);'],
+		{ stdio: 'ignore', timeout: 8000 },
+	);
+
+	const engine = await speak(clean, voice);
+
+	console.log(`🔔 Сигнал подан (звук + голос: ${engine}).`);
+	console.log(
+		'   ⚠️ Код возврата этого НЕ доказывает: уведомления и звук глушатся настройками ОС молча.\n' +
+			'   Доставка считается подтверждённой только словом человека.',
+	);
+	return { signalled: true, engine };
+}
+
+/** Произносит текст: сначала Silero из KLAS, при неудаче — SAPI. Возвращает имя тракта. */
+async function speak(text, voice) {
+	if (existsSync(VOICE_TOOL)) {
+		const ok = await new Promise((resolve) => {
+			const p = spawn(process.execPath, [VOICE_TOOL, text, '--play', '--voice', voice], {
+				stdio: 'ignore',
+				windowsHide: true,
+			});
+			// Код 2 у тракта KLAS означает «нечего произносить» — это не поломка (их bugs/06).
+			p.on('exit', (code) => resolve(code === 0));
+			p.on('error', () => resolve(false));
+			setTimeout(() => resolve(false), 120_000).unref?.();
+		});
+		if (ok) return `Silero/${voice}`;
+		console.log('   (тракт KLAS не ответил — говорю системным голосом)');
+	}
+
+	// Запасной путь. Текст едет ФАЙЛОМ, команда — только ASCII: кириллица в аргументе
+	// PowerShell 5.1 портится кодировкой консоли ещё до того, как её увидит программа
+	// (`EXP-0002`, `EXP-0069`; тот же класс, что KLAS bugs/08).
+	const sayFile = join(tmpdir(), `ndim-review-say-${process.pid}.txt`);
+	writeFileSync(sayFile, text, 'utf8');
+	const ps = [
+		'try {',
+		'  Add-Type -AssemblyName System.Speech;',
+		'  $s = New-Object System.Speech.Synthesis.SpeechSynthesizer;',
+		`  try { $s.SelectVoice("${SAPI_VOICE.replace(/"/g, '')}") } catch {};`,
+		`  $t = [IO.File]::ReadAllText("${sayFile.replace(/\\/g, '\\\\')}", [Text.Encoding]::UTF8);`,
+		'  $s.Speak($t);',
+		'} catch { }',
+	].join(' ');
+	spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', ps], {
+		stdio: 'ignore',
+		timeout: 60_000,
+	});
+	return `SAPI/${SAPI_VOICE}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// КОМАНДЫ
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Поднимает страницу, открывает браузер, зовёт владельца и ждёт ответа. */
+async function cmdOpen(docPath) {
+	const html = buildPage({ docPath, live: true });
+
+	const server = createServer((req, res) => {
+		if (req.method === 'GET' && (req.url === '/' || req.url.startsWith('/?'))) {
+			res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+			return res.end(buildPage({ docPath, live: true })); // всегда свежий разбор документа
+		}
+		if (req.method === 'POST' && req.url === '/decision') {
+			let body = '';
+			req.on('data', (c) => (body += c));
+			req.on('end', () => {
+				try {
+					const got = JSON.parse(body);
+					const at = new Date().toISOString();
+
+					// I3 — одобрение привязано к байтам тела. Сверяем показанный странице хеш с файлом
+					// ПРЯМО СЕЙЧАС: если текст успел измениться, владелец одобрял не то, что уйдёт.
+					for (const [id, rec] of Object.entries(got.artifacts || {})) {
+						const art = artifactsOf(docPath).find((a) => a.id === id);
+						if (!art?.absolute || !existsSync(art.absolute))
+							throw new Error(`тело артефакта «${id}» пропало`);
+						const now = bodyHash(art.absolute);
+						if (rec.sha256 !== now)
+							throw new Error(
+								`текст артефакта «${id}» изменился, пока страница была открыта — ` +
+									'перезагрузите её и посмотрите новую редакцию',
+							);
+					}
+					const paths = writeDecision({
+						docPath,
+						kind: parseMeta(readMd(docPath)).kind,
+						by: (got.by || BY).trim() || BY,
+						at,
+						comment: got.comment,
+						answers: got.answers || {},
+						artifacts: got.artifacts || {},
+					});
+					res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+					res.end(JSON.stringify({ ok: true, paths }));
+					console.log('\n✅ РЕШЕНИЕ ЗАПИСАНО В ТРИ МЕСТА:');
+					console.log('   документ: ' + relative(ROOT, paths.md ?? docPath));
+					console.log('   решение:  ' + relative(ROOT, paths.decision));
+					console.log('   архив:    ' + relative(ROOT, paths.archive));
+					// Сервер живёт ровно до записи решения: поднялся → записал → умер.
+					setTimeout(() => server.close(() => process.exit(0)), 800);
+				} catch (e) {
+					res.writeHead(500, { 'content-type': 'application/json; charset=utf-8' });
+					res.end(JSON.stringify({ ok: false, error: String(e.message) }));
+				}
+			});
+			return;
+		}
+		res.writeHead(404).end('нет');
+	});
+
+	const port = Number(opt('--port', '0'));
+	await new Promise((r) => server.listen(port, '127.0.0.1', r));
+	const url = `http://127.0.0.1:${server.address().port}/`;
+
+	const parsed = parseInterview(docPath, readMd(docPath));
+	const open = parsed.questions.filter((q) => !q.answered).length;
+	console.log(`\nСтраница поднята: ${url}`);
+	console.log(`Документ: ${relative(ROOT, docPath)} · ждут ответа: ${open}`);
+
+	if (!flag('--no-open')) spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' });
+
+	// I5 — сигнал ПОСЛЕ того, как страница поднята и открыта. Не раньше.
+	// Намеренно БЕЗ await: синтез речи занимает секунды, а сервер уже слушает — ждать его значило
+	// бы держать первый запрос браузера в очереди и показать владельцу пустую вкладку.
+	if (!flag('--no-signal')) {
+		const { kind, title } = scopeOf(docPath, parseMeta(readMd(docPath)));
+		void signal(
+			`Николай, вас зовёт ${kind}${title ? `: ${title}` : ''}. ` +
+				`${open} ${plural(open, 'вопрос', 'вопроса', 'вопросов')} без ответа.`,
+		);
+	}
+
+	console.log(`\nЖду ответа (до ${TIMEOUT_MIN} мин). Ctrl+C — прекратить, документ не изменится.`);
+	setTimeout(
+		() => {
+			console.log('\n⏳ Время вышло — страница закрыта, ответов не записано.');
+			server.close(() => process.exit(2));
+		},
+		TIMEOUT_MIN * 60_000,
+	).unref?.();
+	return html;
+}
+
+/**
+ * Что именно произносит голос (решение владельца, интервью №011, В2, дословно): «читать название
+ * документа, скоупа вопросов, по которому зовут. Макет, интервью, эпик, баг, выкатка в прод и
+ * так далее».
+ *
+ * Тип берётся из метаблока, если он есть, иначе — из директории документа: она на этом проекте и
+ * ЕСТЬ скоуп (`bugs/` — баг, `plans/` — план, `design/` — макеты). Из заголовка снимается
+ * служебный префикс «Интервью №011 — »: тип мы уже назвали словом, и повторять его — только
+ * удлинять речь, за что владелец и не любит длинные сигналы.
+ */
+export function scopeOf(docPath, meta) {
+	const rel = relative(ROOT, docPath).split('\\').join('/');
+	const byDir = rel.startsWith('interviews/')
+		? 'интервью'
+		: rel.startsWith('bugs/')
+			? 'баг'
+			: rel.startsWith('plans/')
+				? 'план'
+				: rel.startsWith('ideas/')
+					? 'идея'
+					: rel.startsWith('researches/')
+						? 'исследование'
+						: rel.startsWith('design/')
+							? 'макеты'
+							: rel.startsWith('homeworks/')
+								? 'домашка'
+								: 'документ';
+	const kind = meta?.kind === 'outbound' ? 'черновик отправки' : byDir;
+	let title = String(meta?.title ?? '').replace(/^[^—:]{0,40}[—:]\s*/u, '').trim();
+	if (title.length > 90) title = title.split(/[.:—]/u)[0].trim();
+	return { kind, title };
+}
+
+const plural = (n, a, b, c) => {
+	const m10 = n % 10;
+	const m100 = n % 100;
+	if (m10 === 1 && m100 !== 11) return a;
+	if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return b;
+	return c;
+};
+
+/** Снимает страницу в файл — самодостаточную и открывающуюся офлайн. */
+function cmdRender(docPath) {
+	const outDir = join(ROOT, 'test-results', 'owner-reviews');
+	mkdirSync(outDir, { recursive: true });
+	const out = opt('--out', join(outDir, basename(docPath).replace(/\.md$/, '.html')));
+	writeFileSync(out, buildPage({ docPath, live: false }), 'utf8');
+	console.log(relative(ROOT, out));
+	return out;
+}
+
+/** Все интервью, ждущие владельца. Это исполняемая команда ритуала, а не украшение. */
+function cmdList() {
+	const dir = join(ROOT, 'interviews');
+	const files = readdirSyncSafe(dir)
+		.filter((f) => f.startsWith('interview_') && f.endsWith('.md'))
+		.sort();
+	let waiting = 0;
+	console.log('ИНТЕРВЬЮ, ЖДУЩИЕ ВЛАДЕЛЬЦА\n');
+	for (const f of files) {
+		const p = join(dir, f);
+		const iv = parseInterview(p, readMd(p));
+		if (!iv.waiting) continue;
+		waiting++;
+		const open = iv.questions.filter((q) => !q.answered);
+		console.log(`  🟡 interviews/${f}`);
+		console.log(`     ${iv.status}`);
+		for (const q of open) console.log(`     ⛔ ${q.title}`);
+		console.log(`     открыть: node tools/review.mjs open interviews/${f}\n`);
+	}
+	if (!waiting) console.log('  ✅ ни одного — очередь владельца пуста.');
+	return waiting;
+}
+
+function readdirSyncSafe(d) {
+	try {
+		return readdirSync(d);
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Ставит документ в очередь (I7). Автономный цикл НИКОГДА не стоит у открытой страницы: он
+ * паркует документ и идёт к следующей незаблокированной работе, а зовут владельца один раз на пачку.
+ */
+function cmdQueue(docPath) {
+	mkdirSync(DECISIONS_DIR, { recursive: true });
+	const rel = relative(ROOT, docPath).split('\\').join('/');
+	const q = existsSync(QUEUE_FILE) ? JSON.parse(readFileSync(QUEUE_FILE, 'utf8')) : { items: [] };
+	if (!q.items.some((i) => i.doc === rel)) {
+		q.items.push({ doc: rel, поставлен: new Date().toISOString() });
+		writeFileSync(QUEUE_FILE, JSON.stringify(q, null, '\t') + '\n', 'utf8');
+		console.log(`В очередь: ${rel} (всего накоплено: ${q.items.length})`);
+	} else {
+		console.log(`Уже в очереди: ${rel} (всего накоплено: ${q.items.length})`);
+	}
+	return q.items.length;
+}
+
+/** Одна страница «накопилось N» — карточка на документ, сигнал ОДИН раз на пачку (I7). */
+async function cmdBatch() {
+	const q = existsSync(QUEUE_FILE) ? JSON.parse(readFileSync(QUEUE_FILE, 'utf8')) : { items: [] };
+	// Из очереди выпадает всё, на что владелец уже ответил — иначе пачка растёт вечно.
+	const live = q.items.filter((i) => {
+		const p = join(ROOT, i.doc);
+		if (!existsSync(p)) return false;
+		return parseInterview(p, readMd(p)).waiting;
+	});
+	if (!live.length) {
+		console.log('Очередь пуста — звать владельца незачем.');
+		return 0;
+	}
+
+	const cards = live
+		.map((i) => {
+			const p = join(ROOT, i.doc);
+			const iv = parseInterview(p, readMd(p));
+			const open = iv.questions.filter((x) => !x.answered);
+			return `<section class="q">
+				<div class="qhead"><span class="tag open">ждёт вас</span>
+				<h3 style="margin:0">${esc(parseMeta(readMd(p)).title)}</h3></div>
+				<p class="meta">${esc(i.doc)} · без ответа: ${open.length} из ${iv.questions.length}
+					· в очереди с ${esc(String(i.поставлен).slice(0, 10))}</p>
+				${open.length ? '<ul>' + open.map((x) => `<li>${esc(x.title)}</li>`).join('') + '</ul>' : ''}
+				<p><code>node tools/review.mjs open ${esc(i.doc)}</code></p>
+			</section>`;
+		})
+		.join('\n');
+
+	const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Накопилось: ${live.length}</title><style>${STYLE}</style></head><body><div class="wrap">
+<header class="top"><h1>Накопилось ${live.length} ${plural(live.length, 'документ', 'документа', 'документов')}</h1>
+<div class="meta">Пока вы были заняты, агент работал и складывал сюда всё, что решать не вправе.</div>
+</header>${cards}</div></body></html>`;
+
+	const outDir = join(ROOT, 'test-results', 'owner-reviews');
+	mkdirSync(outDir, { recursive: true });
+	const out = join(outDir, 'batch.html');
+	writeFileSync(out, html, 'utf8');
+	console.log(`Пачка собрана: ${relative(ROOT, out)} (${live.length})`);
+
+	if (!flag('--no-open')) spawn('cmd', ['/c', 'start', '', out], { detached: true, stdio: 'ignore' });
+	// Здесь await обязателен: команда `batch` завершается сразу, и без ожидания процесс умер бы
+	// раньше, чем синтезатор успел открыть рот.
+	if (!flag('--no-signal')) {
+		// Пачка тоже называет, ЧЕМ именно она набрана: «два интервью и баг» полезнее, чем «три
+		// документа», — по этому голос и решают, идти сейчас или после дела (интервью №011, В2).
+		const kinds = live.map((i) => scopeOf(join(ROOT, i.doc), parseMeta(readMd(join(ROOT, i.doc)))).kind);
+		const uniq = [...new Set(kinds)].join(', ');
+		await signal(
+			`Николай, накопилось ${live.length} ${plural(live.length, 'документ', 'документа', 'документов')} ` +
+				`на вашу вычитку: ${uniq}.`,
+		);
+	}
+	return live.length;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function usage() {
+	console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('*/')[0].replace(/^\/\*\*?|^ \* ?/gm, ''));
+}
+
+async function main() {
+	if (flag('--selftest')) {
+		const fails = selftest();
+		console.log(fails.length ? '🔴 ПРОВАЛЫ:\n  ' + fails.join('\n  ') : '✅ самотест ядра чист');
+		return fails.length ? 1 : 0;
+	}
+	const [cmd, arg] = positional;
+	const docPath = arg ? resolve(ROOT, arg) : null;
+	if (docPath && !existsSync(docPath)) {
+		console.error(`Нет такого документа: ${arg}`);
+		return 1;
+	}
+
+	switch (cmd) {
+		case 'open':
+			if (!docPath) return usage(), 1;
+			await cmdOpen(docPath);
+			return null; // сервер жив, выход произойдёт после записи решения
+		case 'render':
+			if (!docPath) return usage(), 1;
+			cmdRender(docPath);
+			return 0;
+		case 'list':
+			cmdList();
+			return 0;
+		case 'queue':
+			if (!docPath) return usage(), 1;
+			cmdQueue(docPath);
+			return 0;
+		case 'batch':
+			await cmdBatch();
+			return 0;
+		default:
+			usage();
+			return 1;
+	}
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+	const code = await main();
+	if (code !== null) process.exit(code);
+}
