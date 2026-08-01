@@ -50,6 +50,64 @@ test('удаление аккаунта: публичная дверь откр�
 	await expect(page.getByText('Управление аккаунтом', { exact: false })).toHaveCount(0);
 });
 
+/*
+ * 🔓 ДОКУМЕНТЫ ОТКРЫТЫ ПОИСКУ — слово владельца «Открываем всё!» (интервью №009, В11).
+ *
+ * 🔴 ЭТОТ СТРАЖ ПЕРЕВЁРНУТ НАМЕРЕННО, и в этом весь смысл. Он требует, чтобы `noindex` на
+ * документах НЕ БЫЛО. Причина — урок `EXP-0107`: когда работа состоит в УДАЛЕНИИ чего-то,
+ * обычный тест её не стережёт, и следующая сессия «восстановит» удалённое, не встретив ни
+ * одного возражения. Одна строка в `DocShell.svelte` закрывала девять страниц; вернуть её
+ * так же дёшево, как убрать.
+ *
+ * Замер до правки: поиску были открыты 2 страницы из 19 (3 692 знака против 53 385 закрытых).
+ * После: 11 страниц, ≈49 700 знаков — рост в 13.5 раза.
+ */
+const PUBLIC_DOCS = [
+	'/menu/manual',
+	'/menu/terms',
+	'/menu/privacy',
+	'/menu/disclaimer',
+	'/menu/about',
+	'/menu/author',
+	'/menu/support',
+	'/menu/donate',
+	'/menu/share',
+];
+
+/** Личные экраны. Их закрытость — тоже работа стража: граница обязана держаться с ОБЕИХ сторон. */
+const PRIVATE_SCREENS = ['/profile', '/relations', '/dims', '/space', '/account', '/menu'];
+
+test('документы продукта ОТКРЫТЫ поиску и попали в карту сайта', async ({ request }) => {
+	const xml = await (await request.get('/sitemap.xml')).text();
+
+	for (const path of PUBLIC_DOCS) {
+		const res = await request.get(path);
+		expect(res.status(), `${path} обязан отдаваться`).toBe(200);
+
+		const html = await res.text();
+		expect(html, `${path} закрыт noindex — это регрессия решения владельца В11`).not.toContain(
+			'noindex',
+		);
+		// Без canonical открытая страница плодит дубли по трём хостам — это её половина работы.
+		expect(html, `${path} без canonical`).toContain(`<link rel="canonical" href="https://ndimspace.app${path}"`);
+		expect(xml, `${path} открыт, но поисковику о нём не сказали`).toContain(
+			`<loc>https://ndimspace.app${path}</loc>`,
+		);
+	}
+});
+
+test('личные экраны ЗАКРЫТЫ от поиска — граница держится с обеих сторон', async ({ request }) => {
+	const xml = await (await request.get('/sitemap.xml')).text();
+
+	for (const path of PRIVATE_SCREENS) {
+		const html = await (await request.get(path)).text();
+		expect(html, `${path} потерял noindex — это утечка личного экрана в поиск`).toContain('noindex');
+		expect(xml, `${path} попал в карту сайта, а не должен`).not.toContain(
+			`<loc>https://ndimspace.app${path}</loc>`,
+		);
+	}
+});
+
 test('robots.txt: обход разрешён, sitemap указан абсолютным URL', async ({ request }) => {
 	const res = await request.get('/robots.txt');
 	expect(res.status()).toBe(200);

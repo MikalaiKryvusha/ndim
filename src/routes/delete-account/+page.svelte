@@ -41,6 +41,7 @@
     type AccountFailure,
   } from '$lib/data/account';
   import { currentSession, signOutUser } from '$lib/data/profile';
+  import { SITE_ORIGIN } from '$lib/site';
   import { technicalDetail } from '$lib/ui/errors';
   import { MOTION } from '$lib/ui/motion';
   import type { Lang } from '$lib/ui/format';
@@ -240,6 +241,14 @@
     initiate account deletion». Скрыв её, мы бы выполнили букву и убили смысл.
   -->
   <meta name="description" content="Удаление учётной записи в Пространстве NDim и всех её данных." />
+  <!--
+    🔴 CANONICAL ДОБАВЛЕН 2026-08-01. Его здесь не было — и это был живой дубль: страница
+    индексируется намеренно (см. выше), а второй хост `ndim-space.web.app` раздаёт её копией.
+    Список редиректов в `firebase.json` перечисляет пути ЯВНО, и `/delete-account` в него не
+    попал — то есть поисковик видел одну и ту же страницу по двум адресам и не знал, какой
+    главный. Найдено разведкой SEO (`researches/26`), подтверждено дважды.
+  -->
+  <link rel="canonical" href={`${SITE_ORIGIN}/delete-account`} />
 </svelte:head>
 
 <main class="port">
