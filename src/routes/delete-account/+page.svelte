@@ -20,7 +20,7 @@
    * ⚠️ Само удаление живёт в общем компоненте `DeleteAccount`, а не копией здесь: две редакции
    * разрушающего потока разойдутся молча (`src/lib/ui/DeleteAccount.svelte`).
    */
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import DeleteAccount from '$lib/ui/DeleteAccount.svelte';
   import Icon from '$lib/ui/Icon.svelte';
@@ -106,11 +106,15 @@
           forgetPendingOp();
           standError = accountErrorText(confirmed.reason, lang);
         } else if (waiting?.op === 'delete-account') {
+          // Та же защита, что на /account: компонент рисуется условно, и без ожидания
+          // кадра вызов мог бы молча пропасть (см. комментарий там).
+          await tick();
           await deleter?.resume();
         }
         history.replaceState(null, '', RETURN_PATH);
       } else if (stand === 'ready') {
         // Человек пришёл сюда ЗА ЭТИМ — не заставляем его нажимать ещё одну кнопку.
+        await tick();
         deleter?.openNow();
       }
     } catch (error) {

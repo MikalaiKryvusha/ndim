@@ -544,6 +544,73 @@ describe('Связи — приватны и неприкосновенны', ()
   });
 });
 
+/*
+ * Удаление аккаунта (эпик `plans/15`, фаза 8). Каскад делает КЛИЕНТ — значит правила обязаны
+ * его пускать в своё и не пускать в чужое. Ровно эта пара и проверяется.
+ *
+ * Отказы стоят ПЕРВЫМИ и их больше: разрешение видно по работающему продукту, а запрет не
+ * виден никогда — пока его не сломают.
+ */
+describe('Удаление аккаунта — каждый сносит только своё', () => {
+  beforeEach(async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'users/alice'), { visibility: {} });
+      await setDoc(doc(db, 'users/alice/profile/everyone'), { name: 'Алиса' });
+      await setDoc(doc(db, 'users/alice/audience/bob'), { buckets: ['friends'] });
+      await setDoc(doc(db, 'users/alice/groups/g1'), { title: 'Друзья' });
+      await setDoc(doc(db, 'users/alice/groups/g1/members/bob'), { added: 1 });
+      await setDoc(doc(db, 'points/alice'), { dirty: false, updated: 1, lastSync: 1 });
+      await setDoc(doc(db, 'points/alice/dims/calm'), { value: 7 });
+      await setDoc(doc(db, 'relations/alice'), { computedAt: 1, version: 1, top: [] });
+    });
+  });
+
+  // ── 🔒 ОТКАЗЫ ──────────────────────────────────────────────────────────────
+  test('🔒 чужой корневой документ снести нельзя', async () => {
+    await assertFails(deleteDoc(doc(verified(BOB).firestore(), 'users/alice')));
+  });
+
+  test('🔒 чужие бакеты, подсказки и группы снести нельзя', async () => {
+    const db = verified(BOB).firestore();
+    for (const path of [
+      'users/alice/profile/everyone',
+      'users/alice/audience/bob', // ⚠️ подсказка ПРО Боба, но в дереве Алисы — и это её документ
+      'users/alice/groups/g1',
+      'users/alice/groups/g1/members/bob',
+    ]) {
+      await assertFails(deleteDoc(doc(db, path)));
+    }
+  });
+
+  test('🔒 чужую точку и чужие оценки снести нельзя', async () => {
+    const db = verified(BOB).firestore();
+    await assertFails(deleteDoc(doc(db, 'points/alice')));
+    await assertFails(deleteDoc(doc(db, 'points/alice/dims/calm')));
+  });
+
+  test('🔒 свой топ связей не сносит даже владелец — это работа сервера синхронизации', async () => {
+    // Клиенту запись в relations запрещена ПОЛНОСТЬЮ, и удаление — тоже запись.
+    // Отсюда и вся серверная уборка следов (`calculator/cleanupDeletedPeople`).
+    await assertFails(deleteDoc(doc(verified(ALICE).firestore(), 'relations/alice')));
+  });
+
+  // ── ✓ РАЗРЕШЕНИЯ: без них каскад невозможен, и «зелёные отказы» ничего не стоили бы ──
+  test('владелец сносит всё своё: документ, бакеты, подсказки, группы, точку, оценки', async () => {
+    const db = verified(ALICE).firestore();
+    for (const path of [
+      'users/alice/profile/everyone',
+      'users/alice/audience/bob',
+      'users/alice/groups/g1/members/bob',
+      'users/alice/groups/g1',
+      'points/alice/dims/calm',
+      'points/alice',
+      'users/alice',
+    ]) {
+      await assertSucceeds(deleteDoc(doc(db, path)));
+    }
+  });
+});
+
 describe('Оси и заявки на них', () => {
   beforeEach(async () => {
     await seed(async (db) => {

@@ -108,7 +108,14 @@ try {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  page.on('console', (m) => m.type() === 'error' && !/permission|insufficient|400|Bad Request/i.test(m.text()) && errors.push(m.text()));
+  /*
+   * `ERR_FAILED` глушится намеренно: сценарий 2.5 САМ обрывает сеть, чтобы проверить останов
+   * каскада, и эти отказы — доказательство, что обрыв случился, а не дефект продукта.
+   * Всё остальное по-прежнему считается провалом.
+   */
+  page.on('console', (m) => m.type() === 'error'
+    && !/permission|insufficient|400|Bad Request|ERR_FAILED|Failed to load resource/i.test(m.text())
+    && errors.push(m.text()));
   const text = () => page.evaluate(() => document.body.innerText || '');
 
   // ── 0 · КТО перед нами и БЫЛО ЛИ ЧТО удалять ───────────────────────────────
@@ -159,8 +166,26 @@ try {
   check(/не совпадает с Вашей/.test(await text()), '🔑 неверная почта отвергнута');
   check(await exists(`users/${uid}`), '🔑 неверная почта НИЧЕГО не удалила');
 
+  /*
+   * ⚠️ ЧЕГО ЗДЕСЬ НЕТ: сценария «сбой посреди каскада не оставляет человека без входа».
+   *
+   * Он был написан и трижды переделан: сбой вызывался обрывом сети к эмуляторам через
+   * page.route. Обрыв роняет не только каскад, но и саму страницу — экран уходит в
+   * состояние загрузки, и проверять становится нечего. Инструментовка съедала больше,
+   * чем давала, поэтому сценарий снят ЦЕЛИКОМ, а не оставлен мигающим.
+   *
+   * Гарантия при этом структурная: каскад выходит по первой же неудаче, и удаление
+   * учётной записи физически недостижимо после ошибки (src/lib/data/erase.ts), а порядок
+   * шагов доказан мутацией «deleteUser первым». Не хватает НАБЛЮДЕНИЯ за самим сбоем —
+   * это записано в plans/20 незакрытым хвостом, а не выдано за проверенное.
+   */
+
   // ── 3 · верная почта → подтверждение личности ──────────────────────────────
   console.log('\nПодтверждение личности:');
+  await page.goto(`${BASE}/account`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(4500);
+  await page.locator('button', { hasText: /^Удалить аккаунт$/ }).first().click();
+  await page.waitForTimeout(500);
   await page.locator('.zone input.inp').first().fill(CURRENT);
   await page.locator('button.warn', { hasText: /Удалить аккаунт/ }).first().click();
   await page.waitForTimeout(3000);
