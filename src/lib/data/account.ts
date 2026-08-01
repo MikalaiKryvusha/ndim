@@ -282,10 +282,20 @@ export const linkGoogle = continueWithGoogle;
  * при переходе по ссылке Firebase обязан сверить её, иначе ссылку можно было бы
  * перехватить и войти в чужой профиль.
  */
-export async function sendLoginLink(email: string, intent: LoginIntent = 'upgrade'): Promise<UpgradeResult> {
+export async function sendLoginLink(
+  email: string,
+  intent: LoginIntent = 'upgrade',
+  /**
+   * Куда вернуть человека. По умолчанию — «Профиль», но публичная страница удаления
+   * (`/delete-account`) обязана вернуть его К СЕБЕ: он пришёл туда снаружи, потому что
+   * приложения у него может уже не быть, и высадить его в «Профиле» значило бы отправить
+   * искать кнопку заново — ровно то, что запрещает требование Google Play к веб-ссылке.
+   */
+  returnPath: string = LINK_RETURN_PATH,
+): Promise<UpgradeResult> {
   try {
     await sendSignInLinkToEmail(devAuth(), email, {
-      url: `${loginLinkOrigin()}${LINK_RETURN_PATH}`,
+      url: `${loginLinkOrigin()}${returnPath}`,
       handleCodeInApp: true,
     });
     localStorage.setItem(PENDING_EMAIL_KEY, email);

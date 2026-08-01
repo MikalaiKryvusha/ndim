@@ -9,7 +9,17 @@ import { SITE_ORIGIN } from '$lib/site';
 
 export const prerender = true;
 
-const PUBLIC_PATHS = ['/'];
+/*
+ * `/delete-account` здесь НЕ по недосмотру, а по требованию.
+ *
+ * Все прочие экраны аккаунта закрыты `noindex`, но страница удаления обязана НАХОДИТЬСЯ:
+ * Google Play требует «readily discoverable option to initiate account deletion» и
+ * веб-ресурс, по которому удаление можно запросить, НЕ возвращаясь в приложение. Закрыв её
+ * от поиска, мы выполнили бы букву требования и убили его смысл.
+ *
+ * Приватных данных на ней нет: до входа это дверь, после входа — шаг подтверждения.
+ */
+const PUBLIC_PATHS = ['/', '/delete-account'];
 
 export function GET(): Response {
   const urls = PUBLIC_PATHS.map((path) => `  <url><loc>${SITE_ORIGIN}${path}</loc></url>`).join('\n');
