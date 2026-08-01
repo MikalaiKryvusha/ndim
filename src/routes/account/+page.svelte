@@ -13,8 +13,10 @@
    * заголовок. Дверь в карточке-шапке «Профиля» при этом носит имя «Управление аккаунтом» —
    * тоже канон 1.x (`ideas/19`), и это не расхождение, а два разных места.
    *
-   * ЧТО ЭТОТ ЭКРАН ПОКА НЕ ДЕЛАЕТ: не меняет почту (фаза 5), не трогает пароль (фаза 7), не
-   * удаляет аккаунт (фаза 8). Фаза 4 — фундамент: маршрут, виджет «Мой аккаунт» и состояния.
+   * СОСТАВ ЭКРАНА ОКОНЧАТЕЛЕН: «Мой аккаунт» (фаза 4) · «Поменять Email» (фаза 5) ·
+   * «Удаление аккаунта» (фаза 8). Виджета «Пароль» не будет никогда — пароли отменены
+   * решением владельца 2026-08-01 («убираем пароли полностью»), `bugs/32` закрыт.
+   *
    * Обещать здесь то, чего нет, нельзя — ровно из-за этого в «Профиле» жила строка «скоро».
    */
   import { onMount } from 'svelte';
@@ -40,9 +42,10 @@
     type AccountFailure,
     type SignInMethod,
   } from '$lib/data/account';
-  import { currentSession } from '$lib/data/profile';
+  import { currentSession, peekProfileScreen } from '$lib/data/profile';
+  import { eraseAccount } from '$lib/data/erase';
   import { technicalDetail } from '$lib/ui/errors';
-  import { dateTime, type Lang } from '$lib/ui/format';
+  import { dateTime, ratingsUnit, type Lang } from '$lib/ui/format';
   import { MOTION } from '$lib/ui/motion';
 
   let lang = $state<Lang>('ru');
@@ -55,6 +58,8 @@
   let stand = $state<'connecting' | 'ready' | 'guest' | 'signedout' | 'down'>('connecting');
   let standError = $state('');
   let facts = $state<AccountFacts | null>(null);
+  /** Кого удаляем. Держим отдельно: после `deleteUser` сессии не станет, а отчитаться надо. */
+  let myUid = $state<string | null>(null);
 
   /*
    * ── СМЕНА ПОЧТЫ (фаза 5) ────────────────────────────────────────────────────────────────
@@ -138,6 +143,96 @@
     emailPhase = 'waiting';
   }
 
+  /*
+   * ── УДАЛЕНИЕ АККАУНТА (фаза 8) ───────────────────────────────────────────────────────────
+   * idle → open (перечень потерь + поле почты) → working (подтверждение + каскад) → done/failed.
+   * Красная кнопка живёт ТОЛЬКО в состоянии `open` — постоянно висящее красное пятно
+   * притупляет внимание ровно тогда, когда оно нужнее всего (GOV.UK).
+   */
+  type DelPhase = 'idle' | 'open' | 'working' | 'waiting' | 'done' | 'failed';
+  let delPhase = $state<DelPhase>('idle');
+  let delEmail = $state('');
+  let delError = $state('');
+
+  /**
+   * Перечень потерь КОНКРЕТИКОЙ, но БЕЗ единого запроса к базе.
+   *
+   * Числа берём из кэша сессии «Профиля» — человек пришёл сюда именно оттуда, и кэш тёплый
+   * (`ideas/18`). Кэш холодный (зашли по прямой ссылке) — говорим общими словами. Тратить
+   * чтения ради красивой цифры на экране удаления нельзя: канон «экономить запросы к базе».
+   */
+  const losses = $derived.by(() => {
+    const warm = peekProfileScreen();
+    const items: string[] = [];
+    items.push(
+      warm === undefined
+        ? t.lossDimsPlain[lang]
+        : `${t.lossDims[lang]} ${warm.ratings.size} ${ratingsUnit(warm.ratings.size, lang)} ${t.lossDimsTail[lang]}`,
+    );
+    if (facts !== null && warm?.values.avatar === true) items.push(t.lossPhoto[lang]);
+    items.push(t.lossRelations[lang]);
+    return items;
+  });
+
+  /** Последний шаг: сам каскад. Вызывается только ПОСЛЕ подтверждения личности. */
+  async function runErase(): Promise<void> {
+    delPhase = 'working';
+    const uid = myUid;
+    if (uid === null) {
+      delError = accountErrorText('no-session', lang);
+      delPhase = 'failed';
+      return;
+    }
+    const result = await eraseAccount(uid);
+    if (result.ok) {
+      forgetPendingOp();
+      delPhase = 'done';
+      return;
+    }
+    // Учётная запись цела — и это самое важное, что человек должен услышать.
+    delError = `${t.delStopped[lang]} «${result.stoppedAt}». ${t.delStillYours[lang]}`;
+    delPhase = 'failed';
+  }
+
+  /** Человек нажал красную кнопку. Сначала личность, потом необратимое. */
+  async function submitDelete(): Promise<void> {
+    delError = '';
+    if (facts === null) return;
+    if (delEmail.trim().toLowerCase() !== (facts.email ?? '').toLowerCase()) {
+      delError = t.delMismatch[lang];
+      return;
+    }
+
+    const way = reauthWay();
+    if (way === null) {
+      delError = accountErrorText('no-session', lang);
+      return;
+    }
+
+    if (way === 'google') {
+      delPhase = 'working';
+      const confirmed = await reauthWithGoogle();
+      if (!confirmed.ok) {
+        delError = accountErrorText(confirmed.reason, lang);
+        delPhase = 'open';
+        return;
+      }
+      await runErase();
+      return;
+    }
+
+    delPhase = 'working';
+    rememberPendingOp({ op: 'delete-account' });
+    const sent = await sendReauthLink(lang);
+    if (!sent.ok) {
+      forgetPendingOp();
+      delError = accountErrorText(sent.reason, lang);
+      delPhase = 'open';
+      return;
+    }
+    delPhase = 'waiting';
+  }
+
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');
     if (saved === 'en' || saved === 'ru') lang = saved;
@@ -146,6 +241,7 @@
       // Сессию спрашиваем ТЕМ ЖЕ способом, что и «Профиль»: там живут стендовые двери
       // `?as=guest` и `?as=none`, без которых гостевые ветки никем не проверяются.
       const uid = await currentSession();
+      myUid = uid;
       if (uid === null) {
         stand = 'signedout';
         return;
@@ -173,8 +269,11 @@
         if (!confirmed.ok) {
           forgetPendingOp();
           fail(confirmed.reason);
-        } else if (waiting !== null) {
+        } else if (waiting?.op === 'change-email') {
           await askEmailChange(waiting.newEmail);
+        } else if (waiting?.op === 'delete-account') {
+          // Личность подтверждена — доводим удаление до конца там же, где человек его начал.
+          await runErase();
         }
         // Адрес чистим от одноразового кода: обновление страницы не должно пытаться
         // применить его ещё раз (код одноразовый — ASVS 6.4.1).
@@ -251,6 +350,57 @@
     emailSessions: {
       ru: 'После смены почты вход на других устройствах придётся выполнить заново.',
       en: 'After the change you will need to sign in again on your other devices.',
+    },
+    // ── Виджет «Удаление аккаунта» (фаза 8) ────────────────────────────────────────────
+    delCard: { ru: 'Удаление аккаунта', en: 'Delete account' },
+    delLede: {
+      ru: 'Мы не сможем восстановить Ваши данные.',
+      en: 'We will not be able to restore your data.',
+    },
+    delOpenBtn: { ru: 'Удалить аккаунт', en: 'Delete account' },
+    // 🔴 ДОСЛОВНО 1.x. Слово «безвозвратно» — формулировка владельца, и он подтвердил её
+    // 2026-08-01 (В4 = А). Правило продукта запрещает «навсегда», а не «безвозвратно», и
+    // здесь это правда: удаление действительно необратимо.
+    delWarn: {
+      ru: 'Ваша учётная запись и все её данные будут безвозвратно удалены. Удалить?',
+      en: 'Your account and all its data will be irrevocably deleted. Delete?',
+    },
+    lossDims: { ru: 'Ваш NDim ID и', en: 'your NDim ID and' },
+    lossDimsTail: { ru: 'по Измерениям', en: 'across dimensions' },
+    lossDimsPlain: {
+      ru: 'Ваш NDim ID и все оценки по Измерениям',
+      en: 'your NDim ID and all your ratings across dimensions',
+    },
+    lossPhoto: { ru: 'фотографию', en: 'your photo' },
+    lossRelations: { ru: 'связи, которые для Вас посчитаны', en: 'the relations computed for you' },
+    delConfirmLabel: {
+      ru: 'Введите Вашу почту, чтобы подтвердить:',
+      en: 'Type your email to confirm:',
+    },
+    delMismatch: { ru: 'Почта не совпадает с Вашей.', en: 'This is not your email address.' },
+    delCancel: { ru: 'Оставить всё как есть', en: 'Keep everything' },
+    delWorking: { ru: 'Удаляем…', en: 'Deleting…' },
+    delWaitTitle: { ru: 'Подтвердите, что это Вы', en: 'Confirm it is you' },
+    delWaitBody: {
+      ru: 'Мы отправили письмо на Вашу почту. Перейдите по ссылке из него — и удаление завершится.',
+      en: 'We sent a letter to your email. Follow the link in it and the deletion will complete.',
+    },
+    // Честно про сутки — решение владельца В3 = А.
+    delTail: {
+      ru: 'Из чужих списков связей Вы исчезнете в течение суток.',
+      en: 'You will disappear from other people’s relation lists within a day.',
+    },
+    delDoneTitle: { ru: 'Аккаунт удалён', en: 'Account deleted' },
+    delDoneBody: {
+      ru: 'Спасибо, что были в Пространстве.',
+      en: 'Thank you for being part of the Space.',
+    },
+    delToLanding: { ru: 'На главную', en: 'To the home page' },
+    // Отказ каскада. Главное здесь — не извинение, а факт: вход цел.
+    delStopped: { ru: 'Удалить не удалось — остановились на шаге', en: 'Deletion failed — stopped at' },
+    delStillYours: {
+      ru: 'Ваш вход цел: войдите ещё раз и повторите.',
+      en: 'Your sign-in still works: sign in again and retry.',
     },
     guestTitle: { ru: 'Вы смотрите Пространство гостем', en: 'You are exploring as a guest' },
     guestBody: {
@@ -404,6 +554,67 @@
           {/if}
         {/if}
       </div>
+
+      <!-- ВИДЖЕТ «Удаление аккаунта» — ВО ВСЮ ПАНЕЛЬ (4 шага), последним. В сетке из двух
+           колонн «низа страницы» не существует, а деструктив отделяется именно ПОЛОЖЕНИЕМ
+           (GitHub, Vercel, GOV.UK). Содержимое при этом ограничено 620px: виджет тянем,
+           содержимое — нет, иначе «Удалить аккаунт» станет самой широкой мишенью экрана
+           (`EXP-0110`). -->
+      <div class="zone" in:fade={{ duration: MOTION.base }}>
+        <h3>{t.delCard[lang]}</h3>
+
+        {#if delPhase === 'done'}
+          <p class="sub">{t.delDoneTitle[lang]}</p>
+          <p class="lede">{t.delDoneBody[lang]}</p>
+          <a class="btn" href="/">{t.delToLanding[lang]}</a>
+        {:else if delPhase === 'waiting'}
+          <p class="sub">{t.delWaitTitle[lang]}</p>
+          <p class="lede">{t.delWaitBody[lang]}</p>
+          <button type="button" class="btn ghost" onclick={() => { forgetPendingOp(); delPhase = 'idle'; }}>
+            {t.delCancel[lang]}
+          </button>
+        {:else if delPhase === 'failed'}
+          <p class="err">{delError}</p>
+          <button type="button" class="btn ghost" onclick={() => (delPhase = 'idle')}>
+            {t.delCancel[lang]}
+          </button>
+        {:else if delPhase === 'idle'}
+          <p class="lede">{t.delLede[lang]}</p>
+          <!-- Кнопка входа в удаление — ОБЫЧНАЯ, не красная (GOV.UK): красная появится
+               только на финальном подтверждении. -->
+          <button type="button" class="btn ghost" onclick={() => (delPhase = 'open')}>
+            {t.delOpenBtn[lang]}
+          </button>
+        {:else}
+          <p class="lede">{t.delWarn[lang]}</p>
+          <ul class="loss">
+            {#each losses as item (item)}<li>{item}</li>{/each}
+          </ul>
+          <label class="field">
+            <span>{t.delConfirmLabel[lang]}</span>
+            <input
+              class="inp"
+              type="email"
+              inputmode="email"
+              autocomplete="off"
+              bind:value={delEmail}
+              disabled={delPhase === 'working'}
+            />
+          </label>
+          {#if delError}<p class="err">{delError}</p>{/if}
+          <!-- Кнопки-глаголы, исход названный (NN/g). Деструктивная НЕ в фокусе по умолчанию:
+               Enter не должен удалять аккаунт. -->
+          <div class="cta">
+            <button type="button" class="btn ghost" onclick={() => { delPhase = 'idle'; delError = ''; }}>
+              {t.delCancel[lang]}
+            </button>
+            <button type="button" class="btn warn" disabled={delPhase === 'working'} onclick={submitDelete}>
+              {delPhase === 'working' ? t.delWorking[lang] : t.delOpenBtn[lang]}
+            </button>
+          </div>
+          <p class="hint">{t.delLede[lang]} {t.delTail[lang]}</p>
+        {/if}
+      </div>
     {/if}
   </main>
 
@@ -489,8 +700,33 @@
     width: 100%; padding: 9px 11px; border: 1px solid var(--edge); border-radius: 10px;
     background: var(--bg); color: var(--heading); font: inherit; font-size: 14px;
   }
-  .err { font-size: 12.5px; color: var(--danger, #d6544f); line-height: 1.5; margin-top: 8px; }
+  .err { font-size: 12.5px; color: var(--down); line-height: 1.5; margin-top: 8px; }
   .cta { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Красный берём из ТЕМЫ (--down: #d6544f светлая / #f87171 тёмная) — палитре не нужен
+     второй красный, а своё запасное значение было бы неверным в тёмной теме.
+     ── Деструктивная зона ──────────────────────────────────────────────────────────────
+     Отделяется ПОЛОЖЕНИЕМ (последняя) и рамкой, а не только цветом: канон бренда требует
+     Ч/Б-инварианта, а GOV.UK прямо запрещает полагаться на красный как единственный носитель
+     смысла. Смысл несут слово на кнопке и заголовок блока. */
+  .zone {
+    border: 1px solid color-mix(in srgb, var(--down) 38%, transparent);
+    border-radius: 16px; padding: 14px; margin-bottom: 12px;
+  }
+  .zone h3 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--down); margin-bottom: 10px; font-weight: 600;
+  }
+  /* Виджет во всю панель, а СОДЕРЖИМОЕ — нет (`EXP-0110`): иначе на 1440 «Удалить аккаунт»
+     становится самой широкой мишенью экрана, ровно наперекор закону Фиттса. */
+  .zone .lede, .zone .loss, .zone .field, .zone .cta, .zone .hint, .zone .err, .zone .sub {
+    max-width: 620px;
+  }
+  .zone .cta .btn { flex: 0 0 auto; }
+  .loss { margin: 10px 0 0; padding-left: 18px; font-size: 13px; color: var(--text); line-height: 1.75; }
+  .btn.warn {
+    background: var(--down); border-color: transparent; color: #fff; font-weight: 600;
+  }
 
   @media (min-width: 1024px) {
     .screen {
@@ -516,6 +752,9 @@
     }
     /* Содержательный виджет — два шага. */
     .body > .card { grid-column: span 2; }
+    /* Деструктивный виджет — ВО ВСЮ ПАНЕЛЬ (4 шага) и последним: в сетке из двух колонн
+       «низа страницы» не существует, а отделяется он именно положением. */
+    .body > .zone { grid-column: 1 / -1; }
     /* Во всю ширину — то, что не делится на колонки. */
     .body > .back,
     .body > h1,

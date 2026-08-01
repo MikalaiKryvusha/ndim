@@ -378,12 +378,17 @@ const REAUTH_EMAIL_KEY = 'ndim-reauth-email';
  *  Без него возврат по ссылке — возврат в никуда: намерение потеряно вместе с вкладкой. */
 const PENDING_OP_KEY = 'ndim-account-op';
 
-/** Отложенная операция, ждущая подтверждения личности. */
-export interface PendingOp {
-  readonly op: 'change-email';
-  /** Новый адрес, который человек ввёл ДО подтверждения. */
-  readonly newEmail: string;
-}
+/**
+ * Отложенная операция, ждущая подтверждения личности.
+ *
+ * Их две, и обе НЕОБРАТИМЫ, поэтому подтверждение обязано состояться ДО действия, а не после:
+ * у удаления «после» не существует — данных уже нет.
+ */
+export type PendingOp =
+  /** Смена почты: новый адрес человек ввёл ДО подтверждения. */
+  | { readonly op: 'change-email'; readonly newEmail: string }
+  /** Удаление аккаунта: подтверждать нечего, кроме личности. */
+  | { readonly op: 'delete-account' };
 
 /**
  * Чем подтверждать личность. Почему подтверждение здесь вообще есть:
@@ -541,9 +546,12 @@ export function pendingOp(): PendingOp | null {
   const raw = localStorage.getItem(PENDING_OP_KEY);
   if (raw === null) return null;
   try {
-    const value = JSON.parse(raw) as Partial<PendingOp>;
-    if (value.op !== 'change-email' || typeof value.newEmail !== 'string') return null;
-    return { op: 'change-email', newEmail: value.newEmail };
+    const value = JSON.parse(raw) as { op?: unknown; newEmail?: unknown };
+    if (value.op === 'delete-account') return { op: 'delete-account' };
+    if (value.op === 'change-email' && typeof value.newEmail === 'string') {
+      return { op: 'change-email', newEmail: value.newEmail };
+    }
+    return null;
   } catch {
     // Испорченная запись — не повод падать: считаем, что ничего не ждёт.
     return null;
