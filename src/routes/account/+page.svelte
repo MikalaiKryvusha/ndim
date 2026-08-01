@@ -24,7 +24,22 @@
   import Icon from '$lib/ui/Icon.svelte';
   import Loading from '$lib/ui/Loading.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
-  import { currentAccount, type AccountFacts, type SignInMethod } from '$lib/data/account';
+  import {
+    accountErrorText,
+    completeReauthLink,
+    currentAccount,
+    forgetPendingOp,
+    isReauthLink,
+    pendingOp,
+    reauthWithGoogle,
+    reauthWay,
+    rememberPendingOp,
+    requestEmailChange,
+    sendReauthLink,
+    type AccountFacts,
+    type AccountFailure,
+    type SignInMethod,
+  } from '$lib/data/account';
   import { currentSession } from '$lib/data/profile';
   import { technicalDetail } from '$lib/ui/errors';
   import { dateTime, type Lang } from '$lib/ui/format';
@@ -40,6 +55,88 @@
   let stand = $state<'connecting' | 'ready' | 'guest' | 'signedout' | 'down'>('connecting');
   let standError = $state('');
   let facts = $state<AccountFacts | null>(null);
+
+  /*
+   * ── СМЕНА ПОЧТЫ (фаза 5) ────────────────────────────────────────────────────────────────
+   * Состояния виджета, и каждое из них человек реально видит:
+   *   idle    — свёрнут;
+   *   open    — раскрыт, человек вводит новый адрес;
+   *   working — идёт подтверждение личности или отправка;
+   *   waiting — ссылка подтверждения ушла на ТЕКУЩИЙ адрес, ждём возврата из письма;
+   *   done    — письмо на новый адрес запрошено (НЕЙТРАЛЬНО: см. `requestEmailChange`).
+   */
+  type EmailPhase = 'idle' | 'open' | 'working' | 'waiting' | 'done';
+  let emailPhase = $state<EmailPhase>('idle');
+  let newEmail = $state('');
+  let emailError = $state('');
+
+  function fail(reason: AccountFailure): void {
+    emailError = accountErrorText(reason, lang);
+    emailPhase = 'open';
+  }
+
+  /** Последний шаг: просим Firebase выслать письмо на НОВЫЙ адрес. */
+  async function askEmailChange(address: string): Promise<void> {
+    emailPhase = 'working';
+    const result = await requestEmailChange(address, lang);
+    if (result.ok) {
+      emailPhase = 'done';
+      newEmail = '';
+      return;
+    }
+    fail(result.reason);
+  }
+
+  /**
+   * Человек нажал «Выслать письмо».
+   *
+   * Порядок шагов — канон 1.x (`researches/24` §2.3): сначала подтверждение личности, потом
+   * новый адрес. У нас подтверждение уехало в отдельный шаг, потому что в 2.0 оно не поле, а
+   * действие: popup у Google и письмо у почты.
+   */
+  async function submitEmail(): Promise<void> {
+    emailError = '';
+    const address = newEmail.trim();
+
+    // Свои проверки — тексты 1.x дословно.
+    if (address === '') {
+      emailError = t.emailEmpty[lang];
+      return;
+    }
+    if (facts !== null && address.toLowerCase() === (facts.email ?? '').toLowerCase()) {
+      emailError = t.emailSame[lang];
+      return;
+    }
+
+    const way = reauthWay();
+    if (way === null) {
+      fail('no-session');
+      return;
+    }
+
+    if (way === 'google') {
+      emailPhase = 'working';
+      const confirmed = await reauthWithGoogle();
+      if (!confirmed.ok) {
+        fail(confirmed.reason);
+        return;
+      }
+      await askEmailChange(address);
+      return;
+    }
+
+    // Путь почты: намерение переживает круг через письмо — без этого возврат по ссылке
+    // окажется возвращением в никуда (тот же приём, что спас вход в `bugs/84`).
+    emailPhase = 'working';
+    rememberPendingOp({ op: 'change-email', newEmail: address });
+    const sent = await sendReauthLink(lang);
+    if (!sent.ok) {
+      forgetPendingOp();
+      fail(sent.reason);
+      return;
+    }
+    emailPhase = 'waiting';
+  }
 
   onMount(async () => {
     const saved = localStorage.getItem('ndim-lang');
@@ -62,6 +159,27 @@
       }
       facts = snapshot;
       stand = snapshot.guest ? 'guest' : 'ready';
+
+      /*
+       * Человек вернулся из письма ПОДТВЕРЖДЕНИЯ личности. Здесь замыкается круг: сессия жива,
+       * ссылка в адресе, намерение лежит в памяти браузера.
+       *
+       * ⚠️ Разбираем это ПОСЛЕ того, как экран уже знает, кто перед ним: иначе ошибка
+       * подтверждения показалась бы на пустом экране без единой подсказки, куда человек попал.
+       */
+      if (isReauthLink()) {
+        const waiting = pendingOp();
+        const confirmed = await completeReauthLink();
+        if (!confirmed.ok) {
+          forgetPendingOp();
+          fail(confirmed.reason);
+        } else if (waiting !== null) {
+          await askEmailChange(waiting.newEmail);
+        }
+        // Адрес чистим от одноразового кода: обновление страницы не должно пытаться
+        // применить его ещё раз (код одноразовый — ASVS 6.4.1).
+        history.replaceState(null, '', '/account');
+      }
     } catch (error) {
       standError = technicalDetail(error);
       stand = 'down';
@@ -88,6 +206,52 @@
       google: { ru: 'Google', en: 'Google' },
       email: { ru: 'Почта', en: 'Email' },
     } satisfies Record<SignInMethod, { ru: string; en: string }>,
+    // ── Виджет «Поменять Email». Тексты, помеченные «1.x», перенесены ДОСЛОВНО
+    //    (`researches/24` §2.3): это язык владельца, проживший два года в бою.
+    emailCard: { ru: 'Поменять Email', en: 'Change email' },
+    emailLede: {
+      ru: 'Для изменения Вашего текущего Email на новый запросите письмо верификации на Ваш новый Email и пройдите по ссылке в полученном письме.',
+      en: 'To change your current email, request a verification letter to your new address and follow the link in it.',
+    }, // 1.x
+    emailLabel: { ru: 'Введите новый Email:', en: 'Enter your new email:' }, // 1.x
+    emailSend: { ru: 'Выслать письмо', en: 'Send letter' }, // 1.x
+    emailEmpty: { ru: 'Новый Email не может быть пустым.', en: 'New email cannot be empty.' }, // 1.x
+    emailSame: {
+      ru: 'Новый Email не может быть равен текущему.',
+      en: 'New email cannot be the same as the current one.',
+    }, // 1.x
+    // Предупреждение стоит В ШАГЕ ВВОДА, а не в сообщении после (приём Slack): почта у нас —
+    // единственный ключ к аккаунту, и опечатка стоит доступа.
+    emailTypo: {
+      ru: 'Проверьте адрес внимательно: почта — Ваш ключ к аккаунту.',
+      en: 'Check the address carefully: email is your key to the account.',
+    },
+    emailWorking: { ru: 'Минуту…', en: 'One moment…' },
+    emailCancel: { ru: 'Отмена', en: 'Cancel' },
+    emailWaitTitle: { ru: 'Подтвердите, что это Вы', en: 'Confirm it is you' },
+    emailWaitBody: {
+      ru: 'Мы отправили письмо на Ваш текущий адрес. Перейдите по ссылке из него — и смена почты продолжится.',
+      en: 'We sent a letter to your current address. Follow the link in it and the change will continue.',
+    },
+    emailWaitWhy: {
+      ru: 'Так мы убеждаемся, что адрес меняете именно Вы, а не тот, кто оказался за Вашим экраном.',
+      en: 'This is how we make sure it is you changing the address, not someone who sat down at your screen.',
+    },
+    emailDoneTitle: { ru: 'Проверьте новый адрес', en: 'Check the new address' },
+    /*
+     * 🔴 НЕЙТРАЛЬНАЯ ФОРМУЛИРОВКА — не осторожность, а единственная правда.
+     * При включённой защите от перечисления почт письмо уходит, ТОЛЬКО если новый адрес
+     * свободен, и никакой ошибки при этом нет. «Письмо отправлено» было бы враньём половине
+     * людей, а «адрес занят» вернуло бы утечку, которую платформа закрыла (ASVS 6.3.8).
+     */
+    emailDoneBody: {
+      ru: 'Если этот адрес свободен, письмо уже в пути. Почта сменится, когда Вы перейдёте по ссылке из письма.',
+      en: 'If this address is free, the letter is already on its way. Your email changes once you follow the link.',
+    },
+    emailSessions: {
+      ru: 'После смены почты вход на других устройствах придётся выполнить заново.',
+      en: 'After the change you will need to sign in again on your other devices.',
+    },
     guestTitle: { ru: 'Вы смотрите Пространство гостем', en: 'You are exploring as a guest' },
     guestBody: {
       ru: 'У гостя нет почты, поэтому управлять пока нечем. Сохраните свои результаты — и этот экран станет Вашим.',
@@ -185,6 +349,61 @@
           <p class="hint">{t.unverifiedHint[lang]}</p>
         {/if}
       </div>
+
+      <!-- ВИДЖЕТ «Поменять Email» — два шага, раскрывашка на месте (утверждённый V2 + виджеты).
+           Подэкрана нет: всё происходит здесь, как решил владелец. -->
+      <div class="card" in:fade={{ duration: MOTION.base }}>
+        {#if emailPhase === 'idle'}
+          <button type="button" class="acc-head" onclick={() => (emailPhase = 'open')}>
+            <span class="ic"><Icon name="envelope" size={20} /></span>
+            <span class="lb">{t.emailCard[lang]}</span>
+            <span class="chev"><Icon name="chevron" size={13} /></span>
+          </button>
+        {:else}
+          <h3>{t.emailCard[lang]}</h3>
+
+          {#if emailPhase === 'waiting'}
+            <!-- Круг через письмо на ТЕКУЩИЙ адрес. Это и есть подтверждение со старого
+                 адреса, которого требует OWASP при отсутствии второго фактора. -->
+            <p class="sub">{t.emailWaitTitle[lang]}</p>
+            <p class="lede">{t.emailWaitBody[lang]}</p>
+            <p class="hint">{t.emailWaitWhy[lang]}</p>
+            <button type="button" class="btn ghost" onclick={() => { forgetPendingOp(); emailPhase = 'idle'; }}>
+              {t.emailCancel[lang]}
+            </button>
+          {:else if emailPhase === 'done'}
+            <p class="sub">{t.emailDoneTitle[lang]}</p>
+            <p class="lede">{t.emailDoneBody[lang]}</p>
+            <p class="hint">{t.emailSessions[lang]}</p>
+            <button type="button" class="btn ghost" onclick={() => (emailPhase = 'idle')}>
+              {t.emailCancel[lang]}
+            </button>
+          {:else}
+            <p class="lede">{t.emailLede[lang]}</p>
+            <label class="field">
+              <span>{t.emailLabel[lang]}</span>
+              <input
+                class="inp"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                bind:value={newEmail}
+                disabled={emailPhase === 'working'}
+              />
+            </label>
+            <p class="hint">{t.emailTypo[lang]}</p>
+            {#if emailError}<p class="err">{emailError}</p>{/if}
+            <div class="cta">
+              <button type="button" class="btn" disabled={emailPhase === 'working'} onclick={submitEmail}>
+                {emailPhase === 'working' ? t.emailWorking[lang] : t.emailSend[lang]}
+              </button>
+              <button type="button" class="btn ghost" onclick={() => { emailPhase = 'idle'; emailError = ''; }}>
+                {t.emailCancel[lang]}
+              </button>
+            </div>
+          {/if}
+        {/if}
+      </div>
     {/if}
   </main>
 
@@ -246,9 +465,32 @@
   .btn {
     display: inline-flex; align-items: center; justify-content: center;
     margin-top: 12px; padding: 10px 16px; border-radius: 12px;
+    border: 1px solid transparent;
     background: var(--primary); color: var(--primary-ink);
-    font-size: 14px; font-weight: 600; text-decoration: none;
+    font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer;
   }
+  .btn:disabled { opacity: .6; cursor: default; }
+  .btn.ghost { background: transparent; border-color: var(--edge); color: var(--text); font-weight: 500; }
+
+  /* Свёрнутая раскрывашка виджета — тот же ряд, что в карточке-шапке «Профиля». */
+  .acc-head {
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    padding: 2px; border: 0; background: transparent;
+    font: inherit; font-size: 13.5px; color: var(--text); text-align: left; cursor: pointer;
+  }
+  .acc-head .ic { width: 24px; display: flex; justify-content: center; color: var(--accent); flex: none; }
+  .acc-head .lb { flex: 1; }
+  .acc-head .chev { color: var(--faint); flex: none; }
+
+  .sub { font-size: 15px; font-weight: 600; color: var(--heading); margin-bottom: 6px; }
+  .field { display: block; margin-bottom: 8px; }
+  .field span { display: block; font-size: 12px; color: var(--dim); margin-bottom: 4px; }
+  .inp {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--edge); border-radius: 10px;
+    background: var(--bg); color: var(--heading); font: inherit; font-size: 14px;
+  }
+  .err { font-size: 12.5px; color: var(--danger, #d6544f); line-height: 1.5; margin-top: 8px; }
+  .cta { display: flex; gap: 8px; flex-wrap: wrap; }
 
   @media (min-width: 1024px) {
     .screen {

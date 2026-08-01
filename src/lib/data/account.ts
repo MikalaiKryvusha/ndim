@@ -25,9 +25,12 @@ import {
   linkWithCredential,
   linkWithPopup,
   onAuthStateChanged,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
   sendSignInLinkToEmail,
   signInWithEmailLink,
   signInWithPopup,
+  verifyBeforeUpdateEmail,
   type User,
   type UserCredential,
 } from 'firebase/auth';
@@ -352,5 +355,304 @@ export async function completeLoginLink(href: string = location.href): Promise<U
     return { ok: true, uid: credentials.user.uid, created: isNewUser(credentials) };
   } catch (error) {
     return { ok: false, reason: classify(error) };
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   УПРАВЛЕНИЕ СВОИМ АККАУНТОМ — фаза 5 эпика `plans/15` (операционный план `plans/19`).
+
+   Всё, что ниже, делает НЕОБРАТИМОЕ: меняет почту, которой человек входит. Поэтому здесь
+   больше комментариев, чем кода — каждая развилка стоила отдельного замера.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/** Куда возвращает ссылка ПОДТВЕРЖДЕНИЯ ЛИЧНОСТИ — на тот же экран, откуда человек ушёл. */
+const REAUTH_RETURN_PATH = '/account';
+
+/** Ключ: на какую почту ушла ссылка подтверждения. Живёт отдельно от ключей ВХОДА
+ *  (`ndim-pending-email`) намеренно: это разные истории, и смешивать их — реплей `bugs/84`. */
+const REAUTH_EMAIL_KEY = 'ndim-reauth-email';
+
+/** Ключ: что человек просил сделать ДО того, как мы отправили его подтверждать личность.
+ *  Без него возврат по ссылке — возврат в никуда: намерение потеряно вместе с вкладкой. */
+const PENDING_OP_KEY = 'ndim-account-op';
+
+/** Отложенная операция, ждущая подтверждения личности. */
+export interface PendingOp {
+  readonly op: 'change-email';
+  /** Новый адрес, который человек ввёл ДО подтверждения. */
+  readonly newEmail: string;
+}
+
+/**
+ * Чем подтверждать личность. Почему подтверждение здесь вообще есть:
+ *
+ * По документации Firebase `verifyBeforeUpdateEmail` — единственный из чувствительных методов,
+ * у которого в reference НЕТ пометки «требует недавнего входа» (`researches/24` §1.2). То есть
+ * платформа, возможно, пустила бы и без него. Мы всё равно требуем:
+ *
+ *   · OWASP ASVS 5.0, 7.5.1 (L2): перед изменением атрибутов, влияющих на аутентификацию —
+ *     а почта именно такой, — нужна ПОЛНАЯ повторная аутентификация;
+ *   · OWASP Authentication Cheat Sheet: без второго фактора планка ВЫШЕ — смену адреса
+ *     положено подтверждать и со СТАРОГО адреса тоже.
+ *
+ * И тут наш путь оказывается изящнее, чем кажется. Ссылка подтверждения уходит на ТЕКУЩИЙ
+ * адрес — значит она И ЕСТЬ то подтверждение со старого адреса, которого требует OWASP. Заодно
+ * это снимает зависимость от письма-отката Firebase, которое в замере фазы 2 не пришло ни разу
+ * (`researches/24` §7.3): защита от угона держится не на чужом письме, а на том, что старый
+ * адрес обязан был активно согласиться.
+ */
+export type ReauthWay = 'google' | 'email-link';
+
+/**
+ * Каким способом подтверждать личность ЭТОМУ человеку.
+ *
+ * ⚠️ Здесь снова капкан `EXP-0109`: провайдер `password` означает «вход почтой» и НЕ говорит,
+ * пароль это или ссылка. Поэтому для всех почтовых аккаунтов путь ОДИН — ссылка. Это не
+ * упрощение от лени: вход по ссылке работает и у тех 331, у кого пароль есть, а спросить
+ * «пароль или ссылка?» мы не можем, потому что не знаем ответа сами.
+ *
+ * Google — отдельный путь: popup, без круга через почту.
+ * `null` — подтверждать нечем (гость); операции над аккаунтом ему недоступны.
+ */
+export function reauthWay(): ReauthWay | null {
+  const user = devAuth().currentUser;
+  if (user === null || user.isAnonymous) return null;
+  const ways = methodsOf(user);
+  if (ways.includes('google')) return 'google';
+  return ways.includes('email') ? 'email-link' : null;
+}
+
+/** Отказы операций над аккаунтом. Каждый показывается человеку своими словами (см. ниже). */
+export type AccountFailure =
+  | 'requires-recent-login'
+  | 'invalid-credential'
+  | 'email-in-use'
+  | 'invalid-email'
+  | 'too-many-requests'
+  | 'network'
+  | 'cancelled'
+  | 'other-device'
+  | 'expired-code'
+  | 'no-session'
+  | 'unknown';
+
+function classifyAccount(error: unknown): AccountFailure {
+  const code = (error as { code?: string })?.code ?? '';
+  switch (code) {
+    case 'auth/requires-recent-login':
+    case 'auth/user-token-expired':
+      return 'requires-recent-login';
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-mismatch':
+      return 'invalid-credential';
+    case 'auth/email-already-in-use':
+      return 'email-in-use';
+    case 'auth/invalid-email':
+      return 'invalid-email';
+    case 'auth/too-many-requests':
+      return 'too-many-requests';
+    case 'auth/network-request-failed':
+      return 'network';
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return 'cancelled';
+    case 'auth/expired-action-code':
+    case 'auth/invalid-action-code':
+      return 'expired-code';
+    default:
+      console.error('Операция над аккаунтом не удалась:', error);
+      return 'unknown';
+  }
+}
+
+/**
+ * Тексты отказов — ЯЗЫК ВЛАДЕЛЬЦА, снятый из 1.x дословно (`researches/24` §2.6).
+ *
+ * Переписывать их нельзя: это его формулировки, прожившие в бою два года. Новые строки (те,
+ * которых в 1.x не было, — отмена popup, чужое устройство) написаны по правилам текста продукта:
+ * обращение на «Вы», ноль жаргона, никакого «навсегда».
+ */
+export function accountErrorText(reason: AccountFailure, lang: 'ru' | 'en'): string {
+  const texts: Record<AccountFailure, { ru: string; en: string }> = {
+    // Дословно 1.x.
+    'requires-recent-login': {
+      ru: 'Эта операция конфиденциальна и требует недавней аутентификации. Авторизуйтесь еще раз, прежде чем повторить эту операцию.',
+      en: 'This operation is sensitive and requires recent authentication. Please sign in again before retrying.',
+    },
+    'invalid-credential': {
+      ru: 'Предоставленные учетные данные неверны.',
+      en: 'The provided credentials are incorrect.',
+    },
+    'email-in-use': {
+      ru: 'Этот адрес электронной почты уже используется другой учетной записью.',
+      en: 'This email address is already in use by another account.',
+    },
+    'invalid-email': {
+      ru: 'Неверный формат адреса электронной почты.',
+      en: 'The email address is badly formatted.',
+    },
+    'too-many-requests': {
+      ru: 'Слишком много запросов. Пожалуйста, повторите попытку позже.',
+      en: 'Too many requests. Please try again later.',
+    },
+    // Новые — в 1.x их не было.
+    network: {
+      ru: 'Нет связи с сервером. Проверьте подключение и попробуйте ещё раз.',
+      en: 'No connection to the server. Check your network and try again.',
+    },
+    cancelled: {
+      ru: 'Подтверждение отменено.',
+      en: 'Confirmation cancelled.',
+    },
+    // Официальная оговорка Firebase: поток может завершиться на ДРУГОМ устройстве, где человек
+    // не вошёл, — и тогда не завершится вовсе. Молчать об этом нельзя (`researches/24` §1.5).
+    'other-device': {
+      ru: 'Похоже, ссылку открыли на другом устройстве. Откройте её там же, где начинали, — иначе мы не сможем убедиться, что это Вы.',
+      en: 'It looks like the link was opened on another device. Open it where you started — otherwise we cannot confirm it is you.',
+    },
+    'expired-code': {
+      ru: 'Срок действия ссылки истёк или она уже использована. Запросите новую.',
+      en: 'The link has expired or has already been used. Please request a new one.',
+    },
+    'no-session': {
+      ru: 'Сессия закончилась. Войдите заново.',
+      en: 'Your session has ended. Please sign in again.',
+    },
+    unknown: { ru: 'Что-то пошло не так.', en: 'Something went wrong.' },
+  };
+  return texts[reason][lang];
+}
+
+/** Итог операции над аккаунтом. Отказ — не исключение: экран обязан показать его человеку. */
+export type AccountResult =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly reason: AccountFailure };
+
+/** Запомнить, что человек просил сделать, — на время круга через почту. */
+export function rememberPendingOp(op: PendingOp): void {
+  localStorage.setItem(PENDING_OP_KEY, JSON.stringify(op));
+}
+
+/** Что человек просил сделать до подтверждения личности. `null` — ничего не ждёт. */
+export function pendingOp(): PendingOp | null {
+  const raw = localStorage.getItem(PENDING_OP_KEY);
+  if (raw === null) return null;
+  try {
+    const value = JSON.parse(raw) as Partial<PendingOp>;
+    if (value.op !== 'change-email' || typeof value.newEmail !== 'string') return null;
+    return { op: 'change-email', newEmail: value.newEmail };
+  } catch {
+    // Испорченная запись — не повод падать: считаем, что ничего не ждёт.
+    return null;
+  }
+}
+
+/** Забыть отложенную операцию и адрес подтверждения — половинки одной записи, снимаются вместе. */
+export function forgetPendingOp(): void {
+  localStorage.removeItem(PENDING_OP_KEY);
+  localStorage.removeItem(REAUTH_EMAIL_KEY);
+}
+
+/** Подтверждение личности через Google — popup, без круга через почту. */
+export async function reauthWithGoogle(): Promise<AccountResult> {
+  const user = devAuth().currentUser;
+  if (user === null) return { ok: false, reason: 'no-session' };
+  try {
+    await reauthenticateWithPopup(user, new GoogleAuthProvider());
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: classifyAccount(error) };
+  }
+}
+
+/**
+ * Шаг 1 подтверждения по почте: письмо со ссылкой на ТЕКУЩИЙ адрес человека.
+ *
+ * ⚠️ `handleCodeInApp: true` здесь ОБЯЗАТЕЛЕН, и это не копипаста: он нужен именно ссылкам
+ * ВХОДА (`sendSignInLinkToEmail`), а сбросу пароля и `verifyBeforeUpdateEmail` — не нужен
+ * (уточнено состязательной проверкой, `researches/24` §1.2). Здесь мы шлём ссылку входа.
+ *
+ * ⚠️ `auth.languageCode` — без него письмо приходит по-английски. Деталь из 1.x, которую легко
+ * потерять (`researches/24` §2.5).
+ */
+export async function sendReauthLink(lang: 'ru' | 'en' = 'ru'): Promise<AccountResult> {
+  const user = devAuth().currentUser;
+  const email = user?.email ?? null;
+  if (user === null || email === null) return { ok: false, reason: 'no-session' };
+
+  try {
+    const auth = devAuth();
+    auth.languageCode = lang;
+    await sendSignInLinkToEmail(auth, email, {
+      url: `${loginLinkOrigin()}${REAUTH_RETURN_PATH}`,
+      handleCodeInApp: true,
+    });
+    localStorage.setItem(REAUTH_EMAIL_KEY, email);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: classifyAccount(error) };
+  }
+}
+
+/** Открыт ли сейчас адрес, по которому человек вернулся из письма ПОДТВЕРЖДЕНИЯ. */
+export function isReauthLink(href: string = location.href): boolean {
+  return localStorage.getItem(REAUTH_EMAIL_KEY) !== null && isSignInWithEmailLink(devAuth(), href);
+}
+
+/**
+ * Шаг 2: человек вернулся по ссылке подтверждения.
+ *
+ * 🔴 Сессия обязана быть ЖИВОЙ: мы подтверждаем личность уже вошедшего, а не входим заново.
+ * Если человек открыл письмо на другом устройстве, `currentUser` там пуст — и честный ответ
+ * «откройте там же, где начинали» лучше молчаливого зависания.
+ */
+export async function completeReauthLink(href: string = location.href): Promise<AccountResult> {
+  const email = localStorage.getItem(REAUTH_EMAIL_KEY);
+  const user = devAuth().currentUser;
+  if (email === null) return { ok: false, reason: 'expired-code' };
+  if (user === null) return { ok: false, reason: 'other-device' };
+
+  try {
+    await reauthenticateWithCredential(user, EmailAuthProvider.credentialWithLink(email, href));
+    localStorage.removeItem(REAUTH_EMAIL_KEY);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: classifyAccount(error) };
+  }
+}
+
+/**
+ * Смена почты — единственным путём, который оставляет платформа.
+ *
+ * 🔴 `updateEmail` НЕ ИСПОЛЬЗУЕТСЯ и использован быть не может: при включённой защите от
+ * перечисления почт (в боевом проекте она ВКЛЮЧЕНА — замерено 2026-08-01) он падает с
+ * `auth/operation-not-allowed` на всех платформах. Живёт только `verifyBeforeUpdateEmail`:
+ * письмо уходит на НОВЫЙ адрес, и почта меняется, лишь когда человек перейдёт по ссылке.
+ *
+ * 🔴 И главное для текстов экрана: письмо отправляется, ТОЛЬКО если новый адрес ещё не занят, —
+ * а ошибки при этом нет, promise просто резолвится. Значит `ok: true` здесь НЕ означает «письмо
+ * ушло». Экран обязан говорить нейтрально: «если адрес свободен, письмо уже в пути». Сказать
+ * «письмо отправлено» — соврать половине людей, а сказать «адрес занят» — вернуть ту самую
+ * утечку, которую платформа только что закрыла (ASVS 6.3.8).
+ */
+export async function requestEmailChange(
+  newEmail: string,
+  lang: 'ru' | 'en' = 'ru',
+): Promise<AccountResult> {
+  const user = devAuth().currentUser;
+  if (user === null) return { ok: false, reason: 'no-session' };
+
+  try {
+    const auth = devAuth();
+    auth.languageCode = lang;
+    // `handleCodeInApp` здесь НЕ нужен — это не ссылка входа (см. `sendReauthLink`).
+    await verifyBeforeUpdateEmail(user, newEmail, {
+      url: `${loginLinkOrigin()}${REAUTH_RETURN_PATH}`,
+    });
+    forgetPendingOp();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: classifyAccount(error) };
   }
 }
