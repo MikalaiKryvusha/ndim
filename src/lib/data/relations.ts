@@ -83,18 +83,46 @@ async function fetchRelations(uid: Uid): Promise<RelationsScreenData | null> {
 
   const relations = snapshot.data() as RelationsDoc;
 
+  /*
+   * 🔴 ОДНА НЕПРОЧИТАННАЯ КАРТОЧКА НЕ ИМЕЕТ ПРАВА ГАСИТЬ ВЕСЬ ЭКРАН.
+   *
+   * Здесь `Promise.all` идёт по всему топу и на каждого человека делает отдельное чтение его
+   * публичной карточки. `Promise.all` отвергается ПЕРВЫМ же отказом — то есть один человек,
+   * чью карточку прочитать нельзя, уносил с собой весь список: `fetchRelations` бросал, и
+   * экран показывал «Не удалось загрузить связи» вместо девятнадцати исправных связей.
+   *
+   * Что делает это не теорией: правила требуют `verified()` на чтение чужой публичной
+   * карточки, а ГОСТЬ его не проходит. То есть замысел «мягко приводим нового человека на
+   * „Связи“» (интервью №009, В3) приводил его ровно в эту ошибку. Найдено сшивкой волны
+   * «Ворота» 2026-08-01; работу не взял ни один из четырёх эпиков — она была ничья.
+   *
+   * Лечение — деградация вместо падения: не прочиталась карточка, значит у связи нет имени и
+   * лица, но ЧИСЛА у неё есть (они в самом документе связей, а не в чужой карточке). Человек
+   * видит свои связи; чего не хватает — видно глазом, а не через пустой экран.
+   *
+   * ⚠️ Это не заменяет правила: когда гостю откроют чтение публичных карточек (`plans/22`),
+   * имена появятся сами. Но клиент обязан переживать отказ в любом случае — сеть моргает, а
+   * человека выкидывать нельзя.
+   */
+  let unreadable = 0;
   const cards = await Promise.all(
     relations.top.map(async (entry): Promise<RelationCard> => {
-      const guestProfile = await getDoc(doc(store, 'users', entry.guestUid, 'profile', 'everyone'));
-      const data = guestProfile.exists()
-        ? (guestProfile.data() as {
-            name?: { first: Localized; nick: Localized };
-            avatar?: boolean;
-            gender?: Gender;
-            born?: BirthDate;
-            about?: Localized;
-          })
-        : {};
+      const guestProfile = await getDoc(
+        doc(store, 'users', entry.guestUid, 'profile', 'everyone'),
+      ).catch(() => {
+        unreadable += 1;
+        return null;
+      });
+      const data =
+        guestProfile !== null && guestProfile.exists()
+          ? (guestProfile.data() as {
+              name?: { first: Localized; nick: Localized };
+              avatar?: boolean;
+              gender?: Gender;
+              born?: BirthDate;
+              about?: Localized;
+            })
+          : {};
       return {
         entry,
         guestName: data.name?.first ?? null,
@@ -106,6 +134,15 @@ async function fetchRelations(uid: Uid): Promise<RelationsScreenData | null> {
       };
     }),
   );
+
+  /*
+   * След для отладки, а не для человека: молчаливая деградация тем и опасна, что её не видно.
+   * Если однажды безымянными окажутся ВСЕ связи — причина будет здесь, в консоли, а не в
+   * догадках. Экран при этом остаётся рабочим, и это главное.
+   */
+  if (unreadable > 0) {
+    console.debug(`Связи: карточек не прочитано — ${unreadable} из ${relations.top.length}`);
+  }
 
   return { computedAt: relations.computedAt, cards };
 }

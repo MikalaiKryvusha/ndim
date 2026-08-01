@@ -63,10 +63,18 @@ export async function loadDimCards(ids: readonly string[]): Promise<DimCard[]> {
   const store = db();
   const missing = ids.filter((id) => !cache.has(id));
 
+  /*
+   * ⚠️ Тот же класс, что в `relations.ts`: `Promise.all` отвергается ПЕРВЫМ отказом, и одно
+   * непрочитанное измерение унесло бы всю порцию из двенадцати. Файл уже прощал «документа
+   * нет» — но не БРОСОК (отказ правил, моргнувшая сеть). Теперь прощает и его: не прочиталось
+   * одно измерение — не покажем одно, а не двенадцать. Найдено 2026-08-01 при починке «Связей»
+   * — искал не случай, а класс.
+   */
   await Promise.all(
     missing.map(async (id) => {
-      const snapshot = await getDoc(doc(store, 'dims', id));
-      if (!snapshot.exists()) return; // измерение удалили из каталога — не беда, просто не покажем
+      const snapshot = await getDoc(doc(store, 'dims', id)).catch(() => null);
+      // Нет документа или не смогли прочитать — не беда, просто не покажем ЭТО измерение.
+      if (snapshot === null || !snapshot.exists()) return;
       cache.set(id, { id, ...(snapshot.data() as DimDoc) });
     }),
   );
