@@ -1,3 +1,12 @@
 {
-	"items": []
+	"items": [
+		{
+			"doc": "interviews/interview_010_gates_forks.md",
+			"поставлен": "2026-08-01T19:31:46.133Z"
+		},
+		{
+			"doc": "interviews/interview_012_question_card_style.md",
+			"поставлен": "2026-08-01T19:31:46.223Z"
+		}
+	]
 }
