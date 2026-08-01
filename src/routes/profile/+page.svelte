@@ -531,8 +531,9 @@
     },
     // Виджет «Аккаунт» (ideas/19) — тексты переехали из «Меню» дословно.
     acctTitle: { ru: 'Аккаунт', en: 'Account' },
+    // Имя ДВЕРИ — «Управление аккаунтом» (канон 1.x, `ideas/19`); имя САМОГО ЭКРАНА —
+    // «Управлять аккаунтом», инфинитив (кадр app-14). Это не расхождение, а два места.
     acctManage: { ru: 'Управление аккаунтом', en: 'Manage account' },
-    acctSoon: { ru: 'скоро', en: 'soon' },
     acctLeave: { ru: 'Выйти', en: 'Sign out' },
     // Слово владельца дословно (интервью №007, В3=А): «Выйти? Ваши оценки исчезнут».
     acctLeaveConfirm: { ru: 'Выйти? Ваши оценки исчезнут', en: 'Sign out? Your ratings will be gone' },
@@ -1072,10 +1073,13 @@
     -->
     {#snippet acctRows()}
         {#if !guest}
-          <span class="arow off">
+          <!-- Дверь ожила 2026-08-01 (эпик `plans/15`, фаза 4): вместо мёртвой строки «скоро»
+               ссылка на экран «Управлять аккаунтом». Гостю её по-прежнему не видно — он в
+               соседней ветке: почты у него нет, и управлять ему нечем (`plans/18`, капкан 2). -->
+          <a class="arow" href="/account">
             <span class="ic"><Icon name="gear" size={20} /></span><span class="lb">{t.acctManage[lang]}</span>
-            <span class="val">{t.acctSoon[lang]}</span>
-          </span>
+            <span class="chev"><Icon name="chevron" size={13} /></span>
+          </a>
           <button type="button" class="arow" onclick={leave}>
             <span class="ic"><Icon name="logout" size={20} /></span><span class="lb">{t.acctLeave[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
           </button>
@@ -1842,6 +1846,10 @@
     padding: 9px 2px; border: 0; border-top: 1px solid var(--edge-soft);
     background: transparent; font: inherit; font-size: 13.5px; color: var(--text);
     text-align: left;
+    /* Ряд бывает и кнопкой, и ССЫЛКОЙ (дверь в «Управлять аккаунтом» — ссылка, чтобы работали
+       средний клик, «открыть в новой вкладке» и системная «Назад»). Подчёркивание ссылки здесь
+       лишнее: ряд и так читается кликабельным по шеврону. */
+    text-decoration: none;
   }
   @media (hover: hover) {
     .arow:hover { background: var(--edge-soft); }
@@ -1850,7 +1858,9 @@
   .arow.off { cursor: default; }
   .arow .ic { width: 24px; display: flex; justify-content: center; color: var(--accent); }
   .arow .lb { flex: 1; }
-  .arow .val { font-size: 12px; color: var(--faint); font-family: var(--mono); }
+  /* `.arow .val` (моноширинное значение справа) ушёл вместе со строкой «скоро»: у рядов
+     аккаунта больше нет ряда со значением. Оставлять правило «на всякий случай» нельзя —
+     мёртвый стиль переживает свою причину и вводит следующую сессию в заблуждение. */
   .arow .chev { color: var(--faint); }
   .awarn {
     margin: 0 0 4px; padding: 11px 13px;

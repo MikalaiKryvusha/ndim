@@ -40,6 +40,79 @@ import type { Uid } from '../model/schema.ts';
 const LINK_RETURN_PATH = '/profile';
 
 /**
+ * Способ входа, ПОКАЗЫВАЕМЫЙ человеку на экране «Управлять аккаунтом».
+ *
+ * 🔴 ЗДЕСЬ ЛЕЖИТ КАПКАН, СТОИВШИЙ ОТДЕЛЬНОГО ЗАМЕРА (`EXP-0109`, `researches/24` §7.2).
+ *
+ * `providerData` НЕ отличает «у человека есть пароль» от «человек входит по ссылке на почту».
+ * У обоих `providerId === 'password'`. Это не причуда эмулятора — так написано в самих типах SDK:
+ *
+ *     static readonly PROVIDER_ID: 'password';
+ *     /** Always set to {@link ProviderId}.PASSWORD, **even for email link**. *\/
+ *
+ * Различие живёт в `signInMethod` (`password` против `emailLink`), а единственный клиентский API,
+ * который его отдавал — `fetchSignInMethodsForEmail`, — устарел и при включённой в БОЮ защите от
+ * перечисления почт (проверено 2026-08-01: `enableImprovedEmailPrivacy: true`) всегда возвращает
+ * пустой список.
+ *
+ * Поэтому здесь ровно два значения, и оба — правда:
+ *   · `google` — вход через Google;
+ *   · `email`  — вход почтой. КАКОЙ ИМЕННО (ссылка или пароль) — мы не знаем и не пишем.
+ *
+ * ⚠️ Не поддавайся соблазну дописать сюда `password` и вывести «Пароль не задан»: это выдумка,
+ * а не факт. Как отличать — вопрос владельцу В10 (`interviews/interview_008`), и ответ приедет
+ * вместе с фазой 7 эпика (`plans/15`).
+ */
+export type SignInMethod = 'google' | 'email';
+
+/** Что экран «Управлять аккаунтом» знает о человеке. Всё — из Auth: в Firestore этого нет. */
+export interface AccountFacts {
+  /** Почта из Auth. У гостя её нет — и это его состояние, а не ошибка. */
+  readonly email: string | null;
+  /** Подтверждена ли почта. Без подтверждения правила 2.0 не показывают человеку ничего. */
+  readonly emailVerified: boolean;
+  /** Когда заведена учётная запись. Истина живёт в Auth, а не в `users/{uid}.time.created`
+   *  (`EXP-0039`: идентичность разрешай через Auth). */
+  readonly createdAt: number | null;
+  /** Чем человек входит. См. {@link SignInMethod} — про пароль здесь СОЗНАТЕЛЬНО ничего нет. */
+  readonly methods: readonly SignInMethod[];
+  /** Гость (анонимный вход): почты нет, управлять нечем. */
+  readonly guest: boolean;
+}
+
+function methodsOf(user: User): readonly SignInMethod[] {
+  const seen = new Set<SignInMethod>();
+  for (const provider of user.providerData) {
+    if (provider.providerId === GoogleAuthProvider.PROVIDER_ID) seen.add('google');
+    // 'password' у Firebase означает «вход почтой» — и ссылкой, и паролем (см. SignInMethod).
+    else if (provider.providerId === EmailAuthProvider.PROVIDER_ID) seen.add('email');
+  }
+  return [...seen];
+}
+
+/**
+ * Снимок аккаунта для экрана. `null` — сессии нет вовсе (человек не вошёл).
+ *
+ * Читается из живого объекта `User`, БЕЗ единого запроса к базе: всё нужное Firebase уже держит
+ * в сессии. Это прямое следствие канона проекта «экономить запросы к базе».
+ */
+export function currentAccount(): AccountFacts | null {
+  const user = devAuth().currentUser;
+  if (user === null) return null;
+
+  const created = user.metadata.creationTime;
+  return {
+    email: user.email,
+    emailVerified: user.emailVerified,
+    // `creationTime` — строка RFC 1123 либо `undefined`; выдумывать «сейчас» вместо
+    // отсутствующей даты нельзя (PHILOSOPHY: отсутствующее честнее выдуманного).
+    createdAt: created === undefined ? null : Date.parse(created),
+    methods: methodsOf(user),
+    guest: user.isAnonymous,
+  };
+}
+
+/**
  * Origin, на который письмо вернёт человека.
  *
  * В БОЮ — всегда КАНОНИЧЕСКИЙ домен, а не `location.origin`. Поймано на боевом выкате
