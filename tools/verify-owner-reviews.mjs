@@ -212,6 +212,26 @@ for (const cfg of CONFIGS) {
 	check(`${tag} отвеченный вопрос помечен «отвечено»`, (await page.locator('[data-q="В2"] .tag').innerText()).toLowerCase().includes('отвечено'));
 	check(`${tag} прежний ответ владельца показан`, (await page.locator('[data-q="В2"]').innerText()).includes('ИСХОДНЫЙ ОТВЕТ'));
 
+	// Полоса слева — выбор владельца (интервью №012). Меряется ПИКСЕЛЯМИ и ЦВЕТОМ, а не наличием
+	// класса: «полоса есть в разметке» ничего не говорит о том, видна ли она и красится ли
+	// состоянием, а именно за это владелец и голосовал.
+	const stripes = await page.evaluate(() => {
+		const read = (sel) => {
+			const el = document.querySelector(sel);
+			if (!el) return null;
+			const s = getComputedStyle(el);
+			return { w: parseFloat(s.borderLeftWidth), color: s.borderLeftColor };
+		};
+		return { open: read('[data-q="В1"]'), done: read('[data-q="В2"]') };
+	});
+	check(`${tag} у ждущего вопроса полоса слева есть`, (stripes.open?.w ?? 0) >= 4, `${stripes.open?.w}px`);
+	check(`${tag} у отвеченного вопроса полоса слева есть`, (stripes.done?.w ?? 0) >= 4, `${stripes.done?.w}px`);
+	check(
+		`${tag} полоса красится СОСТОЯНИЕМ (цвета ждущего и отвеченного различны)`,
+		stripes.open?.color !== stripes.done?.color,
+		`${stripes.open?.color} vs ${stripes.done?.color}`,
+	);
+
 	// Грабли №6 — обе темы ПИКСЕЛЯМИ, а не по наличию класса.
 	const colors = await page.evaluate(() => {
 		const s = getComputedStyle(document.body);
@@ -295,9 +315,11 @@ console.log('\n— блок 3: ответ в один клик —');
 }
 await browser.close();
 
-// Сервер обязан умереть сам: поднялся → записал → умер.
+// 🔑 «СОХРАНИТЬ» БУДИТ АГЕНТА (слово владельца): агент узнаёт о событии по ЗАВЕРШЕНИЮ процесса,
+// значит контур обязан завершиться сразу после записи. Пока он этого не делал, ответ лежал
+// записанным, а за ним никто не приходил — владелец поймал это первым.
 await waitFor(async () => server.exitCode !== null, 8000);
-check('сервер умер сам после записи решения', server.exitCode === 0, `код ${server.exitCode}`);
+check('контур завершился сам после сохранения (это и есть побудка агента)', server.exitCode === 0, `код ${server.exitCode}`);
 
 const md = readFileSync(DOC, 'utf8');
 check('МЕСТО 1 — ответ лёг в исходный md', md.includes(ANSWER_TEXT));

@@ -131,8 +131,13 @@ table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:.92em}
 th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
 th{background:var(--code-bg)}
 .meta{color:var(--dim);font-size:.86rem}
-.q{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:20px 0}
-.q.done{opacity:.72}
+/* Виджет вопроса. Полоса слева — выбор владельца (интервью №012: В1=А «Полоса слева»,
+   В2=А «красится состоянием»). Она делает две работы разом: отделяет один вопрос от другого и
+   показывает, ждёт он ответа или нет, — на длинном интервью это главное, что нужно видеть глазом. */
+.q{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);
+	border-radius:4px 12px 12px 4px;padding:16px 18px;margin:20px 0}
+.q.open{border-left-color:var(--warn)}
+.q.done{opacity:.72;border-left-color:var(--ok)}
 .qhead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 .tag{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;
 	border:1px solid var(--line);color:var(--dim)}
@@ -261,7 +266,7 @@ function questionCard(q, bodyMd) {
 		: '';
 
 	return `
-	<section class="q ${q.answered ? 'done' : ''}" data-q="${esc(q.label)}">
+	<section class="q ${q.answered ? 'done' : 'open'}" data-q="${esc(q.label)}">
 		<div class="qhead">
 			<span class="tag ${q.answered ? 'ok' : 'open'}">${q.answered ? 'отвечено' : 'ждёт вас'}</span>
 			<h3 style="margin:0">${esc(q.title)}</h3>
@@ -776,6 +781,9 @@ export function scopeOf(docPath, meta) {
 	return { kind, title };
 }
 
+/** Сравнение путей без оглядки на регистр и слэши — Windows отдаёт их по-разному. */
+const samePath = (a, b) => resolve(a).toLowerCase() === resolve(b ?? '').toLowerCase();
+
 const plural = (n, a, b, c) => {
 	const m10 = n % 10;
 	const m100 = n % 100;
@@ -904,8 +912,33 @@ a.card-link:hover{border-color:var(--accent)}
 		return 0;
 	}
 
-	// Пачка живёт до истечения срока, а не до первого ответа: документов несколько.
-	const server = startServer({ index: batchPage });
+	/**
+	 * 🔑 «СОХРАНИТЬ» БУДИТ АГЕНТА. Слово владельца, дословно: «если я дал ответы, нажал сохранить —
+	 * оно должно дёргать тебя».
+	 *
+	 * Как это устроено технически: агент узнаёт о событии, когда ЗАВЕРШАЕТСЯ запущенный им процесс.
+	 * Значит контур обязан завершиться сразу после записи решения — иначе ответ лежит записанным, а
+	 * за ним никто не приходит (ровно это и случилось: пачка держала сервер три часа).
+	 *
+	 * Отсюда правило, одинаковое для одиночного документа и для пачки: ЛЮБОЕ сохранение закрывает
+	 * контур. Если в очереди осталось неотвеченное — это забота АГЕНТА поднять страницу заново, а
+	 * не владельца держать вкладку открытой.
+	 */
+	const server = startServer({
+		index: batchPage,
+		onDecision: (target, srv) => {
+			const rest = live.filter((i) => {
+				const p = join(ROOT, i.doc);
+				return existsSync(p) && !samePath(p, target) && parseInterview(p, readMd(p)).waiting;
+			});
+			console.log(
+				rest.length
+					? `\n📌 Осталось ждать владельца: ${rest.length} — подними пачку заново.`
+					: '\n✅ Очередь пуста.',
+			);
+			setTimeout(() => srv.close(() => process.exit(0)), 2500);
+		},
+	});
 	const url = await listen(server);
 	console.log(`Пачка поднята: ${url} (${live.length})`);
 	setTimeout(
