@@ -322,4 +322,4 @@ Google — ваше же решение (интервью №004, В2). Сужа
 ## Ссылки
 
 `interviews/interview_009` (ваши ответы, из которых всё выросло) · `plans/21`–`plans/25` ·
-`researches/25`, `26`, `27` · `MASTER_PLAN.md` фаза 6.5 · `GOAL.md` · `ideas/12` (⛔ UGC)
+`researches/25`, `26`, `27` · `MASTER_PLAN.md` фаза 7 · `GOAL.md` · `ideas/12` (⛔ UGC)

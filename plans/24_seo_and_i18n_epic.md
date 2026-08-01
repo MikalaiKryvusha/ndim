@@ -563,7 +563,7 @@ Rich Results Test принимает `Organization` и `WebSite` без ошиб
 `researches/08_seo_indexing.md` (что из него **устарело** — §3 обзора 26) ·
 `researches/05_onboarding_texts_1x.md` · `researches/06_product_texts_1x.md` («Заметки для 2.0» —
 дефекты английского) · `researches/07_user_manual_1x.md` ·
-`interviews/interview_009_frictionless_entry.md` (В8–В11) · `MASTER_PLAN.md` фаза 6.5 ·
+`interviews/interview_009_frictionless_entry.md` (В8–В11) · `MASTER_PLAN.md` фаза 7 ·
 `AGENT_GUIDE.md` → «Языки — ТРИ аудитории» и «Дизайн — правило четырёх макетов» ·
 `GOAL.md` · `plans/21` · `plans/22` · `plans/23` ·
 архив 1.x: `MikalaiKryvusha/ndim-old` → `public/images/NDim_OG.jpg`, `public/index.html`

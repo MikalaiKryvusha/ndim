@@ -291,7 +291,8 @@ This document is the user manual and the developer's reference.
 ### 1.1. General provisions
 
 1. The source material is a person's self-ratings over **dimensions** — axes of human qualities
-   ("I love silence", "I wake up early", "I read at night") invented by the community.
+   ("I love silence", "I wake up early", "I read at night"). A dimension is shared by everyone:
+   rating yourself, you use the same axis as everybody else. Anyone can propose a new one.
 2. A person who has rated themselves on at least one dimension becomes a **point in their own
    subspace of dimensions**.
 3. The result of the service is **Relations** — a list of at most 250 most similar people, built
@@ -353,8 +354,8 @@ This document is the user manual and the developer's reference.
 
 ### 3.2. Dimensions
 
-1. Dimensions are invented by the community. The form for proposing a new dimension is on the
-   "Dimensions" screen; proposals are reviewed by the author of the service.
+1. **Anyone can propose** a new dimension: the form is on the "Dimensions" screen, and proposals
+   are reviewed by the author of the service before a dimension enters the catalogue.
 2. A dimension is shared by everyone: rating yourself on a dimension, you use the same axis as
    everybody else.
 

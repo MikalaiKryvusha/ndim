@@ -113,4 +113,4 @@
 ## Ссылки
 
 `interviews/interview_009` (ответы владельца) · `interviews/interview_010` (развилки волны) ·
-`plans/21`–`25` · `researches/25`, `26`, `27` · `MASTER_PLAN.md` фаза 6.5
+`plans/21`–`25` · `researches/25`, `26`, `27` · `MASTER_PLAN.md` фаза 7
