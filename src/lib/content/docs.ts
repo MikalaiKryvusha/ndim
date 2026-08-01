@@ -741,7 +741,6 @@ export const DOCS: Readonly<Record<string, Doc>> = {
             "UI/UX улучшения во флоу онбординга.",
             "UI/UX улучшения во флоу регистрации и авторизации.",
             "Добавлен модальный диалог для новых пользователей о важности заполнения NDim ID профиля.",
-            "Добавлена аналитика рекламной атрибуции.",
             "Оптимизация и исправление дефектов.",
             "Пополнение базы данных измерениями."
           ],
@@ -749,7 +748,6 @@ export const DOCS: Readonly<Record<string, Doc>> = {
             "UI/UX improvements in the onboarding flow.",
             "UI/UX improvements in the registration and authorization flows.",
             "Added a modal dialog for new users about the importance of filling in the NDim ID profile.",
-            "Added advertising attribution analytics.",
             "Optimization and bug fixing.",
             "Filling the database with dimensions."
           ]
