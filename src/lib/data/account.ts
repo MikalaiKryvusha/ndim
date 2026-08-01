@@ -20,6 +20,8 @@
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
+  applyActionCode,
+  checkActionCode,
   getAdditionalUserInfo,
   isSignInWithEmailLink,
   linkWithCredential,
@@ -651,6 +653,101 @@ export async function requestEmailChange(
       url: `${loginLinkOrigin()}${REAUTH_RETURN_PATH}`,
     });
     forgetPendingOp();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: classifyAccount(error) };
+  }
+}
+
+/* ── СТРАНИЦА-ОБРАБОТЧИК ПОЧТОВЫХ ДЕЙСТВИЙ (`/auth/action`) ──────────────────────────────────
+   Firebase шлёт человеку письма со ссылками, и каждая ведёт на «страницу действий». По
+   умолчанию это страница Firebase — английская, чужая. Своя даёт русский текст и наш вид;
+   доки требуют от неё лишь «веб-страницу, использующую Firebase JS SDK», так что `adapter-static`
+   не мешает: маршрут пререндерится, всю работу делает клиентский JS (`researches/24` §5, п. 2).
+
+   🔴 РЕЖИМ `recoverEmail` ОБЯЗАТЕЛЕН. Если своя страница появится, но этот режим не умеет —
+   ссылка «это была не я, верните адрес» приведёт человека в никуда. Именно поэтому переключать
+   Action URL в консоли можно только тогда, когда страница знает ВСЕ режимы (`plans/19`, капкан 4).
+   ─────────────────────────────────────────────────────────────────────────────────────────── */
+
+/** Что именно просит сделать ссылка из письма. */
+export type ActionKind =
+  /** Подтвердить новый адрес и применить смену почты. */
+  | 'verify-and-change-email'
+  /** Откатить смену почты — письмо приходит на СТАРЫЙ адрес. */
+  | 'recover-email'
+  /** Подтвердить адрес. */
+  | 'verify-email'
+  /** Сброс пароля. Приёмник появится вместе с самим паролем — фаза 7. */
+  | 'reset-password'
+  | 'unknown';
+
+/** Что известно о ссылке ДО того, как мы её применим. Читается без побочных действий. */
+export interface ActionInfo {
+  readonly kind: ActionKind;
+  /**
+   * Адрес, К КОТОРОМУ ведёт действие:
+   *   · `verify-and-change-email` — новый адрес;
+   *   · `recover-email` — адрес, на который вернёмся;
+   *   · `verify-email` — подтверждаемый адрес.
+   */
+  readonly email: string | null;
+  /** Адрес ДО действия. Firebase отдаёт его только для смены и отката. */
+  readonly previousEmail: string | null;
+}
+
+function actionKind(operation: string): ActionKind {
+  switch (operation) {
+    case 'VERIFY_AND_CHANGE_EMAIL':
+      return 'verify-and-change-email';
+    case 'RECOVER_EMAIL':
+      return 'recover-email';
+    case 'VERIFY_EMAIL':
+      return 'verify-email';
+    case 'PASSWORD_RESET':
+      return 'reset-password';
+    default:
+      return 'unknown';
+  }
+}
+
+/**
+ * Прочитать ссылку, НЕ применяя её.
+ *
+ * Порядок «сначала показать, потом применить» — из официального образца обработчика: человек
+ * должен увидеть, ЧТО с ним сейчас произойдёт, до того как это произойдёт. Особенно на откате:
+ * там важно назвать оба адреса.
+ */
+export async function inspectActionCode(
+  code: string,
+): Promise<{ readonly ok: true; readonly info: ActionInfo } | { readonly ok: false; readonly reason: AccountFailure }> {
+  try {
+    const info = await checkActionCode(devAuth(), code);
+    return {
+      ok: true,
+      info: {
+        kind: actionKind(info.operation),
+        email: info.data.email ?? null,
+        previousEmail: info.data.previousEmail ?? null,
+      },
+    };
+  } catch (error) {
+    return { ok: false, reason: classifyAccount(error) };
+  }
+}
+
+/**
+ * Применить ссылку.
+ *
+ * ⚠️ `applyActionCode` принимает `auth` и КОД ИЗ ССЫЛКИ, а не объект пользователя — частая
+ * ошибка по памяти (уточнено состязательной проверкой, `researches/24` §1.2).
+ *
+ * ⚠️ Сессия здесь НЕ обязательна: письмо могло прийти человеку, который давно вышел, и это
+ * нормальный случай — код самодостаточен.
+ */
+export async function applyAction(code: string): Promise<AccountResult> {
+  try {
+    await applyActionCode(devAuth(), code);
     return { ok: true };
   } catch (error) {
     return { ok: false, reason: classifyAccount(error) };
