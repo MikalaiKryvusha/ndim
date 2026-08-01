@@ -438,6 +438,90 @@ export async function cleanupStaleGuests(now = Date.now()) {
 }
 
 /**
+ * Убирает следы за человеком, УДАЛИВШИМ АККАУНТ САМ (эпик `plans/15`, фаза 8; ответ владельца
+ * В11 = А, 2026-08-01).
+ *
+ * ═══ ЗАЧЕМ ЭТО ЗДЕСЬ, А НЕ В КЛИЕНТЕ ═══
+ *
+ * Человек удаляет всё, что вправе удалить, сам и мгновенно (`src/lib/data/erase.ts`). Но пять
+ * следов ему недоступны по правилам, и это не недоделка, а устройство безопасности:
+ *   · свой `relations/{uid}` — клиенту запись запрещена ПОЛНОСТЬЮ (иначе он мог бы объявить
+ *     себя похожим на кого угодно);
+ *   · он в ЧУЖИХ топах — чужие документы;
+ *   · его членство в ЧУЖИХ группах и подсказка аудитории у другого — чужие документы;
+ *   · его предложения измерений — их правит только админ.
+ *
+ * ═══ КАК УЗНАЁМ, ЧТО ЧЕЛОВЕКА НЕТ ═══
+ *
+ * По отсутствию точки при живом `relations`. Отдельного «надгробия» не заводим сознательно:
+ * его пришлось бы хранить вечно, и оно само стало бы следом человека — ровно тем, что мы
+ * пришли убрать.
+ *
+ * ═══ ЦЕНА ЗАПРОСОВ (канон владельца «экономить запросы к базе») ═══
+ *
+ * Поиск сирот — ДВА `listDocuments()`: они возвращают ссылки, а НЕ данные, то есть чтений
+ * документов не тратят вовсе. Тяжёлый обход членств и подсказок (`collectionGroup`) делается
+ * ТОЛЬКО когда сирота действительно нашёлся. Никто не удалялся — проход бесплатен.
+ *
+ * ⚠️ Чужие топы здесь НЕ правятся руками: ночной проход всё равно пересчитывает их по ЖИВЫМ
+ * точкам, удалённого в них уже не будет, и хэш топа изменится — значит он будет переписан
+ * штатным путём. Дописывать это отдельно значило бы делать одну работу дважды.
+ *
+ * Возвращает число людей, за которыми убрали.
+ */
+export async function cleanupDeletedPeople(now = Date.now()) {
+  const [relationRefs, pointRefs] = await Promise.all([
+    db.collection('relations').listDocuments(),
+    db.collection('points').listDocuments(),
+  ]);
+
+  const alive = new Set(pointRefs.map((ref) => ref.id));
+  const gone = relationRefs.filter((ref) => !alive.has(ref.id)).map((ref) => ref.id);
+  if (gone.length === 0) return 0;
+
+  const goneSet = new Set(gone);
+
+  for (const uid of gone) {
+    // Его собственный топ и остатки дерева (клиент мог оборваться на середине каскада).
+    await db.doc(`relations/${uid}`).delete();
+    await db.recursiveDelete(db.doc(`users/${uid}`));
+    await db.recursiveDelete(db.doc(`points/${uid}`));
+
+    /*
+     * Предложения измерений ОБЕЗЛИЧИВАЮТСЯ, а не удаляются (решение владельца В11 = А):
+     * предложенное измерение полезно Пространству и после ухода автора, а связка с человеком
+     * уходит вместе с `authorUid`. Это и есть разница между «удалить данные человека» и
+     * «стереть его вклад».
+     */
+    const mine = await db.collection('suggestions').where('authorUid', '==', uid).get();
+    for (const suggestion of mine.docs) {
+      await suggestion.ref.update({ authorUid: null, anonymizedAt: now });
+    }
+
+    pointsCache?.delete(uid);
+    writtenTops?.delete(uid);
+    log(`человек ${uid} удалил аккаунт — следы вычищены`);
+  }
+
+  /*
+   * Членства и подсказки живут в ЧУЖИХ деревьях, а их документы не хранят uid полем — он
+   * только в имени документа (`GroupMemberDoc` содержит лишь `added`). Значит запросом по
+   * полю их не найти, и остаётся обход группы коллекций.
+   *
+   * Он дорог — и потому выполняется ТОЛЬКО здесь, внутри ветки «сирота нашёлся», а не в
+   * каждом проходе.
+   */
+  for (const groupName of ['members', 'audience']) {
+    const found = await db.collectionGroup(groupName).get();
+    for (const entry of found.docs) {
+      if (goneSet.has(entry.id)) await entry.ref.delete();
+    }
+  }
+
+  return gone.length;
+}
+
+/**
  * Сердцебиение сервера синхронизации: `space/server`.
  *
  * Пишется КАЖДЫЙ цикл, даже когда пересчитывать нечего, — по свежести этой отметки экран
@@ -521,7 +605,12 @@ export async function runCycle() {
   const fullPass = nightly || warmup;
 
   if (fullPass) {
-    if (nightly) await cleanupStaleGuests(startedAt); // до перечитки: сироты не должны попасть в кэш
+    if (nightly) {
+      // Оба — ДО перечитки точек: ни осиротевший гость, ни следы удалившегося не должны
+      // попасть в кэш и в чужие топы этого же прохода.
+      await cleanupStaleGuests(startedAt);
+      await cleanupDeletedPeople(startedAt);
+    }
     pointsCache = await loadAllPoints();
     if (writtenTops === null) writtenTops = await seedWrittenTops();
     // ⚠️ lastFullPassAt здесь НЕ трогаем: отметка «проход сделан» ставится только после
