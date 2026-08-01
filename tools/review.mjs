@@ -79,6 +79,22 @@ const BY = opt('--by', process.env.NDIM_OWNER || 'Николай Кривуша'
  * цифры, пока не появилась нормализация «56 → пятьдесят шесть» · `14` разметка утекала в речь,
  * поэтому в голос уходит ЧИСТЫЙ текст, без markdown.
  */
+/**
+ * КТО спрашивает. Владелец ведёт несколько проектов сразу, и каждый зовёт его страницей ОДНОГО И
+ * ТОГО ЖЕ вида — значит страница обязана назвать себя раньше, чем он прочтёт хоть слово (его слово
+ * 2026-08-02, увидев это в контуре соседнего проекта: «я понимаю, по какому проекту меня
+ * спрашивают, и сколько вопросов в этом интервью в каком статусе»).
+ *
+ * Имя — каноническое написание из `AGENT_GUIDE.md` → «Идентичность проекта», а не новое брендовое
+ * решение: агент бренд не сочиняет. Форк переопределяет `NDIM_PROJECT`, а не правит код.
+ */
+const PROJECT = process.env.NDIM_PROJECT || 'NDim Space';
+
+/** Когда спрошено — человеческой строкой, а не ISO: её читает человек, а не разбор. */
+const stamp = (d = new Date()) =>
+	`${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}, ` +
+	`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+
 const VOICE = opt('--voice', process.env.NDIM_VOICE || 'eugene');
 const SAPI_VOICE = process.env.NDIM_SAPI_VOICE || 'Microsoft Irina Desktop';
 const VOICE_TOOL = opt('--voice-tool', process.env.NDIM_VOICE_TOOL || 'F:\\KLAS\\tools\\voice-say.mjs');
@@ -138,6 +154,18 @@ th{background:var(--code-bg)}
 	border-radius:4px 12px 12px 4px;padding:16px 18px;margin:20px 0}
 .q.open{border-left-color:var(--warn)}
 .q.done{opacity:.72;border-left-color:var(--ok)}
+/* Шапка: КТО спрашивает, КОГДА и состояние интервью двумя пилюлями, читаемыми одним взглядом.
+   Пилюли ЗАЛИВНЫЕ, а не обводкой: обводка уже занята тегами вопросов, и два похожих элемента
+   рядом читались бы как один список. Цвет — по СОСТОЯНИЮ (тот же принцип, что владелец выбрал
+   для карточек вопросов, интервью №012, V1 «Полоса слева»). Ноль гасится в серое: «отвечено: 0»
+   зелёным было бы похвалой за несделанное. */
+.asks{font-size:.86rem;color:var(--dim);margin-top:2px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 2px}
+.pill{font-size:.8rem;font-weight:600;padding:3px 11px;border-radius:99px;border:1px solid transparent}
+.pill.wait{background:var(--warn);color:var(--card)}
+.pill.done{background:var(--ok);color:var(--card)}
+.pill.art{background:var(--accent);color:var(--accent-ink,var(--card))}
+.pill.zero{background:transparent;color:var(--dim);border-color:var(--line);font-weight:400}
 .qhead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 .tag{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;
 	border:1px solid var(--line);color:var(--dim)}
@@ -342,6 +370,7 @@ export function buildPage({ docPath, live }) {
 	}
 
 	const open = parsed.questions.filter((q) => !q.answered).length;
+	const answered = parsed.questions.length - open;
 
 	const page = `<!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
@@ -352,10 +381,13 @@ export function buildPage({ docPath, live }) {
 <div class="wrap">
 	<header class="top">
 		<h1>${esc(meta.title)}</h1>
-		<div class="meta">
-			${esc(relPath)} · ${parsed.questions.length} вопрос(ов), ждут вас ${open}
-			${meta.artifacts.length ? ` · артефактов на одобрение: ${meta.artifacts.length}` : ''}
+		<div class="asks">Спрашивает ИИ-агент <b>${esc(PROJECT)}</b> · ${esc(stamp())}</div>
+		<div class="pills">
+			<span class="pill ${open ? 'wait' : 'zero'}">ждут вас: ${open}</span>
+			<span class="pill ${answered ? 'done' : 'zero'}">отвечено: ${answered}</span>
+			${meta.artifacts.length ? `<span class="pill art">на одобрение: ${meta.artifacts.length}</span>` : ''}
 		</div>
+		<div class="meta">${esc(relPath)}</div>
 		${parsed.statusRaw ? `<div class="meta">${mdToHtml(parsed.statusRaw)}</div>` : ''}
 	</header>
 
@@ -895,6 +927,11 @@ a.card-link{display:block;text-decoration:none;color:inherit}
 a.card-link:hover{border-color:var(--accent)}
 </style></head><body><div class="wrap">
 <header class="top"><h1>Накопилось ${live.length} ${plural(live.length, 'документ', 'документа', 'документов')}</h1>
+<div class="asks">Спрашивает ИИ-агент <b>${esc(PROJECT)}</b> · ${esc(stamp())}</div>
+<div class="pills">
+	<span class="pill wait">ждут вас: ${live.reduce((n, i) => n + parseInterview(join(ROOT, i.doc), readMd(join(ROOT, i.doc))).questions.filter((x) => !x.answered).length, 0)}</span>
+	<span class="pill zero">документов: ${live.length}</span>
+</div>
 <div class="meta">Пока вы были заняты, агент работал и складывал сюда всё, что решать не вправе.
 Нажмите карточку — откроется сам документ.</div>
 </header>${cards}</div></body></html>`;
