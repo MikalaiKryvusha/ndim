@@ -220,7 +220,7 @@ if (uid === null) { stand = 'signedout'; return; }` (`profile/+page.svelte:181-1
 - `bugs/19_signin_not_own_screen.md` — вход отдельным экраном в стиле лендинга (там же: «внутренние
   экраны при отсутствии сессии не рисуют карточку входа сами»); дверь «У меня уже есть аккаунт»
   просится туда.
-- `bugs/32_password_signin_missing.md` — третий способ входа (почта+пароль) для 331 человека 1.x;
+- `bugs/32_DONE_password_signin_missing.md` — ⛔ ОТМЕНЁН 2026-08-01: паролей в продукте не будет;
   та же карточка, та же пачка макетов.
 - `bugs/45_no_account_management.md` — управления аккаунтом нет вовсе (смена почты, удаление).
 - `ideas/11_DONE_guest_mode_respectful_upgrade.md`, `plans/03_onboarding_2x.md` — откуда пришёл
