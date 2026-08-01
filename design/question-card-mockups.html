@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — выделение виджетов вопросов, 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     СТРАНИЦА ВЫЧИТКИ ВЛАДЕЛЬЦА — как визуально разделить виджеты вопросов.
+
+     ЗАКАЗ ВЛАДЕЛЬЦА (дословно, 2026-08-01):
+       «было бы здорово, чтобы вопросы были как-то яркой полосой какой-то сбоку помечены,
+        чтобы один от другого визуально разделялся, виджеты вопросов, выделять их области»
+
+     ═══ ЧТО РЕШАЮТ ЭТИ МАКЕТЫ — ОДИН вопрос ═══
+     ЧЕМ карточка вопроса отделяется от соседней и как видно её состояние.
+     Каждый вариант — цельный ответ, а не набор опций.
+
+     ═══ ЧТО ИМИ НЕ РЕШАЕТСЯ (уже работает, не выбирайте дважды) ═══
+       · Состав карточки: заголовок, тело вопроса, варианты кликом, поле своими словами,
+         пометка для агента. Не меняется ни в одном варианте.
+       · Повторный клик снимает выбор — ваше решение, во всех вариантах одинаково.
+       · Плашка состояния «ждёт вас» / «отвечено» существует уже сейчас.
+
+     ═══ ЧЕСТНОСТЬ МАКЕТА ═══
+       · Цвета — ДОСЛОВНО токены страницы вычитки (tools/review.mjs, блок STYLE), обе темы.
+       · Текст вопроса — настоящий Р5 из interviews/interview_010_gates_forks.md,
+         включая тот самый вариант В, который недавно терялся при разборе.
+       · Второй вопрос показан НАРОЧНО: задача — увидеть ГРАНИЦУ между двумя виджетами,
+         а на одной карточке её не видно в принципе.
+       · Состояния тоже настоящие: первый вопрос ждёт ответа, второй уже отвечен —
+         разделение обязано работать и между разными состояниями.
+
+     ВАРИАНТЫ:
+       · V1 «Полоса слева»      — тонкая яркая полоса по левому краю карточки, цветом состояния.
+                                  Минимум добавленного, читается мгновенно.
+       · V2 «Корешок с меткой»  — широкая полоса слева, и в ней живёт метка вопроса (Р5).
+                                  Полоса не просто украшение: она носит на себе номер.
+       · V3 «Цветная шапка»     — акцент не сбоку, а сверху: заголовок вопроса лежит на
+                                  цветной плашке во всю ширину карточки.
+       · V4 «Отбивка и подложка» — разделение не рамкой, а ВОЗДУХОМ: крупный зазор, номер
+                                  крупной цифрой на поле слева, тонкая линия-разделитель.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Токены страницы вычитки, светлая тема (дословно из tools/review.mjs) ── */
+  :root {
+    --bg: #f7f7f5; --card: #fff; --ink: #1a1a1a; --dim: #5b5b57; --line: #e2e2dd;
+    --accent: #1a6fd4; --accent-ink: #fff; --ok: #1f7a3d; --warn: #b06000; --bad: #b3261e;
+    --code-bg: #f0f0ec;
+  }
+  /* ── Тёмная тема (оттуда же) ── */
+  :root[data-theme='dark'] {
+    --bg: #14161a; --card: #1b1e24; --ink: #e8e8e6; --dim: #a0a4ad; --line: #2c313a;
+    --accent: #4d9bff; --accent-ink: #0b1220; --ok: #5fd08a; --warn: #e0a34a; --bad: #ff6b60;
+    --code-bg: #232830;
+  }
+
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.6 -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    padding-top: 52px;
+  }
+  /* Дом стиля макетов проекта: сцена несёт ширину в `data-w`, съёмщик её и читает. */
+  .stage { background: var(--bg); }
+  .stage[data-w='390'] .wrap { max-width: 430px; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 20px 18px 60px; }
+
+  h1.doc { font-size: 1.35rem; margin-bottom: 6px; }
+  .meta { color: var(--dim); font-size: .86rem; }
+  code { background: var(--code-bg); padding: .1em .35em; border-radius: 4px; font-size: .9em }
+  .topbar { border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px; }
+
+  /* ── Панель выбора варианта (дом стиля макетов проекта) ── */
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 9;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    background: #0d1420; color: #cfe0f2; padding: 8px 12px; font-size: 12px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    background: #16233a; border: 1px solid #24354f; color: #cfe0f2;
+    padding: 5px 10px; border-radius: 7px; cursor: pointer; font: inherit;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  /* ── Общая часть карточки вопроса (во всех вариантах одинаковая) ── */
+  .q { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+       padding: 16px 18px; margin: 20px 0; position: relative; }
+  .qhead { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+  .qhead h3 { font-size: 1.05rem; margin: 0; }
+  .tag { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase;
+         padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--dim); }
+  .tag.open { color: var(--warn); border-color: var(--warn); }
+  .tag.ok { color: var(--ok); border-color: var(--ok); }
+  .q p { margin: .6em 0; }
+  .opts { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px;
+         border: 1px solid var(--line); border-radius: 10px; }
+  .opt i { width: 14px; height: 14px; border: 1px solid var(--dim); border-radius: 50%;
+           flex: 0 0 auto; margin-top: 5px; }
+  label.f { display: block; margin: 10px 0 4px; font-size: .85rem; color: var(--dim); }
+  .field { width: 100%; height: 64px; border: 1px solid var(--line); border-radius: 10px;
+           background: var(--bg); }
+  .field.small { height: 40px; }
+  .prev { background: var(--code-bg); border-radius: 8px; padding: 10px 12px; font-size: .95em; }
+
+  /* ══════════════════ V1 «Полоса слева» ══════════════════════════════════ */
+  body.V1 .q { border-left: 5px solid var(--line); border-radius: 4px 12px 12px 4px; }
+  body.V1 .q.open { border-left-color: var(--warn); }
+  body.V1 .q.done { border-left-color: var(--ok); }
+
+  /* ══════════════════ V2 «Корешок с меткой» ═════════════════════════════ */
+  body.V2 .q { padding-left: 62px; border-radius: 4px 12px 12px 4px; overflow: hidden; }
+  body.V2 .q::before {
+    content: attr(data-label);
+    position: absolute; left: 0; top: 0; bottom: 0; width: 44px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .95rem; letter-spacing: .02em;
+    color: var(--accent-ink); background: var(--warn);
+  }
+  body.V2 .q.done::before { background: var(--ok); }
+
+  /* ══════════════════ V3 «Цветная шапка» ════════════════════════════════ */
+  body.V3 .q { padding: 0; overflow: hidden; }
+  body.V3 .qhead {
+    margin: 0; padding: 12px 18px; background: var(--warn); color: var(--accent-ink);
+    align-items: center;
+  }
+  body.V3 .q.done .qhead { background: var(--ok); }
+  body.V3 .qhead .tag { color: var(--accent-ink); border-color: rgba(255,255,255,.55); }
+  body.V3 .qbody { padding: 14px 18px 18px; }
+
+  /* ══════════════════ V4 «Отбивка и подложка» ═══════════════════════════ */
+  body.V4 .q { border: 0; background: none; padding: 0 0 0 56px; margin: 44px 0; }
+  body.V4 .q::before {
+    content: attr(data-label);
+    position: absolute; left: 0; top: -4px;
+    font-size: 1.5rem; font-weight: 800; color: var(--warn); opacity: .9;
+  }
+  body.V4 .q.done::before { color: var(--ok); }
+  body.V4 .q::after {
+    content: ''; position: absolute; left: 56px; right: 0; bottom: -22px;
+    border-bottom: 1px solid var(--line);
+  }
+  body.V4 .q:last-of-type::after { display: none; }
+</style>
+</head>
+<body class="V1">
+
+<div class="picker">
+  <b>Выделение виджетов вопросов:</b>
+  <button data-v="1" class="active">V1 «Полоса слева»</button>
+  <button data-v="2">V2 «Корешок с меткой»</button>
+  <button data-v="3">V3 «Цветная шапка»</button>
+  <button data-v="4">V4 «Отбивка и подложка»</button>
+  <span class="sp"></span>
+  <button id="theme">☾ тёмная</button>
+  <button id="width">Телефон 430</button>
+  <span class="hint">содержимое настоящее — Р5 и Р6 интервью №010</span>
+</div>
+
+<div class="stage" id="stage" data-w="390">
+<div class="wrap">
+  <div class="topbar">
+    <h1 class="doc">Развилки ворот: то, что четыре эпика не могут решить без Вас</h1>
+    <div class="meta">interviews/interview_010_gates_forks.md · 15 вопросов, ждут вас 1</div>
+  </div>
+
+  <!-- ── Вопрос, ждущий ответа ─────────────────────────────────────────── -->
+  <section class="q open" data-label="Р5">
+    <div class="qhead">
+      <span class="tag open">ждёт вас</span>
+      <h3>Р5. Что стоит на корне сайта?</h3>
+    </div>
+    <div class="qbody">
+      <p>Вы сказали: «EN основной, RU опциональный». Это можно прочитать двумя способами, и они
+        дают разный результат:</p>
+      <div class="opts">
+        <div class="opt"><i></i><span><b>А)</b> Буквально: на корне <code>/</code> — английский,
+          русский уезжает в <code>/ru/</code>.</span></div>
+        <div class="opt"><i></i><span><b>Б)</b> На корне остаётся русский, английский появляется
+          в <code>/en/</code> и раскручивается рядом.</span></div>
+        <div class="opt"><i></i><span><b>В)</b> Ни один язык не сидит на корне — оба живут своими
+          адресами, а <code>/</code> только распознаёт язык и отправляет.</span></div>
+        <div class="opt"><i></i><span><b>Г)</b> свой ответ</span></div>
+      </div>
+      <label class="f">Ответ своими словами</label>
+      <div class="field"></div>
+      <label class="f">Пометка для агента (необязательно)</label>
+      <div class="field small"></div>
+    </div>
+  </section>
+
+  <!-- ── Уже отвеченный вопрос: граница обязана читаться и между состояниями ── -->
+  <section class="q done" data-label="Р6">
+    <div class="qhead">
+      <span class="tag ok">отвечено</span>
+      <h3>Р6. Отзывы: где живут и кто их видит?</h3>
+    </div>
+    <div class="qbody">
+      <p>Секция отзывов на лендинге и форма «Оставить отзыв» в меню. Вопрос был о том, публикуем
+        ли мы отзыв сразу или после просмотра.</p>
+      <div class="prev"><b>Уже отвечено:</b><br>А — сначала смотрю я, потом публикуем.</div>
+      <label class="f">Уточнение (старый ответ останется дословно)</label>
+      <div class="field"></div>
+    </div>
+  </section>
+</div>
+</div>
+
+<script>
+  // Переключение варианта: класс на body, как во всех наборах макетов проекта.
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+      b.classList.add('active');
+      document.body.className = document.body.className.replace(/\bV\d\b/, '') + ' V' + b.dataset.v;
+      document.body.className = document.body.className.replace(/\s+/g, ' ').trim();
+    });
+  });
+  document.getElementById('theme').addEventListener('click', (e) => {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    e.target.textContent = dark ? '☾ тёмная' : '☀ светлая';
+  });
+  document.getElementById('width').addEventListener('click', (e) => {
+    const st = document.getElementById('stage');
+    const wide = st.dataset.w === '1440';
+    st.dataset.w = wide ? '390' : '1440';
+    e.target.textContent = wide ? 'Десктоп 1440' : 'Телефон 430';
+  });
+</script>
+</body>
+</html>

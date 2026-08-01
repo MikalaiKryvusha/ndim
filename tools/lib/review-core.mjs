@@ -114,9 +114,33 @@ function parseInline(s) {
 
 /** Заголовок вопроса: `### В1.`, `### Р5.`, `#### Q2.` — буква(ы) + номер + точка. */
 const Q_HEADING = /^#{2,4}\s*(?<label>[\p{Lu}]{1,2}\d+)\s*[.．)]/u;
-const ANSWER_FIELD = /\*\*Ответ[^*]*:?\*\*:?/u;
-/** Вариант ответа: `- **А) (рекомендуется)** текст` — буква латиницей или кириллицей. */
-const OPTION = /^\s*[-*]\s+\*\*(?<letter>[\p{Lu}])\)\s*(?<label>[^*]*)\*\*(?<rest>.*)$/u;
+const ANSWER_FIELD = /\*\*Ответ(?<note>[^*]*?):?\*\*:?/u;
+/**
+ * 🔴 ПОЛЕ, ПОДПИСАННОЕ КАК ВСТРЕЧНЫЙ ВОПРОС, — НЕ ОТВЕТ.
+ * Поймано на живом документе: в интервью №010 поле Р5 подписано «**Ответ (вопрос владельца):**»,
+ * внутри — вопрос владельца агенту и ответ агента, а сама развилка НЕ выбрана. Формально поле
+ * непустое, и страница показывала «ждут ответа: 0» на единственном блокирующем вопросе волны
+ * ворот — то есть звала владельца туда, где всё выглядело закрытым.
+ */
+const COUNTER_QUESTION = /вопрос/iu;
+/**
+ * Вариант ответа: `- **А) (рекомендуется)** текст` — буква латиницей или кириллицей.
+ *
+ * 🔴 РАЗБОР ОБЯЗАН БЫТЬ МНОГОСТРОЧНЫМ. Первая редакция искала закрывающие `**` в ТОЙ ЖЕ строке —
+ * и вариант, чей жирный заголовок перенесён на вторую строку, просто ИСЧЕЗАЛ со страницы. Поймано
+ * владельцем на живом Р5 интервью №010: из четырёх вариантов кликабельными оказались три, а
+ * пропал ровно тот, который рекомендован и который надо выбрать.
+ *
+ * Молчаливая потеря варианта — худший из возможных дефектов этого контура: страница выглядит
+ * исправной, владелец выбирает из того, что видит, и решение принимается по УРЕЗАННОМУ списку.
+ * Поэтому ниже — не только починка, но и счётная проверка в `verify-owner-reviews.mjs`: число
+ * строк-кандидатов обязано совпадать с числом разобранных вариантов у КАЖДОГО вопроса ВСЕХ живых
+ * интервью.
+ */
+const OPTION_START = /^\s*[-*]\s+\*\*(?<letter>[\p{Lu}])\)/u;
+const OPTION_FULL = /\*\*(?<letter>[\p{Lu}])\)\s*(?<label>[\s\S]*?)\*\*(?<rest>[\s\S]*)/u;
+/** Продолжение пункта списка: отступ, не новый пункт, не пусто. */
+const LIST_CONT = /^\s{2,}\S/u;
 
 /**
  * Разбирает документ интервью в структуру, пригодную и для стража, и для страницы.
@@ -163,15 +187,29 @@ export function parseInterview(relPath, text) {
 		}
 		if (!current) continue;
 
-		const o = OPTION.exec(line);
-		if (o && current.answerLine < 0) {
-			current.options.push({
-				letter: o.groups.letter,
-				label: (o.groups.label + ' ' + o.groups.rest).trim().replace(/\s+/g, ' ').slice(0, 300),
-			});
+		if (OPTION_START.test(line) && current.answerLine < 0) {
+			current.optionLines = (current.optionLines ?? 0) + 1;
+			// Собираем пункт ЦЕЛИКОМ: сам маркер плюс его продолжения с отступом. Жирный заголовок
+			// варианта запросто переносится на вторую строку — на этом контур уже обжёгся.
+			let text = line;
+			for (let j = i + 1; j < lines.length; j++) {
+				if (!LIST_CONT.test(lines[j]) || OPTION_START.test(lines[j])) break;
+				if (/^\s*[-*]\s/u.test(lines[j])) break;
+				text += ' ' + lines[j].trim();
+			}
+			const o = OPTION_FULL.exec(text);
+			if (o) {
+				current.options.push({
+					letter: o.groups.letter,
+					label: (o.groups.label + ' ' + o.groups.rest).trim().replace(/\s+/g, ' ').slice(0, 300),
+				});
+			}
 		}
-		if (ANSWER_FIELD.test(line) && current.answerLine < 0) {
+		const field = current.answerLine < 0 ? ANSWER_FIELD.exec(line) : null;
+		if (field) {
 			current.answerLine = i;
+			// Поле-встречный-вопрос считается ПУСТЫМ: развилка не выбрана, вопрос жив.
+			current.counterQuestion = COUNTER_QUESTION.test(field.groups.note ?? '');
 			current.answer += line.replace(ANSWER_FIELD, '').trim() + '\n';
 			continue;
 		}
@@ -182,7 +220,7 @@ export function parseInterview(relPath, text) {
 
 	for (const q of questions) {
 		q.answer = q.answer.trim();
-		q.answered = q.answerLine >= 0 && q.answer.length > 0;
+		q.answered = q.answerLine >= 0 && q.answer.length > 0 && !q.counterQuestion;
 	}
 
 	// Две формы одной строки: `statusRaw` сохраняет markdown (её рендерит страница),
@@ -206,7 +244,7 @@ const esc = (s) =>
 	String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** Строчные преобразования: код, жирный, курсив, ссылки, зачёркнутое. */
-function inline(s) {
+export function inline(s) {
 	let t = esc(s);
 	t = t.replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`);
 	t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -396,8 +434,9 @@ export function writeDecision({ docPath, kind, by, at, comment, answers = {}, ar
 		...(Object.keys(artifacts).length ? { artifacts } : {}),
 	};
 
-	// (1) — обратно в md
-	const touchedMd = applyAnswersToMd(docPath, answers, by, at);
+	// (1) — обратно в md: ответы по вопросам и общий комментарий по документу
+	const touchedMd = applyAnswersToMd(docPath, answers, by, at) ?? (comment ? docPath : null);
+	if (comment && comment.trim()) appendDocComment(docPath, comment.trim(), by, at);
 
 	// (2) — файл решения рядом, имя производно от документа
 	const prev = readDecision(docPath);
@@ -424,6 +463,32 @@ export function writeDecision({ docPath, kind, by, at, comment, answers = {}, ar
 		decision: decisionPath(docPath),
 		archive: join(ARCHIVE_DIR, `${docBase(docPath)}--${stamp}.json`),
 	};
+}
+
+/**
+ * Дописывает общий комментарий по документу в КОНЕЦ md (слово владельца 2026-08-01: «по всему
+ * документу целиком — в самом низу, общий комментарий владельца»).
+ *
+ * Почему в конец, а не в шапку: шапку документа пишет агент, и она отвечает на вопрос «о чём это».
+ * Комментарий владельца — это его реакция НА ПРОЧИТАННОЕ, её место после текста. Каждый приезд —
+ * отдельный блок с датой: комментарии копятся, а не затирают друг друга.
+ */
+export function appendDocComment(docPath, comment, by, at) {
+	const raw = readFileSync(docPath, 'utf8');
+	const eol = raw.includes('\r\n') ? '\r\n' : '\n';
+	const lines = raw.replace(/^﻿/, '').replace(/\s+$/, '').split(/\r?\n/);
+	lines.push(
+		'',
+		'---',
+		'',
+		`## 💬 Комментарий владельца — ${at.slice(0, 10)}`,
+		'',
+		...comment.split(/\r?\n/),
+		'',
+		`<!-- owner-review: by="${by}" at="${at}" транспорт=страница вид=общий-комментарий -->`,
+	);
+	writeFileSync(docPath, lines.join(eol) + eol, 'utf8');
+	return docPath;
 }
 
 /**
@@ -602,6 +667,40 @@ export function selftest() {
 	ok('разбор: В1 без ответа', p.questions[0].answered === false);
 	ok('разбор: В2 с ответом', p.questions[1].answered === true);
 	ok('разбор: статус прочитан', p.waiting === true);
+
+	// Поле, подписанное как ВСТРЕЧНЫЙ ВОПРОС, ответом не считается: развилка не выбрана.
+	// Случай снят с живого Р5 интервью №010 и закреплён здесь фикстурой — на живых данных он
+	// перестал бы стеречь правило в тот час, когда владелец ответит.
+	const counter = [
+		'### Р9. Развилка?',
+		'- **А) (рекомендуется)** вариант',
+		'',
+		'**Ответ (вопрос владельца):** «а можно иначе?»',
+		'',
+		'> ### Ответ агента: можно, но…',
+		'',
+	].join('\n');
+	const pc = parseInterview('проба.md', counter);
+	ok('встречный вопрос НЕ считается ответом', pc.questions[0]?.answered === false);
+	ok('встречный вопрос помечен признаком', pc.questions[0]?.counterQuestion === true);
+	ok(
+		'обычное поле ответом считается',
+		parseInterview('x.md', '### Р9. Вопрос?\n\n**Ответ:** В\n').questions[0]?.answered === true,
+	);
+	// Многострочный вариант (жирный заголовок перенесён) обязан разобраться — на этом контур обжёгся.
+	const wrapped = [
+		'### Р8. Развилка?',
+		'- **А) первый** хвост',
+		'- **Б) (ДОБАВЛЕН по вашему вопросу — и это лучший вариант) Ни один язык не сидит на',
+		'  корне.** Оба живут своими адресами.',
+		'- **В) свой ответ** —',
+		'',
+		'**Ответ:**',
+		'',
+	].join('\n');
+	const pw = parseInterview('x.md', wrapped);
+	ok('вариант с переносом строки не теряется', pw.questions[0]?.options.length === 3);
+	ok('буквы вариантов с переносом верны', pw.questions[0]?.options.map((o) => o.letter).join() === 'А,Б,В');
 
 	// Рендерер: связка, а не просто отсутствие падения (EXP-0015 — структура ≠ связность)
 	const html = mdToHtml(doc);

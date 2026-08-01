@@ -67,10 +67,18 @@ function luma(css) {
 	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** Запускает CLI проекта и возвращает {code, out}. */
-function run(args) {
-	const r = spawnSync(process.execPath, args, { cwd: ROOT, encoding: 'utf8' });
-	return { code: r.status, out: (r.stdout || '') + (r.stderr || '') };
+/**
+ * Запускает CLI проекта и возвращает {code, out}.
+ *
+ * ⚠️ ЖЁСТКИЙ СРОК ОБЯЗАТЕЛЕН. Без него команда, которая по замыслу не завершается (а такая в
+ * контуре есть — `batch` держит сервер), вешает весь прогон намертво и оставляет осиротевшие
+ * процессы на портах. Поймано на себе: четыре сироты и два прогона в никуда.
+ */
+function run(args, timeout = 60_000) {
+	const r = spawnSync(process.execPath, args, { cwd: ROOT, encoding: 'utf8', timeout });
+	const out = (r.stdout || '') + (r.stderr || '');
+	if (r.error?.code === 'ETIMEDOUT') return { code: 124, out: out + `\n[прогон убит по сроку ${timeout} мс]` };
+	return { code: r.status, out };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -78,6 +86,8 @@ function run(args) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ANSWER_TEXT = 'проверка контура — этого текста в документе до клика быть не должно';
+const Q_COMMENT = 'пометка к одному вопросу — она обязана лечь рядом со СВОИМ вопросом';
+const DOC_COMMENT = 'общий комментарий по документу целиком — его место в самом низу';
 
 mkdirSync(FIX, { recursive: true });
 writeFileSync(
@@ -259,10 +269,28 @@ console.log('\n— блок 3: ответ в один клик —');
 	await optA.click();
 	await page.locator('[data-q="В1"] [data-text]').fill(ANSWER_TEXT);
 	await page.locator('[data-q="В2"] [data-text]').fill('уточнение поверх прежнего');
+
+	// Комментарии: по каждому вопросу в отдельности И по документу целиком (слово владельца).
+	await page.locator('[data-q="В1"] [data-comment]').fill(Q_COMMENT);
+	check('поле общего комментария по документу есть', (await page.locator('#docComment').count()) === 1);
+	await page.locator('#docComment').fill(DOC_COMMENT);
+
 	await page.locator('#save').click();
 	await page.waitForSelector('.note.ok', { timeout: 10000 });
 	check('страница подтвердила запись', (await page.locator('.note.ok').innerText()).includes('Записано'));
 	await page.screenshot({ path: join(OUT, 'after-save.png') });
+
+	// Автозакрытие через 2 с (слово владельца). Браузер обычно НЕ даёт закрыть вкладку, которую
+	// открыл не скрипт, — поэтому стережём наблюдаемое: через 3 с страница либо закрыта, либо
+	// честно говорит об этом. Молчаливого «висит как было» быть не должно.
+	await page.waitForTimeout(3000);
+	const closed = page.isClosed();
+	const fallback = closed ? '' : await page.locator('body').innerText().catch(() => '');
+	check(
+		'через 2 с вкладка закрыта ЛИБО честно просит закрыть',
+		closed || /не дал закрыть вкладку|Записано/.test(fallback),
+		closed ? 'закрылась сама' : 'осталась с честным сообщением',
+	);
 	await ctx.close();
 }
 await browser.close();
@@ -277,6 +305,13 @@ check('МЕСТО 1 — выбранная буква записана', /\*\*О
 check('МЕСТО 1 — провенанс by/at проставлен', /owner-review: by="Николай Кривуша" at="\d{4}-/.test(md));
 check('ПЕРВОИСТОЧНИК ЦЕЛ — прежний ответ владельца не затёрт', md.includes('**Ответ:** ИСХОДНЫЙ ОТВЕТ ВЛАДЕЛЬЦА'));
 check('уточнение приехало отдельным полем', /Ответ \(уточнение \d{4}-\d{2}-\d{2}\)/.test(md));
+
+check('пометка к вопросу легла рядом со СВОИМ вопросом', md.indexOf(Q_COMMENT) > md.indexOf('### В1'), '');
+check(
+	'общий комментарий стоит в САМОМ НИЗУ документа',
+	md.includes(DOC_COMMENT) && md.indexOf(DOC_COMMENT) > md.lastIndexOf('### В2'),
+);
+check('у общего комментария свой заголовок с датой', /## 💬 Комментарий владельца — \d{4}-\d{2}-\d{2}/.test(md));
 
 check('МЕСТО 2 — файл решения создан', existsSync(decisionPath(DOC)));
 const decision = existsSync(decisionPath(DOC)) ? JSON.parse(readFileSync(decisionPath(DOC), 'utf8')) : {};
@@ -331,8 +366,11 @@ console.log('\n— блок 5: накопление (I7) —');
 {
 	const q = run(['tools/review.mjs', 'queue', DOC]);
 	check('документ встаёт в очередь', q.code === 0 && /В очередь|Уже в очереди/.test(q.out));
-	const batch = run(['tools/review.mjs', 'batch', '--no-open', '--no-signal']);
-	check('пачка собирается одной страницей', batch.code === 0 && /Пачка собрана|Очередь пуста/.test(batch.out));
+	// `--no-serve`: пачка собирается в файл и ВЫХОДИТ. Без него она поднимает сервер и не
+	// завершается — синхронный вызов повис бы навсегда (см. комментарий у `run`).
+	const batch = run(['tools/review.mjs', 'batch', '--no-open', '--no-signal', '--no-serve']);
+	check('пачка собирается одной страницей', batch.code === 0 && /Пачка собрана|Очередь пуста/.test(batch.out), batch.out.trim().slice(0, 70));
+	check('пачка не виснет (завершается сама)', batch.code !== 124);
 }
 
 // ── Блок 5б. Голос называет документ и его скоуп (решение владельца, интервью №011 В2)
@@ -360,6 +398,46 @@ console.log('\n— блок 5б: что произносит голос —');
 	if (existsSync(iv)) {
 		const s = scopeOf(iv, parseMeta(rmd(iv)));
 		check('тип не дублируется в названии', !/^интервью/iu.test(s.title), s.title);
+	}
+}
+
+// ── Блок 5в. НИ ОДИН ВАРИАНТ НЕ ПРОПАЛ — счётная проверка по ВСЕМ живым интервью
+//
+// 🔴 Худший дефект этого контура: страница выглядит исправной, но показывает УРЕЗАННЫЙ список
+// вариантов, и владелец выбирает из того, что видит. Поймано им самим на живом Р5 интервью №010 —
+// исчез ровно рекомендованный вариант, потому что его жирный заголовок перенесён на вторую строку.
+// Впечатление здесь бесполезно: считаем строки-кандидаты и сверяем с разобранными вариантами.
+console.log('\n— блок 5в: варианты не теряются (все живые интервью) —');
+{
+	const { parseInterview, readMd: rmd } = await import('./lib/review-core.mjs');
+	const dir = join(ROOT, 'interviews');
+	const files = readdirSync(dir).filter((f) => f.startsWith('interview_') && f.endsWith('.md'));
+	let lost = 0;
+	let total = 0;
+	for (const f of files) {
+		const p = join(dir, f);
+		const iv = parseInterview(p, rmd(p));
+		for (const q of iv.questions) {
+			const candidates = q.optionLines ?? 0;
+			total += candidates;
+			if (q.options.length !== candidates) {
+				lost++;
+				check(`${f} ${q.label}: разобрано ${q.options.length} из ${candidates} вариантов`, false);
+			}
+		}
+	}
+	check(`ни один вариант не потерян (${total} по ${files.length} интервью)`, lost === 0, `потеряно у ${lost} вопросов`);
+
+	// Точечно: тот самый вариант, на котором дефект нашёлся.
+	const p10 = join(ROOT, 'interviews/interview_010_gates_forks.md');
+	if (existsSync(p10)) {
+		const q5 = parseInterview(p10, rmd(p10)).questions.find((q) => q.label === 'Р5');
+		check('Р5: разобраны все четыре варианта', q5?.options.length === 4, `${q5?.options.length}`);
+		check('Р5: вариант В (рекомендованный) на месте', !!q5?.options.some((o) => o.letter === 'В'));
+		// ⚠️ Здесь НЕ проверяется «Р5 ждёт ответа»: первая редакция это делала и покраснела ровно
+		// в тот час, когда владелец на него ответил. Проверка, привязанная к переменному состоянию
+		// живых данных, стережёт календарь, а не продукт. Само правило «поле-встречный-вопрос не
+		// считается ответом» стережётся самотестом ядра, где случай зафиксирован фикстурой.
 	}
 }
 

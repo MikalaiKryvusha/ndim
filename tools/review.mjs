@@ -34,6 +34,7 @@ import {
 	parseMeta,
 	parseInterview,
 	mdToHtml,
+	inline,
 	bodyHash,
 	artifactsOf,
 	writeDecision,
@@ -159,6 +160,18 @@ button:disabled{opacity:.5;cursor:default}
 	margin:14px 0;font-size:.92rem}
 .audio{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:.3em 0}
 .audio audio{height:34px;max-width:100%}
+.embed{margin:.8em 0;display:block}
+.embed figcaption{color:var(--dim);font-size:.85rem;margin-bottom:6px;
+	display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+/* Рамка компактная НАМЕРЕННО: внутри вопроса она для быстрого просмотра, а полноценный выбор
+   макета делается отдельным экраном (правило владельца). */
+.embed .frame{width:100%;height:440px;border:1px solid var(--line);
+	border-radius:10px;background:var(--card);display:block}
+.embed button.full{font-size:.8rem;padding:4px 10px}
+.shot{margin:.6em 0;display:block}
+.shot img{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;display:block}
+.shot figcaption{color:var(--dim);font-size:.82rem;margin-top:4px}
+.q.whole{border-style:dashed}
 .note.ok{border-color:var(--ok);color:var(--ok)}
 .note.bad{border-color:var(--bad);color:var(--bad)}
 .art{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:20px 0}
@@ -187,6 +200,50 @@ function inlineAudio(html) {
 	});
 }
 
+/**
+ * Ссылка на HTML-файл превращается в ЖИВУЮ страницу внутри вопроса (слово владельца 2026-08-01:
+ * «рендер HTML страниц внутри вопросов — чтобы там можно просмотр макетов делать»).
+ *
+ * Почему `srcdoc`, а не `src`: страница вычитки обязана оставаться САМОДОСТАТОЧНОЙ и открываться
+ * офлайн одним файлом. Ссылка `src="design/…"` требовала бы раздачи файлов сервером и умирала бы в
+ * снимке страницы; `srcdoc` вшивает документ целиком, и макет живёт внутри вопроса даже без сети.
+ *
+ * ⚠️ Вкладывается ровно то, что лежит в файле. Макет с внешними зависимостями внутри рамки
+ * развалится — но в этом проекте макеты по канону самодостаточны (свои стили, свои скрипты).
+ */
+function inlineHtmlFrames(html) {
+	return html.replace(/<a href="([^"]+\.html)">([^<]*)<\/a>/g, (_, src, label) => {
+		const p = resolve(ROOT, decodeURIComponent(src));
+		if (!existsSync(p)) return `<span class="meta">нет файла: ${esc(src)}</span>`;
+		return `<figure class="embed">
+			<figcaption><b>${esc(label)}</b>
+				<button type="button" class="apart primary">Открыть отдельным экраном</button>
+				<button type="button" class="full">Во весь экран</button>
+				<span class="meta">ниже — быстрый просмотр</span></figcaption>
+			<iframe class="frame" srcdoc="${esc(readFileSync(p, 'utf8'))}"></iframe>
+		</figure>`;
+	});
+}
+
+/**
+ * Ссылка на картинку превращается в саму картинку, вшитую в страницу.
+ *
+ * Тот же довод, что у звука: судящему ВИД нужен вид, а не описание вида (`AGENT_GUIDE` → «Класс
+ * вкуса»), и страница обязана открываться офлайн одним файлом. Кадры макетов живут в
+ * `test-results/` вне git — ссылка на них с http-страницы браузером блокируется, а вшитая
+ * картинка работает всегда.
+ */
+function inlineImages(html) {
+	return html.replace(/<a href="([^"]+\.(png|jpe?g|webp|svg))">([^<]*)<\/a>/g, (_, src, ext, label) => {
+		const p = resolve(ROOT, decodeURIComponent(src));
+		if (!existsSync(p)) return `<span class="meta">нет файла: ${esc(src)}</span>`;
+		const mime =
+			ext === 'svg' ? 'image/svg+xml' : ext === 'webp' ? 'image/webp' : ext === 'png' ? 'image/png' : 'image/jpeg';
+		const b64 = readFileSync(p).toString('base64');
+		return `<figure class="shot"><img src="data:${mime};base64,${b64}" alt="${esc(label)}" loading="lazy"><figcaption>${esc(label)}</figcaption></figure>`;
+	});
+}
+
 /** Карточка одного вопроса интервью: тело + варианты + поля ввода. */
 function questionCard(q, bodyMd) {
 	const opts = q.options
@@ -194,7 +251,7 @@ function questionCard(q, bodyMd) {
 			(o) => `
 			<label class="opt" data-l="${esc(o.letter)}">
 				<input type="radio" name="ch-${esc(q.label)}" value="${esc(o.letter)}">
-				<span><b>${esc(o.letter)})</b> ${esc(o.label)}</span>
+				<span><b>${esc(o.letter)})</b> ${inline(o.label)}</span>
 			</label>`,
 		)
 		.join('');
@@ -301,6 +358,16 @@ export function buildPage({ docPath, live }) {
 
 	${arts.join('\n')}
 	${chunks.join('\n')}
+
+	${
+		live
+			? `<section class="q whole">
+		<div class="qhead"><span class="tag">по документу целиком</span></div>
+		<label class="f">Общий комментарий — то, что относится ко всему документу, а не к одному вопросу</label>
+		<textarea id="docComment" placeholder="необязательно"></textarea>
+	</section>`
+			: ''
+	}
 </div>
 
 ${
@@ -342,6 +409,21 @@ document.addEventListener('change', (e) => {
 	if (e.target.type === 'radio') paint(e.target.closest('.opts'));
 });
 
+// Живой макет внутри вопроса. Правило владельца (2026-08-01): выбор из четырёх макетов смотрят
+// ОТДЕЛЬНЫМ ЭКРАНОМ, а внутри вопроса рамка нужна для быстрого просмотра мелких решений. Поэтому
+// рамка компактная, а рядом две двери наружу — отдельное окно и полный экран.
+document.addEventListener('click', (e) => {
+	const frame = e.target.closest?.('.embed')?.querySelector('.frame');
+	if (!frame) return;
+	if (e.target.classList.contains('full') && frame.requestFullscreen) frame.requestFullscreen();
+	if (e.target.classList.contains('apart')) {
+		// Окно открывает СКРИПТ — значит макет живёт полноценным экраном и закрывается как обычное
+		// окно. Содержимое берём из самой рамки: второй копии документа не заводим.
+		const blob = new Blob([frame.getAttribute('srcdoc')], { type: 'text/html;charset=utf-8' });
+		window.open(URL.createObjectURL(blob), '_blank', 'noopener');
+	}
+});
+
 const saveBtn = document.getElementById('save');
 if (saveBtn) saveBtn.addEventListener('click', async () => {
 	const answers = {};
@@ -361,7 +443,10 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 		// изменился, пока владелец читал, одобрять нечего — он видел не то (I3).
 		if (status) artifacts[id] = { status, comment: text, sha256: sec.dataset.hash };
 	}
-	if (!Object.keys(answers).length && !Object.keys(artifacts).length) {
+	// Общий комментарий по документу целиком (слово владельца 2026-08-01). Он САМ ПО СЕБЕ
+	// достаточен для сохранения: «ответов нет, но есть что сказать» — законный исход вычитки.
+	const comment = document.getElementById('docComment')?.value.trim() || '';
+	if (!Object.keys(answers).length && !Object.keys(artifacts).length && !comment) {
 		document.getElementById('status').textContent = 'Ничего не отмечено — нечего сохранять.';
 		return;
 	}
@@ -377,15 +462,28 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 	const res = await fetch('/decision', {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({ answers, artifacts }),
+		// Какой документ отвечают — говорит сама страница: один сервер обслуживает всю пачку.
+		body: JSON.stringify({ doc: document.body.dataset.doc, answers, artifacts, comment }),
 	});
 	const out = await res.json();
 	if (out.ok) {
 		document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
 			'<div class="note ok"><b>Записано.</b> Ответ лёг в три места: сам документ, файл решения и архив. ' +
-			'Вкладку можно закрыть — агент уже видит ваш ответ.</div>');
-		document.getElementById('status').textContent = 'готово';
+			'Вкладка закроется сама.</div>');
+		document.getElementById('status').textContent = 'готово, закрываю…';
 		window.scrollTo({ top: 0, behavior: 'smooth' });
+		// Автозакрытие через 2 секунды (слово владельца 2026-08-01).
+		// ⚠️ Браузер разрешает window.close() только вкладке, ОТКРЫТОЙ скриптом, а нашу открыла
+		// операционная система. Поэтому закрытие — попытка, а не обещание: если браузер её не дал,
+		// страница честно превращается в короткое «готово», а не притворяется закрытой.
+		setTimeout(() => {
+			window.close();
+			setTimeout(() => {
+				document.body.innerHTML =
+					'<div class="wrap"><div class="note ok"><b>Записано.</b> ' +
+					'Браузер не дал закрыть вкладку сам — закройте её, пожалуйста.</div></div>';
+			}, 400);
+		}, 2000);
 	} else {
 		document.getElementById('status').textContent = 'ОШИБКА: ' + (out.error || 'неизвестно');
 		saveBtn.disabled = false;
@@ -394,7 +492,8 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 </script>
 </body></html>`;
 
-	return inlineAudio(page);
+	// Порядок важен: HTML-рамки первыми — иначе ссылка на макет успела бы стать картинкой.
+	return inlineImages(inlineAudio(inlineHtmlFrames(page)));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -487,27 +586,81 @@ async function speak(text, voice) {
 // КОМАНДЫ
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Поднимает страницу, открывает браузер, зовёт владельца и ждёт ответа. */
-async function cmdOpen(docPath) {
-	const html = buildPage({ docPath, live: true });
+/**
+ * Открывает страницу в браузере — по возможности ОКНОМ-ПРИЛОЖЕНИЕМ (`--app=`).
+ *
+ * Зачем именно так (слово владельца 2026-08-01: «страницу нужно автоматически закрывать после
+ * 2 секунд от ответа»): браузер разрешает `window.close()` только окну, которое открыл САМ, —
+ * обычную вкладку, запущенную через `start`, скрипт закрыть не может, и обещание автозакрытия
+ * было бы враньём. Режим `--app` даёт отдельное окно без вкладок и адресной строки, и закрытие
+ * в нём работает.
+ *
+ * Порядок поиска: Edge (владелец им проверяет вёрстку) → Chrome → обычная вкладка по умолчанию.
+ * Откат честный: если ни одного браузера не нашли, страница всё равно откроется, просто закрывать
+ * вкладку придётся рукой — об этом она сама и скажет.
+ */
+function openBrowser(url) {
+	const candidates = [
+		'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+		'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+		'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+		'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+	];
+	const exe = candidates.find((p) => existsSync(p));
+	if (exe) {
+		spawn(exe, [`--app=${url}`, '--window-size=1100,900'], { detached: true, stdio: 'ignore' }).unref();
+		return 'окно-приложение';
+	}
+	spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' });
+	return 'вкладка браузера по умолчанию';
+}
 
+/**
+ * Поднимает сервер контура.
+ *
+ * Один и тот же сервер обслуживает и ОДИН документ (`open`), и ПАЧКУ (`batch`): владелец не должен
+ * печатать команды, чтобы перейти от списка накопившегося к самому вопросу — карточка пачки
+ * обязана быть ссылкой, а не инструкцией. Разные серверы на каждый документ означали бы ровно тот
+ * порок, ради устранения которого контур и строился.
+ *
+ * @param index — функция, рисующая корневую страницу (для пачки), либо null (тогда корень — сам
+ *                документ)
+ */
+function startServer({ docPath = null, index = null, onDecision = null }) {
 	const server = createServer((req, res) => {
-		if (req.method === 'GET' && (req.url === '/' || req.url.startsWith('/?'))) {
+		const url = new URL(req.url, 'http://127.0.0.1');
+
+		if (req.method === 'GET' && url.pathname === '/') {
 			res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-			return res.end(buildPage({ docPath, live: true })); // всегда свежий разбор документа
+			// Страница всегда собирается заново: документ мог измениться, пока владелец читал.
+			return res.end(index ? index() : buildPage({ docPath, live: true }));
 		}
-		if (req.method === 'POST' && req.url === '/decision') {
+		if (req.method === 'GET' && url.pathname === '/doc') {
+			const p = resolve(ROOT, url.searchParams.get('p') ?? '');
+			if (!p.startsWith(ROOT) || !existsSync(p)) {
+				res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+				return res.end('нет такого документа');
+			}
+			res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+			return res.end(buildPage({ docPath: p, live: true }));
+		}
+		if (req.method === 'POST' && url.pathname === '/decision') {
 			let body = '';
 			req.on('data', (c) => (body += c));
 			req.on('end', () => {
 				try {
 					const got = JSON.parse(body);
 					const at = new Date().toISOString();
+					// Какой документ отвечают, говорит САМА страница (`<body data-doc>`): один сервер
+					// обслуживает и одиночный документ, и всю пачку.
+					const target = got.doc ? resolve(ROOT, got.doc) : docPath;
+					if (!target || !target.startsWith(ROOT) || !existsSync(target))
+						throw new Error('документ не найден');
 
 					// I3 — одобрение привязано к байтам тела. Сверяем показанный странице хеш с файлом
 					// ПРЯМО СЕЙЧАС: если текст успел измениться, владелец одобрял не то, что уйдёт.
 					for (const [id, rec] of Object.entries(got.artifacts || {})) {
-						const art = artifactsOf(docPath).find((a) => a.id === id);
+						const art = artifactsOf(target).find((a) => a.id === id);
 						if (!art?.absolute || !existsSync(art.absolute))
 							throw new Error(`тело артефакта «${id}» пропало`);
 						const now = bodyHash(art.absolute);
@@ -518,8 +671,8 @@ async function cmdOpen(docPath) {
 							);
 					}
 					const paths = writeDecision({
-						docPath,
-						kind: parseMeta(readMd(docPath)).kind,
+						docPath: target,
+						kind: parseMeta(readMd(target)).kind,
 						by: (got.by || BY).trim() || BY,
 						at,
 						comment: got.comment,
@@ -529,11 +682,10 @@ async function cmdOpen(docPath) {
 					res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
 					res.end(JSON.stringify({ ok: true, paths }));
 					console.log('\n✅ РЕШЕНИЕ ЗАПИСАНО В ТРИ МЕСТА:');
-					console.log('   документ: ' + relative(ROOT, paths.md ?? docPath));
+					console.log('   документ: ' + relative(ROOT, paths.md ?? target));
 					console.log('   решение:  ' + relative(ROOT, paths.decision));
 					console.log('   архив:    ' + relative(ROOT, paths.archive));
-					// Сервер живёт ровно до записи решения: поднялся → записал → умер.
-					setTimeout(() => server.close(() => process.exit(0)), 800);
+					if (onDecision) onDecision(target, server);
 				} catch (e) {
 					res.writeHead(500, { 'content-type': 'application/json; charset=utf-8' });
 					res.end(JSON.stringify({ ok: false, error: String(e.message) }));
@@ -543,17 +695,31 @@ async function cmdOpen(docPath) {
 		}
 		res.writeHead(404).end('нет');
 	});
+	return server;
+}
 
+/** Поднимает сервер на свободном порту и возвращает адрес. */
+async function listen(server) {
 	const port = Number(opt('--port', '0'));
 	await new Promise((r) => server.listen(port, '127.0.0.1', r));
-	const url = `http://127.0.0.1:${server.address().port}/`;
+	return `http://127.0.0.1:${server.address().port}/`;
+}
+
+/** Открывает ОДИН документ: страница, браузер, сигнал, ожидание ответа. */
+async function cmdOpen(docPath) {
+	const server = startServer({
+		docPath,
+		// Сервер одного документа живёт ровно до записи решения: поднялся → записал → умер.
+		onDecision: (_, srv) => setTimeout(() => srv.close(() => process.exit(0)), 2500),
+	});
+	const url = await listen(server);
 
 	const parsed = parseInterview(docPath, readMd(docPath));
 	const open = parsed.questions.filter((q) => !q.answered).length;
 	console.log(`\nСтраница поднята: ${url}`);
 	console.log(`Документ: ${relative(ROOT, docPath)} · ждут ответа: ${open}`);
 
-	if (!flag('--no-open')) spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' });
+	if (!flag('--no-open')) openBrowser(url);
 
 	// I5 — сигнал ПОСЛЕ того, как страница поднята и открыта. Не раньше.
 	// Намеренно БЕЗ await: синтез речи занимает секунды, а сервер уже слушает — ждать его значило
@@ -574,7 +740,7 @@ async function cmdOpen(docPath) {
 		},
 		TIMEOUT_MIN * 60_000,
 	).unref?.();
-	return html;
+	return url;
 }
 
 /**
@@ -691,36 +857,66 @@ async function cmdBatch() {
 		return 0;
 	}
 
-	const cards = live
-		.map((i) => {
-			const p = join(ROOT, i.doc);
-			const iv = parseInterview(p, readMd(p));
-			const open = iv.questions.filter((x) => !x.answered);
-			return `<section class="q">
-				<div class="qhead"><span class="tag open">ждёт вас</span>
+	/**
+	 * Страница пачки. 🔑 Карточка — ССЫЛКА, а не инструкция: владелец не должен печатать команду,
+	 * чтобы перейти от списка к вопросу. Первая редакция печатала на карточке
+	 * `node tools/review.mjs open …` — это тот же порок «расскажу вместо сделаю», ради устранения
+	 * которого контур и строился.
+	 */
+	const batchPage = () => {
+		const cards = live
+			.map((i) => {
+				const p = join(ROOT, i.doc);
+				const iv = parseInterview(p, readMd(p));
+				const open = iv.questions.filter((x) => !x.answered);
+				const { kind } = scopeOf(p, parseMeta(readMd(p)));
+				return `<a class="q card-link" href="/doc?p=${encodeURIComponent(i.doc)}">
+				<div class="qhead"><span class="tag ${open.length ? 'open' : 'ok'}">${open.length ? 'ждёт вас' : 'отвечено'}</span>
 				<h3 style="margin:0">${esc(parseMeta(readMd(p)).title)}</h3></div>
-				<p class="meta">${esc(i.doc)} · без ответа: ${open.length} из ${iv.questions.length}
+				<p class="meta">${esc(kind)} · ${esc(i.doc)} · без ответа: ${open.length} из ${iv.questions.length}
 					· в очереди с ${esc(String(i.поставлен).slice(0, 10))}</p>
 				${open.length ? '<ul>' + open.map((x) => `<li>${esc(x.title)}</li>`).join('') + '</ul>' : ''}
-				<p><code>node tools/review.mjs open ${esc(i.doc)}</code></p>
-			</section>`;
-		})
-		.join('\n');
+			</a>`;
+			})
+			.join('\n');
 
-	const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8">
+		return `<!doctype html><html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Накопилось: ${live.length}</title><style>${STYLE}</style></head><body><div class="wrap">
+<title>Накопилось: ${live.length}</title><style>${STYLE}
+a.card-link{display:block;text-decoration:none;color:inherit}
+a.card-link:hover{border-color:var(--accent)}
+</style></head><body><div class="wrap">
 <header class="top"><h1>Накопилось ${live.length} ${plural(live.length, 'документ', 'документа', 'документов')}</h1>
-<div class="meta">Пока вы были заняты, агент работал и складывал сюда всё, что решать не вправе.</div>
+<div class="meta">Пока вы были заняты, агент работал и складывал сюда всё, что решать не вправе.
+Нажмите карточку — откроется сам документ.</div>
 </header>${cards}</div></body></html>`;
+	};
 
-	const outDir = join(ROOT, 'test-results', 'owner-reviews');
-	mkdirSync(outDir, { recursive: true });
-	const out = join(outDir, 'batch.html');
-	writeFileSync(out, html, 'utf8');
-	console.log(`Пачка собрана: ${relative(ROOT, out)} (${live.length})`);
+	// `--no-serve` — снять пачку в файл и выйти. Нужен не для красоты: без него команда НИКОГДА не
+	// завершается (сервер живёт до срока), и всякий, кто зовёт её синхронно, виснет намертво. Ровно
+	// это и случилось с собственным QA-прогоном контура — четыре осиротевших процесса держали порты.
+	if (flag('--no-serve')) {
+		const outDir = join(ROOT, 'test-results', 'owner-reviews');
+		mkdirSync(outDir, { recursive: true });
+		const out = join(outDir, 'batch.html');
+		writeFileSync(out, batchPage(), 'utf8');
+		console.log(`Пачка собрана в файл: ${relative(ROOT, out)} (${live.length})`);
+		return 0;
+	}
 
-	if (!flag('--no-open')) spawn('cmd', ['/c', 'start', '', out], { detached: true, stdio: 'ignore' });
+	// Пачка живёт до истечения срока, а не до первого ответа: документов несколько.
+	const server = startServer({ index: batchPage });
+	const url = await listen(server);
+	console.log(`Пачка поднята: ${url} (${live.length})`);
+	setTimeout(
+		() => {
+			console.log('\n⏳ Время вышло — страница пачки закрыта.');
+			server.close(() => process.exit(0));
+		},
+		TIMEOUT_MIN * 60_000,
+	).unref?.();
+
+	if (!flag('--no-open')) openBrowser(url);
 	// Здесь await обязателен: команда `batch` завершается сразу, и без ожидания процесс умер бы
 	// раньше, чем синтезатор успел открыть рот.
 	if (!flag('--no-signal')) {
@@ -733,7 +929,9 @@ async function cmdBatch() {
 				`на вашу вычитку: ${uniq}.`,
 		);
 	}
-	return live.length;
+	console.log(`\nЖду ответов (до ${TIMEOUT_MIN} мин). Ctrl+C — прекратить, документы не изменятся.`);
+	// null означает «сервер жив»: процесс не завершается, иначе страница умрёт вместе с ним.
+	return null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -772,8 +970,7 @@ async function main() {
 			cmdQueue(docPath);
 			return 0;
 		case 'batch':
-			await cmdBatch();
-			return 0;
+			return await cmdBatch();
 		default:
 			usage();
 			return 1;
