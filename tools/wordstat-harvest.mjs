@@ -196,8 +196,25 @@ try {
 
   let done = 0;
   for (const { group, query } of todo) {
+    /*
+     * Читаем СОБСТВЕННЫЙ API Вордстата, а не разметку.
+     *
+     * Разведка нашла эндпоинт `wordstat/api/getTable`, и он отдаёт ровно то, что нужно:
+     *   · `totalValue` — показов в месяц по запросу (1181 у «найти единомышленников»);
+     *   · `tableData.popular` — 20 НАСТОЯЩИХ запросов людей с их частотностями.
+     * Второе — бесплатный подарок: это спрос, снятый с живых людей, а не придуманный агентом.
+     *
+     * Почему так, а не селектором: разметка меняется при любом редизайне и молча, а контракт
+     * API меняется реже и ломается ГРОМКО. Плюс из разметки числа приходят строками с
+     * неразрывными пробелами — лишний повод ошибиться.
+     */
+    const waitTable = page
+      .waitForResponse((r) => r.url().includes('/wordstat/api/getTable'), { timeout: 30000 })
+      .catch(() => null);
+
     await page.goto(wordstatUrl(query), { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await page.waitForTimeout(1200);
+    const tableRes = await waitTable;
+    await page.waitForTimeout(800);
     const html = await page.content();
 
     const state = pageState(page.url(), html);
@@ -212,8 +229,32 @@ try {
       break;
     }
 
-    // Извлечение: сумма показов по запросу. Пиннится после разведки — см. режим --discover.
-    const value = await page.evaluate(() => {
+    /*
+     * ИЗВЛЕЧЕНИЕ ИЗ API, а не из разметки. Разведка нашла контракт:
+     *   · `totalValue` — показов в месяц по запросу (1181 у «найти единомышленников»);
+     *   · `table.tableData.popular` — 20 НАСТОЯЩИХ запросов людей с их частотностями.
+     * Второе — подарок разведки: это спрос, снятый с живых людей, а не придуманный агентом.
+     * Разметка меняется при редизайне молча, контракт API ломается громко — и в разметке
+     * числа приходят строками с неразрывными пробелами, то есть лишним поводом ошибиться.
+     */
+    let apiValue = null;
+    let popular = [];
+    let invalid = false;
+    if (tableRes) {
+      try {
+        const body = await tableRes.json();
+        apiValue = Number(body.totalValue ?? 0) || 0;
+        invalid = Boolean(body.table?.isQueryInvalid);
+        popular = (body.table?.tableData?.popular ?? [])
+          .map((p) => ({ запрос: p.text, показов: Number(p.value) || 0 }))
+          .filter((p) => p.запрос);
+      } catch {
+        /* ответ не разобрался — падаем на разметку, но НЕ выдумываем число */
+      }
+    }
+
+    // Запасной путь: если API не ответил, читаем разметку. Он хуже и потому второй.
+    const domValue = await page.evaluate(() => {
       const cells = Array.from(document.querySelectorAll('body *')).filter((el) => el.children.length === 0);
       const nums = cells
         .map((el) => el.textContent.trim())
@@ -223,10 +264,18 @@ try {
       return nums.length ? Math.max(...nums) : null;
     });
 
-    collected[query] = { группа: group, показов: value };
+    const value = apiValue ?? domValue;
+    collected[query] = {
+      группа: group,
+      показов: value,
+      источник: apiValue !== null ? 'api' : domValue !== null ? 'разметка' : 'нет',
+      ...(invalid ? { некорректный: true } : {}),
+      ...(popular.length ? { люди_ищут: popular } : {}),
+    };
     save(collected);
     done++;
-    process.stdout.write(`   [${group}] ${query} → ${value ?? 'нет данных'}\n`);
+    const mark = value === null ? 'НЕ РАЗОБРАН' : value.toLocaleString('ru-RU');
+    process.stdout.write(`   [${group}] ${query} → ${mark}\n`);
     await page.waitForTimeout(PAUSE_MS);
   }
 
