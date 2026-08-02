@@ -1,0 +1,148 @@
+{
+  "_": "Список запросов под замер спроса. Машиночитаемый близнец приложения B в researches/30 — правь ЗДЕСЬ, документ ссылается сюда. Группы — гипотезы о разных людях, а не рубрикатор: группа с нулевым спросом закрывает целую ветку работы.",
+  "_группы": {
+    "A": "Задача: найти похожих людей — то, что NDim делает буквально",
+    "B": "Тест и самопознание (модель 16personalities)",
+    "C": "Боль: одиночество и поиск своих",
+    "D": "Объект культуры + люди — шаблоны, умножаемые на каталог (главный приз)",
+    "E": "Альтернативы индустрии (чужая лексика, наш ответ)",
+    "F": "Механика: «а это вообще работает?» — единственная группа, где у нас есть доказанный ответ",
+    "G": "Брендовые — не цель, а ноль отсчёта"
+  },
+  "ru": {
+    "A": [
+      "найти людей с похожими вкусами",
+      "найти людей с общими интересами",
+      "кто похож на меня по вкусам",
+      "найти единомышленников",
+      "найти единомышленников по интересам",
+      "найти друзей по интересам",
+      "с кем у меня общие интересы",
+      "кто любит те же фильмы что и я",
+      "сравнить вкусы в кино",
+      "сравнить музыкальные вкусы",
+      "подобрать людей по интересам",
+      "сайт для поиска единомышленников",
+      "найти людей с такими же увлечениями",
+      "поиск людей по интересам",
+      "социальная сеть по интересам",
+      "найти людей с похожим мировоззрением"
+    ],
+    "B": [
+      "тест на совместимость с другом",
+      "тест на совместимость бесплатно без регистрации",
+      "что говорят обо мне мои любимые фильмы",
+      "тест вкусов",
+      "насколько мы похожи тест",
+      "тест на схожесть интересов",
+      "тест на совместимость вкусов",
+      "о чём говорит моя любимая музыка",
+      "тест без регистрации"
+    ],
+    "C": [
+      "как найти друзей во взрослом возрасте",
+      "как познакомиться с единомышленниками",
+      "где найти людей со схожими взглядами",
+      "как найти своих людей",
+      "не с кем поговорить о своих увлечениях",
+      "как найти круг общения",
+      "как найти друзей по интересам взрослому",
+      "одиноко хочу общения по интересам",
+      "как найти близких по духу людей",
+      "где найти людей с общими ценностями"
+    ],
+    "E": [
+      "бесплатное приложение для знакомств без подписки",
+      "знакомства без свайпов",
+      "знакомства не по фотографиям",
+      "сайт знакомств по интересам бесплатно",
+      "знакомства по совместимости бесплатно",
+      "честные знакомства без платных функций",
+      "знакомства без рекламы",
+      "приложение знакомств с открытым кодом"
+    ],
+    "F": [
+      "как работают алгоритмы совместимости",
+      "работают ли алгоритмы знакомств",
+      "есть ли наука за приложениями знакомств",
+      "как измерить совместимость",
+      "математическая совместимость людей",
+      "влияет ли схожесть на симпатию"
+    ],
+    "G": ["NDim Space", "НДим", "ndimspace"]
+  },
+  "en": {
+    "A": [
+      "find people with similar taste",
+      "find people with the same interests",
+      "people who like the same movies as me",
+      "find your taste twin",
+      "who has the same taste as me",
+      "taste compatibility",
+      "movie taste compatibility",
+      "compare movie taste",
+      "compare music taste with friends",
+      "find people by taste in books",
+      "similar taste finder",
+      "interest matching site",
+      "find people who like the same games",
+      "match by interests not looks",
+      "find someone who likes what I like",
+      "shared interests finder",
+      "find people who share my hobbies",
+      "taste based social network",
+      "find people similar to me online"
+    ],
+    "B": [
+      "taste profile test",
+      "what my movie taste says about me",
+      "what does my taste in music say about me",
+      "compatibility test with a friend",
+      "how compatible are we test",
+      "free compatibility test",
+      "music taste test",
+      "film taste test",
+      "personality test no sign up",
+      "interests test",
+      "what your favourite films say about you"
+    ],
+    "C": [
+      "how to make friends as an adult",
+      "how to meet like minded people",
+      "where to find people who understand me",
+      "how to find your people",
+      "finding community as an adult",
+      "can't find friends with the same interests",
+      "how to meet people with shared hobbies",
+      "lonely but not looking for dating",
+      "how to find friends with similar values",
+      "meet people who get me"
+    ],
+    "E": [
+      "free dating app without subscription",
+      "dating app that doesn't charge",
+      "dating without swiping",
+      "app to meet people by personality not photos",
+      "dating app based on interests not looks",
+      "alternative to swiping apps",
+      "non superficial dating app",
+      "honest dating app",
+      "dating site that doesn't sell your data",
+      "open source dating app"
+    ],
+    "F": [
+      "how compatibility algorithms work",
+      "do dating algorithms work",
+      "is there science behind dating apps",
+      "similarity score between people",
+      "how to measure compatibility mathematically",
+      "does similarity predict attraction"
+    ],
+    "G": ["NDim Space", "NDim ID", "ndimspace"]
+  },
+  "d_шаблоны": {
+    "_": "Подставляется название измерения из каталога. Запросы строятся КОДОМ из dims-slice.json по самым оцениваемым — руками не переписываются.",
+    "ru": ["кому нравится {t}", "фанаты {t}", "кто ещё любит {t}", "сообщество {t}", "стоит ли смотреть {t}"],
+    "en": ["people who like {t}", "fans of {t}", "who else loves {t}", "{t} community", "is {t} worth watching"]
+  }
+}
