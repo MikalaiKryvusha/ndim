@@ -89,9 +89,23 @@ function save(collected) {
   writeFileSync(OUT, JSON.stringify(body, null, 2) + '\n', 'utf8');
 }
 
-/** Признаки того, что сервис попросил доказать, что мы человек. Увидели — останавливаемся. */
-function looksLikeCaptcha(html) {
-  return /captcha|smartcaptcha|подтвердите, что вы не робот|checkcaptcha/i.test(html);
+/**
+ * Различает ТРИ состояния страницы, и различает их точно.
+ *
+ * 🔴 Первая редакция считала капчей любое вхождение слова «captcha» в HTML — и немедленно соврала:
+ * страница ВХОДА Яндекса тянет скрипты капчи как часть своей обычной сборки, слово встретилось
+ * 19 раз, инструмент отчитался «сервис просит подтвердить, что Вы не робот», а на деле человек
+ * просто не был залогинен. Признак обязан быть узким: адрес и заголовок, а не наличие слова.
+ */
+function pageState(url, html) {
+  const title = (html.match(/<title>([^<]*)<\/title>/i)?.[1] ?? '').trim();
+  if (/passport\.yandex|\/auth\b/i.test(url) || /^Авторизация$|^Authorization$/i.test(title)) {
+    return 'нужен вход';
+  }
+  if (/showcaptcha|checkcaptcha/i.test(url) || /подтвердите, что вы не робот/i.test(html)) {
+    return 'капча';
+  }
+  return 'ок';
 }
 
 // ── подключение к УЖЕ ОТКРЫТОМУ браузеру владельца ────────────────────────────────────────
@@ -130,15 +144,24 @@ try {
     });
 
     console.log(`🔎 разведка по запросу «${DISCOVER}» …`);
-    await page.goto(wordstatUrl(DISCOVER), { waitUntil: 'networkidle', timeout: 60000 });
-    await page.waitForTimeout(2500);
+    // 🔴 НЕ `networkidle`: Вордстат держит соединения открытыми (аналитика, длинные опросы), и
+    // ожидание тишины в сети не наступает никогда — первый прогон разведки упал по таймауту
+    // ровно на этом. Ждём разметку, потом даём время дорисоваться.
+    await page.goto(wordstatUrl(DISCOVER), { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForTimeout(6000);
 
     const html = await page.content();
     writeFileSync(`${SCRATCH}/discover.html`, html, 'utf8');
     writeFileSync(`${SCRATCH}/discover-network.json`, JSON.stringify(captured, null, 2), 'utf8');
 
-    if (looksLikeCaptcha(html)) {
-      console.error('🔴 Страница просит подтвердить, что Вы не робот. Пройдите проверку в браузере и повторите.');
+    const state = pageState(page.url(), html);
+    if (state !== 'ок') {
+      console.error(
+        state === 'нужен вход'
+          ? '🔴 Вордстат требует ВХОДА. Войдите в Яндекс в открытом окне Chrome и повторите — это одно действие, дальше всё сделает код.'
+          : '🔴 Сервис просит подтвердить, что Вы не робот. Пройдите проверку в браузере и повторите.',
+      );
+      console.error(`   (снимок страницы сохранён: ${SCRATCH}/discover.html)`);
       process.exit(2);
     }
 
@@ -177,10 +200,15 @@ try {
     await page.waitForTimeout(1200);
     const html = await page.content();
 
-    if (looksLikeCaptcha(html)) {
-      console.error(`\n🔴 ОСТАНОВКА: сервис просит подтвердить, что Вы не робот.`);
-      console.error(`   Собрано до остановки: ${done}. Пройдите проверку в браузере и запустите снова —`);
-      console.error(`   инструмент продолжит с того же места (${OUT} дописывается).`);
+    const state = pageState(page.url(), html);
+    if (state !== 'ок') {
+      console.error(
+        state === 'нужен вход'
+          ? `\n🔴 ОСТАНОВКА: сессия перестала быть авторизованной. Войдите в Яндекс в окне Chrome.`
+          : `\n🔴 ОСТАНОВКА: сервис просит подтвердить, что Вы не робот.`,
+      );
+      console.error(`   Собрано до остановки: ${done}. Разберитесь в браузере и запустите снова —`);
+      console.error(`   инструмент продолжит с того же места (${OUT} дописывается после каждого запроса).`);
       break;
     }
 
