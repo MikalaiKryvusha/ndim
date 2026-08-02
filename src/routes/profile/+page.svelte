@@ -99,15 +99,12 @@
     if (seeMeOpen) history.back();
   }
 
-  // Пока окно предпросмотра открыто — страница под ним не прокручивается (как лайтбокс).
-  $effect(() => {
-    if (!seeMeOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  });
+  /*
+   * Скролл-лока здесь БОЛЬШЕ НЕТ (`bugs/105`). Он был приёмом ЛАЙТБОКСА: пока окно поверх
+   * страницы, страница под ним замирает. Предпросмотр перестал быть окном поверх — он рисуется
+   * в рабочей области `main` вместо содержимого профиля (интервью №013, В1 = А), и блокировать
+   * ему под собой нечего: под ним нет никакой второй страницы.
+   */
 
   // Состояние стенда — честное: подключаемся / готово / стенда нет / публичный хост.
   // На публичном домене экраны 2.0 ещё не открыты (данные 2.0 появятся с миграцией) —
@@ -1135,7 +1132,62 @@
         {@render acctRows()}
       </div>
     {/snippet}
-    {#if stand === 'connecting'}
+    <!-- ── «Как меня видят» — ВЕТКА СОСТОЯНИЯ ЭКРАНА, а не окно поверх него (`bugs/105`) ──
+         Слово владельца: «превью как меня видят открытается в каком-то отдельном окне, а не в
+         обычной рабочей области приложения». Форму он назвал сам (интервью №013, В1 = А):
+         предпросмотр рисуется ТАМ ЖЕ, где содержимое «Профиля», а шапка, нижняя панель и рельс
+         остаются на местах и работают.
+
+         Поэтому блок стоит ПЕРВОЙ веткой цепочки состояний внутри `main`: при открытом
+         предпросмотре рабочая область рисует его ВМЕСТО профиля, а оболочка вокруг не трогается
+         вовсе. Прежде он лежал между `</main>` и `<BottomNav>` слоем `fixed; inset: 0; z-index: 70`
+         и закрашивал собой всю оболочку.
+
+         🔑 Запись в истории и точка закрытия НЕ меняются (`bugs/76`, оплачено прошлой правкой
+         владельца): открытие — `pushState`, закрытие — единственный `history.back()`. Меняется
+         только то, КАК открытое состояние нарисовано. -->
+    {#if seeMeOpen && data}
+      <div class="seeme" transition:fade={{ duration: MOTION.base }}>
+        <!-- Строка возврата (не вторая шапка): собственный <h2> вида удалён вместе с полосой —
+             настоящая шапка продукта уже стоит выше, а вид называет себя заголовком карточки. -->
+        <div class="seeme-head">
+          <button type="button" class="back-btn" onclick={closeSeeMe}>
+            <Icon name="back" size={13} />{t.backBtn[lang]}
+          </button>
+        </div>
+        <div class="seeme-body">
+          <div class="seg" role="group">
+            {#each previewOptions as option (option.key)}
+              <button type="button" class:on={previewKey === option.key} onclick={() => (previewKey = option.key)}>
+                {#if option.icon}<Icon name={option.icon} size={13} />{/if} {option.label}
+              </button>
+            {/each}
+          </div>
+          <div class="card">
+            <h3>{t.seenBy[lang]}</h3>
+            {#each PROPERTIES as property (property)}
+              {@const chip = audienceChip(data.root.visibility[property])}
+              {@const visible = previewKey === 'me' || property in previewValues}
+              <div class="prop" class:ghosted={!visible}>
+                <span class="k">{t.props[property][lang]}</span>
+                <span class="v">
+                  {visible ? formatValue(property, (previewValues as Record<string, unknown>)[property] ?? data.values[property]) : `— ${t.hidden[lang]} (${chip.label})`}
+                </span>
+                <!-- Иконка рисуется КОМПОНЕНТОМ. Здесь стояло `{chip.icon}` — и на экран
+                     печаталось само имя иконки: «globe Все» (поймано владельцем в бою). -->
+                <span class="aud {chip.kind}">
+                  {#if chip.icon}<Icon name={chip.icon} size={13} />{/if}{chip.label}
+                </span>
+              </div>
+            {/each}
+          </div>
+          <div class="card">
+            <h3>{t.tabs.dims[lang]}</h3>
+            <p class="hint">{t.dimsPrivate[lang]}</p>
+          </div>
+        </div>
+      </div>
+    {:else if stand === 'connecting'}
       <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
       <div class="state"><Loading {lang} /></div>
     {:else if stand === 'signedout'}
@@ -1511,50 +1563,9 @@
     {/if}
   </main>
 
-  <!-- Окно «Как меня видят» (слово владельца 2026-07-27: не таба, а кнопка → окно
-       предпросмотра; «Назад» возвращает в профиль). Контент — прежний предпросмотр по
-       аудиториям: чипы Я/Все/Друзья и поля глазами выбранной аудитории. -->
-  {#if seeMeOpen && data}
-    <div class="seeme" transition:fade={{ duration: MOTION.base }}>
-      <div class="seeme-head">
-        <button type="button" class="back-btn" onclick={closeSeeMe}>
-          <Icon name="back" size={13} />{t.backBtn[lang]}
-        </button>
-        <h2>{t.seeMe[lang]}</h2>
-      </div>
-      <div class="seeme-body">
-        <div class="seg" role="group">
-          {#each previewOptions as option (option.key)}
-            <button type="button" class:on={previewKey === option.key} onclick={() => (previewKey = option.key)}>
-              {#if option.icon}<Icon name={option.icon} size={13} />{/if} {option.label}
-            </button>
-          {/each}
-        </div>
-        <div class="card">
-          <h3>{t.seenBy[lang]}</h3>
-          {#each PROPERTIES as property (property)}
-            {@const chip = audienceChip(data.root.visibility[property])}
-            {@const visible = previewKey === 'me' || property in previewValues}
-            <div class="prop" class:ghosted={!visible}>
-              <span class="k">{t.props[property][lang]}</span>
-              <span class="v">
-                {visible ? formatValue(property, (previewValues as Record<string, unknown>)[property] ?? data.values[property]) : `— ${t.hidden[lang]} (${chip.label})`}
-              </span>
-              <!-- Иконка рисуется КОМПОНЕНТОМ. Здесь стояло `{chip.icon}` — и на экран
-                   печаталось само имя иконки: «globe Все» (поймано владельцем в бою). -->
-              <span class="aud {chip.kind}">
-                {#if chip.icon}<Icon name={chip.icon} size={13} />{/if}{chip.label}
-              </span>
-            </div>
-          {/each}
-        </div>
-        <div class="card">
-          <h3>{t.tabs.dims[lang]}</h3>
-          <p class="hint">{t.dimsPrivate[lang]}</p>
-        </div>
-      </div>
-    </div>
-  {/if}
+  <!-- Окна «Как меня видят» здесь БОЛЬШЕ НЕТ: предпросмотр переехал ВНУТРЬ `main` веткой
+       состояния экрана (`bugs/105`, интервью №013 В1 = А). Кнопка, открывающая его, осталась
+       на своём месте в колонне профиля — решение владельца 2026-07-27 не отменяется. -->
 
   <BottomNav active="profile" {lang} />
 </div>
@@ -1573,23 +1584,27 @@
   }
 
 
-  /* ── Окно «Как меня видят»: полноэкранный слой со своим скроллом; шапка прибита. ── */
-  .seeme {
-    position: fixed; inset: 0; z-index: 70;
-    background: var(--bg); overflow-y: auto;
-  }
+  /* ── «Как меня видят»: СЕКЦИЯ В ПОТОКЕ рабочей области, а не слой поверх неё. ──
+     `bugs/105`, интервью №013 В1 = А. Отсюда УДАЛЁН весь лайтбоксовый набор, унаследованный
+     от портрета во весь экран (`bugs/36`):
+       · `position: fixed; inset: 0` + непрозрачный `background: var(--bg)` — они не перекрывали
+         оболочку, а закрашивали её;
+       · `z-index: 70` — вместе со слоем ушла и гонка с `AppBar` (10) и `BottomNav` (6);
+       · `overflow-y: auto` — своя полоса прокрутки внутри окна; теперь прокручивается страница,
+         как на любом другом экране.
+     Не возвращать ничего из этого «чтобы шапка не уезжала»: уезжать ей и положено — она общая
+     для всего продукта и ведёт себя одинаково на всех экранах. */
   .seeme-head {
-    position: sticky; top: 0; z-index: 1;
     display: flex; align-items: center; gap: 12px;
-    padding: 12px 14px; background: var(--panel-solid); border-bottom: 1px solid var(--edge);
+    padding: 2px 0 6px;
   }
-  .seeme-head h2 { font-size: 16px; font-weight: 700; color: var(--heading); margin: 0; }
   .back-btn {
     display: inline-flex; align-items: center; gap: 5px;
     font: inherit; font-size: 13px; font-weight: 600; color: var(--primary);
     background: none; border: 0; padding: 4px 6px; cursor: pointer;
   }
-  .seeme-body { max-width: 458px; margin: 0 auto; padding: 14px; }
+  /* Своих полей и своей колонны у предпросмотра больше нет: и то и другое уже даёт `.body`
+     (те же 458px и те же 14px) — дублирование удвоило бы отступы. */
   .seeme-body .card { margin-top: 12px; }
 
   .body {
@@ -1860,6 +1875,19 @@
     .body > .state {
       grid-column: 1 / -1;
     }
+    /*
+     * Предпросмотр «Как меня видят» — СОДЕРЖАТЕЛЬНЫЙ ВИДЖЕТ, два шага (`bugs/105`).
+     *
+     * ⚠️ План бага требовал здесь `1 / -1` («во всю ширину, как .intro/.guest-card/.state»).
+     * Написано это было до того, как экран увидели глазами, и оказалось неверным: на 1440
+     * строки «Имя … Все» растягивались на 1140px, значение уезжало от своего чипа к другому
+     * краю — ровно та «пустота ВНУТРИ карточки», которой владелец забраковал прежний профиль
+     * (`EXP-0104`). Канон решает не вкус, а ближайший сосед: `/account` держит содержательный
+     * виджет в двух шагах и прямо называет полупустую половину «НЕ дырой» (`EXP-0107`).
+     * Ответ владельца (В1 = А) от этого не страдает: «там же, где содержимое Профиля» — это и
+     * есть колонна той же ширины, что у остальных карточек экрана.
+     */
+    .body > .seeme { grid-column: span 2; }
   }
 
   /* ── Виджет «Аккаунт» (ideas/19): стили переехали из «Меню» вместе с блоком. Ряды и
