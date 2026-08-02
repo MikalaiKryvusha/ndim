@@ -35,6 +35,20 @@ export function landingDims(): number {
   return PUBLIC_PEOPLE_SNAPSHOT.dims;
 }
 
+/**
+ * Оценок поставлено и связей рассчитано — слово владельца 2026-08-02: «число связей можно писать —
+ * оно математически получается огромным и внушительным, и число оценок измерений».
+ * Он прав арифметически: связей вдвое больше пар, у которых есть общие измерения, и это число
+ * растёт быстрее числа людей.
+ */
+export function landingRatings(): number {
+  return PUBLIC_PEOPLE_SNAPSHOT.ratings;
+}
+
+export function landingRelations(): number {
+  return PUBLIC_PEOPLE_SNAPSHOT.relations;
+}
+
 export function landingPeopleTakenAt(): string {
   return PUBLIC_PEOPLE_SNAPSHOT.takenAt;
 }

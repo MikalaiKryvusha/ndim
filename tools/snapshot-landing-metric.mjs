@@ -78,7 +78,7 @@ if (!Number.isInteger(people) || people <= 0) {
  * служебный индекс `dims_list` — это `bugs/106`. Пока дефект не починен в вычислителе, поправка
  * живёт здесь, и убрать её надо ВМЕСТЕ с починкой, иначе витрина начнёт занижать.
  */
-async function readDims() {
+async function readStats() {
   const signUp = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`,
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnSecureToken: true }) },
@@ -91,8 +91,14 @@ async function readDims() {
       { headers: { Authorization: `Bearer ${idToken}` } },
     );
     if (!stats.ok) return null;
-    const raw = Number((await stats.json())?.fields?.dims?.integerValue ?? NaN);
-    return Number.isInteger(raw) && raw > 1 ? raw - 1 : null; // −1 — служебный dims_list, bugs/106
+    const fields = (await stats.json())?.fields ?? {};
+    const int = (name) => Number(fields?.[name]?.integerValue ?? NaN);
+    const dims = int('dims');
+    const ratings = int('ratings');
+    const relations = int('relations');
+    if (![dims, ratings, relations].every(Number.isInteger) || dims <= 1) return null;
+    // −1 у измерений — служебный документ индекса `dims_list` (bugs/106).
+    return { dims: dims - 1, ratings, relations };
   } finally {
     await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`, {
       method: 'POST',
@@ -102,10 +108,10 @@ async function readDims() {
   }
 }
 
-const dims = await readDims();
-if (dims === null) {
-  console.error('❌ число измерений из боевого space/stats не прочитано.');
-  console.error('   Файл НЕ тронут: витрина хвастается этим числом, и устаревшее лучше выдуманного.');
+const space = await readStats();
+if (space === null) {
+  console.error('❌ агрегаты боевого space/stats не прочитаны.');
+  console.error('   Файл НЕ тронут: витрина хвастается этими числами, и устаревшее лучше выдуманного.');
   process.exit(1);
 }
 
@@ -128,11 +134,18 @@ const file = `/**
 export const PUBLIC_PEOPLE_SNAPSHOT = {
   people: ${people},
   /** Измерений в каталоге — БЕЗ служебного документа индекса (\`bugs/106\`). */
-  dims: ${dims},
+  dims: ${space.dims},
+  /** Оценок поставлено всего — слово владельца: число внушительное и настоящее. */
+  ratings: ${space.ratings},
+  /** Связей рассчитано — строк во всех топах последней синхронизации. */
+  relations: ${space.relations},
   takenAt: '${takenAt}',
 } as const;
 `;
 
 writeFileSync(OUT, file, 'utf8');
-console.log(`✅ ${OUT}: people = ${people}, dims = ${dims}, снимок от ${takenAt}`);
+console.log(
+  `✅ ${OUT}: people = ${people}, dims = ${space.dims}, ratings = ${space.ratings}, ` +
+    `relations = ${space.relations}, снимок от ${takenAt}`,
+);
 console.log('   Витрина лендинга покажет ровно эти числа — множителя больше нет (интервью №010, Р7).');

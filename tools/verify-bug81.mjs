@@ -63,17 +63,27 @@ function check(ok, what, detail = '') {
  * Трасса строки витрины по кадрам. Возвращает список изменений `{f, v}` — только моменты, когда
  * значение стало ДРУГИМ. Одна запись = строка не менялась ни разу.
  *
- * ⚠️ Значение берём из `<b>` внутри `.joined`, а не из текста всей страницы: так `null`
- * означает «строки нет вовсе», и переход `null → «2 820 человек»` виден как ИЗМЕНЕНИЕ. Первая
+ * ⚠️ Значение берём из первого `<b>` внутри `.stats`, а не из текста всей страницы: так `null`
+ * означает «числа нет вовсе», и переход `null → «5 111»` виден как ИЗМЕНЕНИЕ. Первая
  * редакция прибора волны считала такой переход «одним значением» и красила дефект зелёным
  * (EXP-0082).
+ *
+ * 🔄 **ЧТО ИЗМЕНИЛОСЬ 2026-08-02.** Прежде страж смотрел в `.joined b` и искал в сыром HTML
+ * подстроку «С нами уже <b>…</b> челов». Этой фразы больше нет: владелец потребовал, чтобы
+ * витрина ХВАСТАЛАСЬ («она должна… нахваливать, выставлять в приятном заманчивом выгодном
+ * свете»), и счёт людей — наше самое слабое число — перестал быть героем строки. Его место
+ * заняла полоса `.stats` из четырёх настоящих чисел (измерения · оценки · связи · люди), а
+ * `.joined` стала приглашением без цифр.
+ * **Инвариант стража не изменился ни на йоту:** числа витрины обязаны стоять в СЫРОМ
+ * пререндеренном HTML и не доезжать «на горячую». Изменилась только цель проверки — туда, где
+ * эти числа теперь живут. Ослабления нет: полоса даёт стражу ЧЕТЫРЕ числа вместо одного.
  */
 const traceScript = (frames, mutateAtFrame) => `
   new Promise((done) => {
     const seen = [];
     let f = 0;
     const value = () => {
-      const b = document.querySelector('.joined b');
+      const b = document.querySelector('.stats b');
       return b === null ? null : (b.textContent || '').replace(/\\s+/g, ' ').trim();
     };
     const featsTop = () => {
@@ -85,7 +95,7 @@ const traceScript = (frames, mutateAtFrame) => `
       const last = seen[seen.length - 1];
       if (!last || last.v !== v) seen.push({ f, v, feats: featsTop() });
       if (${mutateAtFrame} > 0 && f === ${mutateAtFrame}) {
-        const b = document.querySelector('.joined b');
+        const b = document.querySelector('.stats b');
         if (b) b.textContent = 'КОНТРОЛЬ ПРИБОРА';
       }
       if (++f < ${frames}) requestAnimationFrame(tick);
@@ -106,10 +116,20 @@ try {
     // 1 · СЫРОЙ HTML — до всякого JavaScript.
     const raw = await ctx.request.get(`${BASE}/`);
     const html = await raw.text();
-    const inHtml = /С нами уже\s*<b[^>]*>\s*([\d\s  ]+)\s*челов/.exec(html);
-    check(inHtml !== null, 'строка витрины есть в СЫРОМ HTML (пререндер, до JS)');
-    const rawNumber = inHtml ? inHtml[1].replace(/[\s  ]/g, '') : '';
-    check(Number(rawNumber) > 0, 'в пререндере стоит настоящее число, а не пустота', `«${rawNumber}»`);
+    // Полоса чисел целиком обязана лежать в пререндере: ищем её по КЛАССУ, а не по фразе —
+    // фраза меняется вместе с маркетингом, инвариант «числа в сыром HTML» не меняется никогда.
+    const strip = /<ul[^>]*class="[^"]*stats[^"]*"[\s\S]*?<\/ul>/.exec(html);
+    check(strip !== null, 'полоса чисел витрины есть в СЫРОМ HTML (пререндер, до JS)');
+    const rawNumbers = strip
+      ? [...strip[0].matchAll(/<b[^>]*>\s*([\d\s  ]+)\s*<\/b>/g)].map((m) => Number(m[1].replace(/[\s  ]/g, '')))
+      : [];
+    check(rawNumbers.length === 4, 'в пререндере ВСЕ ЧЕТЫРЕ числа, а не часть', `нашлось: ${rawNumbers.length}`);
+    check(rawNumbers.every((v) => v > 0), 'каждое число настоящее, а не пустота', `«${rawNumbers.join(' · ')}»`);
+    check(
+      new Set(rawNumbers).size === rawNumbers.length,
+      'числа РАЗНЫЕ — совпадение значило бы, что все четыре взяты из одного поля',
+      `«${rawNumbers.join(' · ')}»`,
+    );
 
     const page = await ctx.newPage();
     const errors = [];

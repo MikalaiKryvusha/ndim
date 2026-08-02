@@ -16,7 +16,7 @@
   import Icon from '$lib/ui/Icon.svelte';
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
-  import { landingDims, landingPeople } from '$lib/data/metrics';
+  import { landingDims, landingPeople, landingRatings, landingRelations } from '$lib/data/metrics';
   import { endBoot, hasSession } from '$lib/data/session';
   import { num, peopleUnit } from '$lib/ui/format';
   // Тема — общий источник истины (bugs/53): лендинг, шапка и «Меню» читают одно значение.
@@ -64,9 +64,11 @@
    * реактивность здесь означала бы, что оно может измениться на глазах у человека — ровно то,
    * от чего мы уходим.
    */
+  // Все числа витрины — в том же пререндере и по тому же правилу: снимок, а не литерал.
   const joinedPeople = landingPeople();
-  // Размер каталога — в том же пререндере и по тому же правилу: снимок, а не литерал.
   const joinedDims = landingDims();
+  const joinedRatings = landingRatings();
+  const joinedRelations = landingRelations();
 
   onMount(() => {
     // ── Человек пришёл по ссылке из письма, но попал на ЛЕНДИНГ — уводим его в профиль ──
@@ -158,14 +160,14 @@
      * ⚠️ Оба числа ЖИВЫЕ (`landing-metric.ts`, снимок перед выкатом) — литералов здесь нет,
      * иначе это ровно `bugs/07`.
      */
-    joinedPre: { ru: 'Уже ', en: 'Already ' },
-    joinedMid: {
-      ru: ' в Пространстве из ',
-      en: ' in a Space of ',
-    },
-    joinedPost: {
-      ru: ' измерений — станьте одним из первых',
-      en: ' dimensions — be among the first',
+    statsLabel: { ru: 'Пространство NDim в числах', en: 'NDim Space in numbers' },
+    statDims: { ru: 'измерений', en: 'dimensions' },
+    statRatings: { ru: 'оценок', en: 'ratings' },
+    statRelations: { ru: 'связей рассчитано', en: 'relations computed' },
+    statPeople: { ru: 'человек', en: 'people' },
+    joined: {
+      ru: 'Станьте одним из первых, кого здесь найдут',
+      en: 'Be among the first to be found here',
     },
     foot: {
       ru: 'Пространство NDim · открытая платформа, сделанная с заботой о людях',
@@ -281,10 +283,16 @@
     <!-- Строка витрины стоит БЕЗ условия и БЕЗ перехода появления: она часть страницы, а не
          новость, приехавшая позже (bugs/81). Условие `{#if}` и `in:fade` здесь и были тем
          самым «на горячую»: сначала вставлялся узел, потом он ещё и проявлялся 240 мс. -->
-    <p class="joined">
-      {t.joinedPre[lang]}<b>{num(joinedPeople, lang)} {peopleUnit(joinedPeople, lang)}</b>{t.joinedMid[lang]}<b
-        >{num(joinedDims, lang)}</b
-      >{t.joinedPost[lang]}
+    <!-- ПОЛОСА НАСТОЯЩИХ ЧИСЕЛ (слово владельца 2026-08-02: «число связей можно писать — оно
+         математически получается огромным и внушительным, и число оценок измерений»).
+         Все четыре — из снимка боя, литералов нет. Каждое сильнее, чем счёт людей в одиночку:
+         оценки и связи растут быстрее, чем число человек, и это честное преимущество математики. -->
+    <ul class="stats" aria-label={t.statsLabel[lang]}>
+      {#each [{ v: joinedDims, l: t.statDims }, { v: joinedRatings, l: t.statRatings }, { v: joinedRelations, l: t.statRelations }, { v: joinedPeople, l: t.statPeople }] as stat (stat.l.ru)}
+        <li><b>{num(stat.v, lang)}</b><span>{stat.l[lang]}</span></li>
+      {/each}
+    </ul>
+    <p class="joined">{t.joined[lang]}
     </p>
   </section>
 
@@ -512,14 +520,43 @@
     }
   }
 
+  /* ── Полоса настоящих чисел Пространства ──
+     Числа набраны КРУПНО и акцентом, подписи мелко: витрина обязана хвастаться, а не отчитываться.
+     Перенос по строкам разрешён — на 390px четыре плитки честно встают в две строки, и это лучше,
+     чем сжимать цифры до нечитаемых. Разделителей нет: зазор справляется сам. */
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 26px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .stats li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 74px;
+  }
+  .stats b {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .stats span {
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: var(--faint);
+    text-align: center;
+  }
   .joined {
-    margin-top: 18px;
+    margin-top: 12px;
     font-size: 13px;
     color: var(--faint);
-  }
-  .joined b {
-    color: var(--accent);
-    font-weight: 600;
   }
 
   /* ── Фичи ── */
