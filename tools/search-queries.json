@@ -171,7 +171,33 @@
       "how to measure compatibility mathematically",
       "does similarity predict attraction"
     ],
-    "G": ["NDim Space", "NDim ID", "ndimspace"]
+    "G": ["NDim Space", "NDim ID", "ndimspace"],
+    "L": [
+      "events near me",
+      "things to do near me",
+      "meetups near me",
+      "groups near me",
+      "clubs near me",
+      "social events near me",
+      "singles events near me",
+      "how to meet new people in my city",
+      "where to meet people near me",
+      "book club near me",
+      "board game night near me",
+      "find local community"
+    ],
+    "P": [
+      "people near me",
+      "singles near me",
+      "friends near me",
+      "meet people near me",
+      "chat with people near me",
+      "who lives near me",
+      "find people near me",
+      "people nearby",
+      "new friends near me",
+      "someone to talk to near me"
+    ]
   },
   "d_шаблоны": {
     "_": "Подставляется название измерения из каталога. Запросы строятся КОДОМ из dims-slice.json по самым оцениваемым — руками не переписываются.",
