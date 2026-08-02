@@ -49,17 +49,41 @@ test('пререндер: витрина людей стоит в HTML и НЕ �
 	const res = await request.get('/');
 	const html = (await res.text()).replace(/ |&nbsp;/g, ' ');
 
-	const shown = /С нами уже\s*<b[^>]*>\s*([\d\s]+)\s*челов/.exec(html);
-	expect(shown, 'строки витрины нет в пререндеренном HTML — это дефект bugs/81').not.toBeNull();
+	/*
+	 * 🔴 СТРАЖ РАЗВЁРНУТ 2026-08-02, А НЕ УДАЛЁН (`EXP-0123`).
+	 *
+	 * Он краснел на ИСПРАВНОМ коде, потому что искал строку «С нами уже N человек», которой
+	 * больше нет: владелец сменил героя витрины на полосу из четырёх настоящих чисел
+	 * (`5 111 · 4 089 · 2 346 · 94`). Удалить такой тест значило бы тихо подогнать проверку под
+	 * новое поведение; правильный ход — навести его на то, что стало.
+	 *
+	 * Заодно проверка стала СТРОЖЕ. Прежде допускалась кратность снимку: витрина имела право
+	 * умножать (множитель ×30). Владелец его отменил (интервью №010, Р7: «делаем живую настоящую
+	 * цифру»), поэтому теперь требуется РАВЕНСТВО — любое расхождение с боевым снимком есть
+	 * выдумка, то есть `bugs/07`.
+	 */
+	const band = [
+		['измерений', PUBLIC_PEOPLE_SNAPSHOT.dims],
+		['оценок', PUBLIC_PEOPLE_SNAPSHOT.ratings],
+		['связей рассчитано', PUBLIC_PEOPLE_SNAPSHOT.relations],
+		['человек', PUBLIC_PEOPLE_SNAPSHOT.people],
+	] as const;
 
-	const value = Number(shown![1]!.replace(/\s/g, ''));
-	expect(value).toBeGreaterThan(0);
-	const factor = value / PUBLIC_PEOPLE_SNAPSHOT.people;
-	expect(
-		Number.isInteger(factor) && factor >= 1,
-		`витрина (${value}) обязана быть кратна снимку (${PUBLIC_PEOPLE_SNAPSHOT.people}); ` +
-			`отношение ${factor} — похоже на выдуманное число (bugs/07)`,
-	).toBe(true);
+	for (const [label, expected] of band) {
+		const shown = new RegExp(`<b[^>]*>\\s*([\\d\\s]+?)\\s*</b>\\s*</?[^>]*>?\\s*${label}`).exec(html);
+		expect(
+			shown,
+			`числа «${label}» нет в пререндеренном HTML — это дефект bugs/81 (витрина обязана быть в сыром HTML, до всякого JS)`,
+		).not.toBeNull();
+
+		const value = Number(shown![1]!.replace(/\s/g, ''));
+		expect(value).toBeGreaterThan(0);
+		expect(
+			value,
+			`витрина «${label}» показывает ${value}, а боевой снимок — ${expected}; ` +
+				'множителя больше нет (интервью №010, Р7), значит расхождение = выдуманное число (bugs/07)',
+		).toBe(expected);
+	}
 
 	// Исторический литерал из bugs/07 — при 331 живом человеке на лендинге стояло 2 184.
 	expect(html).not.toContain('2 184');
