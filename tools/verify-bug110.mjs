@@ -83,6 +83,27 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 
 try {
+	// ── 0. МЕРА 1: без --timeout часов нет вовсе ───────────────────────────────
+	head('0. мера 1: «терпение бесконечно» — умолчание без часов');
+	{
+		const child0 = spawn(
+			process.execPath,
+			[join(ROOT, 'tools', 'review.mjs'), 'open', 'interviews/interview_999_bug110_fixture.md',
+				'--no-open', '--no-signal', '--port', String(PORT + 1)],
+			{ cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] },
+		);
+		child0.stdout.setEncoding('utf8');
+		let out0 = '';
+		child0.stdout.on('data', (c) => (out0 += c));
+		await sleep(2500);
+		check(out0.includes('Терпение бесконечно'),
+			'МЕРА 1: без --timeout страница объявляет, что часов нет');
+		check(!/Жду ответа \(до \d+ мин\)/.test(out0) || out0.includes('Терпение бесконечно'),
+			'МЕРА 1: срока владельцу не назначается');
+		try { child0.kill(); } catch {}
+		await sleep(300);
+	}
+
 	// ── 1. КОНТРОЛЬ ПРИБОРА: при живом сервере всё работает ────────────────────
 	head('1. контроль прибора: живой сервер, сохранение проходит');
 	let { child, url } = await startPage();
@@ -121,10 +142,22 @@ try {
 		.catch(() => check(false, 'ДЕФЕКТ 2: страница честно говорит «НЕ ЗАПИСАНО», а не «Записываю…»'));
 
 	check(!(await page.locator('#save').isDisabled()), 'ДЕФЕКТ 2: кнопка «Сохранить» снова активна');
-	const shown = await page.locator('.wrap textarea[readonly]').first().inputValue().catch(() => '');
+	const shown = await page.locator('#rescueText').inputValue().catch(() => '');
 	check(shown.includes('Мой длинный комментарий'),
-		'ДЕФЕКТ 2: текст ответа выложен на страницу — есть что скопировать');
+		'МЕРА 3: текст ответа выложен на страницу — есть что скопировать');
+	check(await page.locator('#rescueCopy').isVisible().catch(() => false),
+		'МЕРА 3: кнопка «Скопировать» на месте');
+	check(await page.locator('#rescueRetry').isVisible().catch(() => false),
+		'МЕРА 3: кнопка «Повторить» на месте');
 	await page.screenshot({ path: join(SHOTS, '2-server-dead.png') });
+
+	// МЕРА 5 — пульс обязан ЗАГОВОРИТЬ сам, без единого клика владельца.
+	head('2а. мера 5: пульс сообщает о молчании сервера сам');
+	await page.waitForFunction(() => document.body.innerText.includes('Сервер агента замолчал'),
+		null, { timeout: 20_000 })
+		.then(() => check(true, 'МЕРА 5: страница сама сказала, что сервер замолчал'))
+		.catch(() => check(false, 'МЕРА 5: страница сама сказала, что сервер замолчал'));
+	await page.screenshot({ path: join(SHOTS, '2a-pulse-warned.png') });
 
 	// ── 3. ДЕФЕКТ 3: черновик переживает смерть сервера и возвращается ──────────
 	head('3. дефект 3: черновик переживает перезапуск');

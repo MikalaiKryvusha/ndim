@@ -98,7 +98,18 @@ const stamp = (d = new Date()) =>
 const VOICE = opt('--voice', process.env.NDIM_VOICE || 'eugene');
 const SAPI_VOICE = process.env.NDIM_SAPI_VOICE || 'Microsoft Irina Desktop';
 const VOICE_TOOL = opt('--voice-tool', process.env.NDIM_VOICE_TOOL || 'F:\\KLAS\\tools\\voice-say.mjs');
-const TIMEOUT_MIN = Number(opt('--timeout', '30'));
+/**
+ * МЕРА 1 — «ТЕРПЕНИЕ БЕСКОНЕЧНО» (`bugs/110`).
+ *
+ * Умолчание — **0, то есть ждать без конца**. Часы остались только для автоматики: автономный
+ * цикл, поднявший страницу, обязан уметь завершиться сам, а живой человек — никогда не обязан
+ * укладываться в чужой срок. Слово владельца соседнего проекта: «Ждать ответы владельца
+ * ХОТЬ ВЕЧНОСТЬ!».
+ *
+ * Прежнее умолчание было 30 минут, и агент этого проекта ещё и передавал `--timeout 90…180`
+ * руками — то есть заводил часы над работой человека, который в это время ДУМАЛ.
+ */
+const TIMEOUT_MIN = Number(opt('--timeout', '0'));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // СТРАНИЦА
@@ -529,10 +540,41 @@ addEventListener('input', saveDraft);
 addEventListener('change', saveDraft);
 restoreDraft();
 
-// Сердцебиение: пока вкладка открыта, сервер не имеет права уйти по часам (bugs/100).
-// Раз в 10 секунд — запас втрое против самого короткого разумного времени тишины; один
-// пустой ответ 204 не стоит ничего, а цена пропущенного удара — потерянный час владельца.
-setInterval(() => { fetch('/alive').catch(() => {}); }, 10000);
+// ── МЕРА 5: ПУЛЬС, КОТОРЫЙ ГОВОРИТ ВСЛУХ (bugs/110) ─────────────────────────
+// Из пяти мер только эта делает дефект НЕВОЗМОЖНЫМ: остальные четыре делают его поправимым.
+// Пульс не только держит сервер живым — он немедленно сообщает, если сервер замолчал. Владелец
+// узнаёт о беде в ту же секунду, а не через час письма в мёртвую страницу.
+// Раз в 10 секунд: один пустой ответ 204 не стоит ничего, а цена пропущенного удара —
+// потерянный час работы человека.
+let pulseLost = false;
+function pulseBanner(text, ok) {
+	let el = document.getElementById('pulseWarn');
+	if (!el) {
+		document.querySelector('.wrap').insertAdjacentHTML('afterbegin', '<div id="pulseWarn"></div>');
+		el = document.getElementById('pulseWarn');
+	}
+	el.className = ok ? 'note ok' : 'note';
+	el.innerHTML = text;
+}
+setInterval(async () => {
+	try {
+		const r = await fetch('/alive', { cache: 'no-store' });
+		if (!r.ok) throw new Error('bad status');
+		if (pulseLost) {
+			pulseLost = false;
+			pulseBanner('<b>Связь восстановлена.</b> Можно сохранять — ответы запишутся.', true);
+		}
+	} catch (e) {
+		if (pulseLost) return;
+		pulseLost = true;
+		pulseBanner(
+			'<b>Сервер агента замолчал.</b> Продолжайте писать — всё, что Вы уже отметили и написали, ' +
+			'сохранено в этом браузере и не потеряется. Но записать это сейчас нельзя: попросите ' +
+			'агента поднять страницу заново, и Ваши ответы вернутся на места сами.',
+			false,
+		);
+	}
+}, 10000);
 
 const saveBtn = document.getElementById('save');
 if (saveBtn) saveBtn.addEventListener('click', async () => {
@@ -584,15 +626,39 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 	} catch (err) {
 		// Ответы НЕ ПОТЕРЯНЫ: черновик лежит в браузере, и мы тут же кладём текст на стол,
 		// чтобы его можно было выделить и скопировать в чат одним движением.
+		// ── МЕРА 3: СПАСАТЕЛЬНЫЙ КРУГ ────────────────────────────────────────────
+		// Мало сказать «не записалось» — надо вернуть человеку его труд В РУКИ: текст на
+		// странице, кнопка «Скопировать» (чтобы отправить в чат одним движением) и кнопка
+		// «Повторить» (сервер мог просто моргнуть). Кнопка сохранения — снова активна.
 		saveBtn.disabled = false;
-		document.getElementById('status').textContent = 'НЕ ЗАПИСАНО — сервер не отвечает';
+		document.getElementById('status').textContent = 'НЕ ЗАПИСАНО — ответы ниже, они не потеряны';
+		const old = document.getElementById('rescue');
+		if (old) old.remove();
 		document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
-			'<div class="note"><b>Записать не удалось: сервер agenta уже не слушает.</b> ' +
-			'Ваши ответы целы — они сохранены в этом браузере и восстановятся, когда страницу ' +
-			'поднимут заново. Ниже они же текстом: можно выделить и отправить в чат.' +
-			'<textarea readonly rows="10" style="width:100%;margin-top:10px"></textarea></div>');
-		document.querySelector('.wrap textarea[readonly]').value =
+			'<div class="note" id="rescue"><b>Записать не удалось: сервер агента не отвечает.</b> ' +
+			'Ваши ответы целы — они сохранены в этом браузере и вернутся на места сами, когда ' +
+			'страницу поднимут заново. Ниже они же текстом.' +
+			'<textarea id="rescueText" readonly rows="10" style="width:100%;margin-top:10px"></textarea>' +
+			'<div style="margin-top:8px"><button id="rescueCopy" type="button">Скопировать</button> ' +
+			'<button id="rescueRetry" type="button">Повторить</button> ' +
+			'<span id="rescueMsg"></span></div></div>');
+		document.getElementById('rescueText').value =
 			JSON.stringify({ answers, artifacts, comment }, null, 2);
+		document.getElementById('rescueCopy').addEventListener('click', async () => {
+			const ta = document.getElementById('rescueText');
+			try {
+				await navigator.clipboard.writeText(ta.value);
+			} catch (e) {
+				// Буфер обмена доступен не всегда (нет разрешения, не защищённый контекст) —
+				// тогда честно выделяем текст, чтобы сработало Ctrl+C.
+				ta.select();
+			}
+			document.getElementById('rescueMsg').textContent = 'скопировано';
+		});
+		document.getElementById('rescueRetry').addEventListener('click', () => {
+			document.getElementById('rescueMsg').textContent = 'пробую ещё раз…';
+			saveBtn.click();
+		});
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 		return;
 	}
@@ -791,6 +857,10 @@ function openBrowser(url) {
 function watchIdle(server) {
 	server.lastBeat = Date.now();
 	const idleMs = TIMEOUT_MIN * 60_000;
+	if (!idleMs) {
+		console.log('Терпение бесконечно: часов нет, страница ждёт столько, сколько нужно человеку.');
+		return;
+	}
 	setInterval(() => {
 		if (Date.now() - server.lastBeat < idleMs) return;
 		console.log(
