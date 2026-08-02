@@ -461,6 +461,79 @@ document.addEventListener('click', (e) => {
 	}
 });
 
+// ── ЧЕРНОВИК И СЕРДЦЕБИЕНИЕ (bugs/100) ──────────────────────────────────────
+// Третий из трёх дефектов, потопивших час работы владельца в соседнем проекте: ответы
+// жили ТОЛЬКО в DOM и умирали вместе со вкладкой. Теперь каждая правка тут же ложится
+// в браузер, а восстановление происходит само при следующем открытии той же страницы.
+const draftKey = 'ndim-review-draft:' + (document.body.dataset.doc || 'x');
+
+function snapshotDraft() {
+	const d = { q: {}, a: {}, comment: '' };
+	for (const sec of document.querySelectorAll('[data-q]')) {
+		d.q[sec.dataset.q] = {
+			choice: sec.querySelector('input[type=radio]:checked')?.value || '',
+			text: sec.querySelector('[data-text]')?.value || '',
+			comment: sec.querySelector('[data-comment]')?.value || '',
+		};
+	}
+	for (const sec of document.querySelectorAll('[data-art]')) {
+		d.a[sec.dataset.art] = {
+			status: sec.querySelector('input[type=radio]:checked')?.value || '',
+			text: sec.querySelector('[data-text]')?.value || '',
+		};
+	}
+	d.comment = document.getElementById('docComment')?.value || '';
+	return d;
+}
+
+function saveDraft() {
+	try { localStorage.setItem(draftKey, JSON.stringify(snapshotDraft())); } catch (e) {}
+}
+
+function restoreDraft() {
+	let d = null;
+	try { d = JSON.parse(localStorage.getItem(draftKey) || 'null'); } catch (e) {}
+	if (!d) return;
+	let n = 0;
+	const pick = (sec, value) => {
+		if (!value) return;
+		const r = sec.querySelector('input[type=radio][value="' + value + '"]');
+		if (r && !r.checked) { r.checked = true; n++; }
+	};
+	for (const sec of document.querySelectorAll('[data-q]')) {
+		const rec = (d.q || {})[sec.dataset.q];
+		if (!rec) continue;
+		pick(sec, rec.choice);
+		const t = sec.querySelector('[data-text]');
+		if (t && rec.text && !t.value) { t.value = rec.text; n++; }
+		const c = sec.querySelector('[data-comment]');
+		if (c && rec.comment && !c.value) { c.value = rec.comment; n++; }
+	}
+	for (const sec of document.querySelectorAll('[data-art]')) {
+		const rec = (d.a || {})[sec.dataset.art];
+		if (!rec) continue;
+		pick(sec, rec.status);
+		const t = sec.querySelector('[data-text]');
+		if (t && rec.text && !t.value) { t.value = rec.text; n++; }
+	}
+	const dc = document.getElementById('docComment');
+	if (dc && d.comment && !dc.value) { dc.value = d.comment; n++; }
+	if (n > 0) {
+		document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
+			'<div class="note ok"><b>Восстановлен черновик.</b> Прошлый раз записать не удалось — ' +
+			'ваши отметки и тексты возвращены на места. Проверьте и нажмите «Сохранить».</div>');
+	}
+}
+
+addEventListener('input', saveDraft);
+addEventListener('change', saveDraft);
+restoreDraft();
+
+// Сердцебиение: пока вкладка открыта, сервер не имеет права уйти по часам (bugs/100).
+// Раз в 10 секунд — запас втрое против самого короткого разумного времени тишины; один
+// пустой ответ 204 не стоит ничего, а цена пропущенного удара — потерянный час владельца.
+setInterval(() => { fetch('/alive').catch(() => {}); }, 10000);
+
 const saveBtn = document.getElementById('save');
 if (saveBtn) saveBtn.addEventListener('click', async () => {
 	const answers = {};
@@ -496,14 +569,35 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 	// месяцы спустя (I2). Убрали ВОПРОС, а не ЗАПИСЬ.
 	// ⚠️ Внутри этого <script> живут ШАБЛОННЫЕ СТРОКИ — обратная кавычка здесь обрывает всю
 	// страницу и роняет модуль синтаксической ошибкой. В комментариях кавычки только «ёлочки».
-	const res = await fetch('/decision', {
-		method: 'POST',
-		headers: { 'content-type': 'application/json' },
-		// Какой документ отвечают — говорит сама страница: один сервер обслуживает всю пачку.
-		body: JSON.stringify({ doc: document.body.dataset.doc, answers, artifacts, comment }),
-	});
-	const out = await res.json();
+	// 🔴 try/catch ОБЯЗАТЕЛЕН (bugs/100). Без него мёртвый сервер отвергает промис, обработчик
+	// клика молча умирает на необработанном отказе — и кнопка остаётся навсегда заблокированной,
+	// а статус навсегда «Записываю…». Владелец соседнего проекта потерял так час работы.
+	let out;
+	try {
+		const res = await fetch('/decision', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			// Какой документ отвечают — говорит сама страница: один сервер обслуживает всю пачку.
+			body: JSON.stringify({ doc: document.body.dataset.doc, answers, artifacts, comment }),
+		});
+		out = await res.json();
+	} catch (err) {
+		// Ответы НЕ ПОТЕРЯНЫ: черновик лежит в браузере, и мы тут же кладём текст на стол,
+		// чтобы его можно было выделить и скопировать в чат одним движением.
+		saveBtn.disabled = false;
+		document.getElementById('status').textContent = 'НЕ ЗАПИСАНО — сервер не отвечает';
+		document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
+			'<div class="note"><b>Записать не удалось: сервер agenta уже не слушает.</b> ' +
+			'Ваши ответы целы — они сохранены в этом браузере и восстановятся, когда страницу ' +
+			'поднимут заново. Ниже они же текстом: можно выделить и отправить в чат.' +
+			'<textarea readonly rows="10" style="width:100%;margin-top:10px"></textarea></div>');
+		document.querySelector('.wrap textarea[readonly]').value =
+			JSON.stringify({ answers, artifacts, comment }, null, 2);
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+		return;
+	}
 	if (out.ok) {
+		try { localStorage.removeItem(draftKey); } catch (e) {}
 		document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
 			'<div class="note ok"><b>Записано.</b> Ответ лёг в три места: сам документ, файл решения и архив. ' +
 			'Вкладка закроется сама.</div>');
@@ -684,11 +778,57 @@ function openBrowser(url) {
  * @param index — функция, рисующая корневую страницу (для пачки), либо null (тогда корень — сам
  *                документ)
  */
+/**
+ * Гасит сервер, только когда СТРАНИЦЫ НИКТО НЕ ДЕРЖИТ (`bugs/100`).
+ *
+ * `--timeout` теперь означает не «сколько ждём ответа», а «сколько терпим ТИШИНУ». Открытая
+ * вкладка бьётся в `/alive` каждые 20 секунд, и пока она бьётся, ждать можно хоть вечность —
+ * ровно этого потребовал владелец: «Ждать ответы владельца ХОТЬ ВЕЧНОСТЬ!».
+ *
+ * Часы всё же нужны: без них автономный цикл, поднявший страницу, висел бы вечно, даже если
+ * владельца нет у машины вовсе. Но теперь они считают отсутствие человека, а не его раздумья.
+ */
+function watchIdle(server) {
+	server.lastBeat = Date.now();
+	const idleMs = TIMEOUT_MIN * 60_000;
+	setInterval(() => {
+		if (Date.now() - server.lastBeat < idleMs) return;
+		console.log(
+			`\n⏳ Страницу никто не держит уже ${TIMEOUT_MIN} мин (вкладка закрыта) — ответов не записано.`,
+		);
+		server.close(() => process.exit(2));
+	}, 15_000).unref?.();
+}
+
 function startServer({ docPath = null, index = null, onDecision = null }) {
 	const server = createServer((req, res) => {
 		const url = new URL(req.url, 'http://127.0.0.1');
 
+		/*
+		 * 🔴 СЕРДЦЕБИЕНИЕ ОТКРЫТОЙ ВКЛАДКИ (`bugs/100`, весть из Unliminium 2026-08-02).
+		 *
+		 * Раньше сервер умирал ПО ЧАСАМ, а вкладка в браузере об этом не знала: владелец писал
+		 * ответы час, жал «Сохранить» и получал вечное «Записываю…». Его слова из соседнего
+		 * проекта: «Я писал ответы, работал, а оно не может их записать!!!!»
+		 *
+		 * Ловушка была в ложной симметрии. Наш инвариант «сохранение будит ждущего» требует,
+		 * чтобы процесс ЗАВЕРШАЛСЯ по сохранению, — отсюда соблазн добавить и смерть по времени.
+		 * Но умирать он обязан ПО СОБЫТИЮ и НИКОГДА по часам: агент ждёт минуты, а владелец
+		 * отвечает часами, потому что ДУМАЕТ. Таймаут был выставлен по мерке агента, а платил
+		 * по нему человек.
+		 *
+		 * Теперь часы считают не «сколько мы ждём», а «сколько НИКОГО НЕТ». Открытая страница
+		 * бьётся каждые 20 секунд и держит сервер живым сколько угодно долго; закрытая — не
+		 * бьётся, и сервер честно уходит.
+		 */
+		if (req.method === 'GET' && url.pathname === '/alive') {
+			server.lastBeat = Date.now();
+			res.writeHead(204);
+			return res.end();
+		}
+
 		if (req.method === 'GET' && url.pathname === '/') {
+			server.lastBeat = Date.now();
 			res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
 			// Страница всегда собирается заново: документ мог измениться, пока владелец читал.
 			return res.end(index ? index() : buildPage({ docPath, live: true }));
@@ -791,13 +931,7 @@ async function cmdOpen(docPath) {
 	}
 
 	console.log(`\nЖду ответа (до ${TIMEOUT_MIN} мин). Ctrl+C — прекратить, документ не изменится.`);
-	setTimeout(
-		() => {
-			console.log('\n⏳ Время вышло — страница закрыта, ответов не записано.');
-			server.close(() => process.exit(2));
-		},
-		TIMEOUT_MIN * 60_000,
-	).unref?.();
+	watchIdle(server);
 	return url;
 }
 
