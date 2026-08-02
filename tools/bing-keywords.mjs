@@ -45,6 +45,9 @@ const PAUSE_MS = Number(argv.includes('--pause') ? argv[argv.indexOf('--pause') 
 const RICH = argv.includes('--rich');
 
 function buildQueries() {
+  // `--only "запрос"` — разовая проверка одного запроса (обычно вместе с `--rich`, чтобы увидеть,
+  // КТО по нему ранжируется). Список при этом не читается вовсе.
+  if (argv.includes('--only')) return [{ group: 'ручной', query: argv[argv.indexOf('--only') + 1] }];
   const src = JSON.parse(readFileSync('tools/search-queries.json', 'utf8'));
   const out = [];
   for (const [group, list] of Object.entries(src.en)) {
@@ -125,7 +128,8 @@ try {
 
   const queries = buildQueries();
   const collected = loadCollected();
-  const todo = queries.filter((q) => !(q.query in collected));
+  // `--only` — всегда перезапрашивает: его зовут именно чтобы ПЕРЕСНЯТЬ (обычно с `--rich`).
+  const todo = argv.includes('--only') ? queries : queries.filter((q) => !(q.query in collected));
   console.log(`📋 запросов: ${queries.length} · собрано: ${Object.keys(collected).length} · осталось: ${todo.length}\n`);
 
   for (const { group, query } of todo) {
