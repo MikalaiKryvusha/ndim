@@ -56,12 +56,16 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import { initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { computeRelation } from '../src/lib/similarity/similarity.ts';
 import { computeSpaceStats, dayKey, snapshotOf } from '../src/lib/model/stats.ts';
 // Потолок топа объявлен в схеме, а не здесь: его же показывает профиль человека
 // («250 (максимум)», bugs/43). Две копии числа разъехались бы молча.
-import { RELATIONS_TOP_LIMIT as TOP_LIMIT } from '../src/lib/model/schema.ts';
+// Идентификатор служебного документа-индекса берётся ОТТУДА ЖЕ, где его знает клиент
+// (`src/lib/data/dims.ts` читает индекс по этой же константе). Две копии строки «dims_list»
+// разъехались бы молча — а это ровно та пара «истина ↔ зеркало», на которой уже обжёгся
+// `bugs/106`: число измерений считалось по документам коллекции, а показывалось по индексу.
+import { RELATIONS_TOP_LIMIT as TOP_LIMIT, DIMS_INDEX_ID } from '../src/lib/model/schema.ts';
 /** Версия формата relations-документа. */
 const RELATIONS_VERSION = 2;
 /** Измерение считается новым для виджета «Сегодня» первые сутки после появления. */
@@ -316,14 +320,41 @@ async function seedWrittenTops() {
  */
 async function loadDims(now) {
   const catalog = db.collection('dims');
-  const [count, fresh] = await Promise.all([
+  const since = now - NEW_DIM_WINDOW_MS;
+  /*
+   * 🔴 ВОЗРАСТ ИЗМЕРЕНИЯ ЖИВЁТ В ДВУХ ФОРМАХ, И ЗАПРОС ОБЯЗАН ЗНАТЬ ОБЕ (`bugs/109`).
+   *
+   * В бою каталог пришёл из 1.x, где возраст лежит во ВЛОЖЕННОМ `time.created` (Timestamp);
+   * миграция это поле не трогала. Плоское числовое `created` существует только на стенде.
+   * Прежний запрос знал ровно плоскую форму — то есть на стенде работал, а в бою не находил
+   * НИЧЕГО и никогда, и виджет «Сегодня» молчал бы, сколько бы измерений ни завели.
+   * Дефект нашёлся чтением кода и воспроизведён `calculator/measure-dims-index.mjs`.
+   *
+   * Два запроса вместо одного стоят ровно столько, сколько документов они вернут (обычно ноль),
+   * а знание об обеих формах уже живёт в `src/lib/model/feed.ts` → `createdAt` — здесь тот же
+   * инвариант, только на стороне сервера.
+   */
+  const [count, freshLegacy, freshProd] = await Promise.all([
     catalog.count().get(),
-    catalog.where('created', '>=', now - NEW_DIM_WINDOW_MS).get(),
+    catalog.where('created', '>=', since).get(),
+    catalog.where('time.created', '>=', Timestamp.fromMillis(since)).get(),
   ]);
-  return {
-    dimsCount: count.data().count,
-    newDims: fresh.docs.map((dim) => ({ id: dim.id, title: dim.data().title })),
-  };
+
+  const newDims = new Map();
+  for (const dim of [...freshLegacy.docs, ...freshProd.docs]) {
+    const title = dim.data().title;
+    /*
+     * 🔴 БЕЗ НАЗВАНИЯ — НЕ НОВОСТЬ, И ЭТО НЕ ПРИДИРКА. Документ каталога без `title`
+     * (наследие формы 1.x, где название лежало в `name`) давал `title: undefined`, а Firestore
+     * отвергает `undefined` — падала ВСЯ пакетная запись цикла: и статистика, и топы, и
+     * снятие флагов dirty. Поймано собственным тестом при первом же прогоне фикса; прежний
+     * запрос этого не показывал только потому, что в бою не находил вообще ничего (`bugs/109`).
+     */
+    if (!title || typeof title !== 'object') continue;
+    newDims.set(dim.id, { id: dim.id, title });
+  }
+
+  return { dimsCount: count.data().count, newDims: [...newDims.values()] };
 }
 
 /**
@@ -344,27 +375,95 @@ async function loadDims(now) {
 async function ensureDimsIndex(dimsCount) {
   const ref = db.doc('dims/dims_list');
   const snapshot = await ref.get();
+  const data = snapshot.data() ?? {};
 
-  let indexed = -1;
+  let index = null;
   try {
-    indexed = Object.keys(JSON.parse(snapshot.data()?.dims_list ?? '{}')).length;
+    const parsed = JSON.parse(data.dims_list ?? 'null');
+    if (parsed && typeof parsed === 'object') index = parsed;
   } catch {
-    indexed = -1; // битый индекс — пересоберём
+    index = null; // битый индекс — пересоберём целиком
   }
 
-  if (indexed === dimsCount - 1) return; // всё сходится, каталог не менялся
+  /*
+   * ОТМЕТКА СБОРКИ вместо вычитания единицы.
+   *
+   * Прежний сторож сравнивал число записей индекса с числом документов минус ОДИН —
+   * магической константой «служебный документ ровно один, и всё остальное индексируется».
+   * Оба допущения ломались молча: документ без `title` в индекс не попадал, но в счёте
+   * документов оставался, условие не выполнялось НИКОГДА, и вычислитель перечитывал весь
+   * каталог на каждом цикле (`bugs/108`, замерено: 3 пересборки из 3, «было 13, стало 13»).
+   *
+   * Теперь свежесть определяется отметкой: сколько документов было в коллекции, когда индекс
+   * последний раз обслуживали. Сошлось — не трогаем. Не сошлось — обслуживаем и ОТМЕТКУ
+   * ОБНОВЛЯЕМ, поэтому расхождение не может повторяться вечно, какова бы ни была его причина.
+   */
+  const built = data.built ?? null;
+  if (index && built && built.docs === dimsCount) return Object.keys(index).length;
 
-  const catalog = await db.collection('dims').get();
-  const index = {};
-  for (const dim of catalog.docs) {
-    if (dim.id === 'dims_list') continue; // индекс не индексирует сам себя
-    const data = dim.data();
-    if (!data.title || typeof data.title !== 'object') continue; // без названия показывать нечего
-    index[dim.id] = { ru: data.title.ru ?? null, en: data.title.en ?? null, year: data.year ?? '' };
+  const catalog = db.collection('dims');
+  const entry = (doc) => {
+    const d = doc.data();
+    if (!d.title || typeof d.title !== 'object') return null; // без названия показывать нечего
+    return { ru: d.title.ru ?? null, en: d.title.en ?? null, year: d.year ?? '' };
+  };
+  /*
+   * Слияние НА УРОВНЕ КЛЮЧЕЙ записи, а не подстановкой новой. Требование соседнего эпика
+   * `ideas/28`: в записи индекса поселится счётчик оценок, и обслуживание не имеет права
+   * стирать поля, которых не знает. Прежний код собирал запись заново — то есть первая же
+   * пересборка убила бы все 5111 счётчиков молча.
+   */
+  const merge = (into, id, fresh) => { into[id] = { ...(into[id] ?? {}), ...fresh }; };
+
+  // ── ДЕЛЬТА: документов стало больше — дочитываем ТОЛЬКО новые ───────────────
+  // Это и есть ответ на вопрос владельца «можно ли не перелопачивать всю БД». Одно измерение
+  // стоило чтения всего каталога (в бою 5112 документов); теперь — ровно столько документов,
+  // сколько добавили.
+  if (index && built && dimsCount > built.docs) {
+    const added = await catalog.where('time.created', '>=', Timestamp.fromMillis(built.at)).get();
+    const before = Object.keys(index).length;
+    for (const doc of added.docs) {
+      if (doc.id === DIMS_INDEX_ID) continue;
+      const fresh = entry(doc);
+      if (fresh) merge(index, doc.id, fresh);
+    }
+    const grew = Object.keys(index).length - before;
+    if (grew === dimsCount - built.docs) {
+      await ref.set({ dims_list: JSON.stringify(index), built: { at: Date.now(), docs: dimsCount } }, { merge: true });
+      log(`индекс каталога дополнен: +${grew}, стало ${Object.keys(index).length} измерений`);
+      return Object.keys(index).length;
+    }
+    // Дельта не сошлась (документ без `time.created`, без `title`, восстановленный старый) —
+    // честно падаем в полную пересборку, а не делаем вид, что всё в порядке.
   }
 
-  await ref.set({ dims_list: JSON.stringify(index) }, { merge: true });
-  log(`индекс каталога пересобран: было ${indexed}, стало ${Object.keys(index).length} измерений`);
+  // ── АВАРИЙНЫЙ ПУТЬ: полная пересборка ──────────────────────────────────────
+  const all = await catalog.get();
+  const rebuilt = {};
+  let skipped = 0;
+  for (const doc of all.docs) {
+    if (doc.id === DIMS_INDEX_ID) continue; // индекс не индексирует сам себя
+    const fresh = entry(doc);
+    if (!fresh) { skipped += 1; continue; }
+    // Прежнюю запись кладём ПОД новую — это и есть сохранение чужих полей. Единственное место,
+    // где оно живёт, — `merge`: первая редакция дублировала ту же логику ещё и здесь, и мутация
+    // «слияние заменено подстановкой» осталась ЗЕЛЁНОЙ, потому что дубль её прикрывал.
+    if (index?.[doc.id]) rebuilt[doc.id] = { ...index[doc.id] };
+    merge(rebuilt, doc.id, fresh);
+  }
+
+  const wasIndexed = index ? Object.keys(index).length : -1;
+  await ref.set(
+    { dims_list: JSON.stringify(rebuilt), built: { at: Date.now(), docs: dimsCount } },
+    { merge: true },
+  );
+  log(`индекс каталога пересобран: было ${wasIndexed}, стало ${Object.keys(rebuilt).length} измерений`);
+  if (skipped > 0) {
+    // Мина обязана быть ВИДНА. Прежде она молчала: документ без названия просто пропускался,
+    // и о том, что каталог и индекс разошлись навсегда, не знал никто.
+    log(`⚠️ документов каталога без названия: ${skipped} — они не попали в индекс и не будут показаны`);
+  }
+  return Object.keys(rebuilt).length;
 }
 
 /**
@@ -667,7 +766,20 @@ export async function runCycle() {
   ]);
 
   // Индекс каталога обязан поспевать за каталогом: на нём держится экран «Измерения».
-  await ensureDimsIndex(dimsCount);
+  /*
+   * 🔑 ЧИСЛО ИЗМЕРЕНИЙ РОЖДАЕТСЯ ЗДЕСЬ, И ОНО ОДНО (`bugs/106`).
+   *
+   * Прежде статистике скармливался `dimsCount` — число ДОКУМЕНТОВ коллекции, куда попадал и
+   * служебный индекс. Поэтому «Пространство» показывало 5112, «Измерения» — 5111, а диаметр
+   * выходил 715 вместо канона 1.x 714,9. Замер вскрыл, что разрыв бывает и БОЛЬШЕ единицы:
+   * документ без названия тоже считается документом, но в индекс не попадает.
+   *
+   * Теперь «сколько измерений» = «сколько записей в индексе», то есть ровно то, что человек
+   * видит на экране «Измерения». Дрейфу этой пары больше неоткуда взяться — число одно.
+   * ⚠️ Сторожу свежести (`ensureDimsIndex`) по-прежнему нужны ОБА числа: он сравнивает
+   * документы коллекции с отметкой сборки, и схлопывать их в одно нельзя.
+   */
+  const indexedDims = await ensureDimsIndex(dimsCount);
   const now = Date.now();
 
   // firstSeen — отметка «сервер синхронизации увидел эту точку впервые»; на ней держится
@@ -750,7 +862,10 @@ export async function runCycle() {
     updated: point.updated,
     firstSeen: point.firstSeen,
   }));
-  const stats = computeSpaceStats({ points: summaries, dimsCount, newDims, similarities, bests }, now);
+  const stats = computeSpaceStats(
+    { points: summaries, dimsCount: indexedDims, newDims, similarities, bests },
+    now,
+  );
   writes.push((batch) => batch.set(db.doc('space/stats'), stats));
   writes.push((batch) => batch.set(db.doc(`space/stats/daily/${dayKey(now)}`), snapshotOf(stats)));
   // Публичная витрина лендинга («С нами уже N человек», bugs/07): РОВНО тот же счёт людей,

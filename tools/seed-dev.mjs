@@ -13,6 +13,8 @@
 // Данные вымышленные, проект demo-* — боевого Firestore этот скрипт не касается никогда.
 
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
+// Timestamp нужен, чтобы сеять БОЕВУЮ форму возраста измерения — `time.created` (bugs/109).
+import { Timestamp } from 'firebase/firestore';
 import { distribute } from '../src/lib/model/visibility.ts';
 import { dayKey } from '../src/lib/model/stats.ts';
 
@@ -290,11 +292,31 @@ try {
   await env.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
 
+    /*
+     * 🔴 ВОЗРАСТ ИЗМЕРЕНИЯ СЕЕТСЯ В ДВУХ ФОРМАХ — И ЭТО НЕ ПРИХОТЬ (`bugs/109`).
+     *
+     * До 2026-08-02 стенд знал ровно одну форму — ПЛОСКОЕ поле `created` (миллисекунды).
+     * В бою такой формы нет ни у одного документа: каталог пришёл из 1.x, где возраст лежит
+     * во вложенном `time.created` (Timestamp), а миграция его не трогала. Значит стенд
+     * моделировал данные, КОТОРЫХ НЕ СУЩЕСТВУЕТ, и запрос вычислителя «какие измерения
+     * появились за сутки» на стенде работал, а в бою не находил ничего никогда.
+     *
+     * Ни один тест этого поймать не мог: все они смотрели на стендовую форму. Дефект нашёлся
+     * чтением кода и был воспроизведён прибором `calculator/measure-dims-index.mjs`.
+     *
+     * Теперь обе формы живут рядом, как в реальности: боевая — у большинства, стендовая — у
+     * нескольких проб. Проверка, зелёная на одной форме и красная на другой, — это находка,
+     * а не поломка сида.
+     */
+    let flatShaped = 0;
     for (const [dimId, dim] of Object.entries(DIMS)) {
-      // `created` — возраст измерения. По нему сервер синхронизации отбирает те, что
-      // появились за сутки (виджет «Сегодня»); без даты измерение просто не считается новым.
       const created = now - (FRESH_DIMS.has(dimId) ? 3 * 60 * 60 * 1000 : 60 * DAY_MS);
-      await db.doc(`dims/${dimId}`).set({ ...dim, created });
+      // Плоскую форму оставляем только трём пробам — ради самой возможности сравнить формы.
+      const flat = flatShaped < 3 && dimId.startsWith('probe-');
+      if (flat) flatShaped += 1;
+      await db.doc(`dims/${dimId}`).set(
+        flat ? { ...dim, created } : { ...dim, time: { created: Timestamp.fromMillis(created) } },
+      );
     }
 
     // СЛУЖЕБНЫЙ ДОКУМЕНТ БЕЗ НАЗВАНИЯ — наследие 1.x, он живёт в боевом каталоге (`dims_list`).
