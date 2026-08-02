@@ -27,6 +27,14 @@ export function landingPeople(): number {
 }
 
 /** Когда взят снимок витрины (ISO-день) — чтобы возраст числа был виден, а не угадывался. */
+/**
+ * Сколько измерений в каталоге — БЕЗ служебного документа индекса (`bugs/106`).
+ * Витрина хвастается именно этим числом: оно самое сильное честное, какое у нас есть.
+ */
+export function landingDims(): number {
+  return PUBLIC_PEOPLE_SNAPSHOT.dims;
+}
+
 export function landingPeopleTakenAt(): string {
   return PUBLIC_PEOPLE_SNAPSHOT.takenAt;
 }

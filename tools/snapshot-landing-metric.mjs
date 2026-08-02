@@ -63,6 +63,52 @@ if (!Number.isInteger(people) || people <= 0) {
   process.exit(1);
 }
 
+/*
+ * ── ЧИСЛО ИЗМЕРЕНИЙ ДЛЯ ВИТРИНЫ ────────────────────────────────────────────────────────────
+ * Витрина хвастается размером каталога — и это самое сильное честное число, какое у нас есть.
+ * Но оно ОБЯЗАНО быть живым: зашитый литерал протухнет в тот день, когда владелец добавит
+ * измерение, и станет ровно `bugs/07`.
+ *
+ * Публичный `space/public_metrics` его пока не несёт (там только `people`), а `space/stats`
+ * закрыт правилами для не вошедших. Поэтому читаем его анонимным входом — тем же приёмом и с
+ * тем же разрешением владельца, что `tools/probe-prod-stats.mjs` (интервью №013, В2 = Б).
+ * Учётная запись удаляется здесь же.
+ *
+ * ⚠️ ВЫЧИТАЕМ ЕДИНИЦУ: `space/stats.dims` считает документы коллекции `dims`, а среди них лежит
+ * служебный индекс `dims_list` — это `bugs/106`. Пока дефект не починен в вычислителе, поправка
+ * живёт здесь, и убрать её надо ВМЕСТЕ с починкой, иначе витрина начнёт занижать.
+ */
+async function readDims() {
+  const signUp = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnSecureToken: true }) },
+  );
+  if (!signUp.ok) return null;
+  const { idToken } = await signUp.json();
+  try {
+    const stats = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/space/stats`,
+      { headers: { Authorization: `Bearer ${idToken}` } },
+    );
+    if (!stats.ok) return null;
+    const raw = Number((await stats.json())?.fields?.dims?.integerValue ?? NaN);
+    return Number.isInteger(raw) && raw > 1 ? raw - 1 : null; // −1 — служебный dims_list, bugs/106
+  } finally {
+    await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    }).catch(() => {});
+  }
+}
+
+const dims = await readDims();
+if (dims === null) {
+  console.error('❌ число измерений из боевого space/stats не прочитано.');
+  console.error('   Файл НЕ тронут: витрина хвастается этим числом, и устаревшее лучше выдуманного.');
+  process.exit(1);
+}
+
 // Дата снимка — только день: точность до минут тут ничего не значит, а шум в дифф добавляет.
 const takenAt = new Date().toISOString().slice(0, 10);
 
@@ -78,13 +124,15 @@ const file = `/**
  * показывается ровно столько людей, сколько их есть (интервью №010, Р7).
  */
 
-/** Сколько людей было в Пространстве на момент снимка, и когда снимок взят. */
+/** Что было в Пространстве на момент снимка, и когда снимок взят. */
 export const PUBLIC_PEOPLE_SNAPSHOT = {
   people: ${people},
+  /** Измерений в каталоге — БЕЗ служебного документа индекса (\`bugs/106\`). */
+  dims: ${dims},
   takenAt: '${takenAt}',
 } as const;
 `;
 
 writeFileSync(OUT, file, 'utf8');
-console.log(`✅ ${OUT}: people = ${people}, снимок от ${takenAt}`);
-console.log('   Витрина лендинга покажет ровно это число — множителя больше нет (интервью №010, Р7).');
+console.log(`✅ ${OUT}: people = ${people}, dims = ${dims}, снимок от ${takenAt}`);
+console.log('   Витрина лендинга покажет ровно эти числа — множителя больше нет (интервью №010, Р7).');

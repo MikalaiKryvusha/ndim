@@ -16,7 +16,7 @@
   import Icon from '$lib/ui/Icon.svelte';
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
-  import { landingPeople } from '$lib/data/metrics';
+  import { landingDims, landingPeople } from '$lib/data/metrics';
   import { endBoot, hasSession } from '$lib/data/session';
   import { num, peopleUnit } from '$lib/ui/format';
   // Тема — общий источник истины (bugs/53): лендинг, шапка и «Меню» читают одно значение.
@@ -65,6 +65,8 @@
    * от чего мы уходим.
    */
   const joinedPeople = landingPeople();
+  // Размер каталога — в том же пререндере и по тому же правилу: снимок, а не литерал.
+  const joinedDims = landingDims();
 
   onMount(() => {
     // ── Человек пришёл по ссылке из письма, но попал на ЛЕНДИНГ — уводим его в профиль ──
@@ -139,8 +141,32 @@
     },
     create: { ru: 'Создать Аккаунт', en: 'Create Account' },
     login: { ru: 'Войти в Аккаунт', en: 'Log In' },
-    joinedPre: { ru: 'С нами уже ', en: 'We already have ' },
-    joinedPost: { ru: ' — и каждый день приходят новые', en: ' — and new ones come every day' },
+    /*
+     * ── СТРОКА ВИТРИНЫ (`bugs/107`) ──────────────────────────────────────────────────────
+     * Было: «С нами уже 94 человека — и каждый день приходят новые». Хвост — утверждение о
+     * факте, опровергнутое НАШИМИ ЖЕ снимками дней (94 неизменно пять суток, +1 за три недели).
+     *
+     * 🔑 Слово владельца 2026-08-02: «ЭТО РЕКЛАМНАЯ ВИТРИНА, ОНА ДОЛЖНА ХОТЬ И ЧЕСТНЫЙ ПРОДУКТ,
+     * НО НАХВАЛИВАТЬ, ВЫСТАВЛЯТЬ В ПРИЯТНОМ ЗАМАНЧИВОМ ВЫГОДНОМ СВЕТЕ». Отсюда решение:
+     * не выкидывать хвост в пустоту и не мямлить, а СМЕНИТЬ ГЕРОЯ строки.
+     *
+     * 94 человека — наше самое слабое число, и делать его главным было ошибкой подачи.
+     * Самое сильное честное число — размер каталога: 5111 измерений, которых нет ни у кого.
+     * А малое число людей перестаёт быть слабостью, когда оно приглашение: «станьте одним из
+     * первых» — это правда при 94 и это заманчиво.
+     *
+     * ⚠️ Оба числа ЖИВЫЕ (`landing-metric.ts`, снимок перед выкатом) — литералов здесь нет,
+     * иначе это ровно `bugs/07`.
+     */
+    joinedPre: { ru: 'Уже ', en: 'Already ' },
+    joinedMid: {
+      ru: ' в Пространстве из ',
+      en: ' in a Space of ',
+    },
+    joinedPost: {
+      ru: ' измерений — станьте одним из первых',
+      en: ' dimensions — be among the first',
+    },
     foot: {
       ru: 'Пространство NDim · открытая платформа, сделанная с заботой о людях',
       en: 'NDim Space · an open platform built with care for people',
@@ -256,7 +282,9 @@
          новость, приехавшая позже (bugs/81). Условие `{#if}` и `in:fade` здесь и были тем
          самым «на горячую»: сначала вставлялся узел, потом он ещё и проявлялся 240 мс. -->
     <p class="joined">
-      {t.joinedPre[lang]}<b>{num(joinedPeople, lang)} {peopleUnit(joinedPeople, lang)}</b>{t.joinedPost[lang]}
+      {t.joinedPre[lang]}<b>{num(joinedPeople, lang)} {peopleUnit(joinedPeople, lang)}</b>{t.joinedMid[lang]}<b
+        >{num(joinedDims, lang)}</b
+      >{t.joinedPost[lang]}
     </p>
   </section>
 
