@@ -57,3 +57,7 @@ KAIF_ADAPTATION_TASK.md
 KAIF_UPDATE_TASK.md
 KAIF_UPDATE_TASK.superseded.md
 .kaif/heartbeat.log
+
+# Полный каталог измерений в сборке — 16,7 МБ (plans/36, шаг 0). В git живёт только срез 50;
+# полный выгружается шагом выката: node tools/fetch-dims-slice.mjs --all
+
