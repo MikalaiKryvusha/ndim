@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — Менеджер измерений, 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — МЕНЕДЖЕР ИЗМЕРЕНИЙ. Фаза 2 эпика `ideas/29` (метаплан `plans/30`).
+
+     ЗАКАЗ ВЛАДЕЛЬЦА (дословно, `ideas/29`):
+       «Нужно в админскую панель добавить инструменты по управлению Измерениями пространства
+        NDIM. CRUD с удобным интерфейсом просмотра измерений, как объектов. форму ручного
+        создания Измерений, для пополнения базы измерений.»
+
+     И его же уточнение 2026-08-02 (интервью №015, В5) — оно и определило центр экрана:
+       «измерения, написанные ИИ агентом для моей вычитки. Заявки пользователей читает сам ИИ
+        агент, и их выносит в список кандидатов измерений… помечается пилюлей, что это по
+        заявке пользователей. Статус "по заявке" только для админа — в продакшен эти статусы
+        не просачиваются».
+
+     И решение о втором поле (2026-08-02, дословно):
+       «помимо поля комментария автора — заполняемое, делаем ещё статичное текстовое поле
+        комментария ИИ агента владельцу. Вдруг что-то важное нужно будет отметить. Часто оно
+        будет пустое… В прод комментарии не попадают — внутренняя штука.»
+
+     ═══ ЧТО РЕШАЮТ ЭТИ МАКЕТЫ — ОДИН вопрос ═══
+     КАК УСТРОЕН ЭКРАН, на котором главное — очередь кандидатов на вычитку, а каталог и
+     ручное создание живут рядом. Каждый вариант — цельный ответ, а не набор опций.
+
+     ═══ ЧТО ИМИ НЕ РЕШАЕТСЯ (уже закрыто вашими ответами — не выбирайте дважды) ═══
+       · Где живёт панель — РАЗДЕЛ ВНУТРИ приложения, не отдельный сайт (В1 = Б).
+       · Источник кандидатов — Wikidata (В2 = А).
+       · Агент НИКОГДА не заводит измерение без вычитки (В3 = А) — поэтому во всех вариантах
+         кнопка «Одобрить» есть только у вас.
+       · Отдельной комнаты «Заявки людей» нет: заявку читает агент и выносит сюда же (В5).
+       · Состав полей измерения — форма 1.x (`researches/11`): тип · название · год · автор ·
+         описание · теги. Одинаков во всех четырёх.
+
+     ═══ ЧЕСТНОСТЬ МАКЕТА ═══
+       · Токены обеих тем скопированы из `src/routes/+layout.svelte` дословно — цвета настоящие.
+       · Поля карточки измерения — из живого кода 1.x (`researches/11` §3), не выдуманы.
+       · Число измерений 5111 — боевое (подтверждено 2026-08-02). Остальные числа
+         ПРАВДОПОДОБНЫЕ, но не боевые.
+       · Идентификаторы Wikidata (Q…) — настоящего вида, но это ПРИМЕРЫ, не проверенные ссылки.
+       · 🔑 Комментарий агента показан ПУСТЫМ в первой карточке и заполненным во второй:
+         владелец сказал «часто оно будет пустое», значит пустое состояние — ОСНОВНОЕ, и
+         макет обязан выглядеть цельным именно с ним.
+       · Ни в одном варианте нет кнопки «одобрить всё» или «одобрить пачкой»: отрасль называет
+         главным риском таких очередей превращение человека в штамп (`researches/29` §3.3).
+
+     ВАРИАНТЫ:
+       · V1 «Стопка»          — очередь лентой раскрытых карточек, одна под другой.
+                                Каталог и создание — соседние вкладки. Модель почтового ящика.
+       · V2 «Один в фокусе»   — на экране РОВНО ОДИН кандидат целиком, со счётчиком «2 из 17».
+                                Максимум внимания на каждом; пролистать пачку не выйдет.
+       · V3 «Список и карточка» — слева очередь строками, справа выбранный кандидат.
+                                На телефоне: список → тап → карточка. Модель почтового клиента.
+       · V4 «Приборная панель» — экран из виджетов по канону проекта (`ideas/24`, V4 утверждён):
+                                «Очередь», «Каталог», «Создать вручную», «Работа агента».
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Токены светлой темы «Бумага» (дословно из src/routes/+layout.svelte) ── */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1467d6; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --card-shadow: 0 16px 40px rgba(29, 50, 71, 0.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --danger: #d6544f; --danger-ink: #ffffff;
+    --ghost: rgba(20, 103, 214, 0.28);
+    --ok: #2e9e6b;
+  }
+  /* ── Токены тёмной темы (дословно оттуда же) ── */
+  :root[data-theme='dark'] {
+    --bg: #060b14; --panel: rgba(10, 21, 38, 0.78); --edge: rgba(77, 159, 255, 0.22);
+    --edge-soft: rgba(77, 159, 255, 0.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #4d9fff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --card-shadow: 0 0 0 1px rgba(63, 217, 255, 0.06), 0 24px 60px rgba(2, 8, 20, 0.6);
+    --danger: #f87171; --danger-ink: #12060a;
+    --ghost: rgba(77, 159, 255, 0.34);
+    --ok: #56d3a0;
+  }
+
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  /* ── Панель выбора (дом стиля макетов проекта) ── */
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  .note {
+    padding: 12px 16px; background: #0d1b2a; color: #b7cde0; font-size: 13px; line-height: 1.55;
+    border-bottom: 1px solid #1d3247;
+  }
+  .note b { color: #fff; }
+  .note .q { color: #7fd4ff; }
+
+  .stage { padding: 22px 14px 60px; background: #0f1826; }
+  .panes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+
+  .pane { display: flex; flex-direction: column; gap: 7px; }
+  .pane > .cap { color: #8fa9c0; font-size: 12px; text-align: center; }
+
+  /* Оболочка «телефона»/«десктопа»: рисуем экран продукта, а не абстрактный блок */
+  .screen {
+    width: 390px; height: 760px; overflow: hidden; position: relative;
+    background: var(--bg); color: var(--text);
+    border-radius: 22px; border: 1px solid var(--edge); box-shadow: var(--card-shadow);
+    display: flex; flex-direction: column;
+  }
+  .stage[data-w='1440'] .screen { width: 1180px; height: 980px; border-radius: 16px; }
+
+  /* Шапка продукта */
+  .bar {
+    flex: 0 0 auto; height: 56px; display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; background: var(--panel); border-bottom: 1px solid var(--edge);
+  }
+  .bar .mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, #1467d6, #3fd9ff); flex: 0 0 auto; }
+  .bar .title { font-weight: 700; color: var(--heading); font-size: 15px; }
+  .bar .adm {
+    margin-left: auto; font-size: 11px; padding: 3px 9px; border-radius: 999px;
+    background: var(--ghost); color: var(--accent); font-weight: 600;
+  }
+
+  .body { flex: 1 1 auto; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+  .stage[data-w='1440'] .body { padding: 16px; }
+
+  /* Вкладки раздела */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs button {
+    font: inherit; font-size: 13px; cursor: pointer; padding: 7px 13px; border-radius: 999px;
+    border: 1px solid var(--edge); background: var(--panel); color: var(--dim);
+  }
+  .tabs button.on { background: var(--primary); border-color: transparent; color: var(--primary-ink); font-weight: 600; }
+  .tabs .count {
+    display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px;
+    background: rgba(255,255,255,.22); font-size: 11px;
+  }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    padding: 13px; box-shadow: var(--card-shadow);
+  }
+
+  /* ── Карточка КАНДИДАТА — общая для всех четырёх вариантов ────────────── */
+  .cand .top { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .cand .pill {
+    font-size: 10.5px; padding: 3px 8px; border-radius: 999px; font-weight: 600; white-space: nowrap;
+    background: var(--ghost); color: var(--accent);
+  }
+  .cand .pill.req { background: rgba(232,165,22,.18); color: var(--star); }
+  .cand .num { margin-left: auto; font-size: 11px; color: var(--faint); }
+  .cand h3 { font-size: 15px; color: var(--heading); line-height: 1.3; }
+  .cand .type { font-size: 12px; color: var(--dim); }
+  .cand .en { font-size: 12px; color: var(--faint); margin-top: 1px; }
+
+  .fields { display: grid; grid-template-columns: 74px 1fr; gap: 5px 9px; margin: 9px 0; font-size: 12.5px; }
+  .fields dt { color: var(--faint); }
+  .fields dd { color: var(--text); }
+  .tag {
+    display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 6px;
+    background: var(--edge-soft); color: var(--dim); margin: 0 4px 4px 0;
+  }
+
+  .src {
+    display: flex; align-items: center; gap: 7px; font-size: 12px;
+    padding: 7px 9px; border-radius: 9px; background: var(--edge-soft); margin-bottom: 8px;
+  }
+  .src .qid { font-family: var(--mono); color: var(--accent); }
+  .src .pop { margin-left: auto; color: var(--dim); font-size: 11px; }
+
+  .near { font-size: 11.5px; color: var(--dim); margin-bottom: 9px; }
+  .near b { color: var(--text); font-weight: 600; }
+
+  /* Два поля комментария — сердце этих макетов */
+  .talk { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+  .say { border-radius: 10px; padding: 8px 10px; font-size: 12.5px; }
+  .say .who { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+  .say.agent { background: var(--edge-soft); }
+  .say.agent .who { color: var(--faint); }
+  .say.agent p { color: var(--text); line-height: 1.5; }
+  .say.agent.empty { border: 1px dashed var(--edge); background: transparent; }
+  .say.agent.empty p { color: var(--faint); font-style: italic; }
+  .say.owner { border: 1px solid var(--edge); }
+  .say.owner .who { color: var(--faint); }
+  .say.owner .field {
+    min-height: 34px; border-radius: 7px; background: var(--bg); border: 1px solid var(--edge);
+    padding: 6px 8px; color: var(--faint); font-size: 12.5px;
+  }
+
+  .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  /* 🔴 На телефоне четыре действия НЕ помещаются в строку, и перенос выбрасывал «Отклонить»
+     одну на вторую строку — разрушительное действие получало вес, которого не заслуживает.
+     Поймано съёмкой кадров ДО показа владельцу (урок EXP-0110). Лечение — не ужимать шрифт,
+     а сделать раскладку НАМЕРЕННОЙ: сетка 2×2, где «Отклонить» стоит в углу, а не особняком. */
+  .stage[data-w='390'] .acts { display: grid; grid-template-columns: 1fr 1fr; }
+  .acts button {
+    font: inherit; font-size: 12.5px; cursor: pointer; padding: 7px 12px; border-radius: 9px;
+    border: 1px solid var(--edge); background: var(--panel); color: var(--text);
+  }
+  .acts button.ok { background: var(--ok); border-color: transparent; color: #fff; font-weight: 600; }
+  .acts button.no { color: var(--danger); border-color: var(--danger); }
+
+  /* Строка каталога */
+  .row {
+    display: flex; align-items: center; gap: 9px; padding: 9px 11px;
+    border-bottom: 1px solid var(--edge-soft); font-size: 13px;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .rt { color: var(--dim); font-size: 11.5px; }
+  .row .rn { color: var(--heading); }
+  .row .rr { margin-left: auto; color: var(--star); font-size: 12px; white-space: nowrap; }
+
+  .h { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); margin-bottom: 7px; }
+
+  /* Форма создания */
+  .form { display: grid; gap: 7px; }
+  .form .in {
+    border: 1px solid var(--edge); border-radius: 8px; padding: 7px 9px;
+    color: var(--faint); font-size: 12.5px; background: var(--bg);
+  }
+  .form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+  /* V2: один в фокусе */
+  .focus-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .focus-head .of { font-size: 13px; color: var(--dim); }
+  .focus-head .nav { margin-left: auto; display: flex; gap: 6px; }
+  .focus-head .nav button {
+    font: inherit; font-size: 12px; cursor: pointer; padding: 5px 10px; border-radius: 8px;
+    border: 1px solid var(--edge); background: var(--panel); color: var(--dim);
+  }
+  .prog { height: 4px; border-radius: 999px; background: var(--edge-soft); overflow: hidden; margin-bottom: 10px; }
+  .prog i { display: block; height: 100%; width: 12%; background: var(--primary); }
+
+  /* V3: список и карточка */
+  .split { display: grid; grid-template-columns: 260px 1fr; gap: 12px; align-items: start; }
+  .stage[data-w='390'] .split { grid-template-columns: 1fr; }
+  .qrow {
+    display: flex; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 10px;
+    font-size: 12.5px; cursor: pointer; border: 1px solid transparent;
+  }
+  .qrow.on { background: var(--edge-soft); border-color: var(--edge); }
+  .qrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: 0 0 auto; }
+  .qrow .dot.req { background: var(--star); }
+  .qrow .qn { color: var(--heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* V4: виджетная сетка (канон ideas/24 — 4 шага по горизонтали) */
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(4, 1fr); align-items: start; }
+  .stage[data-w='390'] .grid { grid-template-columns: 1fr; }
+  .w2 { grid-column: span 2; }
+  .w4 { grid-column: span 4; }
+  .stage[data-w='390'] .w2, .stage[data-w='390'] .w4 { grid-column: auto; }
+  .stat { display: flex; gap: 14px; flex-wrap: wrap; }
+  .stat div { font-size: 12px; color: var(--dim); }
+  .stat b { display: block; font-size: 19px; color: var(--heading); }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Макет:</b>
+  <button data-v="1" class="active">V1 «Стопка»</button>
+  <button data-v="2">V2 «Один в фокусе»</button>
+  <button data-v="3">V3 «Список и карточка»</button>
+  <button data-v="4">V4 «Приборная панель»</button>
+  <span class="sp"></span>
+  <button id="theme">☾ тёмная</button>
+  <button id="width">Телефон 390</button>
+  <span class="hint">Менеджер измерений · фаза 2 эпика ideas/29</span>
+</div>
+
+<div class="note" id="note"></div>
+
+<div class="stage" id="stage" data-w="390">
+  <div class="panes" id="panes"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Общие куски (карточка кандидата, строка каталога, форма создания) собираются
+   ОДНИМ кодом и одинаковы во всех четырёх вариантах — иначе сравнивались бы не
+   формы экрана, а случайные различия наполнения.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const ICON = {
+  link: '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5a3 3 0 0 0 4.24 0l2-2a3 3 0 1 0-4.24-4.24l-.7.7"/><path d="M9.5 6.5a3 3 0 0 0-4.24 0l-2 2a3 3 0 1 0 4.24 4.24l.7-.7"/></svg>',
+  plus: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3.5v9M3.5 8h9"/></svg>',
+  bot: '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="5.5" width="10" height="7.5" rx="2"/><path d="M8 5.5V3M6 9h.01M10 9h.01"/></svg>',
+};
+
+/* Кандидаты. ПЕРВЫЙ — с ПУСТЫМ комментарием агента: владелец сказал «часто оно будет
+   пустое», значит это ОСНОВНОЕ состояние карточки, и макет обязан выглядеть цельным
+   именно с ним. Второй — с заполненным, чтобы было видно оба. */
+const CANDIDATES = [
+  {
+    origin: 'найдено агентом', req: false,
+    type: 'Фильм', ru: '«Прибытие»', en: 'Arrival', year: '2016',
+    author: 'Дени Вильнёв', authorEn: 'Denis Villeneuve',
+    desc: 'Лингвист учится говорить с пришельцами и вместе с их языком получает иное переживание времени.',
+    tags: ['фантастика', 'язык', 'время'],
+    qid: 'Q20909133', pop: '78 языковых разделов',
+    near: 'Похожее в каталоге: <b>«Интерстеллар» (2014)</b>, <b>«Солярис» (1972)</b> — не дубли.',
+    agent: '',
+  },
+  {
+    origin: 'по заявке пользователей', req: true,
+    type: 'Роман', ru: '«Дом, в котором…»', en: 'The Gray House', year: '2009',
+    author: 'Мариам Петросян', authorEn: 'Mariam Petrosyan',
+    desc: 'Закрытый интернат живёт по своим законам, и время в нём идёт не так, как снаружи.',
+    tags: ['роман', 'взросление', 'магический реализм'],
+    qid: 'Q4167410', pop: '9 языковых разделов',
+    near: 'Похожего в каталоге нет.',
+    agent: 'Заявка пришла от двух разных людей. Год издания в источниках расходится: 2009 (первое издание) и 2016 (английский перевод) — поставил 2009. Английское название не перевод, а официальный титул издания.',
+  },
+];
+
+const candidateCard = (c, extra = '') => `
+  <div class="card cand">
+    <div class="top">
+      <span class="pill ${c.req ? 'req' : ''}">${c.origin}</span>
+      ${extra}
+    </div>
+    <h3>${c.type}: ${c.ru} (${c.year})</h3>
+    <div class="en">${c.en}</div>
+
+    <div class="src">
+      ${ICON.link}<span class="qid">${c.qid}</span>
+      <span>Wikidata</span>
+      <span class="pop">${c.pop}</span>
+    </div>
+
+    <dl class="fields">
+      <dt>Тип</dt><dd>${c.type}</dd>
+      <dt>Название</dt><dd>${c.ru} · <span style="color:var(--faint)">${c.en}</span></dd>
+      <dt>Год</dt><dd>${c.year}</dd>
+      <dt>Автор</dt><dd>${c.author} · <span style="color:var(--faint)">${c.authorEn}</span></dd>
+      <dt>Описание</dt><dd>${c.desc}</dd>
+      <dt>Теги</dt><dd>${c.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</dd>
+    </dl>
+
+    <p class="near">${c.near}</p>
+
+    <div class="talk">
+      <div class="say agent ${c.agent ? '' : 'empty'}">
+        <div class="who">${ICON.bot} комментарий агента</div>
+        <p>${c.agent || 'агенту нечего добавить'}</p>
+      </div>
+      <div class="say owner">
+        <div class="who">ваш комментарий агенту</div>
+        <div class="field">…</div>
+      </div>
+    </div>
+
+    <div class="acts">
+      <button class="ok">Одобрить</button>
+      <button>Править</button>
+      <button>Вернуть на доработку</button>
+      <button class="no">Отклонить</button>
+    </div>
+  </div>`;
+
+const CATALOG = [
+  ['Фильм', '«Таксист» (1976)', '8,4 · 41 голос'],
+  ['Роман', '«Лолита» (1955)', '7,1 · 33 голоса'],
+  ['Практика', 'Ранние подъёмы', '6,2 · 58 голосов'],
+  ['Видеоигра', 'Disco Elysium (2019)', '9,1 · 27 голосов'],
+  ['Сериал', '«Твин Пикс» (1990)', '8,8 · 19 голосов'],
+];
+const catalogCard = (n = 5) => `
+  <div class="card">
+    <div class="h">Каталог · 5111 измерений</div>
+    ${CATALOG.slice(0, n).map(([t, name, r]) => `
+      <div class="row"><span class="rt">${t}</span><span class="rn">${name}</span><span class="rr">${r}</span></div>`).join('')}
+  </div>`;
+
+const createCard = () => `
+  <div class="card">
+    <div class="h">Создать вручную</div>
+    <div class="form">
+      <div class="two"><div class="in">Тип (ru)</div><div class="in">Type (en)</div></div>
+      <div class="two"><div class="in">Название (ru)</div><div class="in">Title (en)</div></div>
+      <div class="two"><div class="in">Год</div><div class="in">Автор</div></div>
+      <div class="in">Описание (ru)</div>
+      <div class="in">Теги через ;</div>
+      <div class="acts"><button class="ok">${ICON.plus} Создать измерение</button></div>
+    </div>
+  </div>`;
+
+const shell = (inner) => `
+  <div class="screen">
+    <div class="bar"><div class="mark"></div><div class="title">Менеджер измерений</div><div class="adm">админ</div></div>
+    <div class="body">${inner}</div>
+  </div>`;
+
+const tabs = (on) => `
+  <div class="tabs">
+    <button class="${on === 'q' ? 'on' : ''}">Очередь<span class="count">17</span></button>
+    <button class="${on === 'c' ? 'on' : ''}">Каталог</button>
+    <button class="${on === 'n' ? 'on' : ''}">Создать</button>
+  </div>`;
+
+/* ── Варианты ─────────────────────────────────────────────────────────────── */
+const VARIANTS = {
+  1: {
+    note: `<b>V1 «Стопка».</b> Очередь — лента раскрытых карточек, одна под другой; каталог и
+      создание живут соседними вкладками. Модель почтового ящика: всё видно прокруткой, ничего не
+      прячется. <span class="q">Цена: пачка одинаковых карточек усыпляет внимание — это ровно тот
+      риск, который отрасль называет главным для очередей вычитки.</span>`,
+    panes: [
+      ['очередь · пустой комментарий агента', tabs('q') + candidateCard(CANDIDATES[0], '<span class="num">1 из 17</span>')],
+      ['вторая карточка · агент дописал', tabs('q') + candidateCard(CANDIDATES[1], '<span class="num">2 из 17</span>')],
+      ['каталог и создание', tabs('c') + catalogCard() + createCard()],
+    ],
+  },
+  2: {
+    note: `<b>V2 «Один в фокусе».</b> На экране РОВНО ОДИН кандидат — целиком, со счётчиком и
+      полосой прогресса. Пролистать пачку не выйдет: следующий появится только после решения.
+      <span class="q">Цена: чтобы окинуть очередь взглядом, придётся идти в каталог — обзора нет.</span>`,
+    panes: [
+      ['кандидат 2 из 17', `
+        <div class="focus-head"><span class="of">Кандидат <b style="color:var(--heading)">2</b> из 17</span>
+        <span class="nav"><button>Отложить</button></span></div>
+        <div class="prog"><i></i></div>` + candidateCard(CANDIDATES[0])],
+      ['следующий · с комментарием агента', `
+        <div class="focus-head"><span class="of">Кандидат <b style="color:var(--heading)">3</b> из 17</span>
+        <span class="nav"><button>Отложить</button></span></div>
+        <div class="prog"><i style="width:18%"></i></div>` + candidateCard(CANDIDATES[1])],
+      ['очередь кончилась', `
+        <div class="focus-head"><span class="of">Очередь пуста</span></div>
+        <div class="card"><div class="h">Готово</div>
+          <p style="font-size:13px;line-height:1.6">Все кандидаты разобраны. Каталог — 5111 измерений.</p>
+          <div class="acts" style="margin-top:10px"><button>Открыть каталог</button><button class="ok">Создать вручную</button></div>
+        </div>` + createCard()],
+    ],
+  },
+  3: {
+    note: `<b>V3 «Список и карточка».</b> Слева очередь строками, справа выбранный кандидат.
+      На телефоне — сначала список, тап открывает карточку. Модель почтового клиента и консоли
+      Firebase. <span class="q">Цена: на телефоне это два экрана вместо одного, и возврат к списку
+      надо не потерять.</span>`,
+    panes: [
+      ['телефон: список очереди', tabs('q') + `
+        <div class="card">
+          <div class="h">Очередь · 17</div>
+          <div class="qrow on"><span class="dot"></span><span class="qn">Фильм: «Прибытие» (2016)</span></div>
+          <div class="qrow"><span class="dot req"></span><span class="qn">Роман: «Дом, в котором…»</span></div>
+          <div class="qrow"><span class="dot"></span><span class="qn">Видеоигра: Outer Wilds (2019)</span></div>
+          <div class="qrow"><span class="dot req"></span><span class="qn">Практика: Холодный душ</span></div>
+          <div class="qrow"><span class="dot"></span><span class="qn">Сериал: «Чернобыль» (2019)</span></div>
+        </div>`],
+      ['телефон: тап открыл карточку', candidateCard(CANDIDATES[0], '<span class="num">← к списку</span>')],
+      ['вторая карточка', candidateCard(CANDIDATES[1], '<span class="num">← к списку</span>')],
+    ],
+    desk: [
+      ['десктоп: список и карточка рядом', tabs('q') + `
+        <div class="split">
+          <div class="card">
+            <div class="h">Очередь · 17</div>
+            <div class="qrow on"><span class="dot"></span><span class="qn">«Прибытие» (2016)</span></div>
+            <div class="qrow"><span class="dot req"></span><span class="qn">«Дом, в котором…»</span></div>
+            <div class="qrow"><span class="dot"></span><span class="qn">Outer Wilds (2019)</span></div>
+            <div class="qrow"><span class="dot req"></span><span class="qn">Холодный душ</span></div>
+            <div class="qrow"><span class="dot"></span><span class="qn">«Чернобыль» (2019)</span></div>
+          </div>
+          <div>${candidateCard(CANDIDATES[0])}</div>
+        </div>`],
+      ['выбран кандидат по заявке', tabs('q') + `
+        <div class="split">
+          <div class="card">
+            <div class="h">Очередь · 17</div>
+            <div class="qrow"><span class="dot"></span><span class="qn">«Прибытие» (2016)</span></div>
+            <div class="qrow on"><span class="dot req"></span><span class="qn">«Дом, в котором…»</span></div>
+            <div class="qrow"><span class="dot"></span><span class="qn">Outer Wilds (2019)</span></div>
+            <div class="qrow"><span class="dot req"></span><span class="qn">Холодный душ</span></div>
+            <div class="qrow"><span class="dot"></span><span class="qn">«Чернобыль» (2019)</span></div>
+          </div>
+          <div>${candidateCard(CANDIDATES[1])}</div>
+        </div>`],
+    ],
+  },
+  4: {
+    note: `<b>V4 «Приборная панель».</b> Экран собран ВИДЖЕТАМИ по канону проекта — так уже
+      устроено «Пространство», и сетка с шагом виджета утверждена вами (<i>ideas/24</i>, V4).
+      Очередь — большой виджет, рядом каталог, создание и сводка последней работы агента.
+      <span class="q">Цена: карточка кандидата внутри виджета теснее, чем во весь экран.</span>`,
+    panes: [
+      ['телефон: виджеты колонной', `
+        <div class="grid">
+          <div class="card w2"><div class="h">Работа агента · вчера в 23:40</div>
+            <div class="stat"><div><b>17</b>кандидатов</div><div><b>9</b>из заявок</div><div><b>0</b>без источника</div></div>
+          </div>
+          <div class="w2">${candidateCard(CANDIDATES[0], '<span class="num">очередь · 1 из 17</span>')}</div>
+          ${catalogCard(3)}
+          ${createCard()}
+        </div>`],
+      ['вторая карточка очереди', `
+        <div class="grid">
+          <div class="w2">${candidateCard(CANDIDATES[1], '<span class="num">очередь · 2 из 17</span>')}</div>
+        </div>`],
+    ],
+    desk: [
+      ['десктоп: сетка из виджетов', `
+        <div class="grid">
+          <div class="card w4"><div class="h">Работа агента · вчера в 23:40</div>
+            <div class="stat">
+              <div><b>17</b>кандидатов на вычитке</div>
+              <div><b>9</b>из заявок людей</div>
+              <div><b>0</b>без источника</div>
+              <div><b>5111</b>измерений в каталоге</div>
+            </div>
+          </div>
+          <div class="w2">${candidateCard(CANDIDATES[0], '<span class="num">1 из 17</span>')}</div>
+          <div class="w2">${candidateCard(CANDIDATES[1], '<span class="num">2 из 17</span>')}</div>
+          <div class="w2">${catalogCard()}</div>
+          <div class="w2">${createCard()}</div>
+        </div>`],
+    ],
+  },
+};
+
+const stage = document.getElementById('stage');
+const panes = document.getElementById('panes');
+const note = document.getElementById('note');
+let current = '1';
+
+const pane = (label, inner) => `<div class="pane"><div>${shell(inner)}</div><div class="cap">${label}</div></div>`;
+
+function render() {
+  const v = VARIANTS[current];
+  note.innerHTML = v.note;
+  const set = stage.dataset.w === '1440' && v.desk ? v.desk : v.panes;
+  panes.innerHTML = set.map(([label, inner]) => pane(label, inner)).join('');
+}
+
+document.querySelectorAll('.picker button[data-v]').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    current = b.dataset.v;
+    render();
+  };
+});
+
+document.getElementById('theme').onclick = (e) => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  e.target.textContent = dark ? '☾ тёмная' : '☀ светлая';
+};
+
+document.getElementById('width').onclick = (e) => {
+  const wide = stage.dataset.w === '1440';
+  stage.dataset.w = wide ? '390' : '1440';
+  e.target.textContent = wide ? 'Телефон 390' : 'Десктоп 1440';
+  render();
+};
+
+render();
+</script>
+</body>
+</html>
