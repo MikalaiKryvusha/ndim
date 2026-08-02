@@ -1,0 +1,29 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_014_prod_numbers_forks.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-02T07:36:37.768Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "В",
+			"text": "",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "В",
+			"text": "",
+			"comment": ""
+		},
+		"В3": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В4": {
+			"choice": "",
+			"text": "скину в чат два моих топа",
+			"comment": ""
+		}
+	}
+}

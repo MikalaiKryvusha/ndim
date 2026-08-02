@@ -686,6 +686,7 @@ export async function runCycle() {
   const writtenNow = []; // писать в writtenTops можно только после успешного коммита
   const readySet = new Set(readyUids);
   const similarities = [];
+  const bests = []; // верхние строки топов — по одному числу на человека (`plans/28` §8)
   let written = 0;
   let checked = 0; // пользователей, чьи топы пересчитаны и сверены в этом цикле
   for (const [uid, point] of pointsCache) {
@@ -706,7 +707,22 @@ export async function runCycle() {
     const top = emptied ? [] : topFor(uid, pointsCache);
     // «Связей рассчитано» и средняя похожесть — про Пространство, а гостя в Пространстве
     // не видно (В3). Его собственный топ мы считаем и пишем, но в статистику не пускаем.
-    if (!point.anonymous) similarities.push(...top.map((entry) => entry.similarity));
+    if (!point.anonymous) {
+      similarities.push(...top.map((entry) => entry.similarity));
+      /*
+       * ВЕРХНЯЯ СТРОКА — то, что человек видит, открыв «Связи» (`plans/28` §8).
+       *
+       * Берётся здесь и только здесь, потому что `topFor` уже отсортировал топ по убыванию
+       * (строка 401) — значит вершина стоит первой, и она достаётся БЕСПЛАТНО: ни одного
+       * лишнего чтения базы, ни одного лишнего прохода.
+       *
+       * 🔑 Почему без этого нельзя было обойтись: `avgSimilarity` усредняет ВСЕ строки всех
+       * топов вместе с хвостом и потому не отвечает на вопрос «что увидит человек» ни при
+       * каких данных (замер боя 2026-08-02, `EXP-0124`). Пустой топ сюда не попадает: у него
+       * нет верхней строки, а сколько таких людей — видно как `people − bestMatch.people`.
+       */
+      if (top.length > 0) bests.push(top[0].similarity);
+    }
 
     const fingerprint = topFingerprint(top);
     const changed = writtenTops.get(uid) !== fingerprint;
@@ -734,7 +750,7 @@ export async function runCycle() {
     updated: point.updated,
     firstSeen: point.firstSeen,
   }));
-  const stats = computeSpaceStats({ points: summaries, dimsCount, newDims, similarities }, now);
+  const stats = computeSpaceStats({ points: summaries, dimsCount, newDims, similarities, bests }, now);
   writes.push((batch) => batch.set(db.doc('space/stats'), stats));
   writes.push((batch) => batch.set(db.doc(`space/stats/daily/${dayKey(now)}`), snapshotOf(stats)));
   // Публичная витрина лендинга («С нами уже N человек», bugs/07): РОВНО тот же счёт людей,

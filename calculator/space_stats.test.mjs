@@ -71,6 +71,23 @@ describe('Сервер синхронизации пишет статистик�
     assert.ok(stats.avgSimilarity > 0 && stats.avgSimilarity <= 100);
   });
 
+  /*
+   * ВЕРХНЯЯ СТРОКА ТОПА (`plans/28` §8). Юнит-тесты `stats.ts` доказывают, что агрегат СЧИТАЕТСЯ
+   * верно; здесь доказывается, что вычислитель его действительно ЗАПОЛНЯЕТ — то есть что провод
+   * от отсортированного топа до документа проложен. Без этой проверки поле могло бы вечно
+   * приезжать в бой пустым при всех зелёных юнит-тестах.
+   */
+  test('верхняя строка топа записана — и гость в неё не попадает', async () => {
+    const stats = (await db.doc('space/stats').get()).data();
+    assert.ok(stats.bestMatch, 'bestMatch должен быть записан вычислителем');
+
+    assert.equal(stats.bestMatch.people, 2, 'вершина есть у обоих жителей; гость в счёт не идёт');
+    assert.ok(stats.bestMatch.max > 0, 'лучшая похожесть Пространства не может быть нулевой');
+    assert.equal(stats.bestMatch.max, stats.bestMatch.median, 'двое, связь одна и та же — вершины равны');
+    // Топ здесь ровно из одной строки у каждого, поэтому вершина и есть вся связь.
+    assert.equal(stats.bestMatch.avg, stats.avgSimilarity, 'при топе из одной строки среднее совпадает');
+  });
+
   test('новое измерение попадает в события суток вместе со своим именем', async () => {
     const stats = (await db.doc('space/stats').get()).data();
     assert.deepEqual(

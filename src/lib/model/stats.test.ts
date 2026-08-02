@@ -45,8 +45,12 @@ const person = (over: Partial<PointSummary> = {}): PointSummary => ({
   ...over,
 });
 
-const stats = (points: readonly PointSummary[], similarities: readonly number[] = [], dimsCount = 4) =>
-  computeSpaceStats({ points, dimsCount, newDims: [], similarities }, NOW);
+const stats = (
+  points: readonly PointSummary[],
+  similarities: readonly number[] = [],
+  dimsCount = 4,
+  bests: readonly number[] = [],
+) => computeSpaceStats({ points, dimsCount, newDims: [], similarities, bests }, NOW);
 
 describe('Кто живёт в Пространстве', () => {
   test('человек с оценками считается; гость — нет', () => {
@@ -114,6 +118,68 @@ describe('Похожесть по всему Пространству', () => {
 
   test('связей нет — распределение нулевое, а не поделённое на ноль', () => {
     assert.deepEqual(similarityDistribution([]), { high: 0, upper: 0, middle: 0, low: 0 });
+  });
+});
+
+/*
+ * ВЕРХНЯЯ СТРОКА ТОПА (`plans/28` §8, `EXP-0124`).
+ *
+ * Эти тесты стерегут ровно ту ошибку, которая стоила проекта одного неверного вывода: средняя
+ * похожесть по ВСЕМ строкам не отвечает на вопрос «что увидит человек, открыв „Связи“», потому
+ * что человек видит ВЕРХНЮЮ строку. Первый тест написан так, чтобы старое поле и новое дали
+ * РАЗНЫЕ числа: если кто-нибудь однажды «упростит» `bestMatch` до синонима `avgSimilarity`,
+ * тест обязан покраснеть.
+ */
+describe('Верхняя строка топа: что человек видит, открыв «Связи»', () => {
+  test('среднее по ВЕРШИНАМ — не то же самое, что среднее по всем строкам', () => {
+    // Двое: у первого топ 30/2/2/2, у второго 20/2. Все строки: среднее ≈ 9,7 → 10.
+    // Вершины: 30 и 20 → среднее 25. Одно число описывает хвост, другое — то, что видно.
+    const result = stats([person(), person()], [30, 2, 2, 2, 20, 2], 4, [30, 20]);
+    assert.equal(result.avgSimilarity, 10, 'старое поле по-прежнему усредняет весь хвост');
+    assert.equal(result.bestMatch?.avg, 25, 'новое поле усредняет только вершины');
+    assert.notEqual(result.avgSimilarity, result.bestMatch?.avg, 'если сравнялись — поле выродилось');
+  });
+
+  test('медиана устойчива к выбросу, а среднее — нет', () => {
+    // Один счастливчик с 90 % и четверо с 4 %: среднее 21, медиана 4.
+    // Человеку важнее медиана — она говорит, что видит ТИПИЧНЫЙ житель.
+    const best = stats([person()], [], 4, [4, 4, 90, 4, 4]).bestMatch;
+    assert.equal(best?.avg, 21);
+    assert.equal(best?.median, 4);
+    assert.equal(best?.max, 90);
+  });
+
+  test('медиана при чётном числе людей — среднее двух средних', () => {
+    assert.equal(stats([person()], [], 4, [10, 20, 30, 41]).bestMatch?.median, 25);
+  });
+
+  test('человек без единой связи в вершины не попадает, и это ВИДНО разностью', () => {
+    // Трое жителей, но топ есть только у двоих: 94 − 2 = у одного «Связи» пусты.
+    const result = stats([person(), person(), person()], [50, 50], 4, [50, 50]);
+    assert.equal(result.people, 3);
+    assert.equal(result.bestMatch?.people, 2, 'третий без связей — его вершины не существует');
+  });
+
+  test('вершин нет вовсе — нули, а не деление на ноль и не NaN', () => {
+    const best = stats([person()], [], 4, []).bestMatch;
+    assert.deepEqual(best, {
+      people: 0,
+      avg: 0,
+      median: 0,
+      max: 0,
+      distribution: { high: 0, upper: 0, middle: 0, low: 0 },
+    });
+  });
+
+  test('распределение вершин считается по тем же полосам', () => {
+    const best = stats([person()], [], 4, [90, 70, 50, 10]).bestMatch;
+    assert.deepEqual(best?.distribution, { high: 25, upper: 25, middle: 25, low: 25 });
+  });
+
+  test('старый вызов без вершин не падает: в бою до выката такого поля нет', () => {
+    // Совместимость важнее красоты: документ, записанный прежним билдом сервера, поля не несёт.
+    const result = computeSpaceStats({ points: [person()], dimsCount: 4, newDims: [], similarities: [50] }, NOW);
+    assert.equal(result.bestMatch?.people, 0);
   });
 });
 

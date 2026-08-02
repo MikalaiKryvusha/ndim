@@ -53,6 +53,33 @@ export interface SimilarityDistribution {
   /** 0–39 % */ readonly low: number;
 }
 
+/**
+ * ВЕРХНЯЯ СТРОКА ТОПА — то, что человек реально видит, открыв «Связи» (`plans/28` §8).
+ *
+ * 🔴 **Зачем это отдельно от `avgSimilarity`.** Замер боя 2026-08-02 дал `avgSimilarity = 3`, и
+ * первый вывод «значит новичок видит 3 %» оказался НЕВЕРЕН: `avgSimilarity` — среднее по всем
+ * строкам всех топов, вместе с длинным хвостом, а человек смотрит на ВЕРХНЮЮ строку
+ * отсортированного списка. Арифметика: те же боевые агрегаты (2346 связей, среднее 3,
+ * `distribution.low = 100`) одинаково совместимы и с «лучшая связь у всех 3 %», и с «лучшая
+ * связь у всех 25 %». То есть прежние поля на вопрос «что увидит человек» ответить НЕ МОГУТ
+ * ни при каких данных — нужен агрегат по вершинам (`EXP-0124`).
+ *
+ * Считается бесплатно: топ к этому моменту уже построен и отсортирован, лишних чтений базы нет.
+ * ПДн здесь тоже нет — это числа о Пространстве, а не чьи-то оценки.
+ */
+export interface BestMatchStats {
+  /** У скольких жителей есть хотя бы одна связь (непустой топ). */
+  readonly people: number;
+  /** Средняя ВЕРХНЯЯ похожесть по этим людям, 0…100. */
+  readonly avg: number;
+  /** Медианная верхняя похожесть, 0…100 — она устойчива к выбросам, среднее нет. */
+  readonly median: number;
+  /** Лучшая верхняя похожесть во всём Пространстве, 0…100. */
+  readonly max: number;
+  /** Распределение ВЕРХНИХ строк по тем же полосам, что и `distribution`. */
+  readonly distribution: SimilarityDistribution;
+}
+
 /** `space/stats` — текущее состояние Пространства. Пишет сервер синхронизации. */
 export interface SpaceStatsDoc {
   readonly computedAt: Millis;
@@ -71,6 +98,14 @@ export interface SpaceStatsDoc {
   /** Средняя похожесть по всем рассчитанным связям, 0…100. */
   readonly avgSimilarity: number;
   readonly distribution: SimilarityDistribution;
+  /**
+   * Агрегат по ВЕРХНИМ строкам топов (`plans/28` §8).
+   *
+   * ⚠️ Поле НЕОБЯЗАТЕЛЬНОЕ намеренно, и это не про будущее, а про НАСТОЯЩЕЕ: в бою до
+   * пересборки образа сервера синхронизации лежит документ, записанный прежним билдом, — там
+   * этого поля нет. Читатель обязан пережить его отсутствие, а не считать `undefined` нулём.
+   */
+  readonly bestMatch?: BestMatchStats;
   /** Измерения, появившиеся за последние сутки. Пусто — за сутки не появилось ни одного. */
   readonly newDims: readonly NewDim[];
 }
@@ -199,11 +234,27 @@ export function similarityDistribution(similarities: readonly number[]): Similar
 }
 
 /**
+ * Медиана целых процентов. При чётном числе — среднее двух средних, округлённое.
+ * Нужна рядом со средним, потому что среднее верхних строк тянут вниз люди с одной
+ * случайной связью, а медиана показывает, что видит ТИПИЧНЫЙ человек.
+ */
+function medianOf(values: readonly number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = sorted.length >> 1;
+  return sorted.length % 2 === 1 ? sorted[middle] : Math.round((sorted[middle - 1] + sorted[middle]) / 2);
+}
+
+/**
  * Считает всё состояние Пространства за один проход.
  *
  * `similarities` — похожести ВСЕХ строк всех топов последней синхронизации (их число и есть
  * «Связей рассчитано»). Гости в них не попадают: сервер синхронизации не пускает гостя
  * в чужие топы (plans/03, В3), — поэтому и в среднюю похожесть они не вмешиваются.
+ *
+ * `bests` — по ОДНОМУ числу на человека: похожесть ВЕРХНЕЙ строки его топа. Люди с пустым
+ * топом сюда не попадают вовсе (у них нет верхней строки), и это не потеря: сколько их —
+ * видно как `people − bestMatch.people`. Зачем этот вход отдельно — см. `BestMatchStats`.
  */
 export function computeSpaceStats(
   input: {
@@ -211,6 +262,7 @@ export function computeSpaceStats(
     readonly dimsCount: number;
     readonly newDims: readonly NewDim[];
     readonly similarities: readonly number[];
+    readonly bests?: readonly number[];
   },
   now: Millis,
 ): SpaceStatsDoc {
@@ -232,6 +284,16 @@ export function computeSpaceStats(
 
   const total = input.similarities.reduce((sum, value) => sum + value, 0);
 
+  const bests = input.bests ?? [];
+  const bestTotal = bests.reduce((sum, value) => sum + value, 0);
+  const bestMatch: BestMatchStats = {
+    people: bests.length,
+    avg: bests.length === 0 ? 0 : Math.round(bestTotal / bests.length),
+    median: medianOf(bests),
+    max: bests.length === 0 ? 0 : Math.max(...bests),
+    distribution: similarityDistribution(bests),
+  };
+
   return {
     computedAt: now,
     people: inhabitants.length,
@@ -243,6 +305,7 @@ export function computeSpaceStats(
     relations: input.similarities.length,
     avgSimilarity: input.similarities.length === 0 ? 0 : Math.round(total / input.similarities.length),
     distribution: similarityDistribution(input.similarities),
+    bestMatch,
     newDims: input.newDims,
   };
 }
