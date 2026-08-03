@@ -45,10 +45,12 @@
     seconds,
     signed,
     starsUnit,
-    type Lang,
   } from '$lib/ui/format';
+  import { lang as currentLang } from '$lib/ui/lang.svelte';
 
-  let lang = $state<Lang>('ru');
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у экрана больше нет:
+  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
+  const lang = $derived(currentLang());
   // 'prod' — публичный домен: экраны 2.0 ещё не открыты, показываем заглушку со ссылкой на 1.x.
   // Тёплый первый кадр (`ideas/18`). Состояние сервера `peekSpace` пересчитывает относительно
   // «сейчас», поэтому из памяти приходят цифры, а лампочка остаётся живой, а не замороженной.
@@ -80,8 +82,6 @@
   }
 
   onMount(async () => {
-    const saved = localStorage.getItem('ndim-lang');
-    if (saved === 'en' || saved === 'ru') lang = saved;
     try {
       // Цифры Пространства открыты каждому, кто вошёл, включая гостя. Не вошёл — правила
       // молчат: агрегаты продукта не витрина лендинга.
@@ -370,7 +370,7 @@
 <div class="screen">
   <SideRail active="space" {lang} />
 
-  <AppBar {lang} onLang={(next) => (lang = next)} />
+  <AppBar />
   <PullToRefresh onRefresh={refreshScreen} />
 
   <main class="body">

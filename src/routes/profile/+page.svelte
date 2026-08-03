@@ -25,7 +25,8 @@
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
   // `dateOnly` ушла вместе со строкой «В Пространстве с …» (см. `accountLine`).
-  import { dateTime, num as decimal, starsUnit } from '$lib/ui/format';
+  import { dateTime, num as decimal, starsUnit, type Lang } from '$lib/ui/format';
+  import { lang as currentLang } from '$lib/ui/lang.svelte';
   import { preloadAvatars } from '$lib/data/avatar';
   // Жест «потянуть вниз» (интервью №006, В1=А — все четыре главных экрана).
   import PullToRefresh from '$lib/ui/PullToRefresh.svelte';
@@ -65,11 +66,12 @@
   import type { Audience, ProfileProperty } from '$lib/model/visibility';
   import { isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
 
-  type Lang = 'ru' | 'en';
   // Вкладки «Личное/Видимость» упразднены (слово владельца 2026-07-27): предпросмотр
   // аудиторий — не таба, а ОКНО за кнопкой «Как меня видят»; «Назад» возвращает в профиль.
 
-  let lang = $state<Lang>('ru');
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Здесь стояла ТРЕТЬЯ копия типа `Lang` и своя
+  // копия состояния; копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
+  const lang = $derived(currentLang());
 
   /**
    * Окно «Как меня видят» живёт В ИСТОРИИ БРАУЗЕРА (ideas/21 п. 3).
@@ -864,13 +866,6 @@
   const NAME_FIELD_KEYS = ['firstRu', 'firstEn', 'nickRu', 'nickEn', 'middleRu', 'middleEn', 'lastRu', 'lastEn'] as const;
   const BORN_FIELD_KEYS = ['year', 'month', 'day'] as const;
 
-  onMount(() => {
-    const saved = localStorage.getItem('ndim-lang');
-    if (saved === 'en' || saved === 'ru') lang = saved;
-  });
-
-  // Смену языка и её persist делает шапка (bugs/39) — экран лишь принимает новое значение.
-
   // ── Отображение значений ──
   const loc = (value: Localized | undefined | null): string | null =>
     value ? (value[lang] ?? value.ru ?? value.en) : null;
@@ -1073,8 +1068,6 @@
   <SideRail active="profile" {lang} />
 
   <AppBar
-    {lang}
-    onLang={(next) => (lang = next)}
     badge={guest ? t.guest.pill[lang] : undefined}
     onBadge={() => (guestCard = !guestCard)}
   />

@@ -33,8 +33,32 @@
 			(function () {
 				try {
 					var t = localStorage.getItem('ndim-theme') || 'light';
-					var l = localStorage.getItem('ndim-lang') || 'ru';
 					var d = document.documentElement;
+
+					// ── ЯЗЫК: АДРЕС → ПАМЯТЬ → БРАУЗЕР (plans/39, шаг 1) ──
+					// 🔴 Порядок ОБЯЗАН совпадать с `$lib/ui/lang.svelte.ts` → `readInitial()`.
+					// Это ЕДИНСТВЕННАЯ копия правила, которую нельзя убрать в модуль: скрипт
+					// исполняется до всякого JS приложения, ради первого кадра без мигания.
+					// Стережёт совпадение `tools/verify-lang-module.mjs`.
+					//
+					// Прежняя строка была `localStorage.getItem('ndim-lang') || 'ru'` — она
+					// СЛЕПО перезаписывала `lang`, который серверный хук уже поставил из адреса.
+					// Человек с `ru` в памяти, открывший `/en/…`, получал английский текст,
+					// объявленный русским: у робота работало, у человека ломалось
+					// (`hooks.server.ts` называет этот долг прямым текстом).
+					var seg = location.pathname.split('/')[1];
+					var l = seg === 'ru' || seg === 'en' ? seg : localStorage.getItem('ndim-lang');
+					if (l !== 'ru' && l !== 'en') {
+						// Пустая память — спрашиваем браузер (интервью №024, В1 = А):
+						// просит русский, даём русский, иначе английский.
+						var asked = [navigator.language].concat(navigator.languages || []);
+						l = asked.some(function (x) {
+							return typeof x === 'string' && x.toLowerCase().indexOf('ru') === 0;
+						})
+							? 'ru'
+							: 'en';
+					}
+
 					d.setAttribute('data-theme', t);
 					d.setAttribute('lang', l);
 					var m = document.querySelector('meta[name="theme-color"]');

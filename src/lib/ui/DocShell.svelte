@@ -7,13 +7,14 @@
   //
   // Язык живёт здесь: страницы получают его снаружи через сниппет, чтобы не заводить
   // собственный переключатель на каждой из восьми страниц.
-  import { onMount, type Snippet } from 'svelte';
+  import { type Snippet } from 'svelte';
   import { page } from '$app/state';
   import AppBar from '$lib/ui/AppBar.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { SITE_ORIGIN } from '$lib/site';
+  import { lang as currentLang } from '$lib/ui/lang.svelte';
   import type { Lang } from '$lib/ui/format';
 
   let {
@@ -25,14 +26,10 @@
     children: Snippet<[Lang]>;
   } = $props();
 
-  let lang = $state<Lang>('ru');
-
-  onMount(() => {
-    const saved = localStorage.getItem('ndim-lang');
-    if (saved === 'en' || saved === 'ru') lang = saved;
-  });
-
-  // Смену языка и её persist делает шапка (bugs/39) — оболочка лишь принимает новое значение.
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у оболочки больше нет:
+  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`). Смену языка и её
+  // сохранение делает шапка через тот же модуль.
+  const lang = $derived(currentLang());
 
   // Стрелка — иконка набора (bugs/17, `back.svg` из 1.x), а не типографский ‹:
   // у глифа нет ни сетки, ни веса, и он не встаёт в линию с текстом.
@@ -70,7 +67,7 @@
 
 <div class="screen">
   <SideRail active="menu" {lang} />
-  <AppBar {lang} onLang={(next) => (lang = next)} />
+  <AppBar />
 
   <main class="body">
     <a class="back" href="/menu"><Icon name="back" size={13} />{back[lang]}</a>

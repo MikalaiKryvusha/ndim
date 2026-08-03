@@ -26,6 +26,7 @@
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
   import type { Lang } from '$lib/ui/format';
+  import { lang as currentLang, setLang } from '$lib/ui/lang.svelte';
   import { MOTION } from '$lib/ui/motion';
   import { SITE_ORIGIN } from '$lib/site';
   // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
@@ -33,7 +34,9 @@
   // Тема — общий источник истины (bugs/53): её же читает и переключает шапка.
   import { theme, setTheme } from '$lib/ui/theme.svelte';
 
-  let lang = $state<Lang>('ru');
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у экрана больше нет:
+  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
+  const lang = $derived(currentLang());
   // Данные профиля «Меню» больше НЕ читает (ideas/19): единственным их потребителем была
   // карточка «Аккаунт», а она переехала на «Профиль». Экрану остались разделы и виджет
   // версий — из данных ему нужен только `space/server` (и то лишь вошедшему).
@@ -48,10 +51,9 @@
   useViewMemory({ path: '/menu', warm: true });
 
   onMount(async () => {
-    const savedLang = localStorage.getItem('ndim-lang');
-    if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
-    // Тема живёт в общем источнике (bugs/53) — ни локального состояния, ни наблюдателя
-    // за атрибутом здесь больше нет: сегмент «Вид» и кнопка шапки читают одно значение.
+    // Тема и ЯЗЫК живут в общих источниках (`bugs/53`, `plans/39` шаг 1) — ни локального
+    // состояния, ни наблюдателя за атрибутом здесь нет: сегмент «Вид» и кнопки шапки
+    // читают одно значение и переключают его же.
 
     try {
       // Меню работает и без входа: документы и версии от данных не зависят.
@@ -64,12 +66,6 @@
       // Меню обязано работать и без стенда: документы и версии не зависят от данных.
     }
   });
-
-  function setLang(next: Lang) {
-    lang = next;
-    document.documentElement.setAttribute('lang', next);
-    localStorage.setItem('ndim-lang', next);
-  }
 
   // Системное «поделиться» переехало на страницу «Пригласить друзей» (`/menu/share`,
   // bugs/47) — вместе с сеткой соцсетей и прямой ссылкой, как было в 1.x. Здесь осталось
@@ -129,7 +125,7 @@
 
 <div class="screen">
   <SideRail active="menu" {lang} />
-  <AppBar {lang} onLang={(next) => (lang = next)} />
+  <AppBar />
 
   <main class="body">
     <h1 class="screen-title">{t.title[lang]}</h1>

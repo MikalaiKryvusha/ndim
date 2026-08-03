@@ -32,16 +32,16 @@
   } from '$lib/data/account';
   import { MOTION } from '$lib/ui/motion';
   import type { Lang } from '$lib/ui/format';
+  import { lang as currentLang } from '$lib/ui/lang.svelte';
 
-  let lang = $state<Lang>('ru');
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у экрана больше нет:
+  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
+  const lang = $derived(currentLang());
   let stage = $state<'working' | 'done' | 'not-yet' | 'error'>('working');
   let info = $state<ActionInfo | null>(null);
   let error = $state('');
 
   onMount(async () => {
-    const saved = localStorage.getItem('ndim-lang');
-    if (saved === 'en' || saved === 'ru') lang = saved;
-
     const code = new URLSearchParams(location.search).get('oobCode');
     if (code === null || code === '') {
       // Человек попал сюда без ссылки — набрал адрес руками или ссылка обрезалась почтовиком.

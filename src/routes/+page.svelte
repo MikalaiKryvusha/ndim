@@ -18,9 +18,11 @@
   import { track } from '$lib/data/funnel';
   import { landingDims, landingPeople, landingRatings, landingRelations } from '$lib/data/metrics';
   import { endBoot, hasSession } from '$lib/data/session';
-  import { num, peopleUnit } from '$lib/ui/format';
+  import { num, peopleUnit, type Lang } from '$lib/ui/format';
   // Тема — общий источник истины (bugs/53): лендинг, шапка и «Меню» читают одно значение.
   import { theme, toggleTheme } from '$lib/ui/theme.svelte';
+  // Язык — такой же общий источник (`plans/39` шаг 1).
+  import { lang as currentLang, setLang } from '$lib/ui/lang.svelte';
 
   /** Дверь в продукт: вход, гостевой режим и профиль — всё на одном экране. */
   const APP_URL = '/profile';
@@ -45,11 +47,11 @@
    */
   let demoUrl = $state(APP_URL);
 
-  type Lang = 'ru' | 'en';
-
-  // Стартовые значения совпадают с пререндером (RU + светлая), поэтому гидрация не рвётся.
-  // Реальный сохранённый выбор подхватываем в onMount (только в браузере).
-  let lang = $state<Lang>('ru');
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Здесь стояла своя копия типа `Lang`, своя копия
+  // состояния и свой `setLang` — то самое устройство, за которое проект уже заплатил дефектом
+  // `bugs/53` на теме. Стартовое значение по-прежнему совпадает с пререндером (RU), поэтому
+  // гидрация не рвётся: сохранённый выбор модуль подхватывает на клиенте.
+  const lang = $derived(currentLang());
 
   /*
    * «С нами уже N человек» — число ГОТОВО К ПЕРВОМУ КАДРУ (bugs/81).
@@ -113,17 +115,10 @@
       // Витрину людей здесь больше не читаем — она в пререндере (bugs/81, см. `joinedPeople`).
     });
 
-    // Тема — общий источник истины (bugs/53), он сам читает атрибут инлайн-скрипта.
-    const savedLang = localStorage.getItem('ndim-lang');
-    if (savedLang === 'en' || savedLang === 'ru') lang = savedLang;
+    // Тема и язык — общие источники истины (bugs/53, `plans/39`): они сами читают то, что
+    // проставил инлайн-скрипт, и сами хранят выбор.
     if (['localhost', '127.0.0.1'].includes(location.hostname)) demoUrl = '/profile?guest=1';
   });
-
-  function setLang(next: Lang) {
-    lang = next;
-    document.documentElement.setAttribute('lang', next);
-    localStorage.setItem('ndim-lang', next);
-  }
 
   // ── Двуязычные строки (RU — основной, из онбординга владельца) ──
   const t = {

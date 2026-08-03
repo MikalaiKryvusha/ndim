@@ -33,12 +33,15 @@
   } from '$lib/data/relations';
   import { technicalDetail } from '$lib/ui/errors';
   import { bornWithAge, dateOnly, dateTime, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
+  import { lang as currentLang } from '$lib/ui/lang.svelte';
   import { MOTION } from '$lib/ui/motion';
   // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
   import { useViewMemory } from '$lib/ui/view-memory';
   import type { Localized } from '$lib/model/schema';
 
-  let lang = $state<Lang>('ru');
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у экрана больше нет:
+  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
+  const lang = $derived(currentLang());
   // 'prod' — публичный домен: экраны 2.0 ещё не открыты, показываем заглушку со ссылкой на 1.x.
   // Тёплый первый кадр (`ideas/18`): экран уже открывали в этой сессии — рисуем сразу из
   // памяти, без карточки «Загрузка». `onMount` тихо освежит топ, если минута свежести истекла.
@@ -139,8 +142,6 @@
   }
 
   onMount(async () => {
-    const saved = localStorage.getItem('ndim-lang');
-    if (saved === 'en' || saved === 'ru') lang = saved;
     try {
       // Связи — величина приватная: без входа их не существует, и показывать здесь нечего.
       const uid = await currentSession();
@@ -283,7 +284,7 @@
 <div class="screen">
   <SideRail active="relations" {lang} />
 
-  <AppBar {lang} onLang={(next) => (lang = next)} />
+  <AppBar />
   <PullToRefresh onRefresh={refreshScreen} />
 
   <main class="body">

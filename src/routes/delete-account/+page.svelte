@@ -45,10 +45,13 @@
   import { technicalDetail } from '$lib/ui/errors';
   import { MOTION } from '$lib/ui/motion';
   import type { Lang } from '$lib/ui/format';
+  import { lang as currentLang } from '$lib/ui/lang.svelte';
 
   const RETURN_PATH = '/delete-account';
 
-  let lang = $state<Lang>('ru');
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у экрана больше нет:
+  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
+  const lang = $derived(currentLang());
   let stand = $state<'connecting' | 'ready' | 'guest' | 'signedout' | 'down'>('connecting');
   let standError = $state('');
   let facts = $state<AccountFacts | null>(null);
@@ -109,9 +112,6 @@
   }
 
   onMount(async () => {
-    const saved = localStorage.getItem('ndim-lang');
-    if (saved === 'en' || saved === 'ru') lang = saved;
-
     try {
       /*
        * 🔴 ВХОД ПО ССЫЛКЕ РАЗБИРАЕТСЯ ЗДЕСЬ — И ОБЯЗАН БЫТЬ ПЕРВЫМ.

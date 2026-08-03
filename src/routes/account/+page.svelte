@@ -46,9 +46,12 @@
   import { currentSession } from '$lib/data/profile';
   import { technicalDetail } from '$lib/ui/errors';
   import { dateTime, type Lang } from '$lib/ui/format';
+  import { lang as currentLang } from '$lib/ui/lang.svelte';
   import { MOTION } from '$lib/ui/motion';
 
-  let lang = $state<Lang>('ru');
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у экрана больше нет:
+  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
+  const lang = $derived(currentLang());
   /*
    * Состояния экрана — те же четыре, что у «Профиля», и по той же причине.
    * `guest` вынесен отдельно от `ready`: у гостя нет ни почты, ни даты создания, и показывать
@@ -147,9 +150,6 @@
   let deleter = $state<DeleteAccount | undefined>();
 
   onMount(async () => {
-    const saved = localStorage.getItem('ndim-lang');
-    if (saved === 'en' || saved === 'ru') lang = saved;
-
     try {
       // Сессию спрашиваем ТЕМ ЖЕ способом, что и «Профиль»: там живут стендовые двери
       // `?as=guest` и `?as=none`, без которых гостевые ветки никем не проверяются.
@@ -349,7 +349,7 @@
 
 <div class="screen">
   <SideRail active="profile" {lang} />
-  <AppBar {lang} onLang={(next) => (lang = next)} />
+  <AppBar />
 
   <main class="body">
     <!-- Дверь назад — в «Профиль», откуда сюда и попадают. Иконка набора, а не типографский

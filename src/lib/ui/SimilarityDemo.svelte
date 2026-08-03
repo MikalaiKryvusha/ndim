@@ -13,7 +13,10 @@
   // проявляются готовыми — и в кружках карточек, и на карте, и в оверлее.
   import { ready } from '$lib/ui/ready';
 
-  type Lang = 'ru' | 'en';
+  // Тип языка — общий (`$lib/ui/format`), а не своя копия: копий этой строки в проекте было
+  // четыре, и расходятся они молча (`plans/39` шаг 1).
+  import type { Lang } from '$lib/ui/format';
+
   let { lang, appUrl }: { lang: Lang; appUrl: string } = $props();
 
   // ── Измерения демо: понятные, нечувствительные качества ──

@@ -5,8 +5,12 @@
   //
   // Язык — ВЫПАДАЮЩИМ меню, тема — кнопкой рядом (bugs/39, слово владельца: «как было в
   // оригинальном NDim» — в 1.x в правом верхнем углу жила кнопка «Ru» с выпадашкой).
-  // Persist языка и темы (html-атрибут + localStorage) шапка делает сама: экраны получают
-  // только колбэк onLang и держат своё состояние — семь одинаковых toggleLang им не нужны.
+  //
+  // 🔴 Язык и тема живут в ОБЩИХ модулях и пропсами сюда не передаются (`plans/39` шаг 1).
+  // Раньше шапка принимала `lang` и колбэк `onLang`, а каждый из семи экранов держал свою
+  // копию состояния — ровно то устройство, за которое проект уже заплатил дефектом `bugs/53`
+  // на теме: две копии расходятся молча и в ту сторону, где сборка зелёная. Список языков
+  // тоже общий (`$lib/content/langs`), чтобы третий язык добавлялся в одном месте.
   //
   // Шапка приклеена к верху (bugs/34); фон — только непрозрачный токен (bugs/22).
   //
@@ -19,17 +23,13 @@
   import Icon from '$lib/ui/Icon.svelte';
   import { observeBar } from '$lib/ui/barheight.svelte';
   import { theme, toggleTheme } from '$lib/ui/theme.svelte';
-  import type { Lang } from '$lib/ui/format';
+  import { lang, setLang } from '$lib/ui/lang.svelte';
+  import { LANGS, LANG_LABEL } from '$lib/content/langs';
 
   let {
-    lang,
-    onLang,
     badge,
     onBadge,
   }: {
-    lang: Lang;
-    /** Вызывается ПОСЛЕ того, как шапка сохранила выбор (атрибут + localStorage). */
-    onLang: (next: Lang) => void;
     // `| undefined` явно: у проекта exactOptionalPropertyTypes, а экраны передают
     // badge={guest ? ... : undefined}
     badge?: string | undefined;
@@ -54,15 +54,12 @@
   // ровно это и увидел владелец: «переключаю тему через Settings, кнопка в хедере
   // не переключается соответственно».
 
-  function pickLang(next: Lang) {
+  // Атрибут `lang` документа и сохранение выбора делает общий модуль — здесь остаётся
+  // только закрыть выпадашку.
+  function pickLang(next: (typeof LANGS)[number]) {
     open = false;
-    document.documentElement.setAttribute('lang', next);
-    localStorage.setItem('ndim-lang', next);
-    onLang(next);
+    setLang(next);
   }
-
-  const LANGS: readonly Lang[] = ['ru', 'en'];
-  const LANG_NAMES: Record<Lang, string> = { ru: 'Русский', en: 'English' };
 </script>
 
 <!-- Тап МИМО выпадашки или Esc закрывает её — как у контекстных меню продукта.
@@ -85,7 +82,7 @@
        и на телефоне, где до сих пор был мёртвым <span>. -->
   <a class="brand" href="/profile">
     <Brand size={26} />
-    <span class="wm">{lang === 'ru' ? 'Пространство NDim' : 'NDim Space'}</span>
+    <span class="wm">{lang() === 'ru' ? 'Пространство NDim' : 'NDim Space'}</span>
   </a>
   {#if badge}
     <button type="button" class="badge" onclick={onBadge}>◌ {badge}</button>
@@ -93,7 +90,7 @@
   <!-- Значок показывает ТЕКУЩУЮ тему (солнце = светлая), как и строка «Тема» в «Меню»:
        два переключателя одного продукта обязаны говорить об одном одинаково. Здесь
        стояли глифы ☀/☾ — иконки bugs/17 до шапки не дошли. -->
-  <button type="button" class="theme" onclick={toggleTheme} title={lang === 'ru' ? 'Тема' : 'Theme'} aria-label={lang === 'ru' ? 'Тема' : 'Theme'}>
+  <button type="button" class="theme" onclick={toggleTheme} title={lang() === 'ru' ? 'Тема' : 'Theme'} aria-label={lang() === 'ru' ? 'Тема' : 'Theme'}>
     <Icon name={theme() === 'dark' ? 'moon' : 'sun'} size={15} />
   </button>
   <span class="lang-wrap">
@@ -104,13 +101,13 @@
       aria-expanded={open}
       onclick={() => (open = !open)}
     >
-      {lang === 'ru' ? 'Ru' : 'En'}
+      {lang() === 'ru' ? 'Ru' : 'En'}
     </button>
     {#if open}
       <div class="dd" role="menu">
         {#each LANGS as code (code)}
-          <button type="button" role="menuitem" class:on={lang === code} onclick={() => pickLang(code)}>
-            <span class="tick">{lang === code ? '✓' : ''}</span>{LANG_NAMES[code]}
+          <button type="button" role="menuitem" class:on={lang() === code} onclick={() => pickLang(code)}>
+            <span class="tick">{lang() === code ? '✓' : ''}</span>{LANG_LABEL[code]}
           </button>
         {/each}
       </div>

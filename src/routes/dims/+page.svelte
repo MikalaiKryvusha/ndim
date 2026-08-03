@@ -68,6 +68,7 @@
   import { technicalDetail } from '$lib/ui/errors';
   import { GRADE_FACES } from '$lib/ui/emojiscale';
   import { votesUnit, type Lang } from '$lib/ui/format';
+  import { lang as currentLang } from '$lib/ui/lang.svelte';
   import GradeFace from '$lib/ui/GradeFace.svelte';
   import { MOTION } from '$lib/ui/motion';
   // Память вида экрана и общий возврат прокрутки (plans/08, ответ владельца В11=А).
@@ -79,7 +80,9 @@
 
   type Tab = 'all' | 'mine';
 
-  let lang = $state<Lang>('ru');
+  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у экрана больше нет:
+  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
+  const lang = $derived(currentLang());
   // Тёплый первый кадр (`ideas/18`): собранный экран и мои оценки уже в памяти приложения —
   // берём их синхронно, и возврат на «Измерения» перестаёт выглядеть загрузкой с нуля.
   // Очередь ленты приходит ТА ЖЕ САМАЯ (она случайная — пересборка перетасовала бы её).
@@ -253,9 +256,6 @@
   }
 
   onMount(() => {
-    const saved = localStorage.getItem('ndim-lang');
-    if (saved === 'en' || saved === 'ru') lang = saved;
-
     void (async () => {
       try {
         const session = await currentSession();
@@ -1176,7 +1176,7 @@
 
 <div class="screen">
   <SideRail active="dims" {lang} />
-  <AppBar {lang} onLang={(next) => (lang = next)} />
+  <AppBar />
   <PullToRefresh onRefresh={refreshScreen} />
 
   <!--
