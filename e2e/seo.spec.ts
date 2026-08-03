@@ -21,9 +21,14 @@ test('sitemap.xml: отдаётся и содержит только то, чт�
 	// `/ru/dimension/profile-qgg1lfbk` содержит те же знаки. Проверка краснела бы на исправном
 	// продукте и выглядела как «личный экран утёк в поиск» — худший вид ложной тревоги
 	// (`plans/36`, шаг 4; фаза 5 эпика ideas/30 добавила 10 222 адреса каталога).
-	expect(xml).not.toContain('<loc>https://ndimspace.app/profile</loc>');
-	expect(xml).not.toContain('<loc>https://ndimspace.app/relations</loc>');
-	expect(xml).not.toContain('<loc>https://ndimspace.app/account</loc>');
+	// 🔴 Проверяем КОНЕЦ ПУТИ, а не точный адрес: судейский проход поймал, что точная форма
+	// пропустила бы `/ru/profile` — а `plans/39` (следующая же работа) добавляет ровно языковые
+	// префиксы. Сузить проверку в том самом месте, куда работа идёт дальше, — худший момент.
+	const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+	for (const screen of ['profile', 'relations', 'account', 'space', 'dims']) {
+		const leaked = locs.filter((p) => p === `/${screen}` || p.endsWith(`/${screen}`));
+		expect(leaked, `личный экран /${screen} попал в карту сайта`).toEqual([]);
+	}
 });
 
 test('удаление аккаунта: публичная дверь открыта без входа и НЕ закрыта от поиска', async ({

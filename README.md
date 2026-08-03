@@ -97,7 +97,10 @@
 1. **Пространство** состоит из измерений и точек-людей. Каждый человек присутствует в Пространстве
    ровно одной точкой.
 2. Профиль измерений человека называется **NDim ID**.
-3. В Пространстве более пяти тысяч измерений. Полный каталог доступен на экране «Измерения».
+3. В Пространстве более пяти тысяч измерений. Полный каталог доступен на экране «Измерения», а
+   с 2026-08-03 у каждого измерения есть и собственная открытая страница — на русском и английском
+   (например, `ndimspace.app/ru/dimension/…`). Оценки на ней показываются по тому же правилу, что и
+   внутри: нет голосов — нет звёзд.
 
 ### 3.2. Измерения
 
@@ -350,7 +353,9 @@ This document is the user manual and the developer's reference.
    exactly one point.
 2. A person's profile of dimensions is called their **NDim ID**.
 3. The Space holds more than five thousand dimensions. The full catalogue is available on the
-   "Dimensions" screen.
+   "Dimensions" screen, and since 2026-08-03 every dimension also has its own public page — in
+   Russian and in English (for example, `ndimspace.app/en/dimension/…`). Ratings there follow the
+   same rule as inside: no votes, no stars.
 
 ### 3.2. Dimensions
 
