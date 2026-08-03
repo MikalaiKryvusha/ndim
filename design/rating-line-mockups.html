@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — Строка рейтинга NDSR, 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — СТРОКА РЕЙТИНГА на публичной странице измерения.
+
+     ═══ ЧТО РЕШАЮТ ЭТИ МАКЕТЫ — ОДИН вопрос ═══
+     КАК разместить фирменное имя «NDim Space Rating» рядом с оценкой, не отняв у звёзд их
+     место. Звёзды — «главная ценная метрика измерения» (Ваши слова), и имя не должно их
+     отодвигать; но и безымянная оценка читается как чей-то случайный агрегат.
+
+     🔴 ПОЧЕМУ ЭТИ МАКЕТЫ ВООБЩЕ ПОЯВИЛИСЬ. Агент поставил подпись одним своим решением, минуя
+     правило четырёх макетов, — и она сдвинула звёзды. Вы это увидели сразу. Правило нарушил
+     агент, а не обстоятельства: канон говорит, что ключевое UI-решение утверждает автор.
+
+     ═══ ЧТО ИМИ НЕ РЕШАЕТСЯ (уже закрыто — не выбирайте дважды) ═══
+       · Имя «NDim Space Rating» не переводится и пишется одинаково на всех языках.
+       · Счётчик показывается при ЛЮБОМ числе оценивших, формулировка «оценено N людьми».
+       · Звёзд нет вовсе, когда оценок нет, — там серый текст «Ещё без голосов».
+       · Шкала 0…10, одиннадцать значений; ноль — законная оценка.
+     ───────────────────────────────────────────────────────────────────────── */
+
+  :root {
+    --bg: #0b1420; --panel: #111d2c; --edge: #1e3247;
+    --heading: #eef6ff; --text: #cfe0ef; --dim: #8fa9c0; --faint: #6a819a;
+    --primary: #1467d6; --star: #f5b301; --star-off: #2b415a;
+  }
+  html[data-theme='light'] {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #dde6f0;
+    --heading: #12263c; --text: #26405a; --dim: #5b7288; --faint: #7d8fa3;
+    --primary: #1467d6; --star: #eda200; --star-off: #d6dfe9;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  .note {
+    padding: 12px 16px; background: #0d1b2a; color: #b7cde0; font-size: 13px; line-height: 1.55;
+    border-bottom: 1px solid #1d3247;
+  }
+  .note b { color: #fff; }
+
+  .stage { padding: 24px 14px 60px; background: var(--bg); }
+  .panes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .pane { display: flex; flex-direction: column; gap: 8px; }
+  .pane > .cap { color: var(--dim); font-size: 12px; text-align: center; max-width: 390px; }
+  .stage[data-w='1440'] .pane > .cap { max-width: 700px; }
+
+  /* Карточка-досье — та же, что на живой странице: макет судится в своём окружении */
+  .card {
+    width: 390px; padding: 16px; background: var(--panel);
+    border: 1px solid var(--edge); border-radius: 14px; color: var(--text);
+  }
+  .stage[data-w='1440'] .card { width: 700px; padding: 20px; }
+
+  .rule { height: 1px; background: var(--edge); margin: 14px 0; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; margin: 0; font-size: .95rem; }
+  dt { color: var(--dim); }
+  dd { margin: 0; color: var(--heading); }
+
+  .stars i { font-style: normal; color: var(--star-off); }
+  .stars i.on { color: var(--star); }
+  .val { font-weight: 700; color: var(--heading); }
+  .votes { color: var(--faint); }
+  .brand { color: var(--dim); }
+
+  /* ── V1 «Строка» — как сделал агент: имя, звёзды, число, счётчик в одну линию ── */
+  .v1 .rate { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .v1 .stars { font-size: 1.6rem; line-height: 1; }
+  .v1 .val { font-size: 1.15rem; }
+  .v1 .brand { font-size: .95rem; }
+  .v1 .votes { font-size: .9rem; }
+
+  /* ── V2 «Подпись сверху» — имя мелкой строкой НАД оценкой, звёзды на своей линии ── */
+  .v2 .brand {
+    display: block; font-size: .7rem; letter-spacing: .09em; text-transform: uppercase;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .v2 .rate { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .v2 .stars { font-size: 1.75rem; line-height: 1; }
+  .v2 .val { font-size: 1.35rem; }
+  .v2 .votes { font-size: .88rem; }
+
+  /* ── V3 «Плашка» — имя контурной пилюлей, оценка под ней крупно ── */
+  .v3 .brand {
+    display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .04em;
+    padding: 3px 10px; border: 1px solid var(--edge); border-radius: 999px; margin-bottom: 10px;
+  }
+  .v3 .rate { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .v3 .stars { font-size: 1.8rem; line-height: 1; }
+  .v3 .val { font-size: 1.6rem; }
+  .v3 .votes { font-size: .88rem; }
+
+  /* ── V4 «Оценка вперёд» — крупное число слева, имя и счётчик стопкой справа ── */
+  .v4 .rate { display: flex; align-items: center; gap: 14px; }
+  .v4 .big { font-size: 2.5rem; font-weight: 800; color: var(--heading); line-height: 1; }
+  .v4 .right { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .v4 .stars { font-size: 1.35rem; line-height: 1; }
+  .v4 .brand { font-size: .74rem; letter-spacing: .07em; text-transform: uppercase; font-weight: 600; }
+  .v4 .votes { font-size: .84rem; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Макет:</b>
+  <button data-v="1" class="active">V1 «Строка»</button>
+  <button data-v="2">V2 «Подпись сверху»</button>
+  <button data-v="3">V3 «Плашка»</button>
+  <button data-v="4">V4 «Оценка вперёд»</button>
+  <span class="sp"></span>
+  <button id="theme">Тема</button>
+  <button id="width">Ширина</button>
+  <span class="hint">данные настоящие: «Матрица», 9,3, 11 оценивших</span>
+</div>
+
+<div class="note">
+  <b>Вопрос один:</b> где стоит фирменное имя <b>NDim Space Rating</b>, чтобы звёзды остались
+  главным. <b>V1</b> — то, что стоит в бою сейчас и что Вы забраковали: имя сдвинуло звёзды вправо.
+  <b>V2</b> и <b>V3</b> уводят имя на свою строку и возвращают звёздам начало строки.
+  <b>V4</b> делает главным число, а звёзды — подтверждением.
+</div>
+
+<div class="stage" id="stage" data-w="390">
+  <div class="panes" id="panes"></div>
+</div>
+
+<script>
+  const DIM = { stars: 9, val: '9,3', votes: 'оценено 11 людьми' };
+  const starsHtml = (n) =>
+    Array.from({ length: 10 }, (_, i) => `<i class="${i < n ? 'on' : ''}">★</i>`).join('');
+
+  const rows = `
+    <div class="rule"></div>
+    <dl>
+      <dt>Вид</dt><dd>фильм</dd>
+      <dt>Год</dt><dd>1999</dd>
+      <dt>Автор</dt><dd>Вачовски</dd>
+      <dt>На английском</dt><dd>The Matrix</dd>
+    </dl>`;
+
+  const V = {
+    1: `<div class="rate">
+          <span class="brand">NDim Space Rating</span>
+          <span class="stars">${starsHtml(DIM.stars)}</span>
+          <span class="val">${DIM.val}</span>
+          <span class="votes">${DIM.votes}</span>
+        </div>`,
+    2: `<span class="brand">NDim Space Rating</span>
+        <div class="rate">
+          <span class="stars">${starsHtml(DIM.stars)}</span>
+          <span class="val">${DIM.val}</span>
+          <span class="votes">${DIM.votes}</span>
+        </div>`,
+    3: `<span class="brand">NDim Space Rating</span>
+        <div class="rate">
+          <span class="stars">${starsHtml(DIM.stars)}</span>
+          <span class="val">${DIM.val}</span>
+          <span class="votes">${DIM.votes}</span>
+        </div>`,
+    4: `<div class="rate">
+          <span class="big">${DIM.val}</span>
+          <div class="right">
+            <span class="brand">NDim Space Rating</span>
+            <span class="stars">${starsHtml(DIM.stars)}</span>
+            <span class="votes">${DIM.votes}</span>
+          </div>
+        </div>`,
+  };
+
+  const CAP = {
+    1: 'V1 «Строка» — как в бою сейчас. Имя первым отодвигает звёзды от края.',
+    2: 'V2 «Подпись сверху» — имя мелким капсом над оценкой; звёзды снова начинают строку.',
+    3: 'V3 «Плашка» — имя контурной пилюлей, как бейдж рейтинга; оценка под ним крупно.',
+    4: 'V4 «Оценка вперёд» — главное число крупно, имя и счётчик стопкой справа.',
+  };
+
+  let v = 1;
+  const panes = document.getElementById('panes');
+  const stage = document.querySelector('.stage');
+
+  function render() {
+    panes.innerHTML =
+      `<div class="pane">
+         <div class="card v${v}">${V[v]}${rows}</div>
+         <div class="cap">${CAP[v]}</div>
+       </div>`;
+  }
+
+  document.querySelectorAll('.picker button[data-v]').forEach((b) =>
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+      b.classList.add('active');
+      v = Number(b.dataset.v);
+      render();
+    }),
+  );
+
+  document.getElementById('theme').addEventListener('click', () => {
+    // Контракт дома стиля макетов: тема живёт в `data-theme` на <html> — её же читает
+    // съёмщик кадров `tools/shoot-mockups.mjs`. Своё имя атрибута ломает съёмку.
+    const now = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', now);
+  });
+
+  document.getElementById('width').addEventListener('click', () => {
+    stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390';
+  });
+
+  render();
+</script>
+</body>
+</html>

@@ -20,8 +20,15 @@
   import type { DimView } from '$lib/content/dim-view';
   import { LANGS, LANG_LABEL } from '$lib/content/langs';
   import Icon from '$lib/ui/Icon.svelte';
-  // Тема — ЕДИНСТВЕННЫЙ источник истины на весь проект (`bugs/53`), включая витрину.
-  import { theme, toggleTheme } from '$lib/ui/theme.svelte';
+  // Знак бренда — тот же компонент, что в шапке приложения: витрина не рисует своих логотипов.
+  import Brand from '$lib/ui/Brand.svelte';
+  /*
+   * ⚠️ Модуль темы (`theme.svelte.ts`) здесь НЕ импортируется, и это не забывчивость.
+   * Страница объявлена `csr = false`: клиентский бандл не исполняется, реактивное состояние
+   * мертво по построению. Тему на этой странице переключает инлайн-скрипт `app.html`, а
+   * значок — стили по атрибуту `data-theme`. Позовёшь модуль — получишь кнопку, которая
+   * выглядит рабочей и не работает (эта ошибка здесь уже была).
+   */
   // Русская морфология — общая на проект (`bugs/15`-класс: своя копия склонения разъезжается).
   import { unitRu } from '$lib/ui/format';
 
@@ -170,8 +177,10 @@
   захочет рельс, он добавляется как в `DocShell`, одной строкой импорта.
 -->
 <header class="bar">
+  <!-- Знак — ТОТ ЖЕ компонент, что в шапке приложения (`Brand.svelte`, N-сеть V3 «Диагональ»).
+       Здесь стоял цветной квадрат-заглушка: витрина показывала не наш бренд, а прямоугольник. -->
   <a class="brand" href="/">
-    <span class="mark" aria-hidden="true"></span>
+    <Brand size={26} />
     <span>NDim Space</span>
   </a>
   <!--
@@ -194,14 +203,25 @@
     шапке приложения: два переключателя одного продукта обязаны говорить об одном одинаково.
     Иконка набора, а не глиф — правило `bugs/17`.
   -->
+  <!--
+    🔴 КНОПКА ТЕМЫ БЕЗ КЛИЕНТСКОГО JS. Страница объявлена `csr = false` (`+page.server.ts`):
+    бандл здесь не исполняется, и обработчик Svelte `onclick` МЁРТВ. Первая редакция этой кнопки
+    была именно такой — отрисовалась и не работала, владелец поймал сразу.
+
+    Живёт она так: обработчик вешает инлайн-скрипт `app.html` по идентификатору (он и так
+    исполняется на каждой странице, чтобы применить тему до первой отрисовки), а значок
+    переключают СТИЛИ по атрибуту `data-theme` на `<html>` — без единой строки бандла.
+    Оба значка лежат в разметке всегда; лишний прячет CSS.
+  -->
   <button
     type="button"
+    id="theme-toggle"
     class="theme"
-    onclick={toggleTheme}
     title={data.lang === 'en' ? 'Theme' : 'Тема'}
     aria-label={data.lang === 'en' ? 'Theme' : 'Тема'}
   >
-    <Icon name={theme() === 'dark' ? 'moon' : 'sun'} size={15} />
+    <span class="ic sun"><Icon name="sun" size={15} /></span>
+    <span class="ic moon"><Icon name="moon" size={15} /></span>
   </button>
   <!--
     🔴 «Войти» ведёт в ДВЕРЬ `/profile`, а не на лендинг (`bugs/114`, пункт «в»).
@@ -289,15 +309,7 @@
     color: var(--heading);
     text-decoration: none;
   }
-  .mark {
-    width: 24px;
-    height: 24px;
-    border-radius: 7px;
-    /* Знак бренда — N-сеть; здесь его цветовая заливка, полноценный логотип живёт в шапке
-       приложения. Форма знака канонична (лого 1.x) и цветом не заменяется. */
-    background: linear-gradient(135deg, #1467d6, #3fd9ff);
-    flex: none;
-  }
+  /* Стиль `.mark` убран вместе с квадратом-заглушкой: знак рисует компонент `Brand`. */
   /* Переключатель языка (`bugs/114`). Вторичен по отношению к «Войти»: это смена вида страницы,
      а не действие с продуктом — поэтому контурная, а не залитая. `margin-left: auto` живёт
      ЗДЕСЬ, у первого элемента правой группы, иначе он оттолкнул бы только кнопку входа. */
@@ -317,15 +329,32 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    /* Размер и радиус — КАК В ШАПКЕ ПРИЛОЖЕНИЯ (`AppBar.svelte`): 34px, радиус 10.
+       Две шапки одного продукта не должны отличаться на глаз. */
+    width: 34px;
+    height: 34px;
     padding: 0;
     flex: none;
-    border-radius: 999px;
+    border-radius: 10px;
     border: 1px solid var(--edge);
     background: transparent;
     color: var(--dim);
     cursor: pointer;
+  }
+  /* Оба значка в разметке всегда; нужный показывает АТРИБУТ ТЕМЫ, а не JS — иначе на странице
+     без бандла значок замёрз бы на том, что отрисовал сервер. Значок показывает ТЕКУЩУЮ тему
+     (солнце = светлая), как и кнопка в приложении. */
+  .theme .ic {
+    display: inline-flex;
+  }
+  .theme .moon {
+    display: none;
+  }
+  :global(html[data-theme='dark']) .theme .sun {
+    display: none;
+  }
+  :global(html[data-theme='dark']) .theme .moon {
+    display: inline-flex;
   }
   .enter {
     padding: 0.4rem 0.9rem;

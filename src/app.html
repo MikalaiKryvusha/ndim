@@ -64,6 +64,31 @@
 					var m = document.querySelector('meta[name="theme-color"]');
 					if (m) m.setAttribute('content', t === 'dark' ? '#060b14' : '#f6f8fb');
 
+					// ── ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ДЛЯ СТРАНИЦ БЕЗ КЛИЕНТСКОГО JS ──
+					// 🔴 Публичные страницы каталога объявлены `csr = false` (`+page.server.ts`):
+					// клиентский бандл там не исполняется ВОВСЕ, и обработчик Svelte `onclick`
+					// на них мёртв. Агент это уже проверил дорого: кнопку темы поставили
+					// компонентом, она отрисовалась и не работала.
+					// Здесь она оживает без единого байта бандла — тем же скриптом, что уже
+					// применяет тему до первой отрисовки. Экраны приложения этим не пользуются:
+					// у них живой модуль `theme.svelte.ts`, и кнопки с этим id там нет.
+					document.addEventListener('DOMContentLoaded', function () {
+						var btn = document.getElementById('theme-toggle');
+						if (!btn) return;
+						btn.addEventListener('click', function () {
+							var now = d.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+							d.setAttribute('data-theme', now);
+							try {
+								localStorage.setItem('ndim-theme', now);
+							} catch (e) {}
+							var mm = document.querySelector('meta[name="theme-color"]');
+							if (mm) mm.setAttribute('content', now === 'dark' ? '#060b14' : '#f6f8fb');
+							// Значок обязан показывать ТЕКУЩУЮ тему — как в шапке приложения.
+							btn.setAttribute('data-theme-now', now);
+						});
+						btn.setAttribute('data-theme-now', d.getAttribute('data-theme') || 'light');
+					});
+
 					// ── Щит поднимается ТОЛЬКО на корне и ТОЛЬКО при признаке сессии ──
 					// Гость и поисковый робот маркера не имеют и получают лендинг сразу:
 					// накрывать щитом единственную индексируемую страницу нельзя.
