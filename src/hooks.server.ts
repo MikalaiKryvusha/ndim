@@ -17,14 +17,20 @@
  * за решение задачи целиком.
  */
 import type { Handle } from '@sveltejs/kit';
-import { LANGS } from '$lib/content/langs';
+import { langFromPath } from '$lib/content/langs';
 
-/** Умолчание — русский: остальной сайт ещё живёт без языковых префиксов (`plans/24` фаза 7). */
+/**
+ * Умолчание — русский: экраны за стеной входа языковых адресов не имеют и не получат
+ * (`plans/39`, шаг 2). Публичные страницы свой язык называют адресом.
+ */
 const DEFAULT_LANG = 'ru';
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const first = event.url.pathname.split('/')[1] ?? '';
-  const lang = (LANGS as readonly string[]).includes(first) ? first : DEFAULT_LANG;
+  // 🔴 Правило «какой язык задаёт адрес» живёт в ОДНОМ месте (`$lib/content/langs`) и
+  // покрыто тестами с мутациями. Здесь была его вторая копия — «взять первый сегмент», — и
+  // копии разошлись бы молча, причём в ту сторону, где сборка зелёная, а человек видит не тот
+  // язык. Тот же модуль читают ограничитель маршрута и клиентский модуль языка.
+  const lang = langFromPath(event.url.pathname) ?? DEFAULT_LANG;
 
   return resolve(event, {
     transformPageChunk: ({ html }) => html.replace('%ndim.lang%', lang),
