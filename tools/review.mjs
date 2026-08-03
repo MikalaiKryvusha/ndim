@@ -38,6 +38,7 @@ import {
 	bodyHash,
 	artifactsOf,
 	writeDecision,
+	savedStamp,
 	isQuiet,
 	selftest,
 } from './lib/review-core.mjs';
@@ -182,6 +183,8 @@ th{background:var(--code-bg)}
 	border:1px solid var(--line);color:var(--dim)}
 .tag.open{color:var(--warn);border-color:var(--warn)}
 .tag.ok{color:var(--ok);border-color:var(--ok)}
+/* Когда ответ сохранён. Тише плашки состояния: это справка, а не состояние. */
+.when{font-size:.78rem;color:var(--dim)}
 .opts{display:flex;flex-direction:column;gap:8px;margin:12px 0}
 .opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);
 	border-radius:10px;cursor:pointer;background:transparent}
@@ -304,10 +307,17 @@ function questionCard(q, bodyMd) {
 		? `<div class="prev"><b>Уже отвечено:</b><br>${mdToHtml(q.answer)}</div>`
 		: '';
 
+	// Когда ответ был сохранён — просьба владельца 2026-08-03: «чтобы ответы имели таймстемп».
+	// Время местное и словами; ISO живёт в машинной метке и человеку не показывается (`bugs/112`).
+	const when = q.answered && q.savedAt
+		? `<span class="when" title="${esc(q.savedAt)}">${esc(savedStamp(q.savedBy || BY, q.savedAt).replace(/^\*🕒 Сохранено /, '').replace(/\*$/, ''))}</span>`
+		: '';
+
 	return `
 	<section class="q ${q.answered ? 'done' : 'open'}" data-q="${esc(q.label)}">
 		<div class="qhead">
 			<span class="tag ${q.answered ? 'ok' : 'open'}">${q.answered ? 'отвечено' : 'ждёт вас'}</span>
+			${when}
 			<h3 style="margin:0">${esc(q.title)}</h3>
 		</div>
 		${mdToHtml(bodyMd)}

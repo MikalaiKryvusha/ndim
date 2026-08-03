@@ -123,6 +123,37 @@ const ANSWER_FIELD = /\*\*Ответ(?<note>[^*]*?):?\*\*:?/u;
  * ворот — то есть звала владельца туда, где всё выглядело закрытым.
  */
 const COUNTER_QUESTION = /вопрос/iu;
+
+/**
+ * Машинная метка авторства и времени, которую контур ставит под каждым ответом.
+ *
+ * 🔴 Она НЕ ДОЛЖНА попадать в текст ответа. Разбор складывал в `answer` все строки после поля
+ * «Ответ:», включая эту, а `mdToHtml` экранирует HTML — и метка приезжала владельцу на страницу
+ * видимым мусором: «**А** &lt;!-- owner-review: by="…" at="2026-08-02T17:51:49.003Z" … --&gt;»
+ * (`bugs/112`). Отсюда же и его просьба про время: время писалось всегда, но подавалось шумом.
+ */
+const OWNER_MARK = /^\s*<!--\s*owner-review:/u;
+const OWNER_MARK_FIELDS = /by="(?<by>[^"]*)"\s+at="(?<at>[^"]*)"/u;
+
+/** Видимая человеку отметка сохранения — её и просил владелец 2026-08-03. */
+const SAVED_STAMP = /^\s*[*_]*\s*🕒\s*Сохранено\s/u;
+
+/**
+ * Момент сохранения — словами и в МЕСТНОМ времени.
+ *
+ * 🔴 Почему не ISO: в архиве стоит `at="2026-08-02T17:51:49.003Z"`, а владелец нажал «Сохранить»
+ * в 20:51 по своим часам. Показать ему UTC — значит показать неправду о его же действии.
+ * Машинная метка остаётся ISO (её читают программы), человеку показывается местное время.
+ */
+export function savedStamp(by, at) {
+  const d = new Date(at);
+  const when = Number.isNaN(d.getTime())
+    ? at
+    : d.toLocaleString('ru-RU', {
+        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
+  return `*🕒 Сохранено ${when} · ${by}*`;
+}
 /**
  * Вариант ответа: `- **А) (рекомендуется)** текст` — буква латиницей или кириллицей.
  *
@@ -213,8 +244,19 @@ export function parseInterview(relPath, text) {
 			current.answer += line.replace(ANSWER_FIELD, '').trim() + '\n';
 			continue;
 		}
-		if (current.answerLine >= 0) current.answer += line + '\n';
-		else current.body.push(line);
+		if (current.answerLine >= 0) {
+			// Служебные строки под ответом в САМ ОТВЕТ не входят: из машинной метки забираем
+			// авторство и время (их показывает страница отдельным элементом), видимую отметку
+			// пропускаем — иначе она удвоится при повторном разборе. `bugs/112`.
+			const mark = OWNER_MARK.test(line) ? OWNER_MARK_FIELDS.exec(line) : null;
+			if (mark) {
+				current.savedBy = mark.groups.by;
+				current.savedAt = mark.groups.at;
+				continue;
+			}
+			if (SAVED_STAMP.test(line)) continue;
+			current.answer += line + '\n';
+		} else current.body.push(line);
 	}
 	close(lines.length);
 
@@ -300,6 +342,19 @@ export function mdToHtml(md) {
 		if (inCode) {
 			out.push(esc(line));
 			i++;
+			continue;
+		}
+
+		// ── `bugs/112`: HTML-комментарий по определению НЕВИДИМ, а мы его показывали ──────────
+		// Разметка здесь экранируется целиком (это защита от чужого HTML в документе), и потому
+		// служебная метка `<!-- owner-review: by="…" at="2026-08-02T17:51:49.003Z" … -->`
+		// приезжала владельцу на страницу видимым мусором. Мест утечки было ДВА — под ответом и
+		// под общим комментарием документа, — поэтому лечим здесь, в одном месте на все будущие.
+		// Внутри ограждённого кода комментарии остаются: там они содержание, а не служебка.
+		const bare = line.replace(/<!--[\s\S]*?-->/g, '');
+		if (/<!--/.test(line) && !bare.trim()) { i++; continue; }
+		if (bare !== line) {
+			lines[i] = bare;
 			continue;
 		}
 
@@ -485,6 +540,8 @@ export function appendDocComment(docPath, comment, by, at) {
 		'',
 		...comment.split(/\r?\n/),
 		'',
+		// Время — рядом с комментарием, а не только в машинной метке (просьба владельца 2026-08-03).
+		savedStamp(by, at),
 		`<!-- owner-review: by="${by}" at="${at}" транспорт=страница вид=общий-комментарий -->`,
 	);
 	writeFileSync(docPath, lines.join(eol) + eol, 'utf8');
@@ -517,15 +574,18 @@ export function applyAnswersToMd(docPath, answers, by, at) {
 		if (a.text && a.text.trim()) parts.push(a.text.trim());
 		const body = parts.join(' — ') || '—';
 		const mark = `<!-- owner-review: by="${by}" at="${at}" транспорт=страница -->`;
+		// Видимая отметка времени идёт РЯДОМ с машинной, а не вместо неё: программы читают ISO,
+		// человек — местное время. Просьба владельца 2026-08-03: «чтобы ответы имели таймстемп».
+		const stamp = savedStamp(by, at);
 
 		if (!q.answered && q.answerLine >= 0) {
 			// Поле пустое — заполняем его же.
 			lines[q.answerLine] = `**Ответ:** ${body}`;
-			lines.splice(q.answerLine + 1, 0, mark);
+			lines.splice(q.answerLine + 1, 0, stamp, mark);
 		} else {
 			// Ответ уже есть (или поля нет вовсе) — дописываем уточнение, ничего не затирая.
 			const at1 = q.endLine;
-			lines.splice(at1, 0, '', `**Ответ (уточнение ${at.slice(0, 10)}):** ${body}`, mark);
+			lines.splice(at1, 0, '', `**Ответ (уточнение ${at.slice(0, 10)}):** ${body}`, stamp, mark);
 		}
 		if (a.comment && a.comment.trim()) {
 			const idx = lines.indexOf(mark);
