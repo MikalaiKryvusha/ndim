@@ -207,6 +207,13 @@ const log = (message) => console.log(`[calc ${new Date().toISOString()}] ${messa
 let pointsCache = null;
 /** uid → канонический текст последнего ЗАПИСАННОГО топа. Что в этой мапе — то и в базе. */
 let writtenTops = null;
+/**
+ * dimId → «stars|rates» последней ЗАПИСАННОЙ сводки оценок каталога (`bugs/111`).
+ * Что в этой мапе — то и в базе. `null` — ещё не поднимали из базы.
+ */
+let writtenDimRatings = null;
+/** При каком размере каталога снята `writtenDimRatings` — по нему видно, что её пора переснять. */
+let seededDimsCount = null;
 /** Последний счёт людей, ушедший в space/public_metrics: пишем только когда изменился. */
 let lastPublishedPeople = null;
 /**
@@ -306,6 +313,72 @@ async function seedWrittenTops() {
   for (const doc of snapshot.docs) {
     const data = doc.data();
     map.set(doc.id, stableStringify({ version: data.version ?? null, top: data.top ?? null }));
+  }
+  return map;
+}
+
+// ── СВОДКА ОЦЕНОК КАТАЛОГА (`bugs/111`, она же шаг 0 эпика `ideas/28`) ──────────────────────
+//
+// 🔴 ЧТО ЭТО ЧИНИТ. Поля `stars` / `rates` / `rating` документа `dims/{dimId}` — наследие 1.x,
+// где их кто-то поддерживал. Миграция переносила ЛЮДЕЙ, каталог остался на месте, и в 2.0
+// писать эти поля не стал НИКТО: поиск по всему дереву давал только чтение. Числа замерли на
+// эпохе 1.x, а публичные страницы каталога показывают именно их — то есть расхождение не шум,
+// а недостающий механизм, и росло бы оно вечно (на 2026-08-03 — 31 оценка).
+//
+// 🔑 ПОЧЕМУ ЭТО МЕСТО, А НЕ ЗАПИСЬ ПРИ ВЫСТАВЛЕНИИ ОЦЕНКИ. Канон владельца: агрегаты производит
+// сервер синхронизации, а не клиент, — он и так обходит все точки, ему это даром. Плюс оценки
+// приватны (интервью №002, В4): клиент чужих не видит и сложить их не может в принципе.
+
+/** Канонический текст сводки для diff — ровно то, что уходит в документ. */
+const dimRatingFingerprint = (stars, rates) => `${stars}|${rates}`;
+
+/** Среднее «как в 1.x»: `stars / rates`, округлённое до 0,1 (`schema.ts:244-249`). */
+const averageRating = (stars, rates) => (rates === 0 ? 0 : Math.round((stars / rates) * 10) / 10);
+
+/**
+ * Сворачивает ВСЕ точки в сводку по измерениям: dimId → { stars, rates }.
+ *
+ * 🔴 ПОПУЛЯЦИЯ ЗДЕСЬ ОБЯЗАНА СОВПАДАТЬ С `space/stats.ratings` — иначе сходимость, которой
+ * этот механизм проверяется, не сойдётся никогда. В `model/stats.ts` считаются `inhabitants`:
+ * `!anonymous && ratings > 0`. Аноним исключён, и это не придирка к цифре: он живёт 7 дней и
+ * исчезает — считай мы его, публичный счётчик измерения УМЕНЬШАЛСЯ бы сам собой, и человек из
+ * поиска видел бы, как оценки пропадают. Условие `ratings > 0` выполняется здесь само: точка
+ * без оценок в сводку ничего не вносит.
+ */
+function dimRatingsFrom(points) {
+  const summary = new Map();
+  for (const point of points.values()) {
+    if (point.anonymous) continue;
+    for (const [dimId, value] of Object.entries(point.ratings)) {
+      // Оценки приезжают из базы, а не из наших типов: битое значение не должно испортить
+      // сумму молча. Пропущенная оценка честнее, чем `NaN` на публичной странице.
+      if (typeof value !== 'number' || !Number.isFinite(value)) continue;
+      const cell = summary.get(dimId) ?? { stars: 0, rates: 0 };
+      cell.stars += value;
+      cell.rates += 1;
+      summary.set(dimId, cell);
+    }
+  }
+  return summary;
+}
+
+/**
+ * Поднимает из базы то, что в полях каталога лежит СЕЙЧАС, — один раз за жизнь процесса.
+ *
+ * Устройство скопировано с `seedWrittenTops`, и по той же причине: без него первый цикл после
+ * каждого рестарта переписывал бы все 1873 документа с оценками вслепую. Чтение коллекции
+ * стóит дешевле такой записи и случается один раз, а дальше diff живёт в памяти —
+ * канон экономии запросов (слово владельца: «ЭКОНОМИТЬ ЗАПРОСЫ К БАЗЕ!!!»).
+ */
+async function seedDimRatings() {
+  const snapshot = await db.collection('dims').get();
+  const map = new Map();
+  for (const doc of snapshot.docs) {
+    if (doc.id === DIMS_INDEX_ID) continue; // индекс — не измерение
+    const data = doc.data();
+    const stars = Number(data.stars) || 0;
+    const rates = Number(data.rates) || 0;
+    map.set(doc.id, dimRatingFingerprint(stars, rates));
   }
   return map;
 }
@@ -780,6 +853,25 @@ export async function runCycle() {
    * документы коллекции с отметкой сборки, и схлопывать их в одно нельзя.
    */
   const indexedDims = await ensureDimsIndex(dimsCount);
+
+  /*
+   * СВОДКА ОЦЕНОК КАТАЛОГА поднимается из базы (`bugs/111`) — один раз за жизнь процесса и
+   * заново, когда каталог ИЗМЕНИЛСЯ в размере. Второе условие обязательно, и вот почему:
+   * ключи этой мапы — единственное, что отделяет существующее измерение от сироты (см. запись
+   * ниже). Без пересъёмки новое измерение никогда не получило бы своих счётчиков, а удалённое
+   * роняло бы весь батч цикла до самого рестарта.
+   *
+   * Цена названа честно: одно чтение коллекции (5111 документов) при старте и при каждом
+   * изменении размера каталога. Измерения заводит владелец вручную и редко, так что на деле
+   * это одно чтение за жизнь процесса. Альтернатива — слепая перезапись 1873 документов на
+   * каждом рестарте — дороже и грязнее.
+   */
+  if (writtenDimRatings === null || seededDimsCount !== dimsCount) {
+    writtenDimRatings = await seedDimRatings();
+    seededDimsCount = dimsCount;
+    log(`сводка оценок каталога поднята из базы: измерений ${writtenDimRatings.size}`);
+  }
+
   const now = Date.now();
 
   // firstSeen — отметка «сервер синхронизации увидел эту точку впервые»; на ней держится
@@ -877,6 +969,55 @@ export async function runCycle() {
   if (publishPeople) {
     writes.push((batch) => batch.set(db.doc('space/public_metrics'), { people: stats.people, computedAt: now }));
   }
+
+  /*
+   * ── СВОДКА ОЦЕНОК КАТАЛОГА (`bugs/111`) ──────────────────────────────────────────────────
+   *
+   * Считается ИЗ ТЕХ ЖЕ точек и в том же цикле, что `space/stats`: все оценки уже в руках,
+   * второго прохода не нужно. Пишется diff-ом — как топы и как витрина лендинга: одинаковая
+   * запись каждую минуту была бы ровно тем расточительством, против которого идея 14.
+   *
+   * ⚠️ Обход идёт по ОБЪЕДИНЕНИЮ «что насчитали» и «что лежит в базе», а не только по первому.
+   * Иначе измерение, у которого последний оценивший удалил свою оценку (или сам удалился),
+   * навсегда сохранило бы прежний счётчик: его просто не было бы в новой сводке, и обнулить
+   * его стало бы некому. Это тот же класс, что `bugs/92` у опустевшей точки.
+   */
+  const dimRatings = dimRatingsFrom(pointsCache);
+  let dimsRewritten = 0;
+  /*
+   * 🔴 ОБХОД ИДЁТ ПО КАТАЛОГУ, А НЕ ПО ОЦЕНКАМ, и это не стилистика.
+   *
+   * `writtenDimRatings` поднят ИЗ КАТАЛОГА, то есть его ключи — измерения, которые существуют.
+   * Оценка человека может ссылаться на измерение, которого в каталоге уже нет (гипотеза 1
+   * самого `bugs/111` — «сироты»), и такой ключ обязан быть пропущен:
+   *   · `batch.update` несуществующего документа НЕ «тихо отпадает» — Firestore отвечает
+   *     NOT_FOUND и роняет ВЕСЬ батч, то есть заодно статистику, снимок дня и все топы цикла;
+   *   · `set` с merge вместо него был бы хуже: он ВОСКРЕСИЛ бы измерение пустым документом без
+   *     `title`, а это включает вечную пересборку индекса каталога (`bugs/108`).
+   * Обход по каталогу закрывает оба пути разом. Заодно он и обнуляет счётчик измерения, у
+   * которого последний оценивший удалил оценку: такое измерение в сводке отсутствует, но в
+   * каталоге есть, и получает честные нули (тот же класс, что опустевшая точка в `bugs/92`).
+   */
+  for (const [dimId, previous] of writtenDimRatings) {
+    const cell = dimRatings.get(dimId) ?? { stars: 0, rates: 0 };
+    const fingerprint = dimRatingFingerprint(cell.stars, cell.rates);
+    if (previous === fingerprint) continue;
+    writes.push((batch) =>
+      batch.update(db.doc(`dims/${dimId}`), {
+        stars: cell.stars,
+        rates: cell.rates,
+        rating: averageRating(cell.stars, cell.rates),
+      }),
+    );
+    writtenDimRatings.set(dimId, fingerprint);
+    dimsRewritten += 1;
+  }
+  const orphanRatings = [...dimRatings.keys()].filter((id) => !writtenDimRatings.has(id));
+  if (orphanRatings.length > 0) {
+    // Не молчим: это и есть гипотеза 1 `bugs/111`, и её проверка стоила бы отдельного прохода.
+    log(`оценки на измерениях вне каталога — ${orphanRatings.length} (сироты, в счёт не идут)`);
+  }
+  if (dimsRewritten > 0) log(`сводка оценок каталога обновлена у измерений: ${dimsRewritten}`);
 
   await commitInChunks(writes);
 
