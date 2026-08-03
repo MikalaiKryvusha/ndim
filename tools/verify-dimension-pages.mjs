@@ -125,6 +125,8 @@ console.log('\n— правило показа оценок (интервью �
   let starsAtZero = 0;
   let countMissing = 0;
   let countAtZero = 0;
+  let brandMissing = 0;
+  let brandAtZero = 0;
   let noStarsAtRated = 0;
   let seenZero = 0;
   let seenRated = 0;
@@ -136,15 +138,30 @@ console.log('\n— правило показа оценок (интервью �
     const text = visible(read('ru', f));
     const hasStars = text.includes('★');
     const hasNoVotes = text.includes('Ещё без голосов');
-    const hasCount = /оценили:\s*\d+/.test(text);
+    /*
+     * ⚠️ ЭТА СТРОКА СВЯЗАНА С ТЕКСТОМ СТРАНИЦЫ, и это осознанная цена: страж судит ОТДАННЫЙ
+     * ФАЙЛ, то есть видит ровно те слова, что видит человек. Меняется формулировка — меняется
+     * и здесь. Формулировка «оценено N людьми» — слово владельца 2026-08-03 (прежняя «оценили: N»
+     * называла действие, а не результат).
+     * 🔑 Ловим ФОРМУ «оценено <число>», а не точную фразу целиком: склонение «человеком/людьми»
+     * зависит от числа, и вшивать его сюда значило бы ронять стража на каждом одиннадцатом.
+     */
+    const hasCount = /оценено\s+\d+/.test(text);
+    const hasBrand = text.includes('NDim Space Rating');
 
     if (d.rates === 0) {
       seenZero += 1;
       if (hasStars) starsAtZero += 1;
       if (!hasNoVotes) starsAtZero += 1;
+      // 🏷 Бренд-имени там, где оценок нет, быть не должно: называть нечего.
+      if (hasBrand) brandAtZero += 1;
     } else {
       seenRated += 1;
       if (!hasStars) noStarsAtRated += 1;
+      // 🏷 «NDim Space Rating» — фирменный рейтинг (слово владельца 2026-08-03: «наш фирменный
+      // бренд-рейтинг, наравне с IMDb и Rotten Tomatoes»). Безымянные звёзды читаются как чей-то
+      // случайный агрегат; имя делает их ВЕЛИЧИНОЙ ПРОДУКТА, узнаваемой вне нашего сайта.
+      if (!hasBrand) brandMissing += 1;
     }
     // 🔄 Правило сменилось 2026-08-03 (решение владельца отменяет интервью №022 В3):
     // счётчик показывается при ЛЮБОМ числе оценивших. Здесь стерёгся прежний порог «от трёх».
@@ -160,6 +177,8 @@ console.log('\n— правило показа оценок (интервью �
   check('звёзды ЕСТЬ там, где голоса есть', noStarsAtRated === 0, `нарушений: ${noStarsAtRated}`);
   check('счётчик ЕСТЬ везде, где есть голоса', countMissing === 0, `нарушений: ${countMissing}`);
   check('счётчика НЕТ там, где голосов нет', countAtZero === 0, `нарушений: ${countAtZero}`);
+  check('🏷 «NDim Space Rating» назван везде, где есть оценка', brandMissing === 0, `нарушений: ${brandMissing}`);
+  check('🏷 бренд-имени НЕТ там, где оценок нет', brandAtZero === 0, `нарушений: ${brandAtZero}`);
 }
 
 // ── Языковые адреса: hreflang двусторонний, lang честный ────────────────────

@@ -18,7 +18,9 @@
 -->
 <script lang="ts">
   import type { DimView } from '$lib/content/dim-view';
-  import { LANGS } from '$lib/content/langs';
+  import { LANGS, LANG_LABEL } from '$lib/content/langs';
+  // Русская морфология — общая на проект (`bugs/15`-класс: своя копия склонения разъезжается).
+  import { unitRu } from '$lib/ui/format';
 
   let { data }: { data: DimView } = $props();
 
@@ -38,13 +40,31 @@
       original: 'В оригинале',
       tags: 'Теги',
       noVotes: 'Ещё без голосов',
-      voted: (n: number) => `оценили: ${n}`,
+      /**
+       * 🏷 ФИРМЕННЫЙ ТЕРМИН (слово владельца 2026-08-03): «NDim Space Rating — наш фирменный
+       * бренд-рейтинг». Не переводится ни на один язык: это ИМЯ, а не описание.
+       */
+      ratingBrand: 'NDim Space Rating',
+      /**
+       * «Оценено N людьми» — форма выбрана владельцем дословно. Она ещё и удобнее любой другой:
+       * страдательный залог снимает согласование глагола («оценил 1 человек» против «оценили
+       * 2 человека»), и остаётся склонять одно слово.
+       */
+      voted: (n: number) => `оценено ${n} ${unitRu(n, ['человеком', 'людьми', 'людьми'])}`,
       doorTitle: 'Это одна из координат, по которым люди описывают себя',
       doorText: (t: string) =>
         `В Пространстве NDim человек — это точка, а такие объекты — оси вокруг неё. ` +
         `Оцените «${t}» и ещё несколько вещей, которые Вы любите, — и увидите людей, ` +
         `у которых они отзываются так же.`,
-      doorGo: 'Оценить и посмотреть, кто рядом',
+      /**
+       * Формулировка владельца дословно (2026-08-03). Он сам поправил себя с «Оцени» на
+       * «Оцените» — обращение на «Вы» держится и в призыве к действию, а не только в прозе.
+       *
+       * 🔑 Чем она лучше прежней («Оценить и посмотреть, кто рядом»): называет НЕ действие, а
+       * ЦЕЛЬ действия — найти людей, которые думают так же. «Кто рядом» описывало механику
+       * (близость в пространстве), и человеку из поиска не говорило ничего.
+       */
+      doorGo: 'Оцените, чтобы найти людей, кто думает, как Вы',
       foot:
         'NDim Space — честный поиск похожих людей по математической близости. ' +
         'Бесплатно, без рекламы и без подписок.',
@@ -57,13 +77,16 @@
       original: 'Original title',
       tags: 'Tags',
       noVotes: 'No ratings yet',
-      voted: (n: number) => `rated by ${n}`,
+      /** Имя бренда — одно на все языки (см. русскую половину). */
+      ratingBrand: 'NDim Space Rating',
+      voted: (n: number) => `rated by ${n} ${n === 1 ? 'person' : 'people'}`,
       doorTitle: 'This is one of the coordinates people describe themselves by',
       doorText: (t: string) =>
         `In NDim Space a person is a point, and objects like this are the axes around them. ` +
         `Rate “${t}” and a few more things you love — and you will see the people ` +
         `they resonate with in the same way.`,
-      doorGo: 'Rate it and see who is near',
+      /** Зеркало русской формулировки владельца: цель действия, а не само действие. */
+      doorGo: 'Rate it to find people who think like you',
       foot:
         'NDim Space — an honest search for similar people by mathematical proximity. ' +
         'Free, no ads, no subscriptions.',
@@ -115,6 +138,20 @@
     <span class="mark" aria-hidden="true"></span>
     <span>NDim Space</span>
   </a>
+  <!--
+    ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКА — ССЫЛКОЙ, а не кнопкой (`bugs/114`, решение владельца 2026-08-03:
+    «вот эти кнопки убрать, появится переключатель в хедере»).
+
+    🔴 Почему именно ССЫЛКА и почему сюда НЕ зовётся модуль языка. На публичных адресах источник
+    истины — АДРЕС (правило `$lib/ui/lang.svelte.ts`). Кнопка на состоянии оставила бы человека
+    на прежнем адресе с чужим содержанием; ссылка ведёт РОВНО туда, что уже объявлено в
+    `hreflang` выше, — робот и человек начинают видеть одно и то же. Плюс она работает без единой
+    строки скрипта, а страница каталога сознательно нулевая по JS.
+
+    Подпись — самоназвание языка из общего списка (`LANG_LABEL`), тот же словарь, что в
+    выпадашке приложения: два разных названия одного языка сбивали бы с толку.
+  -->
+  <a class="langsw" href="/{other}/dimension/{data.slug}" hreflang={other}>{LANG_LABEL[other]}</a>
   <a class="enter" href="/">{data.lang === 'en' ? 'Log in' : 'Войти'}</a>
 </header>
 
@@ -128,6 +165,10 @@
   <section class="dossier">
     <p class="rate">
       {#if data.showStars}
+        <!-- 🏷 Оценка названа СВОИМ ИМЕНЕМ — «NDim Space Rating» (слово владельца 2026-08-03:
+             «наш фирменный бренд-рейтинг»). Без имени звёзды читаются как чей-то безымянный
+             агрегат; с именем это ВЕЛИЧИНА ПРОДУКТА, и её можно узнать в другом месте сети. -->
+        <span class="brandname">{t.ratingBrand}</span>
         <span class="stars" aria-hidden="true">
           {#each Array(10) as _, i (i)}<i class:on={i < filled}>★</i>{/each}
         </span>
@@ -162,10 +203,9 @@
     <a class="go" href="/">{t.doorGo}</a>
   </section>
 
-  <p class="foot">
-    {t.foot}
-    <a class="lang" href="/{other}/dimension/{data.slug}">{t.otherLang}</a>
-  </p>
+  <!-- Ссылка «Читать по-…» отсюда УБРАНА (`bugs/114`, слово владельца): переключатель языка
+       переехал в шапку, и двух дверей в одно место быть не должно. -->
+  <p class="foot">{t.foot}</p>
 </article>
 
 <style>
@@ -196,8 +236,20 @@
     background: linear-gradient(135deg, #1467d6, #3fd9ff);
     flex: none;
   }
-  .enter {
+  /* Переключатель языка (`bugs/114`). Вторичен по отношению к «Войти»: это смена вида страницы,
+     а не действие с продуктом — поэтому контурная, а не залитая. `margin-left: auto` живёт
+     ЗДЕСЬ, у первого элемента правой группы, иначе он оттолкнул бы только кнопку входа. */
+  .langsw {
     margin-left: auto;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--edge);
+    color: var(--dim);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+  }
+  .enter {
     padding: 0.4rem 0.9rem;
     border-radius: 999px;
     background: var(--primary);
@@ -341,7 +393,7 @@
     line-height: 1.6;
     color: var(--faint);
   }
-  .lang {
-    color: var(--accent);
-  }
+  /* Стиль `.lang` убран вместе со ссылкой «Читать по-…»: переключатель переехал в шапку
+     (`bugs/114`). Осиротевший селектор svelte-check ловит предупреждением — не глушить его,
+     а убирать причину. */
 </style>
