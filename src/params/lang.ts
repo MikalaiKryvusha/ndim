@@ -14,7 +14,7 @@
  * ⚠️ Список языков живёт ЗДЕСЬ и в `$lib/content/langs.ts` — они обязаны совпадать. Третий язык
  * добавляется в оба места; каркас на это и рассчитан («в будущем добавим ещё языков» — владелец).
  */
-import { LANGS } from '$lib/content/langs.ts';
+import { LANGS } from '$lib/content/langs';
 
 export function match(value: string): boolean {
   return (LANGS as readonly string[]).includes(value);

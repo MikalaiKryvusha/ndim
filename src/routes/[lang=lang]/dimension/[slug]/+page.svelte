@@ -17,8 +17,8 @@
   страницу, потому что владелец сказал «одно правило внутри и снаружи» (интервью №022).
 -->
 <script lang="ts">
-  import type { DimView } from '$lib/content/dim-view.ts';
-  import { LANG_LABEL, LANGS } from '$lib/content/langs.ts';
+  import type { DimView } from '$lib/content/dim-view';
+  import { LANGS } from '$lib/content/langs';
 
   let { data }: { data: DimView } = $props();
 
@@ -75,8 +75,8 @@
   const other = $derived(LANGS.find((l) => l !== data.lang) ?? data.lang);
 
   /** Звёзды рисуются от округлённой средней; шкала 0…10 — жест оценки из 1.x. */
-  const filled = $derived(Math.round(data.dim.rating));
-  const average = $derived(data.dim.rating.toFixed(1).replace('.', data.lang === 'ru' ? ',' : '.'));
+  const filled = $derived(Math.round(data.rating));
+  const average = $derived(data.rating.toFixed(1).replace('.', data.lang === 'ru' ? ',' : '.'));
 </script>
 
 <svelte:head>
@@ -132,7 +132,7 @@
           {#each Array(10) as _, i (i)}<i class:on={i < filled}>★</i>{/each}
         </span>
         <span class="val">{average}</span>
-        {#if data.showRaterCount}<span class="votes">{t.voted(data.dim.rates)}</span>{/if}
+        {#if data.showRaterCount}<span class="votes">{t.voted(data.rates)}</span>{/if}
       {:else}
         <!-- Ноль в поле оценки означает «не оценивали», а НЕ «оценили на ноль». Показать его
              звёздами было бы неправдой на двух третях страниц каталога — ради этого правило
@@ -164,7 +164,7 @@
 
   <p class="foot">
     {t.foot}
-    <a class="lang" href="/{other}/dimension/{data.dim.slug}">{t.otherLang}</a>
+    <a class="lang" href="/{other}/dimension/{data.slug}">{t.otherLang}</a>
   </p>
 </article>
 

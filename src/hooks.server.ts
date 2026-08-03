@@ -17,7 +17,7 @@
  * за решение задачи целиком.
  */
 import type { Handle } from '@sveltejs/kit';
-import { LANGS } from '$lib/content/langs.ts';
+import { LANGS } from '$lib/content/langs';
 
 /** Умолчание — русский: остальной сайт ещё живёт без языковых префиксов (`plans/24` фаза 7). */
 const DEFAULT_LANG = 'ru';

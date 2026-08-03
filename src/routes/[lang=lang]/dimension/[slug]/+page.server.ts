@@ -32,11 +32,11 @@
  */
 
 import { error } from '@sveltejs/kit';
-import { DIMS, DIMS_SOURCE } from '$lib/content/dims-source.ts';
-import { ratingView } from '$lib/content/dims-rating.ts';
-import { LANGS, X_DEFAULT, pick, type Lang } from '$lib/content/langs.ts';
+import { DIMS, DIMS_SOURCE } from '$lib/content/dims-source';
+import { ratingView } from '$lib/content/dims-rating';
+import { LANGS, X_DEFAULT, pick, type Lang } from '$lib/content/langs';
 import { SITE_ORIGIN } from '$lib/site';
-import type { DimView } from '$lib/content/dim-view.ts';
+import type { DimView } from '$lib/content/dim-view';
 
 const BY_SLUG = new Map(DIMS.map((d) => [d.slug, d]));
 
@@ -97,9 +97,14 @@ export function load({ params }: { params: { lang: string; slug: string } }): Di
 
   const href = (l: Lang) => `${SITE_ORIGIN}/${l}/dimension/${dim.slug}`;
 
+  // 🔴 ОТДАЁМ РОВНО ТО, ЧТО СТРАНИЦА РИСУЕТ, и ни полем больше. Объект каталога `dim` целиком
+  // сюда НЕ возвращается: в нём оба языка разом, и описание уезжало бы в ответ ТРИЖДЫ (русское,
+  // английское и выбранное). Замер до правки: `__data.json` весил 4 871 байт × 10 222 страницы =
+  // 41 МБ в каждом релизе — при том что страница объявлена `csr = false` и эти файлы никто не
+  // запрашивает. Подробности и почему их нельзя просто удалить — в `dim-view.ts`.
   return {
-    dim,
     lang,
+    slug: dim.slug,
     title,
     description,
     kind: known(pick(dim.type, lang)),
@@ -107,6 +112,8 @@ export function load({ params }: { params: { lang: string; slug: string } }): Di
     original: other && other !== title ? other : '',
     year: known(dim.year),
     tags: dim.tags,
+    rating: dim.rating,
+    rates: dim.rates,
     meta,
     canonical: href(lang),
     // Самоссылка ОБЯЗАТЕЛЬНА («Each language version must list itself as well as all other
