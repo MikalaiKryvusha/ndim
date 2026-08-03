@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
  * СТРАЖ ПУБЛИЧНЫХ СТРАНИЦ КАТАЛОГА — шаг 5 фазы 5 эпика `ideas/30` (`plans/36`).
  *
@@ -123,7 +123,8 @@ console.log('\n— правило показа оценок (интервью �
   );
   const bySlug = new Map(dims.map((d) => [d.slug, d]));
   let starsAtZero = 0;
-  let countBelow3 = 0;
+  let countMissing = 0;
+  let countAtZero = 0;
   let noStarsAtRated = 0;
   let seenZero = 0;
   let seenRated = 0;
@@ -145,14 +146,20 @@ console.log('\n— правило показа оценок (интервью �
       seenRated += 1;
       if (!hasStars) noStarsAtRated += 1;
     }
-    if (d.rates < 3 && hasCount) countBelow3 += 1;
+    // 🔄 Правило сменилось 2026-08-03 (решение владельца отменяет интервью №022 В3):
+    // счётчик показывается при ЛЮБОМ числе оценивших. Здесь стерёгся прежний порог «от трёх».
+    // Страж не ослаблен, а ПЕРЕНАЦЕЛЕН: раньше он ловил счётчик там, где его быть не должно,
+    // теперь — его ОТСУТСТВИЕ там, где он обязан быть, плюс появление там, где голосов нет.
+    if (d.rates > 0 && !hasCount) countMissing += 1;
+    if (d.rates === 0 && hasCount) countAtZero += 1;
   }
 
   check('в выборке есть измерения БЕЗ голосов', seenZero > 0, `их ${seenZero}`);
   check('в выборке есть измерения С голосами', seenRated > 0, `их ${seenRated}`);
   check('звёзд НЕТ там, где нет голосов', starsAtZero === 0, `нарушений: ${starsAtZero}`);
   check('звёзды ЕСТЬ там, где голоса есть', noStarsAtRated === 0, `нарушений: ${noStarsAtRated}`);
-  check('счётчика НЕТ при rates < 3', countBelow3 === 0, `нарушений: ${countBelow3}`);
+  check('счётчик ЕСТЬ везде, где есть голоса', countMissing === 0, `нарушений: ${countMissing}`);
+  check('счётчика НЕТ там, где голосов нет', countAtZero === 0, `нарушений: ${countAtZero}`);
 }
 
 // ── Языковые адреса: hreflang двусторонний, lang честный ────────────────────
