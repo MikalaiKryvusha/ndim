@@ -53,14 +53,15 @@ test('нет голосов — нет звёзд (две трети катал�
   assert.equal(v.showRaterCount, false);
 });
 
-test('один голос — звёзды есть, счётчика нет', () => {
-  const v = ratingView(1);
-  assert.equal(v.showStars, true);
-  assert.equal(v.showRaterCount, false, 'при одном голосе счётчик выдал бы, что человек один');
+test('ОДИН голос — показываем и звёзды, и счётчик', () => {
+  // 🔄 Решение владельца 2026-08-03 ОТМЕНЯЕТ интервью №022 В3: «открываем показ оценок при
+  // любом числе оценивших везде по приложению». Прежний порог (от трёх) прятал не личность,
+  // а лишь впечатление от числа — разбор в `bugs/113`.
+  assert.deepEqual(ratingView(1), { showStars: true, showRaterCount: true });
 });
 
-test('два голоса — всё ещё без счётчика', () => {
-  assert.deepEqual(ratingView(2), { showStars: true, showRaterCount: false });
+test('два голоса — так же', () => {
+  assert.deepEqual(ratingView(2), { showStars: true, showRaterCount: true });
 });
 
 test('три голоса — показываем и звёзды, и счётчик', () => {
@@ -69,7 +70,7 @@ test('три голоса — показываем и звёзды, и счёт�
 
 test('пороги именно такие, какие выбрал владелец', () => {
   assert.equal(STARS_FROM, 1, 'интервью №022 В1 = А');
-  assert.equal(RATER_COUNT_FROM, 3, 'интервью №021 В1');
+  assert.equal(RATER_COUNT_FROM, 1, 'решение владельца 2026-08-03, отменяет интервью №022 В3');
 });
 
 test('счётчик НИКОГДА не показывается без звёзд', () => {
@@ -91,7 +92,7 @@ test('битое значение ведёт себя как «оценок не
     assert.equal(ratingView(bad as number).showRaterCount, false, `сломалось на ${bad}`);
   }
   assert.equal(ratingView(0.9).showStars, false, 'дробное меньше единицы — это ещё ноль голосов');
-  assert.equal(ratingView(2.9).showRaterCount, false, 'дробное меньше трёх — счётчика нет');
+  assert.equal(ratingView(0.9).showRaterCount, false, 'и счётчика у него тоже нет');
 });
 
 test('на РЕАЛЬНОМ срезе каталога правило не даёт ни одной неправды', () => {
@@ -104,8 +105,17 @@ test('на РЕАЛЬНОМ срезе каталога правило не да
       assert.equal(v.showStars, false, `«${d.title.ru}» без голосов, а звёзды показаны`);
       assert.equal(d.rating, 0, 'у измерения без голосов средняя обязана быть нулём');
     }
-    if (v.showStars) assert.ok(d.rating > 0, `«${d.title.ru}»: звёзды есть, а средняя ${d.rating}`);
-    if (v.showRaterCount) assert.ok(d.rates >= 3);
+    /*
+     * ⚠️ ЗДЕСЬ БЫЛО ЛОЖНОЕ ДОПУЩЕНИЕ `d.rating > 0` — «оценили, значит средняя не ноль».
+     * Шкала продукта 0…10, и НОЛЬ — законная оценка: измерению, которому все поставили 0,
+     * честно полагается средняя 0 при ненулевом `rates`. В бою таких два. Пока их не было в
+     * срезе, допущение молчало; при следующем обновлении среза оно уронило бы тест на
+     * исправных данных. Тот же промах я уже поймал в `tools/verify-prod-dim-ratings.mjs`.
+     */
+    if (v.showStars) {
+      assert.ok(d.rating >= 0 && d.rating <= 10, `«${d.title.ru}»: средняя вне шкалы — ${d.rating}`);
+    }
+    if (v.showRaterCount) assert.ok(d.rates >= 1);
   }
   assert.ok(zero > 0, 'в срезе обязаны быть измерения без голосов — иначе тест ничего не проверил');
 });
