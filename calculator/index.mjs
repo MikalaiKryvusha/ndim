@@ -1012,10 +1012,27 @@ export async function runCycle() {
     writtenDimRatings.set(dimId, fingerprint);
     dimsRewritten += 1;
   }
-  const orphanRatings = [...dimRatings.keys()].filter((id) => !writtenDimRatings.has(id));
-  if (orphanRatings.length > 0) {
-    // Не молчим: это и есть гипотеза 1 `bugs/111`, и её проверка стоила бы отдельного прохода.
-    log(`оценки на измерениях вне каталога — ${orphanRatings.length} (сироты, в счёт не идут)`);
+  /*
+   * СИРОТЫ — оценки на измерениях, которых в каталоге больше нет (гипотеза 1 `bugs/111`,
+   * подтверждена боем 2026-08-03). Молчать о них нельзя: это ЕДИНСТВЕННЫЙ законный источник
+   * расхождения между суммой `rates` и `space/stats.ratings`, и без числа он неотличим от
+   * сломанного механизма.
+   *
+   * 🔑 Докладываются ДВЕ величины, и путать их дорого: измерений-сирот и ОЦЕНОК на них.
+   * Первая редакция печатала только первую, а называла её «оценки» — то есть врала о том,
+   * сколько именно оценок не сходится.
+   *
+   * ⚠️ В лог идут только АГРЕГАТЫ и идентификаторы измерений — никогда не пара «кто → что
+   * оценил». Оценки приватны (интервью №002, В4), и лог сервера им не исключение.
+   */
+  const orphanIds = [...dimRatings.keys()].filter((id) => !writtenDimRatings.has(id));
+  if (orphanIds.length > 0) {
+    const orphanVotes = orphanIds.reduce((sum, id) => sum + dimRatings.get(id).rates, 0);
+    const shown = orphanIds.slice(0, 20).join(', ');
+    log(
+      `сироты: измерений вне каталога ${orphanIds.length}, оценок на них ${orphanVotes} ` +
+        `(в счёт каталога не идут) — ${shown}${orphanIds.length > 20 ? ', …' : ''}`,
+    );
   }
   if (dimsRewritten > 0) log(`сводка оценок каталога обновлена у измерений: ${dimsRewritten}`);
 
