@@ -19,6 +19,9 @@
 <script lang="ts">
   import type { DimView } from '$lib/content/dim-view';
   import { LANGS, LANG_LABEL } from '$lib/content/langs';
+  import Icon from '$lib/ui/Icon.svelte';
+  // Тема — ЕДИНСТВЕННЫЙ источник истины на весь проект (`bugs/53`), включая витрину.
+  import { theme, toggleTheme } from '$lib/ui/theme.svelte';
   // Русская морфология — общая на проект (`bugs/15`-класс: своя копия склонения разъезжается).
   import { unitRu } from '$lib/ui/format';
 
@@ -37,7 +40,16 @@
       kind: 'Вид',
       year: 'Год',
       author: 'Автор',
-      original: 'В оригинале',
+      /*
+       * 🔴 БЫЛО «В оригинале» — и это НЕПРАВДА (`bugs/116`, слово владельца 2026-08-03:
+       * «Матрица ТОЧНО не называлась в оригинале русским именем, это нонсенс фрод»).
+       *
+       * Поле содержит название на ДРУГОМ языке, а не на языке оригинала произведения. Какой
+       * язык оригинала у каждого из 5111 объектов, мы не знаем и следить за этим не будем —
+       * владелец назвал это прямо. Подпись теперь говорит ровно то, что есть: язык названия.
+       * Это честно при любом происхождении объекта и не требует ни одного нового поля.
+       */
+      otherTitle: 'На английском',
       tags: 'Теги',
       noVotes: 'Ещё без голосов',
       /**
@@ -51,11 +63,32 @@
        * 2 человека»), и остаётся склонять одно слово.
        */
       voted: (n: number) => `оценено ${n} ${unitRu(n, ['человеком', 'людьми', 'людьми'])}`,
-      doorTitle: 'Это одна из координат, по которым люди описывают себя',
+      /*
+       * 🔴 ЗДЕСЬ СТОЯЛ ЖАРГОН, ЗАПРЕЩЁННЫЙ СЛОВАРЁМ (`bugs/115`): «человек — это точка, а такие
+       * объекты — ОСИ вокруг неё». Слово «ось» канон помещает в колонку «никогда не пишем» с
+       * пояснением «наружу, к человеку, он выходить не должен НИКОГДА», — а оно уехало на все
+       * 10 222 страницы. Теперь это стережёт `tools/verify-product-vocabulary.mjs`.
+       *
+       * 🔑 И ВТОРАЯ ПОЛОВИНА ДЕФЕКТА была тяжелее первой: текст описывал УСТРОЙСТВО, а не пользу.
+       * Человек пришёл из поиска за фильмом, а ему объясняли геометрию.
+       *
+       * Новый текст даёт ДВА повода остаться, оба — словами владельца (2026-08-03):
+       *   · рейтинг сам по себе: «метрика того, насколько сообществу нравится объект культуры…
+       *     хочешь найти хороший фильм на вечер — приходи в NDim Space посмотреть рейтинги»;
+       *   · люди: «найти людей, кто думает, как Вы».
+       * Первый работает ДО всякой регистрации — это и есть повод прийти, которого у каталога
+       * не было вовсе.
+       *
+       * ⛔ Конкурентов не называем (принцип 9 `MASTER_PLAN`, подтверждено владельцем).
+       * ⛔ Пошлый и негативный ключ запрещён (`researches/30`): знание о том, что негатив
+       *    повышает клик, не является разрешением им пользоваться.
+       */
+      doorTitle: 'NDim Space ведёт свою систему рейтингов',
       doorText: (t: string) =>
-        `В Пространстве NDim человек — это точка, а такие объекты — оси вокруг неё. ` +
-        `Оцените «${t}» и ещё несколько вещей, которые Вы любите, — и увидите людей, ` +
-        `у которых они отзываются так же.`,
+        `NDim Space Rating показывает, насколько объект нравится сообществу, — ` +
+        `ищете, что посмотреть или почитать сегодня, загляните к нам. ` +
+        `А если оцените «${t}» и ещё несколько вещей, которые Вы любите, ` +
+        `Пространство покажет Вам людей, которые думают так же.`,
       /**
        * Формулировка владельца дословно (2026-08-03). Он сам поправил себя с «Оцени» на
        * «Оцените» — обращение на «Вы» держится и в призыве к действию, а не только в прозе.
@@ -74,17 +107,20 @@
       kind: 'Kind',
       year: 'Year',
       author: 'Author',
-      original: 'Original title',
+      /** Зеркало русской половины: называем ЯЗЫК названия, а не выдумываем язык оригинала. */
+      otherTitle: 'In Russian',
       tags: 'Tags',
       noVotes: 'No ratings yet',
       /** Имя бренда — одно на все языки (см. русскую половину). */
       ratingBrand: 'NDim Space Rating',
       voted: (n: number) => `rated by ${n} ${n === 1 ? 'person' : 'people'}`,
-      doorTitle: 'This is one of the coordinates people describe themselves by',
+      /** Зеркало русской половины: тот же смысл, тот же порядок, без жаргона и без сравнений. */
+      doorTitle: 'NDim Space runs its own rating system',
       doorText: (t: string) =>
-        `In NDim Space a person is a point, and objects like this are the axes around them. ` +
-        `Rate “${t}” and a few more things you love — and you will see the people ` +
-        `they resonate with in the same way.`,
+        `NDim Space Rating shows how much the community likes something — ` +
+        `looking for what to watch or read tonight, come and see. ` +
+        `And if you rate “${t}” and a few more things you love, ` +
+        `the Space will show you people who think the same way.`,
       /** Зеркало русской формулировки владельца: цель действия, а не само действие. */
       doorGo: 'Rate it to find people who think like you',
       foot:
@@ -152,13 +188,35 @@
     выпадашке приложения: два разных названия одного языка сбивали бы с толку.
   -->
   <a class="langsw" href="/{other}/dimension/{data.slug}" hreflang={other}>{LANG_LABEL[other]}</a>
-  <a class="enter" href="/">{data.lang === 'en' ? 'Log in' : 'Войти'}</a>
+  <!--
+    ТЕМА — общий модуль (`theme.svelte.ts`), а не своя копия: за две копии состояния темы проект
+    уже заплатил дефектом `bugs/53`. Значок показывает ТЕКУЩУЮ тему (солнце = светлая), как и в
+    шапке приложения: два переключателя одного продукта обязаны говорить об одном одинаково.
+    Иконка набора, а не глиф — правило `bugs/17`.
+  -->
+  <button
+    type="button"
+    class="theme"
+    onclick={toggleTheme}
+    title={data.lang === 'en' ? 'Theme' : 'Тема'}
+    aria-label={data.lang === 'en' ? 'Theme' : 'Тема'}
+  >
+    <Icon name={theme() === 'dark' ? 'moon' : 'sun'} size={15} />
+  </button>
+  <!--
+    🔴 «Войти» ведёт в ДВЕРЬ `/profile`, а не на лендинг (`bugs/114`, пункт «в»).
+    Здесь стояло `href="/"` — ровно то же, что у знака бренда строкой выше: две разные подписи
+    делали одно действие, а подпись обещала вход. Проверка близнецов показала, что все ОСТАЛЬНЫЕ
+    восемь подписей «Войти» в продукте ведут именно в `/profile` либо запускают вход, — то есть
+    выбивалась ровно эта.
+  -->
+  <a class="enter" href="/profile">{data.lang === 'en' ? 'Log in' : 'Войти'}</a>
 </header>
 
 <article class="dim">
   <header>
     <h1>{data.title}</h1>
-    {#if data.original}<p class="orig">{data.original}</p>{/if}
+    {#if data.otherTitle}<p class="orig">{data.otherTitle}</p>{/if}
   </header>
 
   <!-- ── КАРТОЧКА-ДОСЬЕ — сердце макета V2 ─────────────────────────────────── -->
@@ -186,7 +244,7 @@
       {#if data.kind}<dt>{t.kind}</dt><dd>{data.kind}</dd>{/if}
       {#if data.year}<dt>{t.year}</dt><dd>{data.year}</dd>{/if}
       {#if data.author}<dt>{t.author}</dt><dd>{data.author}</dd>{/if}
-      {#if data.original}<dt>{t.original}</dt><dd>{data.original}</dd>{/if}
+      {#if data.otherTitle}<dt>{t.otherTitle}</dt><dd>{data.otherTitle}</dd>{/if}
       {#if data.tags.length}
         <dt>{t.tags}</dt>
         <dd class="tags">{#each data.tags as tag (tag)}<span>{tag}</span>{/each}</dd>
@@ -200,7 +258,11 @@
   <section class="door">
     <h2>{t.doorTitle}</h2>
     <p>{t.doorText(data.title)}</p>
-    <a class="go" href="/">{t.doorGo}</a>
+    <!-- 🔴 Ведёт В ПРОДУКТ (`/profile`), а не на лендинг. Здесь стояло `href="/"` — тот же
+         дефект, что был у «Войти» в шапке: главная кнопка страницы отправляла человека на
+         витрину вместо двери, то есть добавляла лишний шаг ровно на пике интереса. Это боль
+         `ideas/09`, ради снятия которой строился весь онбординг. -->
+    <a class="go" href="/profile">{t.doorGo}</a>
   </section>
 
   <!-- Ссылка «Читать по-…» отсюда УБРАНА (`bugs/114`, слово владельца): переключатель языка
@@ -248,6 +310,22 @@
     font-weight: 600;
     font-size: 0.85rem;
     text-decoration: none;
+  }
+  /* Кнопка темы — квадратная, как в шапке приложения (правка владельца 2026-07-27: «кнопки в
+     хедере квадратные и без стрелочки»). Содержимое центрируется флексом, а не базовой линией. */
+  .theme {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    flex: none;
+    border-radius: 999px;
+    border: 1px solid var(--edge);
+    background: transparent;
+    color: var(--dim);
+    cursor: pointer;
   }
   .enter {
     padding: 0.4rem 0.9rem;
@@ -299,7 +377,11 @@
     padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--edge);
   }
+  /* ЗВЁЗДЫ КРУПНЫЕ — слово владельца 2026-08-03: «главная ценная метрика измерения». Та же
+     правка, что он уже делал для карточек внутри приложения («звёзды большие как в v2»). */
   .stars {
+    font-size: 1.6rem;
+    line-height: 1;
     display: flex;
     gap: 1px;
     font-size: 0.95rem;
@@ -375,10 +457,20 @@
     font-size: 0.92rem;
     line-height: 1.6;
   }
+  /*
+   * ГЛАВНАЯ КНОПКА СТРАНИЦЫ — по центру (слово владельца 2026-08-03: «эта кнопка должна быть
+   * отцентрована, она самая главная — завлекает внутрь продукта, „продаёт" ценность гостю»).
+   *
+   * 🔑 Центрирование сделано `margin-inline: auto` при `width: fit-content`, а НЕ `text-align`
+   * у родителя: текст блока обязан остаться выключенным влево (по нему читают), а по центру
+   * встаёт только кнопка. `text-align: center` на `.door` растащил бы и заголовок, и абзац.
+   */
   .go {
-    display: inline-block;
-    margin-top: 0.8rem;
-    padding: 0.55rem 1.1rem;
+    display: block;
+    width: fit-content;
+    margin-inline: auto;
+    margin-top: 1rem;
+    padding: 0.7rem 1.4rem;
     border-radius: 999px;
     background: var(--primary);
     color: var(--primary-ink);

@@ -109,7 +109,7 @@ export function load({ params }: { params: { lang: string; slug: string } }): Di
     description,
     kind: known(pick(dim.type, lang)),
     author: known(pick(dim.author, lang)),
-    original: other && other !== title ? other : '',
+    otherTitle: other && other !== title ? other : '',
     year: known(dim.year),
     tags: dim.tags,
     rating: dim.rating,
