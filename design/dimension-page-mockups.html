@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — Публичная страница измерения, 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — ПУБЛИЧНАЯ СТРАНИЦА ИЗМЕРЕНИЯ. Фаза 5 эпика `ideas/30` (план `plans/36`).
+
+     ═══ ЧТО РЕШАЮТ ЭТИ МАКЕТЫ — ОДИН вопрос ═══
+     КАК УСТРОЕНА страница, которую человек видит ПЕРВОЙ, придя к нам из поиска и не имея
+     аккаунта. Таких страниц будет 5111 — по одной на каждый объект каталога, — и вместе они
+     откроют миру примерно в СТО раз больше текста, чем открыто сегодня (замер `researches/30`,
+     приложение A). Каждый вариант — цельный ответ, а не набор опций.
+
+     ═══ ЧТО ИМИ НЕ РЕШАЕТСЯ (уже закрыто Вашими ответами — не выбирайте дважды) ═══
+       · Страница есть у ВСЕХ 5111 объектов, а не только у оценённых (интервью №021, В1).
+       · Звёзды — когда есть хоть одна оценка; «ещё без голосов» — когда их нет; число
+         проголосовавших — от трёх (интервью №021 В1 + №022 В1 = А). Во всех четырёх одинаково.
+       · Ни одной обложки и ни одного кадра — авторское право (интервью №020).
+       · Ни одного имени, ни одной почты: людей на публичной странице нет (интервью №022).
+       · Адреса: у каждого языка свой префикс — `/ru/…` и `/en/…` (интервью №010, Р5 = В).
+       · Слаг адреса — читаемые слова плюс хвост идентификатора: `battlefield-3-ucvge98o`.
+
+     ═══ ЧЕСТНОСТЬ МАКЕТА ═══
+       · Токены обеих тем скопированы из `src/routes/+layout.svelte` дословно — цвета настоящие.
+       · 🔑 ВСЕ ЧЕТЫРЕ ОБЪЕКТА — НАСТОЯЩИЕ, из боевого каталога: названия, описания, годы, авторы,
+         теги, число голосов и средняя оценка выгружены `tools/fetch-dims-slice.mjs` 2026-08-02.
+         Ничего не сочинено и не подправлено.
+       · Объекты подобраны так, чтобы закрыть ВСЕ границы правила показа оценок:
+         Warcraft III — 4 голоса (звёзды + счётчик) · «Идеальный незнакомец» — 0 голосов
+         (серый текст) · «Дом Дракона» — 1 голос (звёзды БЕЗ счётчика) · «Катание на лыжах» —
+         3 голоса и при этом НЕТ ни года, ни автора (элементы просто не показываются).
+       · Число 5111 — боевое. 1873 / 3238 / 892 — тоже (сколько объектов в каждой из трёх границ).
+       · Терминов на витрине голыми нет: не «5111 измерений», а «объектов человеческой культуры»
+         (Ваша правка 2026-08-02).
+
+     ВАРИАНТЫ:
+       · V1 «Статья»     — уважение к тексту: заголовок, строка данных, описание во всю ширину.
+                           Модель энциклопедии. Самая быстрая и самая простая.
+       · V2 «Досье»      — сверху карточка объекта (вид, год, автор, теги, оценка), текст под ней.
+                           Модель Кинопоиска: данные считываются мгновенно.
+       · V3 «Вопрос Вам» — центр страницы не объект, а ЖЕСТ: «Насколько это про Вас?», звёзды
+                           прямо здесь, без аккаунта. Страница — сам инструмент, а не витрина.
+       · V4 «Соседство»  — объект показан ВНУТРИ Пространства: рядом другие объекты того же рода,
+                           и это же связывает 5111 страниц между собой.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Токены светлой темы «Бумага» (дословно из src/routes/+layout.svelte) ── */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1467d6; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --card-shadow: 0 16px 40px rgba(29, 50, 71, 0.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --ok: #2e9e6b;
+  }
+  /* ── Токены тёмной темы (дословно оттуда же) ── */
+  :root[data-theme='dark'] {
+    --bg: #060b14; --panel: rgba(10, 21, 38, 0.78); --edge: rgba(77, 159, 255, 0.22);
+    --edge-soft: rgba(77, 159, 255, 0.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #4d9fff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --card-shadow: 0 0 0 1px rgba(63, 217, 255, 0.06), 0 24px 60px rgba(2, 8, 20, 0.6);
+    --ok: #56d3a0;
+  }
+
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  /* ── Панель выбора (дом стиля макетов проекта) ── */
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  .note {
+    padding: 12px 16px; background: #0d1b2a; color: #b7cde0; font-size: 13px; line-height: 1.55;
+    border-bottom: 1px solid #1d3247;
+  }
+  .note b { color: #fff; }
+  .note .q { color: #7fd4ff; }
+
+  .stage { padding: 22px 14px 60px; background: #0f1826; }
+  .panes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .pane { display: flex; flex-direction: column; gap: 7px; }
+  .pane > .cap { color: #8fa9c0; font-size: 12px; text-align: center; max-width: 390px; }
+  .stage[data-w='1440'] .pane > .cap { max-width: 1180px; }
+
+  /* Оболочка экрана: рисуем страницу продукта, а не абстрактный блок */
+  /* Высота НЕ фиксирована: страница показывается целиком, до самого низа. Обрезанный кадр
+     скрывал бы дверь в продукт — то есть ровно то, чем варианты друг от друга и отличаются. */
+  .screen {
+    width: 390px; overflow: hidden; position: relative;
+    background: var(--bg); color: var(--text);
+    border-radius: 22px; border: 1px solid var(--edge); box-shadow: var(--card-shadow);
+    display: flex; flex-direction: column;
+  }
+  .stage[data-w='1440'] .screen { width: 1180px; border-radius: 16px; }
+
+  /* Адресная строка — здесь виден слаг и языковой префикс, это часть решения */
+  .url {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 7px; padding: 7px 12px;
+    background: var(--edge-soft); border-bottom: 1px solid var(--edge);
+    font-family: var(--mono); font-size: 10.5px; color: var(--dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .url .lock { color: var(--ok); }
+
+  /* ── ОБОЛОЧКА ПРОДУКТА ───────────────────────────────────────────────────
+     🔴 ЗАМЕЧАНИЕ ВЛАДЕЛЬЦА 2026-08-03: «десктопная версия получается кривой, нет боковой
+     рельсы и шапки. Выглядит так, словно ты просто мобильную версию на весь экран растянул».
+     Он прав: первая редакция этих макетов рисовала на 1440px ту же узкую полоску, что и на
+     телефоне. Десктоп у нас — СВОЯ раскладка, утверждённая им же (V2 «Рабочий стол»):
+     полноширинная шапка первой строкой ПОВЕРХ рельса (V3-А, `ideas/17`) и рельс навигации
+     слева от 1024px (`SideRail.svelte`). Здесь она воспроизведена по коду, а не по памяти. */
+  .bar {
+    flex: 0 0 auto; min-height: 52px; display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; background: var(--panel); border-bottom: 1px solid var(--edge);
+  }
+  .bar .mark { width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(135deg, #1467d6, #3fd9ff); flex: 0 0 auto; }
+  .bar .title { font-weight: 700; color: var(--heading); font-size: 14px; }
+  .bar .tools { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .bar .icobtn {
+    width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--edge);
+    display: grid; place-items: center; color: var(--dim); font-size: 13px;
+  }
+  .bar .enter {
+    font-size: 12px; padding: 6px 13px; border-radius: 999px;
+    background: var(--primary); color: var(--primary-ink); font-weight: 600;
+  }
+
+  /* Рельс: только от 1024px, ровно как в продукте. На телефоне его нет вовсе. */
+  .shell { flex: 1 1 auto; display: flex; min-height: 0; }
+  .rail { display: none; }
+  .stage[data-w='1440'] .rail {
+    display: flex; flex-direction: column; gap: 3px; flex: 0 0 auto;
+    padding: 16px 12px; background: var(--panel); border-right: 1px solid var(--edge);
+  }
+  .rail a {
+    display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 11px;
+    font-size: 14px; color: var(--dim); white-space: nowrap;
+  }
+  .rail a .ico {
+    width: 22px; height: 22px; border-radius: 6px; flex: 0 0 auto;
+    border: 1.6px solid currentColor; opacity: .75;
+  }
+  .rail a.on { background: var(--edge-soft); color: var(--accent); font-weight: 600; }
+
+  .body { flex: 1 1 auto; min-width: 0; }
+  .panes { align-items: flex-start; }
+  .wrap { max-width: 660px; margin: 0 auto; padding: 20px 16px 40px; }
+  .stage[data-w='1440'] .wrap { padding: 30px 24px 60px; }
+  /* V4 держит две колонны, и читательская ширина 660px, поделённая надвое, превращает текст в
+     ленту. Двухколонному варианту нужна своя ширина — иначе сравниваются не формы, а поломка. */
+  .stage[data-w='1440'] .wrap.wide { max-width: 1040px; }
+
+  h1 { font-size: 24px; line-height: 1.18; color: var(--heading); margin: 0; }
+  .stage[data-w='1440'] h1 { font-size: 32px; }
+
+  /* Строка «вид · год · автор» */
+  .facts { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--dim); margin-bottom: 7px; }
+  .facts .kind { text-transform: uppercase; letter-spacing: .05em; color: var(--accent); font-weight: 600; }
+  .facts i { font-style: normal; color: var(--faint); }
+
+  .orig { font-size: 13px; color: var(--faint); margin-top: 5px; }
+
+  /* ── Блок оценки: ОДИНАКОВ во всех четырёх вариантах ────────────────────── */
+  .rate { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; min-height: 26px; margin: 14px 0; }
+  .stars { display: flex; gap: 1px; font-size: 15px; letter-spacing: 0; }
+  .stars i { font-style: normal; color: var(--edge); }
+  .stars i.on { color: var(--star); }
+  .val { font-weight: 700; color: var(--heading); font-size: 15px; }
+  .votes, .novotes { font-size: 12.5px; color: var(--dim); }
+  .novotes { font-style: italic; }
+
+  .desc { line-height: 1.68; font-size: 15px; margin: 16px 0; }
+  .desc p + p { margin-top: 12px; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 16px 0; }
+  .tags span {
+    font-size: 11.5px; padding: 3px 9px; border-radius: 999px;
+    border: 1px solid var(--edge); color: var(--dim);
+  }
+
+  /* Дверь в продукт */
+  .door {
+    margin-top: 22px; padding: 16px; border-radius: 14px;
+    background: var(--panel); border: 1px solid var(--edge); box-shadow: var(--card-shadow);
+  }
+  .door h3 { font-size: 15px; color: var(--heading); margin-bottom: 6px; }
+  .door p { font-size: 13.5px; line-height: 1.6; color: var(--text); }
+  .door .go {
+    display: inline-block; margin-top: 11px; padding: 9px 17px; border-radius: 999px;
+    background: var(--primary); color: var(--primary-ink); font-weight: 600; font-size: 13.5px;
+  }
+  .foot { margin-top: 20px; font-size: 11.5px; color: var(--faint); line-height: 1.6; }
+
+  /* ── V2 «Досье»: карточка объекта ──────────────────────────────────────── */
+  .dossier {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    padding: 15px; box-shadow: var(--card-shadow); margin: 14px 0 18px;
+  }
+  .dossier dl { display: grid; grid-template-columns: 84px 1fr; gap: 6px 12px; font-size: 13px; }
+  .dossier dt { color: var(--faint); }
+  .dossier dd { color: var(--text); }
+  .dossier .rate { margin: 0 0 12px; padding-bottom: 12px; border-bottom: 1px solid var(--edge); }
+
+  /* ── V3 «Вопрос Вам»: жест оценки прямо на публичной странице ──────────── */
+  .ask {
+    background: var(--panel); border: 1px solid var(--accent); border-radius: 16px;
+    padding: 18px 16px; box-shadow: var(--card-shadow); margin: 16px 0 18px; text-align: center;
+  }
+  .ask h2 { font-size: 17px; color: var(--heading); margin-bottom: 3px; }
+  .ask .sub { font-size: 12.5px; color: var(--dim); margin-bottom: 13px; }
+  .ask .pick { display: flex; justify-content: center; gap: 3px; font-size: 26px; margin-bottom: 9px; }
+  .ask .pick i { font-style: normal; color: var(--edge); cursor: pointer; }
+  .ask .pick i.on { color: var(--star); }
+  .ask .scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); max-width: 300px; margin: 0 auto 12px; }
+  .ask .note2 { font-size: 12px; color: var(--dim); line-height: 1.55; }
+  .ask .crowd { font-size: 12.5px; color: var(--dim); margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--edge); }
+
+  /* ── V4 «Соседство» ────────────────────────────────────────────────────── */
+  .near { margin: 20px 0 0; }
+  .near h3 { font-size: 14px; color: var(--heading); margin-bottom: 4px; }
+  .near .why { font-size: 12px; color: var(--faint); margin-bottom: 10px; }
+  .nlist { display: flex; flex-direction: column; gap: 7px; }
+  .nrow {
+    display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 11px;
+    background: var(--panel); border: 1px solid var(--edge); font-size: 13px;
+  }
+  .nrow .nn { color: var(--heading); font-weight: 600; }
+  .nrow .nk { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; }
+  .nrow .nr { margin-left: auto; font-size: 12px; color: var(--dim); white-space: nowrap; }
+  .stage[data-w='1440'] .nlist { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .two { display: grid; grid-template-columns: 1fr; gap: 22px; }
+  .stage[data-w='1440'] .two { grid-template-columns: 1.55fr 1fr; gap: 32px; align-items: start; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Макет:</b>
+  <button data-v="1" class="active">V1 «Статья»</button>
+  <button data-v="2">V2 «Досье»</button>
+  <button data-v="3">V3 «Вопрос Вам»</button>
+  <button data-v="4">V4 «Соседство»</button>
+  <span class="sp"></span>
+  <button id="theme">☾ тёмная</button>
+  <button id="width">Телефон 390</button>
+  <span class="hint">Публичная страница измерения · фаза 5 эпика ideas/30</span>
+</div>
+
+<div class="note" id="note"></div>
+
+<div class="stage" id="stage" data-w="390">
+  <div class="panes" id="panes"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ДАННЫЕ — НАСТОЯЩИЕ. Выгружены из боевого каталога 2026-08-02 инструментом
+   `tools/fetch-dims-slice.mjs`. Ни одно поле не подправлено: если описание
+   обрывается на полуслове или тег продублирован по-русски и по-английски —
+   значит так лежит в базе, и макет обязан показывать это, а не приукрашенную
+   версию. Четыре объекта закрывают все границы правила показа оценок.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const DIMS = [
+  {
+    id: "2VVDn7dCUFRXGlZnoLke", slug: "warcraft-iii-reign-of-chaos-2vvdn7dc",
+    ru: "Warcraft III: Reign of Chaos", en: "Warcraft III: Reign of Chaos",
+    typeRu: "Видеоигра", typeEn: "Video game",
+    year: "2002", authorRu: "Blizzard Entertainment", authorEn: "Blizzard Entertainment",
+    rates: 4, rating: 9.3,
+    tags: ["video game","видеоигра","RTS","стратегия","fantasy","фэнтези"],
+    descRu: "Стратегическая видеоигра в реальном времени, разработанная Blizzard Entertainment и выпущенная в 2002 году. Третья часть культовой серии Warcraft, она предлагает насыщенный сюжет и разнообразный геймплей, объединяющий строительство базы, управление армией и стратегические сражения. Игроку доступны четыре уникальные фракции: люди, орки, ночные эльфы и нежить, каждая со своими особенностями, юнитами и героями. Кампания повествует о нашествии Пылающего Легиона на Азерот, падении принца Артаса, становлении Короля-Лича и судьбах разных народов. Warcraft III значительно расширил механику жанра RTS, введя ролевые элементы, систему героев с прокачкой и мощными умениями. Также игра заложила основу для пользовательских карт, среди которых возник знаменитый мод Defense of the Ancients (DotA), ставший предшественником жанра MOBA.",
+    descEn: "A real-time strategy video game developed by Blizzard Entertainment and released in 2002. The third installment in the iconic Warcraft series, it features a rich storyline and diverse gameplay that combines base-building, army management, and strategic battles. Players can choose from four distinct factions: Humans, Orcs, Night Elves, and Undead, each with unique units, heroes, and abilities. The campaign follows the Burning Legion’s invasion of Azeroth, the fall of Prince Arthas, the rise of the Lich King, and the fate of different races. Warcraft III introduced RPG elements into the RTS genre, including a hero system with leveling and powerful abilities. The game also laid the groundwork for custom maps, leading to the creation of Defense of the Ancients (DotA), the precursor to the MOBA genre.",
+  },
+  {
+    id: "00S8ckKACl6WhEdc9n3V", slug: "perfect-stranger-00s8ckka",
+    ru: "Идеальный незнакомец", en: "Perfect Stranger",
+    typeRu: "Фильм", typeEn: "Movie",
+    year: "2007", authorRu: "Джеймс Фоули", authorEn: "James Foley",
+    rates: 0, rating: 0,
+    tags: ["кино","фильм","триллер","movie","film","thriller"],
+    descRu: "Американский нео-нуарный психологический триллер 2007 года о журналистке Ровене Прайс (Холли Берри), расследующей секс-скандал с участием сенатора. После закрытия истории из-за отсутствия источника, Ровена встречает подругу детства Грейс Клейтон, которая просит помочь разоблачить богатого рекламного магната Харрисона Хилла (Брюс Уиллис), с которым у нее был роман. Когда Грейс находят мертвой, Ровена подозревает Хилла и, с помощью своего друга и исследователя Майлза Хейли (Джованни Рибизи), устраивается на работу в его рекламное агентство под вымышленным именем. Флиртуя с Хиллом онлайн и в реальной жизни, Ровена не осознает, что онлайн-Хилл на самом деле является Майлзом, который тайно одержим ею. Фильм исследует темы предательства, обмана и скрытых мотивов, ведя зрителя через лабиринт интриг и неожиданных поворотов, кульминируя в шокирующем раскрытии истинного убийцы.",
+    descEn: "A 2007 American neo-noir psychological thriller about journalist Rowena Price (Halle Berry) investigating a sex scandal involving a senator. After the story is shut down due to a lack of sources, Rowena encounters her childhood friend Grace Clayton, who seeks help in exposing wealthy advertising magnate Harrison Hill (Bruce Willis) with whom she had an affair. When Grace is found dead, Rowena suspects Hill and, with the help of her friend and researcher Miles Haley (Giovanni Ribisi), goes undercover at his advertising agency under an alias. Flirting with Hill both online and in real life, Rowena doesn't realize that the online Hill is actually Miles, who is secretly obsessed with her. The film explores themes of betrayal, deception, and hidden motives, leading the audience through a maze of intrigue and unexpected twists, culminating in a shocking revelation of the true killer.",
+  },
+  {
+    id: "0Q43WuaqKwxbGFxEKHph", slug: "house-of-the-dragon-0q43wuaq",
+    ru: "Дом Дракона", en: "House of the Dragon",
+    typeRu: "Телесериал", typeEn: "TV Series",
+    year: "2022", authorRu: "Джордж Р. Р. Мартин, Райан Кондал", authorEn: "George R. R. Martin, Ryan Condal",
+    rates: 1, rating: 10,
+    tags: ["кино","телесериал","movie","tv series","фэнтези","fantasy","драма","drama","эпик","epic","история","history"],
+    descRu: "Американский фэнтезийный телесериал 2022 года, созданный Джорджем Р. Р. Мартином и Райаном Кондалом, являющийся приквелом Игры престолов. Основанный на книге Пламя и кровь, он рассказывает о династическом кризисе в королевском доме Таргариенов, произошедшем за 200 лет до событий оригинального сериала. В центре сюжета борьба за престол между принцессой Рейнирой Таргариен (Эмма Д’Арси) и принцем Деймоном Таргариеном (Мэтт Смит), а также раскол, приведший к кровопролитной гражданской войне, известной как \"Танец драконов\". Великолепная постановка, проработанная мифология и масштабные баталии сделали сериал одним из самых ожидаемых проектов в жанре фэнтези.",
+    descEn: "An American fantasy TV series created by George R. R. Martin and Ryan Condal in 2022, serving as a prequel to Game of Thrones. Based on Fire & Blood, it depicts the dynastic crisis within House Targaryen, set 200 years before the events of the original series. The plot centers around the struggle for the throne between Princess Rhaenyra Targaryen (Emma D’Arcy) and Prince Daemon Targaryen (Matt Smith), leading to a devastating civil war known as the \"Dance of the Dragons.\" With its grand production, deep mythology, and epic battles, the series quickly became one of the most anticipated fantasy projects.",
+  },
+  {
+    id: "11mnoskttOStaViFeOak", slug: "skiing-11mnoskt",
+    ru: "Катание на лыжах", en: "Skiing",
+    typeRu: "Практика", typeEn: "Practice",
+    year: "-", authorRu: "-", authorEn: "-",
+    rates: 3, rating: 7.3,
+    tags: ["практика","спорт","зима","активность","снега","practice","skiing","sport","winter","activity"],
+    descRu: "Практика передвижения по снегу с помощью специальных длинных и узких досок — лыж, которая возникла как способ выживания и охоты в заснеженных регионах и со временем превратилась в популярное развлечение и спортивную дисциплину. Археологические находки свидетельствуют, что лыжи использовались уже более 5 тысяч лет назад на территории современной Скандинавии и России. В течение веков лыжи были необходимым средством транспортировки для жителей северных регионов, особенно в условиях суровой зимы. В XIX веке в Норвегии начали организовываться первые соревнования по лыжным гонкам и прыжкам с трамплина, положившие начало современному лыжному спорту. Катание на лыжах включает множество направлений: беговые лыжи, горные лыжи (альпийский спуск), фристайл, ски-туринг, прыжки с трамплина и экстремальные формы фрирайда. Эта практика требует физической выносливости, координации, силы и навыков управления движением на снежной поверхности. Катание на лыжах активно развивается как в спортивной сфере, включая Олимпийские игры, так и в туристической индустрии, где горнолыжные курорты играют важную роль в экономике многих стран. Также лыжи используются в армейской подготовке, экспедициях и приключенческих турах. Это не только способ активного отдыха, но и элемент культурной идентичности северных народов.",
+    descEn: "The practice of moving across snow using long, narrow boards called skis, which originated as a means of survival and hunting in snowy regions and gradually evolved into a popular recreational and competitive activity. Archaeological evidence shows that skis were used over 5,000 years ago in present-day Scandinavia and Russia. For centuries, they served as an essential means of transport for inhabitants of northern areas, especially during harsh winters. In the 19th century, Norway began organizing the first ski races and ski jumping competitions, marking the birth of modern skiing sports. Skiing includes various disciplines: cross-country skiing, alpine (downhill) skiing, freestyle, ski touring, ski jumping, and extreme freeriding. This practice demands physical endurance, coordination, strength, and the ability to control motion on snow. Skiing has developed both as a competitive sport—featuring in the Olympic Games—and as a key sector of the tourism industry, with ski resorts playing a vital role in many national economies. It is also used in military training, expeditions, and adventure travel. Skiing is not only a form of active recreation but also a cultural element for many northern peoples.",
+  },
+];
+
+/* Правило показа оценок — ОДНО на все четыре варианта, ровно как в коде
+   (`src/routes/dimension/[slug]/+page.ts`): звёзды при rates ≥ 1, серый текст
+   при нуле, число проголосовавших при rates ≥ 3. */
+const rateBlock = (d) => {
+  if (!d.rates) return '<p class="rate"><span class="novotes">Ещё без голосов</span></p>';
+  const full = Math.round(d.rating);
+  const stars = Array.from({ length: 10 }, (_, i) => `<i class="${i < full ? 'on' : ''}">★</i>`).join('');
+  const votes = d.rates >= 3 ? `<span class="votes">оценили: ${d.rates}</span>` : '';
+  return `<p class="rate"><span class="stars">${stars}</span>
+    <span class="val">${d.rating.toFixed(1).replace('.', ',')}</span>${votes}</p>`;
+};
+
+/* Год «-» и автор «-» в каталоге означают «неизвестно» — элемент просто не показывается
+   (Ваше решение `ideas/26`). У «Катания на лыжах» нет ни того, ни другого. */
+const has = (v) => v && v !== '-';
+
+const facts = (d) => `
+  <p class="facts">
+    <span class="kind">${d.typeRu}</span>
+    ${has(d.year) ? `<i>·</i><span>${d.year}</span>` : ''}
+    ${has(d.authorRu) ? `<i>·</i><span>${d.authorRu}</span>` : ''}
+  </p>`;
+
+const title = (d) => `
+  <h1>${d.ru}</h1>
+  ${d.en && d.en !== d.ru ? `<p class="orig">${d.en}</p>` : ''}`;
+
+const desc = (d) => `<div class="desc"><p>${d.descRu}</p></div>`;
+
+const tags = (d) => `<div class="tags">${d.tags.map((t) => `<span>${t}</span>`).join('')}</div>`;
+
+const url = (d) => `
+  <div class="url"><span class="lock">🔒</span>ndimspace.app/ru/dimension/${d.slug}</div>`;
+
+/* Шапка — ВО ВСЮ ШИРИНУ поверх рельса (V3-А, `ideas/17`), как в `AppBar.svelte`. */
+const bar = () => `
+  <div class="bar">
+    <div class="mark"></div><div class="title">NDim Space</div>
+    <div class="tools">
+      <span class="icobtn">☾</span><span class="icobtn">RU</span>
+      <span class="enter">Войти</span>
+    </div>
+  </div>`;
+
+/* Рельс навигации — пять пунктов `SideRail.svelte`, от 1024px.
+   ⚠️ Человек из поиска в аккаунт не вошёл, и любой пункт рельса ведёт его в дверь входа.
+   Рельс здесь стоит потому, что это НАСТОЯЩАЯ десктопная оболочка продукта; прятать её
+   на публичной странице — отдельное решение, и оно за владельцем, а не за мной. */
+const rail = () => `
+  <nav class="rail">
+    <a><span class="ico"></span>Профиль</a>
+    <a><span class="ico"></span>Связи</a>
+    <a><span class="ico"></span>Пространство</a>
+    <a class="on"><span class="ico"></span>Измерения</a>
+    <a><span class="ico"></span>Меню</a>
+  </nav>`;
+
+/* Дверь в продукт. Термины голыми не бросаются — Ваша правка 2026-08-02:
+   не «5111 измерений», а «объектов человеческой культуры». */
+const door = (d) => `
+  <div class="door">
+    <h3>Это одна из координат, по которым люди описывают себя</h3>
+    <p>В Пространстве NDim человек — это точка, а такие объекты — оси вокруг неё. Оцените
+       «${d.ru}» и ещё несколько вещей, которые Вы любите, — и увидите людей, у которых
+       они отзываются так же.</p>
+    <span class="go">Оценить и посмотреть, кто рядом</span>
+  </div>
+  <p class="foot">NDim Space — честный поиск похожих людей по математической близости.
+     Бесплатно, без рекламы и без подписок. Сейчас в Пространстве 5111 объектов
+     человеческой культуры.</p>`;
+
+const shell = (inner, d, wide = false) => `
+  <div class="screen">
+    ${url(d)}
+    ${bar()}
+    <div class="shell">
+      ${rail()}
+      <div class="body"><div class="wrap${wide ? ' wide' : ''}">${inner}</div></div>
+    </div>
+  </div>`;
+
+/* ── V1 «Статья» ─────────────────────────────────────────────────────────── */
+const v1 = (d) => shell(`
+  ${facts(d)}
+  ${title(d)}
+  ${rateBlock(d)}
+  ${desc(d)}
+  ${tags(d)}
+  ${door(d)}`, d);
+
+/* ── V2 «Досье» ──────────────────────────────────────────────────────────── */
+const v2 = (d) => shell(`
+  ${title(d)}
+  <div class="dossier">
+    ${rateBlock(d)}
+    <dl>
+      <dt>Вид</dt><dd>${d.typeRu}</dd>
+      ${has(d.year) ? `<dt>Год</dt><dd>${d.year}</dd>` : ''}
+      ${has(d.authorRu) ? `<dt>Автор</dt><dd>${d.authorRu}</dd>` : ''}
+      <dt>В оригинале</dt><dd>${d.en}</dd>
+      <dt>Теги</dt><dd>${d.tags.join(', ')}</dd>
+    </dl>
+  </div>
+  ${desc(d)}
+  ${door(d)}`, d);
+
+/* ── V3 «Вопрос Вам» ─────────────────────────────────────────────────────── */
+const askBlock = (d) => `
+  <div class="ask">
+    <h2>Насколько это про Вас?</h2>
+    <div class="sub">${d.ru}</div>
+    <div class="pick">${Array.from({ length: 10 }, (_, i) => `<i class="${i < 7 ? 'on' : ''}">★</i>`).join('')}</div>
+    <div class="scale"><span>0 — совсем нет</span><span>10 — это про меня</span></div>
+    <p class="note2">Аккаунт не нужен: оцените прямо здесь. Наберётся несколько таких оценок —
+       и Пространство покажет людей, у которых они совпадают с Вашими.</p>
+    ${d.rates ? `<p class="crowd">${d.rates >= 3
+        ? `Средняя оценка ${d.rating.toFixed(1).replace('.', ',')} · оценили: ${d.rates}`
+        : `Средняя оценка ${d.rating.toFixed(1).replace('.', ',')}`}</p>`
+      : '<p class="crowd">Вы будете первым, кто это оценит.</p>'}
+  </div>`;
+
+const v3 = (d) => shell(`
+  ${facts(d)}
+  ${title(d)}
+  ${askBlock(d)}
+  ${desc(d)}
+  ${tags(d)}
+  <p class="foot">NDim Space — честный поиск похожих людей по математической близости.
+     Бесплатно, без рекламы и без подписок.</p>`, d);
+
+/* ── V4 «Соседство» ──────────────────────────────────────────────────────── */
+const NEIGHBOURS = {
+  '2VVDn7dCUFRXGlZnoLke': [
+    ['Видеоигра', 'Disco Elysium', '9,1 · оценили: 27'],
+    ['Видеоигра', 'Borderlands 2', '7,5'],
+    ['Видеоигра', 'Outer Wilds', 'ещё без голосов'],
+    ['Фильм', '«Властелин колец»', '9,0 · оценили: 12'],
+  ],
+  '00S8ckKACl6WhEdc9n3V': [
+    ['Фильм', '«Таксист»', '8,4 · оценили: 41'],
+    ['Фильм', '«Основной инстинкт»', 'ещё без голосов'],
+    ['Телесериал', '«Настоящий детектив»', '8,8 · оценили: 19'],
+    ['Фильм', '«Исчезнувшая»', 'ещё без голосов'],
+  ],
+  '0Q43WuaqKwxbGFxEKHph': [
+    ['Телесериал', '«Игра престолов»', '9,2 · оценили: 33'],
+    ['Роман', '«Пламя и кровь»', 'ещё без голосов'],
+    ['Телесериал', '«Ведьмак»', '6,9'],
+    ['Фильм', '«Дюна»', '8,1 · оценили: 7'],
+  ],
+  '11mnoskttOStaViFeOak': [
+    ['Практика', 'Сноуборд', 'ещё без голосов'],
+    ['Практика', 'Горные походы', '8,0'],
+    ['Практика', 'Ранние подъёмы', '6,2 · оценили: 58'],
+    ['Практика', 'Холодный душ', 'ещё без голосов'],
+  ],
+};
+
+const nearBlock = (d) => `
+  <div class="near">
+    <h3>Рядом в Пространстве</h3>
+    <p class="why">Объекты того же рода — с них удобно начать, если «${d.ru}» Вам близко.</p>
+    <div class="nlist">
+      ${(NEIGHBOURS[d.id] ?? []).map(([k, n, r]) => `
+        <div class="nrow"><span class="nk">${k}</span><span class="nn">${n}</span><span class="nr">${r}</span></div>`).join('')}
+    </div>
+  </div>`;
+
+const v4 = (d) => shell(`
+  <div class="two">
+    <div>
+      ${facts(d)}
+      ${title(d)}
+      ${rateBlock(d)}
+      ${desc(d)}
+      ${tags(d)}
+    </div>
+    <div>
+      ${door(d)}
+      ${nearBlock(d)}
+    </div>
+  </div>`, d, true);
+
+/* ── Сборка ──────────────────────────────────────────────────────────────── */
+const CAPS = [
+  '4 голоса → звёзды И счётчик',
+  '0 голосов → «ещё без голосов», звёзд нет',
+  '1 голос → звёзды БЕЗ счётчика',
+  '3 голоса, но НЕТ ни года, ни автора',
+];
+
+const VARIANTS = {
+  1: {
+    note: `<b>V1 «Статья».</b> Уважение к тексту: строка данных, заголовок, оценка тонкой строкой,
+      описание во всю ширину. Модель энциклопедии — так устроены страницы, которые поиск любит
+      больше всего. Самый простой и самый быстрый вариант.
+      <span class="q">Цена: выше сгиба страница почти ничего не говорит о том, куда человек попал.
+      Он прочитает про «Дом Дракона» и уйдёт, так и не поняв, что такое NDim.</span>`,
+    build: v1,
+  },
+  2: {
+    note: `<b>V2 «Досье».</b> Сверху карточка объекта — вид, год, автор, оригинальное название,
+      теги и оценка одним блоком; текст под ней. Модель Кинопоиска и IMDb: данные считываются
+      мгновенно, взгляду есть за что зацепиться.
+      <span class="q">Цена: карточка отодвигает описание вниз — а описание и есть то единственное,
+      ради чего эти 5111 страниц вообще существуют для поиска.</span>`,
+    build: v2,
+  },
+  3: {
+    note: `<b>V3 «Вопрос Вам».</b> Центр страницы — не объект, а ЖЕСТ: «Насколько это про Вас?»,
+      звёзды прямо здесь, аккаунт не нужен. Публичная страница становится САМИМ ИНСТРУМЕНТОМ, а не
+      витриной. <b>Основание не вкусовое:</b> 68 % поисков в 2026 году не дают клика, и выигрывают
+      поверхности, которые ИИ-ответ не замещает (<i>researches/30</i>). У нас такая ровно одна —
+      инструмент, — и сегодня она заперта за входом.
+      <span class="q">Цена, и она настоящая: оценка без аккаунта тянет за собой гостевой режим
+      (эпик plans/22, гость живёт 7 дней). То есть эта страница зависит от чужой фазы, а три
+      другие — нет.</span>`,
+    build: v3,
+  },
+  4: {
+    note: `<b>V4 «Соседство».</b> Объект показан ВНУТРИ Пространства: рядом другие объекты того же
+      рода. Это объясняет идею продукта не словами, а формой, и попутно связывает 5111 страниц
+      между собой — на таком объёме внутренние ссылки это то, чем страницы вообще находятся
+      роботом.
+      <span class="q">Цена: соседство надо чем-то считать. По людям его посчитать нельзя — оценок
+      мало (4089 на 5111 объектов), значит по виду и тегам, а это слабее и иногда будет выглядеть
+      случайным.</span>`,
+    build: v4,
+  },
+};
+
+const stage = document.getElementById('stage');
+const panes = document.getElementById('panes');
+const note = document.getElementById('note');
+let current = '1';
+
+function render() {
+  const v = VARIANTS[current];
+  note.innerHTML = v.note;
+  // На десктопе показываем два случая: широкая страница длинная, четыре рядом не читаются.
+  const items = stage.dataset.w === '1440' ? [DIMS[0], DIMS[1]] : DIMS;
+  panes.innerHTML = items
+    .map((d, i) => `<div class="pane"><div>${v.build(d)}</div><div class="cap">${CAPS[DIMS.indexOf(d)]}</div></div>`)
+    .join('');
+}
+
+document.querySelectorAll('.picker button[data-v]').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    current = b.dataset.v;
+    render();
+  };
+});
+
+document.getElementById('theme').onclick = (e) => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  e.target.textContent = dark ? '☾ тёмная' : '☀ светлая';
+};
+
+document.getElementById('width').onclick = (e) => {
+  const wide = stage.dataset.w === '1440';
+  stage.dataset.w = wide ? '390' : '1440';
+  e.target.textContent = wide ? 'Телефон 390' : 'Десктоп 1440';
+  render();
+};
+
+render();
+</script>
+</body>
+</html>

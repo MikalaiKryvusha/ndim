@@ -9,6 +9,8 @@
 // поэтому пишем один <loc> (researches/08 §4, KISS).
 import { SITE_ORIGIN } from '$lib/site';
 import { DOCS } from '$lib/content/docs';
+import { DIMS } from '$lib/content/dims-source';
+import { LANGS } from '$lib/content/langs';
 
 export const prerender = true;
 
@@ -39,6 +41,21 @@ const DOC_PATHS = Object.keys(DOCS)
   .filter((slug) => slug !== 'history')
   .map((slug) => `/menu/${slug}`);
 
+/*
+ * 🆕 СТРАНИЦЫ КАТАЛОГА — фаза 5 эпика `ideas/30` (`plans/36`, шаг 4), 2026-08-03.
+ *
+ * По странице на каждый объект каталога и на каждый язык: 5111 × 2 = 10 222 адреса. Список
+ * берётся ИЗ САМОГО КАТАЛОГА, а не переписывается руками, — по тому же правилу, что и документы:
+ * руками написанный список разошёлся бы с правдой при первом же пополнении.
+ *
+ * ⚠️ Предел одного файла карты — 50 000 адресов и 50 МБ несжатыми. У нас 10 233 адреса и
+ * ~0,8 МБ: влезаем с запасом, дробить на индекс карт не нужно (`interviews/019`).
+ *
+ * 🔴 Языковые адреса тут — ТОЛЬКО у страниц каталога. Остальной сайт переезжает на префиксы
+ * отдельно (`plans/24` фаза 7): его адреса уже проиндексированы, и трогать их этой фазе нельзя.
+ */
+const DIM_PATHS = LANGS.flatMap((lang) => DIMS.map((d) => `/${lang}/dimension/${d.slug}`));
+
 const PUBLIC_PATHS = [
   '/',
   '/delete-account',
@@ -48,6 +65,7 @@ const PUBLIC_PATHS = [
   '/menu/support',
   '/menu/donate',
   '/menu/share',
+  ...DIM_PATHS,
 ];
 
 export function GET(): Response {

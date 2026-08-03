@@ -39,6 +39,29 @@ const FORBIDDEN = [
   'npm run',
 ];
 
+/**
+ * Описание объекта каталога — НЕ наш текст, и судить его словарём продукта нельзя.
+ *
+ * 🔴 Полевой случай, ради которого это появилось (2026-08-03, фаза 5 эпика `ideas/30`): страж
+ * покраснел на страницах фильмов **«Скрытые фигуры»** и **«Игра в имитацию»**. Оба про людей,
+ * которые считали вручную, — слово «вычислитель» стоит там по делу, в описании произведения.
+ * Запрет же существует для СЛОВАРЯ ПРОДУКТА: внутреннее имя папки `calculator/` не должно
+ * выходить на лицо приложения вместо «Сервера синхронизации».
+ *
+ * Вырезаем ровно блок описания, а не всю страницу: обвязка страницы каталога — наш текст, и
+ * жаргон в ней страж обязан ловить по-прежнему. Ослабить проверку целиком было бы дешевле и
+ * неправильно.
+ */
+const stripCatalogDescription = (html: string) =>
+	html.replace(/<div class="desc[^"]*">[\s\S]*?<\/div>/g, ' ');
+
+/**
+ * Данные пререндера SvelteKit (`__sveltekit_*` / `data:`) несут те же чужие описания в
+ * сериализованном виде — их тоже судить нельзя по той же причине.
+ */
+const ourTextOnly = (html: string) =>
+	stripCatalogDescription(html).replace(/<script[\s\S]*?<\/script>/g, ' ');
+
 /** Все файлы собранного сайта — именно они уезжают к людям. */
 function filesOf(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -53,7 +76,7 @@ test('в собранном сайте нет жаргона разработч�
 
   const found: string[] = [];
   for (const file of files) {
-    const text = readFileSync(file, 'utf8');
+    const text = ourTextOnly(readFileSync(file, 'utf8'));
     for (const word of FORBIDDEN) {
       if (text.includes(word)) found.push(`${file} → «${word}»`);
     }

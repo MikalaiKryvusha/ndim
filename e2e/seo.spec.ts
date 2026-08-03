@@ -15,10 +15,15 @@ test('sitemap.xml: отдаётся и содержит только то, чт�
 	// Google Play требует «readily discoverable option to initiate account deletion».
 	// Закрыть её от поиска значило бы выполнить букву требования и убить его смысл.
 	expect(xml).toContain('<loc>https://ndimspace.app/delete-account</loc>');
-	// Приватные экраны под noindex — им нечего делать в карте сайта
-	expect(xml).not.toContain('/profile');
-	expect(xml).not.toContain('/relations');
-	expect(xml).not.toContain('/account<');
+	// Приватные экраны под noindex — им нечего делать в карте сайта.
+	// 🔴 Сверяем ПОЛНЫЙ адрес, а не подстроку. Голая подстрока `/profile` сломалась на живых
+	// данных: в каталоге есть измерение «Profile», и его публичный адрес
+	// `/ru/dimension/profile-qgg1lfbk` содержит те же знаки. Проверка краснела бы на исправном
+	// продукте и выглядела как «личный экран утёк в поиск» — худший вид ложной тревоги
+	// (`plans/36`, шаг 4; фаза 5 эпика ideas/30 добавила 10 222 адреса каталога).
+	expect(xml).not.toContain('<loc>https://ndimspace.app/profile</loc>');
+	expect(xml).not.toContain('<loc>https://ndimspace.app/relations</loc>');
+	expect(xml).not.toContain('<loc>https://ndimspace.app/account</loc>');
 });
 
 test('удаление аккаунта: публичная дверь открыта без входа и НЕ закрыта от поиска', async ({
