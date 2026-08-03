@@ -68,6 +68,8 @@
   import { technicalDetail } from '$lib/ui/errors';
   import { GRADE_FACES } from '$lib/ui/emojiscale';
   import { votesUnit, type Lang } from '$lib/ui/format';
+  // Правило показа оценок — ОДНО на приложение и на публичные страницы (интервью №022).
+  import { ratingView } from '$lib/content/dims-rating';
   import { lang as currentLang } from '$lib/ui/lang.svelte';
   import GradeFace from '$lib/ui/GradeFace.svelte';
   import { MOTION } from '$lib/ui/motion';
@@ -1388,19 +1390,31 @@
               </div>
             </div>
 
-            <!-- Рейтинг сообщества. Строка есть ВСЕГДА — карточки одной высоты (bugs/15);
-                 у неоценённых — пустые звёзды и честное «ещё без голосов». -->
+            <!--
+              Рейтинг сообщества. Строка есть ВСЕГДА — карточки одной высоты (bugs/15).
+              🔑 Высоту держит `min-height` на `.rating`, а НЕ звёзды: поэтому убрать их у
+              неоценённых можно, не сломав сетку.
+
+              🔴 ПРАВИЛО ПОКАЗА — ОБЩЕЕ (`$lib/content/dims-rating`), а не своё.
+              Здесь стояла его копия, и копия УЖЕ РАЗОШЛАСЬ: «(N оценок)» показывалось с
+              ПЕРВОГО голоса, тогда как публичная страница каталога показывает счётчик с
+              ТРЁХ. А владелец решил ровно обратное — «одно правило внутри и снаружи»
+              (интервью №022). То есть человек видел одно число внутри приложения и другое
+              на той же карточке, пришедшей из поиска.
+
+              Десять пустых звёзд у неоценённых убраны по слову владельца 2026-08-01
+              (`ideas/26`): остаётся только серый текст «ещё без голосов».
+            -->
             <div class="rating">
-              {#if card.rates > 0}
+              {#if ratingView(card.rates).showStars}
                 <span class="rval">{card.rating}</span>
                 <span class="rstars" aria-hidden="true">
                   {#each Array(10) as _, i (i)}<i class:lit={i < Math.round(card.rating)}>★</i>{/each}
                 </span>
-                <span class="rvotes">({card.rates} {votesUnit(card.rates, lang)})</span>
+                {#if ratingView(card.rates).showRaterCount}
+                  <span class="rvotes">({card.rates} {votesUnit(card.rates, lang)})</span>
+                {/if}
               {:else}
-                <span class="rstars" aria-hidden="true">
-                  {#each Array(10) as _, i (i)}<i>★</i>{/each}
-                </span>
                 <span class="rvotes">{t.noVotes[lang]}</span>
               {/if}
             </div>

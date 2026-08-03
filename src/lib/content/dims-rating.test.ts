@@ -11,9 +11,41 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
 import { ratingView, STARS_FROM, RATER_COUNT_FROM } from './dims-rating.ts';
 import slice from './dims-slice.json' with { type: 'json' };
+
+/**
+ * 🔴 НИ ОДИН ЭКРАН НЕ ДЕРЖИТ СВОЮ КОПИЮ ПРАВИЛА.
+ *
+ * Копия здесь уже была и уже разошлась: экран «Измерения» показывал «(N оценок)» с ПЕРВОГО
+ * голоса, а публичная страница каталога — с ТРЁХ. То есть человек видел на одной и той же
+ * карточке разные числа внутри приложения и из поиска, тогда как владелец решил ровно обратное:
+ * «одно правило внутри и снаружи» (интервью №022). Поймано 2026-08-03, вылечено `ratingView`.
+ *
+ * Проверка грепом, а не типами: разойтись копии могут только текстом.
+ */
+test('правило показа оценок не скопировано ни в один компонент', () => {
+  const walk = (dir: string): string[] =>
+    readdirSync(dir).flatMap((name) => {
+      const full = join(dir, name);
+      return statSync(full).isDirectory() ? walk(full) : [full];
+    });
+
+  const strays: string[] = [];
+  for (const file of walk('src').filter((f) => f.endsWith('.svelte'))) {
+    const code = readFileSync(file, 'utf8')
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ');
+    // Сравнение `rates` с порогом мимо общей функции — и есть копия правила.
+    if (/\brates\s*[<>=]=?\s*\d/.test(code) || /\d\s*[<>]=?\s*[\w.]*\brates\b/.test(code)) {
+      strays.push(file);
+    }
+  }
+  assert.deepEqual(strays, [], 'порог сравнивается мимо `ratingView` — правило снова раздвоилось');
+});
 
 test('нет голосов — нет звёзд (две трети каталога)', () => {
   const v = ratingView(0);
