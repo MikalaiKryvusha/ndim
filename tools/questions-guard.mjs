@@ -153,6 +153,113 @@ function docsInScope() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Половина 3 — ОБРАТНОЕ ПЛЕЧО: доехал ли ОТВЕТ до документов, которые его ждали
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * 🔴 ЗАЧЕМ ЭТО ЕСТЬ. Страж родился, стерегущим одно плечо контура: «вопрос лежит в правильном
+ * месте». Второе плечо — «ответ доехал до документа, который на нём стоял» — не стерёг никто, и
+ * это не мелочь, а дыра в самом KAIF: его же принцип 3 требует, чтобы конвенция была накрыта
+ * стражем, а `/interview` шаг 5 («обнови релевантные файлы в plans/») оставался прозой, которую
+ * судит уставшая сессия в конце дня.
+ *
+ * ЦЕНА, УПЛАЧЕННАЯ ПОЛЕМ. Ответ владельца Р5 интервью №010 (2026-08-01) не доехал до `plans/24`.
+ * Документ два дня носил вопрос как открытый и держал риск «флип корня», которого при этом ответе
+ * не существует. Свежая сессия 2026-08-03, прошедшая полный `/resume`, СОБИРАЛАСЬ спросить то же
+ * самое заново — остановило только то, что владелец читал чат. Его слова: «странно, что это не
+ * записано! Меня агент спрашивал, я ему отвечал на это!»
+ *
+ * ПОЧЕМУ ЕДИНИЦА — ВОПРОС, А НЕ ИНТЕРВЬЮ. Замер по трём проектам KAIF (NDim, KLAS, Unliminium):
+ * интервью-сирот, на которые не ссылается никто, — НОЛЬ. А ответов без единой ссылки — 124 из 227
+ * (55 %). Разносится не интервью, а конкретный ответ: `interview_010` цитировался 12 раз, и это
+ * ничего не говорило про Р5.
+ *
+ * ЧЕГО СТРАЖ НЕ ДОКАЗЫВАЕТ. Ноль ссылок ≠ «ответ потерян»: его могли впитать без цитаты. Стражу
+ * важна ПРОСЛЕЖИВАЕМОСТЬ — без неё впитывание не может проверить никто, и ровно так Р5 и
+ * проскользнул.
+ */
+const PROPAGATION_BASELINE = join(ROOT, 'tools', 'propagation-baseline.json');
+
+/** Ищем «№NNN» и код вопроса РЯДОМ — цитата ответа выглядит как «интервью №010, Р5 = В». */
+const NEAR = 90;
+
+function propagation(interviews) {
+	// Корпус: всё, что НЕ интервью, включая STATUS.md и закрытые документы — ссылка есть ссылка.
+	const corpus = [];
+	for (const d of [...SCAN_DIRS, '.']) {
+		for (const f of d === '.' ? [] : walkMd(join(ROOT, d))) corpus.push(f);
+	}
+	for (const name of readdirSync(ROOT)) {
+		if (name.endsWith('.md') && statSync(join(ROOT, name)).isFile()) corpus.push(join(ROOT, name));
+	}
+	const texts = corpus.map((f) => readFileSync(f, 'utf8'));
+
+	const orphans = [];
+	let total = 0;
+
+	for (const iv of interviews) {
+		const num = basename(iv.file).match(/interview_(\d+)/)?.[1];
+		if (!num) continue;
+		const short = String(Number(num));
+		for (const q of iv.questions) {
+			if (!q.answered) continue;
+			total += 1;
+			// ⚠️ `\b` здесь бесполезен: для движка JS кириллическая «В» — НЕ буквенный знак, и
+			// границы слова перед ней не возникает. Первая редакция прибора из-за этого показала
+			// «не разнесено 100 %» — то есть меряла себя, а не проект.
+			const rx = new RegExp(`(?<![А-Яа-яЁёA-Za-z0-9])${q.label}(?![0-9])`, 'gu');
+			const cited = texts.some((t) => {
+				for (const m of t.matchAll(rx)) {
+					const near = t.slice(Math.max(0, m.index - NEAR), m.index + NEAR);
+					if (
+						near.includes(`№${num}`) || near.includes(`№ ${num}`) ||
+						near.includes(`№${short}`) || near.includes(`interview_${num}`)
+					) return true;
+				}
+				return false;
+			});
+			if (!cited) orphans.push(`№${num} ${q.label}`);
+		}
+	}
+
+	// Базовая линия — тем же приёмом, что у половины 1: страж, красный с рождения, приучает себя
+	// игнорировать. Краснеем только на НОВЫХ, унаследованное печатаем числом, которое обязано убывать.
+	let baseline = [];
+	if (existsSync(PROPAGATION_BASELINE)) {
+		try {
+			baseline = JSON.parse(readFileSync(PROPAGATION_BASELINE, 'utf8')).items ?? [];
+		} catch {
+			baseline = [];
+		}
+	} else {
+		writeFileSync(
+			PROPAGATION_BASELINE,
+			JSON.stringify(
+				{
+					снято: new Date().toISOString().slice(0, 10),
+					почему:
+						'Унаследованные неразнесённые ответы на момент постройки стража обратного плеча. ' +
+						'Страж краснеет только на НОВЫХ; это число обязано убывать.',
+					items: orphans,
+				},
+				null,
+				'\t',
+			) + '\n',
+			'utf8',
+		);
+		baseline = orphans;
+	}
+
+	const known = new Set(baseline);
+	return {
+		total,
+		orphans,
+		fresh: orphans.filter((o) => !known.has(o)),
+		debt: orphans.filter((o) => known.has(o)),
+	};
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Половина 1 — вопросы вне interviews/
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -345,6 +452,23 @@ function main() {
 			'\n  Неотвеченное интервью — не нарушение, а очередь владельца.',
 	);
 
+	// ── Половина 3: ОБРАТНОЕ ПЛЕЧО — доехал ли ответ до документов, которые его ждали
+	const back = propagation(interviews);
+	console.log('\nРАЗНОС ОТВЕТОВ (обратное плечо контура)\n');
+	console.log(
+		`  Отвеченных вопросов ${back.total} · без единой ссылки вне interviews/ ` +
+			`${back.orphans.length} (${back.total ? Math.round((back.orphans.length / back.total) * 100) : 0} %).`,
+	);
+	if (back.fresh.length) {
+		console.log(`\n  🔴 НОВЫЕ НЕРАЗНЕСЁННЫЕ ОТВЕТЫ — ${back.fresh.length}:`);
+		for (const o of back.fresh) console.log(`     ${o}`);
+		console.log('     Ответ получен, а документ, который на нём стоял, о нём не знает.');
+	}
+	if (back.debt.length) {
+		console.log(`\n  📉 Унаследованный долг разноса — ${back.debt.length}: ${back.debt.join(' · ')}`);
+		console.log('     Число обязано убывать: разносишь ответ — цитируй «интервью №NNN, ВN».');
+	}
+
 	// ── Отчёт (не провал): неулаженные допущения фейбл-цикла
 	if (pendings.length) {
 		console.log(`\nНЕУЛАЖЕННЫЕ ДОПУЩЕНИЯ (PENDING:) — ${pendings.length}, к закрытию работы у`);
@@ -352,8 +476,12 @@ function main() {
 		for (const p of pendings) console.log(`  ${p.file}:${p.line}`);
 	}
 
-	const failed = fresh.length + noStatus.length;
-	console.log(failed ? `\n🔴 ПРОВАЛОВ: ${failed}` : `\n✅ ЧИСТО (долг ${debt.length} — к разбору)`);
+	const failed = fresh.length + noStatus.length + back.fresh.length;
+	console.log(
+		failed
+			? `\n🔴 ПРОВАЛОВ: ${failed}`
+			: `\n✅ ЧИСТО (долг: вопросов вне interviews/ ${debt.length} · неразнесённых ответов ${back.debt.length})`,
+	);
 	return failed ? 1 : 0;
 }
 
