@@ -246,12 +246,14 @@
         <!-- 🏷 Оценка названа СВОИМ ИМЕНЕМ — «NDim Space Rating» (слово владельца 2026-08-03:
              «наш фирменный бренд-рейтинг»). Без имени звёзды читаются как чей-то безымянный
              агрегат; с именем это ВЕЛИЧИНА ПРОДУКТА, и её можно узнать в другом месте сети. -->
-        <span class="brandname">{t.ratingBrand}</span>
         <span class="stars" aria-hidden="true">
           {#each Array(10) as _, i (i)}<i class:on={i < filled}>★</i>{/each}
         </span>
         <span class="val">{average}</span>
-        {#if data.showRaterCount}<span class="votes">{t.voted(data.rates)}</span>{/if}
+        <span class="meta">
+          <span class="brandname">{t.ratingBrand}</span>
+          {#if data.showRaterCount}<span class="votes">{t.voted(data.rates)}</span>{/if}
+        </span>
       {:else}
         <!-- Ноль в поле оценки означает «не оценивали», а НЕ «оценили на ноль». Показать его
              звёздами было бы неправдой на двух третях страниц каталога — ради этого правило
@@ -264,7 +266,19 @@
       {#if data.kind}<dt>{t.kind}</dt><dd>{data.kind}</dd>{/if}
       {#if data.year}<dt>{t.year}</dt><dd>{data.year}</dd>{/if}
       {#if data.author}<dt>{t.author}</dt><dd>{data.author}</dd>{/if}
-      {#if data.otherTitle}<dt>{t.otherTitle}</dt><dd>{data.otherTitle}</dd>{/if}
+      <!--
+        🔴 СТРОКА «НА АНГЛИЙСКОМ / IN RUSSIAN» УБРАНА (слово владельца 2026-08-04: «это убрать!
+        мы согласовали, что там будет поле названия в оригинале»).
+
+        Она была временной заплатой поверх `bugs/116`: подпись «В оригинале» врала, и я заменил
+        её на честную «язык названия». Но честная подпись не делает строку НУЖНОЙ — второе имя
+        объекта и так стоит подзаголовком под заголовком, без подписи и без утверждений.
+        Место в досье ждёт НАСТОЯЩЕГО оригинального названия (`ideas/33`, одобрена владельцем):
+        его даст Wikidata (`P364`, `P1476`) тем же конвейером, что и остальное обогащение.
+
+        ⚠️ Поле `otherTitle` НЕ удалено из модели: на нём держится подзаголовок под заголовком.
+        Удалять его «заодно» нельзя — это разные места с разной судьбой.
+      -->
       {#if data.tags.length}
         <dt>{t.tags}</dt>
         <dd class="tags">{#each data.tags as tag (tag)}<span>{tag}</span>{/each}</dd>
@@ -394,10 +408,19 @@
     box-shadow: var(--card-shadow);
   }
 
+  /*
+   * СТРОКА ОЦЕНКИ — макет **V4 «Оценка вперёд»** с правкой владельца (2026-08-04):
+   * «делаем V4, только огромную цифру среднего рейтинга переносим вправо от звёзд, а весь
+   * блок со звёздами сдвигается в крайнее левое положение в шапке виджета».
+   *
+   * Порядок слева направо: ЗВЁЗДЫ (у самого края) → огромная средняя → имя рейтинга и счётчик
+   * стопкой. Макеты и их сравнение — `design/rating-line-mockups.html`, кадры в
+   * `test-results/rating-line-mockups/`.
+   */
   .rate {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.75rem;
     flex-wrap: wrap;
     /* Высоту строки держит min-height, а не звёзды: без него карточки без голосов «прыгают»
        относительно оценённых (урок `bugs/15`). */
@@ -406,14 +429,17 @@
     padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--edge);
   }
-  /* ЗВЁЗДЫ КРУПНЫЕ — слово владельца 2026-08-03: «главная ценная метрика измерения». Та же
-     правка, что он уже делал для карточек внутри приложения («звёзды большие как в v2»). */
+  /*
+   * ЗВЁЗДЫ КРУПНЫЕ и ПЕРВЫЕ — слово владельца: «главная ценная метрика измерения».
+   * ⚠️ Здесь стояли ДВЕ декларации `font-size` подряд (1.6rem и 0.95rem), и вторая молча
+   * съедала первую: правка «сделать звёзды крупными» не действовала вовсе. Классика — не
+   * дописывай свойство в чужое правило, не дочитав его до конца.
+   */
   .stars {
-    font-size: 1.6rem;
-    line-height: 1;
     display: flex;
-    gap: 1px;
-    font-size: 0.95rem;
+    gap: 2px;
+    font-size: 1.55rem;
+    line-height: 1;
   }
   .stars i {
     font-style: normal;
@@ -422,9 +448,27 @@
   .stars i.on {
     color: var(--star);
   }
+  /* Огромная средняя — СПРАВА ОТ ЗВЁЗД (правка владельца). Она подтверждает звёзды числом,
+     а не спорит с ними за начало строки. */
   .val {
-    font-weight: 700;
+    font-size: 2.3rem;
+    font-weight: 800;
+    line-height: 1;
     color: var(--heading);
+  }
+  /* Имя рейтинга и счётчик — стопкой, мелко: подпись к величине, а не сама величина. */
+  .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .brandname {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--dim);
   }
   .votes,
   .novotes {
