@@ -1,0 +1,39 @@
+{
+  "_kaif_hooks": "Модуль refresh-hooks KAIF 2.2 (.kaif/hooks/README.md). Подключён по явному опт-ину владельца: чат 2026-08-14 — «убедись что опциональный модуль хуков подключен». Отличие от .kaif/hooks/settings-fragment.json: команда одной строкой вместо полей command+args — документированная схема хуков Claude Code поля args не содержит (расхождение зафиксировано в полевом отчёте обновления 2.2).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.kaif/hooks/session-start-refresh.mjs\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.kaif/hooks/prompt-refresh-timer.mjs\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.kaif/hooks/stop-status-guard.mjs\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

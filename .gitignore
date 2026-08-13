@@ -62,4 +62,6 @@ KAIF_UPDATE_TASK.superseded.md
 # (src/lib/content/dims-slice.json — он ОБЯЗАН оставаться в git: без него сборка из чистого клона
 # падает). Полный выгружается шагом выката: node tools/fetch-dims-slice.mjs --all
 src/lib/content/dims-build.json
-
+KAIF_ADAPTATION_TASK.superseded.md
+.kaif/backup-*/
+.kaif/refresh-marker.json

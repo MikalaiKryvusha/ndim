@@ -1,15 +1,16 @@
 {
-  "from": "2.0",
-  "to": "2.1",
-  "route": "legacy-bootstrap",
+  "from": "2.1",
+  "to": "2.2",
+  "route": "bootstrap",
   "counters": {
-    "replaced": 10,
-    "mergedModules": 7,
-    "added": 8,
-    "kept": 45,
-    "adopted": 27
+    "replaced": 15,
+    "mergedModules": 0,
+    "added": 14,
+    "kept": 50,
+    "adopted": 30
   },
   "classified": true,
-  "date": "2026-07-31",
-  "verifiedAt": "2026-07-31"
+  "date": "2026-08-14T00:08:35+03:00",
+  "judgeVerdict": "# Fable-judge verdict — KAIF 2.1 → 2.2 update, NDim Space, 2026-08-14\n\n**VERDICT: VERIFIED** — every claim re-checked by observation, none refuted.\n\nClaims and re-run evidence:\n\n1. **Version stamped.** `.kaif/kaif.json` → `2.2 · 2026-08-08 · tracking=origin`, history row\n   `{\"from\":\"2.1\",\"to\":\"2.2\",\"route\":\"bootstrap\",\"date\":\"2026-08-14T00:08:35+03:00\"}`.\n2. **No Cyrillic lost.** Per-file counter (HEAD vs worktree) over every changed tracked `*.md`:\n   zero files with a loss. The one wholesale replacement (`OWNER_VOICE.md` → `AUTHOR_STYLOMETRY.md`)\n   is an intentional, owner-ordered actualization; the old text survives in git history via `git mv`.\n3. **No module doubling** (the i18n trap of 1.6→2.0): duplicate-heading count in AGENT_GUIDE.md /\n   PHILOSOPHY.md / BUG_FIXING_FRAMEWORK.md = 0 / 0 / 0.\n4. **All 55 merge modules present.** Spot-grep of 11 marker strings (Таксономия документов ·\n   Свежесть контекста · Досье окружения · Мета-шапка · Контуры · Витрина · Код прежде когниции ·\n   «не священен» · bugs/KAIF · Метка несёт ДАТУ И ВРЕМЯ · ВОПРОС САМОДОСТАТОЧЕН) — every one found\n   in its target file.\n5. **Sandbox prediction matched battle.** `git archive` sandbox run predicted the same tracked-file\n   set (20 files, +2262/−385) and the same 13 untracked additions; battle diff matched.\n6. **Mirrors in sync.** `node .kaif/kaif-core.mjs check` → «manifest satisfied: 79 files + 144 agent\n   artifacts present», 0 drifted mirrors after `sync` (machinery re-synced 152 copies).\n7. **Hooks module wired and functional** (owner opt-in quoted in chat 2026-08-14): smoke per module\n   README — no marker → JSON order printed; fresh marker → silence; SessionStart → order. Exit 0 all.\n8. **Stylometry mirror honest.** `tail -n +12 AUTHOR_STYLOMETRY.md` vs KAIF public snapshot —\n   byte-identical; core version 1.1, status accepted; consumer registered and pushed to\n   `krinik-stylometry` (`version.json`).\n9. **Project tree green.** `npm test` → 232/232 pass; `npm run kaif:check` → green (1 expected\n   warning about `.private/`); `tools/03-kaif-verify.mjs` → 35/35 skills incl. `kaif-go`.\n10. **Checkpoints executed, not narrated:** policy-changes, merge-modules, merge-diverged,\n    owner-conventions, local-inventories, project-name, review-news, stale-claims, recheck — all\n    recorded by the machinery.\n\nKnown caveats (named, not hidden):\n- STATUS.md is 659 lines vs the ~200 soft target — a bonsai trim is queued for the next `/end-chat`,\n  not part of this update.\n- The shipped hooks `settings-fragment.json` uses `command`+`args` fields; the documented Claude Code\n  hook schema takes a single command string — wired in the string form, divergence reported upstream.",
+  "verifiedAt": "2026-08-14T00:38:59+03:00"
 }

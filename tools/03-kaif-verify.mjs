@@ -100,6 +100,8 @@ const EXPECTED_SKILLS = [
   'fable-method', 'fable-loop', 'fable-judge', 'fable-domain',
   // Приехали с KAIF 2.1: лестница планирования, защищённый цикл, читающая ревизия, голос владельца.
   'plan-task', 'plan-epic', 'guarded-loop', 'code-revision', 'owner-voice', 'owner-reviews',
+  // Приехал с KAIF 2.2: пинок «продолжай» одной командой.
+  'kaif-go',
 ];
 const hasCyrillic = (s) => /[а-яёА-ЯЁ]/.test(s);
 

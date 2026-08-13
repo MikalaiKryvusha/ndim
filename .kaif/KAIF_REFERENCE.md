@@ -33,6 +33,7 @@ for understanding the project and making judgment calls.
 | **Receipt** | `.kaif/last-update.json` — the permanent proof of the last update (§12.3). |
 | **Owner** | The human whose vision the project serves. The owner's word outranks every document. |
 | **Canon artifact** | An owner document whose wording IS the content (rules, lore, brand texts). AI text enters it only marked (§13.3). |
+| **Contour** | A top-level logical module of the system or of the methodology itself: a complete closed stack of context on one direction — boundaries · governance · execution layer · quality control (`AGENT_GUIDE.md` → Contours). |
 
 ## 2. Design principles
 
@@ -63,13 +64,13 @@ Each release attaches five artifacts (their roles are machine-readable in `kaif-
 |---|---|
 | `KAIF.md` | The thin entry point; transient in the target project. |
 | `KAIF-CORE.mjs` | The machinery; survives as `.kaif/kaif-core.mjs` (except on anonymous deployments, §11.3). |
-| `KAIF-CORE-BUNDLE.md` | The COMPLETE deployable set: documents, skills, spheres, optional tool modules, language packs. |
+| `KAIF-CORE-BUNDLE.md` | The COMPLETE deployable set: documents, skills, spheres, optional tool modules, the optional refresh-hooks module, language packs. |
 | `kaif-manifest.json` | Version, codename, sha256 pins of the fetched pair, asset roles. |
 | `KAIF-FULL.md` | The offline fallback core — a SUBSET (no language packs/spheres/references); not an authoritative diff baseline (only a last-resort candidate for a synthetic one, §10.4). |
 
 ## 5. The document system
 
-Thirteen key documents ship with a deployment (twelve project documents plus this reference):
+Fourteen key documents ship with a deployment (thirteen project documents plus this reference):
 
 | Document | Purpose | Written by |
 |---|---|---|
@@ -77,6 +78,7 @@ Thirteen key documents ship with a deployment (twelve project documents plus thi
 | `PHILOSOPHY.md` | How the agent thinks: simplicity (KISS + Occam) and the wider principle set. | Deployed verbatim. |
 | `BUG_FIXING_FRAMEWORK.md` | How defects are fixed: intent gate, 3-attempt rule, twin check, class-not-instance, guards. | Deployed verbatim. |
 | `TESTING_FRAMEWORK.md` | Nothing raw is trusted: the `[NOT-TESTED]`/`[TESTED: …]` contract, observation gates. | Deployed verbatim. |
+| `REQUIREMENTS_FRAMEWORK.md` | How requirements are written and checked: goal vector + acceptance criteria first, the ten quality criteria, EARS, fit criterion, the stop-word dictionary as a lintable guard (2.2, epic N). | Deployed verbatim. |
 | `GOAL.md` | The owner's vision. | **The owner.** |
 | `MASTER_PLAN.md` | The phased road from the current state to the GOAL. | Agent derives (`/revision`). |
 | `STATUS.md` | The living SUMMARY of now and the baton between sessions (soft target ~200 lines; closed work moves to the chronicle — the bonsai trim). | Agent, after every task. |
@@ -87,12 +89,29 @@ Thirteen key documents ship with a deployment (twelve project documents plus thi
 | `KAIF_FRAMEWORK.md` | "KAIF, deployed here": the deployment record page. | Agent, after injection. |
 | `KAIF_REFERENCE.md` (this document, at `.kaif/`) | The complete framework reference. | Deployed verbatim. |
 
+One OPTIONAL canon document joins the fourteen only when it is earned: **`AUTHOR_STYLOMETRY.md`** in
+the project root — the owner's voice portrait (`/owner-voice`), written by the agent from the owner's
+own texts and accepted by the owner. It ships as a SKELETON (`.kaif/_owner-voice-template.md`), never
+as a filled file or a stub: a deployment without a portrait is complete and `check` stays green. Its
+history is kept INSIDE the file, append-only (§9 of the skeleton).
+
 Knowledge directories, each with its own README: `plans/` `ideas/` `bugs/` `researches/`
-`interviews/` `homeworks/`. Closed items take the `DONE` tag in the filename (§13.1).
+`interviews/` `homeworks/` `reports/`. Closed items take the `DONE` tag in the filename (§13.1);
+research notes and reports are living records and are never tagged.
+
+The documents divide into five tiers (the taxonomy canon lives in `AGENT_GUIDE.md` → Document
+taxonomy): **KEY canon documents** — the re-read core of nine the agent re-reads on schedule
+(`GOAL`, `AGENT_GUIDE`, `PHILOSOPHY`, `REQUIREMENTS_FRAMEWORK`, `TESTING_FRAMEWORK`,
+`BUG_FIXING_FRAMEWORK`, `STATUS`, `MASTER_PLAN`, `PROJECT_STRUCTURE_EXTERNAL_MAP`) — a smaller
+set than the fourteen shipped key documents above; **EXTENDED canon documents**, fetched on demand
+by the context router; **WORKING canon documents** — the dynamic knowledge-directory documents,
+each opening with the lintable header meta (H1 + `Created`/`Parent`/`Status`/`Outbound`, in the
+project's working language); **OTHER KAIF documents** — the project's local "house rules"; and
+**project working documents**, which belong to the owner's project, not to the framework.
 
 ## 6. The skill system
 
-Thirty-four skills — the verbs of project work — deploy to `.claude/skills/` (canonical) and are
+Thirty-five skills — the verbs of project work — deploy to `.claude/skills/` (canonical) and are
 mirrored into every declared agent system (§7.3). Groups:
 
 - **Session:** `resume` (read ALL canon documents, pick one main thing) · `pause` (soft-park the
@@ -105,7 +124,8 @@ mirrored into every declared agent system (§7.3). Groups:
 - **Knowledge:** `experience` · `report-bug` · `bug-research` · `propose-idea` · `interview`.
 - **Owner contour (2.1):** `owner-voice` (a stylometric portrait of the owner's written voice from
   their own texts; portrait and rewrite modes, the skeleton ships as
-  `.kaif/_owner-voice-template.md`) · `owner-reviews` (the optional review contour: interviews and
+  `.kaif/_owner-voice-template.md`, and the filled portrait lives at the project root as the
+  optional `AUTHOR_STYLOMETRY.md`) · `owner-reviews` (the optional review contour: interviews and
   outbound drafts as local HTML pages, decisions recorded with `by`/`at`, sends gated fail-closed;
   the hard place-of-questions rule itself lives in AGENT_GUIDE).
 - **Planning:** `plan-task` (one operational plan for an ordinary task; runs the heaviness test) ·
@@ -116,7 +136,10 @@ mirrored into every declared agent system (§7.3). Groups:
 - **Code quality (2.1):** `code-revision` — the periodic reading revision of the codebase by the
   strongest model: zoned parallel reviewers armed with the project's paid-for failure classes
   (EXPERIENCE + bugs), verbatim quote per finding, adversarial skeptic with the default verdict
-  "not a defect"; survivors become bug docs and feed the guardrails.
+  "not a defect"; survivors become bug docs and feed the guardrails. Since 2.2 the run also leaves
+  audit reports in `reports/KAIF_AUDIT/` — one document per finding family plus a summary with the
+  coverage map and the limits — and each finding is written as an eight-field contract a weaker
+  model can execute (skeletons: the skill's `references/audit-report-template.md`).
 - **Shipping:** `release` (owner-confirmed only).
 - **Execution discipline (vendored from fable-method, MIT):** `fable-method` · `fable-loop` ·
   `fable-judge` · `fable-domain`.
@@ -141,8 +164,10 @@ Parses the bundle; applies the language pack (`--lang`; §7.4); autofills the ca
 placeholders from project reality (package.json, git config, LICENSE); writes files respectfully
 (`writeIfNew`: an existing non-empty file is ADOPTED, never clobbered); deploys per-system skill
 mirrors; wires the marker, npm handles and the deploy manifest (v2, §12.2); writes ONE cognitive
-deliverable — `KAIF_ADAPTATION_TASK.md`, whose items close only via `checkpoint <id>` commands;
-`verify-final` runs the final gates (§7.5) and self-cleans the installer.
+deliverable — `KAIF_ADAPTATION_TASK.md`, whose items close only via `checkpoint <id>` commands
+(the `field-report` item requires the mandatory field install report to exist in
+`reports/KAIF_UPDATES/` before it ticks); `verify-final` runs the final gates (§7.5) and
+self-cleans the installer.
 
 ### 7.3 Agent systems
 
@@ -219,7 +244,9 @@ it. New template modules insert by template order.
 `KAIF_UPDATE_TASK.md` lists: per-module merges with diffs · whole-file merges · owner-convention
 transfers · deprecations carrying local edits · stale claims (lines still asserting the OLD
 version anywhere in the project) · the news interval · executing checkpoints (`recheck` runs the
-actual check; `judge` requires `--verdict` with evidence).
+actual check; `judge` requires `--verdict` with evidence; `field-report` demands the mandatory
+field update report on disk in `reports/KAIF_UPDATES/`, pinned to the delivered version — an
+update does not verify green without its report).
 
 ### 10.4 Legacy and anonymous roads
 
@@ -272,7 +299,14 @@ lies on disk, refreshed post-merge). Authority to replace derives ONLY from temp
 an adaptation that survived one update cannot die in the next. Template and module hashes are
 EOL-normalized; the disk snapshot (`shas`) is byte-exact.
 
-### 11.3 Anonymity
+### 11.3 Install mode: origin by default, anonymity on request
+
+The install mode defaults to `standard`, which records `tracking: "origin"` together with the
+origin URL: version checks, respectful updates and the feedback loop are available to a fresh
+deployment without further configuration. Anonymity is never reached by default — only by the
+explicit flag. The default is guarded by the sandbox polygon (suite `s01`), which asserts the
+marker of a flag-free install rather than the wording of the help text: help is prose, the marker
+is behaviour.
 
 `--mode anonymous`: origin-tied skills are skipped, author regions stripped, the acronym
 de-expanded; no origin field, no core kept after self-clean. The deploy manifest carries no origin
@@ -288,14 +322,15 @@ the owner's name is not a leak.
 |---|---|
 | `framework` | Always `"KAIF"`. |
 | `version`, `released` | Deployed version and its release date. |
-| `tracking` | `"origin"` or `"anonymous"`. |
+| `tracking` | `"origin"` (the default, §11.3) or `"anonymous"`. |
 | `origin` | The origin URL (absent on anonymous). |
 | `sphere` | The project's sphere; its library shall exist at `.kaif/spheres/<sphere>.md`. |
 | `agents` | The declared agent systems (array). |
 | `language` | The owner's working language. |
-| `i18n` | Optional: `"translated"` — the wrapper is translated wholesale (§7.4). |
-| `canonArtifacts` | Optional: declared owner canon paths for the provenance module (§13.3). |
-| `history` | Update history: `{from, to, route, date}` entries. |
+| `i18n` | Optional: `"translated"` — the wrapper is translated wholesale (§7.4); updates record it automatically when the translation net recognizes translated files on a non-English deployment. |
+| `canonArtifacts` | Declared owner canon paths for the provenance module (§13.3). Seeded `[]` at deploy/update — the conscious "no canon yet" state; a MISSING key makes the provenance gate exit 3 "SKIPPED". |
+| `aiMarks` | Optional: localized provenance mark pairs as open tags in the owner's script (the `[AI]`/`[AI-ed]` analogs a translated wrapper uses, two entries); closers are derived by inserting `/`, and the English pair always works. Literal examples live in the tool's header, not here — an EN template body must stay free of owner-script text (§7.4's translation net judges bodies). |
+| `history` | Update history: `{from, to, route, date}` entries; `date` is a moment — local ISO 8601 with the offset (§12.3). |
 
 Commands never require the CLI to restate what the marker already records. The marker is edited
 only through commands (`sphere`, updates) — never by hand.
@@ -312,7 +347,11 @@ reconcile the canon by hand) · `marker` (pristine marker snapshot backing self-
 ### 12.3 The receipt (`.kaif/last-update.json`)
 
 `from`, `to`, `route` (`core-update` | `legacy-bootstrap`), `date`, `counters`, `diverged`,
-`divergedModules`, `ownerConvention`, `verifiedAt` (stamped by `update-verify`).
+`divergedModules`, `ownerConvention`, `judgeVerdict` (the full judge verdict recorded by
+`checkpoint judge` — the committable proof of the update's judging), `verifiedAt` (stamped by
+`update-verify`). `date` and `verifiedAt` are MOMENTS, so both carry the time and the offset in
+the owner's local clock — full ISO 8601 (`2026-08-08T07:13:00+03:00`), never a bare date: on a
+day carrying two updates a date-only receipt cannot say which one it proves.
 
 ## 13. Conventions
 
@@ -339,6 +378,32 @@ Shipped to `.kaif/tools/`, active only when the project opts in:
 |---|---|
 | `kaif-provenance.mjs` | The acceptance gate for AI text in owner canon (§13.3). |
 | `kaif-canon-lint.mjs` | The growing canon linter: revoked decision → forbidden wording; accepted decision → guarded full unique line; `selftest` proves every guard can fire. |
+| `kaif-requirements-lint.mjs` | The stop-word dictionary of `REQUIREMENTS_FRAMEWORK.md` as an advisory grep guard over requirement sections (`check` / `selftest`); quotes, ❌ examples, code, and `(justified: …)` lines are legal by construction. |
+
+A sibling optional module ships to `.kaif/hooks/` (2.2, epic O) — the **refresh-hooks module**:
+mechanical injections of the context-refresh canon (`AGENT_GUIDE.md` → Context refresh) for
+agent systems with lifecycle hooks. Three scripts speaking the Claude Code hook contract —
+`session-start-refresh.mjs` (canon order after compaction/clear), `prompt-refresh-timer.mjs`
+(refresh-marker age over 60 minutes → refresh order; silent while fresh),
+`stop-status-guard.mjs` (work happened while `STATUS.md` went stale → one soft block per
+session) — plus `settings-fragment.json`, the ready sample config. Every hook carries a
+predicate and a cooldown; injections are orders to re-read, never document bodies. Activation
+is an explicit owner opt-in (`.kaif/hooks/README.md`): the machinery never edits the project's
+`settings.json`, and a deployment without hooks never reddens — the markdown ritual is the
+complete contour on its own.
+
+**Portability across agent systems** (phase O5; contracts read in each vendor's live docs on
+2026-08-07). The predicate and the order text are system-independent; only the JSON envelope of
+the injection differs, so each script takes `--emit <shape>` and the SAMPLE names the shape
+explicitly — never auto-detection, because a hook must exit silently on anything unclear and a
+wrong guess would therefore fail invisibly. Four samples ship beside the reference one:
+`sample-codex-hooks.json` (identical field names — the scripts run unchanged),
+`sample-cursor-hooks.json`, `sample-copilot-hooks.json`, `sample-antigravity-hooks.json`. Grok
+Build needs none — it reads `.claude/settings.json` directly. Where a system's contract carries
+only one hook of three, the sample ships that one and says why in its own `_readme`; where a
+system cannot inject agent-facing context at all (Windsurf/Cascade, Cline), no sample ships and
+the markdown ritual is the honest answer. The module README holds the per-system table, and the
+adapters (`_index.md` → "Hook support") hold the same survey from the agent-system side.
 
 ## 15. Lifecycle
 
@@ -356,6 +421,8 @@ Shipped to `.kaif/tools/`, active only when the project opts in:
 ## 16. Where to read more
 
 The living showcase is the origin README. The execution discipline is documented inside the
-`fable-*` skills. The testing canon is `TESTING_FRAMEWORK.md`; the debugging canon is
-`BUG_FIXING_FRAMEWORK.md`; the thinking canon is `PHILOSOPHY.md`. This reference documents the
-FRAMEWORK; the project's own architecture lives in the project's two maps.
+`fable-*` skills. The requirements canon is `REQUIREMENTS_FRAMEWORK.md`; the testing canon is
+`TESTING_FRAMEWORK.md`; the debugging canon is `BUG_FIXING_FRAMEWORK.md` — bugs are what is born
+when testing's checks run against what the requirements demanded. The thinking canon is
+`PHILOSOPHY.md`. This reference documents the FRAMEWORK; the project's own architecture lives in
+the project's two maps.

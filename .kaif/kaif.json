@@ -1,7 +1,7 @@
 {
   "framework": "KAIF",
-  "version": "2.1",
-  "released": "2026-07-31",
+  "version": "2.2",
+  "released": "2026-08-08",
   "origin": "https://github.com/MikalaiKryvusha/KAIF",
   "tracking": "origin",
   "sphere": "programming",
@@ -27,6 +27,14 @@
       "to": "2.1",
       "route": "legacy-bootstrap",
       "date": "2026-07-31"
+    },
+    {
+      "from": "2.1",
+      "to": "2.2",
+      "route": "bootstrap",
+      "date": "2026-08-14T00:08:35+03:00"
     }
-  ]
+  ],
+  "canonArtifacts": [],
+  "projectName": "NDim Space"
 }

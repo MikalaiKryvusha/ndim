@@ -23,6 +23,89 @@ description: Завести документ бага в bugs/ по правил
   источника («брошено владельцем, <дата>»), подтверди одной строкой и вернись к текущей задаче.
 - НЕ для застревания из-за непонимания (это `PHILOSOPHY.md`) и не вместо починки тривиальной опечатки.
 
+## Сначала ветвление — дефект самого ФРЕЙМВОРКА, а не проекта
+
+Если грабли существуют из-за того, как сформулирован или ведёт себя **сам KAIF** — руководящий
+документ/скилл/шаг машинерии увёл не туда, ворота соврали зелёным, отсутствует ограждение, которое
+предотвратило бы ошибку, — сигнал адресован разработчику KAIF, а не беклогу этого проекта (локальной
+починкой правит контур «Дефект в САМОМ KAIF» в `AGENT_GUIDE.md`; эта ветка правит ОТЧЁТОМ):
+
+1. **Классифицируй:** дефект → шаблон A (bug report); пробел или пожелание — включая предложение
+   проверенного боем принципа (или снятие неработающего) → шаблон B (improvement request).
+2. **Дедупликация ДО заведения** (строка-аттестация в теле обязательна — заявление о поиске без
+   команды за ним пусто): грепни локальный реестр —
+   `grep -ri "<surface>" bugs/KAIF/ | grep -i "<symptom-class>"`; на развёртывании с привязкой к
+   origin (`tracking: origin` в `.kaif/kaif.json`) поищи и в открытых тикетах истока:
+   `gh issue list --repo <origin> --state open --search "<surface> <symptom-class>"`.
+   Совпадение по surface + symptom-class (версия НЕ входит в ключ) = ТОТ ЖЕ сигнал → допиши там
+   комментарий «+1 наблюдение» (условия, окружение, версия, шаги, ожидалось/получено; новая версия
+   того же класса → «reproduced on vX.Y») — новый тикет НЕ открывай.
+3. **Заведи локально:** `bugs/KAIF/NN_*.md` по шаблону A/B ниже (директорию создай при первом
+   использовании), **строго по-английски** — эти документы адресованы разработчику KAIF.
+   > На этой машине разработка KAIF живёт рядом (`D:\work\ai_sandbox\KAIF`) — развёрнутый отчёт
+   > по-прежнему кладётся и туда (контур в `AGENT_GUIDE.md`, шаги 3–4).
+4. **Доставь по режиму отслеживания:** `origin` — заведи/допиши и тикет истока ОТ ИМЕНИ владельца,
+   и только через гейт отправки проекта (`tools/send-outbound.mjs`) либо с цитируемой стоячей
+   авторизацией владельца; `anonymous` — сигнал остаётся ЛОКАЛЬНЫМ, к истоку не тянись.
+5. **Ворота качества отправителя:** сигнал уходит наверх только с детерминированным репро ЛИБО
+   дословным цитатным доказательством; формулировки безвинны (провал слабой модели описывается как
+   отсутствующее ограждение, никогда как «модель тупая»).
+
+Оба шаблона открываются машинно-грепаемым отпечатком
+`kaif-fp: <surface> :: <symptom-class> :: v<major.minor>` — surface это канонический путь поставки
+(док, скилл, инструмент, якорь модуля); symptom-class — короткий слаг из открытого словаря.
+
+### Шаблон A — KAIF bug report (заполняется по-английски)
+```markdown
+# KAIF bug: <one-line defect statement>
+kaif-fp: <surface> :: <symptom-class> :: v<major.minor>
+**Autocapture** (from `.kaif/kaif.json` + update receipt): KAIF <version> · project <name | anonymized> ·
+sphere <…> · language <…> · i18n <…> · tracking <origin | none> · agent system <…> · OS <…> · Node <…>
+**Dedup attestation:** searched `bugs/KAIF/` (<command → result>) and open origin issues
+(`gh issue list --search "…"` → <result>). No match found. <!-- match found → comment there, no new ticket -->
+
+## Expected per canon
+<verbatim quote of the KAIF doc/skill/tool output that promises the behavior> — <file / section>
+
+## Got in the field
+<verbatim evidence: log lines, diff, command output — never a paraphrase>
+
+## Repro (deterministic)
+1. <smallest step sequence; sandbox recipe if the live project cannot be shared>
+
+## Cost and violated invariant
+<what it broke or nearly broke (near-miss counts); which framework invariant it violates:
+owner-work-safety / honest-green / owner-decisions / cold-start / memory / autonomy / universality-anonymity / self-sufficiency / simplicity>
+
+## What in KAIF led to this
+<the mechanism or assumption that produced the defect — point at the module, not the symptom>
+
+## Local remediation (per the "defect in KAIF itself" contour, if applied)
+<local fix + whether it is mutation-proved; "none" if not applicable>
+```
+
+### Шаблон B — KAIF improvement request (заполняется по-английски)
+```markdown
+# KAIF improvement request: <one-line proposal>
+kaif-fp: <surface> :: <symptom-class> :: v<major.minor>
+**Autocapture:** <same line as template A>
+**Dedup attestation:** <same as template A>
+
+## Gap
+<what KAIF lacks or does clumsily — with a verbatim quote of the current canon/tool output that shows the gap>
+
+## Field evidence
+<the episode(s) that paid for this proposal: project, date, what happened; ≥1 verbatim artifact.
+For principle proposals (battle-tested methodology — or dropping a non-working one): where it is
+proven in production — projects, hours, sources. The owner of KAIF decides the proposal's fate.>
+
+## Proposed change (smallest that closes the gap)
+<doc/skill/tool + sketch of wording or behavior>
+
+## Expected effect and its check
+<observable verification that the change worked; which framework invariant it serves>
+```
+
 ## Что делать
 
 1. **Определи следующий номер.** `ls bugs/` → максимальный двузначный `NN` + 1. Имя файла:
@@ -58,6 +141,9 @@ description: Завести документ бага в bugs/ по правил
    ## План фикса (или сам фикс, если сделан)
    <шаги; связь с архитектурой и другими багами>
 
+   **Фикс принят, когда (наблюдаемо):** <что будет ВИДНО работающим после починки — пишется по
+   REQUIREMENTS_FRAMEWORK.md; уточняется по мере расследования>
+
    ## Решения, принятые без владельца
    <заполняется при закрытии: каждое решение, принятое агентом соло (и как он выбрал), либо «нет»>
 
@@ -72,7 +158,7 @@ description: Завести документ бага в bugs/ по правил
    - Закоммить (в автоциклах — по обычной дисциплине): `git add -A && git commit -m "docs(bugNN): …"`.
 
 5. **Жизненный цикл:** пока открыт — файл БЕЗ `DONE`. Когда ПОДТВЕРЖДЁННО закрыт (исправлен и
-   проверен) — `git mv bugs/NN_x.md bugs/NN_DONE_x.md` и допиши секцию `## ✅ СТАТУС: DONE (дата)`
+   проверен) — `git mv bugs/NN_x.md bugs/NN_DONE_x.md` и допиши секцию `## ✅ СТАТУС: DONE (дата + время)`
    (что сделано / как проверено). Ревизия беклога — скилл `/check-backlog`.
 
 ## Заметки
