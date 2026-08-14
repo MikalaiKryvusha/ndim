@@ -16,7 +16,13 @@
  *   🔑 после удаления в базе не осталось НИЧЕГО из перечня `plans/20` шаг 0;
  *   🔑 фотография удалена из Storage — дефект 1.x, где она переживала аккаунт;
  *   · тексты: предупреждение 1.x дословно, перечень потерь, «Аккаунт удалён»;
- *   · честность про сутки.
+ *   · честность про сутки;
+ *   🔴 ИНВАРИАНТ фазы: человек НЕ остаётся без входа при живых данных (дефект 1.x). Сформулирован
+ *     так, чтобы быть зелёным в обоих исправных исходах — и при полном удалении, и при честном
+ *     останове каскада на полпути; краснеет ровно на «вход отобран, данные на месте»;
+ *   🔑 Д1: вход ТОЙ ЖЕ почтой после удаления заводит ПУСТОЙ НОВЫЙ аккаунт (другой uid, ни одного
+ *     документа) — проверяется REST'ом эмулятора Auth, а НЕ через экран: на стенде сессия
+ *     заводится сама, и экранная проверка была бы зелёной при любом коде (`EXP-0114`).
  *
  * ⚠️ ЧЕГО СТРАЖ НЕ ПРОВЕРЯЕТ: что `relations/{uid}` исчез. Он и НЕ ДОЛЖЕН исчезать здесь —
  * клиенту запись в него запрещена правилами, это работа суточного прохода сервера
@@ -93,6 +99,42 @@ async function uidByEmail(email) {
   if (r.status !== 200) return null;
   const body = await r.json();
   return (body.userInfo ?? []).find((u) => u.email === email)?.localId ?? null;
+}
+
+/**
+ * Попросить эмулятор выписать ссылку входа на почту — НАПРЯМУЮ, мимо продукта.
+ *
+ * ⚠️ Именно мимо: на стенде `currentSession()` при отсутствии сессии входит САМА (`signInDev`),
+ * и проверка «вошёл той же почтой» через экран была бы зелёной при любом состоянии кода —
+ * ровно тот класс маскировки, что описан в `EXP-0114` и стоил суток сломанной публичной двери.
+ */
+async function requestSignInLink(email) {
+  const r = await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=demo-api-key`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requestType: 'EMAIL_SIGNIN', email, continueUrl: `${BASE}/profile` }),
+  });
+  return r.status === 200;
+}
+
+/** Обменять код на сессию. Возвращает, КЕМ человек вошёл: новый ли это uid и новый ли аккаунт. */
+async function signInWithLink(email, oobCode) {
+  const r = await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signInWithEmailLink?key=demo-api-key`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, oobCode }),
+  });
+  if (r.status !== 200) return null;
+  return await r.json();
+}
+
+/** Убрать за собой заведённую пробой учётную запись (правило класса `bugs/103`). */
+async function dropAccount(idToken) {
+  await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:delete?key=demo-api-key`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
 }
 
 async function lastSignInCode() {
@@ -226,6 +268,61 @@ try {
   // ещё не сделана — молчаливое «всё чисто» здесь было бы самообманом.
   const relations = await exists(`relations/${uid}`);
   console.log(`  relations/{uid} остался: ${relations} (ожидаемо до серверной чистки)`);
+
+  // ── 7 · 🔴 ГЛАВНЫЙ ИНВАРИАНТ ФАЗЫ: без входа при живых данных человек не остаётся ──────
+  /*
+   * Это тот самый дефект 1.x во плоти, ради которого писалась вся фаза (`plans/20`, риск 1):
+   * там `deleteUser` выполнялся ДАЖЕ ЕСЛИ данные не удалились — человек терял вход, а данные
+   * оставались навсегда, и вернуть их было нечем.
+   *
+   * Проверка сформулирована как ИНВАРИАНТ, а не как «учётной записи нет», и это принципиально:
+   * она обязана быть зелёной в ОБОИХ исправных исходах — и когда удаление прошло целиком, и
+   * когда каскад честно остановился на полпути. Красной она становится ровно в одном случае —
+   * когда вход отобран, а данные на месте. Поэтому её можно (и нужно) держать безусловной.
+   */
+  const authGone = (await uidByEmail(CURRENT)) === null;
+  const dataGone = !after.user && !after.point && after.dims === 0 && after.profile === 0;
+  console.log(`  протокол: учётная запись исчезла=${authGone} · данные исчезли=${dataGone}`);
+  check(
+    !(authGone && !dataGone),
+    '🔴 ИНВАРИАНТ: человек не остаётся без входа при живых данных (дефект 1.x)',
+    `учётка исчезла=${authGone}, данные исчезли=${dataGone}`,
+  );
+
+  // ── 8 · Д1 · вход ТОЙ ЖЕ почтой заводит ПУСТОЙ НОВЫЙ аккаунт ──────────────────────────
+  /*
+   * Хвост `plans/20` Д1, до 2026-08-15 не проверявшийся ничем. Вопрос человеческий: «я удалил
+   * аккаунт, вошёл снова той же почтой — не вернутся ли мои данные и не увижу ли я чужое?»
+   * Ответ обязан быть: это ДРУГОЙ человек с тем же адресом, и он пуст.
+   */
+  if (authGone) {
+    console.log('\nВход той же почтой после удаления:');
+    check(await requestSignInLink(CURRENT), 'ссылка входа на ту же почту выписывается');
+    const fresh = await lastSignInCode();
+    const session = fresh === null ? null : await signInWithLink(CURRENT, fresh.oobCode);
+    check(session !== null, 'вход по ссылке проходит', 'эмулятор не отдал сессию');
+    if (session !== null) {
+      check(session.localId !== uid, '🔑 uid НОВЫЙ — это другой человек с тем же адресом', `${session.localId} vs ${uid}`);
+      check(session.isNewUser === true, 'эмулятор подтверждает: учётная запись создана заново');
+      const reborn = {
+        user: await exists(`users/${session.localId}`),
+        profile: await count(`users/${session.localId}/profile`),
+        point: await exists(`points/${session.localId}`),
+        dims: await count(`points/${session.localId}/dims`),
+        photo: await photoExists(session.localId),
+      };
+      console.log('  ' + JSON.stringify(reborn));
+      check(!reborn.user, '🔑 новый аккаунт ПУСТ: документа нет');
+      check(reborn.profile === 0 && reborn.dims === 0, '🔑 новый аккаунт ПУСТ: ни бакетов, ни оценок', JSON.stringify(reborn));
+      check(!reborn.point && !reborn.photo, '🔑 новый аккаунт ПУСТ: ни точки, ни фотографии');
+      // Убираем за собой: заведённая пробой учётка не должна пережить прогон.
+      await dropAccount(session.idToken);
+      check((await uidByEmail(CURRENT)) === null, 'след пробы убран — учётной записи снова нет');
+    }
+  } else {
+    console.log('\n⚠️ Д1 пропущен: учётная запись цела — значит каскад не дошёл до конца.');
+    console.log('   Это НЕ зелёный результат, а «нечем мерить» (`EXP-0070`).');
+  }
 
   check(errors.length === 0, 'консоль чиста', errors.slice(0, 2).join(' | '));
   await ctx.close();
