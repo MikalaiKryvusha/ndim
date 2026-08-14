@@ -34,6 +34,8 @@
 import { error } from '@sveltejs/kit';
 import { DIMS, DIMS_SOURCE } from '$lib/content/dims-source';
 import { ratingView } from '$lib/content/dims-rating';
+import { kindKeyOf } from '$lib/content/dim-kind';
+import { dimJsonLd } from '$lib/content/dim-jsonld';
 import { LANGS, X_DEFAULT, pick, type Lang } from '$lib/content/langs';
 import { SITE_ORIGIN } from '$lib/site';
 import type { DimView } from '$lib/content/dim-view';
@@ -97,6 +99,29 @@ export function load({ params }: { params: { lang: string; slug: string } }): Di
 
   const href = (l: Lang) => `${SITE_ORIGIN}/${l}/dimension/${dim.slug}`;
 
+  // Разметка считается ЗДЕСЬ, на пререндере: правило показа оценок одно на проект, и разметка
+  // обязана следовать ему, а не собственной копии условия (`plans/48` шаг 5).
+  const rating = ratingView(dim.rates);
+  /*
+   * 🔴 `<` ЭКРАНИРУЕТСЯ, И ЭТО НЕ ПЕДАНТИЗМ. Строка едет внутрь `<script type="application/ld+json">`
+   * через `{@html}`; описания каталога — 5,24 млн знаков чужого текста, и одна
+   * последовательность `</script>` в любом из них закрыла бы тег раньше времени и вывалила
+   * остаток JSON в разметку страницы. `<` — валидный JSON и невидим для разбора.
+   */
+  const jsonLd = JSON.stringify(
+    dimJsonLd({
+      kindKey: kindKeyOf(dim.type),
+      title,
+      description,
+      author: known(pick(dim.author, lang)),
+      year: known(dim.year),
+      canonical: href(lang),
+      rating: dim.rating,
+      rates: dim.rates,
+      showStars: rating.showStars,
+    }),
+  ).replace(/</g, '\\u003c');
+
   // 🔴 ОТДАЁМ РОВНО ТО, ЧТО СТРАНИЦА РИСУЕТ, и ни полем больше. Объект каталога `dim` целиком
   // сюда НЕ возвращается: в нём оба языка разом, и описание уезжало бы в ответ ТРИЖДЫ (русское,
   // английское и выбранное). Замер до правки: `__data.json` весил 4 871 байт × 10 222 страницы =
@@ -122,8 +147,9 @@ export function load({ params }: { params: { lang: string; slug: string } }): Di
       ...LANGS.map((l) => ({ hreflang: l, href: href(l) })),
       { hreflang: 'x-default', href: href(X_DEFAULT) },
     ],
+    jsonLd,
     // Правило показа оценок решается в ОДНОМ месте на весь проект — одно внутри приложения и
     // снаружи (интервью №022). Шаблон получает его готовым.
-    ...ratingView(dim.rates),
+    ...rating,
   };
 }

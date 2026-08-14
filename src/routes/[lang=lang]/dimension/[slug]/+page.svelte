@@ -157,8 +157,22 @@
   {#each data.alternates as alt (alt.hreflang)}
     <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
   {/each}
-  <!-- Открытый граф — только то, что обзор признал живым; JSON-LD сюда не ставится
-       (`researches/26` §7: три из четырёх типов Google официально похоронил). -->
+  <!--
+    СТРУКТУРИРОВАННАЯ РАЗМЕТКА ОБЪЕКТА (`plans/48` шаг 5, 2026-08-14).
+
+    🔴 ЗДЕСЬ СТОЯЛО «JSON-LD сюда не ставится (`researches/26` §7: три из четырёх типов Google
+    официально похоронил)» — и это было верно ровно для тех типов, которые §7 РАССМАТРИВАЛ:
+    Organization, WebSite, BreadcrumbList, SearchAction, FAQPage, HowTo. Типы объектов культуры
+    там не оценивались вовсе; дыру закрыл `researches/34` §5.6 по первоисточнику: Book, Movie,
+    Game (VideoGame наследует) валидны, а рейтинги СООБЩЕСТВА об объектах культуры легальны —
+    правило self-serving ограничивает только LocalBusiness/Organization (модель IMDb).
+
+    Что именно ставится и какие ловушки обойдены (`inLanguage` не ставим — языка произведения мы
+    не знаем, `bugs/116`) — в шапке `dim-jsonld.ts`. Условие показа рейтинга сюда не копируется:
+    оно посчитано загрузчиком по общему правилу проекта.
+  -->
+  {@html `<script type="application/ld+json">${data.jsonLd}</script>`}
+  <!-- Открытый граф — только то, что обзор признал живым. -->
   <meta property="og:type" content="article" />
   <meta property="og:title" content={data.title} />
   <meta property="og:description" content={data.meta} />

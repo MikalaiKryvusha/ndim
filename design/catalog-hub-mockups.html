@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — Хаб каталога, 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — ХАБ КАТАЛОГА. Фаза 2 эпика 40 (`plans/48`, шаг 2).
+
+     ═══ ЧТО РЕШАЮТ ЭТИ МАКЕТЫ — ОДИН вопрос ═══
+     КАК УСТРОЕНА страница, которая собирает объекты одного вида и ведёт к ним. Таких страниц
+     будет ≈89 × 2 языка, и они существуют ради одного: сегодня **все 10 222 страницы каталога
+     недостижимы от корня сайта** — робот знает их адреса из карты сайта и не приходит
+     (Google: взято 994, висит «обнаружена, не проиндексирована» 9 237).
+
+     ═══ ЧТО ИМИ НЕ РЕШАЕТСЯ (уже закрыто Вашими ответами — не выбирайте дважды) ═══
+       · Хабы делаем ПО ВИДУ; год и теги — позже, по данным (интервью №025, В2 = А).
+       · Блок «Похожие по каталогу» — по классификации, без математики похожести (№025, В7 = А).
+       · Правило показа оценок одно на весь продукт: звёзды при ≥1 голосе, «ещё без голосов»
+         при нуле (интервью №021 В1 + №022 В1 = А). Во всех четырёх вариантах одинаково.
+       · Ни обложек, ни кадров — авторское право (интервью №020). Ни одного человека на
+         публичной странице (интервью №022). Ни одного числа похожести — нигде и никогда.
+       · Рельса навигации на публичных страницах нет сознательно: незнакомца из поиска пять
+         пунктов рельса уводят за стену входа.
+
+     ═══ ЧЕСТНОСТЬ МАКЕТА ═══
+       · Токены обеих тем скопированы из `src/routes/+layout.svelte` дословно.
+       · 🔑 ВСЕ объекты — НАСТОЯЩИЕ, из боевого каталога (выгрузка 2026-08-14): названия, годы,
+         авторы, средние оценки и число голосов. Ничего не сочинено и не подправлено.
+       · Числа хаба боевые: фильмов **2774**, из них оценён **981**, без единого голоса —
+         **1793** (65 %). При 60 карточках на страницу выходит **47 страниц**.
+       · Терминов на витрине голыми нет: не «измерения», а объекты культуры.
+
+     ВАРИАНТЫ:
+       · V1 «Библиотека»  — плотный список строк. Максимум объектов на экран, минимум украшений.
+       · V2 «Плитка»      — сетка карточек. Воздушно, объектов на экран вдвое меньше.
+       · V3 «Рейтинг»     — ранжированный список: страница становится «топом по версии NDim
+                            Space». У хаба появляется собственная ценность, а не только ссылки.
+       · V4 «Витрина»     — сверху «Самое любимое» крупно, под ним плотный список остального.
+
+     🔴 ВОПРОС, КОТОРЫЙ ВАРИАНТЫ ЗАДАЮТ ВАМ ПОПУТНО — В КАКОМ ПОРЯДКЕ ИДУТ КАРТОЧКИ.
+     Две трети фильмов не оценены никем. Порядок «сначала лучшие» (V3) даёт золотую первую
+     страницу и сорок страниц пустых карточек в хвосте; порядок по алфавиту (V1, V2) ровно
+     размазывает оценённые по всем страницам. Это видно на кадрах — на то они и кадры.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Токены светлой темы «Бумага» (дословно из src/routes/+layout.svelte) ── */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1467d6; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --card-shadow: 0 16px 40px rgba(29, 50, 71, 0.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --ok: #2e9e6b;
+  }
+  /* ── Токены тёмной темы (дословно оттуда же) ── */
+  :root[data-theme='dark'] {
+    --bg: #060b14; --panel: rgba(10, 21, 38, 0.78); --edge: rgba(77, 159, 255, 0.22);
+    --edge-soft: rgba(77, 159, 255, 0.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #4d9fff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --card-shadow: 0 0 0 1px rgba(63, 217, 255, 0.06), 0 24px 60px rgba(2, 8, 20, 0.6);
+    --ok: #56d3a0;
+  }
+
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  /* ── Панель выбора (дом стиля макетов проекта) ── */
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  .note {
+    padding: 12px 16px; background: #0d1b2a; color: #b7cde0; font-size: 13px; line-height: 1.55;
+    border-bottom: 1px solid #1d3247;
+  }
+  .note b { color: #fff; }
+  .note .q { color: #7fd4ff; }
+
+  .stage { padding: 22px 14px 60px; background: #0f1826; }
+  .panes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .pane { display: flex; flex-direction: column; gap: 7px; }
+  .pane > .cap { color: #8fa9c0; font-size: 12px; text-align: center; max-width: 390px; }
+  .stage[data-w='1440'] .pane > .cap { max-width: 1180px; }
+
+  /* Оболочка экрана: рисуем страницу продукта, а не абстрактный блок. Высота не фиксирована —
+     страница показывается целиком: обрезанный кадр спрятал бы пагинацию, а она и есть каркас. */
+  .screen {
+    width: 390px; overflow: hidden; position: relative;
+    background: var(--bg); color: var(--text);
+    border-radius: 22px; border: 1px solid var(--edge); box-shadow: var(--card-shadow);
+    display: flex; flex-direction: column;
+  }
+  .stage[data-w='1440'] .screen { width: 1180px; border-radius: 16px; }
+
+  /* Адресная строка — здесь виден адрес хаба, это часть решения */
+  .url {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 7px; padding: 7px 12px;
+    background: var(--edge-soft); border-bottom: 1px solid var(--edge);
+    font-family: var(--mono); font-size: 10.5px; color: var(--dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .url .lock { color: var(--ok); }
+
+  /* ── ШАПКА ПУБЛИЧНОЙ СТРАНИЦЫ — как у страницы объекта: знак, язык, тема, одна дверь ── */
+  .bar {
+    flex: 0 0 auto; min-height: 52px; display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; background: var(--panel); border-bottom: 1px solid var(--edge);
+  }
+  .bar .mark { width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(135deg, #1467d6, #3fd9ff); flex: 0 0 auto; }
+  .bar .title { font-weight: 700; color: var(--heading); font-size: 14px; }
+  .bar .tools { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .bar .langsw { font-size: 11.5px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--edge); color: var(--dim); font-weight: 600; }
+  .bar .icobtn { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--edge); display: grid; place-items: center; color: var(--dim); font-size: 13px; }
+  .bar .enter { font-size: 12px; padding: 6px 13px; border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-weight: 600; }
+
+  /* ── Тело хаба ── */
+  .wrap { padding: 16px 14px 26px; }
+  .stage[data-w='1440'] .wrap { padding: 22px 28px 34px; max-width: 1100px; margin: 0 auto; }
+
+  /* Ссылка вверх — она же краулируемый путь обратно в индекс каталога */
+  .up { font-size: 11.5px; color: var(--dim); margin-bottom: 8px; }
+  .up a { color: var(--accent); text-decoration: none; }
+
+  h1 { font-size: 26px; line-height: 1.15; color: var(--heading); margin-bottom: 6px; }
+  .stage[data-w='1440'] h1 { font-size: 32px; }
+  /* Строка смысла: она делает хаб самодостаточным, а не сеткой ссылок. */
+  .lede { font-size: 13px; line-height: 1.6; color: var(--dim); margin-bottom: 14px; }
+  .lede b { color: var(--text); }
+
+  /* Полоса соседних хабов — перелинковка вбок: каждый хаб зовёт остальные шесть */
+  .siblings { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .siblings a {
+    font-size: 11.5px; padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--edge); background: var(--panel); color: var(--dim); text-decoration: none;
+  }
+  .siblings a.on { background: var(--primary); border-color: transparent; color: var(--primary-ink); font-weight: 600; }
+
+  /* Звёзды — общий стиль всех вариантов (жест оценки из 1.x, шкала 0…10) */
+  .stars { display: inline-flex; gap: 1px; line-height: 1; }
+  .stars i { font-style: normal; color: var(--edge); }
+  .stars i.on { color: var(--star); }
+  .novotes { font-style: italic; color: var(--faint); }
+
+  /* ── V1 «Библиотека»: плотный список строк ── */
+  .lib { display: flex; flex-direction: column; border: 1px solid var(--edge); border-radius: 14px; overflow: hidden; background: var(--panel); }
+  .lib .row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--edge-soft); text-decoration: none; }
+  .lib .row:last-child { border-bottom: 0; }
+  .lib .nm { flex: 1 1 auto; min-width: 0; }
+  .lib .nm b { display: block; font-size: 13.5px; font-weight: 600; color: var(--heading); line-height: 1.3; }
+  .lib .nm span { font-size: 11.5px; color: var(--faint); }
+  .lib .sc { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
+  .lib .sc .stars { font-size: 10px; }
+  .lib .sc .val { font-size: 14px; font-weight: 800; color: var(--heading); min-width: 26px; text-align: right; }
+  .lib .sc .novotes { font-size: 11px; }
+
+  /* ── V2 «Плитка»: сетка карточек ── */
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stage[data-w='1440'] .tiles { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .tile { padding: 12px; border: 1px solid var(--edge); border-radius: 14px; background: var(--panel); box-shadow: var(--card-shadow); text-decoration: none; display: flex; flex-direction: column; gap: 7px; }
+  .tile b { font-size: 13.5px; font-weight: 600; color: var(--heading); line-height: 1.3; }
+  .tile .meta { font-size: 11px; color: var(--faint); }
+  .tile .sc { display: flex; align-items: center; gap: 6px; margin-top: auto; }
+  .tile .sc .stars { font-size: 10px; }
+  .tile .sc .val { font-size: 15px; font-weight: 800; color: var(--heading); }
+  .tile .sc .novotes { font-size: 11px; }
+
+  /* ── V3 «Рейтинг»: ранжированный список ── */
+  .rank { display: flex; flex-direction: column; gap: 8px; }
+  .rank .row { display: flex; align-items: flex-start; gap: 11px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--panel); text-decoration: none; }
+  .rank .n { flex: 0 0 auto; width: 26px; font-size: 15px; font-weight: 800; color: var(--faint); text-align: center; }
+  .rank .row.top .n { color: var(--accent); }
+  .rank .nm { flex: 1 1 auto; min-width: 0; }
+  .rank .nm b { display: block; font-size: 13.5px; font-weight: 600; color: var(--heading); line-height: 1.3; }
+  .rank .nm span { font-size: 11px; color: var(--faint); }
+  .rank .sc { flex: 0 0 auto; text-align: right; }
+  .rank .sc .val { font-size: 17px; font-weight: 800; color: var(--heading); line-height: 1; }
+  .rank .sc .votes { display: block; font-size: 10.5px; color: var(--dim); margin-top: 2px; }
+  .rank .sc .stars { font-size: 9px; }
+  /* Подпись величины — имя бренда, а не безымянный агрегат */
+  .brandname { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--dim); }
+
+  /* ── V4 «Витрина»: верхушка крупно + список ── */
+  .showcase { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+  .stage[data-w='1440'] .showcase { gap: 14px; }
+  .big { padding: 14px; border: 1px solid var(--edge); border-radius: 16px; background: var(--panel); box-shadow: var(--card-shadow); text-decoration: none; display: flex; flex-direction: column; gap: 8px; }
+  .big .val { font-size: 30px; font-weight: 800; color: var(--heading); line-height: 1; }
+  .stage[data-w='1440'] .big .val { font-size: 40px; }
+  /* Название — не больше двух строк, иначе одна длинная строка растягивает всю тройку и
+     витрина выглядит рваной (поймано на кадрах: «Гарри Поттер и философский камень» уходил
+     в четыре строки, соседи — в две). */
+  .big b { font-size: 13px; font-weight: 600; color: var(--heading); line-height: 1.25; }
+  /* Подпись прижата к низу карточки: у всех трёх она встаёт на одну линию независимо от
+     длины названия. */
+  .big .meta { font-size: 10.5px; color: var(--faint); margin-top: auto; }
+  .big .stars { font-size: 9px; }
+  .sub { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); margin: 0 0 9px; }
+
+  /* ── Пагинация: ВСЕ номера страниц, а не только «дальше» ──────────────────
+     🔴 Это не украшение. Цепочка «дальше → дальше → дальше» уводит карточку последней страницы
+     на 47 кликов от хаба; перечисленные номера держат любую карточку в трёх кликах от лендинга. */
+  .pager { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .pager a { font-size: 11.5px; min-width: 26px; text-align: center; padding: 5px 7px; border-radius: 8px; border: 1px solid var(--edge); background: var(--panel); color: var(--dim); text-decoration: none; }
+  .pager a.on { background: var(--primary); border-color: transparent; color: var(--primary-ink); font-weight: 700; }
+  .pager .gap { color: var(--faint); font-size: 11.5px; padding: 0 2px; }
+  .pager .nx { font-weight: 600; color: var(--accent); }
+
+  .foot { margin-top: 18px; font-size: 11px; line-height: 1.6; color: var(--faint); }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Хаб каталога:</b>
+  <button data-v="1" class="active">V1 Библиотека</button>
+  <button data-v="2">V2 Плитка</button>
+  <button data-v="3">V3 Рейтинг</button>
+  <button data-v="4">V4 Витрина</button>
+  <span class="sp"></span>
+  <button id="theme">Тема</button>
+  <button id="width">Ширина</button>
+  <span class="hint">данные боевые · 2774 фильма · оценён 981</span>
+</div>
+
+<div class="note" id="note"></div>
+
+<div class="stage" id="stage" data-w="390">
+  <div class="panes"><div class="pane">
+    <div class="screen" id="screen"></div>
+    <div class="cap" id="cap"></div>
+  </div></div>
+</div>
+
+<script>
+/*
+ * ДАННЫЕ — ДОСЛОВНАЯ ВЫГРУЗКА ИЗ БОЕВОГО КАТАЛОГА (2026-08-14).
+ * Ни одно название, год, автор, средняя оценка и число голосов не сочинены: выгружено
+ * из `src/lib/content/dims-build.json` фильтром по каноническому виду `movie`.
+ */
+const RATED = [
+  { t: 'Гарри Поттер и философский камень', y: '2001', a: 'Крис Коламбус', r: 8.4, n: 14 },
+  { t: 'Побег из Шоушенка', y: '1994', a: 'Фрэнк Дарабонт', r: 9.4, n: 12 },
+  { t: 'Матрица', y: '1999', a: 'Вачовски', r: 9.3, n: 11 },
+  { t: 'Пираты Карибского моря: На краю света', y: '2007', a: 'Гор Вербински', r: 8.7, n: 11 },
+  { t: 'Гарри Поттер и Дары Смерти. Часть 2', y: '2011', a: 'Дэвид Йейтс', r: 9.4, n: 10 },
+  { t: 'Леон', y: '1994', a: 'Люк Бессон', r: 9.2, n: 10 },
+  { t: 'Интерстеллар', y: '2014', a: 'Кристофер Нолан', r: 9.2, n: 10 },
+  { t: 'Гарри Поттер и Кубок огня', y: '2005', a: 'Майк Ньюэлл', r: 9.0, n: 10 },
+  { t: 'Гарри Поттер и узник Азкабана', y: '2004', a: 'Альфонсо Куарон', r: 8.9, n: 10 },
+];
+const UNRATED = [
+  { t: 'Идеальный незнакомец', y: '2007', a: 'Джеймс Фоули', r: 0, n: 0 },
+  { t: 'Джек Ричер', y: '2012', a: 'Кристофер МакКуорри', r: 0, n: 0 },
+  { t: 'Парклэнд', y: '2013', a: 'Питер Ландесман', r: 0, n: 0 },
+  { t: 'Найти Форрестера', y: '2000', a: 'Гас Ван Сент', r: 0, n: 0 },
+  { t: 'Ведьма', y: '2015', a: 'Роберт Эггерс', r: 0, n: 0 },
+];
+
+/*
+ * Смесь для вариантов с АЛФАВИТНЫМ порядком: две трети каталога без единого голоса, и макет
+ * обязан это показывать. Врать плотностью оценённых — значит выбрать форму по красивой
+ * картинке, а потом увидеть в бою другую страницу.
+ */
+const MIXED = [
+  RATED[0], UNRATED[0], UNRATED[1], RATED[2], UNRATED[2], RATED[5],
+  UNRATED[3], UNRATED[4], RATED[6], RATED[3], RATED[8], RATED[4],
+];
+/* Список V4 идёт ПОСЛЕ витрины — и не повторяет её тройку: на одной странице объект дважды
+   выглядит дефектом данных, даже когда он им не является. */
+const REST = MIXED.slice(1, 10);
+
+const HUBS = ['Фильмы', 'Видеоигры', 'Телесериалы', 'Романы', 'Практики', 'Музыка', 'Книги'];
+
+const stars = (r) => {
+  const on = Math.round(r);
+  let s = '<span class="stars">';
+  for (let i = 0; i < 10; i++) s += '<i' + (i < on ? ' class="on"' : '') + '>★</i>';
+  return s + '</span>';
+};
+const dec = (r) => r.toFixed(1).replace('.', ',');
+
+const head = (page) => `
+  <div class="url"><span class="lock">🔒</span> ndimspace.app/ru/catalog/movie${page ? '/' + page : ''}</div>
+  <div class="bar">
+    <span class="mark"></span><span class="title">NDim Space</span>
+    <span class="tools">
+      <span class="langsw">English</span><span class="icobtn">☀</span><span class="enter">Войти</span>
+    </span>
+  </div>`;
+
+const intro = (lede) => `
+  <div class="up">← <a href="#">Каталог</a></div>
+  <h1>Фильмы</h1>
+  <p class="lede">${lede}</p>
+  <div class="siblings">${HUBS.map((h, i) => `<a href="#"${i === 0 ? ' class="on"' : ''}>${h}</a>`).join('')}</div>`;
+
+const pager = (cur) => {
+  const pages = [1, 2, 3, 4, 5, 6, 7, 8];
+  let s = '<nav class="pager">';
+  for (const p of pages) s += `<a href="#"${p === cur ? ' class="on"' : ''}>${p}</a>`;
+  s += '<span class="gap">…</span><a href="#">46</a><a href="#">47</a>';
+  s += `<a href="#" class="nx">Дальше →</a></nav>`;
+  return s;
+};
+
+const FOOT = '<p class="foot">NDim Space — честный поиск похожих людей по математической близости. Бесплатно, без рекламы и без подписок.</p>';
+
+const VARIANTS = {
+  1: {
+    cap: 'V1 «Библиотека» — плотный список. Больше всего объектов на экран; страница читается сверху вниз, как каталог библиотеки.',
+    html: () => `${head(1)}<div class="wrap">
+      ${intro('<b>2774</b> фильма в каталоге, оценён <b>981</b>. Оценки ставят люди, которые их смотрели, — это <b>NDim Space Rating</b>.')}
+      <div class="lib">${MIXED.map((m) => `
+        <a class="row" href="#">
+          <span class="nm"><b>${m.t}</b><span>${m.y} · ${m.a}</span></span>
+          <span class="sc">${m.n ? `${stars(m.r)}<span class="val">${dec(m.r)}</span>` : '<span class="novotes">ещё без голосов</span>'}</span>
+        </a>`).join('')}</div>
+      ${pager(1)}${FOOT}</div>`,
+  },
+  2: {
+    cap: 'V2 «Плитка» — сетка карточек. Воздушнее и наряднее, но объектов на экран вдвое меньше, а значит длиннее прокрутка при тех же 60 на странице.',
+    html: () => `${head(1)}<div class="wrap">
+      ${intro('<b>2774</b> фильма в каталоге, оценён <b>981</b>. Оценки ставят люди, которые их смотрели, — это <b>NDim Space Rating</b>.')}
+      <div class="tiles">${MIXED.map((m) => `
+        <a class="tile" href="#">
+          <b>${m.t}</b><span class="meta">${m.y} · ${m.a}</span>
+          <span class="sc">${m.n ? `${stars(m.r)}<span class="val">${dec(m.r)}</span>` : '<span class="novotes">ещё без голосов</span>'}</span>
+        </a>`).join('')}</div>
+      ${pager(1)}${FOOT}</div>`,
+  },
+  3: {
+    cap: 'V3 «Рейтинг» — ранжированный список: страница становится «топом фильмов по версии NDim Space». У хаба появляется собственная ценность, а не только ссылки. Цена: оценённых 981 из 2774, и с 17-й страницы список станет сплошь «без голосов».',
+    html: () => `${head(1)}<div class="wrap">
+      ${intro('Топ фильмов по версии NDim Space. Оценки ставят люди, которые их смотрели, — <b>981</b> фильм из <b>2774</b> уже получил хотя бы один голос.')}
+      <p class="sub brandname">NDim Space Rating · страница 1 из 47</p>
+      <div class="rank">${RATED.map((m, i) => `
+        <a class="row${i < 3 ? ' top' : ''}" href="#">
+          <span class="n">${i + 1}</span>
+          <span class="nm"><b>${m.t}</b><span>${m.y} · ${m.a}</span><br>${stars(m.r)}</span>
+          <span class="sc"><span class="val">${dec(m.r)}</span><span class="votes">оценено ${m.n} людьми</span></span>
+        </a>`).join('')}</div>
+      ${pager(1)}${FOOT}</div>`,
+  },
+  4: {
+    cap: 'V4 «Витрина» — сверху «Самое любимое» крупно, под ним плотный список остального. У страницы есть и собственное содержание, и плотность.',
+    html: () => `${head(1)}<div class="wrap">
+      ${intro('<b>2774</b> фильма в каталоге, оценён <b>981</b>. Оценки ставят люди, которые их смотрели, — это <b>NDim Space Rating</b>.')}
+      <p class="sub">Самое любимое</p>
+      <div class="showcase">${RATED.slice(0, 3).map((m) => `
+        <a class="big" href="#">
+          <span class="val">${dec(m.r)}</span>${stars(m.r)}
+          <b>${m.t}</b><span class="meta">${m.y} · оценено ${m.n} людьми</span>
+        </a>`).join('')}</div>
+      <p class="sub">Все фильмы, по алфавиту</p>
+      <div class="lib">${REST.map((m) => `
+        <a class="row" href="#">
+          <span class="nm"><b>${m.t}</b><span>${m.y} · ${m.a}</span></span>
+          <span class="sc">${m.n ? `${stars(m.r)}<span class="val">${dec(m.r)}</span>` : '<span class="novotes">ещё без голосов</span>'}</span>
+        </a>`).join('')}</div>
+      ${pager(1)}${FOOT}</div>`,
+  },
+};
+
+const NOTE = `<b>Что решаем:</b> <span class="q">как устроена страница, которая собирает объекты одного вида и ведёт к ним.</span>
+Сегодня <b>все 10 222 страницы каталога недостижимы от корня сайта</b> — робот знает адреса из карты сайта и не приходит:
+Google взял <b>994</b>, а <b>9 237</b> висят в «обнаружена, не проиндексирована». Хаб — путь к ним и вес для них.
+<br><b>Попутный вопрос, который видно на кадрах:</b> в каком порядке идут карточки. Две трети фильмов не оценены никем
+(оценён 981 из 2774). «Сначала лучшие» (V3) даёт золотую первую страницу и пустой хвост; алфавит (V1, V2, V4) размазывает оценённые ровно.`;
+
+let cur = 1;
+const render = () => {
+  document.getElementById('screen').innerHTML = VARIANTS[cur].html();
+  document.getElementById('cap').textContent = VARIANTS[cur].cap;
+  document.getElementById('note').innerHTML = NOTE;
+};
+document.querySelectorAll('.picker button[data-v]').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    cur = b.dataset.v;
+    render();
+  };
+});
+document.getElementById('theme').onclick = () => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (dark) document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', 'dark');
+};
+document.getElementById('width').onclick = () => {
+  const s = document.getElementById('stage');
+  s.dataset.w = s.dataset.w === '390' ? '1440' : '390';
+};
+render();
+</script>
+</body>
+</html>

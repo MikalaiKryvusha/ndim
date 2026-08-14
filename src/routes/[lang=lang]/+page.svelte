@@ -16,6 +16,12 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { SITE_ORIGIN } from '$lib/site';
+  import { siteJsonLd } from '$lib/content/dim-jsonld';
+
+  /* Разметка сайта считается один раз: она не зависит ни от языка, ни от состояния экрана.
+     `<` экранируется по той же причине, что на страницах каталога, — строка едет внутрь
+     `<script>` через `{@html}`. */
+  const siteLd = JSON.stringify(siteJsonLd(SITE_ORIGIN)).replace(/</g, '\\u003c');
   import { LANGS, X_DEFAULT, isLang } from '$lib/content/langs';
   import Icon from '$lib/ui/Icon.svelte';
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
@@ -225,6 +231,14 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content={canonicalUrl} />
   <meta property="og:locale" content={lang === 'en' ? 'en_US' : 'ru_RU'} />
+  <!--
+    `Organization` + `WebSite` — давний долг `researches/26` §7.6, закрыт `plans/48` шаг 5.
+    Rich result они не дают и не должны: их работа — имя сайта и логотип в выдаче.
+    ⛔ `SearchAction` внутри `WebSite` НЕ ставится: sitelinks search box удалён в ноябре 2024,
+    и с тех пор это мёртвый код, который ставят по привычке (§7.2). Почему один и тот же блок
+    стоит на обеих языковых главных — в шапке `dim-jsonld.ts`.
+  -->
+  {@html `<script type="application/ld+json">${siteLd}</script>`}
 </svelte:head>
 
 <!-- Открытое цифровое пространство: едва видные неоновые узлы и связи.

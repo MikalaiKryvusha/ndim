@@ -58,4 +58,13 @@ export interface DimView extends RatingView {
   readonly canonical: string;
   /** Двусторонний `hreflang`: у Google односторонняя разметка игнорируется ЦЕЛИКОМ. */
   readonly alternates: readonly { hreflang: string; href: string }[];
+  /**
+   * Структурированная разметка объекта — УЖЕ СЕРИАЛИЗОВАННАЯ строка (`plans/48` шаг 5).
+   *
+   * Строкой, а не объектом, по той же причине, по какой здесь нет самого `dim`: страница всё
+   * равно сериализует её в `<script type="application/ld+json">`, а объект в ответе загрузчика
+   * стоил бы ещё одной копии названия, описания и автора в каждом `__data.json` (см. врезку о
+   * 41 МБ выше).
+   */
+  readonly jsonLd: string;
 }
