@@ -1,5 +1,5 @@
 /**
- * СТРАНИЦЫ-ОБЁРТКИ ТЕСТА — фаза 5 эпика 40 (`plans/42`, шаг 3, такт А).
+ * СТРАНИЦЫ-ОБЁРТКИ ТЕСТА — фаза 5 эпика 40 (`plans/42`, шаг 3, такты А–Б).
  *
  * ОДИН маршрут на все три обёртки («совместимость», «личность», «калькулятор любви») — это
  * прямое следствие решения владельца: жанры — обёртки поверх ОДНОГО движка (интервью №026,
@@ -14,29 +14,43 @@
  */
 
 import { error } from '@sveltejs/kit';
-import { TESTS, TEST_SLUGS, FIRST_CARD, TEST_FOOT, type TestSlug, type TestCopy } from '$lib/content/test-copy';
+import { TESTS, TEST_SLUGS, CARD_CHROME, TEST_FOOT, type TestSlug, type TestCopy } from '$lib/content/test-copy';
+import { buildTestQueue, queueLengthFor, TEST_TARGET } from '$lib/content/test-set';
+import { DIMS } from '$lib/content/dims-source';
 import { LANGS, X_DEFAULT, type Lang } from '$lib/content/langs';
 import { SITE_ORIGIN } from '$lib/site';
 
 export const prerender = true;
 
 /**
- * ТАКТ А — СТРАНИЦА БЕЗ КЛИЕНТСКОГО JS (`csr = false`), как страницы каталога: содержание
- * отдано сырым HTML, тему переключает инлайн-скрипт `app.html`, FAQ работает на нативных
- * `<details>`. ⚠️ Такт Б (живой движок оценки) ВКЛЮЧИТ гидратацию — это осознанная будущая
- * правка, а не забытая строка: снимать её без движка нельзя (мёртвые звёзды выглядели бы
- * рабочими), включать без движка не за чем.
+ * ТАКТ Б — ГИДРАТАЦИЯ ВКЛЮЧЕНА (`csr` по умолчанию): на странице живой движок оценки.
+ * Содержание по-прежнему отдаётся сырым HTML пререндера (первая карточка очереди
+ * детерминирована — `test-set.ts`), а Firebase в бандл страницы НЕ попадает: слой данных
+ * подгружает `$lib/data/test-engine.ts` динамически, в момент жеста (канон `funnel.ts`).
+ * Хаб `/tests` остаётся без клиентского JS — движка там нет.
  */
-export const csr = false;
 
 /** Адреса всех обёрток на каждом языке: 3 × 2 = 6 страниц. */
 export const entries = () => LANGS.flatMap((lang) => TEST_SLUGS.map((slug) => ({ lang, slug })));
+
+/** Одна карточка очереди движка — уже на языке страницы. */
+export interface TestCard {
+  id: string;
+  kind: string;
+  name: string;
+  year: string;
+  rates: number;
+}
 
 export interface TestPageData {
   lang: Lang;
   slug: TestSlug;
   copy: TestCopy;
-  first: (typeof FIRST_CARD)['ru'];
+  chrome: (typeof CARD_CHROME)['ru'];
+  /** Очередь движка: набор + запас под «не знаю». Детерминирована (`test-set.ts`). */
+  queue: TestCard[];
+  /** Длина набора обёртки — обещана текстами страницы («12 вещей»). */
+  target: number;
   foot: string;
   canonical: string;
   alternates: { hreflang: string; href: string }[];
@@ -53,7 +67,15 @@ export function load({ params }: { params: { lang: string; slug: string } }): Te
     lang,
     slug,
     copy: TESTS[slug][lang],
-    first: FIRST_CARD[lang],
+    chrome: CARD_CHROME[lang],
+    queue: buildTestQueue(DIMS, queueLengthFor(slug)).map((e) => ({
+      id: e.id,
+      kind: e.kind[lang],
+      name: e.name[lang],
+      year: e.year,
+      rates: e.rates,
+    })),
+    target: TEST_TARGET[slug],
     foot: TEST_FOOT[lang],
     canonical: href(lang),
     // Двусторонний hreflang с самоссылкой — без неё разметка игнорируется целиком

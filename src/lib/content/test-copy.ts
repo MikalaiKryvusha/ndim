@@ -70,22 +70,15 @@ export interface TestCopy {
   metaDesc: string;
 }
 
-/** Первая карточка движка — статическое стартовое состояние такта А.
- *  Объект настоящий, из боевого каталога («Дом Дракона», 2022). Сам НАБОР теста первой версии
- *  соберётся тактом Б по числу оценок каталога — эта карточка лишь показывает форму жеста. */
-export const FIRST_CARD: L<{ kind: string; name: string; meta: string; scale0: string; scale10: string; skip: string }> = {
+/** Обвязка карточки движка: подписи шкалы и пропуск. Сам ОБЪЕКТ карточки с такта Б живой —
+ *  очередь строится на сборке из популярнейших объектов каталога (`test-set.ts`). */
+export const CARD_CHROME: L<{ scale0: string; scale10: string; skip: string }> = {
   ru: {
-    kind: 'Телесериал',
-    name: '«Дом Дракона»',
-    meta: '2022',
     scale0: '0 — совсем не моё',
     scale10: '10 — это про меня',
     skip: 'Не знаю эту вещь — дальше',
   },
   en: {
-    kind: 'TV series',
-    name: 'House of the Dragon',
-    meta: '2022',
     scale0: '0 — not my thing',
     scale10: '10 — that’s me',
     skip: 'I don’t know this one — next',
