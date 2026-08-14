@@ -63,18 +63,34 @@ try {
   }
 
   // ── bugs/36: лайтбокс фото — по центру вьюпорта, поверх всего, из любого скролла ──
-  console.log('bugs/36 · лайтбокс фото на «Связях» из середины прокрутки:');
-  {
-    const { context, page, errors } = await person(browser);
+  // ── bugs/65: и он накрывает ОКНО ЦЕЛИКОМ, включая жёлоб полосы прокрутки ──
+  // Прогон идёт по обеим темам и обеим ширинам: полоска гуттера видна на ДЕСКТОПЕ (на телефоне
+  // полосы прокрутки наложенные и ширины не отнимают), а светлая щель на тёмной подложке —
+  // ровно тот класс косметики, который владелец ловит глазом.
+  for (const theme of ['light', 'dark'])
+  for (const width of [390, 1440]) {
+    console.log(`bugs/36 + bugs/65 · лайтбокс фото на «Связях» (${theme}, ${width}):`);
+    const { context, page, errors } = await person(browser, { theme, width });
     await page.goto(`${BASE}/relations`);
     await page.waitForSelector('.card .head', { timeout: 20000 });
 
-    const peek = page.locator('.peek').first();
-    await peek.waitFor({ timeout: 10000 });
+    // 🔴 Путь к портрету изменился в bugs/104 (решение владельца 2026-07-31): в СВЁРНУТОЙ
+    // карточке фото больше не кнопка — весь её верх работает на раскрытие, а портрет
+    // открывается из РАСКРЫТОЙ. Прежняя редакция искала `.peek` в свёрнутой и падала по
+    // таймауту, роняя ВЕСЬ прогон исключением: то есть про лайтбокс этот страж молчал с
+    // самого bugs/104. Путь взят у `verify-bug104`, где он и стережётся.
+    const card = page.locator('.card').first();
+    await card.waitFor({ timeout: 10000 });
     // Ховер по карточке включает transform — ровно сценарий, ломавший fixed (bugs/36).
-    await peek.hover();
+    await card.hover();
     await page.evaluate(() => window.scrollTo(0, 250));
     await page.waitForTimeout(150);
+    await card.locator('.who').click();
+    await page.waitForTimeout(500);
+    check('карточка связи раскрыта (портрет живёт там — bugs/104)', await card.locator('.deep').count() === 1);
+
+    const peek = card.locator('.head button.peek');
+    await peek.waitFor({ timeout: 10000 });
     await peek.click();
 
     const box = page.locator('button.lightbox');
@@ -86,19 +102,74 @@ try {
 
     const overlay = await box.boundingBox();
     const vp = page.viewportSize();
-    // Сравниваем с РАСКЛАДКОЙ, а не с вьюпортом: `scrollbar-gutter: stable` (bugs/59) резервирует
-    // ~15px под полосу прокрутки, и слой `position: fixed; inset: 0` их по построению не накрывает.
-    // Проверка требовала 390 при раскладке 375 и краснела на верном коде — стала правдой, а не
-    // желаемым. То, что полоска гуттера остаётся неприкрытой, — отдельная находка: **bugs/65**.
     const layout = await page.evaluate(() => document.body.getBoundingClientRect().width);
     check(
-      'оверлей накрывает раскладку целиком (полоска гуттера — bugs/65)',
+      'оверлей накрывает раскладку целиком',
       overlay !== null &&
         overlay.x <= 0 &&
         overlay.y <= 0 &&
         Math.round(overlay.width) >= Math.round(layout) &&
         overlay.height >= vp.height,
-      JSON.stringify(overlay),
+      `оверлей ${JSON.stringify(overlay)} · вьюпорт ${vp.width} · раскладка ${Math.round(layout)}`,
+    );
+
+    /*
+     * bugs/65 — СВЕТЛОЙ ЩЕЛИ СПРАВА НЕТ.
+     *
+     * 🔴 Проверять это ГАБАРИТОМ слоя нельзя, и прежняя редакция стража ошибалась именно так —
+     * а до неё так же ошибался план починки. `scrollbar-gutter: stable` (bugs/59) держит справа
+     * полосу ~15px; под скролл-локом полосы прокрутки в ней нет, и видно ХОЛСТ страницы.
+     * Растянуть слой на `100vw` не помогает: габарит честно становится 1440 при окне 1440, а
+     * пиксели полосы не меняются — оверфлоу фиксированного слоя обрезается краем области
+     * прокрутки (доказано кадрами `tools/probe-bug65-edge.mjs`: `-1-defekt` и `-2-vylecheno`
+     * неотличимы, `-3-holst` — отличается).
+     *
+     * Поэтому стережём НАСТОЯЩЕЕ лечение: цвет холста обязан совпасть с подложкой, ЛОЖАЩЕЙСЯ НА
+     * ФОН ТЕМЫ, — то есть с тем, что человек видит сразу внутри от полосы. Сравнивать холст с
+     * сырой `rgba(3, 8, 16, 0.88)` было бы сравнением разных вещей: подложка полупрозрачна.
+     * Инвариант держит ОБЕ стороны пары «подложка ↔ холст» и краснеет, когда они разъедутся.
+     */
+    const ink = await page.evaluate(() => {
+      // Разбор цветов отдаём БРАУЗЕРУ: токен темы бывает и `#hex`, и `rgb()`, а color-mix
+      // возвращается как `color(srgb 0..1 …)`. Свой парсер здесь был бы третьим диалектом.
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;left:-9999px;background:var(--bg)';
+      document.documentElement.appendChild(probe);
+      const rgb = (css) => {
+        const n = css.match(/[\d.]+/g)?.map(Number) ?? [];
+        const scale = css.startsWith('color(') ? 255 : 1;
+        return n.slice(0, 3).map((v) => v * scale);
+      };
+      const bg = rgb(getComputedStyle(probe).backgroundColor);
+      probe.remove();
+
+      const backdropCss = getComputedStyle(document.querySelector('button.lightbox')).backgroundColor;
+      const ink3 = rgb(backdropCss);
+      const alpha = Number(backdropCss.match(/[\d.]+\s*\)$/)?.[0].replace(')', '') ?? 1);
+      // Что человек видит СРАЗУ ВНУТРИ полосы: подложка, положенная на фон темы.
+      const expect = ink3.map((v, i) => alpha * v + (1 - alpha) * bg[i]);
+
+      const canvasCss = getComputedStyle(document.documentElement).backgroundColor;
+      const canvas = rgb(canvasCss);
+      const drift = Math.max(...canvas.map((v, i) => Math.abs(v - expect[i])));
+      return { canvasCss, backdropCss, drift, expect: expect.map((v) => Math.round(v)) };
+    });
+    check(
+      'холст в полосе жёлоба = подложка на фоне темы — светлой щели нет (bugs/65)',
+      ink.drift <= 2,
+      `холст ${ink.canvasCss} · ожидалось rgb(${ink.expect.join(', ')}) из ${ink.backdropCss} · расхождение ${ink.drift.toFixed(1)}`,
+    );
+
+    // Обратная половина: лечение не имеет права вернуть bugs/59 («скролбар двигает приложение
+    // в сторону»). Покраска холста гуттер не отпускает — но это ЗАМЕРЯЕТСЯ, а не предполагается.
+    const spill = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    check(
+      'горизонтального перелива нет при открытом фото (bugs/59 не вернулся)',
+      spill.scrollWidth <= spill.clientWidth,
+      `scrollWidth ${spill.scrollWidth} · clientWidth ${spill.clientWidth}`,
     );
 
     const img = box.locator('img');
@@ -116,7 +187,8 @@ try {
     });
     check('поверх фото ничего не рисуется', onTop);
     check('страница под фото не крутится', await page.evaluate(() => getComputedStyle(document.body).overflow === 'hidden'));
-    await page.screenshot({ path: `${SHOTS}/lightbox-centered.png` });
+    // Кадр приёмки: правый край — то место, где жила светлая щель (владелец — QA, судит глазами).
+    await page.screenshot({ path: `${SHOTS}/lightbox-${theme}-${width}.png` });
 
     await page.keyboard.press('Escape');
     await page.waitForTimeout(400);
