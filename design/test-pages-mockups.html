@@ -49,7 +49,11 @@
        · V3 «Диалог»        — страница разговаривает: одна крупная карточка-вопрос за раз,
                               «ведём за ручку». Максимум фокуса, минимум шума.
        · V4 «Зеркало»       — движок и РАСТУЩИЙ результат рядом: анкета собирается на глазах,
-                              живой паспорт виден с первой оценки. (рекомендую)
+                              живой паспорт виден с первой оценки.
+       · V5 «Зеркало с инструкцией» — итерация по слову владельца (№029, 14:50: «Мне нравится
+                              v4, но чтобы была инструкция как в v2»): V4 + компактная полоса
+                              трёх шагов НАД движком. Кнопки «Начать» нет сознательно — она
+                              была ценой V2 (церемония на странице без стены). (рекомендую)
   ───────────────────────────────────────────────────────────────────────── */
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -194,6 +198,14 @@
   .step .tt { font-size: 13.5px; line-height: 1.45; }
   .step .tt b { color: var(--heading); display: block; margin-bottom: 1px; }
 
+  /* Компактная полоса шагов (V5): инструкция есть, но движок не уезжает за сгиб */
+  .steps.compact { gap: 6px; margin: 12px 0 4px; }
+  .stage[data-w='1440'] .steps.compact { grid-template-columns: 1fr 1fr 1fr; }
+  .steps.compact .step { padding: 8px 11px; border-radius: 12px; gap: 9px; align-items: center; }
+  .steps.compact .n { width: 20px; height: 20px; font-size: 11px; }
+  .steps.compact .tt { font-size: 12.5px; line-height: 1.35; }
+  .steps.compact .tt b { display: inline; margin: 0; }
+
   .cta {
     display: inline-block; padding: 11px 22px; border-radius: 999px; border: 0; cursor: pointer;
     background: var(--primary); color: var(--primary-ink); font: inherit; font-size: 14.5px; font-weight: 600;
@@ -304,6 +316,7 @@
   <button data-v="2">V2 Лестница</button>
   <button data-v="3">V3 Диалог</button>
   <button data-v="4">V4 Зеркало</button>
+  <button data-v="5">V5 Зеркало + инструкция</button>
   <span class="sp"></span>
   <button id="theme">☀ светлая</button>
   <button id="width">Телефон 390</button>
@@ -499,6 +512,37 @@ const compatV4 = shell(`
   ${faq}
   ${foot}`, { url: '/ru/test/compatibility', wide: true });
 
+/* Компактная инструкция V5 — три шага полосой, движок остаётся в первом экране */
+const howWorksCompact = `
+  <div class="steps compact">
+    <div class="step"><span class="n">1</span><span class="tt"><b>Оцените 12 вещей</b> звёздами — «правильных ответов» нет.</span></div>
+    <div class="step"><span class="n">2</span><span class="tt"><b>Отправьте ссылку второму</b> — он проходит те же 12.</span></div>
+    <div class="step"><span class="n">3</span><span class="tt"><b>Смотрите совпадения</b> — факты, не случайный процент.</span></div>
+  </div>`;
+
+const compatV5 = shell(`
+  ${heroCompat}
+  ${howWorksCompact}
+  <div class="two" style="margin-top:10px">
+    <div>
+      ${progress}
+      ${qcardCur}
+      ${queueChips}
+    </div>
+    <div class="mirror">
+      <h3>Ваша анкета растёт</h3>
+      <div class="fact"><span class="ic">⭐</span><span>Ваша первая десятка — <b>Warcraft III</b></span></div>
+      <div class="fact"><span class="ic">🎬</span><span>Кино и сериалы Вы цените: <b>«Пацаны» 8</b>, <b>«Особое мнение» 7</b></span></div>
+      <div class="fact"><span class="ic">👥</span><span>Эти три вещи вместе с Вами оценили ещё <b>9 человек</b> Пространства</span></div>
+      <p class="grow">+ новый факт после каждой оценки</p>
+    </div>
+  </div>
+  ${invite}
+  ${pairPreview}
+  ${keep}
+  ${faq}
+  ${foot}`, { url: '/ru/test/compatibility', wide: true });
+
 /* ── «Калькулятор любви» — короткая обёртка; результат = счёт совпадений (В3 = А) ── */
 
 const loveResult = `
@@ -562,6 +606,23 @@ const loveV4 = shell(`${loveIntro}
   </div>
   ${loveResult}${foot}`, { url: '/ru/test/love', wide: true });
 
+const loveV5 = shell(`${loveIntro}
+  <div class="steps compact">
+    <div class="step"><span class="n">1</span><span class="tt"><b>Отметьте 7 вещей</b> — только звёзды.</span></div>
+    <div class="step"><span class="n">2</span><span class="tt"><b>Ссылку — половинке.</b></span></div>
+    <div class="step"><span class="n">3</span><span class="tt"><b>Считаем совпадения</b> — настоящие.</span></div>
+  </div>
+  <div class="two" style="margin-top:10px">
+    <div>${loveCard}</div>
+    <div class="mirror">
+      <h3>Копятся искры</h3>
+      <div class="spark"><span class="ic heart">♥</span><span><b>«Дом Дракона»</b> — Ваша девятка</span></div>
+      <div class="spark"><span class="ic heart">♥</span><span><b>Worms</b> — десятка</span></div>
+      <p class="grow">Совпадения посчитаются, когда пройдёт второй</p>
+    </div>
+  </div>
+  ${loveResult}${foot}`, { url: '/ru/test/love', wide: true });
+
 /* ── Хаб «Тесты» (В4 = Б — делается сразу) ── */
 
 const hubCards = `
@@ -611,6 +672,18 @@ const hubV4 = shell(hubBody(`
     <p class="grow">+ каждый тест дописывает её дальше</p>
   </div>`), { url: '/ru/tests', wide: true });
 
+const hubV5 = shell(hubBody(`
+  <div class="steps compact" style="margin-top:12px">
+    <div class="step"><span class="n">1</span><span class="tt"><b>Выберите тест.</b></span></div>
+    <div class="step"><span class="n">2</span><span class="tt"><b>Оцените настоящие вещи.</b></span></div>
+    <div class="step"><span class="n">3</span><span class="tt"><b>Результат — фактами.</b></span></div>
+  </div>
+  <div class="mirror" style="margin-top:10px">
+    <h3>Ваша анкета — одна на все тесты</h3>
+    <div class="fact"><span class="ic">⭐</span><span>3 вещи уже оценены — они зачтутся в любом тесте</span></div>
+    <p class="grow">+ каждый тест дописывает её дальше</p>
+  </div>`), { url: '/ru/tests', wide: true });
+
 /* ── Сборка ── */
 const CAPS = [
   'Тест на совместимость /ru/test/compatibility — главная страница семейства (пройдено 3 из 12)',
@@ -646,13 +719,21 @@ const VARIANTS = {
     build: [compatV3, loveV3, hubV3],
   },
   4: {
-    note: `<b>V4 «Зеркало»</b> <b>(рекомендую)</b>. Движок и РАСТУЩИЙ результат рядом: с
-      первой оценки видно, как собирается Ваша анкета, — «постоянная динамически живущая»
-      (Ваш шейпинг ≈09:06) переведена в форму буквально. Одиночка уходит не пустым даже до
-      прихода второго.
+    note: `<b>V4 «Зеркало»</b>. Движок и РАСТУЩИЙ результат рядом: с первой оценки видно, как
+      собирается Ваша анкета, — «постоянная динамически живущая» (Ваш шейпинг ≈09:06)
+      переведена в форму буквально. Одиночка уходит не пустым даже до прихода второго.
       <span class="q">Цена: самый сложный в реализации; на телефоне два слоя стоят друг под
       другом — путь длиннее на прокрутку.</span>`,
     build: [compatV4, loveV4, hubV4],
+  },
+  5: {
+    note: `<b>V5 «Зеркало с инструкцией»</b> <b>(рекомендую)</b> — Ваша сборка из №029
+      («нравится v4, но чтобы была инструкция как в v2»): V4 целиком + КОМПАКТНАЯ полоса трёх
+      шагов над движком — понятность V2 без его цены. Кнопки «Начать» нет сознательно: она
+      была церемонией на странице без стены, движок виден сразу под шагами.
+      <span class="q">Цена: первый экран плотнее, чем у чистого V4; шаги ужаты до одной
+      строки каждый — длинного объяснения в них не рассказать (для этого FAQ ниже).</span>`,
+    build: [compatV5, loveV5, hubV5],
   },
 };
 
