@@ -30,7 +30,14 @@
     name,
     has = false,
     size = 54,
-  }: { uid: Uid; name: string; has?: boolean; size?: number } = $props();
+    peek = true,
+  }: { uid: Uid; name: string; has?: boolean; size?: number; peek?: boolean } = $props();
+  /*
+   * `peek: false` — лицо БЕЗ собственной кнопки лайтбокса (`bugs/104`): в свёрнутой карточке
+   * связи весь верх, включая площадь фото, работает на раскрытие (решение владельца
+   * 2026-07-31 — дом действий над фото не здесь), и тап по лицу уходит родителю. Портрет
+   * крупно открывается из РАСКРЫТОЙ карточки, где `peek` снова true.
+   */
 
   /**
    * Канон 1.x — карточка появляется СРАЗУ с лицом (bugs/57): экран предзагружает лица до
@@ -114,7 +121,12 @@
   }}
 />
 
-{#if src}
+{#if src && !peek}
+  <!-- Без кнопки: тап по лицу принадлежит родителю (свёрнутая карточка связи, bugs/104).
+       alt пуст: лицо стоит ВНУТРИ кнопки, у которой имя уже есть текстом, — иначе экранный
+       диктор читал бы имя дважды. -->
+  <img class="ava" {src} alt="" style="--size:{size}px" />
+{:else if src}
   <button type="button" class="peek" style="--size:{size}px" title={name} onclick={openPhoto}>
     <img class="ava" {src} alt={name} style="--size:{size}px" />
   </button>
