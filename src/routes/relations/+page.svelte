@@ -238,10 +238,6 @@
     soon: { ru: 'скоро', en: 'soon' },
     collapse: { ru: 'Свернуть ▴', en: 'Collapse ▴' },
     noName: { ru: 'Без имени', en: 'No name' },
-    privacyHint: {
-      ru: 'Вы видите похожесть, но не оценки: из чего сложилась близость — приватно.',
-      en: 'You see the similarity, but not the ratings: what closeness is made of stays private.',
-    },
   } as const;
 
   const loc = (value: Localized | null): string | null =>
@@ -432,7 +428,6 @@
         <!-- Якорь прогрессивного раскрытия: пустой и невидимый, работает за кадром (bugs/13). -->
         <div class="reveal-anchor" bind:this={sentinel} aria-hidden="true"></div>
       {/if}
-      <p class="hint">{t.privacyHint[lang]}</p>
     {/if}
   </main>
 
@@ -481,8 +476,7 @@
     }
     .body > .screen-title,
     .body > .state,
-    .body > .intro,
-    .body > .hint {
+    .body > .intro {
       grid-column: 1 / -1;
     }
   }
