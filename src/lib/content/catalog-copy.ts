@@ -69,7 +69,12 @@ const RU: CatalogCopy = {
   ofRated: 'с оценками',
   tailH2: 'Остальное',
   tailLede: 'Виды, у которых пока слишком мало объектов для собственной страницы.',
-  hubLede: 'Топ по версии NDim Space: сначала то, что людям понравилось больше всего.',
+  /*
+   * Порядок назван в самой строке — интервью №030, В2 = Д: «по оценке, но с учётом числа
+   * голосов». Человек имеет право понимать, почему одно выше другого, и это дешевле объяснить
+   * половиной предложения, чем оставить загадкой.
+   */
+  hubLede: 'Топ по версии NDim Space: выше то, что людям понравилось больше, — с поправкой на то, сколько человек оценило.',
   ratingBrand: 'NDim Space Rating',
   noVotes: 'ещё без голосов',
   voted: (n) => `оценено ${n} ${unitRu(n, ['человеком', 'людьми', 'людьми'])}`,
@@ -99,7 +104,7 @@ const EN: CatalogCopy = {
   ofRated: 'rated',
   tailH2: 'Everything else',
   tailLede: 'Kinds with too few objects for a page of their own.',
-  hubLede: 'The NDim Space top: what people liked most comes first.',
+  hubLede: 'The NDim Space top: what people liked more comes first, adjusted for how many rated it.',
   ratingBrand: 'NDim Space Rating',
   noVotes: 'no ratings yet',
   voted: (n) => `rated by ${n} ${n === 1 ? 'person' : 'people'}`,

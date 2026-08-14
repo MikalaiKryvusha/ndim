@@ -34,7 +34,14 @@ import { LANGS, X_DEFAULT, pick, type Lang } from './langs';
 import { SITE_ORIGIN } from '$lib/site';
 import type { Alternate, CatalogIndexView, HubPageView, SiblingLink } from './catalog-view';
 
-const { hubs, tail } = groupByKind(DIMS as readonly DimPage[]);
+const { hubs, tail, prior } = groupByKind(DIMS as readonly DimPage[]);
+
+/*
+ * Опора взвешивания печатается в лог сборки. Она посчитана из данных (интервью №030, В2 = Д), а
+ * посчитанное число обязано быть видно: молча уехавшая опора переставила бы весь топ каталога, и
+ * заметить это было бы нечем.
+ */
+console.log(`[catalog] опора взвешивания: m = ${prior.m} голосов · C = ${prior.c.toFixed(4)}`);
 
 /** Сводки семи хабов — для индексной страницы каталога и для полосы соседей. */
 export const HUB_SUMMARIES: readonly HubSummary[] = summarize(hubs);

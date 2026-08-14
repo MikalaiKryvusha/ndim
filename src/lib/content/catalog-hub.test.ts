@@ -19,13 +19,15 @@ import { existsSync, readFileSync } from 'node:fs';
 import {
   PER_PAGE,
   catalogPath,
-  compareForHub,
+  catalogPrior,
   groupByKind,
   hubPath,
+  makeComparator,
   pageCount,
   slicePage,
   summarize,
   toCard,
+  weighted,
   type CatalogItem,
 } from './catalog-hub.ts';
 import { KIND_KEYS } from './dim-kind.ts';
@@ -42,18 +44,53 @@ const item = (over: Partial<CatalogItem> & { slug: string }): CatalogItem => ({
   ...over,
 });
 
+/** Опора для юнитов: числа круглые, чтобы ожидания считались в уме, а не подгонялись. */
+const PRIOR = { m: 4, c: 8 };
+const compareForHub = makeComparator(PRIOR);
+
 test('оценённые идут перед неоценёнными — «топ» не начинается с пустых карточек', () => {
   const rated = item({ slug: 'zzz-last-by-slug', rates: 1, rating: 5 });
   const unrated = item({ slug: 'aaa-first-by-slug' });
   assert.deepEqual([unrated, rated].sort(compareForHub), [rated, unrated]);
 });
 
-test('внутри оценённых порядок — по убыванию оценки, потом по числу голосов', () => {
-  const a = item({ slug: 'a', rates: 2, rating: 9.4 });
-  const b = item({ slug: 'b', rates: 30, rating: 9.3 });
-  const c = item({ slug: 'c', rates: 5, rating: 9.4 });
-  // a и c равны по оценке — их разводит число голосов; b ниже по оценке, и это сильнее.
-  assert.deepEqual([b, a, c].sort(compareForHub).map((x) => x.slug), ['c', 'a', 'b']);
+test('🔴 интервью №030, В2 = Д: число голосов УЧАСТВУЕТ — одинокая десятка ниже устойчивой девятки', () => {
+  // При опоре m = 4, C = 8: «10,0 от одного» = (1·10 + 4·8)/5 = 8,4 · «9,0 от двадцати» =
+  // (20·9 + 4·8)/24 ≈ 8,83. Прежнее правило («по чистой средней») поставило бы десятку первой —
+  // ровно эту мутацию тест и обязан ронять.
+  const lonely = item({ slug: 'a-lonely', rates: 1, rating: 10 });
+  const solid = item({ slug: 'b-solid', rates: 20, rating: 9 });
+  assert.ok(weighted(solid, PRIOR) > weighted(lonely, PRIOR));
+  assert.deepEqual([lonely, solid].sort(compareForHub).map((x) => x.slug), ['b-solid', 'a-lonely']);
+});
+
+test('взвешенная оценка НЕ показывается: карточка несёт настоящую среднюю', () => {
+  const d = item({ slug: 'x', rates: 1, rating: 10 });
+  assert.notEqual(weighted(d, PRIOR), d.rating); // величины разные…
+  assert.equal(toCard(d, 'ru').rating, 10); // …а наружу идёт настоящая
+});
+
+test('опора считается ИЗ ДАННЫХ: m — 90-й процентиль голосов, C — средняя по оценённым', () => {
+  // Десять оценённых: восемь по одному голосу, один с пятью, один с семью.
+  // Ряд голосов [1,1,1,1,1,1,1,1,5,7], индекс floor(9 × 0,9) = 8 → p90 = 5.
+  const items = [
+    ...Array.from({ length: 8 }, (_, i) => item({ slug: `s${i}`, rates: 1, rating: 6 })),
+    item({ slug: 's8', rates: 5, rating: 9 }),
+    item({ slug: 's9', rates: 7, rating: 10 }),
+    item({ slug: 'u', rates: 0, rating: 0 }), // неоценённый в опору НЕ входит
+  ];
+  const prior = catalogPrior(items);
+  assert.equal(prior.m, 5);
+  assert.equal(prior.c, (6 * 8 + 9 + 10) / 10);
+  // Пустой каталог не роняет расчёт и не делит на ноль.
+  assert.deepEqual(catalogPrior([]), { m: 1, c: 0 });
+});
+
+test('внутри оценённых равенство взвешенной разводит число голосов', () => {
+  const a = item({ slug: 'a', rates: 2, rating: 9 });
+  const b = item({ slug: 'b', rates: 8, rating: 9 });
+  // Оба выше опоры и равны по средней; больше голосов — выше место.
+  assert.deepEqual([a, b].sort(compareForHub).map((x) => x.slug), ['b', 'a']);
 });
 
 test('🔴 ПОРЯДОК НЕ ЗАВИСИТ ОТ ЯЗЫКА: равенства разводит слаг, а не название', () => {
@@ -141,6 +178,13 @@ test('карточка несёт то, что рисуется, а прочер
 const BUILD = new URL('./dims-build.json', import.meta.url);
 const full = existsSync(BUILD) ? (JSON.parse(readFileSync(BUILD, 'utf8')) as CatalogItem[]) : null;
 const catalog = (full ?? (slice as unknown as CatalogItem[])) as CatalogItem[];
+
+test('боевой каталог: опора взвешивания — числа замера 2026-08-14', () => {
+  if (!full) return; // на запасном срезе эти числа бессмысленны
+  const prior = catalogPrior(catalog);
+  assert.equal(prior.m, 4, 'm — 90-й процентиль числа голосов среди оценённых');
+  assert.equal(prior.c.toFixed(4), '8.2405', 'C — средняя по оценённым объектам');
+});
 
 test('боевой каталог: суммы хабов и хвоста сходятся с числом объектов', () => {
   const { hubs, tail } = groupByKind(catalog);
