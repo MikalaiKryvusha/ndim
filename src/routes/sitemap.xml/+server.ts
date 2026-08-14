@@ -11,6 +11,7 @@ import { SITE_ORIGIN } from '$lib/site';
 import { DOCS } from '$lib/content/docs';
 import { DIMS } from '$lib/content/dims-source';
 import { LANGS } from '$lib/content/langs';
+import { TEST_SLUGS } from '$lib/content/test-copy';
 
 export const prerender = true;
 
@@ -50,6 +51,15 @@ const DOC_PATHS = Object.keys(DOCS)
  *
  * `''` в списке — сам лендинг: `/${lang}` без хвоста.
  */
+/*
+ * 🆕 СЕМЕЙСТВО «ТЕСТ» — фаза 5 эпика 40 (`plans/42`, шаг 3, такт А), 2026-08-14.
+ *
+ * Хаб «Тесты» и три обёртки (состав — интервью №028): открыты поиску по замыслу поверхности —
+ * это страницы-инструменты, в которые человек приходит по «тестовому» запросу. Слаги берутся
+ * из `test-copy.ts` — того же списка, по которому собираются сами страницы.
+ */
+const TEST_PATHS = ['/tests', ...TEST_SLUGS.map((slug) => `/test/${slug}`)];
+
 const STATIC_PATHS = [
   '',
   '/delete-account',
@@ -59,6 +69,7 @@ const STATIC_PATHS = [
   '/menu/support',
   '/menu/donate',
   '/menu/share',
+  ...TEST_PATHS,
 ];
 const LOCALIZED_PATHS = LANGS.flatMap((lang) => STATIC_PATHS.map((path) => `/${lang}${path}`));
 
