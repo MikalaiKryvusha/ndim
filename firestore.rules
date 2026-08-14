@@ -348,6 +348,66 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ── testPairs/{pairId} — пара теста (plans/42, такт В) ──────────────────
+    // Двое проходят один набор обёртки; их ответы — В ОДНОМ документе, по явному согласию
+    // (№002 В4: сюда попадают только оценки, положенные кнопкой в рамках теста; остальные
+    // оценки человека живут в points и не видны никому). Ссылка на пару — секрет: id
+    // случайный и длинный, читается только прямым get, перечислить пары нельзя никому.
+    //
+    // Валидация ответов — map целиком, БЕЗ перебора: values().hasOnly([0…10]) + size().
+    // Это тот же приём, что в правиле воронки (values()[0] == 1). Документ-на-ось, как в
+    // points, здесь не нужен: пара читается одним чтением, и это канон экономии запросов.
+
+    match /testPairs/{pairId} {
+
+      function pairKeys() {
+        return ['slug', 'created', 'aUid', 'aAnswers', 'bUid', 'bAnswers'];
+      }
+
+      // Оценки 0…10, целые, от 1 до 40 штук (потолок — длина очереди обёртки с запасом).
+      function validAnswers(answers) {
+        return answers is map
+               && answers.size() >= 1
+               && answers.size() <= 40
+               && answers.values().hasOnly([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      }
+
+      // Читает любой вошедший (гость — вошедший), но только зная id целиком.
+      allow get: if signedIn();
+      allow list: if false;
+
+      // Создаёт первый участник — ТОЛЬКО собой и только с пустой половиной второго.
+      // id обязан быть длинным: короткий перебирается, а непубличность ссылки (№028)
+      // держится именно на неугадываемости.
+      allow create: if signedIn()
+                    && pairId.size() >= 20
+                    && request.resource.data.keys().hasOnly(pairKeys())
+                    && request.resource.data.slug in ['compatibility', 'personality', 'love']
+                    && request.resource.data.created is int
+                    && request.resource.data.aUid == request.auth.uid
+                    && validAnswers(request.resource.data.aAnswers)
+                    && request.resource.data.bUid == null
+                    && request.resource.data.bAnswers == null;
+
+      // Единственное разрешённое изменение — ПРИСОЕДИНЕНИЕ второго: половина b заполняется
+      // один раз, не самим создателем, и ничья половина после этого не правится.
+      allow update: if signedIn()
+                    && resource.data.bUid == null
+                    && request.auth.uid != resource.data.aUid
+                    && request.resource.data.keys().hasOnly(pairKeys())
+                    && request.resource.data.bUid == request.auth.uid
+                    && validAnswers(request.resource.data.bAnswers)
+                    && request.resource.data.slug == resource.data.slug
+                    && request.resource.data.created == resource.data.created
+                    && request.resource.data.aUid == resource.data.aUid
+                    && request.resource.data.aAnswers == resource.data.aAnswers;
+
+      // Забрать свои ответы (удалить пару) может любой из участников.
+      allow delete: if signedIn()
+                    && (request.auth.uid == resource.data.aUid
+                        || request.auth.uid == resource.data.bUid);
+    }
+
     // ── Всё остальное запрещено ─────────────────────────────────────────────
     // Явное умолчание. Новая коллекция недоступна, пока для неё не написано правило.
 

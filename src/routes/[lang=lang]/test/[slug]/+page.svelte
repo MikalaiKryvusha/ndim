@@ -33,7 +33,18 @@
   import GradeFace from '$lib/ui/GradeFace.svelte';
   import { MOTION } from '$lib/ui/motion';
   import { track } from '$lib/data/funnel';
-  import { restoreMyRatings, saveTestRating, removeTestRating } from '$lib/data/test-engine';
+  import {
+    restoreMyRatings,
+    saveTestRating,
+    removeTestRating,
+    currentUid,
+    createPair,
+    loadPair,
+    joinPair,
+    deletePair,
+  } from '$lib/data/test-engine';
+  import { SESSION_MARK } from '$lib/data/session';
+  import { answersFromRatings, sanitizeAnswers, pairFacts, type PairDoc } from '$lib/model/test-pair';
 
   let { data }: { data: TestPageData } = $props();
 
@@ -54,6 +65,29 @@
       finished: 'Набор пройден — анкета собрана и живёт в Вашем NDim ID.',
       exhausted: 'Это всё: очередь пройдена целиком.',
       saveError: 'Оценка не сохранилась. Проверьте сеть и попробуйте ещё раз.',
+      // Пара (такт В) — черновик до вычитки, как и все тексты семейства.
+      createLink: 'Создать личную ссылку',
+      linkReady: 'Личная ссылка готова — отправьте её второму:',
+      copyBtn: 'Скопировать',
+      copied: 'Скопировано',
+      waiting: 'Как только второй пройдёт тест, здесь появится результат.',
+      checkBtn: 'Проверить',
+      invited: 'Вас позвали сравниться. Оцените те же вещи — а потом нажмите «Сравнить ответы».',
+      compare: 'Сравнить ответы',
+      pairGone: 'Эта ссылка не действует: пары больше нет.',
+      pairTaken: 'По этой ссылке уже сравнились двое.',
+      resultTitle: 'Ваши совпадения',
+      resultCap: 'Результат видите только вы двое — ссылка есть лишь у вас.',
+      seeBelow: 'Результат готов — он ниже, в блоке совпадений.',
+      matchesLabel: 'совпадений',
+      tensLine: (m: number) => `Общих «десяток»: ${m}`,
+      bothGave: (v: number, name: string) => `Вы оба поставили ${v} — ${name}`,
+      closeRow: (name: string, a: number, b: number) => `Вы рядом в «${name}»: ${a} и ${b}`,
+      differRow: (name: string, a: number, b: number) =>
+        `«${name}» вы видите по-разному (${a} и ${b}) — будет о чём поговорить`,
+      comparedLine: (n: number) => `Сравнили вещей: ${n}. Никаких процентов — только то, что можно проверить.`,
+      noOverlap: 'Пока ни одной вещи, оценённой вами обоими, — оцените ещё.',
+      deletePair: 'Удалить пару и ссылку',
     },
     en: {
       enter: 'Log in',
@@ -67,6 +101,28 @@
       finished: 'Set complete — your profile is saved in your NDim ID.',
       exhausted: 'That’s all: you have been through the whole queue.',
       saveError: 'The rating was not saved. Check your connection and try again.',
+      createLink: 'Create a personal link',
+      linkReady: 'Your personal link is ready — send it to the second person:',
+      copyBtn: 'Copy',
+      copied: 'Copied',
+      waiting: 'As soon as the second person finishes, the result will appear here.',
+      checkBtn: 'Check',
+      invited: 'You have been invited to compare. Rate the same things, then press “Compare answers”.',
+      compare: 'Compare answers',
+      pairGone: 'This link no longer works: the pair is gone.',
+      pairTaken: 'Two people have already compared with this link.',
+      resultTitle: 'Your matches',
+      resultCap: 'Only the two of you can see this — the link belongs to you alone.',
+      seeBelow: 'The result is ready — see the matches block below.',
+      matchesLabel: 'matches',
+      tensLine: (m: number) => `Shared “tens”: ${m}`,
+      bothGave: (v: number, name: string) => `You both gave ${v} — ${name}`,
+      closeRow: (name: string, a: number, b: number) => `You are close on “${name}”: ${a} and ${b}`,
+      differRow: (name: string, a: number, b: number) =>
+        `You see “${name}” differently (${a} and ${b}) — something to talk about`,
+      comparedLine: (n: number) => `Things compared: ${n}. No percentages — only what you can check.`,
+      noOverlap: 'No things rated by both of you yet — rate a few more.',
+      deletePair: 'Delete the pair and the link',
     },
   } as const;
   const ui = $derived(UI[data.lang]);
@@ -141,12 +197,14 @@
     pending = null;
     saveFailed = false;
     try {
-      await saveTestRating(data.lang, dimId, value);
+      myUid = await saveTestRating(data.lang, dimId, value);
     } catch {
       saveFailed = true;
       return;
     }
     ratings = new Map(ratings).set(dimId, value);
+    // Пришёл по личной ссылке без сессии — теперь сессия есть, пару можно прочитать.
+    if (pairId !== null && pair === null && !pairLost) void refreshPair();
   }
 
   /** «Убрать» в панели: оценка уходит из базы, карточка возвращается в очередь. */
@@ -171,10 +229,135 @@
     }
     skipped = new Set(skipped).add(current.id);
   }
+
+  // ── Пара (такт В): личная ссылка → второй проходит те же вещи → результат фактами ────────
+
+  let pairId = $state<string | null>(null); // из ?pair=… ИЛИ созданная в этой вкладке
+  let pair = $state<PairDoc | null>(null);
+  let pairLost = $state(false); // ссылка не действует (пары нет)
+  let myUid = $state<string | null>(null);
+  let copied = $state(false);
+  let busyPair = $state(false);
+
+  const queueIds = $derived(data.queue.map((e) => e.id));
+  const nameOf = $derived(new Map(data.queue.map((e) => [e.id, e.name])));
+  const iAmCreator = $derived(pair !== null && myUid !== null && pair.aUid === myUid);
+  const pairReady = $derived(pair !== null && pair.bUid !== null);
+  /** Пара сложилась без меня — ссылка «занята» (для незнакомца и для третьего). */
+  const pairTaken = $derived(
+    pair !== null && pair.bUid !== null && pair.aUid !== myUid && pair.bUid !== myUid,
+  );
+  const shareLink = $derived(pairId === null ? '' : `${data.canonical}?pair=${pairId}`);
+
+  /** Результат: только для участника сложившейся пары. Чужие ответы — через защитный фильтр. */
+  const liveFacts = $derived.by(() => {
+    if (pair === null || pair.bUid === null || myUid === null) return null;
+    if (pair.aUid !== myUid && pair.bUid !== myUid) return null;
+    const allowed = new Set(queueIds);
+    const mineIsA = pair.aUid === myUid;
+    return pairFacts(
+      sanitizeAnswers(mineIsA ? pair.aAnswers : pair.bAnswers, allowed),
+      sanitizeAnswers(mineIsA ? pair.bAnswers : pair.aAnswers, allowed),
+      queueIds,
+    );
+  });
+
+  // ?pair из адреса — только на клиенте (страница пререндерена без query).
+  $effect(() => {
+    const fromUrl = new URLSearchParams(location.search).get('pair');
+    if (fromUrl !== null && /^[a-z0-9-]{20,}$/i.test(fromUrl)) pairId = fromUrl;
+  });
+
+  // Пару читаем, когда сессия УЖЕ есть (маркер). Незнакомцу по ссылке сессию молча не заводим
+  // (канон `profile.ts`) — его пара прочитается после первой оценки, вместе с рождением гостя.
+  $effect(() => {
+    if (pairId === null) return;
+    try {
+      if (localStorage.getItem(SESSION_MARK) === null) return;
+    } catch {
+      return;
+    }
+    void refreshPair();
+  });
+
+  async function refreshPair(): Promise<void> {
+    if (pairId === null) return;
+    try {
+      myUid = await currentUid();
+      const found = await loadPair(pairId);
+      pair = found;
+      pairLost = found === null;
+    } catch {
+      // сеть моргнула — не делаем выводов, кнопка «Проверить» остаётся
+    }
+  }
+
+  /** «Создать личную ссылку» — кладёт МОЮ половину (пересечение оценок с набором, №002 В4). */
+  async function makeLink(): Promise<void> {
+    busyPair = true;
+    saveFailed = false;
+    try {
+      const id = await createPair(data.slug, answersFromRatings(ratings, queueIds));
+      if (id !== null) {
+        pairId = id;
+        await refreshPair();
+      }
+    } catch {
+      saveFailed = true;
+    } finally {
+      busyPair = false;
+    }
+  }
+
+  /** «Сравнить ответы» — половина второго. Гонку двух «вторых» решают правила, не мы. */
+  async function compare(): Promise<void> {
+    if (pairId === null) return;
+    busyPair = true;
+    saveFailed = false;
+    try {
+      if (pair === null) await refreshPair();
+      if (pair === null || pair.bUid !== null) return; // занята или пропала — состояние уже честное
+      await joinPair(pairId, pair, answersFromRatings(ratings, queueIds));
+    } catch {
+      // отказ правил (гонка) — перечитаем и покажем правду
+    } finally {
+      await refreshPair();
+      busyPair = false;
+    }
+  }
+
+  /** Право забрать свои ответы: пара удаляется целиком (№002 В4). */
+  async function removePair(): Promise<void> {
+    if (pairId === null) return;
+    busyPair = true;
+    try {
+      await deletePair(pairId);
+      pair = null;
+      pairId = null;
+      pairLost = false;
+      history.replaceState(null, '', location.pathname);
+    } catch {
+      saveFailed = true;
+    } finally {
+      busyPair = false;
+    }
+  }
+
+  function copyLink(): void {
+    void navigator.clipboard?.writeText(shareLink).then(() => {
+      copied = true;
+      setTimeout(() => (copied = false), 2000);
+    });
+  }
 </script>
 
 <svelte:head>
   <title>{c.metaTitle}</title>
+  {#if pairId !== null}
+    <!-- Непубличная ссылка пары (№028): вариант с ?pair прямо просит робота не индексировать.
+         Пререндер этого не несёт — мета появляется только у живой страницы с query. -->
+    <meta name="robots" content="noindex" />
+  {/if}
   <meta name="description" content={c.metaDesc} />
   <link rel="canonical" href={data.canonical} />
   {#each data.alternates as alt (alt.hreflang)}
@@ -299,29 +482,87 @@
     </aside>
   </div>
 
-  <!-- Приглашение второго: личная ссылка по механике рождается тактом В. -->
+  <!-- Приглашение второго: личная ссылка (такт В). Состояния — по ролям пары. -->
   <section class="invite">
     <h2>{c.inviteTitle}</h2>
-    <p>{c.inviteBody}</p>
-    <p class="fine">{c.inviteNote}</p>
+    {#if pairLost}
+      <p class="warn">{ui.pairGone}</p>
+    {:else if pairTaken}
+      <p class="warn">{ui.pairTaken}</p>
+    {:else if pairId !== null && pairReady}
+      <p class="fine">{ui.seeBelow}</p>
+    {:else if pairId !== null && iAmCreator}
+      <p>{ui.linkReady}</p>
+      <p class="share">
+        <code>{shareLink}</code>
+        <button type="button" class="copy" onclick={copyLink}>{copied ? ui.copied : ui.copyBtn}</button>
+      </p>
+      <p class="fine">
+        {ui.waiting}
+        <button type="button" class="checkbtn" onclick={() => void refreshPair()} disabled={busyPair}>{ui.checkBtn}</button>
+      </p>
+    {:else if pairId !== null}
+      <p>{ui.invited}</p>
+      {#if mineRows.length > 0}
+        <button type="button" class="pairbtn" onclick={() => void compare()} disabled={busyPair}>{ui.compare}</button>
+      {/if}
+      <p class="fine">{c.inviteNote}</p>
+    {:else if finished}
+      <button type="button" class="pairbtn" onclick={() => void makeLink()} disabled={busyPair}>{ui.createLink}</button>
+      <p class="fine">{c.inviteNote}</p>
+    {:else}
+      <p>{c.inviteBody}</p>
+      <p class="fine">{c.inviteNote}</p>
+    {/if}
   </section>
 
-  <!-- Пример результата: имена вымышлены, числа — иллюстрация формы, подпись говорит это прямо. -->
+  <!-- Результат. Пока пары нет — пример формы (имена вымышлены, подпись говорит это прямо);
+       у сложившейся пары — ЖИВЫЕ факты. Ни процентов, ни похожести — закрытый набор полей
+       `pairFacts` стережёт тест (критерий 5 фазы). -->
   <section class="result">
-    <h2>{c.resultTitle}</h2>
-    <div class="pair">
-      <p class="cap">{c.resultCaption}</p>
-      {#if c.resultCount}
-        <p class="bigcount"><span class="n">{c.resultCount.n}</span> <span>{c.resultCount.label}</span></p>
-        <p class="subcount">{c.resultCount.sub}</p>
-      {/if}
-      <ul class="facts">
-        {#each c.resultRows as r (r.text)}
-          <li><span class="ic">{r.icon}</span><span>{r.text}</span></li>
-        {/each}
-      </ul>
-      <p class="rfoot">{c.resultFoot}</p>
-    </div>
+    {#if liveFacts !== null}
+      <h2>{ui.resultTitle}</h2>
+      <div class="pair">
+        <p class="cap">{ui.resultCap}</p>
+        {#if data.slug === 'love'}
+          <!-- Счёт совпадений-фактов — форма результата любви (№028, В3 = А). -->
+          <p class="bigcount"><span class="n">{liveFacts.exact.length}</span> <span>{ui.matchesLabel}</span></p>
+          <p class="subcount">{ui.tensLine(liveFacts.tens.length)}</p>
+        {/if}
+        {#if liveFacts.compared === 0}
+          <p class="rfoot">{ui.noOverlap}</p>
+        {:else}
+          <ul class="facts">
+            {#each liveFacts.exact as r (r.id)}
+              <li><span class="ic">⭐</span><span>{ui.bothGave(r.a, nameOf.get(r.id) ?? '')}</span></li>
+            {/each}
+            {#each liveFacts.close as r (r.id)}
+              <li><span class="ic">🤝</span><span>{ui.closeRow(nameOf.get(r.id) ?? '', r.a, r.b)}</span></li>
+            {/each}
+            {#each liveFacts.differ as r (r.id)}
+              <li><span class="ic">💬</span><span>{ui.differRow(nameOf.get(r.id) ?? '', r.a, r.b)}</span></li>
+            {/each}
+          </ul>
+          <p class="rfoot">{ui.comparedLine(liveFacts.compared)}</p>
+        {/if}
+        <button type="button" class="unlink" onclick={() => void removePair()} disabled={busyPair}>{ui.deletePair}</button>
+      </div>
+    {:else}
+      <h2>{c.resultTitle}</h2>
+      <div class="pair">
+        <p class="cap">{c.resultCaption}</p>
+        {#if c.resultCount}
+          <p class="bigcount"><span class="n">{c.resultCount.n}</span> <span>{c.resultCount.label}</span></p>
+          <p class="subcount">{c.resultCount.sub}</p>
+        {/if}
+        <ul class="facts">
+          {#each c.resultRows as r (r.text)}
+            <li><span class="ic">{r.icon}</span><span>{r.text}</span></li>
+          {/each}
+        </ul>
+        <p class="rfoot">{c.resultFoot}</p>
+      </div>
+    {/if}
   </section>
 
   <!-- Мост-паспорт: кнопки появляются вместе с анкетой — сохранять пустоту было бы обманом. -->
@@ -775,6 +1016,71 @@
     margin-top: 0.4rem;
     font-size: 0.73rem;
     color: var(--faint);
+  }
+  .invite .warn {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--danger, #c0392b);
+  }
+  .pairbtn {
+    margin-top: 0.35rem;
+    padding: 0.45rem 1rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--primary-ink);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pairbtn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .share {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.4rem 0 0;
+    min-width: 0;
+  }
+  .share code {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0.35rem 0.6rem;
+    background: var(--edge-soft);
+    border-radius: 8px;
+    font-size: 0.72rem;
+  }
+  .share .copy,
+  .checkbtn {
+    flex: none;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--dim);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .unlink {
+    display: block;
+    margin: 0.7rem 0 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--faint);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
   }
 
   .result {

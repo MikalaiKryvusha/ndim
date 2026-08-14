@@ -949,3 +949,113 @@ describe('Статистика Пространства — витрина, ко
     await assertFails(deleteDoc(doc(guest(GHOST).firestore(), SNAPSHOT)));
   });
 });
+
+describe('Пара теста — testPairs (plans/42, такт В; №002 В4 + №028)', () => {
+  // Длинный неугадываемый id — как генерит клиент (crypto.randomUUID без дефисов).
+  const PAIR = 'testPairs/0123456789abcdef0123456789abcdef';
+  const SHORT = 'testPairs/short-id';
+
+  const fresh = (aUid: string, over: Record<string, unknown> = {}) => ({
+    slug: 'compatibility',
+    created: 1,
+    aUid,
+    aAnswers: { dim1: 7, dim2: 10 },
+    bUid: null,
+    bAnswers: null,
+    ...over,
+  });
+
+  /** Пара, созданная гостем-Алисой и ждущая второго. */
+  async function seedPair(over: Record<string, unknown> = {}): Promise<void> {
+    await seed(async (db) => {
+      await setDoc(doc(db, PAIR), fresh(ALICE, over));
+    });
+  }
+
+  test('гость создаёт пару собой и читает её по прямой ссылке', async () => {
+    const db = guest(GHOST).firestore();
+    await assertSucceeds(setDoc(doc(db, PAIR), fresh(GHOST)));
+    await assertSucceeds(getDoc(doc(db, PAIR)));
+  });
+
+  test('второй (в том числе гость) присоединяется, заполняя ТОЛЬКО свою половину', async () => {
+    await seedPair();
+    const db = guest(GHOST).firestore();
+    await assertSucceeds(
+      setDoc(doc(db, PAIR), fresh(ALICE, { bUid: GHOST, bAnswers: { dim1: 7, dim3: 0 } })),
+    );
+  });
+
+  test('🔒 создать пару от чужого имени или с занятой половиной второго нельзя', async () => {
+    const db = guest(GHOST).firestore();
+    await assertFails(setDoc(doc(db, PAIR), fresh(ALICE))); // aUid — не я
+    await assertFails(setDoc(doc(db, PAIR), fresh(GHOST, { bUid: BOB, bAnswers: { dim1: 5 } })));
+  });
+
+  test('🔒 короткий id отвергается: непубличность ссылки держится на неугадываемости', async () => {
+    await assertFails(setDoc(doc(guest(GHOST).firestore(), SHORT), fresh(GHOST)));
+  });
+
+  test('🔒 ответы валидируются целиком: вне 0…10, не числа, пустые, больше 40', async () => {
+    const db = guest(GHOST).firestore();
+    await assertFails(setDoc(doc(db, PAIR), fresh(GHOST, { aAnswers: { dim1: 11 } })));
+    await assertFails(setDoc(doc(db, PAIR), fresh(GHOST, { aAnswers: { dim1: -1 } })));
+    await assertFails(setDoc(doc(db, PAIR), fresh(GHOST, { aAnswers: { dim1: 'десять' } })));
+    await assertFails(setDoc(doc(db, PAIR), fresh(GHOST, { aAnswers: {} })));
+    const bloated: Record<string, number> = {};
+    for (let i = 0; i < 41; i += 1) bloated[`dim${i}`] = 5;
+    await assertFails(setDoc(doc(db, PAIR), fresh(GHOST, { aAnswers: bloated })));
+  });
+
+  test('🔒 постороннее поле и чужой slug не проходят', async () => {
+    const db = guest(GHOST).firestore();
+    await assertFails(setDoc(doc(db, PAIR), fresh(GHOST, { email: 'kot@x.ru' })));
+    await assertFails(setDoc(doc(db, PAIR), fresh(GHOST, { slug: 'иное' })));
+  });
+
+  test('🔒 создатель не присоединяется сам к себе', async () => {
+    await seedPair();
+    const db = guest(ALICE).firestore();
+    await assertFails(
+      setDoc(doc(db, PAIR), fresh(ALICE, { bUid: ALICE, bAnswers: { dim1: 7 } })),
+    );
+  });
+
+  test('🔒 присоединяясь, нельзя тронуть половину создателя, slug или дату', async () => {
+    await seedPair();
+    const db = guest(GHOST).firestore();
+    const join = { bUid: GHOST, bAnswers: { dim1: 5 } };
+    await assertFails(setDoc(doc(db, PAIR), fresh(ALICE, { ...join, aAnswers: { dim1: 0 } })));
+    await assertFails(setDoc(doc(db, PAIR), fresh(BOB, { ...join })));
+    await assertFails(setDoc(doc(db, PAIR), fresh(ALICE, { ...join, slug: 'love' })));
+    await assertFails(setDoc(doc(db, PAIR), fresh(ALICE, { ...join, created: 2 })));
+  });
+
+  test('🔒 сложившаяся пара неизменна: третий не влезет, второй не перепишет', async () => {
+    await seedPair({ bUid: BOB, bAnswers: { dim1: 5 } });
+    await assertFails( // третий на занятое место
+      setDoc(doc(guest(EVE).firestore(), PAIR), fresh(ALICE, { bUid: EVE, bAnswers: { dim1: 9 } })),
+    );
+    await assertFails( // второй меняет свои ответы задним числом
+      setDoc(doc(guest(BOB).firestore(), PAIR), fresh(ALICE, { bUid: BOB, bAnswers: { dim1: 10 } })),
+    );
+  });
+
+  test('🔒 не вошедший не читает и не создаёт; перечислить пары нельзя никому', async () => {
+    await seedPair();
+    const db = anonymous().firestore();
+    await assertFails(getDoc(doc(db, PAIR)));
+    await assertFails(setDoc(doc(db, 'testPairs/aaaaaaaaaaaaaaaaaaaaaaaa'), fresh('nobody')));
+    // list запрещён даже участнику: ссылка — единственный путь к паре.
+    const { getDocs, collection } = await import('firebase/firestore');
+    await assertFails(getDocs(collection(guest(ALICE).firestore(), 'testPairs')));
+  });
+
+  test('удалить пару может любой из участников — и только они', async () => {
+    await seedPair({ bUid: BOB, bAnswers: { dim1: 5 } });
+    await assertFails(deleteDoc(doc(guest(EVE).firestore(), PAIR)));
+    await assertSucceeds(deleteDoc(doc(guest(BOB).firestore(), PAIR)));
+    await seedPair({ bUid: BOB, bAnswers: { dim1: 5 } });
+    await assertSucceeds(deleteDoc(doc(guest(ALICE).firestore(), PAIR)));
+  });
+});

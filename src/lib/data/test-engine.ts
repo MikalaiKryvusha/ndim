@@ -72,3 +72,66 @@ export async function removeTestRating(dimId: string): Promise<void> {
   if (uid === null) return;
   await removeRating(uid, dimId);
 }
+
+// ── Пара (такт В): один документ testPairs/{id}, решения — plans/42 ──────────────────────
+
+import type { PairAnswers, PairDoc } from '../model/test-pair.ts';
+import type { TestSlug } from '../content/test-copy.ts';
+
+/** Кто я в этой вкладке — для ролей пары. null = сессии нет. */
+export async function currentUid(): Promise<string | null> {
+  const { currentSession } = await import('./profile.ts');
+  return currentSession();
+}
+
+/**
+ * Создаёт пару со СВОЕЙ половиной ответов и возвращает id — он и есть личная ссылка.
+ * id длинный и случайный: непубличность держится на неугадываемости (№028), правило
+ * отвергает короткие. Сессия к этому моменту есть всегда (ответы уже писались).
+ */
+export async function createPair(slug: TestSlug, answers: PairAnswers): Promise<string | null> {
+  const uid = await currentUid();
+  if (uid === null) return null;
+  const [{ db }, { doc, setDoc }] = await Promise.all([
+    import('../firebase.ts'),
+    import('firebase/firestore'),
+  ]);
+  const id = crypto.randomUUID().replaceAll('-', '');
+  const pair: PairDoc = { slug, created: Date.now(), aUid: uid, aAnswers: answers, bUid: null, bAnswers: null };
+  await setDoc(doc(db(), 'testPairs', id), pair);
+  return id;
+}
+
+/** Читает пару по прямой ссылке. null = пары нет (или ссылка не действует). */
+export async function loadPair(id: string): Promise<PairDoc | null> {
+  const [{ db }, { doc, getDoc }] = await Promise.all([
+    import('../firebase.ts'),
+    import('firebase/firestore'),
+  ]);
+  const snapshot = await getDoc(doc(db(), 'testPairs', id));
+  return snapshot.exists() ? (snapshot.data() as PairDoc) : null;
+}
+
+/**
+ * Присоединяет второго: заполняет половину b одним махом. Правила пустят ровно одно такое
+ * изменение (bUid был null, a-половина не тронута) — гонка двух «вторых» решится правилами,
+ * а не нами: проигравший получит отказ и честную плашку.
+ */
+export async function joinPair(id: string, base: PairDoc, answers: PairAnswers): Promise<void> {
+  const uid = await currentUid();
+  if (uid === null) throw new Error('нет сессии');
+  const [{ db }, { doc, setDoc }] = await Promise.all([
+    import('../firebase.ts'),
+    import('firebase/firestore'),
+  ]);
+  await setDoc(doc(db(), 'testPairs', id), { ...base, bUid: uid, bAnswers: answers });
+}
+
+/** Удаляет пару — право любого участника забрать свои ответы (№002 В4). */
+export async function deletePair(id: string): Promise<void> {
+  const [{ db }, { doc, deleteDoc }] = await Promise.all([
+    import('../firebase.ts'),
+    import('firebase/firestore'),
+  ]);
+  await deleteDoc(doc(db(), 'testPairs', id));
+}
