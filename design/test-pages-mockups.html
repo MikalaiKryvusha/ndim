@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — Семейство страниц ТЕСТ, 4 макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     NDim Space — СЕМЕЙСТВО СТРАНИЦ-ОБЁРТОК ТЕСТА. Фаза 5 эпика 40 (план `plans/42`, шаг 2).
+
+     ═══ ЧТО РЕШАЮТ ЭТИ МАКЕТЫ — ОДИН вопрос ═══
+     КАК УСТРОЕНА страница-обёртка, на которую человек приходит по запросу «тест на
+     совместимость» / «тест личности» / «love calculator» — и проходит путь от заголовка до
+     результата, не увидев ни одной формы. Каркас у всех обёрток семейства ОДИН (движок один,
+     анкета одна) — выбирается форма каркаса. Каждый вариант — цельный ответ, а не набор опций.
+
+     ═══ ЧТО ИМИ НЕ РЕШАЕТСЯ (уже закрыто Вашими ответами — не выбирайте дважды) ═══
+       · Состав первой волны: 4 страницы — хаб «Тесты» + совместимость + личность + калькулятор
+         любви (интервью №028, В1 = А и В4 = Б). Во всех четырёх вариантах одинаково.
+       · H1 страницы двоих — «Тест на совместимость», «тест для двоих» в подзаголовке
+         (интервью №028, В2 = А).
+       · Результат «Калькулятора любви» — СЧЁТ совпадений-фактов + искры, БЕЗ процентов
+         (интервью №028, В3 = А).
+       · Все жанры — обёртки поверх одного движка NDim Space; особых опросников нет
+         (интервью №026, В2 = Г). Тест = оценка настоящих измерений каталога звёздами 0…10.
+       · Числа похожести и порядок близости не публикуются нигде (№018 В4, №023).
+       · До результата — ни одной формы (канон ideas/09); гость — полноценный человек (№009 В5).
+       · Ответы оседают в ОДИН гостевой NDim ID — живой паспорт (шейпинг владельца ≈09:06).
+       · Оболочка публичной страницы — как у страниц каталога: шапка со знаком, языком, темой
+         и «Войти»; рельса навигации НЕТ сознательно (страницу открывает незнакомец из поиска).
+
+     ═══ ЧЕСТНОСТЬ МАКЕТА ═══
+       · Токены обеих тем скопированы из `src/routes/+layout.svelte` дословно — цвета настоящие.
+       · Названия объектов в движке — НАСТОЯЩИЕ, из боевого среза каталога
+         (`src/lib/content/dims-slice.json`): «Пацаны», «Особое мнение», Warcraft III,
+         «Дом Дракона», Worms, Twenty One Pilots и другие. Ничего не сочинено.
+       · ⚠️ УСЛОВНОЕ, и это надо знать при чтении: САМ НАБОР теста (какие 12 вещей войдут)
+         соберётся позже по числу оценок боевого каталога; числа агрегатов («оценили ещё 9
+         человек», «12 совпадений») — примеры формы, в бою придут из данных с порогом ≥3
+         (№021 В1). Имя «Аня» в превью результата пары — вымышленный участник примера.
+       · Тексты страниц — ЧЕРНОВИК ФОРМЫ. Финальные тексты пишутся по `AUTHOR_STYLOMETRY.md`
+         и проходят Вашу вычитку до боя (оба языка).
+
+     ВАРИАНТЫ:
+       · V1 «Сразу к делу»  — инструмент ПЕРВЫМ экраном: заголовок, строка фактов и сразу
+                              первая карточка со звёздами. Объяснение — ниже, для сомневающихся.
+       · V2 «Лестница»      — сначала три шага «как это работает», кнопка «Начать» — и движок.
+                              Модель большого аналога: понятность вперёд.
+       · V3 «Диалог»        — страница разговаривает: одна крупная карточка-вопрос за раз,
+                              «ведём за ручку». Максимум фокуса, минимум шума.
+       · V4 «Зеркало»       — движок и РАСТУЩИЙ результат рядом: анкета собирается на глазах,
+                              живой паспорт виден с первой оценки. (рекомендую)
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Токены светлой темы «Бумага» (дословно из src/routes/+layout.svelte) ── */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1467d6; --star: #e8a516;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --card-shadow: 0 16px 40px rgba(29, 50, 71, 0.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --ok: #2e9e6b;
+  }
+  /* ── Токены тёмной темы (дословно оттуда же) ── */
+  :root[data-theme='dark'] {
+    --bg: #060b14; --panel: rgba(10, 21, 38, 0.78); --edge: rgba(77, 159, 255, 0.22);
+    --edge-soft: rgba(77, 159, 255, 0.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #4d9fff; --star: #ffc93d;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --card-shadow: 0 0 0 1px rgba(63, 217, 255, 0.06), 0 24px 60px rgba(2, 8, 20, 0.6);
+    --ok: #56d3a0;
+  }
+
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+
+  /* ── Панель выбора (дом стиля макетов проекта) ── */
+  .picker {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 6px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef; transition: all .15s;
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: #8fa9c0; font-size: 11px; }
+
+  .note {
+    padding: 12px 16px; background: #0d1b2a; color: #b7cde0; font-size: 13px; line-height: 1.55;
+    border-bottom: 1px solid #1d3247;
+  }
+  .note b { color: #fff; }
+  .note .q { color: #7fd4ff; }
+
+  .stage { padding: 22px 14px 60px; background: #0f1826; }
+  .panes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+  .pane { display: flex; flex-direction: column; gap: 7px; }
+  .pane > .cap { color: #8fa9c0; font-size: 12px; text-align: center; max-width: 390px; }
+  .stage[data-w='1440'] .pane > .cap { max-width: 1180px; }
+
+  /* Оболочка экрана: страница показывается целиком, до низа — дверь в продукт часть решения */
+  .screen {
+    width: 390px; overflow: hidden; position: relative;
+    background: var(--bg); color: var(--text);
+    border-radius: 22px; border: 1px solid var(--edge); box-shadow: var(--card-shadow);
+    display: flex; flex-direction: column;
+  }
+  .stage[data-w='1440'] .screen { width: 1180px; border-radius: 16px; }
+
+  /* Адресная строка — слаг и языковой префикс видны, это часть решения */
+  .url {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 7px; padding: 7px 12px;
+    background: var(--edge-soft); border-bottom: 1px solid var(--edge);
+    font-family: var(--mono); font-size: 10.5px; color: var(--dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .url .lock { color: var(--ok); }
+
+  /* ── ШАПКА ПУБЛИЧНОЙ СТРАНИЦЫ — по живому коду dimension/[slug]/+page.svelte:
+        знак + имя, переключатель языка ссылкой, тема, «Войти». Рельса НЕТ сознательно. ── */
+  .bar {
+    flex: 0 0 auto; min-height: 52px; display: flex; align-items: center; gap: 10px;
+    padding: 0 14px; background: var(--panel); border-bottom: 1px solid var(--edge);
+  }
+  .bar .mark { width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(135deg, #1467d6, #3fd9ff); flex: 0 0 auto; }
+  .bar .title { font-weight: 700; color: var(--heading); font-size: 14px; }
+  .bar .tools { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .bar .langsw { font-size: 12px; color: var(--dim); text-decoration: none; }
+  .bar .icobtn {
+    width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--edge);
+    display: grid; place-items: center; color: var(--dim); font-size: 13px;
+  }
+  .bar .enter {
+    font-size: 12px; padding: 6px 13px; border-radius: 999px;
+    background: var(--primary); color: var(--primary-ink); font-weight: 600;
+  }
+
+  .body { flex: 1 1 auto; min-width: 0; }
+  .wrap { max-width: 660px; margin: 0 auto; padding: 20px 16px 40px; }
+  .stage[data-w='1440'] .wrap { padding: 30px 24px 60px; }
+  .stage[data-w='1440'] .wrap.wide { max-width: 1040px; }
+
+  h1 { font-size: 24px; line-height: 1.18; color: var(--heading); margin: 0 0 4px; }
+  .stage[data-w='1440'] h1 { font-size: 32px; }
+  .sub { font-size: 14.5px; color: var(--dim); line-height: 1.5; }
+  .lede { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--faint); margin-top: 9px; }
+  .lede span { display: inline-flex; align-items: center; gap: 5px; }
+  .lede i { font-style: normal; color: var(--ok); }
+
+  /* ── Движок оценки: карточка измерения + звёзды (жест продукта, 0…10) ── */
+  .qcard {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    padding: 16px; box-shadow: var(--card-shadow); margin: 14px 0;
+  }
+  .qcard .kind { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); font-weight: 600; }
+  .qcard .name { font-size: 18px; font-weight: 700; color: var(--heading); margin: 3px 0 1px; }
+  .qcard .meta { font-size: 12px; color: var(--faint); }
+  .stars { display: flex; gap: 2px; font-size: 21px; margin: 10px 0 2px; }
+  .stars i { font-style: normal; color: var(--edge); }
+  .stars i.on { color: var(--star); }
+  .stars.small { font-size: 14px; margin: 4px 0 0; }
+  .scale { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--faint); }
+  .skip { font-size: 12.5px; color: var(--dim); text-decoration: underline; text-underline-offset: 2px; background: none; border: 0; cursor: pointer; margin-top: 9px; }
+
+  .progress { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--dim); margin: 10px 0 2px; }
+  .progress .track { flex: 1; height: 5px; border-radius: 999px; background: var(--edge-soft); overflow: hidden; }
+  .progress .fill { height: 100%; width: 25%; border-radius: 999px; background: var(--primary); }
+
+  /* Пройденные позиции — приглушённой лентой */
+  .done-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 10px; background: var(--edge-soft); font-size: 12.5px; color: var(--dim); }
+  .done-row + .done-row { margin-top: 5px; }
+  .done-row .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+  .done-list { margin: 10px 0; }
+
+  /* Очередь — что впереди */
+  .queue { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
+  .queue span { font-size: 11.5px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--edge); color: var(--faint); }
+
+  h2 { font-size: 17px; color: var(--heading); margin: 22px 0 8px; }
+  .stage[data-w='1440'] h2 { font-size: 20px; }
+  p.t { line-height: 1.62; font-size: 14.5px; margin: 8px 0; }
+
+  /* Три шага «как это работает» */
+  .steps { display: grid; gap: 9px; margin: 14px 0; }
+  .stage[data-w='1440'] .steps.grid3 { grid-template-columns: 1fr 1fr 1fr; }
+  .step { display: flex; gap: 11px; background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 12px 14px; }
+  .step .n { width: 26px; height: 26px; flex: 0 0 auto; border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-weight: 700; font-size: 13px; display: grid; place-items: center; }
+  .step .tt { font-size: 13.5px; line-height: 1.45; }
+  .step .tt b { color: var(--heading); display: block; margin-bottom: 1px; }
+
+  .cta {
+    display: inline-block; padding: 11px 22px; border-radius: 999px; border: 0; cursor: pointer;
+    background: var(--primary); color: var(--primary-ink); font: inherit; font-size: 14.5px; font-weight: 600;
+  }
+  .cta.ghost { background: transparent; border: 1px solid var(--edge); color: var(--text); font-weight: 500; }
+
+  /* Диалоговые реплики (V3) */
+  .say { max-width: 88%; background: var(--panel); border: 1px solid var(--edge); border-radius: 14px 14px 14px 4px; padding: 10px 13px; font-size: 14px; line-height: 1.5; margin: 10px 0; }
+  .say.me { margin-left: auto; border-radius: 14px 14px 4px 14px; background: var(--edge-soft); color: var(--dim); font-size: 13px; }
+  .dots { display: flex; gap: 4px; margin: 10px 0 2px; }
+  .dots i { width: 7px; height: 7px; border-radius: 999px; background: var(--edge); }
+  .dots i.on { background: var(--primary); }
+
+  /* Растущий паспорт (V4 и промежуточный результат) */
+  .mirror {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    padding: 14px 16px; box-shadow: var(--card-shadow);
+  }
+  .mirror h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); margin: 0 0 8px; }
+  .fact { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.45; padding: 6px 0; }
+  .fact + .fact { border-top: 1px dashed var(--edge); }
+  .fact .ic { flex: 0 0 auto; width: 20px; text-align: center; }
+  .fact b { color: var(--heading); }
+  .crowd { font-size: 12.5px; color: var(--dim); margin-top: 9px; }
+  .grow { font-size: 12px; color: var(--ok); margin-top: 7px; }
+
+  /* Двухслойность V4 на десктопе */
+  .two { display: grid; gap: 18px; }
+  .stage[data-w='1440'] .two { grid-template-columns: 1.25fr 1fr; align-items: start; }
+
+  /* Приглашение второго */
+  .invite {
+    border: 1.5px dashed var(--accent); border-radius: 16px; padding: 14px 16px; margin: 18px 0;
+    background: color-mix(in srgb, var(--panel) 88%, transparent);
+  }
+  .invite h3 { font-size: 15px; color: var(--heading); margin: 0 0 5px; }
+  .invite p { font-size: 13.5px; line-height: 1.5; margin: 0 0 10px; }
+  .linkrow { display: flex; gap: 7px; }
+  .linkrow .fld {
+    flex: 1; min-width: 0; padding: 9px 11px; border-radius: 11px; border: 1px solid var(--edge);
+    background: var(--edge-soft); font-family: var(--mono); font-size: 11px; color: var(--dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .linkrow .cta { padding: 9px 15px; font-size: 13px; flex: 0 0 auto; }
+  .invite .fine { font-size: 11.5px; color: var(--faint); margin: 8px 0 0; }
+
+  /* Результат пары */
+  .pair {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    padding: 15px 16px; margin: 14px 0; box-shadow: var(--card-shadow);
+  }
+  .pair .who { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
+  .pair .ava { width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: #fff; }
+  .pair .ava.a { background: #1467d6; }
+  .pair .ava.b { background: #7c5cd6; }
+  .pair .who b { color: var(--heading); font-size: 14px; }
+  .pair .who span { color: var(--faint); font-size: 12px; }
+  .bigcount { display: flex; align-items: baseline; gap: 9px; margin: 6px 0 2px; }
+  .bigcount .n { font-size: 34px; font-weight: 800; color: var(--heading); line-height: 1; }
+  .bigcount .lbl { font-size: 13.5px; color: var(--dim); }
+  .subcount { font-size: 12.5px; color: var(--dim); margin-bottom: 8px; }
+
+  /* Мост-паспорт */
+  .keep {
+    border-radius: 16px; padding: 14px 16px; margin: 18px 0;
+    background: var(--edge-soft); border: 1px solid var(--edge);
+  }
+  .keep h3 { font-size: 14.5px; color: var(--heading); margin: 0 0 5px; }
+  .keep p { font-size: 13px; line-height: 1.55; margin: 0 0 10px; }
+  .keep .row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* FAQ */
+  .faq { margin: 18px 0 6px; }
+  .faq details { border-top: 1px solid var(--edge); padding: 9px 2px; }
+  .faq details:last-child { border-bottom: 1px solid var(--edge); }
+  .faq summary { font-size: 13.5px; font-weight: 600; color: var(--heading); cursor: pointer; }
+  .faq p { font-size: 13px; line-height: 1.55; color: var(--text); margin: 7px 0 2px; }
+
+  .foot { font-size: 12px; color: var(--faint); line-height: 1.55; margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--edge); }
+  .xlink { font-size: 13px; margin-top: 10px; }
+  .xlink a { color: var(--accent); text-decoration: none; }
+
+  /* Хаб */
+  .hub-cards { display: grid; gap: 11px; margin: 16px 0; }
+  .stage[data-w='1440'] .hub-cards { grid-template-columns: 1fr 1fr 1fr; }
+  .hcard {
+    display: flex; flex-direction: column; gap: 6px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    padding: 15px 16px; box-shadow: var(--card-shadow);
+  }
+  .hcard .tag { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); font-weight: 700; }
+  .hcard .nm { font-size: 16.5px; font-weight: 700; color: var(--heading); }
+  .hcard p { font-size: 13px; line-height: 1.5; color: var(--text); flex: 1; }
+  .hcard .go { font-size: 13px; color: var(--accent); font-weight: 600; }
+  .hub-one { font-size: 13px; line-height: 1.6; background: var(--edge-soft); border-radius: 12px; padding: 10px 13px; margin: 4px 0 14px; }
+
+  /* Искры love */
+  .spark { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.45; padding: 6px 0; }
+  .spark + .spark { border-top: 1px dashed var(--edge); }
+  .heart { color: #e05673; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Семейство ТЕСТ:</b>
+  <button data-v="1" class="active">V1 Сразу к делу</button>
+  <button data-v="2">V2 Лестница</button>
+  <button data-v="3">V3 Диалог</button>
+  <button data-v="4">V4 Зеркало</button>
+  <span class="sp"></span>
+  <button id="theme">☀ светлая</button>
+  <button id="width">Телефон 390</button>
+  <span class="hint">каркас один на все обёртки — выбирается его форма</span>
+</div>
+
+<div class="note" id="note"></div>
+<div class="stage" id="stage" data-w="390"><div class="panes" id="panes"></div></div>
+
+<script>
+/* Материал движка — настоящие объекты боевого каталога (dims-slice.json). */
+const SET = [
+  { kind: 'Телесериал', name: '«Пацаны»', meta: '2019', v: 8 },
+  { kind: 'Фильм', name: '«Особое мнение»', meta: '2002 · Стивен Спилберг', v: 7 },
+  { kind: 'Видеоигра', name: 'Warcraft III: Reign of Chaos', meta: '2002', v: 10 },
+  { kind: 'Телесериал', name: '«Дом Дракона»', meta: '2022', v: null }, // текущая карточка
+  { kind: 'Фильм', name: '«Супермен»', meta: '1978', v: null },
+  { kind: 'Музыкальный исполнитель', name: 'Twenty One Pilots', meta: '', v: null },
+  { kind: 'Практика', name: 'Катание на лыжах', meta: '', v: null },
+  { kind: 'Видеоигра', name: 'Worms', meta: '1995', v: null },
+  { kind: 'Практика', name: 'Выращивание комнатных растений', meta: '', v: null },
+  { kind: 'Роман', name: '«Приключения Оливера Твиста»', meta: '1838 · Чарльз Диккенс', v: null },
+  { kind: 'Фильм', name: '«Человек в железной маске»', meta: '1998', v: null },
+  { kind: 'Фильм', name: '«Вышка»', meta: '2022', v: null },
+];
+const DONE = SET.filter((s) => s.v !== null);
+const CUR = SET[3];
+const QUEUE = SET.slice(4, 9);
+
+const stars = (n, cls = '') => `<div class="stars ${cls}">${Array.from({ length: 10 }, (_, i) => `<i class="${n !== null && i < n ? 'on' : ''}">★</i>`).join('')}</div>`;
+
+/* ── Общие блоки страницы «Совместимость» ── */
+
+const shell = (inner, { url, wide = false } = {}) => `
+  <div class="screen">
+    <div class="url"><span class="lock">🔒</span><span>ndimspace.app${url}</span></div>
+    <header class="bar">
+      <span class="mark"></span><span class="title">NDim Space</span>
+      <span class="tools">
+        <a class="langsw">English</a>
+        <span class="icobtn">☀</span>
+        <span class="enter">Войти</span>
+      </span>
+    </header>
+    <div class="body"><div class="wrap${wide ? ' wide' : ''}">${inner}</div></div>
+  </div>`;
+
+const heroCompat = `
+  <h1>Тест на совместимость</h1>
+  <p class="sub">Тест для двоих — по-настоящему: без выдуманных процентов. Вы оба оцениваете
+     одни и те же вещи, а совпадения говорят сами за себя.</p>
+  <div class="lede"><span><i>✓</i> без регистрации</span><span><i>✓</i> 12 вещей · ~3 минуты</span><span><i>✓</i> бесплатно</span></div>`;
+
+const qcardCur = `
+  <div class="qcard">
+    <div class="kind">${CUR.kind}</div>
+    <div class="name">${CUR.name}</div>
+    <div class="meta">${CUR.meta}</div>
+    ${stars(6)}
+    <div class="scale"><span>0 — совсем не моё</span><span>10 — это про меня</span></div>
+    <button class="skip">Не знаю эту вещь — дальше</button>
+  </div>`;
+
+const progress = `
+  <div class="progress"><span>3 из 12</span><div class="track"><div class="fill"></div></div></div>`;
+
+const doneList = `
+  <div class="done-list">
+    ${DONE.map((d) => `<div class="done-row"><span class="nm">${d.name}</span>${stars(d.v, 'small')}</div>`).join('')}
+  </div>`;
+
+const queueChips = `<div class="queue">${QUEUE.map((q) => `<span>${q.name}</span>`).join('')}<span>и ещё 3</span></div>`;
+
+const howWorks = (grid = false) => `
+  <h2>Как это устроено</h2>
+  <div class="steps${grid ? ' grid3' : ''}">
+    <div class="step"><span class="n">1</span><span class="tt"><b>Оцените 12 вещей звёздами.</b>
+      Настоящие фильмы, игры и привычки — «правильных ответов» здесь нет.</span></div>
+    <div class="step"><span class="n">2</span><span class="tt"><b>Отправьте ссылку второму.</b>
+      Он проходит те же 12 — где угодно и когда угодно.</span></div>
+    <div class="step"><span class="n">3</span><span class="tt"><b>Смотрите совпадения.</b>
+      Не случайный процент, а факты: что вы оба любите на десятку.</span></div>
+  </div>`;
+
+const invite = `
+  <div class="invite">
+    <h3>Позовите второго</h3>
+    <p>Ваша половина теста готова. Отправьте ссылку — когда второй пройдёт, вы оба увидите
+       совпадения.</p>
+    <div class="linkrow"><span class="fld">ndimspace.app/ru/test/c/x7f4-k2m9</span><span class="cta">Скопировать</span></div>
+    <p class="fine">Ссылка личная: результат увидите только вы двое. В поиске его нет.</p>
+  </div>`;
+
+const pairPreview = `
+  <h2>Каким будет результат</h2>
+  <div class="pair">
+    <div class="who">
+      <span class="ava a">Вы</span><span class="ava b">А</span>
+      <span><b>Вы и Аня</b> <span>· пример результата</span></span>
+    </div>
+    <div class="fact"><span class="ic">⭐</span><span>Вы оба поставили <b>10</b> — <b>Warcraft III</b></span></div>
+    <div class="fact"><span class="ic">🤝</span><span>Вы рядом в <b>«Пацанах»</b> и <b>«Особом мнении»</b></span></div>
+    <div class="fact"><span class="ic">💬</span><span><b>Катание на лыжах</b> вы видите по-разному — будет о чём поговорить</span></div>
+    <p class="crowd">Никаких процентов: только то, что можно проверить.</p>
+  </div>`;
+
+const keep = `
+  <div class="keep">
+    <h3>Это не разовый тест</h3>
+    <p>Каждая Ваша оценка уже собирается в анкету — Ваш NDim ID. Она живёт и растёт вместе с
+       Вами, а Пространство ищет по ней людей, которые совпадают с Вами по-настоящему.
+       Гостевая анкета хранится 7 дней.</p>
+    <div class="row"><span class="cta">Сохранить мою анкету</span><span class="cta ghost">Продолжить гостем</span></div>
+  </div>`;
+
+const faq = `
+  <div class="faq">
+    <details open><summary>Почему нет процента совместимости?</summary>
+      <p>Проценты интернет-калькуляторов случайны. Мы показываем то, что можно проверить:
+         ваши настоящие совпадения — по вещам, которые вы оба оценили.</p></details>
+    <details><summary>Это бесплатно?</summary>
+      <p>Да. Без рекламы, без подписок и без покупок.</p></details>
+    <details><summary>Второй увидит все мои ответы?</summary>
+      <p>Только по 12 вещам этого теста — вы оба на это соглашаетесь, начиная его. Остальная
+         Ваша анкета видна так, как решите Вы.</p></details>
+  </div>`;
+
+const foot = `
+  <p class="foot">NDim Space — честный поиск похожих людей по математической близости.
+     Бесплатно, без рекламы и без подписок.</p>`;
+
+/* ── Страница «Совместимость» в четырёх формах ── */
+
+const compatV1 = shell(`
+  ${heroCompat}
+  ${progress}
+  ${qcardCur}
+  ${doneList}
+  ${queueChips}
+  ${howWorks()}
+  ${invite}
+  ${pairPreview}
+  ${keep}
+  ${faq}
+  ${foot}`, { url: '/ru/test/compatibility' });
+
+const compatV2 = shell(`
+  ${heroCompat}
+  ${howWorks(true)}
+  <p style="margin:14px 0 6px"><span class="cta">Начать тест</span></p>
+  <p class="t" style="color:var(--faint);font-size:12.5px">…и сразу под кнопкой — первая карточка:</p>
+  ${progress}
+  ${qcardCur}
+  ${invite}
+  ${pairPreview}
+  ${keep}
+  ${faq}
+  ${foot}`, { url: '/ru/test/compatibility' });
+
+const compatV3 = shell(`
+  ${heroCompat}
+  <div class="say">Начнём с простого. Сериалы смотрите?</div>
+  <div class="say me">«Пацаны» — 8 ★ · «Особое мнение» — 7 ★ · Warcraft III — 10 ★</div>
+  <div class="say">А как Вам это?</div>
+  ${qcardCur}
+  <div class="dots">${Array.from({ length: 12 }, (_, i) => `<i class="${i < 3 ? 'on' : ''}"></i>`).join('')}</div>
+  ${howWorks()}
+  ${invite}
+  ${pairPreview}
+  ${keep}
+  ${faq}
+  ${foot}`, { url: '/ru/test/compatibility' });
+
+const compatV4 = shell(`
+  ${heroCompat}
+  <div class="two" style="margin-top:12px">
+    <div>
+      ${progress}
+      ${qcardCur}
+      ${queueChips}
+    </div>
+    <div class="mirror">
+      <h3>Ваша анкета растёт</h3>
+      <div class="fact"><span class="ic">⭐</span><span>Ваша первая десятка — <b>Warcraft III</b></span></div>
+      <div class="fact"><span class="ic">🎬</span><span>Кино и сериалы Вы цените: <b>«Пацаны» 8</b>, <b>«Особое мнение» 7</b></span></div>
+      <div class="fact"><span class="ic">👥</span><span>Эти три вещи вместе с Вами оценили ещё <b>9 человек</b> Пространства</span></div>
+      <p class="grow">+ новый факт после каждой оценки</p>
+    </div>
+  </div>
+  ${invite}
+  ${pairPreview}
+  ${keep}
+  ${faq}
+  ${foot}`, { url: '/ru/test/compatibility', wide: true });
+
+/* ── «Калькулятор любви» — короткая обёртка; результат = счёт совпадений (В3 = А) ── */
+
+const loveResult = `
+  <h2>Ваш результат</h2>
+  <div class="pair">
+    <div class="who">
+      <span class="ava a">Вы</span><span class="ava b">М</span>
+      <span><b>Вы и Максим</b> <span>· пример результата</span></span>
+    </div>
+    <div class="bigcount"><span class="n">12</span><span class="lbl">совпадений</span></div>
+    <p class="subcount">из них 5 общих «десяток»</p>
+    <div class="spark"><span class="ic heart">♥</span><span>Вы оба поставили <b>10</b> — <b>«Дом Дракона»</b></span></div>
+    <div class="spark"><span class="ic heart">♥</span><span>Оба выросли на <b>Worms</b></span></div>
+    <div class="spark"><span class="ic heart">♥</span><span>Оба слушаете <b>Twenty One Pilots</b></span></div>
+    <p class="crowd">Счёт честный: мы считаем совпадения, а не выдумываем процент.</p>
+  </div>
+  <p class="xlink"><a>Хотите глубже? Пройдите тест на совместимость →</a></p>
+  <p class="xlink"><a>Узнать больше о себе — тест личности →</a></p>`;
+
+const loveIntro = `
+  <h1>Калькулятор любви</h1>
+  <p class="sub">Считает не случайный процент, а настоящие совпадения: вы оба отмечаете,
+     что любите, — а дальше говорят цифры, которым можно верить.</p>
+  <div class="lede"><span><i>✓</i> 7 вещей · ~2 минуты</span><span><i>✓</i> без регистрации</span></div>`;
+
+const loveCard = `
+  <div class="qcard">
+    <div class="kind">Телесериал</div>
+    <div class="name">«Дом Дракона»</div>
+    <div class="meta">2022</div>
+    ${stars(9)}
+    <div class="scale"><span>0 — совсем не моё</span><span>10 — любовь</span></div>
+    <button class="skip">Не знаю эту вещь — дальше</button>
+  </div>`;
+
+const loveV1 = shell(`${loveIntro}
+  <div class="progress"><span>2 из 7</span><div class="track"><div class="fill" style="width:29%"></div></div></div>
+  ${loveCard}${loveResult}${foot}`, { url: '/ru/test/love' });
+const loveV2 = shell(`${loveIntro}
+  <div class="steps" style="margin-top:12px">
+    <div class="step"><span class="n">1</span><span class="tt"><b>Отметьте 7 вещей.</b> Быстро: только звёзды.</span></div>
+    <div class="step"><span class="n">2</span><span class="tt"><b>Ссылку — половинке.</b></span></div>
+    <div class="step"><span class="n">3</span><span class="tt"><b>Считаем совпадения.</b> Настоящие, не выдуманные.</span></div>
+  </div>
+  <p style="margin:10px 0 4px"><span class="cta">Начать</span></p>
+  ${loveResult}${foot}`, { url: '/ru/test/love' });
+const loveV3 = shell(`${loveIntro}
+  <div class="say">Проверим вас двоих? Отметьте, что любите Вы, — остальное сделает математика.</div>
+  ${loveCard}
+  <div class="dots">${Array.from({ length: 7 }, (_, i) => `<i class="${i < 2 ? 'on' : ''}"></i>`).join('')}</div>
+  ${loveResult}${foot}`, { url: '/ru/test/love' });
+const loveV4 = shell(`${loveIntro}
+  <div class="two" style="margin-top:12px">
+    <div>${loveCard}</div>
+    <div class="mirror">
+      <h3>Копятся искры</h3>
+      <div class="spark"><span class="ic heart">♥</span><span><b>«Дом Дракона»</b> — Ваша девятка</span></div>
+      <div class="spark"><span class="ic heart">♥</span><span><b>Worms</b> — десятка</span></div>
+      <p class="grow">Совпадения посчитаются, когда пройдёт второй</p>
+    </div>
+  </div>
+  ${loveResult}${foot}`, { url: '/ru/test/love', wide: true });
+
+/* ── Хаб «Тесты» (В4 = Б — делается сразу) ── */
+
+const hubCards = `
+  <div class="hub-cards">
+    <div class="hcard"><span class="tag">Для двоих</span><span class="nm">Тест на совместимость</span>
+      <p>Вы оба оцениваете одни и те же 12 вещей — совпадения говорят сами за себя.</p>
+      <span class="go">Пройти →</span></div>
+    <div class="hcard"><span class="tag">Для одного</span><span class="nm">Тест личности</span>
+      <p>Не «кто Вы по типу», а живая анкета: факты о Вашем вкусе, которые растут с каждой
+         оценкой.</p>
+      <span class="go">Пройти →</span></div>
+    <div class="hcard"><span class="tag">Для пары · 2 минуты</span><span class="nm">Калькулятор любви</span>
+      <p>Считает настоящие совпадения, а не случайный процент.</p>
+      <span class="go">Посчитать →</span></div>
+  </div>`;
+
+const hubBody = (extraTop = '') => `
+  <h1>Тесты</h1>
+  <p class="sub">Все тесты Пространства работают поверх одной живой анкеты: пройдёте один —
+     второй начнётся уже с середины.</p>
+  ${extraTop}
+  ${hubCards}
+  <div class="hub-one">Без регистрации. Без выдуманных процентов. Бесплатно и без рекламы —
+     как и всё Пространство.</div>
+  ${foot}`;
+
+const hubV1 = shell(hubBody(), { url: '/ru/tests', wide: true });
+const hubV2 = shell(hubBody(`
+  <div class="steps grid3" style="margin-top:12px">
+    <div class="step"><span class="n">1</span><span class="tt"><b>Выберите тест.</b></span></div>
+    <div class="step"><span class="n">2</span><span class="tt"><b>Оцените настоящие вещи.</b></span></div>
+    <div class="step"><span class="n">3</span><span class="tt"><b>Результат — фактами.</b></span></div>
+  </div>`), { url: '/ru/tests', wide: true });
+const hubV3 = shell(`
+  <h1>Тесты</h1>
+  <p class="sub">Что Вам сейчас интереснее?</p>
+  <div class="say">Хочу проверить нас двоих → <b>совместимость</b>. Хочу понять свой вкус →
+    <b>тест личности</b>. Хотим поиграть вдвоём → <b>калькулятор любви</b>.</div>
+  ${hubCards}
+  <div class="hub-one">Все три работают поверх одной анкеты: пройдёте один — второй начнётся
+     с середины.</div>
+  ${foot}`, { url: '/ru/tests', wide: true });
+const hubV4 = shell(hubBody(`
+  <div class="mirror" style="margin-top:12px">
+    <h3>Ваша анкета — одна на все тесты</h3>
+    <div class="fact"><span class="ic">⭐</span><span>3 вещи уже оценены — они зачтутся в любом тесте</span></div>
+    <p class="grow">+ каждый тест дописывает её дальше</p>
+  </div>`), { url: '/ru/tests', wide: true });
+
+/* ── Сборка ── */
+const CAPS = [
+  'Тест на совместимость /ru/test/compatibility — главная страница семейства (пройдено 3 из 12)',
+  'Калькулятор любви /ru/test/love — короткая обёртка; результат — СЧЁТ совпадений (В3 = А)',
+  'Хаб «Тесты» /ru/tests (В4 = Б) — три двери поверх одной анкеты',
+];
+
+const VARIANTS = {
+  1: {
+    note: `<b>V1 «Сразу к делу».</b> Инструмент — ПЕРВЫМ экраном: заголовок, строка фактов и
+      сразу карточка со звёздами; объяснение и приглашение — ниже, по мере пути. <b>Основание
+      не вкусовое:</b> 68 % поисков не дают клика — выигрывает поверхность, где ценность
+      начинается мгновенно (researches/30); и канон ворот: «интерактив сам вносит человека
+      внутрь».
+      <span class="q">Цена: человек начинает, ещё не зная правил, — доверие догоняет по ходу;
+      объясняющий текст ниже сгиба.</span>`,
+    build: [compatV1, loveV1, hubV1],
+  },
+  2: {
+    note: `<b>V2 «Лестница».</b> Сначала три шага «как это работает», кнопка «Начать» — и
+      движок. Модель большого аналога (16personalities): понятность вперёд, много текста
+      наверху — поиску есть что читать.
+      <span class="q">Цена: лишний экран до ценности — трение ровно на пике интереса; кнопка
+      «Начать» на странице без стены — почти церемония.</span>`,
+    build: [compatV2, loveV2, hubV2],
+  },
+  3: {
+    note: `<b>V3 «Диалог».</b> Страница разговаривает: одна крупная карточка-вопрос за раз,
+      прогресс точками, пройденное — репликами. Дословно «ведём за ручку» (Ваше слово о
+      воротах): максимум фокуса, ноль шума.
+      <span class="q">Цена: нетерпеливому медленнее (нет ленты — только по одной); текста в
+      первом экране мало, диалог должен нести всю понятность сам.</span>`,
+    build: [compatV3, loveV3, hubV3],
+  },
+  4: {
+    note: `<b>V4 «Зеркало»</b> <b>(рекомендую)</b>. Движок и РАСТУЩИЙ результат рядом: с
+      первой оценки видно, как собирается Ваша анкета, — «постоянная динамически живущая»
+      (Ваш шейпинг ≈09:06) переведена в форму буквально. Одиночка уходит не пустым даже до
+      прихода второго.
+      <span class="q">Цена: самый сложный в реализации; на телефоне два слоя стоят друг под
+      другом — путь длиннее на прокрутку.</span>`,
+    build: [compatV4, loveV4, hubV4],
+  },
+};
+
+const stage = document.getElementById('stage');
+const panes = document.getElementById('panes');
+const note = document.getElementById('note');
+let current = '1';
+
+function render() {
+  const v = VARIANTS[current];
+  note.innerHTML = v.note;
+  // На десктопе — два пейна (совместимость + хаб): широкие страницы длинные, три не читаются.
+  const idx = stage.dataset.w === '1440' ? [0, 2] : [0, 1, 2];
+  panes.innerHTML = idx
+    .map((i) => `<div class="pane"><div>${v.build[i]}</div><div class="cap">${CAPS[i]}</div></div>`)
+    .join('');
+}
+
+document.querySelectorAll('.picker button[data-v]').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    current = b.dataset.v;
+    render();
+  };
+});
+
+document.getElementById('theme').onclick = (e) => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  e.target.textContent = dark ? '☾ тёмная' : '☀ светлая';
+};
+
+document.getElementById('width').onclick = (e) => {
+  const wide = stage.dataset.w === '1440';
+  stage.dataset.w = wide ? '390' : '1440';
+  e.target.textContent = wide ? 'Телефон 390' : 'Десктоп 1440';
+  render();
+};
+
+render();
+</script>
+</body>
+</html>

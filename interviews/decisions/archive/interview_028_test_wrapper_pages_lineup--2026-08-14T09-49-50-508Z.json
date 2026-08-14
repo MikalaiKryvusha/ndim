@@ -1,0 +1,29 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_028_test_wrapper_pages_lineup.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-14T09:49:50.508Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В3": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В4": {
+			"choice": "Б",
+			"text": "",
+			"comment": ""
+		}
+	}
+}
