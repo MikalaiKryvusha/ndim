@@ -29,6 +29,13 @@ import {
   toCard,
   type HubSummary,
 } from './catalog-hub';
+import {
+  neighboursOf,
+  returnLostNeighbours,
+  tagWeights,
+  type NeighbourItem,
+  type NeighbourLink,
+} from './catalog-neighbours';
 import { CATALOG_COPY, hubMetaDesc, hubMetaTitle } from './catalog-copy';
 import { LANGS, X_DEFAULT, pick, type Lang } from './langs';
 import { SITE_ORIGIN } from '$lib/site';
@@ -86,6 +93,42 @@ export const hubPageEntries = (): { kind: KindKey; page: string }[] => {
  * странице и выглядел бы совершенно исправным.
  */
 export const CATALOG_SOURCE = DIMS_SOURCE;
+
+/*
+ * ── СОСЕДИ ПО КАТАЛОГУ (`plans/48` шаг 4) ────────────────────────────────────────────────────
+ * Индекс считается ОДИН РАЗ на сборку: 5111 объектов × его пул, ~5 секунд. Пересчитывать его в
+ * загрузчике значило бы платить эти секунды 10 222 раза.
+ *
+ * Пул соседства — СВОЙ ХАБ объекта, а для хвостовых видов — сам хвост. Так «Повесть» не получает
+ * в соседи «Роман»: смысловое слияние видов запрещено (`dim-kind.ts`), и блок соседства не место,
+ * где его протаскивают с чёрного хода.
+ */
+const TAG_WEIGHTS = tagWeights(DIMS as readonly NeighbourItem[]);
+const NEIGHBOURS_BY_SLUG = new Map<string, NeighbourItem[]>();
+{
+  const pools = [...hubs.values(), tail] as NeighbourItem[][];
+  for (const pool of pools) {
+    for (const item of pool) NEIGHBOURS_BY_SLUG.set(item.slug, neighboursOf(item, pool, TAG_WEIGHTS));
+  }
+  // Возврат потерянных — без него 764 объекта остались бы с двумя входящими ссылками при
+  // обещанных фазой трёх. Число печатается: молчаливый проход по графу проверить нечем.
+  const returned = returnLostNeighbours(NEIGHBOURS_BY_SLUG, DIMS as readonly NeighbourItem[]);
+  console.log(`[catalog] соседи по классификации: возвращено потерянных — ${returned}`);
+}
+
+/**
+ * Соседи объекта по классификации — уже в нейтральном порядке (по слагу).
+ *
+ * 🔴 Набор ОДИН для обоих языков: теги каталога двуязычны и лежат у объекта вместе, поэтому
+ * пересечение считается одинаково. Разные наборы у пары `/ru/…` и `/en/…` означали бы, что
+ * `hreflang` объявляет переводами страницы с разным содержанием.
+ */
+export const neighboursFor = (slug: string, lang: Lang): NeighbourLink[] =>
+  (NEIGHBOURS_BY_SLUG.get(slug) ?? []).map((d) => ({
+    slug: d.slug,
+    title: pick(d.title, lang),
+    year: d.year && d.year !== '-' ? d.year : '',
+  }));
 
 /** Второй язык — тот, который не текущий. Языков два (`langs.ts`), третий встанет сюда же. */
 const otherOf = (lang: Lang): Lang => (LANGS.find((l) => l !== lang) ?? lang) as Lang;

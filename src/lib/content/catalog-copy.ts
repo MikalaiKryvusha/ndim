@@ -51,6 +51,13 @@ export interface CatalogCopy {
   readonly prev: string;
   readonly next: string;
   readonly siblingsLabel: string;
+  /**
+   * Заголовок блока соседей на карточке.
+   *
+   * 🔴 Формулировка «Рядом в Пространстве» ЗАПРЕЩЕНА (метаплан `plans/40`, ⛔-таблица): она про
+   * людей и про математику похожести, а здесь — классификация каталога, и путать их нельзя.
+   */
+  readonly similar: string;
   readonly enter: string;
   readonly theme: string;
   readonly foot: string;
@@ -84,6 +91,7 @@ const RU: CatalogCopy = {
   prev: 'Назад',
   next: 'Дальше',
   siblingsLabel: 'Разделы каталога',
+  similar: 'Похожие по каталогу',
   enter: 'Войти',
   theme: 'Тема',
   foot:
@@ -114,6 +122,7 @@ const EN: CatalogCopy = {
   prev: 'Back',
   next: 'Next',
   siblingsLabel: 'Catalog sections',
+  similar: 'Similar in the catalog',
   enter: 'Log in',
   theme: 'Theme',
   foot:

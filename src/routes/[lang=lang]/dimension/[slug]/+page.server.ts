@@ -34,7 +34,10 @@
 import { error } from '@sveltejs/kit';
 import { DIMS, DIMS_SOURCE } from '$lib/content/dims-source';
 import { ratingView } from '$lib/content/dims-rating';
-import { kindKeyOf } from '$lib/content/dim-kind';
+import { kindKeyOf, kindTitle } from '$lib/content/dim-kind';
+import { catalogPath, hubPath } from '$lib/content/catalog-hub';
+import { neighboursFor } from '$lib/content/catalog-source';
+import { CATALOG_COPY } from '$lib/content/catalog-copy';
 import { dimJsonLd } from '$lib/content/dim-jsonld';
 import { LANGS, X_DEFAULT, pick, type Lang } from '$lib/content/langs';
 import { SITE_ORIGIN } from '$lib/site';
@@ -99,6 +102,16 @@ export function load({ params }: { params: { lang: string; slug: string } }): Di
 
   const href = (l: Lang) => `${SITE_ORIGIN}/${l}/dimension/${dim.slug}`;
 
+  /*
+   * ВВЕРХ И ВБОК (`plans/48` шаг 4). До этого шага у карточки была РОВНО ОДНА входящая ссылка —
+   * языковой двойник, — и ни одной исходящей внутрь каталога. Хаб даёт ей вход и обратный путь,
+   * соседи — ещё восемь связей по классификации.
+   */
+  const kindKey = kindKeyOf(dim.type);
+  const up = kindKey
+    ? { title: kindTitle(kindKey, lang), href: hubPath(lang, kindKey) }
+    : { title: CATALOG_COPY[lang].up, href: catalogPath(lang) };
+
   // Разметка считается ЗДЕСЬ, на пререндере: правило показа оценок одно на проект, и разметка
   // обязана следовать ему, а не собственной копии условия (`plans/48` шаг 5).
   const rating = ratingView(dim.rates);
@@ -148,6 +161,8 @@ export function load({ params }: { params: { lang: string; slug: string } }): Di
       { hreflang: 'x-default', href: href(X_DEFAULT) },
     ],
     jsonLd,
+    up,
+    neighbours: neighboursFor(dim.slug, lang),
     // Правило показа оценок решается в ОДНОМ месте на весь проект — одно внутри приложения и
     // снаружи (интервью №022). Шаблон получает его готовым.
     ...rating,
