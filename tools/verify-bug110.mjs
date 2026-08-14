@@ -159,9 +159,17 @@ try {
 	await sleep(700);
 
 	await page.locator('#save').click();
-	await page.waitForFunction(() => document.body.innerText.includes('НЕ ЗАПИСАНО'), null, { timeout: 10_000 })
-		.then(() => check(true, 'ДЕФЕКТ 2: страница честно говорит «НЕ ЗАПИСАНО», а не «Записываю…»'))
-		.catch(() => check(false, 'ДЕФЕКТ 2: страница честно говорит «НЕ ЗАПИСАНО», а не «Записываю…»'));
+	// bugs/122 + интервью №031: страница обязана ЗАКРИЧАТЬ (не «Записываю…» навсегда), но НЕ
+	// утверждать «не записано» — отказ fetch одинаков и когда сервер умер до записи, и когда он
+	// записал, но умер до ответа. Стережём обе половины: тревога есть, ложного приговора нет.
+	await page.waitForFunction(() => document.body.innerText.includes('ОТВЕТА ОТ СЕРВЕРА НЕТ'), null, { timeout: 10_000 })
+		.then(() => check(true, 'ДЕФЕКТ 2: страница честно кричит «ОТВЕТА ОТ СЕРВЕРА НЕТ», а не «Записываю…»'))
+		.catch(() => check(false, 'ДЕФЕКТ 2: страница честно кричит «ОТВЕТА ОТ СЕРВЕРА НЕТ», а не «Записываю…»'));
+	const verdict = await page.evaluate(() => document.body.innerText);
+	check(!/Записать не удалось|НЕ ЗАПИСАНО/.test(verdict),
+		'bugs/122: страница НЕ выносит приговор «не записано» — судьбы записи она не знает');
+	check(/не затирается|уточнением/.test(verdict),
+		'bugs/122: сказано, что повторить сохранение безопасно');
 
 	check(!(await page.locator('#save').isDisabled()), 'ДЕФЕКТ 2: кнопка «Сохранить» снова активна');
 	const shown = await page.locator('#rescueText').inputValue().catch(() => '');
