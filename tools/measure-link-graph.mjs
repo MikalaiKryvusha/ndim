@@ -6,9 +6,13 @@
  *
  * Что делает: парсит все `build/**\/*.html`, извлекает внутренние `<a href>`, строит
  * ориентированный граф страниц и печатает + пишет в `researches/34_linkgraph_<дата>.json`:
- *   · число страниц и число сирот (0 входящих) по сегментам (лендинг/каталог/документы/приложение);
+ *   · число страниц и число сирот (0 входящих) по сегментам (лендинг/каталог/хабы/документы/приложение);
  *   · распределение входящих ссылок;
- *   · глубину от `/` (BFS; недостижимые считаются отдельно — в JSON нет ∞).
+ *   · глубину от `/` (BFS; недостижимые считаются отдельно — в JSON нет ∞);
+ *   · 🆕 глубину от ЯЗЫКОВЫХ ГЛАВНЫХ `/ru` и `/en` — метрика критериев 1 и 3 фазы 2
+ *     (`plans/48`). Корень `/` — распознаватель под `noindex`, он в поиске не участвует, и
+ *     считать «клики от корня» значит приписывать каждой странице лишний шаг через страницу,
+ *     которой в выдаче нет.
  *
  * 🔴 КОНТРОЛЬ ПРИБОРА (`EXP-0082`: пустой граф = ошибка ПРИБОРА, а не «0 ссылок»):
  *   · лендинг `/` обязан показать ≥1 исходящую внутреннюю ссылку;
@@ -78,6 +82,9 @@ function normalizeHref(href, pageUrl) {
 function segmentOf(url) {
   if (url === '/') return 'лендинг';
   if (/^\/(ru|en)\/dimension\//.test(url)) return 'каталог';
+  // 🆕 Хабы каталога (`plans/48` шаг 3). Сегмент ДОБАВЛЕН, а не переименован из существующих:
+  // прежние ярлыки остаются сравнимыми с базовой линией фазы 1, снятой тем же прибором.
+  if (/^\/(ru|en)\/catalog(\/|$)/.test(url)) return 'хабы';
   if (url.startsWith('/menu/')) return 'документы';
   if (url === '/404') return 'служебное';
   return 'приложение';
@@ -164,26 +171,51 @@ for (const p of pages) {
   inDistribution[b] = (inDistribution[b] ?? 0) + 1;
 }
 
-// BFS от корня.
-const depth = new Map([['/', 0]]);
-let frontier = ['/'];
-while (frontier.length) {
-  const next = [];
-  for (const p of frontier) {
-    for (const t of [...(outEdges.get(p) ?? [])].sort()) {
-      if (pageSet.has(t) && !depth.has(t)) {
-        depth.set(t, depth.get(p) + 1);
-        next.push(t);
+/** BFS по внутренним ссылкам от заданного набора корней (у всех корней глубина 0). */
+function bfs(roots) {
+  const seen = new Map(roots.filter((r) => pageSet.has(r)).map((r) => [r, 0]));
+  let frontier = [...seen.keys()];
+  while (frontier.length) {
+    const next = [];
+    for (const p of frontier) {
+      for (const t of [...(outEdges.get(p) ?? [])].sort()) {
+        if (pageSet.has(t) && !seen.has(t)) {
+          seen.set(t, seen.get(p) + 1);
+          next.push(t);
+        }
       }
     }
+    frontier = next;
   }
-  frontier = next;
+  return seen;
 }
-const depthHist = {};
-for (const p of pages) {
-  const d = depth.has(p) ? String(depth.get(p)) : 'недостижимо';
-  depthHist[d] = (depthHist[d] ?? 0) + 1;
-}
+
+const histOf = (depths) => {
+  const hist = {};
+  for (const p of pages) {
+    const d = depths.has(p) ? String(depths.get(p)) : 'недостижимо';
+    hist[d] = (hist[d] ?? 0) + 1;
+  }
+  return hist;
+};
+
+// Глубина от корня `/` — метрика базовой линии фазы 1, сохраняется ради сравнимости прогонов.
+const depth = bfs(['/']);
+const depthHist = histOf(depth);
+
+/*
+ * 🆕 ГЛУБИНА ОТ ЯЗЫКОВЫХ ГЛАВНЫХ — метрика критериев приёмки фазы 2 (`plans/48`, критерии 1 и 3:
+ * «недостижимых от `/{lang}` — 0» и «до самой дальней карточки ≤3 кликов»).
+ *
+ * 🔑 Почему отдельно от корня, а не вместо. Корень `/` — распознаватель языка под `noindex`, он
+ * в поиске не участвует (интервью №010, Р5 = В). Считать «клики от корня» — значит приписывать
+ * каждой странице лишний шаг через страницу, которой в выдаче нет. Обещание фазы сформулировано
+ * от языковой главной, и мерить его надо оттуда же.
+ */
+const LANG_ROOTS = ['/ru', '/en'];
+const depthLang = bfs(LANG_ROOTS);
+const depthLangHist = histOf(depthLang);
+const unreachableFromLang = pages.filter((p) => !depthLang.has(p));
 
 const topIncoming = pages
   .map((p) => ({ страница: p, входящих: inDegree.get(p) }))
@@ -213,6 +245,22 @@ const report = {
       return Number(a) - Number(b);
     })
   ),
+  глубина_от_языковых_главных: {
+    корни: LANG_ROOTS,
+    по_кликам: Object.fromEntries(
+      Object.entries(depthLangHist).sort(([a], [b]) => {
+        if (a === 'недостижимо') return 1;
+        if (b === 'недостижимо') return -1;
+        return Number(a) - Number(b);
+      })
+    ),
+    недостижимо_всего: unreachableFromLang.length,
+    // Список, а не «примеры»: недостижимых должно быть мало, и каждую надо назвать поимённо —
+    // усечённый список прячет ровно то, ради чего прибор запускают. Потолок 60 — предохранитель
+    // от простыни на случай, если что-то отвалится целым сегментом.
+    недостижимо_список: unreachableFromLang.slice(0, 60),
+    недостижимо_каталога: unreachableFromLang.filter((p) => segmentOf(p) === 'каталог').length,
+  },
   топ_входящих: topIncoming,
   битые_внутренние_цели: {
     всего: brokenTargets.size,
@@ -239,4 +287,10 @@ for (const [name, s] of Object.entries(report.сегменты)) {
   console.log(`  ${name}: страниц ${s.страниц}, сирот ${s.сирот}`);
 }
 console.log(`Глубина от корня: ${JSON.stringify(report.глубина_от_корня)}`);
+const L = report.глубина_от_языковых_главных;
+console.log(`Глубина от /ru и /en: ${JSON.stringify(L.по_кликам)}`);
+console.log(`Недостижимо от языковых главных: ${L.недостижимо_всего} (из них каталога: ${L.недостижимо_каталога})`);
+if (L.недостижимо_всего > 0) {
+  console.log(`  ${L.недостижимо_список.join('\n  ')}`);
+}
 console.log(`Записано: ${outFile}`);

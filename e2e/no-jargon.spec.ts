@@ -56,6 +56,40 @@ const stripCatalogDescription = (html: string) =>
 	html.replace(/<div class="desc[^"]*">[\s\S]*?<\/div>/g, ' ');
 
 /**
+ * 🔴 ТО ЖЕ ОПИСАНИЕ ЛЕЖИТ НА СТРАНИЦЕ ЕЩЁ РАЗ — В JSON-LD, и это поймано 2026-08-14.
+ *
+ * Шаг 5 `plans/48` (разметка каталога, выкачена накануне) положил описание объекта в
+ * `<script type="application/ld+json">`. Блок описания страж уже вырезал, а второй экземпляр —
+ * нет, и тест покраснел на тех же двух фильмах: «Скрытые фигуры» и «Игра в имитацию», где
+ * «вычислительница» стоит по делу. Прогон `npm run e2e` в той сессии не делался, поэтому
+ * красным он простоял сутки.
+ *
+ * Вырезается РОВНО значение поля `description` внутри разметки, а не весь `<script>`: сама
+ * разметка (типы, имена полей, `aggregateRating`) — НАШ текст, и жаргон в ней страж обязан
+ * ловить по-прежнему. Прежняя редакция уже пробовала вырезать все `<script>` целиком, и
+ * судейский проход это отмёл — исключение было шире своего обоснования.
+ */
+const stripJsonLdDescription = (html: string) =>
+	html.replace(
+		/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/g,
+		(_m, open: string, body: string, close: string) =>
+			open + body.replace(/"description":"(?:\\.|[^"\\])*"/g, '"description":""') + close,
+	);
+
+/**
+ * И ТРЕТИЙ ЭКЗЕМПЛЯР — в `<meta>` выдачи: описание обрезано по 155 знакам и лежит в
+ * `name="description"` и `property="og:description"`. Сегодня слово в оба не попадает (оно
+ * стоит дальше 300-го знака), но это везение, а не свойство: описание пишет владелец, и
+ * завтра чужое слово окажется в первой строке. Вырезаем содержимое ТОЛЬКО у страниц каталога —
+ * на всех остальных страницах описание выдачи наше, и страж обязан его судить.
+ */
+const stripCatalogMeta = (html: string) =>
+	html.replace(
+		/(<meta (?:name="description"|property="og:description") content=")(?:[^"]*)(")/g,
+		'$1$2',
+	);
+
+/**
  * 🔴 ВЫРЕЗАЕТСЯ РОВНО ОПИСАНИЕ И НИЧЕГО БОЛЬШЕ.
  *
  * Первая редакция вырезала заодно все `<script>` — «там сериализованная нагрузка пререндера с
@@ -65,7 +99,13 @@ const stripCatalogDescription = (html: string) =>
  * сегодня (после `csr = false` полезной нагрузки в скриптах страниц каталога больше нет вовсе).
  * **Ослабление, которое ничего не даёт, — просто ослабление.**
  */
-const ourTextOnly = (html: string) => stripCatalogDescription(html);
+/** Страница объекта каталога — единственное место, где на странице живёт ЧУЖОЙ текст. */
+const isCatalogPage = (file: string) => /[\\/]dimension[\\/]/.test(file);
+
+const ourTextOnly = (html: string, file: string) =>
+	isCatalogPage(file)
+		? stripCatalogMeta(stripJsonLdDescription(stripCatalogDescription(html)))
+		: stripCatalogDescription(html);
 
 /** Все файлы собранного сайта — именно они уезжают к людям. */
 function filesOf(dir: string): string[] {
@@ -81,11 +121,30 @@ test('в собранном сайте нет жаргона разработч�
 
   const found: string[] = [];
   for (const file of files) {
-    const text = ourTextOnly(readFileSync(file, 'utf8'));
+    const text = ourTextOnly(readFileSync(file, 'utf8'), file);
     for (const word of FORBIDDEN) {
       if (text.includes(word)) found.push(`${file} → «${word}»`);
     }
   }
 
   expect(found, 'жаргон разработчика уехал бы к живым людям').toEqual([]);
+
+  /*
+   * 🔑 КОНТРОЛЬ ПРИБОРА (EXP-0082). Проверка выше отрицательная: она красится зелёным и от
+   * исправного сайта, и от выреза, съевшего полстраницы. Вырезы добавлялись трижды, и каждый
+   * раз соблазн был расширить их «на всякий случай» — здесь это ловится числом.
+   */
+  const probe = [
+    '<div class="desc svelte-x">Талантливая вычислительница</div>',
+    '<script type="application/ld+json">{"description":"Она была вычислителем","name":"Фильм"}</script>',
+    '<meta name="description" content="Тут тоже вычислитель" />',
+    '<p>Связи считает вычислитель. Запуск: npm run stand</p>',
+  ].join('');
+  const cleaned = ourTextOnly(probe, 'build/ru/dimension/x.html');
+  expect(cleaned, 'вырез съел нашу собственную обвязку').toContain('Связи считает вычислитель');
+  expect(cleaned, 'вырез съел разметку целиком, а судить её надо').toContain('"name":"Фильм"');
+  expect(
+    ourTextOnly(probe, 'build/ru/index.html'),
+    'вне каталога описание выдачи — НАШ текст, и оно обязано проверяться',
+  ).toContain('Тут тоже вычислитель');
 });

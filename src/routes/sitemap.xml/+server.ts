@@ -10,6 +10,8 @@
 import { SITE_ORIGIN } from '$lib/site';
 import { DOCS } from '$lib/content/docs';
 import { DIMS } from '$lib/content/dims-source';
+import { HUB_SUMMARIES } from '$lib/content/catalog-source';
+import { catalogPath, hubPath } from '$lib/content/catalog-hub';
 import { LANGS } from '$lib/content/langs';
 import { TEST_SLUGS } from '$lib/content/test-copy';
 
@@ -88,8 +90,25 @@ const LOCALIZED_PATHS = LANGS.flatMap((lang) => STATIC_PATHS.map((path) => `/${l
  */
 const DIM_PATHS = LANGS.flatMap((lang) => DIMS.map((d) => `/${lang}/dimension/${d.slug}`));
 
-// 11 × 2 языковых + 10 222 каталога = 10 244 адреса (`plans/39`, критерий 7).
-const PUBLIC_PATHS = [...LOCALIZED_PATHS, ...DIM_PATHS];
+/*
+ * 🆕 ХАБЫ КАТАЛОГА — фаза 2 эпика 40 (`plans/48`, шаг 3), 2026-08-14.
+ *
+ * Индекс каталога плюс 89 страниц семи хабов на каждый язык: (1 + 89) × 2 = **180 адресов**.
+ * Список берётся ИЗ САМОГО КАТАЛОГА (`catalog-source`), а не переписывается руками, — по тому
+ * же правилу, что документы и карточки.
+ *
+ * ⚠️ Сегментация карты на отдельные файлы — шаг 5 того же плана; здесь адреса просто входят в
+ * общий файл. Предел одного файла (50 000 адресов, 50 МБ) по-прежнему не близок.
+ */
+const HUB_PATHS = LANGS.flatMap((lang) => [
+  catalogPath(lang),
+  ...HUB_SUMMARIES.flatMap((h) =>
+    Array.from({ length: h.pages }, (_, i) => hubPath(lang, h.key, i + 1)),
+  ),
+]);
+
+// 15 × 2 языковых + 10 222 каталога + 180 хабов = 10 432 адреса (счёт по собранной карте).
+const PUBLIC_PATHS = [...LOCALIZED_PATHS, ...DIM_PATHS, ...HUB_PATHS];
 
 export function GET(): Response {
   const urls = PUBLIC_PATHS.map((path) => `  <url><loc>${SITE_ORIGIN}${path}</loc></url>`).join('\n');

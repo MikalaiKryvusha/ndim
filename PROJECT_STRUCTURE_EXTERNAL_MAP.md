@@ -54,7 +54,10 @@ D:\work\ai_sandbox\ndim\
 │   │   ├── delete-account/      #   публичная дверь удаления (Google Play), оба языка
 │   │   ├── menu/[slug]/         #   документы: руководство, условия, политика, отказ (× 2 языка)
 │   │   ├── menu/{support,donate,about,author,share}/  # статические страницы «Меню» (× 2 языка)
-│   │   └── dimension/[slug]/    #   10 222 страницы каталога (csr=false, plans/36)
+│   │   ├── dimension/[slug]/    #   10 222 страницы каталога (csr=false, plans/36)
+│   │   └── catalog/             # ★ ХАБЫ КАТАЛОГА (plans/48 шаг 3): индекс + [kind] + [kind]/[page],
+│   │                            #   180 страниц, форма V3 «Рейтинг», csr=false. Отсюда карточка
+│   │                            #   достижима в 3 клика от лендинга — было «недостижима вовсе»
 │   ├── profile/+page.svelte     # экран «Профиль» — ЛИЧНЫЙ, noindex, языкового адреса НЕТ
 │   ├── relations/+page.svelte   # экран «Связи» (синтез S4)
 │   ├── space/+page.svelte       # экран «Пространство» — приборная панель из виджетов (V1)
@@ -71,6 +74,13 @@ D:\work\ai_sandbox\ndim\
 ├── src/lib/ui/view-memory.ts    # ★ память ВИДА экранов (plans/08, В11=А): снимок по пути маршрута
 │                                #   + ЕДИНСТВЕННЫЙ возврат прокрутки в проекте и признак того,
 │                                #   что прокрутка сейчас программная (его читает панель /dims)
+├── src/lib/content/dim-kind.ts  # ★ канонический ВИД объекта: нормализация на ЧТЕНИИ (plans/48 шаг 1)
+├── src/lib/content/catalog-hub.ts     # ★ порядок, разбивка на страницы, адреса хабов — ЧИСТАЯ логика
+│                                      #   без импорта каталога, поэтому её достаёт `node --test`
+├── src/lib/content/catalog-source.ts  # 🔴 ТОЛЬКО ДЛЯ СБОРКИ: тянет каталог 17 МБ, зовётся лишь из
+│                                      #   `+page.server.ts` (EXP-0136 — универсальный load уносит всё)
+├── src/lib/ui/PublicBar.svelte  # шапка ПУБЛИЧНОЙ страницы — одна на каталог, хабы и «Тесты»
+├── src/lib/ui/CatalogHub.svelte # разметка хаба V3 «Рейтинг» — одна на оба маршрута хаба
 ├── src/lib/content/docs.ts      # ★ ГЕНЕРИРУЕТСЯ (`node tools/extract-docs.mjs`) — тексты владельца из 1.x
 ├── src/app.html                 # HTML-оболочка (lang=ru, theme-color, скрипт темы до отрисовки)
 ├── src/app.d.ts

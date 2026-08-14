@@ -23,6 +23,14 @@
      `<script>` через `{@html}`. */
   const siteLd = JSON.stringify(siteJsonLd(SITE_ORIGIN)).replace(/</g, '\\u003c');
   import { LANGS, X_DEFAULT, isLang } from '$lib/content/langs';
+  /*
+   * ДВЕРЬ С ЛЕНДИНГА В КАТАЛОГ (`plans/48` шаг 3–4). Импортируются только словарь видов и
+   * склейка адресов — оба модуля на пару килобайт и без единого байта самого каталога.
+   * 🔴 Иначе нельзя: загрузчик лендинга УНИВЕРСАЛЬНЫЙ (`+page.ts`), и всё, что он тянет за
+   * собой, уезжает в клиентский бандл целиком (`EXP-0136`).
+   */
+  import { KIND_KEYS, kindTitle } from '$lib/content/dim-kind';
+  import { catalogPath, hubPath } from '$lib/content/catalog-hub';
   import Icon from '$lib/ui/Icon.svelte';
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
@@ -177,6 +185,25 @@
       ru: 'Пространство NDim · открытая платформа, сделанная с заботой о людях',
       en: 'NDim Space · an open platform built with care for people',
     },
+    /*
+     * ── ССЫЛКИ В КАТАЛОГ (`plans/48`, фаза 2 эпика 40) ────────────────────────────────────
+     * Это не украшение подвала, а несущая работа: до неё все 10 222 страницы каталога были
+     * недостижимы от корня сайта — робот знал адреса только из карты сайта и не приходил
+     * (Google взял 994, 9 237 висят в «обнаружена, не проиндексирована», `researches/34` §14).
+     * Отсюда же берётся обещанные «три клика»: лендинг → хаб → страница → карточка.
+     *
+     * Терминов голыми не бросаем (правка владельца 2026-08-02): не «измерения», а то, чем эти
+     * объекты являются человеку.
+     */
+    catalogTitle: {
+      ru: 'Что оценивают в Пространстве',
+      en: 'What people rate in the Space',
+    },
+    catalogLine: {
+      ru: 'Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.',
+      en: 'Ratings built from what people voted. You can look without an account.',
+    },
+    catalogAll: { ru: 'Весь каталог', en: 'The whole catalog' },
     // Подпись переключателя темы: показываем, КУДА переключит нажатие
     themeLabel: {
       light: { ru: 'тёмная', en: 'dark' },
@@ -331,6 +358,19 @@
 
   <!-- Демо похожести: «пощупать до аккаунта» (ideas/10, макет V5 «Синтез») -->
   <SimilarityDemo {lang} appUrl={demoUrl} />
+
+  <!-- Дверь в каталог: семь разделов прямо с главной плюс общий индекс. Ссылка с главной —
+       самый сильный внутренний сигнал важности, какой у сайта есть (`researches/34` §6.3). -->
+  <nav class="catalog" aria-label={t.catalogTitle[lang]}>
+    <h2>{t.catalogTitle[lang]}</h2>
+    <p>{t.catalogLine[lang]}</p>
+    <ul>
+      {#each KIND_KEYS as key (key)}
+        <li><a href={hubPath(lang, key)}>{kindTitle(key, lang)}</a></li>
+      {/each}
+      <li><a class="all" href={catalogPath(lang)}>{t.catalogAll[lang]}</a></li>
+    </ul>
+  </nav>
 
   <footer class="foot">
     <span>{t.foot[lang]}</span>
@@ -617,6 +657,54 @@
     font-size: 14px;
     line-height: 1.6;
     color: var(--dim);
+  }
+
+  /* ── Дверь в каталог (`plans/48`). Стоит в подвале сознательно: это минимальное вторжение
+     в утверждённый макет «Колонна» — лендинг остаётся территорией `plans/21`. ── */
+  .catalog {
+    margin-top: 34px;
+    padding: 18px 16px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    text-align: center;
+  }
+  .catalog h2 {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.35;
+    font-weight: 700;
+    color: var(--heading);
+  }
+  .catalog p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--dim);
+  }
+  .catalog ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 7px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .catalog a {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--edge);
+    font-size: 13px;
+    color: var(--dim);
+    text-decoration: none;
+  }
+  /* «Весь каталог» — вход в индекс, а не восьмой раздел: выделен цветом бренда. */
+  .catalog a.all {
+    color: var(--accent);
+    font-weight: 600;
   }
 
   .foot {

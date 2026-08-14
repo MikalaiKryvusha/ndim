@@ -6,18 +6,13 @@
   страницы, рельса нет (как у страниц каталога и обёрток теста).
 -->
 <script lang="ts">
-  import { LANGS, LANG_LABEL } from '$lib/content/langs';
-  import Icon from '$lib/ui/Icon.svelte';
-  import Brand from '$lib/ui/Brand.svelte';
+  import { LANGS } from '$lib/content/langs';
+  // Шапка публичной страницы — одна на все публичные поверхности (`plans/48` шаг 3).
+  import PublicBar from '$lib/ui/PublicBar.svelte';
 
   let { data } = $props();
 
   const other = $derived(LANGS.find((l) => l !== data.lang) ?? data.lang);
-  const UI = {
-    ru: { enter: 'Войти', theme: 'Тема' },
-    en: { enter: 'Log in', theme: 'Theme' },
-  } as const;
-  const ui = $derived(UI[data.lang as 'ru' | 'en']);
 </script>
 
 <svelte:head>
@@ -34,18 +29,7 @@
   <meta property="og:locale" content={data.lang === 'en' ? 'en_US' : 'ru_RU'} />
 </svelte:head>
 
-<header class="bar">
-  <a class="brand" href="/">
-    <Brand size={26} />
-    <span>NDim Space</span>
-  </a>
-  <a class="langsw" href="/{other}/tests" hreflang={other}>{LANG_LABEL[other]}</a>
-  <button type="button" id="theme-toggle" class="theme" title={ui.theme} aria-label={ui.theme}>
-    <span class="ic sun"><Icon name="sun" size={15} /></span>
-    <span class="ic moon"><Icon name="moon" size={15} /></span>
-  </button>
-  <a class="enter" href="/profile">{ui.enter}</a>
-</header>
+<PublicBar lang={data.lang} otherLang={other} otherHref="/{other}/tests" />
 
 <article class="hub">
   <h1>{data.hub.h1}</h1>
@@ -68,69 +52,7 @@
 </article>
 
 <style>
-  .bar {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-height: 52px;
-    padding: 0 1rem;
-    background: var(--panel);
-    border-bottom: 1px solid var(--edge);
-  }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 700;
-    color: var(--heading);
-    text-decoration: none;
-  }
-  .langsw {
-    margin-left: auto;
-    padding: 0.4rem 0.7rem;
-    border-radius: 999px;
-    border: 1px solid var(--edge);
-    color: var(--dim);
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-decoration: none;
-  }
-  .theme {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    flex: none;
-    border-radius: 10px;
-    border: 1px solid var(--edge);
-    background: transparent;
-    color: var(--dim);
-    cursor: pointer;
-  }
-  .theme .ic {
-    display: inline-flex;
-  }
-  .theme .moon {
-    display: none;
-  }
-  :global(html[data-theme='dark']) .theme .sun {
-    display: none;
-  }
-  :global(html[data-theme='dark']) .theme .moon {
-    display: inline-flex;
-  }
-  .enter {
-    padding: 0.4rem 0.9rem;
-    border-radius: 999px;
-    background: var(--primary);
-    color: var(--primary-ink);
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-decoration: none;
-  }
-
+  /* Стили шапки переехали в `PublicBar.svelte` вместе с самой шапкой (`plans/48` шаг 3). */
   .hub {
     max-width: 46rem;
     margin: 0 auto;
