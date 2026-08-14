@@ -41,6 +41,21 @@
 
 ## Записи
 
+### EXP-0146 · 2026-08-14 · ❌→✅ · #lighthouse #замер #chrome #launcher #perf
+**Контекст:** повторный замер `bugs/119` по бою: `npx lighthouse <url>` падал мгновенно.
+**Пробовал / сделал:** штатный лаунчер LH — «Protocol error (Page.enable): Session closed» с
+ЛЮБЫМ браузером (Playwright Chromium, настоящий Chrome, headless и headed, PowerShell и Bash).
+Диагностика вместо перебора: поднял Chrome сам и проверил CDP-порт (`/json/version` отвечает) →
+`npx lighthouse --port=9333` отработал с первого раза, дважды.
+**Результат:** ❌→✅ — замер снят: бой `/ru` Perf 100 × 2 (было 70).
+**Урок:** в этом окружении сломан ИМЕННО chrome-launcher Lighthouse, а не браузер и не сеть.
+Не перебирай браузеры — переходи сразу на свой Chrome с CDP-портом и `--port`. Канон EXP-0022
+(«локальный Lighthouse вместо PSI») остаётся, меняется только способ запуска браузера.
+  → ссылка: bugs/119 · EXP-0022
+**Repro:** `Start-Process chrome.exe -ArgumentList '--headless=new','--remote-debugging-port=9333','--user-data-dir=<пустая-папка>'` → `npx lighthouse <url> --port=9333 --only-categories=performance`; после — гасить деревом и проверять процессами.
+**Trigger:** нужен Lighthouse-замер → НЕ давай LH самому поднимать браузер, начинай с `--port`.
+**Not for:** окружения, где штатный лаунчер работает (это дефект среды, не правило LH).
+
 ### EXP-0145 · 2026-08-14 · ❌→✅ · #powershell #encoding #кириллица #мутации #utf8
 **Контекст:** мутационная проверка стража: PowerShell-однострочник читал `+page.svelte`
 (UTF-8 без BOM, кириллические комментарии), мутировал и «откатывал» обратно.
