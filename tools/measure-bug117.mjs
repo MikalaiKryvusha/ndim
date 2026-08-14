@@ -114,6 +114,9 @@ for (const cfg of CONFIGS) {
         seemeH: seeme === null ? 0 : Math.round(seeme.getBoundingClientRect().height),
         profCls: prof === null ? null : prof.className,
         profTop: r === null ? null : Math.round(r.top),
+        // Прозрачность САМОЙ рабочей области: в ней теперь живёт мягкое появление контента
+        // (`bugs/117`, слово владельца — «мягким фейдом, как в других местах»).
+        bodyOpacity: main === null ? 1 : Number(getComputedStyle(main).opacity),
         scrollY: Math.round(window.scrollY),
         docH: Math.round(document.documentElement.scrollHeight),
         // Уходящий слой уезжает ВПРАВО (`bugs/117`, часть 2) — он не имеет права расширить
