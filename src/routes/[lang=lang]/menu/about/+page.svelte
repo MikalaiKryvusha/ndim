@@ -9,8 +9,6 @@
   import DocShell from '$lib/ui/DocShell.svelte';
   import Versions from '$lib/ui/Versions.svelte';
   import { DOCS, type DocBlock } from '$lib/content/docs';
-  import { currentSession } from '$lib/data/profile';
-  import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
 
   let server = $state<SyncServerDoc | null>(null);
@@ -20,7 +18,15 @@
     // только вошедшим (включая гостя). Раньше здесь стояла проверка на localhost — из-за
     // неё в БОЮ версию сервера не видел никто и никогда. Теперь спрашиваем ровно тогда,
     // когда имеем право спросить; не дотянулись — виджет честно скажет «неизвестно».
+    //
+    // 🔴 Модули данных — ДИНАМИЧЕСКИМ импортом (канон EXP-0028, найдено bugs/119): «О системе» —
+    // ПУБЛИЧНАЯ страница, а статическая цепочка `data/profile` → SDK возила 554 КБ Firebase
+    // каждому человеку из поиска ради виджета, который без входа и не показывается.
     try {
+      const [{ currentSession }, { loadSyncServer }] = await Promise.all([
+        import('$lib/data/profile'),
+        import('$lib/data/space'),
+      ]);
       if ((await currentSession()) === null) return;
       server = await loadSyncServer();
     } catch {
