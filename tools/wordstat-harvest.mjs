@@ -34,15 +34,19 @@
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';
+import { readDemandList, groupOf } from './demand-lists.mjs';
 
 const CDP = 'http://127.0.0.1:9222';
-const OUT = 'researches/30_demand_ru.json';
 const SCRATCH = 'test-results/wordstat';
 
 const argv = process.argv.slice(2);
 const has = (f) => argv.includes(f);
 const val = (f) => argv[argv.indexOf(f) + 1];
 
+/** `--file tools/demand-t3….txt --out researches/34_demand_t3_ru.json` — добор по txt-списку
+ *  (plans/41 шаги 0/3); без флагов — прежнее поведение по search-queries.json. */
+const FILE = has('--file') ? val('--file') : null;
+const OUT = has('--out') ? val('--out') : 'researches/30_demand_ru.json';
 const DISCOVER = has('--discover') ? val('--discover') : null;
 const GROUPS = has('--group') ? val('--group').split(',').map((s) => s.trim()) : null;
 const DIMS = has('--dims') ? Number(val('--dims')) : 0;
@@ -54,6 +58,10 @@ const wordstatUrl = (q) =>
 
 /** Строит список запросов: группы из search-queries.json + шаблоны D по самым оцениваемым измерениям. */
 function buildQueries() {
+  if (FILE) {
+    const group = groupOf(FILE);
+    return readDemandList(FILE, 'ru').map((q) => ({ group, query: q }));
+  }
   const src = JSON.parse(readFileSync('tools/search-queries.json', 'utf8'));
   const out = [];
   for (const [group, list] of Object.entries(src.ru)) {

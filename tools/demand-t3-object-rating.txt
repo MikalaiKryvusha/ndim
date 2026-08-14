@@ -1,0 +1,116 @@
+# Группа Т3 «объект + рейтинг/отзывы/похожие» — добор спроса, plans/41 шаг 0.
+# 5 шаблонов (researches/30 прил. B, группа D) × 10 живых названий из dims-build.json:
+# 5 видов × популярное/нишевое (популярность = rates каталога; замер 2026-08-14).
+# Выборка: Фильм — Матрица (11) / Психиатрическая больница Конджиам (0, из выборки §10 researches/34);
+# Видеоигра — The Elder Scrolls V: Skyrim (6) / 7 Days to Die (0);
+# Телесериал — Игра в кальмара (7) / Студия 30 (0);
+# Роман — Гарри Поттер и философский камень (11) / Молитва об Оуэне Мини (0);
+# Музыкальный исполнитель — Земфира (7) / Анитта (0).
+# Шаблон «стоит ли смотреть/играть» и «что посмотреть если понравился» согласованы с видом
+# (играть/читать/слушать) — язык человека, не продукта (урок C.1 researches/30).
+# Формат: секции [ru]/[en], одна строка = один запрос, # — комментарий.
+# Закрывает и homeworks/08 шаг 3.
+
+[ru]
+матрица рейтинг
+матрица отзывы
+похожие на матрицу фильмы
+стоит ли смотреть матрицу
+что посмотреть если понравилась матрица
+психиатрическая больница конджиам рейтинг
+психиатрическая больница конджиам отзывы
+похожие на конджиам фильмы ужасов
+стоит ли смотреть конджиам
+что посмотреть если понравился конджиам
+skyrim рейтинг
+skyrim отзывы
+игры похожие на skyrim
+стоит ли играть в skyrim
+во что поиграть если понравился skyrim
+7 days to die рейтинг
+7 days to die отзывы
+игры похожие на 7 days to die
+стоит ли играть в 7 days to die
+во что поиграть если понравилась 7 days to die
+игра в кальмара рейтинг
+игра в кальмара отзывы
+сериалы похожие на игру в кальмара
+стоит ли смотреть игру в кальмара
+что посмотреть если понравилась игра в кальмара
+студия 30 рейтинг
+студия 30 отзывы
+сериалы похожие на студию 30
+стоит ли смотреть студию 30
+что посмотреть если понравилась студия 30
+гарри поттер и философский камень рейтинг книги
+гарри поттер и философский камень отзывы о книге
+книги похожие на гарри поттера
+стоит ли читать гарри поттера
+что почитать если понравился гарри поттер
+молитва об оуэне мини рейтинг
+молитва об оуэне мини отзывы
+книги похожие на молитву об оуэне мини
+стоит ли читать молитву об оуэне мини
+что почитать если понравилась молитва об оуэне мини
+земфира рейтинг
+земфира отзывы
+исполнители похожие на земфиру
+стоит ли слушать земфиру
+что послушать если нравится земфира
+анитта рейтинг
+анитта отзывы
+исполнители похожие на анитту
+стоит ли слушать анитту
+что послушать если нравится анитта
+
+[en]
+the matrix rating
+the matrix reviews
+movies like the matrix
+is the matrix worth watching
+what to watch after the matrix
+gonjiam haunted asylum rating
+gonjiam haunted asylum reviews
+movies like gonjiam haunted asylum
+is gonjiam haunted asylum worth watching
+what to watch after gonjiam haunted asylum
+skyrim rating
+skyrim reviews
+games like skyrim
+is skyrim worth playing
+what to play after skyrim
+7 days to die rating
+7 days to die reviews
+games like 7 days to die
+is 7 days to die worth playing
+what to play after 7 days to die
+squid game rating
+squid game reviews
+shows like squid game
+is squid game worth watching
+what to watch after squid game
+30 rock rating
+30 rock reviews
+shows like 30 rock
+is 30 rock worth watching
+what to watch after 30 rock
+harry potter and the sorcerers stone book rating
+harry potter and the sorcerers stone book reviews
+books like harry potter
+is harry potter worth reading
+what to read after harry potter
+a prayer for owen meany rating
+a prayer for owen meany reviews
+books like a prayer for owen meany
+is a prayer for owen meany worth reading
+what to read after a prayer for owen meany
+zemfira rating
+zemfira reviews
+artists like zemfira
+is zemfira worth listening to
+music similar to zemfira
+anitta rating
+anitta reviews
+artists like anitta
+is anitta worth listening to
+music similar to anitta

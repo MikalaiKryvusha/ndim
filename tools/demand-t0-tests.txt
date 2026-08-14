@@ -1,0 +1,50 @@
+# Группа Т0 «виды тестов» — добор спроса, plans/41 шаг 0.
+# Гипотеза поверхности ТЕСТ (фаза 5 plans/40): каким языком люди ищут тесты.
+# Урок C.1 researches/30: язык человека, не продукта — короткие обиходные формулировки.
+# «тест на совместимость» и «тест личности» уже замерены в группе H (search-queries.json) —
+# здесь они контрольные точки пересечения, остальное — новые виды.
+# Формат: секции [ru]/[en], одна строка = один запрос, # — комментарий.
+
+[ru]
+тест на совместимость
+тест кто ты из аниме
+тест кто ты из гарри поттера
+тест кто ты из сериала
+тест по фильмам
+тест по сериалам
+тест какой ты фильм
+тест на характер
+тест на темперамент
+тест на любовь
+тест для двоих
+тест для пар
+тест на дружбу
+тест насколько мы похожи
+что посмотреть тест
+какой сериал посмотреть тест
+тест по музыке
+музыкальный тест
+тест на вкус в кино
+тест на психологический возраст
+
+[en]
+love test
+love calculator
+compatibility calculator
+friendship test
+friendship calculator
+what to watch quiz
+movie quiz
+what movie should i watch quiz
+which character are you quiz
+personality quiz
+couple quiz
+couples test
+relationship test
+best friend quiz
+music taste quiz
+what should i play quiz
+who are you quiz
+taste test quiz
+how well do you know me quiz
+am i compatible with my partner test

@@ -1,0 +1,37 @@
+# Группа Т10 «боль» — добор спроса, plans/41 шаг 0.
+# Язык боли, на который отвечает NDim: одиночество, усталость от индустрии знакомств.
+# 🔴 Контрольная строка съёма (plans/41 шаг 3): «как найти своих людей» обязана дать ~4 206
+# (±сезон) — уже замерена в группе C; расхождение на порядок = ошибка съёма, не «спрос изменился».
+# Формат: секции [ru]/[en], одна строка = один запрос, # — комментарий.
+
+[ru]
+как найти своих людей
+почему я одинок
+почему я одинока
+почему у меня нет друзей
+не могу найти друзей
+как перестать быть одиноким
+одиночество что делать
+нет друзей что делать
+как справиться с одиночеством
+устал от приложений знакомств
+надоели сайты знакомств
+знакомства не работают
+разочаровался в сайтах знакомств
+как познакомиться не в интернете
+
+[en]
+why am i lonely
+why do i have no friends
+how to stop being lonely
+loneliness what to do
+feeling lonely even with friends
+no one shares my interests
+dating app fatigue
+dating app burnout
+tired of dating apps
+dating apps don't work
+alternatives to dating apps
+how to meet people without dating apps
+dating apps make me depressed
+is online dating worth it

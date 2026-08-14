@@ -28,10 +28,14 @@
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { chromium } from '@playwright/test';
+import { readDemandList, groupOf } from './demand-lists.mjs';
 
 const SITE = 'https://ndimspace.app/';
-const OUT = 'researches/30_demand_en.json';
 const argv = process.argv.slice(2);
+/** `--file tools/demand-t3….txt --out researches/34_demand_t3_en.json` — добор по txt-списку
+ *  (plans/41 шаги 0/3); без флагов — прежнее поведение по search-queries.json. */
+const FILE = argv.includes('--file') ? argv[argv.indexOf('--file') + 1] : null;
+const OUT = argv.includes('--out') ? argv[argv.indexOf('--out') + 1] : 'researches/30_demand_en.json';
 const GROUPS = argv.includes('--group') ? argv[argv.indexOf('--group') + 1].split(',').map((s) => s.trim()) : null;
 /*
  * 🔴 ПАУЗА КАЛИБРУЕТСЯ ПО ЧИСЛУ ОБРАЩЕНИЙ, А НЕ ПО ОЩУЩЕНИЮ «это же API, можно быстрее».
@@ -48,6 +52,10 @@ function buildQueries() {
   // `--only "запрос"` — разовая проверка одного запроса (обычно вместе с `--rich`, чтобы увидеть,
   // КТО по нему ранжируется). Список при этом не читается вовсе.
   if (argv.includes('--only')) return [{ group: 'ручной', query: argv[argv.indexOf('--only') + 1] }];
+  if (FILE) {
+    const group = groupOf(FILE);
+    return readDemandList(FILE, 'en').map((q) => ({ group, query: q }));
+  }
   const src = JSON.parse(readFileSync('tools/search-queries.json', 'utf8'));
   const out = [];
   for (const [group, list] of Object.entries(src.en)) {
