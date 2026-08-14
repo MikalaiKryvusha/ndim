@@ -49,6 +49,7 @@
   import { lang as currentLang } from '$lib/ui/lang.svelte';
   import { MOTION } from '$lib/ui/motion';
 
+  import { replaceUrl } from '$lib/ui/history';
   // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у экрана больше нет:
   // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
   const lang = $derived(currentLang());
@@ -198,7 +199,7 @@
         }
         // Адрес чистим от одноразового кода: обновление страницы не должно пытаться
         // применить его ещё раз (код одноразовый — ASVS 6.4.1).
-        history.replaceState(null, '', '/account');
+        replaceUrl('/account');
       }
     } catch (error) {
       standError = technicalDetail(error);

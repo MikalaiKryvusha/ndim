@@ -12,6 +12,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "prebuild": "node -e \"require('fs').rmSync('build',{recursive:true,force:true});require('fs').rmSync('.svelte-kit/output',{recursive:true,force:true})\"",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
@@ -33,7 +34,8 @@
     "kaif:fork": "node tools/kaif.mjs fork",
     "kaif:switch-origin": "node tools/kaif.mjs switch-origin",
     "kaif:remove": "node tools/kaif.mjs remove",
-    "kaif:remove-all": "node tools/kaif.mjs remove-all"
+    "kaif:remove-all": "node tools/kaif.mjs remove-all",
+    "deploy": "node tools/deploy.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.1",

@@ -46,6 +46,7 @@
   import { SESSION_MARK } from '$lib/data/session';
   import { answersFromRatings, sanitizeAnswers, pairFacts, type PairDoc } from '$lib/model/test-pair';
 
+  import { replaceUrl } from '$lib/ui/history';
   let { data }: { data: TestPageData } = $props();
 
   const c = $derived(data.copy);
@@ -335,7 +336,7 @@
       pair = null;
       pairId = null;
       pairLost = false;
-      history.replaceState(null, '', location.pathname);
+      replaceUrl(location.pathname);
     } catch {
       saveFailed = true;
     } finally {

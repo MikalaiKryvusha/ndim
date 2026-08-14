@@ -13,6 +13,21 @@
       "public": "build",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "cleanUrls": true,
+      "//9": "КЕШИРОВАНИЕ (bugs/124). Без этих правил Firebase кеширует ВСЁ на час, и человек,",
+      "//10": "уже бывавший на сайте, после выката склеивает СТАРЫЙ html с НОВЫМИ чанками:",
+      "//11": "globalThis.__sveltekit_<хеш> не совпадает, и приложение не стартует вовсе.",
+      "//12": "Пара стандартная: имя immutable-файла содержит хеш содержимого — его можно кешировать",
+      "//13": "на год; html обязан перепроверяться, иначе он переживает собственные ассеты.",
+      "headers": [
+        {
+          "source": "/**",
+          "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+        },
+        {
+          "source": "/_app/immutable/**",
+          "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+        }
+      ],
       "redirects": [
         { "source": "/delete-account", "destination": "/ru/delete-account", "type": 301 },
         { "source": "/menu/manual", "destination": "/ru/menu/manual", "type": 301 },
@@ -37,6 +52,18 @@
       "public": "build",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "cleanUrls": true,
+      "//7": "Те же правила кеширования, что у основного таргета (bugs/124): этот адрес почти",
+      "//8": "весь редиректит, но отвечает тем же содержимым build/ — расходиться им незачем.",
+      "headers": [
+        {
+          "source": "/**",
+          "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+        },
+        {
+          "source": "/_app/immutable/**",
+          "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+        }
+      ],
       "redirects": [
         { "source": "/", "destination": "https://ndimspace.app/", "type": 301 },
         { "source": "/profile", "destination": "https://ndimspace.app/profile", "type": 301 },

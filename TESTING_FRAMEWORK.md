@@ -97,6 +97,20 @@ ships, walk the gates that apply:
 5. **A check that has never failed proves nothing.** Every new guard/check is verified on a broken
    version first (see `BUG_FIXING_FRAMEWORK.md` → Guards); goldens for refactors are byte-exact —
    an empty diff is proof, "the numbers look the same" is not.
+6. 🔴 **After a deploy, the gate is production ITSELF, entered the way a human enters it — signed
+   in.** A smoke that only walks public pages proves that the marketing surface is alive, not that
+   the product is. Sign in and walk the real screens; read the console; only then say "deployed".
+   **Paid for on 2026-08-15** (project NDim Space): three deploys in a row were "verified" by
+   guest-only production smokes while the signed-in application had been failing to start at all
+   (`TypeError … reading 'data'`); every instrument was green, and the owner found it. His words:
+   *«деплой без тестирования это пердёж в лужу, а не работа»*. The remedy is mechanical, never a
+   reminder: the deploy path itself runs the signed-in smoke and exits non-zero if it fails.
+7. 🔴 **Verify the artifact's INTEGRITY before shipping it, not only its behavior.** A build
+   directory that is not cleaned between builds ships a mixture of two builds — and mixtures fail
+   in ways no test sees, because each file is individually valid. Same day, same project: stale
+   chunks from a previous build carried a stale runtime-hash and broke the app for every visitor.
+   One line of check before the upload (*the whole bundle carries exactly one build id*) costs
+   nothing and catches the entire class.
 
 ## The taste class — when the observer must be human
 

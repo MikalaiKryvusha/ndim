@@ -66,6 +66,7 @@
   import type { Audience, ProfileProperty } from '$lib/model/visibility';
   import { isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
 
+  import { replaceUrl } from '$lib/ui/history';
   // Вкладки «Личное/Видимость» упразднены (слово владельца 2026-07-27): предпросмотр
   // аудиторий — не таба, а ОКНО за кнопкой «Как меня видят»; «Назад» возвращает в профиль.
 
@@ -360,7 +361,7 @@
         // не трогаем — вырезается только guest.
         const url = new URL(location.href);
         url.searchParams.delete('guest');
-        history.replaceState(null, '', url.pathname + url.search + url.hash);
+        replaceUrl(url.pathname + url.search + url.hash);
       } else {
         // Стенд входит сам; в бою — только существующая сессия. Её нет — предлагаем войти,
         // а не заводим человеку анонимную сессию за его спиной.
@@ -459,7 +460,7 @@
     if (released) await signOutUser();
 
     const result = await completeLoginLink();
-    history.replaceState(null, '', '/profile');
+    replaceUrl('/profile');
 
     if (result.ok) {
       guest = false; // сессия больше не гостевая: пилюля гостя и запреты уходят

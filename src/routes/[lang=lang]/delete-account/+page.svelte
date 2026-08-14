@@ -48,6 +48,7 @@
   import type { Lang } from '$lib/ui/format';
   import { LANGS, X_DEFAULT, isLang } from '$lib/content/langs';
 
+  import { replaceUrl } from '$lib/ui/history';
   // 🔴 Язык — ИЗ АДРЕСА (`plans/39` шаг 2): `/en/delete-account` обязан запечься английским
   // уже на пререндере, а модуль состояния там без адреса отвечает «ru» всем. Память за
   // адресом ведёт мост в `[lang=lang]/+layout.svelte`.
@@ -161,7 +162,7 @@
         if (before?.isAnonymous === true) await signOutUser();
 
         const entered = await completeLoginLink();
-        history.replaceState(null, '', RETURN_PATH);
+        replaceUrl(RETURN_PATH);
         if (!entered.ok) signError = accountErrorText(asAccountFailure(entered.reason), lang);
       }
 
@@ -192,7 +193,7 @@
           await tick();
           await deleter?.resume();
         }
-        history.replaceState(null, '', RETURN_PATH);
+        replaceUrl(RETURN_PATH);
       } else if (stand === 'ready') {
         // Человек пришёл сюда ЗА ЭТИМ — не заставляем его нажимать ещё одну кнопку.
         await tick();
