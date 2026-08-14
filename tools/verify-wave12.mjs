@@ -31,10 +31,18 @@
  *   node tools/verify-wave12.mjs
  * Скриншоты — test-results/wave12/ (вне git).
  */
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 
 const STAND = 'http://localhost:5173';
+
+/**
+ * Новейшая версия приложения — из package.json, а не зашитым числом: первая запись
+ * истории версий обязана совпадать с версией продукта (иначе бамп версии молча
+ * разъезжается с релиз-нотами — ровно это страж и стережёт с релиза 2.1).
+ */
+const APP_MAJOR_MINOR = JSON.parse(readFileSync('package.json', 'utf8'))
+  .version.split('.').slice(0, 2).join('.');
 const OUT = 'test-results/wave12';
 const AUTH = 'http://127.0.0.1:9099';
 /** Проект СТЕНДА, а не боевой: эмулятор держит oobCode'ы под `demo-ndim-dev`. */
@@ -182,16 +190,17 @@ for (const theme of ['light', 'dark']) {
       good ? ok(`выравнивание ${route} ${tag} → ${align}`) : bad(`выравнивание ${route} ${tag}`, `ожидал ${want}, вижу ${align}`);
     }
 
-    // ── 6. История версий: 2.0 первой и раскрытие анимируется ───────────────
+    // ── 6. История версий: НОВЕЙШАЯ версия первой и раскрытие анимируется ───
     await page.goto(`${STAND}/ru/menu/about`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1200);
     {
       // Внешняя раскрывашка закрыта — innerText скрытого узла пуст. Читаем textContent:
       // проверяем СОДЕРЖИМОЕ истории, а не её видимость (видимость меряется ниже).
       const first = (await page.locator('details.ver > summary').first().textContent() ?? '').trim();
-      /^Верси[яi]?\s*2\.0|^Version 2\.0/i.test(first)
-        ? ok(`история начинается с 2.0 ${tag} → «${first}»`)
-        : bad(`история начинается с 2.0 ${tag}`, `первая запись: «${first}»`);
+      const verRe = new RegExp(`^(?:Версия|Version)\\s*${APP_MAJOR_MINOR.replace('.', '\\.')}`, 'i');
+      verRe.test(first)
+        ? ok(`история начинается с ${APP_MAJOR_MINOR} ${tag} → «${first}»`)
+        : bad(`история начинается с ${APP_MAJOR_MINOR} ${tag}`, `первая запись: «${first}»`);
 
       const outer = page.locator('details.history');
       // Закрываем, чтобы мерить именно РАСКРЫТИЕ.

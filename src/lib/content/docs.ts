@@ -632,6 +632,38 @@ export const DOCS: Readonly<Record<string, Doc>> = {
       {
         "type": "h3",
         "text": {
+          "ru": "Версия 2.1 от 14.08.2026",
+          "en": "Version 2.1 from 08/14/2026"
+        }
+      },
+      {
+        "type": "ul",
+        "items": {
+          "ru": [
+            "Открытый каталог измерений: у каждого измерения — собственная страница, на русском и английском.",
+            "Сводная оценка измерений — NDim Space Rating: звёзды и число голосов.",
+            "У каждого языка свой адрес: ndimspace.app/ru и ndimspace.app/en.",
+            "Управление аккаунтом: смена почты и полное удаление аккаунта со всеми данными.",
+            "Экраны быстрее: приложение помнит, где Вы остановились, и не загружает заново уже загруженное.",
+            "Обновление данных жестом потягивания вниз.",
+            "Раскладка для больших экранов: навигация слева, содержимое в две колонки.",
+            "Оптимизация и исправление дефектов."
+          ],
+          "en": [
+            "The open dimension catalog: every dimension has its own page, in Russian and English.",
+            "The dimension rating summary — the NDim Space Rating: stars and the number of votes.",
+            "Each language has its own address: ndimspace.app/en and ndimspace.app/ru.",
+            "Account management: changing your email and deleting your account with all its data.",
+            "Screens are faster: the app remembers where you left off and does not reload what is already loaded.",
+            "Pull down to refresh the data.",
+            "A layout for large screens: navigation on the left, content in two columns.",
+            "Optimization and bug fixing."
+          ]
+        }
+      },
+      {
+        "type": "h3",
+        "text": {
           "ru": "Версия 2.0 от 12.07.2026",
           "en": "Version 2.0 from 07/12/2026"
         }

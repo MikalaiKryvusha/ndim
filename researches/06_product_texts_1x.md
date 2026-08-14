@@ -28,6 +28,34 @@
 
 ### История версий / Version history
 
+<!-- [AI] ЧЕРНОВИК АГЕНТА 2.1, ЖДЁТ СЛОВА ВЛАДЕЛЬЦА (plans/43, слово владельца 2026-08-14:
+«пора поднять версию до 2.1 и написать что нового… Продуктовые задумки не раскрываем сильно,
+не офишируем планы. Но пишем, что полезного для юзера и для развития NDim Space сделано»).
+Стиль — с его же записей 1.x: короткие утвердительные строки, RU и EN парой. Каждая строка —
+проверяемый ВЫКАЧЕННЫЙ факт (трассировка — plans/43 шаг 1); планов и внутренней кухни нет.
+Вычитка — интервью №027. Владелец говорит «принято» — пометка снимается. -->
+
+#### Версия 2.1 от 14.08.2026 / Version 2.1 from 08/14/2026
+
+- **RU:** Открытый каталог измерений: у каждого измерения — собственная страница, на русском и английском.
+  **EN:** The open dimension catalog: every dimension has its own page, in Russian and English.
+- **RU:** Сводная оценка измерений — NDim Space Rating: звёзды и число голосов.
+  **EN:** The dimension rating summary — the NDim Space Rating: stars and the number of votes.
+- **RU:** У каждого языка свой адрес: ndimspace.app/ru и ndimspace.app/en.
+  **EN:** Each language has its own address: ndimspace.app/en and ndimspace.app/ru.
+- **RU:** Управление аккаунтом: смена почты и полное удаление аккаунта со всеми данными.
+  **EN:** Account management: changing your email and deleting your account with all its data.
+- **RU:** Экраны быстрее: приложение помнит, где Вы остановились, и не загружает заново уже загруженное.
+  **EN:** Screens are faster: the app remembers where you left off and does not reload what is already loaded.
+- **RU:** Обновление данных жестом потягивания вниз.
+  **EN:** Pull down to refresh the data.
+- **RU:** Раскладка для больших экранов: навигация слева, содержимое в две колонки.
+  **EN:** A layout for large screens: navigation on the left, content in two columns.
+- **RU:** Оптимизация и исправление дефектов.
+  **EN:** Optimization and bug fixing.
+
+<!-- [/AI черновик 2.1] -->
+
 <!-- [AI] ЧЕРНОВИК АГЕНТА, ЖДЁТ СЛОВА ВЛАДЕЛЬЦА (bugs/56, волна 12: «в О системе нужно
 сделать версию 2.0»). Релиз-нот — канон-артефакт владельца: это ЕГО слово о ЕГО продукте,
 и агент имеет право только предложить формулировки. Стиль взят с его же записей 1.x:
