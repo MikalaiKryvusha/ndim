@@ -46,7 +46,14 @@ async function ensureDevUser() {
     (await authRequest('accounts:signInWithPassword', { ...DEV_USER, returnSecureToken: true })).localId;
 
   // Подтверждаем почту от имени эмулятора (Bearer owner — его админский токен).
-  await authRequest('accounts:update', { localId: uid, emailVerified: true }, { Authorization: 'Bearer owner' });
+  // Клейм `admin` — зеркало боя: владелец несёт его с cutover 2026-07-12, и стенд обязан
+  // уметь показывать админские ветки (дверь и дом панели, `plans/33`). Не-админа стенд
+  // показывает дверями `?as=guest` / `?as=none` — у них клейма нет по построению.
+  await authRequest(
+    'accounts:update',
+    { localId: uid, emailVerified: true, customAttributes: JSON.stringify({ admin: true }) },
+    { Authorization: 'Bearer owner' },
+  );
   return uid;
 }
 

@@ -22,6 +22,7 @@
   // системным шрифтом и тему не слушают вовсе.
   import Icon from '$lib/ui/Icon.svelte';
   import Versions from '$lib/ui/Versions.svelte';
+  import { adminVerdict } from '$lib/data/admin';
   import { currentSession } from '$lib/data/profile';
   import { loadSyncServer } from '$lib/data/space';
   import type { SyncServerDoc } from '$lib/model/stats';
@@ -42,6 +43,13 @@
   // версий — из данных ему нужен только `space/server` (и то лишь вошедшему).
   let server = $state<SyncServerDoc | null>(null);
   let copied = $state(false);
+  /*
+   * Дверь в «Менеджер измерений» (`plans/33`, шаг 3): видна ТОЛЬКО при вердикте «админ».
+   * Стартует скрытой и появляется, когда ответ о правах получен, — при `unknown` её нет и
+   * она не занимает места: мигнувшая и исчезнувшая дверь хуже отсутствующей (стережёт
+   * rAF-трасса в `tools/verify-admin-home.mjs`). Обычный человек и гость не видят её никогда.
+   */
+  let adminDoor = $state(false);
 
   /**
    * ПАМЯТЬ ВИДА ЭКРАНА (`plans/08`, ответ владельца В11=А). Помним только прокрутку: список
@@ -65,6 +73,10 @@
     } catch {
       // Меню обязано работать и без стенда: документы и версии не зависят от данных.
     }
+
+    // Вердикт о правах — из единственной точки (`data/admin.ts`). Без `insist`: обменивать
+    // токен каждому посетителю меню ради двери, которой у него нет, — расход не по чину.
+    adminDoor = (await adminVerdict()) === 'admin';
   });
 
   // Системное «поделиться» переехало на страницу «Пригласить друзей» (`/menu/share`,
@@ -104,6 +116,7 @@
     disclaimer: { ru: 'Отказ от ответственности', en: 'Disclaimer' },
 
     project: { ru: 'Проект', en: 'Project' },
+    manager: { ru: 'Менеджер измерений', en: 'Dimension Manager' },
     support: { ru: 'Поддержка', en: 'Support' },
     donate: { ru: 'Пожертвование', en: 'Donation' },
     about: { ru: 'О системе', en: 'About the system' },
@@ -236,6 +249,10 @@
         <a class="row" href="/menu/donate"><span class="ic"><Icon name="donate" size={20} /></span><span class="lb">{t.donate[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
         <a class="row" href="/menu/about"><span class="ic"><Icon name="about" size={20} /></span><span class="lb">{t.about[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
         <a class="row" href="/menu/author"><span class="ic"><Icon name="author" size={20} /></span><span class="lb">{t.author[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <!-- Дверь админа (`plans/33`, шаг 3): только при вердикте «админ», см. adminDoor выше. -->
+        {#if adminDoor}
+          <a class="row" href="/admin"><span class="ic"><Icon name="edit" size={20} /></span><span class="lb">{t.manager[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        {/if}
       </div>
 
       <!-- «Версии» — полноценный виджет, а не подвал мелким серым (bugs/66). Приехал
