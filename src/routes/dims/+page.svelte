@@ -1473,7 +1473,9 @@
                   <h4>{t.description[lang]}</h4><p>{loc(card.description)}</p>
                 {/if}
                 {#if loc(card.author)}<h4>{t.author[lang]}</h4><p>{loc(card.author)}</p>{/if}
-                {#if card.year}<h4>{t.year[lang]}</h4><p>{card.year}</p>{/if}
+                <!-- Год — через правило dimCardTitle (`ideas/26` п.2): прочерк из данных 1.x
+                     («-» у 170 записей) означает «года нет», сырой card.year печатал его. -->
+                {#if title.year}<h4>{t.year[lang]}</h4><p>{title.year}</p>{/if}
                 {#if card.tags && card.tags.length > 0}
                   <h4>{t.tags[lang]}</h4>
                   <div class="tags">{#each card.tags as tag (tag)}<span class="tag2">{tag}</span>{/each}</div>
