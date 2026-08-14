@@ -108,7 +108,7 @@ try {
   console.log('bugs/30 · история версий: вложенные раскрывашки, как в 1.x:');
   {
     const { context, page, errors } = await person(browser);
-    await page.goto(`${BASE}/menu/about`);
+    await page.goto(`${BASE}/ru/menu/about`);
     await page.locator('details.history > summary').click();
     const vers = page.locator('details.ver');
     const count = await vers.count();

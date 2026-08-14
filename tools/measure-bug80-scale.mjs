@@ -29,7 +29,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 
 const BASE = process.env.PROBE_BASE ?? 'https://ndimspace.app';
-const PAGE = '/menu/manual';
+const PAGE = '/ru/menu/manual';
 const OUT = 'test-results/bug80-scale';
 
 /** Звезда карточки «Измерений» — то, что человек видит в самом продукте. */

@@ -96,7 +96,7 @@ try {
     // иначе «Назад» уводила бы в пустоту и контроль ниже нечего было бы проверять.
     await page.goto(`${STAND}/menu`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(600);
-    await page.goto(`${STAND}/menu/manual`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${STAND}/ru/menu/manual`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('.pager', { timeout: 20000 });
     /*
      * ⚠️ ЖДЁМ ГИДРАТАЦИИ, а не появления капсулы. Руководство ПРЕРЕНДЕРЕНО: `.pager` лежит в

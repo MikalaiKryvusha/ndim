@@ -41,17 +41,21 @@
     type AccountFailure,
   } from '$lib/data/account';
   import { currentSession, signOutUser } from '$lib/data/profile';
+  import { page } from '$app/state';
   import { SITE_ORIGIN } from '$lib/site';
   import { technicalDetail } from '$lib/ui/errors';
   import { MOTION } from '$lib/ui/motion';
   import type { Lang } from '$lib/ui/format';
-  import { lang as currentLang } from '$lib/ui/lang.svelte';
+  import { LANGS, X_DEFAULT, isLang } from '$lib/content/langs';
 
-  const RETURN_PATH = '/delete-account';
+  // 🔴 Язык — ИЗ АДРЕСА (`plans/39` шаг 2): `/en/delete-account` обязан запечься английским
+  // уже на пререндере, а модуль состояния там без адреса отвечает «ru» всем. Память за
+  // адресом ведёт мост в `[lang=lang]/+layout.svelte`.
+  const lang = $derived(isLang(page.params.lang) ? page.params.lang : 'ru');
 
-  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у экрана больше нет:
-  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`).
-  const lang = $derived(currentLang());
+  // Возврат из письма — на ЭТУ ЖЕ языковую версию страницы: человек начал удаление
+  // по-английски — по-английски и закончит. Старый голый `/delete-account` отвечает 301.
+  const RETURN_PATH = $derived(`/${lang}/delete-account`);
   let stand = $state<'connecting' | 'ready' | 'guest' | 'signedout' | 'down'>('connecting');
   let standError = $state('');
   let facts = $state<AccountFacts | null>(null);
@@ -248,7 +252,12 @@
     попал — то есть поисковик видел одну и ту же страницу по двум адресам и не знал, какой
     главный. Найдено разведкой SEO (`researches/26`), подтверждено дважды.
   -->
-  <link rel="canonical" href={`${SITE_ORIGIN}/delete-account`} />
+  <link rel="canonical" href={`${SITE_ORIGIN}/${lang}/delete-account`} />
+  <!-- Двусторонний hreflang с самоссылкой + x-default на английский — как на лендинге. -->
+  {#each LANGS as l (l)}
+    <link rel="alternate" hreflang={l} href={`${SITE_ORIGIN}/${l}/delete-account`} />
+  {/each}
+  <link rel="alternate" hreflang="x-default" href={`${SITE_ORIGIN}/${X_DEFAULT}/delete-account`} />
 </svelte:head>
 
 <main class="port">

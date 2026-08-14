@@ -39,13 +39,13 @@ const IMAGE_DELAY_MS = 700;
 
 /** Страницы с графикой (инвентарь класса из bugs/69). Якорь — до чего прокрутиться. */
 const PAGES = [
-  { path: '/menu/support', name: 'Поддержка', expect: 1 },
-  { path: '/menu/donate', name: 'Пожертвование', expect: 1 },
-  { path: '/menu/author', name: 'Об авторе', expect: 1 },
+  { path: '/ru/menu/support', name: 'Поддержка', expect: 1 },
+  { path: '/ru/menu/donate', name: 'Пожертвование', expect: 1 },
+  { path: '/ru/menu/author', name: 'Об авторе', expect: 1 },
   { path: '/', name: 'Лендинг', expect: 3, scroll: true },
   // Руководство — самая насыщенная графикой страница (5 иллюстраций 1.x). Приём родился
   // именно здесь (bugs/55), и после выноса его в общий модуль он обязан работать как прежде.
-  { path: '/menu/manual', name: 'Руководство', expect: 5, scroll: true },
+  { path: '/ru/menu/manual', name: 'Руководство', expect: 5, scroll: true },
 ];
 
 let failures = 0;

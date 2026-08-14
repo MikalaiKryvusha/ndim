@@ -207,7 +207,7 @@
            канон меню 1.x — компактный список, а не развёрнутые блоки (bugs/29). -->
       <div class="card">
         <h3>{t.share[lang]}</h3>
-        <a class="row" href="/menu/share">
+        <a class="row" href={`/${lang}/menu/share`}>
           <span class="ic"><Icon name="share" size={20} /></span><span class="lb">{t.invite[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span>
         </a>
         <button type="button" class="row" onclick={copyLink}>
@@ -236,19 +236,21 @@
       <div class="card">
         <h3>{t.documents[lang]}</h3>
         <!-- Иконки документов — ровно те, что стояли на этих же пунктах в 1.x
-             (um.svg · tou.svg · pp.svg · disclaimer.svg), кадр app-08-меню.png. -->
-        <a class="row" href="/menu/manual"><span class="ic"><Icon name="manual" size={20} /></span><span class="lb">{t.manual[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
-        <a class="row" href="/menu/terms"><span class="ic"><Icon name="terms" size={20} /></span><span class="lb">{t.terms[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
-        <a class="row" href="/menu/privacy"><span class="ic"><Icon name="privacy" size={20} /></span><span class="lb">{t.privacy[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
-        <a class="row" href="/menu/disclaimer"><span class="ic"><Icon name="disclaimer" size={20} /></span><span class="lb">{t.disclaimer[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+             (um.svg · tou.svg · pp.svg · disclaimer.svg), кадр app-08-меню.png.
+             🔴 Адреса документов — ЯЗЫКОВЫЕ (`plans/39` шаг 2): человек уходит из приложения
+             на публичную страницу СВОЕГО языка, а не на голый адрес, которого больше нет. -->
+        <a class="row" href={`/${lang}/menu/manual`}><span class="ic"><Icon name="manual" size={20} /></span><span class="lb">{t.manual[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href={`/${lang}/menu/terms`}><span class="ic"><Icon name="terms" size={20} /></span><span class="lb">{t.terms[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href={`/${lang}/menu/privacy`}><span class="ic"><Icon name="privacy" size={20} /></span><span class="lb">{t.privacy[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href={`/${lang}/menu/disclaimer`}><span class="ic"><Icon name="disclaimer" size={20} /></span><span class="lb">{t.disclaimer[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
       </div>
 
       <div class="card">
         <h3>{t.project[lang]}</h3>
-        <a class="row" href="/menu/support"><span class="ic"><Icon name="support" size={20} /></span><span class="lb">{t.support[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
-        <a class="row" href="/menu/donate"><span class="ic"><Icon name="donate" size={20} /></span><span class="lb">{t.donate[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
-        <a class="row" href="/menu/about"><span class="ic"><Icon name="about" size={20} /></span><span class="lb">{t.about[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
-        <a class="row" href="/menu/author"><span class="ic"><Icon name="author" size={20} /></span><span class="lb">{t.author[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href={`/${lang}/menu/support`}><span class="ic"><Icon name="support" size={20} /></span><span class="lb">{t.support[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href={`/${lang}/menu/donate`}><span class="ic"><Icon name="donate" size={20} /></span><span class="lb">{t.donate[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href={`/${lang}/menu/about`}><span class="ic"><Icon name="about" size={20} /></span><span class="lb">{t.about[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
+        <a class="row" href={`/${lang}/menu/author`}><span class="ic"><Icon name="author" size={20} /></span><span class="lb">{t.author[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>
         <!-- Дверь админа (`plans/33`, шаг 3): только при вердикте «админ», см. adminDoor выше. -->
         {#if adminDoor}
           <a class="row" href="/admin"><span class="ic"><Icon name="edit" size={20} /></span><span class="lb">{t.manager[lang]}</span><span class="chev"><Icon name="chevron" size={13} /></span></a>

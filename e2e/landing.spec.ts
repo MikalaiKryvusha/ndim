@@ -18,7 +18,8 @@ const LIGHT_BG = 'rgb(246, 248, 251)'; // #f6f8fb — светлая «Бума�
 const DARK_BG = 'rgb(6, 11, 20)'; // #060b14 — тёмный киберпанк
 
 test('пререндер: русские тексты и скрипт темы лежат в сыром HTML', async ({ request }) => {
-	const res = await request.get('/');
+	// Лендинг живёт на языковых адресах (`plans/39` шаг 2); корень `/` — распознаватель без текстов.
+	const res = await request.get('/ru');
 	expect(res.status()).toBe(200);
 	// В текстах лендинга есть неразрывные пробелы (U+00A0, «Пространство NDim» не рвётся
 	// при переносе). Браузерные матчеры Playwright нормализуют их сами, сырой HTML — нормализуем мы.
@@ -46,7 +47,7 @@ test('пререндер: витрина людей стоит в HTML и НЕ �
 	 */
 	const { PUBLIC_PEOPLE_SNAPSHOT } = await import('../src/lib/content/landing-metric.ts');
 
-	const res = await request.get('/');
+	const res = await request.get('/ru');
 	const html = (await res.text()).replace(/ |&nbsp;/g, ' ');
 
 	/*
@@ -114,14 +115,17 @@ test('тема: переключение в тёмную и сохранение
 });
 
 test('язык: EN переключается, переживает перезагрузку, RU возвращается', async ({ page }) => {
+	// Переключатель — ССЫЛКИ на языковые адреса (`plans/39` шаг 2): у каждого языка своя страница.
 	await page.goto('/');
-	await page.getByRole('button', { name: 'EN' }).click();
+	await page.getByRole('link', { name: 'EN' }).click();
+	await expect(page).toHaveURL(/\/en$/);
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(EN_TITLE);
-	// Перезагрузка: атрибут ставит инлайн-скрипт, тексты подхватывает onMount
+	// Перезагрузка: язык держит АДРЕС (и память — мост записал выбор)
 	await page.reload();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(EN_TITLE);
-	await page.getByRole('button', { name: 'RU' }).click();
+	await page.getByRole('link', { name: 'RU' }).click();
+	await expect(page).toHaveURL(/\/ru$/);
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(RU_TITLE);
 });
 
@@ -136,9 +140,9 @@ test('кнопки ведут в живое приложение 1.x; консо
 	await page.goto('/');
 	await expect(page.getByRole('link', { name: 'Создать Аккаунт' })).toHaveAttribute('href', APP_URL);
 	await expect(page.getByRole('link', { name: 'Войти в Аккаунт' })).toHaveAttribute('href', APP_URL);
-	// Переключатели не должны сыпать ошибками
+	// Переключатели не должны сыпать ошибками (язык — ссылка на /en, plans/39 шаг 2)
 	await page.getByRole('button', { name: 'Тёмная тема' }).click();
-	await page.getByRole('button', { name: 'EN' }).click();
+	await page.getByRole('link', { name: 'EN' }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(EN_TITLE);
 	expect(errors).toEqual([]);
 });

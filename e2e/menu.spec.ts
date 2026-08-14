@@ -16,14 +16,14 @@ const APP_VERSION: string = pkg.version;
 
 /** Все страницы раздела и слово, по которому видно, что открылась именно эта. */
 const PAGES = [
-  { path: '/menu/manual', marker: 'Манифест' },
-  { path: '/menu/terms', marker: 'Общие положения' },
-  { path: '/menu/privacy', marker: 'Общие положения' },
-  { path: '/menu/disclaimer', marker: 'Общие положения' },
-  { path: '/menu/support', marker: 'ndimspace@yandex.ru' },
-  { path: '/menu/donate', marker: 'без покупок и подписок' },
-  { path: '/menu/about', marker: 'Минск' },
-  { path: '/menu/author', marker: 'Кривуше' },
+  { path: '/ru/menu/manual', marker: 'Манифест' },
+  { path: '/ru/menu/terms', marker: 'Общие положения' },
+  { path: '/ru/menu/privacy', marker: 'Общие положения' },
+  { path: '/ru/menu/disclaimer', marker: 'Общие положения' },
+  { path: '/ru/menu/support', marker: 'ndimspace@yandex.ru' },
+  { path: '/ru/menu/donate', marker: 'без покупок и подписок' },
+  { path: '/ru/menu/about', marker: 'Минск' },
+  { path: '/ru/menu/author', marker: 'Кривуше' },
 ] as const;
 
 /**
@@ -51,7 +51,7 @@ test('меню: версия приложения вшита в сборку, а
  * `src/lib/content/manifest.ts` удалены. Проверять пререндер удалённого блока нечего.
  *
  * Что при этом НЕ потеряно и остаётся под охраной: сам текст манифеста живёт разделом
- * «1. Манифест» РУКОВОДСТВА пользователя, и его стережёт строка `{ path: '/menu/manual',
+ * «1. Манифест» РУКОВОДСТВА пользователя, и его стережёт строка `{ path: '/ru/menu/manual',
  * marker: 'Манифест' }` в PAGES ниже — она была здесь и раньше и не менялась.
  * Пререндер `/menu` продолжает проверяться тестом «все страницы раздела существуют».
  */
@@ -66,7 +66,7 @@ test('меню: все страницы раздела существуют и �
 });
 
 test('меню: тексты владельца перенесены дословно — шкала оценок и терминология на месте', async ({ request }) => {
-  const html = (await (await request.get('/menu/manual')).text()).replace(/ |&nbsp;/g, ' ');
+  const html = (await (await request.get('/ru/menu/manual')).text()).replace(/ |&nbsp;/g, ' ');
 
   // Шкала 0–10 из 1.x: крайние значения и середина.
   expect(html).toContain('Абсолютная безусловная ненависть');
@@ -91,13 +91,13 @@ test('меню: без данных манифест и документы вс�
 });
 
 test('меню: поддержка ведёт на почту, пожертвование — на DonationAlerts', async ({ page }) => {
-  await page.goto('/menu/support');
+  await page.goto('/ru/menu/support');
   await expect(page.getByRole('link', { name: /Написать в поддержку/ })).toHaveAttribute(
     'href',
     /^mailto:ndimspace@yandex\.ru/,
   );
 
-  await page.goto('/menu/donate');
+  await page.goto('/ru/menu/donate');
   await expect(page.getByRole('link', { name: /Сделать пожертвование/ })).toHaveAttribute(
     'href',
     'https://donationalerts.com/r/mikalai_kryvusha',

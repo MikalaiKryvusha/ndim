@@ -249,7 +249,7 @@ try {
   for (const [theme, width] of [['light', 390], ['dark', 1440]]) {
     console.log(`bugs/47 · сетка соцсетей (${theme}, ${width}):`);
     const { context, page, errors } = await person(browser, { theme, width });
-    await page.goto(`${BASE}/menu/share`);
+    await page.goto(`${BASE}/ru/menu/share`);
     await page.waitForSelector('.grid .net', { timeout: 30000 });
 
     const nets = page.locator('.grid .net');
@@ -281,7 +281,7 @@ try {
     console.log('bugs/47 · дверь из меню:');
     const { context, page } = await person(browser, { width: 390 });
     await page.goto(`${BASE}/menu`);
-    await page.locator('a.row[href="/menu/share"]').click();
+    await page.locator('a.row[href="/ru/menu/share"]').click();
     await page.waitForSelector('.grid .net', { timeout: 30000 });
     check('из меню открывается «Пригласить друзей»', page.url().endsWith('/menu/share'));
     await context.close();

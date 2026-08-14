@@ -19,12 +19,13 @@
   // документ решения — ideas/17. Знак и водмарк живут ЗДЕСЬ (в рельсе их больше нет — бренд
   // не двоится), имени раздела в шапке НЕТ: открытую вкладку показывает синяя плашка рельса.
   // Приборная строка с метриками (V4) — план на будущее, в шапку сейчас не входит.
+  import { goto } from '$app/navigation';
   import Brand from '$lib/ui/Brand.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import { observeBar } from '$lib/ui/barheight.svelte';
   import { theme, toggleTheme } from '$lib/ui/theme.svelte';
   import { lang, setLang } from '$lib/ui/lang.svelte';
-  import { LANGS, LANG_LABEL } from '$lib/content/langs';
+  import { LANGS, LANG_LABEL, swapLangInPath } from '$lib/content/langs';
 
   let {
     badge,
@@ -56,9 +57,16 @@
 
   // Атрибут `lang` документа и сохранение выбора делает общий модуль — здесь остаётся
   // только закрыть выпадашку.
+  //
+  // 🔴 На ПУБЛИЧНОМ адресе (`/ru/menu/terms`) смена языка — это смена АДРЕСА (`plans/39`
+  // шаг 2): у каждого языка своя страница, и подмена текста под старым адресом заставила бы
+  // canonical и hreflang врать. За стеной входа адрес языка не несёт — там, как и раньше,
+  // хватает памяти.
   function pickLang(next: (typeof LANGS)[number]) {
     open = false;
     setLang(next);
+    const swapped = swapLangInPath(location.pathname, next);
+    if (swapped && swapped !== location.pathname) void goto(swapped + location.search + location.hash);
   }
 </script>
 

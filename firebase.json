@@ -2,10 +2,29 @@
   "hosting": [
     {
       "//": "ndimspace.app — домен продукта. Здесь живёт лендинг и всё приложение 2.0.",
+      "//2": "Публичные страницы переехали на языковые адреса /ru/… и /en/… (plans/39, шаг 3).",
+      "//3": "Старые адреса были проиндексированы с 2026-08-01 — без 301 их заработок выброшен.",
+      "//4": "Ведут на РУССКУЮ версию: на этом языке они были в индексе; EN робот найдёт по hreflang.",
+      "//5": "⛔ Правила ПОИМЁННЫЕ. Маска /menu/:rest* задела бы ЛИЧНЫЙ экран /menu (noindex),",
+      "//6": "и увела бы его на /ru/menu — там сломалась бы навигация приложения.",
+      "//7": "Корня '/' здесь НЕТ намеренно: он не переехал, а стал страницей-распознавателем",
+      "//8": "языка под noindex (интервью №010, Р5 = В) — 301 ему противопоказана.",
       "target": "landing",
       "public": "build",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-      "cleanUrls": true
+      "cleanUrls": true,
+      "redirects": [
+        { "source": "/delete-account", "destination": "/ru/delete-account", "type": 301 },
+        { "source": "/menu/manual", "destination": "/ru/menu/manual", "type": 301 },
+        { "source": "/menu/terms", "destination": "/ru/menu/terms", "type": 301 },
+        { "source": "/menu/privacy", "destination": "/ru/menu/privacy", "type": 301 },
+        { "source": "/menu/disclaimer", "destination": "/ru/menu/disclaimer", "type": 301 },
+        { "source": "/menu/about", "destination": "/ru/menu/about", "type": 301 },
+        { "source": "/menu/author", "destination": "/ru/menu/author", "type": 301 },
+        { "source": "/menu/support", "destination": "/ru/menu/support", "type": 301 },
+        { "source": "/menu/donate", "destination": "/ru/menu/donate", "type": 301 },
+        { "source": "/menu/share", "destination": "/ru/menu/share", "type": 301 }
+      ]
     },
     {
       "//": "ndim-space.web.app — старый адрес, по которому 331 человек знал приложение 1.x.",

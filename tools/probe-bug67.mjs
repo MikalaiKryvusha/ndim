@@ -108,7 +108,7 @@ await browser.close();
  * он и оказался таким в первой редакции: 36 кадров, из них реально прокрученных 0. Берём
  * страницы, чей пререндер длинный САМ ПО СЕБЕ: список «Меню» и руководство (≈14 000px).
  */
-const EARLY_ROUTES = ['/menu', '/menu/manual'];
+const EARLY_ROUTES = ['/menu', '/ru/menu/manual'];
 {
   const browser2 = await chromium.launch();
   for (let round = 1; round <= REPEATS; round++) {
@@ -161,7 +161,7 @@ const fallbackRows = [];
   for (const width of [390, 800, 1024, 1440]) {
     const ctx = await browser3.newContext({ viewport: { width, height: 900 } });
     const page = await ctx.newPage();
-    await page.goto(BASE + '/menu/manual', { waitUntil: 'commit' });
+    await page.goto(BASE + '/ru/menu/manual', { waitUntil: 'commit' });
     const measured = await page.evaluate(async () => {
       // Первый кадр, где шапка уже есть, но `--bar-h` ещё не опубликована.
       for (let i = 0; i < 30; i++) {

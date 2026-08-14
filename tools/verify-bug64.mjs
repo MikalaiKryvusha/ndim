@@ -161,7 +161,7 @@ for (const width of [390, 1440]) {
 
   await page.evaluate(() => window.scrollTo({ top: 600, behavior: 'instant' }));
   await page.waitForTimeout(400);
-  await page.locator('a[href="/menu/donate"]').click();
+  await page.locator('a[href="/ru/menu/donate"]').click();
   await page.waitForTimeout(900);
   const childY = await page.evaluate(() => window.scrollY);
   if (childY <= 5) ok(`${label}: дочерняя страница открылась сверху сразу (scrollY ${childY})`);

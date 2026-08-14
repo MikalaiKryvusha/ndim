@@ -25,7 +25,7 @@ const SHOTS = 'test-results/header-v3a';
 const QUICK = process.argv.includes('--quick');
 
 /** Все шесть оболочек продукта: пять экранов + страница «Меню» через DocShell. */
-const ROUTES = QUICK ? ['/profile', '/dims'] : ['/profile', '/relations', '/space', '/dims', '/menu', '/menu/manual'];
+const ROUTES = QUICK ? ['/profile', '/dims'] : ['/profile', '/relations', '/space', '/dims', '/menu', '/ru/menu/manual'];
 const THEMES = QUICK ? ['light'] : ['light', 'dark'];
 
 /** Рельс появляется от 1024px — проверяем и ровно на пороге, и на широком экране. */

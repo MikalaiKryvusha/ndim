@@ -10,7 +10,7 @@
 import assert from 'node:assert/strict';
 import { test, afterEach } from 'node:test';
 
-import { langFromPath, langFromBrowser, isLang, LANGS, X_DEFAULT } from './langs.ts';
+import { langFromPath, langFromBrowser, swapLangInPath, isLang, LANGS, X_DEFAULT } from './langs.ts';
 
 // ── АДРЕС ЗАДАЁТ ЯЗЫК ────────────────────────────────────────────────────────────────────────
 
@@ -51,6 +51,23 @@ test('список языков и x-default согласованы', () => {
   assert.equal(isLang(X_DEFAULT), true);
   assert.equal(isLang('de'), false);
   assert.equal(isLang(null), false);
+});
+
+// ── ТОТ ЖЕ ПУТЬ НА ДРУГОМ ЯЗЫКЕ (`plans/39` шаг 2) ──────────────────────────────────────────
+
+test('языковой сегмент подменяется, остальной путь не трогается', () => {
+  assert.equal(swapLangInPath('/ru/menu/terms', 'en'), '/en/menu/terms');
+  assert.equal(swapLangInPath('/en/dimension/skiing-11mnoskt', 'ru'), '/ru/dimension/skiing-11mnoskt');
+  // Корень языка: `/ru` ↔ `/en` — хвоста нет, и слэша-сироты быть не должно.
+  assert.equal(swapLangInPath('/ru', 'en'), '/en');
+  // Подмена на тот же язык — честная тождественность, а не ошибка.
+  assert.equal(swapLangInPath('/en/delete-account', 'en'), '/en/delete-account');
+});
+
+test('🔴 адрес БЕЗ языка не подменяется — у личных экранов языковых адресов нет', () => {
+  for (const p of ['/', '/profile', '/menu', '/account', '/russian/x']) {
+    assert.equal(swapLangInPath(p, 'en'), null, `«${p}» нечего подменять`);
+  }
 });
 
 // ── УМОЛЧАНИЕ ДЛЯ ПУСТОЙ ПАМЯТИ (интервью №024, В1 = А) ─────────────────────────────────────

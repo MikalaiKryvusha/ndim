@@ -130,7 +130,7 @@ try {
   for (const theme of ['light', 'dark']) {
     console.log(`bugs/35 · история версий карточкой (тема ${theme}):`);
     const { context, page, errors } = await person(browser, { theme });
-    await page.goto(`${BASE}/menu/about`);
+    await page.goto(`${BASE}/ru/menu/about`);
     const history = page.locator('details.history');
     await history.waitFor({ timeout: 10000 });
 
@@ -212,7 +212,7 @@ try {
     // ⚠️ Страница-образец сменена с `/menu/manifesto` на `/menu/manual` 2026-07-31:
     // манифест удалён (отсебятина агента, слово владельца). Проверяется ТО ЖЕ САМОЕ —
     // оболочка DocShell, общая всем страницам раздела, — просто на живом документе.
-    await page.goto(`${BASE}/menu/manual`);
+    await page.goto(`${BASE}/ru/menu/manual`);
     await page.waitForSelector('nav.tabs, .tabs, footer, [class*="nav"]', { timeout: 10000 }).catch(() => {});
     const gap = await page.evaluate(() => {
       const nav = document.querySelector('.screen > :last-child');

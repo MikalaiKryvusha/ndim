@@ -8,13 +8,15 @@
 
 import { error } from '@sveltejs/kit';
 import { DOCS, type Doc } from '$lib/content/docs';
+import { LANGS } from '$lib/content/langs';
 
 /** История версий — не отдельная страница: она живёт внутри «О системе». */
 const PAGES = Object.keys(DOCS).filter((slug) => slug !== 'history');
 
 export const prerender = true;
 
-export const entries = () => PAGES.map((slug) => ({ slug }));
+// Каждый документ — на каждом языке (`plans/39` шаг 2): 4 документа × 2 языка = 8 адресов.
+export const entries = () => LANGS.flatMap((lang) => PAGES.map((slug) => ({ lang, slug })));
 
 export function load({ params }: { params: { slug: string } }): { doc: Doc } {
   const doc = DOCS[params.slug];

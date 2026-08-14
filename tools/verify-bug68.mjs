@@ -143,7 +143,7 @@ try {
       if (message.type() === 'error') errors.push(message.text());
     });
 
-    await page.goto(`${BASE}/menu/about`);
+    await page.goto(`${BASE}/ru/menu/about`);
     await page.waitForSelector('.history', { timeout: 20000 });
     // Раскроем внешнюю карточку заранее там, где меряем вложенную запись.
     for (const target of TARGETS) {

@@ -14,6 +14,7 @@
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   import { SITE_ORIGIN } from '$lib/site';
+  import { LANGS, X_DEFAULT, isLang, swapLangInPath } from '$lib/content/langs';
   import { lang as currentLang } from '$lib/ui/lang.svelte';
   import type { Lang } from '$lib/ui/format';
 
@@ -26,10 +27,18 @@
     children: Snippet<[Lang]>;
   } = $props();
 
-  // Язык — ОБЩИЙ модуль (`plans/39` шаг 1). Своей копии состояния у оболочки больше нет:
-  // две копии расходятся молча (цена уже уплачена на теме, `bugs/53`). Смену языка и её
-  // сохранение делает шапка через тот же модуль.
-  const lang = $derived(currentLang());
+  // 🔴 Язык — ИЗ АДРЕСА (`plans/39` шаг 2): все страницы этой оболочки живут под
+  // `[lang=lang]/menu/…`, и `/en/menu/terms` обязан запечься английским уже на пререндере —
+  // а модуль состояния там без адреса отвечает «ru» всем. Модуль остаётся запасным на
+  // невозможный случай адреса без языка, чтобы оболочка не падала на пустом параметре.
+  // Память за адресом ведёт мост в `[lang=lang]/+layout.svelte`.
+  const lang = $derived(isLang(page.params.lang) ? page.params.lang : currentLang());
+
+  // Пара этой страницы на других языках — для hreflang ниже. Правило подмены сегмента — одно
+  // на проект (`swapLangInPath`), копий «заменить кусок пути» здесь нет.
+  const alternates = $derived(
+    LANGS.map((l) => ({ hreflang: l, href: `${SITE_ORIGIN}${swapLangInPath(page.url.pathname, l) ?? page.url.pathname}` })),
+  );
 
   // Стрелка — иконка набора (bugs/17, `back.svg` из 1.x), а не типографский ‹:
   // у глифа нет ни сетки, ни веса, и он не встаёт в линию с текстом.
@@ -61,8 +70,15 @@
 -->
 <svelte:head>
   <title>NDim Space — {title[lang]}</title>
-  <!-- Абсолютный canonical гасит дубли трёх хостов — тот же приём, что на лендинге. -->
+  <!-- Абсолютный canonical гасит дубли трёх хостов — тот же приём, что на лендинге.
+       Путь уже несёт язык, поэтому canonical у каждой языковой версии свой. -->
   <link rel="canonical" href={`${SITE_ORIGIN}${page.url.pathname}`} />
+  <!-- Двусторонний hreflang с самоссылкой (researches/26 §4.1) + x-default на английский
+       (интервью №010, Р5) — тот же блок, что на лендинге и страницах каталога. -->
+  {#each alternates as alt (alt.hreflang)}
+    <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+  {/each}
+  <link rel="alternate" hreflang="x-default" href={`${SITE_ORIGIN}${swapLangInPath(page.url.pathname, X_DEFAULT) ?? page.url.pathname}`} />
 </svelte:head>
 
 <div class="screen">

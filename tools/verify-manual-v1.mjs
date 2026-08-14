@@ -43,7 +43,7 @@ try {
       if (message.type() === 'error') errors.push(message.text());
     });
 
-    await page.goto(`${BASE}/menu/manual`);
+    await page.goto(`${BASE}/ru/menu/manual`);
     await page.waitForSelector('.doc h2', { timeout: 20000 });
     await page.waitForTimeout(600);
 

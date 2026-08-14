@@ -111,7 +111,7 @@ for (const theme of ['light', 'dark']) {
     }
 
     // ── 2. Виджет версий в «Меню» и в «О системе» — один и тот же, полный ────
-    for (const [route, label] of [['/menu', 'Меню'], ['/menu/about', 'О системе']]) {
+    for (const [route, label] of [['/menu', 'Меню'], ['/ru/menu/about', 'О системе']]) {
       await page.goto(`${STAND}${route}`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(1800);
       const box = page.locator('.vers');
@@ -136,7 +136,7 @@ for (const theme of ['light', 'dark']) {
     }
 
     // ── 3. Портрет автора и его ссылки ──────────────────────────────────────
-    await page.goto(`${STAND}/menu/author`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${STAND}/ru/menu/author`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1200);
     {
       const shot = page.locator('img.ava');
@@ -155,7 +155,7 @@ for (const theme of ['light', 'dark']) {
     }
 
     // ── 4. Глифы vs иконки, и цветной ❤️ на месте ───────────────────────────
-    for (const route of ['/menu/support', '/menu/donate', '/menu/author', '/menu/share', '/menu/about', '/menu/manual']) {
+    for (const route of ['/ru/menu/support', '/ru/menu/donate', '/ru/menu/author', '/ru/menu/share', '/ru/menu/about', '/ru/menu/manual']) {
       await page.goto(`${STAND}${route}`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(900);
       const body = await page.locator('main').innerText();
@@ -164,7 +164,7 @@ for (const theme of ['light', 'dark']) {
         ? ok(`без глифов ${route} ${tag}`)
         : bad(`глифы ${route} ${tag}`, `остались: ${found.join(' ')}`);
     }
-    for (const route of ['/menu/support', '/menu/donate', '/menu/about']) {
+    for (const route of ['/ru/menu/support', '/ru/menu/donate', '/ru/menu/about']) {
       await page.goto(`${STAND}${route}`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(700);
       const body = await page.locator('main').innerText();
@@ -174,7 +174,7 @@ for (const theme of ['light', 'dark']) {
     }
 
     // ── 5. Центровка: короткие страницы да, длинный документ нет ────────────
-    for (const [route, want] of [['/menu/support', 'center'], ['/menu/donate', 'center'], ['/menu/manual', 'start']]) {
+    for (const [route, want] of [['/ru/menu/support', 'center'], ['/ru/menu/donate', 'center'], ['/ru/menu/manual', 'start']]) {
       await page.goto(`${STAND}${route}`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(700);
       const align = await page.locator('article.doc p').first().evaluate((el) => getComputedStyle(el).textAlign);
@@ -183,7 +183,7 @@ for (const theme of ['light', 'dark']) {
     }
 
     // ── 6. История версий: 2.0 первой и раскрытие анимируется ───────────────
-    await page.goto(`${STAND}/menu/about`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${STAND}/ru/menu/about`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1200);
     {
       // Внешняя раскрывашка закрыта — innerText скрытого узла пуст. Читаем textContent:
@@ -216,11 +216,11 @@ for (const theme of ['light', 'dark']) {
     }
 
     // ── 7. Иллюстрации 1.x вернулись (по пикселям) ──────────────────────────
-    for (const route of ['/menu/support', '/menu/donate', '/menu/share']) {
+    for (const route of ['/ru/menu/support', '/ru/menu/donate', '/ru/menu/share']) {
       await page.goto(`${STAND}${route}`, { waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(1000);
       // У «Пригласить друзей» иллюстрации 1.x не было — там сетка соцсетей; снимок нужен, проверка нет.
-      if (route !== '/menu/share') {
+      if (route !== '/ru/menu/share') {
         const real = await page.locator('img.art').evaluate((el) => el.complete && el.naturalWidth > 0).catch(() => false);
         real ? ok(`иллюстрация ${route} ${tag}`) : bad(`иллюстрация ${route} ${tag}`, 'не загрузилась (naturalWidth = 0)');
       }

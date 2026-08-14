@@ -116,7 +116,7 @@ try {
   console.log('\n── Шаг 1: пришёл извне, сессии нет ──');
   // `?as=none` — стендовая дверь «сессии нет вовсе» (bugs/84). Без неё стенд впустил бы dev@,
   // и проверять было бы нечего: мы бы мерили не тот случай.
-  await page.goto(`${BASE}/delete-account?as=none`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${BASE}/ru/delete-account?as=none`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1200);
 
   const signedOutText = await page.locator('main').innerText();
@@ -152,7 +152,7 @@ try {
    * Адрес БЕЗ `?as=none` — ровно как в жизни: письмо возвращает на голый `/delete-account`.
    * Именно поэтому стенд здесь и норовит подсунуть dev@, а мы это ловим.
    */
-  await page.goto(`${BASE}/delete-account?mode=signIn&oobCode=${code.oobCode}&apiKey=demo-api-key`, {
+  await page.goto(`${BASE}/ru/delete-account?mode=signIn&oobCode=${code.oobCode}&apiKey=demo-api-key`, {
     waitUntil: 'domcontentloaded',
   });
   await page.waitForTimeout(2500);
@@ -209,7 +209,7 @@ try {
     `адрес возврата: ${backTo || '(не прочитан)'} — человека уводит с двери, куда он пришёл`,
   );
 
-  await page.goto(`${BASE}/delete-account?mode=signIn&oobCode=${reauth.oobCode}&apiKey=demo-api-key`, {
+  await page.goto(`${BASE}/ru/delete-account?mode=signIn&oobCode=${reauth.oobCode}&apiKey=demo-api-key`, {
     waitUntil: 'domcontentloaded',
   });
   await page.waitForTimeout(3500);

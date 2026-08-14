@@ -66,6 +66,31 @@ export function langFromBrowser(): Lang {
   return asked.some((l) => typeof l === 'string' && l.toLowerCase().startsWith('ru')) ? 'ru' : 'en';
 }
 
+/**
+ * `entries()` для СТАТИЧЕСКОЙ страницы под `[lang=lang]`: одна на язык, больше параметров нет.
+ *
+ * Сайт статический (`+layout.ts: prerender = true`), а страницы под динамическим сегментом
+ * пререндерятся только когда их адреса названы. Ссылками их все не найти: `/en/…`-двойники
+ * ниоткуда не ссылаются на пререндере (личное «Меню» запекается русским). Одно правило на все
+ * такие страницы — вместо шести расходящихся копий `LANGS.map(…)`.
+ */
+export const langEntries = (): { lang: Lang }[] => LANGS.map((lang) => ({ lang }));
+
+/**
+ * Тот же путь на ДРУГОМ языке: `/ru/menu/terms` → `/en/menu/terms`. Адрес без языкового
+ * сегмента отвечает `null` — у личных экранов языковых адресов нет и не будет (`plans/39`).
+ *
+ * Нужен трём местам с одним правилом: переключателю языка на публичных страницах (он ведёт
+ * на АДРЕС, а не подменяет текст под старым адресом), блоку `hreflang` и стражам. Три копии
+ * «заменить первый сегмент» разошлись бы молча — как и `langFromPath` выше.
+ */
+export function swapLangInPath(pathname: string, lang: Lang): string | null {
+  const current = langFromPath(pathname);
+  if (!current) return null;
+  const rest = pathname.slice(1 + current.length); // '' либо '/…'
+  return `/${lang}${rest}`;
+}
+
 /** Достаёт нужную половину двуязычного поля каталога, с запасным вариантом. */
 export function pick(field: { ru: string; en: string } | undefined, lang: Lang): string {
   if (!field) return '';

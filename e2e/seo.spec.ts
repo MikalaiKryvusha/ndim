@@ -9,12 +9,17 @@ test('sitemap.xml: отдаётся и содержит только то, чт�
 	expect(res.status()).toBe(200);
 	const xml = await res.text();
 	expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-	// Абсолютный URL на боевой домен — единая константа src/lib/site.ts
-	expect(xml).toContain('<loc>https://ndimspace.app/</loc>');
+	// Лендинг — на ЯЗЫКОВЫХ адресах (`plans/39` шаг 2); абсолютный URL — константа src/lib/site.ts
+	expect(xml).toContain('<loc>https://ndimspace.app/ru</loc>');
+	expect(xml).toContain('<loc>https://ndimspace.app/en</loc>');
+	// 🔴 Корня в карте НЕТ: он распознаватель под noindex и в поиске не участвует
+	// (интервью №010, Р5 = В — цена названа владельцу и принята).
+	expect(xml).not.toContain('<loc>https://ndimspace.app/</loc>');
 	// Страница удаления аккаунта — ЕДИНСТВЕННЫЙ экран аккаунта, который обязан находиться:
 	// Google Play требует «readily discoverable option to initiate account deletion».
 	// Закрыть её от поиска значило бы выполнить букву требования и убить его смысл.
-	expect(xml).toContain('<loc>https://ndimspace.app/delete-account</loc>');
+	expect(xml).toContain('<loc>https://ndimspace.app/ru/delete-account</loc>');
+	expect(xml).toContain('<loc>https://ndimspace.app/en/delete-account</loc>');
 	// Приватные экраны под noindex — им нечего делать в карте сайта.
 	// 🔴 Сверяем ПОЛНЫЙ адрес, а не подстроку. Голая подстрока `/profile` сломалась на живых
 	// данных: в каталоге есть измерение «Profile», и его публичный адрес
@@ -35,7 +40,9 @@ test('удаление аккаунта: публичная дверь откр�
 	request,
 	page,
 }) => {
-	const res = await request.get('/delete-account');
+	// Языковой адрес (`plans/39` шаг 2); старый `/delete-account` отвечает 301 из firebase.json —
+	// hosting-слой, которого у vite preview нет, поэтому 301 стережёт tools/verify-lang-addresses.mjs.
+	const res = await request.get('/ru/delete-account');
 	expect(res.status()).toBe(200);
 	const html = await res.text();
 	// Единственный приватный по смыслу экран без noindex — и это осознанно.
@@ -53,7 +60,7 @@ test('удаление аккаунта: публичная дверь откр�
 	 * Ветку «не вошёл → вход прямо здесь» проверяет живой стенд дверью `?as=none`
 	 * (страж фазы 8; на момент написания ещё не покрыта — записано в `plans/20`).
 	 */
-	await page.goto('/delete-account');
+	await page.goto('/ru/delete-account');
 	await expect(page.getByText('Не удалось прочитать', { exact: false })).toBeVisible({ timeout: 20000 });
 	// Чего на этой странице быть не должно НИ В КАКОМ состоянии: отсылки «пойди поищи».
 	await expect(page.getByText('перейдите в Профиль', { exact: false })).toHaveCount(0);
@@ -72,7 +79,9 @@ test('удаление аккаунта: публичная дверь откр�
  * Замер до правки: поиску были открыты 2 страницы из 19 (3 692 знака против 53 385 закрытых).
  * После: 11 страниц, ≈49 700 знаков — рост в 13.5 раза.
  */
-const PUBLIC_DOCS = [
+// Языковые адреса (`plans/39` шаг 2): каждый документ живёт на `/ru/…` И `/en/…`,
+// и открытость поиску обязана держаться на ОБОИХ — закрыть одну половину так же дёшево.
+const DOC_TAILS = [
 	'/menu/manual',
 	'/menu/terms',
 	'/menu/privacy',
@@ -83,6 +92,7 @@ const PUBLIC_DOCS = [
 	'/menu/donate',
 	'/menu/share',
 ];
+const PUBLIC_DOCS = ['ru', 'en'].flatMap((lang) => DOC_TAILS.map((tail) => `/${lang}${tail}`));
 
 /** Личные экраны. Их закрытость — тоже работа стража: граница обязана держаться с ОБЕИХ сторон. */
 const PRIVATE_SCREENS = ['/profile', '/relations', '/dims', '/space', '/account', '/menu'];

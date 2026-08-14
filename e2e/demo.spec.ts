@@ -10,7 +10,9 @@ import { test, expect } from '@playwright/test';
 //   после «Спорт: 10»: Алиса 54, Настя 47, Макс 46.
 
 test('пререндер: демо и числа ядра лежат в сыром HTML', async ({ request }) => {
-	const res = await request.get('/');
+	// Лендинг — на языковых адресах (`plans/39` шаг 2); goto('/') в живых тестах ниже оставлен
+	// нарочно: он заодно проверяет распознаватель корня.
+	const res = await request.get('/ru');
 	expect(res.status()).toBe(200);
 	const html = (await res.text()).replace(/ |&nbsp;/g, ' ');
 	expect(html).toContain('Попробуйте прямо здесь');
@@ -52,7 +54,8 @@ test('аватарки: кроп лица в карточке, тап откры
 
 test('язык: EN переименовывает персонажей и тексты демо', async ({ page }) => {
 	await page.goto('/');
-	await page.getByRole('button', { name: 'EN' }).click();
+	// Переключатель — ссылка на /en (`plans/39` шаг 2)
+	await page.getByRole('link', { name: 'EN' }).click();
 	const demo = page.getByRole('region', { name: 'Try it right here' });
 	await expect(demo.getByText('Emma · closest')).toBeVisible();
 	await expect(demo.getByText('The characters are fictional', { exact: false })).toBeVisible();
