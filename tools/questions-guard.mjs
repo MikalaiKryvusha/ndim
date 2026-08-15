@@ -262,6 +262,91 @@ function propagation(interviews) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Проверка 4 — ПРОСРОЧЕННЫЙ ЗАМОК: блокада ссылается на ОТВЕЧЕННОЕ интервью
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Класс дефекта, ради которого проверка написана, и его цена (2026-08-15, `plans/50`).
+ *
+ * `MASTER_PLAN.md` держал строку «⛔ Волна заблокирована `interviews/interview_010` — 15 развилок,
+ * которые агент решать не вправе». Владелец ответил на все пятнадцать 2026-08-01 — коммитом,
+ * который так и назывался: «волна «Ворота» РАЗБЛОКИРОВАНА». Замок простоял ещё ДВЕ НЕДЕЛИ, и всё
+ * это время фаза, помеченная в том же документе словами «ГЛАВНОЕ СЕЙЧАС», не двигалась. Соседняя
+ * половина воронки (каталог, языковые адреса, семейство «ТЕСТ») росла, ворота не трогал никто.
+ *
+ * Заметить было НЕЧЕМ: «ждут владельца 0» и «⛔ заблокировано» — два разных отчёта, и сводил их
+ * только тот, кто догадается посмотреть в оба. Теперь сводит машина.
+ *
+ * Это третий пойманный случай одного класса: `plans/28` ждал выката, который состоялся
+ * одиннадцать дней назад; `plans/29` ждал портрета голоса, который уже лежал в
+ * `AUTHOR_STYLOMETRY.md`. Пункт «ждём X» без дешёвой проверки «а не случилось ли X»
+ * переживает собственное исполнение.
+ *
+ * 🔴 ГРАНИЦА, названная честно: проверка знает только про ИНТЕРВЬЮ — только про них машине
+ * известно, отвечены они или нет. Второй замок того же дня («фаза 2 заблокирована
+ * `researches/27`», а `researches/27` давно закрыт) она НЕ поймала бы. Класс проверкой не закрыт —
+ * закрыт его самый дорогой представитель.
+ */
+
+/** Слова, которыми документ объявляет работу закрытой до чьего-то ответа. */
+const LOCK_WORD =
+	/⛔|заблокирован|блокиру[ею]|жд[ёеу]\p{L}*\s+ответ|до\s+ответа\s+владельца|не\s+начина\p{L}*\s+до/iu;
+
+/** Ссылка на интервью В ТОЙ ЖЕ строке: `interview_010` либо «интервью №010». */
+const LOCK_REF = /interview_(\d{1,3})|№\s?(\d{1,3})/gu;
+
+/**
+ * Явное исключение с ОБЯЗАТЕЛЬНОЙ причиной — тот же приём и тот же канон, что у половины 1.
+ * Нужен там, где строка ЦИТИРУЕТ снятый замок как улику (разборы, планы починки, уроки).
+ */
+const LOCK_EXCUSE = /<!--\s*ЗАМОК-ОК:\s*(?<reason>[^>]*?)\s*-->/iu;
+
+function staleLocks(interviews) {
+	/** номер интервью без ведущих нулей → сколько его вопросов ещё без ответа */
+	const openByNum = new Map();
+	for (const iv of interviews) {
+		const num = basename(iv.file).match(/interview_(\d+)/)?.[1];
+		if (!num) continue;
+		openByNum.set(String(Number(num)), iv.questions.filter((q) => !q.answered).length);
+	}
+
+	const files = [];
+	for (const d of SCAN_DIRS) walkMd(join(ROOT, d), files);
+	for (const name of readdirSync(ROOT)) {
+		if (name.endsWith('.md') && statSync(join(ROOT, name)).isFile()) files.push(join(ROOT, name));
+	}
+
+	const hits = [];
+	for (const file of files) {
+		const rel = relative(ROOT, file).split(sep).join('/');
+		// Летопись append-only: замок в ней — исторический факт, а не действующий статус.
+		if (rel === 'PROJECT_HISTORY.md') continue;
+		// Закрытый документ — тоже запись о прошлом: работа сделана, и её замки вместе с ней.
+		// Тег `DONE` в имени ставится только по проверке (`AGENT_GUIDE.md` → «Беклог и DONE-тег»),
+		// поэтому признак надёжен настолько же, насколько сам тег.
+		if (basename(rel).includes('_DONE_')) continue;
+		const lines = readFileSync(file, 'utf8').split(/\r?\n/);
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (!LOCK_WORD.test(line)) continue;
+			if (LOCK_EXCUSE.test(line) || (i > 0 && LOCK_EXCUSE.test(lines[i - 1]))) continue;
+			for (const m of line.matchAll(LOCK_REF)) {
+				// Форма «№NNN» сама по себе двусмысленна (номер плана, бага, пачки), поэтому для неё
+				// требуем слово «интервью» непосредственно перед ссылкой. Форма `interview_NNN`
+				// однозначна и в подпорке не нуждается.
+				if (m[2] && !/интервью/iu.test(line.slice(Math.max(0, m.index - 40), m.index))) continue;
+				const num = String(Number(m[1] ?? m[2]));
+				const open = openByNum.get(num);
+				if (open === undefined || open > 0) continue; // интервью нет либо ещё ждёт — замок честный
+				hits.push({ file: rel, line: i + 1, num, text: line.trim() });
+				break;
+			}
+		}
+	}
+	return hits;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Половина 1 — вопросы вне interviews/
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -402,10 +487,11 @@ function main() {
 	}
 	const json = process.argv.includes('--json');
 	const { fresh, debt, pendings, interviews, noStatus } = collect();
+	const locks = staleLocks(interviews);
 
 	if (json) {
-		console.log(JSON.stringify({ fresh, debt, pendings, interviews, noStatus }, null, 2));
-		return fresh.length || noStatus.length ? 1 : 0;
+		console.log(JSON.stringify({ fresh, debt, pendings, interviews, noStatus, locks }, null, 2));
+		return fresh.length || noStatus.length || locks.length ? 1 : 0;
 	}
 
 	console.log('СТРАЖ МЕСТА ВОПРОСОВ — AGENT_GUIDE.md → «Место вопросов»\n');
@@ -471,6 +557,23 @@ function main() {
 		console.log('     Число обязано убывать: разносишь ответ — цитируй «интервью №NNN, ВN».');
 	}
 
+	// ── Проверка 4: ПРОСРОЧЕННЫЙ ЗАМОК — блокада ссылается на отвеченное интервью
+	console.log('\nПРОСРОЧЕННЫЕ ЗАМКИ (блокада пережила своё снятие)\n');
+	if (locks.length === 0) {
+		console.log('  ✅ Ни одна блокада не ссылается на полностью отвеченное интервью.');
+	} else {
+		console.log(`  🔴 ЗАМОК ПЕРЕЖИЛ СВОЁ СНЯТИЕ — ${locks.length}:\n`);
+		for (const l of locks) {
+			console.log(`     ${l.file}:${l.line}  → интервью №${l.num} отвечено ПОЛНОСТЬЮ`);
+			console.log(`        ${l.text.slice(0, 150)}`);
+		}
+		console.log(
+			'\n     Документ объявляет работу заблокированной, а блокиратор снят.\n' +
+				'     Лечение: снять замок и разнести ответы — либо, если строка ЦИТИРУЕТ старый\n' +
+				'     замок как улику, объявить исключение в строке:  <!-- ЗАМОК-ОК: причина -->',
+		);
+	}
+
 	// ── Отчёт (не провал): неулаженные допущения фейбл-цикла
 	if (pendings.length) {
 		console.log(`\nНЕУЛАЖЕННЫЕ ДОПУЩЕНИЯ (PENDING:) — ${pendings.length}, к закрытию работы у`);
@@ -478,7 +581,7 @@ function main() {
 		for (const p of pendings) console.log(`  ${p.file}:${p.line}`);
 	}
 
-	const failed = fresh.length + noStatus.length + back.fresh.length;
+	const failed = fresh.length + noStatus.length + back.fresh.length + locks.length;
 	console.log(
 		failed
 			? `\n🔴 ПРОВАЛОВ: ${failed}`

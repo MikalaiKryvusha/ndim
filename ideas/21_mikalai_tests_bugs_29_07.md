@@ -166,7 +166,7 @@
 | 2 | Панель «Все / Мой NDim ID» закрывается | [`bugs/75`](../bugs/75_dims_toolbar_hides_on_tab_switch.md) | кодом + замером | агент |
 | 3 | «Как меня видят» закрывает приложение | [`bugs/76`](../bugs/76_how_others_see_me_overlay_no_history.md) | кодом | агент |
 | 4+5 | Крестик очистки и клавиатура Android | [`bugs/77`](../bugs/77_search_clear_button_and_android_keyboard.md) | замером | агент |
-| 6 | Пункт «Данные» убрать | [`bugs/78`](../bugs/78_menu_data_card_removal_conflicts_with_ptr.md) | замером | ⛔ владелец (конфликт с интервью №006) |
+| 6 | Пункт «Данные» убрать | [`bugs/78`](../bugs/78_menu_data_card_removal_conflicts_with_ptr.md) | замером | ⛔ владелец (конфликт с интервью №006) |  <!-- ЗАМОК-ОК: журнал волны: ⛔ помечает решение владельца по bugs/78, интервью названо как контекст конфликта -->
 | 7 | Кнопки залипают тёмными | [`bugs/79`](../bugs/79_buttons_stick_in_pressed_state.md) | замером | агент |
 | 8 | Шкала 0–10: звёзды, смайлики, адаптив | [`bugs/80`](../bugs/80_rating_scale_stars_emoji_and_fluid_size.md) | кодом | ⛔ владелец (макеты) |
 | 9 | Позиции прокрутки не сохраняются | [`plans/08`](../plans/08_DONE_screen_state_memory_on_navigation.md) | замером 5 из 5 | ✅ **ПОЧИНЕНО** (В11=А) |
