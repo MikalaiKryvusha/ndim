@@ -347,6 +347,13 @@ if (alienBefore !== null && alienAfter !== alienBefore) {
 console.log('  ✅ сборка легла в заявленный контур, соседний не тронут');
 
 run('заголовки кеширования (bugs/124)', `node tools/verify-prod-cache.mjs --base ${CONTOUR.site}`);
+/*
+ * Переадресации проверяются В ЖИВОМ контуре, хотя `verify-contour-parity` уже сверил конфигурации.
+ * Это не дубль: там сверяются НАМЕРЕНИЯ (два файла), здесь — ПОВЕДЕНИЕ (что реально отдаёт хостинг).
+ * `bugs/133` жил ровно в промежутке между ними — конфигурация стейджа была честной сама по себе,
+ * а вести себя как бой контур не мог.
+ */
+run('переадресации живы (bugs/133)', `node tools/verify-prod-lang-redirects.mjs --base ${CONTOUR.site}`);
 if (CONTOUR.name === 'stage') {
 	run('стейдж закрыт от роботов (П6)', 'node tools/verify-stage-noindex.mjs');
 }

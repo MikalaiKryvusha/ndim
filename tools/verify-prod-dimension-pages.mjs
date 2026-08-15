@@ -12,9 +12,11 @@
  * Запуск: node tools/verify-prod-dimension-pages.mjs [--base https://ndim-stage.web.app]
  * (`NDIM_ORIGIN` продолжает работать — им прибор запускали до появления контуров.)
  */
-import { contourFromArgv } from './lib/contours.mjs';
+import { CONTOURS, contourFromArgv } from './lib/contours.mjs';
 
 const ORIGIN = process.env.NDIM_ORIGIN ?? contourFromArgv().site;
+/** Канонический дом продукта один на все контуры — см. пояснение у проверки `canonical`. */
+const PROD_HOME = CONTOURS.prod.site;
 
 let failed = 0;
 let passed = 0;
@@ -44,7 +46,21 @@ for (const [slug, label] of CASES) {
     check(`/${lang}/dimension/${slug} (${label})`, r.status === 200, `HTTP ${r.status}`);
     if (r.status === 200) {
       check(`  · <html lang="${lang}">`, r.text.includes(`<html lang="${lang}"`));
-      check('  · canonical на свой адрес', r.text.includes(`href="${ORIGIN}/${lang}/dimension/${slug}"`));
+      /*
+       * 🔑 CANONICAL УКАЗЫВАЕТ НА БОЕВОЙ ДОМ, А НЕ «НА СВОЙ АДРЕС», И ЭТО НЕ ПОБЛАЖКА СТЕЙДЖУ.
+       *
+       * У продукта один канонический дом — `src/lib/site.ts`; стейдж отдаёт те же страницы с тем
+       * же `canonical` на `ndimspace.app`. Так и правильно: если страница стейджа куда-то утечёт,
+       * заслуга достанется бою, а не двойнику. Прежняя формулировка ждала СВОЙ адрес и давала на
+       * стейдже 6 ложных провалов — то есть звала «чинить» исправный продукт.
+       *
+       * Проверка осталась строгой: ждём ТОЧНЫЙ боевой адрес этой страницы, а не «хоть какой-то
+       * canonical». В бою это ровно прежнее условие — там свой адрес и есть боевой.
+       */
+      check(
+        '  · canonical на боевой дом страницы (один канонический дом на все контуры)',
+        r.text.includes(`href="${PROD_HOME}/${lang}/dimension/${slug}"`),
+      );
       check('  · hreflang обоих языков', r.text.includes('hreflang="ru"') && r.text.includes('hreflang="en"'));
       check('  · x-default объявлен', r.text.includes('hreflang="x-default"'));
     }
