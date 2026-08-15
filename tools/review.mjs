@@ -1307,14 +1307,30 @@ async function main() {
 	}
 
 	switch (cmd) {
-		case 'open':
+		/*
+		 * 🔴 КОД ВОЗВРАТА ОБЯЗАН ДОЕХАТЬ. Здесь стояло `await cmdOpen(docPath); return null;` и
+		 * `cmdRender(docPath); return 0;` — возвращаемое значение отбрасывалось. Предполётная
+		 * проверка самодостаточности печатала «⛔ СТРАНИЦА НЕ ПОДНЯТА» и выходила С НУЛ�ём:
+		 * страж краснел на глаз и зеленел для машины.
+		 *
+		 * Поймано СУДЬЁЙ (`/fable-judge`) в тот же день, что и написано, — при перепрогоне
+		 * мутации: лечение было заявлено как «дверь отказывает», а отказывала только печать.
+		 * Цена, если бы уехало: автономный цикл делает `review.mjs open X && дальше` и идёт
+		 * дальше как ни в чём не бывало, считая страницу поднятой.
+		 */
+		case 'open': {
 			if (!docPath) return usage(), 1;
-			await cmdOpen(docPath);
-			return null; // сервер жив, выход произойдёт после записи решения
-		case 'render':
+			const code = await cmdOpen(docPath);
+			// null — сервер жив, выход произойдёт после записи решения; число — отказ предполёта.
+			return code === undefined ? null : code;
+		}
+		case 'render': {
 			if (!docPath) return usage(), 1;
-			cmdRender(docPath);
-			return 0;
+			// cmdRender отдаёт ПУТЬ к снимку при успехе и 1 при отказе предполёта — приводим к коду
+			// явно: `?? 0` пропустил бы строку пути прямиком в `process.exit`.
+			const r = cmdRender(docPath);
+			return r === 1 ? 1 : 0;
+		}
 		case 'list':
 			cmdList();
 			return 0;
