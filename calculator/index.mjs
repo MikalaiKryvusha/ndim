@@ -200,8 +200,37 @@ if (
   process.exit(1);
 }
 
+/**
+ * ИМЯ БАЗЫ — второй контур (`plans/53`).
+ *
+ * До 2026-08-15 вычислитель знал только `(default)` и потому физически не мог обслуживать стейдж.
+ * Теперь база задаётся снаружи: `ndim-server-prod` и `ndim-server-stage` — два независимых
+ * контейнера с разными ключами и разными базами (решение владельца 2026-08-15), и перепутать их
+ * нечем, потому что не делят ни конфиг, ни секрет.
+ */
+const databaseId = process.env.FIRESTORE_DATABASE_ID ?? '(default)';
+
+/**
+ * 🔴 ТРЕТИЙ страж пары «проект × база», к двум уже существующим выше.
+ *
+ * Ошибка, от которой он бережёт, дороже своих трёх строк: контейнер стейджа с БОЕВЫМ ключом
+ * пересчитал бы связи живых людей по данным песочницы и записал бы результат им в топы. Признак
+ * прост и не требует знания имён: боевой проект обслуживает боевую базу, стейдж — стейджевую, и
+ * ПЕРЕКРЁСТНАЯ пара — всегда ошибка запуска, а не замысел.
+ */
+const CONTOUR_DATABASES = { 'ndim-space': ['(default)', 'ndim-db-prod'], 'ndim-stage': ['ndim-db-stage'] };
+const allowed = CONTOUR_DATABASES[projectId];
+if (allowed && !allowed.includes(databaseId)) {
+  console.error(
+    `[calc] СТОП: проект ${projectId} и база ${databaseId} — разные контуры. ` +
+      `Проекту ${projectId} принадлежат базы: ${allowed.join(', ')}. ` +
+      'Перекрёстный запуск означает, что связи живых людей посчитались бы по чужим данным.',
+  );
+  process.exit(1);
+}
+
 initializeApp({ projectId });
-const db = getFirestore();
+const db = getFirestore(databaseId);
 
 const log = (message) => console.log(`[calc ${new Date().toISOString()}] ${message}`);
 
@@ -1298,7 +1327,10 @@ if (runDirectly) {
   const once = process.argv.includes('--once');
   const intervalSeconds = Number(process.env.CALC_INTERVAL_SECONDS ?? 60);
 
-  log(`старт: проект ${projectId}, эмулятор: ${process.env.FIRESTORE_EMULATOR_HOST ?? 'нет (боевой Firestore)'}`);
+  log(
+    `старт: проект ${projectId}, база ${databaseId}, ` +
+      `эмулятор: ${process.env.FIRESTORE_EMULATOR_HOST ?? 'нет (боевой Firestore)'}`,
+  );
 
   if (once) {
     await runCycle();

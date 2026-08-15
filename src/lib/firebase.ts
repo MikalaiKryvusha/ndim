@@ -39,6 +39,50 @@ const PROD_CONFIG = {
   appId: '1:1077558742259:web:0de996aa7f186d7d13bb86',
 } as const;
 
+/**
+ * Веб-конфиг СТЕЙДЖА — проект `ndim-stage` (`plans/53`).
+ *
+ * Отдельный проект, а не вторая база в бою: Auth в Firebase живёт на уровне ПРОЕКТА, и общий
+ * контур свёл бы тестовые учётки с живыми людьми и их ПДн (решение владельца 2026-08-15).
+ */
+const STAGE_CONFIG = {
+  apiKey: 'AIzaSyDde20i1Bee1qvw7_srWWlrn2kI1Oom6Uw',
+  authDomain: 'ndim-stage.firebaseapp.com',
+  projectId: 'ndim-stage',
+  storageBucket: 'ndim-stage.firebasestorage.app',
+  messagingSenderId: '995928822280',
+  appId: '1:995928822280:web:2950b2d9e0bf930795b7bd',
+} as const;
+
+/**
+ * Хосты стейдж-контура. Список закрытый и короткий по замыслу: контур узнаётся по ТОЧНОМУ имени
+ * хоста, а не по вхождению подстроки «stage», — иначе домен вроде `ndimspace.app/stage` увёл бы
+ * живых людей в песочницу.
+ *
+ * Владелец 2026-08-15: стейдж «располагается только на дефолтном техническом firebase адресе» и к
+ * боевому домену не привязывается никогда — поэтому список не растёт.
+ */
+const STAGE_HOSTS = ['ndim-stage.web.app', 'ndim-stage.firebaseapp.com'] as const;
+
+/**
+ * Имя базы боевого контура.
+ *
+ * ⚠️ Здесь будет `ndim-db-prod`, когда пройдёт миграция фазы 3 `plans/53`. Пока бой живёт в
+ * `(default)`, и менять эту строку РАНЬШЕ переезда нельзя: приложение пошло бы в базу, которой
+ * ещё нет, и показало бы пустые экраны всем.
+ */
+const PROD_DATABASE = '(default)';
+
+/** Имя базы стейджа. Именованная с рождения — переезжать ей не придётся. */
+const STAGE_DATABASE = 'ndim-db-stage';
+
+/** Стейдж ли это. Решает ХОСТ — тот же принцип, что у стенда: артефакт сборки один на все контуры. */
+export function isStage(): boolean {
+  return (
+    typeof location !== 'undefined' && (STAGE_HOSTS as readonly string[]).includes(location.hostname)
+  );
+}
+
 const FIRESTORE_EMULATOR = { host: '127.0.0.1', port: 8181 } as const;
 const AUTH_EMULATOR_URL = 'http://127.0.0.1:9099';
 
@@ -48,13 +92,18 @@ export function isStand(): boolean {
 }
 
 /**
- * База Firestore. В бою — основная; для репетиции миграции можно указать копию: `?db=sandbox2`.
- * Опечатка в имени базы приведёт к пустому экрану, а не к записи не туда, — это безопасно.
+ * База Firestore ТЕКУЩЕГО контура. Стейдж — своя, бой — своя; выбор делает тот же хост, что и
+ * выбор проекта, поэтому «приложение стейджа в боевой базе» невозможно по построению.
+ *
+ * `?db=` остаётся дверью для отладки: им можно направить приложение в другую базу ТОГО ЖЕ проекта
+ * (так в июле репетировали миграцию на копии). Опечатка в имени даёт пустой экран, а не запись не
+ * туда, — это безопасно.
  */
 function databaseId(): string {
-  if (typeof location === 'undefined') return '(default)';
+  const contour = isStage() ? STAGE_DATABASE : PROD_DATABASE;
+  if (typeof location === 'undefined') return contour;
   const requested = new URLSearchParams(location.search).get('db');
-  return requested && /^[a-z0-9-]+$/.test(requested) ? requested : '(default)';
+  return requested && /^[a-z0-9-]+$/.test(requested) ? requested : contour;
 }
 
 let app: FirebaseApp | null = null;
@@ -76,7 +125,9 @@ function ensureApp(): FirebaseApp {
             // чем connectStorageEmulator успевает его перенаправить (bugs/14).
             storageBucket: `${DEV_PROJECT_ID}.appspot.com`,
           }
-        : PROD_CONFIG,
+        : isStage()
+          ? STAGE_CONFIG
+          : PROD_CONFIG,
     );
   return app;
 }
