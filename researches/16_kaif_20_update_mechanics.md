@@ -64,7 +64,7 @@
 - **Сохранность владельца.** `OWNER_SEEDED` снова точен: `GOAL.md`, `STATUS.md`, `EXPERIENCE.md`,
   `MASTER_PLAN.md`, обе карты, `KAIF_FRAMEWORK.md` — ноль изменений. Содержательные директории
   (`bugs/`, `ideas/`, `interviews/`, `researches/`, `homeworks/`, `design/`, `plans/`) — ноль.
-  Продуктовый код (`src/`, `calculator/`, `e2e/`, `tools/`, `static/`) — ноль.
+  Продуктовый код (`src/`, `sync-server/`, `e2e/`, `tools/`, `static/`) — ноль.
 
 ---
 

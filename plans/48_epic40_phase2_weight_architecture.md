@@ -52,7 +52,7 @@
    Target: 0 ошибок; `AggregateRating` — только там, где правило показа его разрешает.
 6. **Вес не вырос.** Meter: замер бандла (`EXP-0136`: универсальный `load` уже уносил каталог в
    браузер) · Target: клиентский чанк не прибавил ни килобайта каталога.
-7. Регрессия зелёная: `npm test` · `npm run test:calc` · `npm run e2e` · `verify-dimension-pages`.
+7. Регрессия зелёная: `npm test` · `npm run test:sync` · `npm run e2e` · `verify-dimension-pages`.
 
 ## Якоря метаплана (трассировка)
 

@@ -57,7 +57,7 @@ try {
       const widget = page.locator('.card.w-server');
       await widget.waitFor({ timeout: 20000 });
 
-      // Вычислитель стенда (цикл 15 с) мог ещё не отчитаться блоками — дождаться полной.
+      // Сервер синхронизации стенда (цикл 15 с) мог ещё не отчитаться блоками — дождаться полной.
       await page
         .locator('.card.w-server .sub-h', { hasText: 'Полная синхронизация' })
         .waitFor({ timeout: 30000 });

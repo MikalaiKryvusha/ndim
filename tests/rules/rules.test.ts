@@ -475,7 +475,7 @@ describe('Оценки по осям — не видит никто, кроме 
 
   test('🔒 админ НЕ читает чужие оценки — админ не исключение (bugs/100)', async () => {
     // Интервью №002 В4 и ideas/13 дословно: «оценки не видит никто, кроме тебя и
-    // вычислителя», «админ не исключение». isAdmin() в points стоял с первого коммита
+    // сервера синхронизации», «админ не исключение». isAdmin() в points стоял с первого коммита
     // правил вопреки его же описанию и убран аудитом 2026-07-31.
     const db = admin('root').firestore();
     await assertFails(getDoc(doc(db, 'points/alice')));
@@ -511,7 +511,7 @@ describe('Оценки по осям — не видит никто, кроме 
     await assertFails(setDoc(doc(db, 'points/alice/dims/calm'), { value: 5, secret: 'x' }));
   });
 
-  test('🔒 клиент не может снять флаг dirty — это работа вычислителя', async () => {
+  test('🔒 клиент не может снять флаг dirty — это работа сервера синхронизации', async () => {
     const db = verified(ALICE).firestore();
     await assertFails(setDoc(doc(db, 'points/alice'), { dirty: false, updated: 2, lastSync: 2 }));
     await assertSucceeds(setDoc(doc(db, 'points/alice'), { dirty: true, updated: 2, lastSync: 1 }));
@@ -538,7 +538,7 @@ describe('Связи — приватны и неприкосновенны', ()
   });
 
   test('🔒 даже владелец не может писать свои связи', async () => {
-    // Иначе человек объявил бы себя похожим на кого угодно. Пишет только вычислитель (Admin SDK).
+    // Иначе человек объявил бы себя похожим на кого угодно. Пишет только сервер синхронизации (Admin SDK).
     const db = verified(ALICE).firestore();
     await assertFails(setDoc(doc(db, 'relations/alice'), { computedAt: 2, version: 2, top: [] }));
   });
@@ -590,7 +590,7 @@ describe('Удаление аккаунта — каждый сносит тол
 
   test('🔒 свой топ связей не сносит даже владелец — это работа сервера синхронизации', async () => {
     // Клиенту запись в relations запрещена ПОЛНОСТЬЮ, и удаление — тоже запись.
-    // Отсюда и вся серверная уборка следов (`calculator/cleanupDeletedPeople`).
+    // Отсюда и вся серверная уборка следов (`sync-server/cleanupDeletedPeople`).
     await assertFails(deleteDoc(doc(verified(ALICE).firestore(), 'relations/alice')));
   });
 
@@ -692,7 +692,7 @@ describe('Гость (анонимный вход) — может трудить
     await assertSucceeds(setDoc(doc(db, `points/${GHOST}/dims/calm`), { value: 7 }));
   });
 
-  test('🔒 гость не может скрыть флаг guest — на нём держится фильтр вычислителя', async () => {
+  test('🔒 гость не может скрыть флаг guest — на нём держится фильтр сервера синхронизации', async () => {
     const db = guest(GHOST).firestore();
     await assertFails(setDoc(doc(db, `points/${GHOST}`), { dirty: true, updated: 1, lastSync: 0 }));
     await assertFails(

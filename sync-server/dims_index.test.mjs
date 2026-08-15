@@ -5,7 +5,7 @@
 // расхождение вызывало полную пересборку, а сторож свежести опирался на магическую единицу и
 // потому в некоторых состояниях не сходился НИКОГДА.
 //
-// Три дефекта, воспроизведённые прибором `calculator/measure-dims-index.mjs` ДО этих тестов:
+// Три дефекта, воспроизведённые прибором `sync-server/measure-dims-index.mjs` ДО этих тестов:
 //   · `bugs/108` — документ каталога без `title` считается в `dimsCount`, но не попадает в индекс
 //     ⇒ пересборка на КАЖДОМ цикле, 5111 чтений в бою при дневной квоте 50 000;
 //   · `bugs/106` — «сколько измерений» человеку показывается по числу ДОКУМЕНТОВ коллекции,
@@ -13,13 +13,13 @@
 //   · `bugs/109` — «новые измерения» ищутся по ПЛОСКОМУ полю `created`, которого у боевых
 //     документов нет вовсе (там `time.created`) ⇒ виджет «Сегодня» молчит навсегда.
 //
-// Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
+// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
 
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-	throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:calc`.');
+	throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:sync`.');
 }
 
 // СВОЙ проект = своя база: `node --test` гоняет файлы параллельно, а мы считаем документы каталога.
@@ -30,7 +30,7 @@ const { getFirestore, Timestamp } = await import('firebase-admin/firestore');
 
 const db = getFirestore();
 
-/** Ловит строки лога вычислителя за один цикл: пересборка индекса объявляется именно там. */
+/** Ловит строки лога сервера синхронизации за один цикл: пересборка индекса объявляется именно там. */
 async function cycleLog() {
 	const lines = [];
 	const original = process.stdout.write.bind(process.stdout);

@@ -6,7 +6,7 @@
 **Класс:** расхождение формы данных между стендом и боем — дефект, который стенд увидеть не может
 по построению.
 
-## ✅ ЗАМЕР [TESTED: 2026-08-02 · `calculator/measure-dims-index.mjs` на эмуляторе Firestore]
+## ✅ ЗАМЕР [TESTED: 2026-08-02 · `sync-server/measure-dims-index.mjs` на эмуляторе Firestore]
 
 Прибор посеял каталог в **боевой** форме (`time.created` как `Timestamp`), создал новое измерение
 прямо перед циклом и прочитал результат:
@@ -36,7 +36,7 @@ space/stats.dims:    15
 
 ## Криминалистика
 
-Вычислитель ищет свежие измерения так (`calculator/index.mjs:319–322`):
+Сервер синхронизации ищет свежие измерения так (`sync-server/index.mjs:319–322`):
 
 ```js
 const [count, fresh] = await Promise.all([
@@ -59,7 +59,7 @@ const [count, fresh] = await Promise.all([
 - `src/lib/model/feed.test.ts:199`: «Бой (Admin SDK): Timestamp как `{ seconds }`. Стенд: плоское
   число. Оба обличья — настоящие».
 
-То есть **клиент** научили обеим формам, а **запрос вычислителя** — нет.
+То есть **клиент** научили обеим формам, а **запрос сервера синхронизации** — нет.
 
 ### 🔴 Почему ни один тест этого не ловит
 
@@ -112,7 +112,7 @@ await db.doc(`dims/${dimId}`).set({ ...dim, created });
 
 ## Ссылки
 
-`calculator/index.mjs:317–327` (`loadDims`, место дефекта) ·
+`sync-server/index.mjs:317–327` (`loadDims`, место дефекта) ·
 `src/lib/model/schema.ts:236–243` (обе формы названы) ·
 `src/lib/model/feed.ts:227–248` (`createdAt` — как это делает клиент) ·
 `src/lib/model/feed.test.ts:199` (тест знает обе формы) ·

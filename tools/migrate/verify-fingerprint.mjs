@@ -28,7 +28,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { cert, initializeApp } from 'firebase-admin/app';
+import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
@@ -50,10 +50,9 @@ const POINTS = 2; //     points/{uid}
 const USERS = 3; //      users/{uid}
 const PROFILES = 3; //   users/{uid}/profile/{bucket}
 
-const app = initializeApp(
-	{ credential: cert(JSON.parse(readFileSync('calculator/secrets/sa.json', 'utf8'))), projectId: PROJECT_ID },
-	'fingerprint-guard',
-);
+// Учётных данных нет намеренно: эмулятор их не проверяет, а страж не должен зависеть от
+// содержимого `.env` — иначе тест перестаёт запускаться там, где секретов нет (CI, чужая машина).
+const app = initializeApp({ projectId: PROJECT_ID }, 'fingerprint-guard');
 const db = getFirestore(app);
 
 let failures = 0;

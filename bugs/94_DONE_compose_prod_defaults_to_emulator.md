@@ -6,7 +6,7 @@
 ## Симптом
 
 Владелец запускает боевой режим ровно так, как велит инструкция в шапке
-`calculator/docker-compose.yml` (строки 10–11): задаёт `FIREBASE_PROJECT_ID=ndim-space` и
+`sync-server/docker-compose.yml` (строки 10–11): задаёт `FIREBASE_PROJECT_ID=ndim-space` и
 `GOOGLE_APPLICATION_CREDENTIALS` и делает `docker compose up`. Ожидаемое: сервер синхронизации
 ходит в боевой Firestore. Наблюдаемое бы:
 
@@ -19,8 +19,8 @@
 
 ## Воспроизведение (детерминированное)
 
-1. Положить ключ в `calculator/secrets/sa.json` (как велит шапка файла).
-2. `FIREBASE_PROJECT_ID=ndim-space GOOGLE_APPLICATION_CREDENTIALS=/secrets/sa.json docker compose -f calculator/docker-compose.yml up -d --build`
+1. Положить ключ в `sync-server/secrets/sa.json` (как велит шапка файла).
+2. `FIREBASE_PROJECT_ID=ndim-space GOOGLE_APPLICATION_CREDENTIALS=/secrets/sa.json docker compose -f sync-server/docker-compose.yml up -d --build`
 3. `docker inspect` контейнера: `FIRESTORE_EMULATOR_HOST=host.docker.internal:8181` присутствует.
 4. Admin SDK при наличии `FIRESTORE_EMULATOR_HOST` ходит в эмулятор независимо от ключа —
    дальше по состоянию эмулятора одна из двух веток симптома выше.
@@ -30,7 +30,7 @@
 
 ## Криминалистика
 
-Мина — `calculator/docker-compose.yml:24`:
+Мина — `sync-server/docker-compose.yml:24`:
 
 ```yaml
 FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-demo-ndim-dev}
@@ -41,12 +41,12 @@ FIRESTORE_EMULATOR_HOST: ${FIRESTORE_EMULATOR_HOST:-host.docker.internal:8181}
 переменные — про эмулятор ни слова:
 
 ```
-# ...положить ключ сервисного аккаунта в calculator/secrets/sa.json ... и запустить:
+# ...положить ключ сервисного аккаунта в sync-server/secrets/sa.json ... и запустить:
 #   FIREBASE_PROJECT_ID=ndim-space GOOGLE_APPLICATION_CREDENTIALS=/secrets/sa.json \
-#     docker compose -f calculator/docker-compose.yml up -d --build
+#     docker compose -f sync-server/docker-compose.yml up -d --build
 ```
 
-Страж в `calculator/index.mjs:164` однонаправленный — добавляет эмулятор для `demo-*`, но
+Страж в `sync-server/index.mjs:164` однонаправленный — добавляет эмулятор для `demo-*`, но
 комбинацию `ndim-space` + эмулятор не запрещает:
 
 ```js
@@ -85,7 +85,7 @@ Compose-файл писался под дев-стенд: дефолты `demo-n
 1. `[NOT-TESTED]` Убрать эмуляторный дефолт из `docker-compose.yml`; стендовое значение переезжает
    в `docker-compose.override.yml` (compose подхватывает его автоматически только локально) либо
    задаётся явно в командах стенда.
-2. `[NOT-TESTED]` Двусторонний страж в `calculator/index.mjs`: комбинация «проект `ndim-space` +
+2. `[NOT-TESTED]` Двусторонний страж в `sync-server/index.mjs`: комбинация «проект `ndim-space` +
    `FIRESTORE_EMULATOR_HOST`» = немедленное падение при старте с внятным текстом; спасение через
    явный `NDIM_ALLOW_EMULATOR=1` для осознанных случаев.
 3. `[NOT-TESTED]` Мутация для проверки стража: запуск с `ndim-space` + эмулятором **обязан упасть**.
@@ -98,7 +98,7 @@ Compose-файл писался под дев-стенд: дефолты `demo-n
 - `plans/04_DONE_cutover.md:119-126` — канонический боевой путь (`docker run`).
 - `bugs/71_DONE_kaif_check_fails_on_crlf.md` — родственный класс: гейт/инструкция, которой верят
   слепо.
-- `calculator/docker-compose.yml:24` и `calculator/index.mjs:160-169, 665` — цитируемый код.
+- `sync-server/docker-compose.yml:24` и `sync-server/index.mjs:160-169, 665` — цитируемый код.
 
 ## Статус закрытия (2026-07-31)
 

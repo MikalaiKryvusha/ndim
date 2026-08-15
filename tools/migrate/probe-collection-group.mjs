@@ -30,7 +30,7 @@ const PROJECT_ID = arg('--project', 'ndim-space');
 const DATABASE_ID = arg('--database', '(default)');
 
 initializeApp({
-	credential: cert(JSON.parse(readFileSync('calculator/secrets/sa.json', 'utf8'))),
+	credential: cert(JSON.parse(readFileSync('sync-server/secrets/sa.json', 'utf8'))),
 	projectId: PROJECT_ID,
 });
 

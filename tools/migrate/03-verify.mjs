@@ -24,7 +24,7 @@ import { decodeLegacyRelation } from '../../src/lib/similarity/legacy.ts';
 import { parseLegacyTop } from '../../src/lib/migration/transform.ts';
 
 const PROJECT_ID = 'ndim-space';
-const KEY_PATH = 'calculator/secrets/sa.json';
+const KEY_PATH = 'sync-server/secrets/sa.json';
 
 const production = process.argv.includes('--production');
 const databaseId = production ? '(default)' : 'sandbox2';

@@ -60,15 +60,18 @@
  *
  * ⚠️ ЦЕНА: ~10 600 чтений боя (квота 50 000/сут) и ~10 600 записей в стейдж (квота 20 000/сут).
  *
- * Доступ: бой — `calculator/secrets/sa.json`; стейдж — `.private/keys/ndim-stage-sa.json`.
+ * Доступ: ключи ОБОИХ контуров берутся из `.env` (`NDIM_PROD_SA_B64` · `NDIM_STAGE_SA_B64`).
+ * Ключей в файлах и в коде проект не держит — правило владельца 2026-08-15. Образец `.env.example`.
  * Выход: 0 — успех; 1 — прибор не смог гарантировать результат.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+
+import { serviceAccount } from '../lib/credentials.mjs';
 
 const arg = (name, fallback) => {
 	const i = process.argv.indexOf(name);
@@ -82,8 +85,6 @@ const PROD_PROJECT = arg('--prod-project', 'ndim-space');
 const PROD_DATABASE = arg('--prod-database', '(default)');
 const STAGE_PROJECT = arg('--stage-project', 'ndim-stage');
 const STAGE_DATABASE = arg('--stage-database', 'ndim-db-stage');
-const PROD_KEY = process.env.NDIM_PROD_SA ?? 'calculator/secrets/sa.json';
-const STAGE_KEY = process.env.NDIM_STAGE_SA ?? '.private/keys/ndim-stage-sa.json';
 const REPORT = arg('--out', 'test-results/stage-seed/report.json');
 
 /**
@@ -103,12 +104,9 @@ const SKIPPED_ROOTS = {
 /** Подколлекции, которые читаем групповыми запросами. `privat` в списке НЕТ намеренно. */
 const SUBCOLLECTIONS = ['profile', 'dims', 'daily', 'days'];
 
-const prodApp = initializeApp(
-	{ credential: cert(JSON.parse(readFileSync(PROD_KEY, 'utf8'))), projectId: PROD_PROJECT },
-	'prod',
-);
+const prodApp = initializeApp({ credential: cert(serviceAccount('prod')), projectId: PROD_PROJECT }, 'prod');
 const stageApp = initializeApp(
-	{ credential: cert(JSON.parse(readFileSync(STAGE_KEY, 'utf8'))), projectId: STAGE_PROJECT },
+	{ credential: cert(serviceAccount('stage')), projectId: STAGE_PROJECT },
 	'stage',
 );
 const prod = getFirestore(prodApp, PROD_DATABASE);
@@ -118,7 +116,7 @@ const stage = getFirestore(stageApp, STAGE_DATABASE);
  * 🔴 ПРЕДОХРАНИТЕЛЬ: писать разрешено ТОЛЬКО в стейдж-контур.
  * Оба ключа лежат на одном диске, а перепутать аргументы — дело одной опечатки. Проверка стоит
  * ничего и закрывает единственный сценарий, у которого цена невосстановима: запись слепка поверх
- * боевой базы. Класс тот же, что стоп-правило вычислителя «боевой ключ + чужая база = отказ».
+ * боевой базы. Класс тот же, что стоп-правило сервера синхронизации «боевой ключ + чужая база = отказ».
  */
 if (STAGE_PROJECT !== 'ndim-stage' || STAGE_DATABASE === '(default)') {
 	console.error(`ОТКАЗ: цель записи «${STAGE_PROJECT}/${STAGE_DATABASE}» не является стейдж-контуром.`);

@@ -29,7 +29,7 @@ import {
 
 const PROJECT_ID = 'ndim-space';
 const SANDBOX_DB = 'sandbox2';
-const KEY_PATH = 'calculator/secrets/sa.json';
+const KEY_PATH = 'sync-server/secrets/sa.json';
 /** Firestore принимает не больше 500 операций в батче. */
 const BATCH_LIMIT = 400;
 

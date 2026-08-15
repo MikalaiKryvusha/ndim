@@ -11,13 +11,13 @@
 // (одно — сворачиванием по измерениям, другое — сворачиванием по людям в `model/stats.ts`), и
 // совпасть по случайности они не могут. Именно её расхождение и завело `bugs/111`.
 //
-// Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
+// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
 
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-	throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:calc`.');
+	throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:sync`.');
 }
 
 // СВОЙ проект = своя база: `node --test` гоняет файлы параллельно, а мы считаем оценки каталога.
@@ -28,7 +28,7 @@ const { getFirestore, Timestamp } = await import('firebase-admin/firestore');
 
 const db = getFirestore();
 
-/** Ловит строки лога вычислителя за один цикл: обновление сводки объявляется именно там. */
+/** Ловит строки лога сервера синхронизации за один цикл: обновление сводки объявляется именно там. */
 async function cycleLog() {
 	const lines = [];
 	const original = process.stdout.write.bind(process.stdout);

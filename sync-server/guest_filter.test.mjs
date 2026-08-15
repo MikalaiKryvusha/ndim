@@ -1,17 +1,17 @@
-// Тест фильтра анонимных гостей в вычислителе (plans/03, этап 2, В3 интервью №004).
+// Тест фильтра анонимных гостей в сервере синхронизации (plans/03, этап 2, В3 интервью №004).
 //
 // Инвариант невидимости: точка с честным флагом `guest: true` (его гарантируют правила,
 // см. honestGuestFlag в firestore.rules) НЕ попадает в чей бы то ни было топ relations —
 // но сам гость получает свой топ против публичных точек на общих основаниях.
 //
-// Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
+// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
 // Прямой `node --test` не сработает: нужен FIRESTORE_EMULATOR_HOST от emulators:exec.
 
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:calc`.');
+  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:sync`.');
 }
 
 // Импорт после проверки окружения: index.mjs при импорте инициализирует firebase-admin,
@@ -36,7 +36,7 @@ async function topUids(ownerUid) {
   return snap.data().top.map((entry) => entry.guestUid);
 }
 
-describe('Вычислитель: анонимный гость невидим в чужих relations', () => {
+describe('Сервер синхронизации: анонимный гость невидим в чужих relations', () => {
   before(async () => {
     // Два публичных человека и один гость с общими осями — все связи математически существуют.
     await seedPoint('alice', { calm: 7, sport: 5 });
@@ -69,14 +69,14 @@ describe('Вычислитель: анонимный гость невидим �
     }
   });
 
-  test('флаг guest переживает снятие dirty — вычислитель пишет с merge', async () => {
+  test('флаг guest переживает снятие dirty — сервер синхронизации пишет с merge', async () => {
     // Иначе после первого же пересчёта гость «легализовался» бы и попал в чужие топы.
     const snap = await db.doc('points/ghost').get();
     assert.equal(snap.data().guest, true);
   });
 });
 
-describe('Вычислитель: осиротевшие гости вычищаются, живые и полноценные — нет', () => {
+describe('Сервер синхронизации: осиротевшие гости вычищаются, живые и полноценные — нет', () => {
   const DAY = 24 * 60 * 60 * 1000;
 
   before(async () => {

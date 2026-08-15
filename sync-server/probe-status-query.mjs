@@ -10,7 +10,7 @@
  * до проектирования, а не после.
  *
  * Запуск: npx firebase emulators:exec --only firestore --project demo-ndim-probe \
- *           "node calculator/probe-status-query.mjs"
+ *           "node sync-server/probe-status-query.mjs"
  */
 if (!process.env.FIRESTORE_EMULATOR_HOST) throw new Error('нужен эмулятор Firestore');
 process.env.FIREBASE_PROJECT_ID = 'demo-ndim-probe-status';

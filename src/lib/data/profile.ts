@@ -187,7 +187,7 @@ export async function ensureSpaceExists(uid: Uid, language: 'ru' | 'en' = 'ru'):
 /**
  * Штамп «грязной» точки. Гость обязан честно называть свою точку гостевой —
  * правила (`honestGuestFlag` в firestore.rules) отвергнут запись без `guest: true`,
- * а вычислитель по этому флагу не пускает гостя в чужие relations.
+ * а сервер синхронизации по этому флагу не пускает гостя в чужие relations.
  */
 function dirtyStamp(): Record<string, unknown> {
   const stamp = { dirty: true, updated: Date.now(), lastSync: null };
@@ -255,7 +255,7 @@ async function fetchProfileScreen(uid: Uid): Promise<ProfileScreenData> {
 }
 
 /**
- * Сохраняет оценку по оси и помечает точку «грязной» — вычислитель пересчитает связи.
+ * Сохраняет оценку по оси и помечает точку «грязной» — сервер синхронизации пересчитает связи.
  * Оба документа — одним атомарным батчем: оценка без флага потерялась бы для пересчёта.
  */
 export async function saveRating(uid: Uid, dimId: string, value: number): Promise<void> {

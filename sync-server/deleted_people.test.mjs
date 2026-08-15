@@ -8,13 +8,13 @@
 // Живой человек рядом обязан остаться нетронутым — включая его собственные группы,
 // подсказки и предложения. Тест держит обе стороны.
 //
-// Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
+// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
 
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:calc`.');
+  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:sync`.');
 }
 
 /*
@@ -33,7 +33,7 @@ const db = getFirestore();
 const GONE = 'gone-person';
 const ALIVE = 'alive-person';
 
-describe('Вычислитель: следы за удалившим аккаунт', () => {
+describe('Сервер синхронизации: следы за удалившим аккаунт', () => {
   let removed;
 
   before(async () => {

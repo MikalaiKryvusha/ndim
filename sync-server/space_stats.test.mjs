@@ -6,13 +6,13 @@
 // юнит-тестами (src/lib/model/stats.test.ts); здесь — то, чего они увидеть не могут:
 // что сервер действительно КЛАДЁТ эти цифры в Firestore, и кладёт правильные.
 //
-// Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
+// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
 
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:calc`.');
+  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:sync`.');
 }
 
 // СВОЙ ПРОЕКТ = своя база в эмуляторе. Статистика — величина ГЛОБАЛЬНАЯ («людей в
@@ -73,13 +73,13 @@ describe('Сервер синхронизации пишет статистик�
 
   /*
    * ВЕРХНЯЯ СТРОКА ТОПА (`plans/28` §8). Юнит-тесты `stats.ts` доказывают, что агрегат СЧИТАЕТСЯ
-   * верно; здесь доказывается, что вычислитель его действительно ЗАПОЛНЯЕТ — то есть что провод
+   * верно; здесь доказывается, что сервер синхронизации его действительно ЗАПОЛНЯЕТ — то есть что провод
    * от отсортированного топа до документа проложен. Без этой проверки поле могло бы вечно
    * приезжать в бой пустым при всех зелёных юнит-тестах.
    */
   test('верхняя строка топа записана — и гость в неё не попадает', async () => {
     const stats = (await db.doc('space/stats').get()).data();
-    assert.ok(stats.bestMatch, 'bestMatch должен быть записан вычислителем');
+    assert.ok(stats.bestMatch, 'bestMatch должен быть записан сервером синхронизации');
 
     assert.equal(stats.bestMatch.people, 2, 'вершина есть у обоих жителей; гость в счёт не идёт');
     assert.ok(stats.bestMatch.max > 0, 'лучшая похожесть Пространства не может быть нулевой');

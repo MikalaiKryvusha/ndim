@@ -137,7 +137,7 @@ D:\work\ai_sandbox\ndim\
     └── README.md                  # что здесь лежит и почему
 ```
 
-**Здесь вырастет остальное:** `src/routes/` (SvelteKit), `worker/` (Docker-вычислитель связей),
+**Здесь вырастет остальное:** `src/routes/` (SvelteKit), `worker/` (Docker-сервер синхронизации связей),
 `firebase.json`, `firestore.rules`.
 
 ## Где старый проект

@@ -9,13 +9,13 @@
 // вернуться по своей ссылке и забрать свои ответы (право участника, №002 В4). Тест держит обе
 // стороны: и что мусор уходит, и что живое остаётся.
 //
-// Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
+// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
 
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:calc`.');
+  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:sync`.');
 }
 
 /*
@@ -53,7 +53,7 @@ async function seedPair(id, { aUid, bUid = null, created = OLD }) {
 
 const exists = async (id) => (await db.doc(`testPairs/${id}`).get()).exists;
 
-describe('Вычислитель: гигиена старых пар теста', () => {
+describe('Сервер синхронизации: гигиена старых пар теста', () => {
   let removed;
 
   before(async () => {

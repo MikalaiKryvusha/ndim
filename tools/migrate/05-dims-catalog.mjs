@@ -39,7 +39,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 const PROJECT_ID = 'ndim-space';
 const SANDBOX_DB = 'sandbox2';
-const KEY_PATH = 'calculator/secrets/sa.json';
+const KEY_PATH = 'sync-server/secrets/sa.json';
 const BATCH_LIMIT = 400;
 
 const production = process.argv.includes('--production');

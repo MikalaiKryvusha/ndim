@@ -16,7 +16,7 @@
 // в выводе не появляется — репозиторий публичный, а утечка здесь уже случалась (bugs/01).
 //
 // Запуск: node tools/migrate/01-inventory.mjs
-// Доступ: calculator/secrets/sa.json (ключ сервисного аккаунта, вне git).
+// Доступ: sync-server/secrets/sa.json (ключ сервисного аккаунта, вне git).
 
 import { readFileSync } from 'node:fs';
 
@@ -25,7 +25,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 const PROJECT_ID = 'ndim-space';
-const KEY_PATH = 'calculator/secrets/sa.json';
+const KEY_PATH = 'sync-server/secrets/sa.json';
 
 initializeApp({
   credential: cert(JSON.parse(readFileSync(KEY_PATH, 'utf8'))),

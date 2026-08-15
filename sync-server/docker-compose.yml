@@ -1,15 +1,15 @@
-# Вычислитель связей NDim Space 2.0 — постоянная служба на серверном ПК владельца
+# Сервер синхронизации связей NDim Space 2.0 — постоянная служба на серверном ПК владельца
 # (этот компьютер и есть сервер — уточнение владельца, чат 2026-07-11).
 #
 # Дев-режим (против локальных эмуляторов; стенд должен быть поднят: npm run stand).
 # Адрес эмулятора передаётся ЯВНО — дефолта в этом файле больше нет (bugs/94):
 #   FIRESTORE_EMULATOR_HOST=host.docker.internal:8181 \
-#     docker compose -f calculator/docker-compose.yml up -d --build
+#     docker compose -f sync-server/docker-compose.yml up -d --build
 #
-# Боевой режим: положить ключ сервисного аккаунта в calculator/secrets/sa.json (папка в
-# .gitignore) и запустить БЕЗ переменной эмулятора:
-#   FIREBASE_PROJECT_ID=ndim-space GOOGLE_APPLICATION_CREDENTIALS=/secrets/sa.json \
-#     docker compose -f calculator/docker-compose.yml up -d --build
+# Боевой режим: подать ключ ПЕРЕМЕННОЙ NDIM_SA_B64 (значение — из .env, файлов с ключами
+# проект не держит) и запустить БЕЗ переменной эмулятора:
+#   FIREBASE_PROJECT_ID=ndim-space NDIM_SA_B64=<base64 ключа из .env> \
+#     docker compose -f sync-server/docker-compose.yml up -d --build
 # Канонический боевой путь — docker run из шапки Dockerfile (так выкатывали cutover,
 # plans/04). Страж в index.mjs остановит запуск, если НЕ-demo проект совмещён с
 # эмулятором, — раньше compose-дефолт отправлял «бой по инструкции» в эмулятор молча.
@@ -17,11 +17,11 @@
 # Входящих портов у службы нет — только исходящие соединения (интервью №001, В3).
 
 services:
-  calculator:
+  sync-server:
     build:
       context: ..
-      dockerfile: calculator/Dockerfile
-    image: ndim-calculator
+      dockerfile: sync-server/Dockerfile
+    image: ndim-sync-server
     restart: unless-stopped
     environment:
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-demo-ndim-dev}
@@ -29,12 +29,14 @@ services:
       # получал host.docker.internal:8181 и молча писал топы в эмулятор. Пустое значение
       # index.mjs читает как «не задано»; дев-режим передаёт адрес явно (шапка файла).
       FIRESTORE_EMULATOR_HOST: ${FIRESTORE_EMULATOR_HOST:-}
-      CALC_INTERVAL_SECONDS: ${CALC_INTERVAL_SECONDS:-60}
+      SYNC_INTERVAL_SECONDS: ${SYNC_INTERVAL_SECONDS:-60}
       # Экономия запросов (ideas/14): тихий период после правки оценок и период полного прохода.
-      CALC_QUIET_SECONDS: ${CALC_QUIET_SECONDS:-120}
-      CALC_FULL_SYNC_AT_HOUR: ${CALC_FULL_SYNC_AT_HOUR:-0}
+      SYNC_QUIET_SECONDS: ${SYNC_QUIET_SECONDS:-120}
+      SYNC_FULL_AT_HOUR: ${SYNC_FULL_AT_HOUR:-0}
       # Окно новичка (ideas/05): первую сессию тихий период не действует — первая ценность быстрее.
-      CALC_NEWCOMER_MINUTES: ${CALC_NEWCOMER_MINUTES:-30}
-      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
-    volumes:
-      - ./secrets:/secrets:ro
+      SYNC_NEWCOMER_MINUTES: ${SYNC_NEWCOMER_MINUTES:-30}
+      # 🔴 КЛЮЧ — ПЕРЕМЕННОЙ, НЕ ФАЙЛОМ (правило владельца 2026-08-15: «никогда ключи в коде и
+      # других файлах не храним»). Значение — base64 от JSON ключа, берётся из `.env`.
+      # Смонтированной папки `./secrets` здесь БОЛЬШЕ НЕТ: монтирование ПАПКИ однажды затащило
+      # ключ второго контура внутрь боевого контейнера — смешение контуров, запрещённое plans/53.
+      NDIM_SA_B64: ${NDIM_SA_B64:-}

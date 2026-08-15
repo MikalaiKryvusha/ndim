@@ -6,24 +6,24 @@
 // периоде и лечит записи, разошедшиеся с реальностью. Без него ленивый контракт превратился
 // бы в «никогда».
 //
-// CALC_FULL_SYNC_EVERY_CYCLE=1 превращает КАЖДЫЙ цикл в ночной полный проход — так суточная
+// SYNC_FULL_EVERY_CYCLE=1 превращает КАЖДЫЙ цикл в ночной полный проход — так суточная
 // логика проверяется без ожидания суток. Ручка сменилась вместе с расписанием (bugs/85):
-// раньше проход был «раз в CALC_FULL_SYNC_HOURS от старта процесса», теперь — в заданный ЧАС
-// СУТОК (CALC_FULL_SYNC_AT_HOUR), и period-ручки больше не существует.
+// раньше проход был «раз в SYNC_FULL_HOURS от старта процесса», теперь — в заданный ЧАС
+// СУТОК (SYNC_FULL_AT_HOUR), и period-ручки больше не существует.
 //
-// Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
+// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
 
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:calc`.');
+  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:sync`.');
 }
 
 // СВОЙ ПРОЕКТ = своя база в эмуляторе (см. space_stats.test.mjs). Обе переменные читаются
 // при загрузке модуля — ставим ДО импорта index.mjs.
 process.env.FIREBASE_PROJECT_ID = 'demo-ndim-calc-fullpass';
-process.env.CALC_FULL_SYNC_EVERY_CYCLE = '1';
+process.env.SYNC_FULL_EVERY_CYCLE = '1';
 
 const { runCycle } = await import('./index.mjs');
 const { getFirestore } = await import('firebase-admin/firestore');

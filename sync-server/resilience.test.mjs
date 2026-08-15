@@ -6,24 +6,24 @@
 // снимался безусловно (гонка съедала оценку, поставленную во время цикла). Каждый тест
 // красен на коде до фикса — мутантом служит сам дефект (приём bugs/70).
 //
-// ⚠️ В этом файле НЕТ CALC_FULL_SYNC_EVERY_CYCLE: тест bugs/91 различает «ночной проход
+// ⚠️ В этом файле НЕТ SYNC_FULL_EVERY_CYCLE: тест bugs/91 различает «ночной проход
 // повторён, потому что прошлый упал» и «ночной, потому что каждый цикл ночной» — вторым
 // режимом это различие неизмеримо. Ночным первый цикл делает пустая база (fullSync.at
 // отсутствует → 0 → просрочен).
 //
-// Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
+// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
 
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:calc`.');
+  throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:sync`.');
 }
 
 // СВОЙ ПРОЕКТ = своя база в эмуляторе (см. space_stats.test.mjs). Переменные читаются при
 // загрузке модуля — ставим ДО импорта index.mjs.
 process.env.FIREBASE_PROJECT_ID = 'demo-ndim-calc-resilience';
-delete process.env.CALC_FULL_SYNC_EVERY_CYCLE;
+delete process.env.SYNC_FULL_EVERY_CYCLE;
 
 const { runCycle, _testFailNextCommit, _testBetweenCommitAndRelease } = await import('./index.mjs');
 const { getFirestore } = await import('firebase-admin/firestore');
@@ -131,7 +131,7 @@ describe('bugs/94 — страж не пускает НЕ-demo проект в �
 
     // Страж стоит ДО initializeApp — ключи и живой эмулятор процессу не нужны.
     await assert.rejects(
-      run(process.execPath, ['calculator/index.mjs', '--once'], {
+      run(process.execPath, ['sync-server/index.mjs', '--once'], {
         cwd: fileURLToPath(new URL('..', import.meta.url)),
         env: {
           ...process.env,

@@ -10,23 +10,23 @@
 // Замер боя 2026-08-03: 15 измерений, 25 оценок.
 //
 // 🔴 ПОЧЕМУ ОТДЕЛЬНЫЙ ФАЙЛ, А НЕ СТРОКИ В `dim_ratings.test.mjs`. Чистка идёт ТОЛЬКО в полном
-// проходе, а внутри цикла — РАНЬШЕ доклада о сиротах. Включи мы здесь `CALC_FULL_SYNC_EVERY_CYCLE`
+// проходе, а внутри цикла — РАНЬШЕ доклада о сиротах. Включи мы здесь `SYNC_FULL_EVERY_CYCLE`
 // в том файле, сироты не доживали бы до строки лога, и проверка доклада сломалась бы. Два разных
 // предположения о режиме цикла — два файла, у каждого свой проект эмулятора.
 //
-// Запуск: npm run test:calc  (поднимает эмулятор Firestore, Java обязательна)
+// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
 
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-	throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:calc`.');
+	throw new Error('FIRESTORE_EMULATOR_HOST не задан. Запускай через `npm run test:sync`.');
 }
 
 // СВОЙ проект = своя база. Обе переменные читаются при загрузке модуля — ставим ДО импорта.
 process.env.FIREBASE_PROJECT_ID = 'demo-ndim-calc-orphans';
 // Каждый цикл — полный: иначе чистку пришлось бы ждать до полуночи.
-process.env.CALC_FULL_SYNC_EVERY_CYCLE = '1';
+process.env.SYNC_FULL_EVERY_CYCLE = '1';
 
 const { runCycle } = await import('./index.mjs');
 const { getFirestore, Timestamp } = await import('firebase-admin/firestore');

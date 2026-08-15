@@ -20,7 +20,7 @@
 | 3. Хостинг | ✅ оба сайта; проверено живьём — отдают 2.0, следов `app.js` 1.x нет |
 | 4. Правила и индексы | ✅ выпущены — **необратимая точка пройдена**. 2 индекса 1.x оставлены (`--force` не применялся) |
 | 5. Admin claim | ✅ `admin: true` → 2 uid (потребовалась починка, см. ниже) |
-| 6. Сервер синхронизации | ✅ Docker-служба `ndim-calculator`, цикл 3600 с. Первый цикл: 93 точки → 93 топа; Пространство 93 · 5112 · 2340 |
+| 6. Сервер синхронизации | ✅ Docker-служба `ndim-sync-server`, цикл 3600 с. Первый цикл: 93 точки → 93 топа; Пространство 93 · 5112 · 2340 |
 | 7. Проверка руками | ⏳ **за владельцем** |
 
 ### 🔴 Два дефекта, которые вскрыл именно боевой выкат
@@ -59,7 +59,7 @@
   в продукт (`/profile`), а не в 1.x.
 - ✅ **Хостинг настроен на два сайта** (`firebase.json`, `.firebaserc`): `landing` → `ndimspace.app`,
   `app` → `ndim-space.web.app` (там сейчас живёт 1.x).
-- ✅ Ключ сервисного аккаунта: `calculator/secrets/sa.json` (вне git).
+- ✅ Ключ сервисного аккаунта: `sync-server/secrets/sa.json` (вне git).
 
 ---
 
@@ -116,13 +116,13 @@ node tools/migrate/04-admin-claim.mjs   # ставит admin: true владел�
 ### Шаг 6. Сервер синхронизации в бой
 
 ```bash
-docker build -f calculator/Dockerfile -t ndim-calculator .
+docker build -f sync-server/Dockerfile -t ndim-sync-server .
 docker run -d --restart unless-stopped \
-  -v "$(pwd)/calculator/secrets:/secrets:ro" \
+  -v "$(pwd)/sync-server/secrets:/secrets:ro" \
   -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/sa.json \
   -e FIREBASE_PROJECT_ID=ndim-space \
-  -e CALC_INTERVAL_SECONDS=3600 \
-  --name ndim-calculator ndim-calculator
+  -e SYNC_INTERVAL_SECONDS=3600 \
+  --name ndim-sync-server ndim-sync-server
 ```
 Первый цикл пересчитает связи всех 93 людей с непустым NDim ID и запишет статистику
 Пространства. Проверить: `/space` → «Текущее состояние: Работает».

@@ -585,7 +585,7 @@ Access-Control-Allow-Methods: POST, GET, HEAD, DELETE, PATCH
 
 **Прибор:** `tools/probe-account-phase2.mjs` (запуск —
 `npx firebase emulators:exec --only auth --project demo-ndim-dev "node tools/probe-account-phase2.mjs"`;
-тяжёлый стенд не нужен, сироты-вычислителя не остаётся).
+тяжёлый стенд не нужен, сироты-сервера синхронизации не остаётся).
 
 ## Ссылки
 

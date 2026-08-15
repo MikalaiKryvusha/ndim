@@ -19,7 +19,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 const PROJECT_ID = 'ndim-space';
-const KEY_PATH = 'calculator/secrets/sa.json';
+const KEY_PATH = 'sync-server/secrets/sa.json';
 
 const apply = process.argv.includes('--apply');
 

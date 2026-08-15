@@ -28,15 +28,18 @@
  * Запуск:
  *   node tools/migrate/db-fingerprint.mjs [--project ndim-space] [--database "(default)"] [--out ПУТЬ]
  *
- * Доступ: ключ сервисного аккаунта `calculator/secrets/sa.json` (вне git).
+ * Доступ: ключ сервисного аккаунта из `.env` (`NDIM_PROD_SA_B64` / `NDIM_STAGE_SA_B64`) —
+ * контур выбирается по `--project`. Ключей в файлах и в коде проект не держит (`.env.example`).
  * Выход: 0 — отпечаток снят; 1 — прибор не смог гарантировать полноту.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+
+import { serviceAccount } from '../lib/credentials.mjs';
 
 const arg = (name, fallback) => {
 	const i = process.argv.indexOf(name);
@@ -45,7 +48,8 @@ const arg = (name, fallback) => {
 
 const PROJECT_ID = arg('--project', 'ndim-space');
 const DATABASE_ID = arg('--database', '(default)');
-const KEY_PATH = 'calculator/secrets/sa.json';
+/** Контур выводится из проекта: ключи лежат в `.env` под именами контуров (`tools/lib/credentials.mjs`). */
+const CONTOUR = PROJECT_ID === 'ndim-stage' ? 'stage' : 'prod';
 
 /**
  * Известные подколлекции модели 2.0 — по одному имени на строку и с адресом канона.
@@ -69,10 +73,16 @@ const KNOWN_SUBCOLLECTIONS = [
 	'privat',
 ];
 
-initializeApp({
-	credential: cert(JSON.parse(readFileSync(KEY_PATH, 'utf8'))),
-	projectId: PROJECT_ID,
-});
+/*
+ * Под ЭМУЛЯТОРОМ ключ не нужен и не запрашивается: эмулятор не проверяет учётные данные, а
+ * требовать боевой секрет ради прогона стража (`verify-fingerprint.mjs`) значило бы привязать
+ * тест к содержимому `.env`. Так же устроен и сервер синхронизации (`sync-server/index.mjs`).
+ */
+initializeApp(
+	process.env.FIRESTORE_EMULATOR_HOST
+		? { projectId: PROJECT_ID }
+		: { credential: cert(serviceAccount(CONTOUR)), projectId: PROJECT_ID },
+);
 
 const db = getFirestore(DATABASE_ID);
 

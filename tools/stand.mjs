@@ -18,27 +18,27 @@ import { spawn } from 'node:child_process';
 import { connect } from 'node:net';
 
 /** Цикл сервера синхронизации на стенде — короткий: человек не должен ждать. */
-const CALC_INTERVAL_SECONDS = '15';
+const SYNC_INTERVAL_SECONDS = '15';
 /** Тихий период на стенде выключен по той же причине: оценка должна долетать сразу. */
-const CALC_QUIET_SECONDS = '0';
+const SYNC_QUIET_SECONDS = '0';
 
 /**
  * Номер и момент сборки сервера синхронизации.
  *
- * В бою их вшивает в образ `npm run calc:image` (docker --build-arg), и на стенде их не
+ * В бою их вшивает в образ `npm run sync:image` (docker --build-arg), и на стенде их не
  * было вовсе — сервер отчитывался версией без сборки и без даты. Стенд, который не умеет
  * показать поле продукта, не может его и проверить: виджет версий (bugs/66) выглядел бы
  * зелёным ровно потому, что показывать нечего. Считаем те же числа тем же способом.
  */
-const CALC_BUILD = (() => {
+const SYNC_BUILD = (() => {
   try {
-    return execSync('git rev-list --count HEAD -- calculator', { encoding: 'utf8' }).trim();
+    return execSync('git rev-list --count HEAD -- sync-server', { encoding: 'utf8' }).trim();
   } catch {
     return '';
   }
 })();
 /** До минут, как и у приложения (ideas/15): секунды — шум, а не информация. */
-const CALC_BUILT_AT = new Date().toISOString().replace(/:\d{2}\.\d{3}Z$/, ':00Z');
+const SYNC_BUILT_AT = new Date().toISOString().replace(/:\d{2}\.\d{3}Z$/, ':00Z');
 
 const children = [];
 
@@ -59,7 +59,7 @@ function start(command, args, env = {}) {
  * ⚠️ `child.kill()` на Windows этого НЕ делает. Мы запускаем через `shell: true` (иначе не
  * стартуют `.cmd`-обёртки npm/npx), то есть настоящая цепочка — `cmd.exe → node`. `kill()`
  * убивает только `cmd.exe`, а внук-`node` живёт дальше, крутит цикл каждые 15 с и стучится в
- * уже погашенный эмулятор. Именно так рождались сироты `node calculator/index.mjs`, из-за
+ * уже погашенный эмулятор. Именно так рождались сироты `node sync-server/index.mjs`, из-за
  * которых стенд трижды за сессию не поднимался молча (bugs/73, EXP-0059, EXP-0081).
  * `taskkill /T` гасит процесс ВМЕСТЕ С ПОТОМКАМИ — это единственный способ на Windows.
  */
@@ -122,18 +122,18 @@ if (!(await waitForEmulator(emulatorHostPort))) {
   console.error(
     `\n✖ СТЕНД НЕ ПОДНЯЛСЯ: эмулятор Firestore не слушает ${emulatorHostPort}.\n` +
       `  Чаще всего это сирота от прошлого запуска (bugs/73). Проверь и погаси:\n` +
-      `    Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.CommandLine -match 'calculator' }\n` +
+      `    Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.CommandLine -match 'sync-server' }\n` +
       `  Дешёвый признак «сироты живы»: файл stand.log не удаляется.\n`,
   );
   process.exit(1);
 }
 
 // Сервер синхронизации: служба с коротким циклом. Первый цикл он делает сразу.
-start('node', ['calculator/index.mjs'], {
-  CALC_INTERVAL_SECONDS,
-  CALC_QUIET_SECONDS,
-  CALC_BUILD,
-  CALC_BUILT_AT,
+start('node', ['sync-server/index.mjs'], {
+  SYNC_INTERVAL_SECONDS,
+  SYNC_QUIET_SECONDS,
+  SYNC_BUILD,
+  SYNC_BUILT_AT,
 });
 
 // Приложение. Стенд живёт ровно столько, сколько живёт dev-сервер: закрыли его — гасим всё.

@@ -27,7 +27,7 @@
 |---|---|---|
 | Размер топа связей | до **250** человек; в бою людей ~94, значит топ — до 93 | `RELATIONS_TOP_LIMIT`, `schema.ts:199` |
 | Во что обходится экран «Связи» на холодную | **1 + N чтений**, где N — размер топа (сейчас до ~94) | `loadRelations`, `data/relations.ts` |
-| Цикл сервера синхронизации | 60 с; тихий период 120 с; полный проход раз в сутки | `calculator/index.mjs` |
+| Цикл сервера синхронизации | 60 с; тихий период 120 с; полный проход раз в сутки | `sync-server/index.mjs` |
 | Ломает ли приложение bfcache сегодня | **нет** — в коде ни одного `unload`, `beforeunload`, `no-store` | греп по `src/` |
 | Что ломает bfcache | открытое соединение с **IndexedDB** — то самое, что заводит персистентный кэш | web.dev, «Back/forward cache» |
 | Экономит ли встроенный кэш Firestore чтения | **нет.** `get()` по умолчанию идёт на сервер и берёт кэш только «if the network is unavailable or if the request times out» | Google Cloud, Firestore «Getting data» |

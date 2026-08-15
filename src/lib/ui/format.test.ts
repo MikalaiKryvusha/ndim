@@ -115,7 +115,7 @@ test('версия: номера сборки нет — нет и скобок 
   assert.equal(versionLabel('2.0.0', null), '2.0');
   assert.equal(versionLabel('2.0.0'), '2.0');
   assert.equal(versionLabel('2.0.0', 0), '2.0');
-  // Строка из окружения тоже считается числом: Docker передаёт CALC_BUILD строкой.
+  // Строка из окружения тоже считается числом: Docker передаёт SYNC_BUILD строкой.
   assert.equal(versionLabel('0.2.0', '17'), '0.2 (17)');
   assert.equal(versionLabel('0.2.0', 'dev'), '0.2');
 });
