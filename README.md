@@ -227,7 +227,7 @@ npm run dev        # разработка: http://localhost:5173
 npm run stand      # живой стенд: эмуляторы + тестовые данные + сервер синхронизации
 npm test           # 192 юнит-теста: ядро похожести, модель данных, статистика, кэш
 npm run test:rules # 97 тестов правил Firestore и Storage (проверяют ОТКАЗЫ)
-npm run test:sync  # 43 теста сервера синхронизации, включая устойчивость к сбоям
+npm run test:sync  # 77 тестов сервера синхронизации, включая устойчивость к сбоям
 npm run e2e        # 72 браузерные проверки (Playwright, продакшен-сборка)
 npm run build      # статическая сборка: весь сайт пререндерится
 ```
@@ -485,7 +485,7 @@ npm run dev        # development: http://localhost:5173
 npm run stand      # live stand: emulators + seed data + the sync server
 npm test           # 192 unit tests: similarity core, data model, statistics, cache
 npm run test:rules # 97 Firestore and Storage rules tests (asserting DENIALS)
-npm run test:sync  # 43 sync-server tests, including failure resilience
+npm run test:sync  # 77 sync-server tests, including failure resilience
 npm run e2e        # 72 browser checks (Playwright, production build)
 npm run build      # static build: the whole site is prerendered
 ```
