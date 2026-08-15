@@ -187,7 +187,10 @@
 
 ## Стражи, которые надо держать зелёными
 
-`npm test` (**278**) · `npm run test:calc` (**71**) · `npm run check` · `npm run typecheck` ·
+`npm test` (**284**) · `npm run test:calc` (**77**) · `npm run check` · `npm run typecheck` ·
+🆕 `probe-test-pages-live` (**240**, БОЙ: 8 страниц ТЕСТ × обе темы × 390/1440, читающий) ·
+🆕 `probe-test-guest-live` (**15** в бою, путь гостя до общего результата; ПИШЕТ в бой и убирает
+за собой органами продукта — читай его шапку прежде, чем запускать) ·
 `npm run e2e` (**100 passed**) · `npm run kaif:check` · `npm run questions` ·
 🆕 `verify-prod-signed-in` (**24**, БОЙ под сессией — гнать после КАЖДОГО выката) ·
 🆕 `verify-prod-cache` (**12**, заголовки кеширования боя, `bugs/124`) ·

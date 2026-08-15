@@ -1,0 +1,19 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_032_duplicate_names_in_test_rows.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-15T07:27:27.124Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "В",
+			"text": "",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "",
+			"text": "В) Вид и год у КАЖДОЙ строки, всегда",
+			"comment": ""
+		}
+	}
+}

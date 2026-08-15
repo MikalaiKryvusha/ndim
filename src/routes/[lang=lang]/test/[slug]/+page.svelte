@@ -241,7 +241,12 @@
   let busyPair = $state(false);
 
   const queueIds = $derived(data.queue.map((e) => e.id));
-  const nameOf = $derived(new Map(data.queue.map((e) => [e.id, e.name])));
+  /*
+   * В строки результата идёт ПОДПИСЬ (имя · вид, год), а не голое имя: результат читают двое,
+   * и второй вещей не выбирал — «Вы оба поставили 8» и «Вы оба поставили 6» под одинаковым
+   * именем были бы для него загадкой (`bugs/126`, интервью №032).
+   */
+  const nameOf = $derived(new Map(data.queue.map((e) => [e.id, e.label])));
   const iAmCreator = $derived(pair !== null && myUid !== null && pair.aUid === myUid);
   const pairReady = $derived(pair !== null && pair.bUid !== null);
   /** Пара сложилась без меня — ссылка «занята» (для незнакомца и для третьего). */
@@ -470,7 +475,9 @@
         <ul class="rows">
           {#each mineRows as row (row.id)}
             <li transition:slide={{ duration: MOTION.fast }}>
-              <span class="rname">{row.name}</span>
+              <!-- Подпись с видом и годом, а не голое имя: в каталоге 148 имён носят по
+                   несколько разных вещей, и две строки выглядели одной (`bugs/126`, №032 В1=В). -->
+              <span class="rname">{row.label}</span>
               <span class="rval"><b>{ratings.get(row.id)}</b>/10</span>
               <button type="button" class="rm" title={ui.remove} aria-label={ui.remove} onclick={() => void unrate(row.id)}>✕</button>
             </li>
@@ -946,7 +953,11 @@
   }
   .rows li {
     display: flex;
-    align-items: center;
+    /*
+     * По ВЕРХУ, а не по центру (`bugs/120`): название переносится на несколько строк, и при
+     * `center` оценка и «✕» уплыли бы на середину имени.
+     */
+    align-items: flex-start;
     gap: 0.5rem;
     padding: 0.32rem 0;
     font-size: 0.84rem;
@@ -955,12 +966,17 @@
   .rows li + li {
     border-top: 1px dashed var(--edge);
   }
+  /*
+   * 🔴 ЗАКОН ВЛАДЕЛЬЦА 2026-08-14: «названия не должны обрезаться троеточием, всегда полностью
+   * влазят — ЭТО ЗАКОН. если длинное — карточка растет по высоте». Поэтому здесь НЕТ и не
+   * может быть `white-space: nowrap`, `text-overflow: ellipsis`, `-webkit-line-clamp`
+   * (`bugs/120`). Строка свободно переносится, панель растёт.
+   * Стережёт `tools/probe-test-guest-live.mjs` — пиксельно, на 390 и 1440.
+   */
   .rows .rname {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
   }
   .rows .rval {
     flex: none;

@@ -15,7 +15,7 @@
 
 import { error } from '@sveltejs/kit';
 import { TESTS, TEST_SLUGS, CARD_CHROME, TEST_FOOT, type TestSlug, type TestCopy } from '$lib/content/test-copy';
-import { buildTestQueue, queueLengthFor, TEST_TARGET } from '$lib/content/test-set';
+import { buildTestQueue, kindLabelFor, queueLengthFor, rowLabel, TEST_TARGET } from '$lib/content/test-set';
 import { DIMS } from '$lib/content/dims-source';
 import { LANGS, X_DEFAULT, type Lang } from '$lib/content/langs';
 import { SITE_ORIGIN } from '$lib/site';
@@ -40,6 +40,12 @@ export interface TestCard {
   name: string;
   year: string;
   rates: number;
+  /**
+   * Подпись объекта В СТРОКЕ: «имя · Вид, год» (`bugs/126`, №032 В1 = В). Карточка вопроса
+   * показывает те же три части по отдельности и этим полем не пользуется — оно для панели и
+   * для строк результата, где иначе два разных произведения выглядят одной строкой.
+   */
+  label: string;
 }
 
 export interface TestPageData {
@@ -68,13 +74,20 @@ export function load({ params }: { params: { lang: string; slug: string } }): Te
     slug,
     copy: TESTS[slug][lang],
     chrome: CARD_CHROME[lang],
-    queue: buildTestQueue(DIMS, queueLengthFor(slug)).map((e) => ({
-      id: e.id,
-      kind: e.kind[lang],
-      name: e.name[lang],
-      year: e.year,
-      rates: e.rates,
-    })),
+    queue: buildTestQueue(DIMS, queueLengthFor(slug)).map((e) => {
+      // Вид берём КАНОНИЧЕСКИЙ, а не сырое поле каталога: там регистр вразнобой и невидимые
+      // знаки (`plans/48` шаг 0). На карточке это прячет капитель, в строке — нет.
+      const kind = kindLabelFor(e.kind, lang);
+      const name = e.name[lang];
+      return {
+        id: e.id,
+        kind,
+        name,
+        year: e.year,
+        rates: e.rates,
+        label: rowLabel({ name, kind, year: e.year }),
+      };
+    }),
     target: TEST_TARGET[slug],
     foot: TEST_FOOT[lang],
     canonical: href(lang),
