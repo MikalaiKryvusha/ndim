@@ -16,8 +16,6 @@
 //   node tools/migrate/02-run.mjs                # песочница migration-sandbox (по умолчанию)
 //   node tools/migrate/02-run.mjs --production   # БОЕВАЯ база — только с go владельца
 
-import { readFileSync } from 'node:fs';
-
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
@@ -26,18 +24,21 @@ import {
   migrateProfile,
   migrateSuggestion,
 } from '../../src/lib/migration/transform.ts';
+import { serviceAccount } from '../lib/credentials.mjs';
+import { CONTOURS } from '../lib/contours.mjs';
 
-const PROJECT_ID = 'ndim-space';
+// 🔑 Проект и база боя — из реестра контуров, ключ — из `.env` (`bugs/132`). Прежние литералы
+// (`(default)` и файл `sync-server/secrets/sa.json`) пережили и переезд базы, и вынос ключей.
+const PROJECT_ID = CONTOURS.prod.project;
 const SANDBOX_DB = 'sandbox2';
-const KEY_PATH = 'sync-server/secrets/sa.json';
 /** Firestore принимает не больше 500 операций в батче. */
 const BATCH_LIMIT = 400;
 
 const production = process.argv.includes('--production');
-const databaseId = production ? '(default)' : SANDBOX_DB;
+const databaseId = production ? CONTOURS.prod.database : SANDBOX_DB;
 
 initializeApp({
-  credential: cert(JSON.parse(readFileSync(KEY_PATH, 'utf8'))),
+  credential: cert(serviceAccount('prod')),
   projectId: PROJECT_ID,
 });
 

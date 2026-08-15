@@ -20,9 +20,11 @@
  * Выход:  0 — чисто; 1 — есть провалы.
  */
 import { chromium } from 'playwright';
+import { CONTOURS } from './lib/contours.mjs';
 
-const STAGE = { name: 'СТЕЙДЖ', base: 'https://ndim-stage.web.app', own: 'ndim-stage', alien: 'ndim-space' };
-const PROD = { name: 'БОЙ', base: 'https://ndimspace.app', own: 'ndim-space', alien: 'ndim-stage' };
+// Адреса и проекты — из реестра контуров: он один и сверяет себя с приложением.
+const STAGE = { name: CONTOURS.stage.title, base: CONTOURS.stage.site, own: CONTOURS.stage.project, alien: CONTOURS.prod.project };
+const PROD = { name: CONTOURS.prod.title, base: CONTOURS.prod.site, own: CONTOURS.prod.project, alien: CONTOURS.stage.project };
 
 const fails = [];
 const ok = (what) => console.log(`  ✅ ${what}`);
@@ -50,7 +52,7 @@ async function inspect(contour, browser) {
 
 	// `/ru` — лендинг: он поднимает Firebase, потому что показывает живые числа витрины.
 	//
-	// ⚠️ Ждать `networkidle` здесь НЕЛЬЗЯ, и это проверено: Firestore держит長ое соединение
+	// ⚠️ Ждать `networkidle` здесь НЕЛЬЗЯ, и это проверено: Firestore держит долгое соединение
 	// (WebChannel) открытым, сеть не затихает никогда, и ожидание упирается в таймаут — прибор
 	// падал бы всегда, независимо от продукта. Ждём загрузку документа и даём запросам улететь.
 	await page.goto(`${contour.base}/ru`, { waitUntil: 'domcontentloaded', timeout: 60000 });

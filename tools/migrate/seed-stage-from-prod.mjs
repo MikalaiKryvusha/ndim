@@ -72,6 +72,7 @@ import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 import { serviceAccount } from '../lib/credentials.mjs';
+import { CONTOURS } from '../lib/contours.mjs';
 
 const arg = (name, fallback) => {
 	const i = process.argv.indexOf(name);
@@ -81,10 +82,15 @@ const has = (name) => process.argv.includes(name);
 
 const APPLY = has('--apply');
 const WIPE = has('--wipe');
-const PROD_PROJECT = arg('--prod-project', 'ndim-space');
-const PROD_DATABASE = arg('--prod-database', '(default)');
-const STAGE_PROJECT = arg('--stage-project', 'ndim-stage');
-const STAGE_DATABASE = arg('--stage-database', 'ndim-db-stage');
+/*
+ * 🔑 Умолчания — из РЕЕСТРА КОНТУРОВ (`bugs/132`). Здесь стояло `--prod-database '(default)'`, и
+ * после переезда фазы 3 прибор читал бы базу, которой нет: `STATUS.md` зовёт запускать его как
+ * есть, то есть первая же сессия получила бы пустой слепок вместо данных.
+ */
+const PROD_PROJECT = arg('--prod-project', CONTOURS.prod.project);
+const PROD_DATABASE = arg('--prod-database', CONTOURS.prod.database);
+const STAGE_PROJECT = arg('--stage-project', CONTOURS.stage.project);
+const STAGE_DATABASE = arg('--stage-database', CONTOURS.stage.database);
 const REPORT = arg('--out', 'test-results/stage-seed/report.json');
 
 /**

@@ -1,5 +1,5 @@
 /**
- * 🔴 ЕДИНСТВЕННАЯ ДВЕРЬ В БОЙ — `npm run deploy`.
+ * 🔴 ЕДИНСТВЕННАЯ ДВЕРЬ ВЫКАТА — `npm run deploy` (бой) и `npm run deploy -- --stage` (стейдж).
  *
  * Существует потому, что 2026-08-15 агент трижды выкатил прод «руками» (`firebase deploy`) и
  * трижды не проверил результат под сессией. В бою оказалось приложение, которое не стартовало
@@ -10,35 +10,121 @@
  * Правило, записанное в документ, сессия нарушает — правило, встроенное в единственную дверь,
  * нарушить нечем (`AGENT_GUIDE.md` → «Журнал опыта»: убрать ловушку > страж > запись).
  *
+ * ═══ ОДНА ДВЕРЬ, ПАРАМЕТР КОНТУРА (фаза 4 `plans/53`) ═══
+ *
+ * Вторая дверь для стейджа ЗАПРЕЩЕНА планом эпика, и причина не вкусовая: два набора проверок
+ * разъезжаются через месяц, и тогда стейдж перестаёт проверять то, что уезжает в бой, — то есть
+ * перестаёт быть предрелизным рубежом, оставаясь им на бумаге. Поэтому контур здесь — ПАРАМЕТР, а
+ * порядок шагов один и тот же.
+ *
+ * Различия контуров ровно три, и каждое названо:
+ *   · бой обновляет снимок витрины лендинга, стейдж — нет (снимок читает БОЕВЫЕ числа и является
+ *     частью боевого артефакта; собирать его на стейдже значило бы получить ВТОРОЙ артефакт — П9);
+ *   · у стейджа есть свой страж невидимости поиску (П6), у боя его быть не должно;
+ *   · адрес, проект и конфигурация выката берутся из реестра контуров.
+ *
  * ЧТО ДЕЛАЕТ ПО ПОРЯДКУ, останавливаясь на первой же неудаче:
- *   1. `npm run build` — С ОЧИСТКОЙ (`prebuild`), иначе в бой уезжает смесь сборок: старый чанк
- *      ищет свой `globalThis.__sveltekit_<хеш>`, не находит и роняет приложение (`bugs/124`).
- *   2. ПРОВЕРКА ЦЕЛОСТНОСТИ СБОРКИ до выката: во всей `build/` обязан быть РОВНО ОДИН хеш.
- *      Это и есть машинная защита от того, что случилось.
- *   3. `firebase deploy --only hosting --project ndim-space` (оба таргета).
- *   4. `verify-prod-cache` — заголовки кеширования (`bugs/124`).
- *   5. `verify-prod-signed-in` — 🔑 СМОУК ПОД СЕССИЕЙ: вход, все пять экранов, консоль.
- *   6. `verify-prod-b4` — публичный смоук гостем.
+ *   0. 🔑 СТОП-ПРАВИЛО КОНТУРА (П8): каждая команда выката обязана НАЗЫВАТЬ проект заявленного
+ *      контура и не упоминать чужой. Проверяется ДО запуска и доказывается `--selftest`.
+ *   1. правила и индексы Firestore — ПЕРВЫМ шагом (см. ниже, почему);
+ *   2. `npm run build` — С ОЧИСТКОЙ (`prebuild`), иначе уезжает смесь сборок: старый чанк ищет
+ *      свой `globalThis.__sveltekit_<хеш>`, не находит и роняет приложение (`bugs/124`);
+ *   3. ПРОВЕРКА ЦЕЛОСТНОСТИ СБОРКИ до выката: во всей `build/` обязан быть РОВНО ОДИН хеш;
+ *   4. выкат хостинга;
+ *   5. 🔑 ЗАМЕР ПОПАДАНИЯ (П8): целевой контур отдаёт хеш ИМЕННО этой сборки, а соседний контур
+ *      остался таким, каким был до выката, — то есть выстрела не туда не случилось;
+ *   6. заголовки кеширования (`verify-prod-cache`);
+ *   7. только стейдж: `verify-stage-noindex` — контур закрыт от роботов (П6);
+ *   8. 🔑 `verify-prod-signed-in` — СМОУК ПОД СЕССИЕЙ: вход, все пять экранов, консоль;
+ *   9. `verify-prod-b4` — публичный смоук гостем.
  *
  * Выход ненулевой, если упал любой шаг: «выкатил и не проверил» больше не является достижимым
  * состоянием.
  *
- * Запуск: `npm run deploy`   (флаг `--skip-build` — только выкат уже собранного, для повтора)
+ * Запуск:
+ *   npm run deploy                  — бой
+ *   npm run deploy -- --stage       — стейдж
+ *   npm run deploy -- --skip-build  — только выкат уже собранного (повтор)
+ *   node tools/deploy.mjs --selftest — доказать стоп-правило контура, ничего не выкатывая
  */
 import { execSync } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { CONTOURS, contourFromArgv } from './lib/contours.mjs';
 
+/**
+ * СТОП-ПРАВИЛО КОНТУРА (критерий П8) — ВЕСЬ вердикт одной функцией, чтобы самопроверка судила
+ * ТЕМ ЖЕ кодом, что рабочий путь. Две копии правила разъехались бы, и самопроверка стала бы
+ * зелёной ширмой (тот же приём, что в `.claude/hooks/deploy-guard.mjs`).
+ *
+ * Что оно ловит: команду выката, целящуюся не в тот контур, который дверь объявила. Самый
+ * опасный исход двухконтурной схемы — выкат стейджевой правки в БОЙ по забытому флагу, и стоить
+ * он будет ровно столько же, сколько стоил `bugs/124`.
+ */
+export function targetFits(contour, command) {
+	const alien = Object.values(CONTOURS).find((item) => item.name !== contour.name);
+	const namesOwn = new RegExp(`--project[\\s=]+${contour.project}\\b`).test(command);
+	const namesAlien = new RegExp(`\\b${alien.project}\\b`).test(command);
+	// Конфигурация обязательна ровно у того контура, у которого она есть: у боя `firebase.json`
+	// подхватывается сам, и требовать `--config` значило бы требовать выдуманного флага.
+	const configOk = contour.config === null
+		? !/--config/.test(command)
+		: new RegExp(`--config[\\s=]+${contour.config.replace('.', '\\.')}\\b`).test(command);
+	return namesOwn && !namesAlien && configOk;
+}
+
+if (process.argv.includes('--selftest')) {
+	const cases = [
+		[CONTOURS.prod, 'firebase deploy --only hosting --project ndim-space', true, 'бой в бой'],
+		[CONTOURS.prod, 'firebase deploy --only hosting --project ndim-stage', false, '🔴 бой целится в стейдж'],
+		[CONTOURS.prod, 'firebase deploy --only hosting', false, 'бой без явного проекта'],
+		[CONTOURS.stage, 'firebase deploy --config firebase.stage.json --project ndim-stage --only hosting', true, 'стейдж в стейдж'],
+		[CONTOURS.stage, 'firebase deploy --project ndim-stage --only hosting', false, '🔴 стейдж без своего конфига (полез бы в боевую базу)'],
+		[CONTOURS.stage, 'firebase deploy --config firebase.stage.json --project ndim-space --only hosting', false, '🔴 стейдж целится в бой'],
+		[CONTOURS.prod, 'firebase deploy --config firebase.stage.json --project ndim-space --only hosting', false, '🔴 бой с чужим конфигом'],
+		/*
+		 * 🔑 СЛУЧАЙ, РАДИ КОТОРОГО СУЩЕСТВУЕТ ПРОВЕРКА ЧУЖОГО ИМЕНИ, и он найден мутацией: без него
+		 * снятие `!namesAlien` оставляло самопроверку ЗЕЛЁНОЙ — то есть строка правила ничем не
+		 * охранялась. Промах выглядит так: проект назван свой, а таргет хостинга — соседнего
+		 * контура (`--only hosting:<сайт>`). Проверка «свой проект назван» его пропускает.
+		 */
+		[CONTOURS.prod, 'firebase deploy --only hosting:ndim-stage --project ndim-space', false, '🔴 проект боевой, а таргет хостинга — стейджевый сайт'],
+	];
+	let bad = 0;
+	for (const [contour, command, mustPass, label] of cases) {
+		const got = targetFits(contour, command);
+		const good = got === mustPass;
+		if (!good) bad += 1;
+		console.log(`  ${good ? '✅' : '❌'} ${label}: ${got ? 'пропущено' : 'ОСТАНОВЛЕНО'}`);
+	}
+	console.log(`\nпроверок ${cases.length} · провалов ${bad}`);
+	process.exit(bad === 0 ? 0 : 1);
+}
+
+const CONTOUR = contourFromArgv();
 const skipBuild = process.argv.includes('--skip-build');
 
 function run(title, command) {
-  console.log(`\n══ ${title} ══\n$ ${command}`);
-  try {
-    execSync(command, { stdio: 'inherit' });
-  } catch {
-    console.error(`\n🔴 ШАГ ПРОВАЛЕН: ${title}. Выкат остановлен.`);
-    process.exit(1);
-  }
+	console.log(`\n══ ${title} ══\n$ ${command}`);
+	try {
+		execSync(command, { stdio: 'inherit' });
+	} catch {
+		console.error(`\n🔴 ШАГ ПРОВАЛЕН: ${title}. Выкат остановлен.`);
+		process.exit(1);
+	}
+}
+
+/** Выкат Firebase в НАЗВАННЫЙ контур: команда собирается из реестра и проверяется стоп-правилом. */
+function firebase(title, only) {
+	const parts = ['firebase', 'deploy'];
+	if (CONTOUR.config !== null) parts.push('--config', CONTOUR.config);
+	parts.push('--project', CONTOUR.project, '--only', only);
+	const command = parts.join(' ');
+	if (!targetFits(CONTOUR, command)) {
+		console.error(`\n🔴 СТОП-ПРАВИЛО КОНТУРА (П8): команда не целится в «${CONTOUR.title}».\n   ${command}`);
+		process.exit(1);
+	}
+	run(title, command);
 }
 
 /**
@@ -47,39 +133,54 @@ function run(title, command) {
  * `globalThis.__sveltekit_<хеш>` объявляет HTML, а читают его чанки. Два разных хеша в одной
  * папке означают файлы от РАЗНЫХ сборок — ровно то, что уехало в бой 2026-08-15 и уронило
  * приложение у всех, кто открыл его свежим браузером.
+ *
+ * Возвращает единственный хеш — им же ниже судится, ТУДА ЛИ уехала сборка.
  */
 function checkBuildIntegrity() {
-  console.log('\n══ целостность сборки: один хеш на всю папку ══');
-  const hashes = new Map();
-  const walk = (dir) => {
-    for (const name of readdirSync(dir)) {
-      const path = join(dir, name);
-      if (statSync(path).isDirectory()) {
-        walk(path);
-        continue;
-      }
-      if (!/\.(js|html)$/.test(name)) continue;
-      const text = readFileSync(path, 'utf8');
-      for (const found of text.matchAll(/__sveltekit_([a-z0-9]+)/g)) {
-        const list = hashes.get(found[1]) ?? [];
-        if (list.length < 3) list.push(path);
-        hashes.set(found[1], list);
-      }
-    }
-  };
-  walk('build');
+	console.log('\n══ целостность сборки: один хеш на всю папку ══');
+	const hashes = new Map();
+	const walk = (dir) => {
+		for (const name of readdirSync(dir)) {
+			const path = join(dir, name);
+			if (statSync(path).isDirectory()) {
+				walk(path);
+				continue;
+			}
+			if (!/\.(js|html)$/.test(name)) continue;
+			const text = readFileSync(path, 'utf8');
+			for (const found of text.matchAll(/__sveltekit_([a-z0-9]+)/g)) {
+				const list = hashes.get(found[1]) ?? [];
+				if (list.length < 3) list.push(path);
+				hashes.set(found[1], list);
+			}
+		}
+	};
+	walk('build');
 
-  if (hashes.size === 0) {
-    console.error('🔴 в сборке нет ни одного `__sveltekit_<хеш>` — это не собранное приложение.');
-    process.exit(1);
-  }
-  if (hashes.size > 1) {
-    console.error(`🔴 В СБОРКЕ ${hashes.size} РАЗНЫХ ХЕША — это смесь сборок, в бой её пускать нельзя (bugs/124):`);
-    for (const [hash, files] of hashes) console.error(`   ${hash} → ${files.join(', ')}`);
-    console.error('   Лечение: `npm run build` (он теперь чистит build/ сам) и повторить.');
-    process.exit(1);
-  }
-  console.log(`✅ хеш один: ${[...hashes.keys()][0]}`);
+	if (hashes.size === 0) {
+		console.error('🔴 в сборке нет ни одного `__sveltekit_<хеш>` — это не собранное приложение.');
+		process.exit(1);
+	}
+	if (hashes.size > 1) {
+		console.error(`🔴 В СБОРКЕ ${hashes.size} РАЗНЫХ ХЕША — это смесь сборок, выкатывать её нельзя (bugs/124):`);
+		for (const [hash, files] of hashes) console.error(`   ${hash} → ${files.join(', ')}`);
+		console.error('   Лечение: `npm run build` (он теперь чистит build/ сам) и повторить.');
+		process.exit(1);
+	}
+	const hash = [...hashes.keys()][0];
+	console.log(`✅ хеш один: ${hash}`);
+	return hash;
+}
+
+/** Хеш рантайма, который контур отдаёт ЖИВЫМ людям прямо сейчас. `null` — не удалось прочитать. */
+async function liveHash(site) {
+	try {
+		const response = await fetch(`${site}/ru`, { redirect: 'follow' });
+		const html = await response.text();
+		return html.match(/__sveltekit_([a-z0-9]+)/)?.[1] ?? null;
+	} catch {
+		return null;
+	}
 }
 
 /*
@@ -98,16 +199,59 @@ function checkBuildIntegrity() {
  * команда `--only firestore:rules` завершается УСПЕХОМ и не катит НИЧЕГО (firebase-tools#10447) —
  * самый неприятный вид отказа: зелёный.
  */
-run('правила и индексы Firestore', 'firebase deploy --only firestore --project ndim-space');
+console.log(`\n🎯 КОНТУР ВЫКАТА: ${CONTOUR.title} · проект ${CONTOUR.project} · база ${CONTOUR.database}\n   сайт ${CONTOUR.site}`);
+
+// Снимок соседнего контура ДО выката: им доказывается, что мы в него не выстрелили (П8).
+const alien = Object.values(CONTOURS).find((item) => item.name !== CONTOUR.name);
+const alienBefore = await liveHash(alien.site);
+console.log(`   соседний контур (${alien.title}) до выката: ${alienBefore ?? 'не прочитан'}`);
+
+firebase('правила и индексы Firestore', 'firestore');
 
 if (!skipBuild) {
-  run('снимок витрины лендинга (число стареет)', 'node tools/snapshot-landing-metric.mjs');
-  run('сборка НАЧИСТО', 'npm run build');
+	/*
+	 * Снимок витрины — только для боя. Он читает БОЕВЫЕ числа и порождает файл исходника; собрав
+	 * его под стейдж, мы получили бы второй продакшен-артефакт, а критерий П9 требует одного.
+	 */
+	if (CONTOUR.name === 'prod') {
+		run('снимок витрины лендинга (число стареет)', 'node tools/snapshot-landing-metric.mjs');
+	} else {
+		console.log('\n══ снимок витрины лендинга ══\n⏭  пропущен: витрина боевая, и её слепок — часть БОЕВОГО артефакта (П9).');
+	}
+	run('сборка НАЧИСТО', 'npm run build');
 }
-checkBuildIntegrity();
-run('выкат в бой', 'firebase deploy --only hosting --project ndim-space');
-run('заголовки кеширования (bugs/124)', 'node tools/verify-prod-cache.mjs');
-run('🔑 СМОУК ПОД СЕССИЕЙ — вход и все экраны', 'node tools/verify-prod-signed-in.mjs');
-run('публичный смоук гостем', 'node tools/verify-prod-b4.mjs');
+const builtHash = checkBuildIntegrity();
 
-console.log('\n✅ ВЫКАТ ЗАВЕРШЁН И ПРОВЕРЕН: сборка целая, заголовки верны, приложение в бою работает под сессией.');
+firebase(`выкат в ${CONTOUR.title}`, 'hosting');
+
+/*
+ * 🔑 ЗАМЕР ПОПАДАНИЯ (П8) — «контур цели совпал с заявленным» перестаёт быть намерением и
+ * становится числом. Проверяется ПАРА, и без второй половины первая ничего не стоит:
+ *   · целевой контур отдаёт ИМЕННО эту сборку — значит выкат дошёл;
+ *   · соседний контур остался тем, чем был, — значит выстрела не туда не случилось.
+ * Сравнение с «до», а не с «не равно нашему хешу»: одну и ту же сборку законно выкатить в оба
+ * контура подряд, и жёсткое неравенство краснело бы на исправной работе.
+ */
+console.log('\n══ 🔑 замер попадания в контур (П8) ══');
+const targetAfter = await liveHash(CONTOUR.site);
+const alienAfter = await liveHash(alien.site);
+console.log(`  цель  ${CONTOUR.title}: сборка ${builtHash} · сайт отдаёт ${targetAfter ?? 'не прочитан'}`);
+console.log(`  сосед ${alien.title}: было ${alienBefore ?? 'не прочитан'} · стало ${alienAfter ?? 'не прочитан'}`);
+if (targetAfter !== builtHash) {
+	console.error(`\n🔴 ${CONTOUR.title} отдаёт НЕ ту сборку, которую мы собрали. Выкат не дошёл до цели.`);
+	process.exit(1);
+}
+if (alienBefore !== null && alienAfter !== alienBefore) {
+	console.error(`\n🔴 СОСЕДНИЙ КОНТУР (${alien.title}) ИЗМЕНИЛСЯ — выкат ушёл не туда. Это авария класса П8.`);
+	process.exit(1);
+}
+console.log('  ✅ сборка легла в заявленный контур, соседний не тронут');
+
+run('заголовки кеширования (bugs/124)', `node tools/verify-prod-cache.mjs --base ${CONTOUR.site}`);
+if (CONTOUR.name === 'stage') {
+	run('стейдж закрыт от роботов (П6)', 'node tools/verify-stage-noindex.mjs');
+}
+run('🔑 СМОУК ПОД СЕССИЕЙ — вход и все экраны', `node tools/verify-prod-signed-in.mjs --base ${CONTOUR.site}`);
+run('публичный смоук гостем', `node tools/verify-prod-b4.mjs --base ${CONTOUR.site}`);
+
+console.log(`\n✅ ВЫКАТ В ${CONTOUR.title} ЗАВЕРШЁН И ПРОВЕРЕН: сборка целая, легла в свой контур, заголовки верны, приложение работает под сессией.`);

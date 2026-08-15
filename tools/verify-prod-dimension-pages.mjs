@@ -9,9 +9,12 @@
  * боем лежат хостинг, его правила переписывания и `cleanUrls` — и ровно там прячутся дефекты,
  * которых на диске не видно (адрес без `.html`, редиректы, кэш).
  *
- * Запуск: node tools/verify-prod-dimension-pages.mjs
+ * Запуск: node tools/verify-prod-dimension-pages.mjs [--base https://ndim-stage.web.app]
+ * (`NDIM_ORIGIN` продолжает работать — им прибор запускали до появления контуров.)
  */
-const ORIGIN = process.env.NDIM_ORIGIN ?? 'https://ndimspace.app';
+import { contourFromArgv } from './lib/contours.mjs';
+
+const ORIGIN = process.env.NDIM_ORIGIN ?? contourFromArgv().site;
 
 let failed = 0;
 let passed = 0;

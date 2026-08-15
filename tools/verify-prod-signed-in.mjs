@@ -36,10 +36,21 @@
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { contourFromArgv } from './lib/contours.mjs';
 
-const baseArg = process.argv.indexOf('--base');
-const BASE = baseArg === -1 ? 'https://ndimspace.app' : process.argv[baseArg + 1];
-const OUT = 'test-results/prod-signed-in';
+/*
+ * 🔑 КОНТУР ВЫБИРАЕТСЯ ОДИН РАЗ И ЦЕЛИКОМ (`plans/53` фаза 4).
+ *
+ * Прежняя редакция брала адрес из `--base`, а ключ для уборки — БОЕВОЙ константой. Прогон по
+ * стейджу заводил стейджевую учётку и пытался удалить её боевым ключом: удаление молча не
+ * проходило, а прибор печатал предупреждение мелким шрифтом. То есть «убирает за собой» держалось
+ * на том, что прибор никогда не запускали в другом контуре, — ровно до дня, когда контуров стало
+ * два. Теперь адрес, ключ и база приезжают ОДНИМ объектом (`tools/lib/contours.mjs`), и взять их
+ * из разных контуров нечем.
+ */
+const CONTOUR = contourFromArgv();
+const BASE = CONTOUR.site;
+const OUT = `test-results/prod-signed-in${CONTOUR.name === 'prod' ? '' : '-' + CONTOUR.name}`;
 mkdirSync(OUT, { recursive: true });
 
 const CONFIGS = [
@@ -73,7 +84,7 @@ const tokens = new Set();
 
 for (const cfg of CONFIGS) {
   const tag = `${cfg.width}-${cfg.theme}`;
-  console.log(`\n▶ бой ${BASE} · ${cfg.theme} ${cfg.width}×${cfg.height}`);
+  console.log(`\n▶ ${CONTOUR.title} ${BASE} · ${cfg.theme} ${cfg.width}×${cfg.height}`);
 
   const ctx = await browser.newContext({ viewport: { width: cfg.width, height: cfg.height }, locale: 'ru-RU' });
   await ctx.addInitScript((theme) => {
@@ -216,9 +227,9 @@ for (const cfg of CONFIGS) {
 await browser.close();
 
 // ── 🧹 УБОРКА: анонимные учётки, заведённые прогоном ──────────────────────────────────────
-// Публичный веб-ключ боевого проекта — тот же, что в `src/lib/firebase.ts:34` и
-// `probe-prod-stats.mjs:45`. Не секрет по устройству: он лежит в бандле у каждого посетителя.
-const API_KEY = 'AIzaSyCZsGkY0Lw_OJ35QhRumcD5RzNJUFsAsww';
+// Публичный веб-ключ ТОГО КОНТУРА, в который ходили. Не секрет по устройству: он лежит в бандле у
+// каждого посетителя, а первоисточник — `src/lib/firebase.ts`, с которым реестр сверяется сам.
+const API_KEY = CONTOUR.apiKey;
 let removed = 0;
 for (const idToken of tokens) {
   const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${API_KEY}`, {

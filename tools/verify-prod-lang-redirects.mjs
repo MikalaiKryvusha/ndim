@@ -21,13 +21,15 @@
  *      `oobCode` на голый адрес). Не проверка, а замер: поведение решает платформа, мы его
  *      фиксируем числом, а не гадаем.
  *
- * Запуск:  node tools/verify-prod-lang-redirects.mjs [--host https://ndimspace.app]
+ * Запуск:  node tools/verify-prod-lang-redirects.mjs [--base https://ndim-stage.web.app]
+ *          (`--host` понимается по-прежнему — им прибор запускали до появления контуров)
  * Выход:   0 — чисто; 1 — есть провалы.
  */
+import { contourFromArgv } from './lib/contours.mjs';
 
 const HOST = process.argv.includes('--host')
   ? process.argv[process.argv.indexOf('--host') + 1]
-  : 'https://ndimspace.app';
+  : contourFromArgv().site;
 
 const OLD_PATHS = [
   '/delete-account',

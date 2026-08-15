@@ -32,22 +32,23 @@
 //   node tools/migrate/05-dims-catalog.mjs --production            # СУХОЙ ПРОГОН (не пишет)
 //   node tools/migrate/05-dims-catalog.mjs --production --apply    # записать
 
-import { readFileSync } from 'node:fs';
-
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-const PROJECT_ID = 'ndim-space';
+import { serviceAccount } from '../lib/credentials.mjs';
+import { CONTOURS } from '../lib/contours.mjs';
+
+// Проект, база и ключ — из общих источников (`bugs/132`), а не литералами.
+const PROJECT_ID = CONTOURS.prod.project;
 const SANDBOX_DB = 'sandbox2';
-const KEY_PATH = 'sync-server/secrets/sa.json';
 const BATCH_LIMIT = 400;
 
 const production = process.argv.includes('--production');
 const apply = process.argv.includes('--apply');
-const databaseId = production ? '(default)' : SANDBOX_DB;
+const databaseId = production ? CONTOURS.prod.database : SANDBOX_DB;
 
 initializeApp({
-  credential: cert(JSON.parse(readFileSync(KEY_PATH, 'utf8'))),
+  credential: cert(serviceAccount('prod')),
   projectId: PROJECT_ID,
 });
 const db = getFirestore(databaseId);

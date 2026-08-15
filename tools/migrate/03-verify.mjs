@@ -14,23 +14,23 @@
 //   node tools/migrate/03-verify.mjs               # песочница
 //   node tools/migrate/03-verify.mjs --production  # боевая база
 
-import { readFileSync } from 'node:fs';
-
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 import { computeRelation } from '../../src/lib/similarity/similarity.ts';
 import { decodeLegacyRelation } from '../../src/lib/similarity/legacy.ts';
 import { parseLegacyTop } from '../../src/lib/migration/transform.ts';
+import { serviceAccount } from '../lib/credentials.mjs';
+import { CONTOURS } from '../lib/contours.mjs';
 
-const PROJECT_ID = 'ndim-space';
-const KEY_PATH = 'sync-server/secrets/sa.json';
+// Проект, база и ключ — из общих источников (`bugs/132`), а не литералами.
+const PROJECT_ID = CONTOURS.prod.project;
 
 const production = process.argv.includes('--production');
-const databaseId = production ? '(default)' : 'sandbox2';
+const databaseId = production ? CONTOURS.prod.database : 'sandbox2';
 
 initializeApp({
-  credential: cert(JSON.parse(readFileSync(KEY_PATH, 'utf8'))),
+  credential: cert(serviceAccount('prod')),
   projectId: PROJECT_ID,
 });
 const db = getFirestore(databaseId);

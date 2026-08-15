@@ -17,13 +17,16 @@
  * число сиротских измерений в своём логе. Поэтому прибор судит так: расхождение обязано быть
  * НЕОТРИЦАТЕЛЬНЫМ и небольшим, а НЕ нулевым.
  *
- * Запуск:  node tools/verify-prod-dim-ratings.mjs
+ * Запуск:  node tools/verify-prod-dim-ratings.mjs [--stage]
  * Выход:   0 — сошлось; 1 — есть провалы.
  */
-const API_KEY = 'AIzaSyCZsGkY0Lw_OJ35QhRumcD5RzNJUFsAsww';
-// Имя боевой базы — из общей константы, которая сверяет себя с приложением (`tools/lib/contours.mjs`).
-const { docsUrl } = await import('./lib/contours.mjs');
-const DOCS = docsUrl();
+// Контур целиком — проект, база и ключ входа приезжают ОДНИМ объектом, взять их из разных
+// контуров нечем (`tools/lib/contours.mjs`, оно же сверяет себя с приложением).
+const { contourFromArgv, docsUrl } = await import('./lib/contours.mjs');
+const CONTOUR = contourFromArgv();
+const API_KEY = CONTOUR.apiKey;
+const DOCS = docsUrl(CONTOUR);
+console.log(`\n🎯 контур: ${CONTOUR.title} · база ${CONTOUR.database}`);
 
 let failed = 0;
 let passed = 0;

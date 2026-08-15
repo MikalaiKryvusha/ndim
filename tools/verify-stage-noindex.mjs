@@ -19,8 +19,10 @@
  * Запуск: node tools/verify-stage-noindex.mjs
  * Выход:  0 — чисто; 1 — есть провалы.
  */
-const STAGE = 'https://ndim-stage.web.app';
-const PROD = 'https://ndimspace.app';
+import { CONTOURS } from './lib/contours.mjs';
+
+const STAGE = CONTOURS.stage.site;
+const PROD = CONTOURS.prod.site;
 
 /** Адреса выбраны так, чтобы покрыть РАЗНЫЕ типы ответа, а не три копии одного. */
 const PATHS = [
