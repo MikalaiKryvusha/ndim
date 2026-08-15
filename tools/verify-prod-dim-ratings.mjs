@@ -21,7 +21,9 @@
  * Выход:   0 — сошлось; 1 — есть провалы.
  */
 const API_KEY = 'AIzaSyCZsGkY0Lw_OJ35QhRumcD5RzNJUFsAsww';
-const DOCS = 'https://firestore.googleapis.com/v1/projects/ndim-space/databases/(default)/documents';
+// Имя боевой базы — из общей константы, которая сверяет себя с приложением (`tools/lib/contours.mjs`).
+const { docsUrl } = await import('./lib/contours.mjs');
+const DOCS = docsUrl();
 
 let failed = 0;
 let passed = 0;

@@ -47,7 +47,11 @@ const API_KEY = 'AIzaSyCZsGkY0Lw_OJ35QhRumcD5RzNJUFsAsww';
 const KEEP = process.argv.includes('--keep');
 const DAYS = Number(process.argv[process.argv.indexOf('--days') + 1]) || 5;
 
-const DOCS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
+// Имя боевой базы живёт в ОДНОМ месте и сверяется с приложением при каждом импорте
+// (`tools/lib/contours.mjs`): после переезда `(default)` → `ndim-db-prod` литерал здесь означал бы
+// поход в базу, которой больше нет.
+const { docsUrl } = await import('./lib/contours.mjs');
+const DOCS = docsUrl();
 
 /** Разворачивает значение Firestore REST в обычное JS-значение (нужны только скаляры и карты). */
 function plain(value) {

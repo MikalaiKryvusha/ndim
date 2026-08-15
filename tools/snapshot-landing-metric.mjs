@@ -39,6 +39,7 @@
  * боевой веб-конфиг Firebase публичен по устройству, а документ читается без авторизации).
  */
 import { writeFileSync } from 'node:fs';
+import { docsUrl } from './lib/contours.mjs';
 
 /** Боевой проект и его публичный веб-ключ — те же, что в `src/lib/firebase.ts`. */
 const PROJECT = 'ndim-space';
@@ -46,8 +47,8 @@ const API_KEY = 'AIzaSyCZsGkY0Lw_OJ35QhRumcD5RzNJUFsAsww';
 const OUT = 'src/lib/content/landing-metric.ts';
 
 const url =
-  `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/` +
-  `space/public_metrics?key=${API_KEY}`;
+  `${docsUrl()}/` +
+		`space/public_metrics?key=${API_KEY}`;
 
 const response = await fetch(url);
 if (!response.ok) {
@@ -87,7 +88,7 @@ async function readStats() {
   const { idToken } = await signUp.json();
   try {
     const stats = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/space/stats`,
+      `${docsUrl()}/space/stats`,
       { headers: { Authorization: `Bearer ${idToken}` } },
     );
     if (!stats.ok) return null;

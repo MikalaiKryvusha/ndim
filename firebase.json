@@ -75,10 +75,18 @@
       ]
     }
   ],
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
+  "firestore": [
+    {
+      "//": "МАССИВНАЯ форма обязательна с 2026-08-16: бой переехал в ИМЕНОВАННУЮ базу",
+      "//2": "ndim-db-prod (plans/53, фаза 3), а одиночная форма адресует только `(default)`,",
+      "//3": "которой больше не существует — правила уехали бы в никуда с кодом успеха.",
+      "//4": "🔴 ПОДТАРГЕТ НЕ БРАТЬ: `--only firestore:rules` при массивной форме завершается",
+      "//5": "успехом и не катит НИЧЕГО (firebase-tools#10447). Только `--only firestore` целиком.",
+      "database": "ndim-db-prod",
+      "rules": "firestore.rules",
+      "indexes": "firestore.indexes.json"
+    }
+  ],
   "storage": {
     "//": "ЧЕРНОВИК правил для ЭМУЛЯТОРА стенда (bugs/14). В бой не выпускать без bugs/04.",
     "rules": "storage.rules"

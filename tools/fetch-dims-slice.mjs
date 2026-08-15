@@ -39,9 +39,10 @@ import { writeFileSync } from 'node:fs';
 // (`dim-slug.test.ts` — ворота шага 1 `plans/36`). Копии функции в проекте быть не должно —
 // разъехавшиеся копии дали бы разные адреса у инструмента и у сборки, и никто бы не заметил.
 import { slugify } from '../src/lib/content/dim-slug.ts';
+import { docsUrl } from './lib/contours.mjs';
 
 const API_KEY = 'AIzaSyCZsGkY0Lw_OJ35QhRumcD5RzNJUFsAsww';
-const DOCS = 'https://firestore.googleapis.com/v1/projects/ndim-space/databases/(default)/documents';
+const DOCS = docsUrl();
 const ALL = process.argv.includes('--all');
 const COUNT = Number(process.argv[process.argv.indexOf('--count') + 1]) || 50;
 
