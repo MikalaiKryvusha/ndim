@@ -33,6 +33,7 @@ import {
 	readMd,
 	parseMeta,
 	parseInterview,
+	lintSelfContained,
 	mdToHtml,
 	inline,
 	bodyHash,
@@ -1003,7 +1004,32 @@ async function listen(server) {
 }
 
 /** Открывает ОДИН документ: страница, браузер, сигнал, ожидание ответа. */
+/**
+ * ПРЕДПОЛЁТНАЯ ПРОВЕРКА: вопрос, отсылающий за своим содержимым наружу, страницу не поднимает.
+ * Куплена словом владельца 2026-08-15 — «не собираюсь скролить этот длинный документ»
+ * (`lintSelfContained` в `lib/review-core.mjs` несёт полную историю и цену).
+ */
+function preflight(docPath) {
+	const text = readMd(docPath);
+	const bad = lintSelfContained(parseInterview(docPath, text), text);
+	if (!bad.length) return true;
+	console.error('\n⛔ СТРАНИЦА НЕ ПОДНЯТА: вопрос отсылает за своим содержимым НАРУЖУ.\n');
+	for (const b of bad) {
+		console.error(`   ${b.label} — ${relative(ROOT, docPath)}:${b.line}`);
+		console.error(`      ${b.text}`);
+	}
+	console.error(
+		'\n   Слово владельца, ради которого стоит эта проверка:\n' +
+			'   «Пиши прямо в вопросе то, что предлагаешь взять. Я не собираюсь скролить этот\n' +
+			'    длинный документ и искать „вон ту формулу“».\n\n' +
+			'   Лечение: перенеси текст ВНУТРЬ вопроса. Если отсылка законна — объяви её в строке:\n' +
+			'   <!-- ССЫЛКА-ОК: причина -->\n',
+	);
+	return false;
+}
+
 async function cmdOpen(docPath) {
+	if (!preflight(docPath)) return 1;
 	const server = startServer({
 		docPath,
 		// Сервер одного документа живёт ровно до записи решения: поднялся → записал → умер.
@@ -1080,6 +1106,9 @@ const plural = (n, a, b, c) => {
 
 /** Снимает страницу в файл — самодостаточную и открывающуюся офлайн. */
 function cmdRender(docPath) {
+	// Та же предполётная проверка, что и у `open`: офлайн-страница отнимает время владельца
+	// ровно так же, как живая, и отсылка «см. выше» в ней ничем не лучше.
+	if (!preflight(docPath)) return 1;
 	const outDir = join(ROOT, 'test-results', 'owner-reviews');
 	mkdirSync(outDir, { recursive: true });
 	const out = opt('--out', join(outDir, basename(docPath).replace(/\.md$/, '.html')));
