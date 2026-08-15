@@ -38,7 +38,21 @@ const command = String(event?.tool_input?.command ?? '');
 const isTheDoor = /npm run deploy|tools[\\/]deploy\.mjs/.test(command);
 const isRawDeploy = /firebase\s+deploy/.test(command);
 
-if (isRawDeploy && !isTheDoor) {
+/**
+ * СТЕЙДЖ — ВТОРОЙ КОНТУР, и запрет его не касается (`plans/53`).
+ *
+ * Хук стережёт БОЙ: цена его правила — неработающее приложение у живых людей. У стейджа этой цены
+ * нет по устройству — там нет ни людей, ни их данных, он и существует, чтобы ломаться. Запрещать
+ * выкат туда значило бы запрещать ровно то поведение, ради которого контур построен.
+ *
+ * 🔑 Признак стейджа — ЯВНО НАЗВАННЫЙ чужой проект или его конфиг. Умолчание не считается: команда
+ * без `--project` целится туда, куда смотрит CLI, а это состояние машины, а не намерение агента.
+ * То есть послабление получает только тот, кто написал контур в команде своими руками.
+ */
+const isStageDeploy =
+  /--project[\s=]+ndim-stage\b/.test(command) || /--config[\s=]+firebase\.stage\.json\b/.test(command);
+
+if (isRawDeploy && !isTheDoor && !isStageDeploy) {
   const reason = [
     '🔴 Голый `firebase deploy` запрещён на этом проекте.',
     'Единственная дверь в бой — `npm run deploy` (tools/deploy.mjs): она собирает НАЧИСТО,',
