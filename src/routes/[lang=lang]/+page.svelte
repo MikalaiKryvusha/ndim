@@ -31,6 +31,7 @@
    */
   import { KIND_KEYS, kindTitle } from '$lib/content/dim-kind';
   import { catalogPath, hubPath } from '$lib/content/catalog-hub';
+  import { landingCopy, landingFeatures } from '$lib/content/landing-copy';
   import Icon from '$lib/ui/Icon.svelte';
   import SimilarityDemo from '$lib/ui/SimilarityDemo.svelte';
   import { track } from '$lib/data/funnel';
@@ -137,109 +138,12 @@
     if (['localhost', '127.0.0.1'].includes(location.hostname)) demoUrl = '/profile?guest=1';
   });
 
-  // ── Двуязычные строки (RU — основной, из онбординга владельца) ──
-  const t = {
-    metaTitle: {
-      ru: 'NDim Space — Знакомства нового измерения',
-      en: 'NDim Space — New Dimension Friendships',
-    },
-    metaDesc: {
-      ru: 'Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — Пространство NDim подберёт тех, с кем у Вас настоящая совместимость.',
-      en: 'Here you will find people who are really like you. Forget about endless swiping — NDim Space selects those with whom you are truly compatible.',
-    },
-    eyebrow: { ru: 'Знакомства нового измерения', en: 'New Dimension Friendships' },
-    title: { ru: 'Добро пожаловать в Пространство NDim', en: 'Welcome to the NDim Space' },
-    sub: {
-      ru: 'Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — мы подберём тех, с кем у Вас настоящая совместимость.',
-      en: "Here you will find people who are really like you. Forget about endless swiping — we'll select those with whom you are truly compatible.",
-    },
-    create: { ru: 'Создать Аккаунт', en: 'Create Account' },
-    login: { ru: 'Войти в Аккаунт', en: 'Log In' },
-    /*
-     * ── СТРОКА ВИТРИНЫ (`bugs/107`) ──────────────────────────────────────────────────────
-     * Было: «С нами уже 94 человека — и каждый день приходят новые». Хвост — утверждение о
-     * факте, опровергнутое НАШИМИ ЖЕ снимками дней (94 неизменно пять суток, +1 за три недели).
-     *
-     * 🔑 Слово владельца 2026-08-02: «ЭТО РЕКЛАМНАЯ ВИТРИНА, ОНА ДОЛЖНА ХОТЬ И ЧЕСТНЫЙ ПРОДУКТ,
-     * НО НАХВАЛИВАТЬ, ВЫСТАВЛЯТЬ В ПРИЯТНОМ ЗАМАНЧИВОМ ВЫГОДНОМ СВЕТЕ». Отсюда решение:
-     * не выкидывать хвост в пустоту и не мямлить, а СМЕНИТЬ ГЕРОЯ строки.
-     *
-     * 94 человека — наше самое слабое число, и делать его главным было ошибкой подачи.
-     * Самое сильное честное число — размер каталога: 5111 измерений, которых нет ни у кого.
-     * А малое число людей перестаёт быть слабостью, когда оно приглашение: «станьте одним из
-     * первых» — это правда при 94 и это заманчиво.
-     *
-     * ⚠️ Оба числа ЖИВЫЕ (`landing-metric.ts`, снимок перед выкатом) — литералов здесь нет,
-     * иначе это ровно `bugs/07`.
-     */
-    statsLabel: { ru: 'Пространство NDim в числах', en: 'NDim Space in numbers' },
-    statDims: { ru: 'измерений', en: 'dimensions' },
-    statRatings: { ru: 'оценок', en: 'ratings' },
-    statRelations: { ru: 'связей рассчитано', en: 'relations computed' },
-    statPeople: { ru: 'человек', en: 'people' },
-    joined: {
-      ru: 'Станьте одним из первых, кого здесь найдут',
-      en: 'Be among the first to be found here',
-    },
-    foot: {
-      ru: 'Пространство NDim · открытая платформа, сделанная с заботой о людях',
-      en: 'NDim Space · an open platform built with care for people',
-    },
-    /*
-     * ── ССЫЛКИ В КАТАЛОГ (`plans/48`, фаза 2 эпика 40) ────────────────────────────────────
-     * Это не украшение подвала, а несущая работа: до неё все 10 222 страницы каталога были
-     * недостижимы от корня сайта — робот знал адреса только из карты сайта и не приходил
-     * (Google взял 994, 9 237 висят в «обнаружена, не проиндексирована», `researches/34` §14).
-     * Отсюда же берётся обещанные «три клика»: лендинг → хаб → страница → карточка.
-     *
-     * Терминов голыми не бросаем (правка владельца 2026-08-02): не «измерения», а то, чем эти
-     * объекты являются человеку.
-     */
-    catalogTitle: {
-      ru: 'Что оценивают в Пространстве',
-      en: 'What people rate in the Space',
-    },
-    catalogLine: {
-      ru: 'Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.',
-      en: 'Ratings built from what people voted. You can look without an account.',
-    },
-    catalogAll: { ru: 'Весь каталог', en: 'The whole catalog' },
-    // Подпись переключателя темы: показываем, КУДА переключит нажатие
-    themeLabel: {
-      light: { ru: 'тёмная', en: 'dark' },
-      dark: { ru: 'светлая', en: 'light' },
-    },
-  };
-
-  const feats = [
-    {
-      tag: { ru: '01 · NDim ID', en: '01 · NDim ID' },
-      h2: { ru: 'Ваш уникальный многомерный профиль', en: 'Your unique multi-dimensional profile' },
-      p: {
-        ru: 'Заполните измерения, отражающие Вашу личность, — и позвольте алгоритму найти тех, кто разделяет Ваши ценности и интересы.',
-        en: 'Fill in the dimensions that reflect your personality, and let the algorithm find those who share your values and interests.',
-      },
-    },
-    {
-      tag: { ru: '02 · Настоящие связи', en: '02 · Real Connections' },
-      h2: {
-        ru: 'Люди, с которыми у Вас настоящая совместимость',
-        en: 'People with whom you are truly compatible',
-      },
-      p: {
-        ru: 'Мы бережно анализируем Ваш профиль и находим самых похожих на Вас людей. Начните общение с теми, кто действительно Вам подходит.',
-        en: 'We carefully analyze your profile and find the people most similar to you. Start communicating with those who are really right for you.',
-      },
-    },
-    {
-      tag: { ru: '03 · С заботой', en: '03 · With Care' },
-      h2: { ru: 'Ваш внутренний мир под защитой', en: 'Your inner world is protected' },
-      p: {
-        ru: 'Ваши оценки остаются только Вашими. Другие видят лишь то, насколько вы близки, — не то, из чего эта близость сложилась.',
-        en: 'Your ratings stay yours alone. Others see only how close you are — not what that closeness is made of.',
-      },
-    },
-  ];
+  // ── Тексты витрины ──
+  // Вынесены в `src/lib/content/landing-copy.ts` (plans/29 §4, plans/21 фаза 2): эпик plans/24
+  // переносит лендинг на адреса языков, и инлайновые литералы пришлось бы переписывать второй раз.
+  // 🔴 Правка текста витрины идёт ЧЕРЕЗ ВЫЧИТКУ ВЛАДЕЛЬЦА, а не здесь.
+  const t = landingCopy;
+  const feats = landingFeatures;
 </script>
 
 <svelte:head>

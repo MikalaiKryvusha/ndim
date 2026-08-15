@@ -1,0 +1,29 @@
+{
+	"kind": "interview",
+	"document": "plans/51_gate_texts_en.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-15T13:36:42.710Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "Б",
+			"text": "",
+			"comment": ""
+		},
+		"В3": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В4": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		}
+	}
+}
