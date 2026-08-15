@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — ворота, первый экран: четыре макета</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     ВОРОТА, ПЕРВЫЙ ЭКРАН — фаза 3 эпика plans/21, план plans/52.
+
+     Ось расхождения вариантов названа ДО вёрстки: ЧЕМ ЧЕЛОВЕК БЕРЁТСЯ ПЕРВЫМ.
+       V1 — игрой (карта сверху)
+       V2 — обещанием и игрой сразу (два столба)
+       V3 — числами (витрина первой)
+       V4 — только игрой; переход ПОЯВЛЯЕТСЯ (решение №009 В3)
+
+     🔴 Тексты НЕ выдуманы: взяты из src/lib/content/landing-copy.ts и gateCopyPhase4,
+     вычитаны владельцем (plans/29 В9=А · plans/51 В4=А). Рыбы здесь нет.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f7fb; --panel: #ffffff; --edge: #e3e9f3; --edge-soft: #eef2f9;
+    --heading: #0f1b2d; --text: #4a5a70; --muted: #8a97ab;
+    --accent: #1667d6; --accent-soft: #e8f0fd;
+    --ok: #128a5a; --ok-soft: #e6f6ee; --ok-edge: #bfe6d3;
+    --card-shadow: 0 1px 2px rgba(16,32,64,.05), 0 8px 24px rgba(16,32,64,.06);
+    --star: #f0a500; --star-off: #dbe3ee;
+  }
+  :root[data-theme="dark"] {
+    --bg: #070c16; --panel: #0e1626; --edge: #1c2942; --edge-soft: #131e33;
+    --heading: #eaf1ff; --text: #9fb1cb; --muted: #6c7f9c;
+    --accent: #2f86ff; --accent-soft: #10233f;
+    --ok: #38d39a; --ok-soft: #0d2a20; --ok-edge: #1c4c3a;
+    --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    --star: #ffc44d; --star-off: #26344c;
+  }
+
+  body {
+    font: 15px/1.55 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); padding: 96px 16px 60px;
+  }
+
+  /* ── панель управления набором (дом стиля проекта) ───────────────────── */
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel);
+    border-bottom: 1px solid var(--edge); box-shadow: var(--card-shadow);
+    font-size: 13px;
+  }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--edge); background: var(--bg); color: var(--text);
+  }
+  .picker button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: var(--muted); font-size: 12px; }
+
+  .note {
+    max-width: 980px; margin: 0 auto 16px; padding: 11px 15px;
+    background: var(--accent-soft); border: 1px solid var(--edge);
+    border-radius: 12px; font-size: 13px; line-height: 1.5; color: var(--heading);
+  }
+  .note b { color: var(--accent); }
+
+  /* ── сцена: имитация окна нужной ширины ──────────────────────────────── */
+  .stage { margin: 0 auto; transition: max-width .2s; }
+  .stage[data-w="390"] { max-width: 390px; }
+  .stage[data-w="1440"] { max-width: 1180px; }
+
+  .screen {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 20px;
+    box-shadow: var(--card-shadow); overflow: hidden;
+  }
+  /* Черта сгиба: всё выше неё человек видит без прокрутки. */
+  .fold { border-top: 2px dashed var(--accent); position: relative; margin-top: 2px; }
+  .fold::after {
+    content: 'сгиб — ниже нужна прокрутка'; position: absolute; right: 8px; top: 3px;
+    font-size: 10px; color: var(--accent); background: var(--panel); padding: 0 6px;
+  }
+
+  .pad { padding: 22px 20px; }
+  .stage[data-w="1440"] .pad { padding: 34px 40px; }
+
+  /* ── типографика витрины ─────────────────────────────────────────────── */
+  .eyebrow {
+    font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; text-align: center;
+  }
+  h1 { color: var(--heading); font-size: 27px; line-height: 1.15; text-align: center; margin: 8px 0 10px; letter-spacing: -.01em; }
+  .stage[data-w="1440"] h1 { font-size: 38px; }
+  .sub { text-align: center; font-size: 14.5px; line-height: 1.5; }
+  .stage[data-w="1440"] .sub { font-size: 16px; max-width: 680px; margin-inline: auto; }
+  .pain { text-align: center; font-size: 13.5px; color: var(--muted); margin-top: 8px; }
+  .anchor {
+    margin-top: 14px; padding: 12px 14px; border-radius: 13px;
+    background: var(--accent-soft); border: 1px solid var(--edge);
+    font-size: 13px; line-height: 1.5; color: var(--heading); text-align: center;
+  }
+  .stage[data-w="1440"] .anchor { font-size: 14px; }
+
+  /* ── кнопки ──────────────────────────────────────────────────────────── */
+  .cta { display: grid; gap: 9px; margin-top: 16px; }
+  .btn {
+    display: block; text-align: center; padding: 13px 16px; border-radius: 13px;
+    font-weight: 700; font-size: 15px; border: 1px solid transparent; cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); color: #fff; box-shadow: 0 6px 18px rgba(22,103,214,.28); }
+  .btn.ghost { background: transparent; color: var(--accent); border-color: var(--accent); font-weight: 600; }
+  .hint-under { text-align: center; font-size: 12px; color: var(--muted); margin-top: -3px; }
+  .signin-row { display: flex; justify-content: center; gap: 10px; align-items: center; font-size: 13px; }
+  .signin-row a { color: var(--accent); font-weight: 600; text-decoration: none; }
+
+  /* ── карта связей ────────────────────────────────────────────────────── */
+  .demo { background: var(--edge-soft); border-radius: 16px; padding: 14px; }
+  .demo h3 { font-size: 13px; color: var(--heading); text-align: center; margin-bottom: 10px; }
+  .map { position: relative; height: 168px; border-radius: 12px; background: var(--panel); border: 1px solid var(--edge); overflow: hidden; }
+  .stage[data-w="1440"] .map { height: 240px; }
+  .dot { position: absolute; border-radius: 50%; background: var(--accent); transform: translate(-50%,-50%); }
+  .dot.me { width: 15px; height: 15px; box-shadow: 0 0 0 6px var(--accent-soft); }
+  .dot.p { width: 11px; height: 11px; opacity: .8; }
+  .lbl { position: absolute; font-size: 11px; color: var(--muted); transform: translate(-50%,0); white-space: nowrap; }
+  .lnk { position: absolute; height: 1px; background: var(--edge); transform-origin: 0 50%; }
+
+  .stars { margin-top: 11px; display: grid; gap: 7px; }
+  .srow { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; font-size: 12.5px; }
+  .srow .nm { color: var(--heading); }
+  /* Звёзды 0–10 — канон 1.x. Цифра рядом обязательна: она и есть оценка, звёзды — её жест. */
+  .sset { letter-spacing: .5px; font-size: 11.5px; color: var(--star); white-space: nowrap; }
+  .sset i { color: var(--star-off); font-style: normal; }
+  .sset b { color: var(--heading); font-size: 12px; margin-left: 3px; }
+  .demo-cap { font-size: 11.5px; color: var(--muted); line-height: 1.45; margin-top: 10px; }
+
+  /* ── блок живых метрик ───────────────────────────────────────────────── */
+  .metrics { background: var(--ok-soft); border: 1px solid var(--ok-edge); border-radius: 16px; padding: 15px 16px; }
+  .metrics h3 { font-size: 13.5px; color: var(--ok); margin-bottom: 9px; display: flex; align-items: center; gap: 7px; }
+  .metrics h3::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .metrics ul { list-style: none; display: grid; gap: 8px; }
+  .metrics li { font-size: 12.5px; line-height: 1.45; color: var(--text); }
+  .metrics .n { color: var(--heading); font-weight: 800; }
+  .metrics .zero { color: var(--muted); font-style: italic; }
+  .metrics .join { margin-top: 10px; font-size: 12.5px; color: var(--ok); font-weight: 600; }
+
+  /* ── четыре отличия ──────────────────────────────────────────────────── */
+  .diffs { display: grid; gap: 10px; }
+  .stage[data-w="1440"] .diffs { grid-template-columns: 1fr 1fr; }
+  .diff { border: 1px solid var(--edge); border-radius: 13px; padding: 12px 13px; }
+  .diff h4 { font-size: 13px; color: var(--heading); margin-bottom: 5px; }
+  .diff p { font-size: 12px; line-height: 1.45; }
+
+  .sect { margin-top: 18px; }
+  .sect-h { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 9px; }
+
+  /* ── двухстолбовая раскладка V2 ──────────────────────────────────────── */
+  .cols { display: grid; gap: 18px; }
+  .stage[data-w="1440"] .cols { grid-template-columns: 1fr 1fr; align-items: center; }
+
+  /* ── V4: панель, которая ПОЯВЛЯЕТСЯ ──────────────────────────────────── */
+  .emerge {
+    margin-top: 14px; padding: 14px; border-radius: 14px;
+    background: var(--accent-soft); border: 1px solid var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .emerge .t { font-size: 13.5px; color: var(--heading); font-weight: 700; margin-bottom: 4px; }
+  .emerge .s { font-size: 12.5px; margin-bottom: 10px; }
+  .emerge-flag { font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .top-signin { display: flex; justify-content: flex-end; padding: 10px 20px 0; font-size: 13px; }
+  .top-signin a { color: var(--accent); font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Ворота, первый экран:</b>
+  <button data-v="1" class="active">V1 Карта сверху</button>
+  <button data-v="2">V2 Два столба</button>
+  <button data-v="3">V3 Витрина первой</button>
+  <button data-v="4">V4 Игра сама вносит</button>
+  <span class="sp"></span>
+  <button id="theme">☀ светлая</button>
+  <button id="width">Телефон 390</button>
+  <span class="hint">тексты вычитаны — plans/29 и plans/51</span>
+</div>
+
+<div class="note" id="note"></div>
+<div class="stage" id="stage" data-w="390"><div id="screen"></div></div>
+
+<script>
+/* ═══ УТВЕРЖДЁННЫЕ ТЕКСТЫ. Источник — src/lib/content/landing-copy.ts (RU). ═══ */
+const T = {
+  eyebrow: 'Знакомства нового измерения',
+  title: 'Добро пожаловать в Пространство NDim',
+  sub: 'Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — мы подберём тех, с кем у Вас настоящая совместимость.',
+  pain: 'Здесь Вас не разглядывают по фотографии — здесь считают, сколько у Вас с человеком общего.',
+  anchor: 'Пространство NDim — точный, честный и быстрый беспристрастный суперкомпьютер в мире отношений: он считает, с кем у Вас больше всего общего, и показывает каждое число расчёта.',
+  ctaPrimary: 'Найти людей по душе',
+  ctaHint: 'гостем, без аккаунта',
+  ctaSecondary: 'Войти',
+  demoCap: 'Поставьте звёзды пяти вещам — и соседи тут же подойдут ближе или отойдут: расстояния на карте настоящие. Здесь их пять, чтобы Вы увидели, как это устроено; в Пространстве NDim — 5 111. Считает то же самое ядро, что работает внутри. Люди на карте — системные персонажи, они живут в Пространстве и помечены в нём честно.',
+  metricsTitle: 'Пространство NDim работает прямо сейчас',
+  metrics: [
+    ['5 111', 'уникальных объектов культуры — фильмы, книги, сериалы, игры, музыка, привычки и занятия. По ним человек описывает себя, и по ним же Пространство находит ему похожих.'],
+    ['4 064', 'оценки поставлено людьми — каждая от 0 до 10 звёзд. Это и есть описание человека: не анкета о себе, а то, как он относится к вещам, которые любит.'],
+    ['2 344', 'связи рассчитано — для каждого человека посчитано, насколько он близок каждому другому. Расчёт идёт непрерывно и обновляется, пока Вы живёте своей жизнью.'],
+    ['94', 'человека уже описали себя — и каждый новый проверяется на схожесть с Вами в первую очередь.'],
+  ],
+  join: 'Станьте одним из первых, кого здесь найдут',
+  diffs: [
+    ['Ни одной рекламы и ни одного чужого счётчика', 'На этой странице и внутри Пространства нет ни одной рекламы и ни одного чужого счётчика.'],
+    ['Здесь нечего купить', 'Бесплатно для всех людей по всему Миру. Место повыше в чужом списке не продаётся.'],
+    ['Одинаково в обе стороны', 'Насколько Вы похожи на человека, ровно настолько же он похож на Вас — одно число на двоих.'],
+    ['Только объективная математика', 'Похожесть — это близость, умноженная на общность. Пространство NDim не использует субъективизм человеческого взгляда и непредсказуемость систем искусственного интеллекта.'],
+  ],
+};
+
+/* Персонажи демо — те же, что в бою (SimilarityDemo.svelte). */
+const SET = [
+  ['«Мастер и Маргарита»', 8],
+  ['«Интерстеллар»', 9],
+  ['Тихое утро', 7],
+  ['«Ведьмак 3»', 6],
+  ['Долгие прогулки', 10],
+];
+/*
+ * 🔴 ШКАЛА 0–10, А НЕ 0–5. Первая редакция макета резала оценку до пяти звёзд, и ВСЕ пять строк
+ * выходили «5 из 5» — витрина врала про сам жест оценки. Классические звёзды 0–10 это наследие
+ * 1.x и канон продукта (`MEMORY.md` → «звёзды для ввода, бары для просмотра»).
+ */
+const stars = (v) => '★'.repeat(v) + '<i>' + '★'.repeat(10 - v) + '</i>';
+
+const map = () => `
+  <div class="map">
+    <div class="lnk" style="left:50%;top:50%;width:78px;transform:rotate(-28deg)"></div>
+    <div class="lnk" style="left:50%;top:50%;width:66px;transform:rotate(158deg)"></div>
+    <div class="lnk" style="left:50%;top:50%;width:88px;transform:rotate(52deg)"></div>
+    <div class="dot me" style="left:50%;top:50%"></div>
+    <div class="lbl" style="left:50%;top:56%">Вы</div>
+    <div class="dot p" style="left:72%;top:33%"></div><div class="lbl" style="left:72%;top:37%">Алиса · 61 %</div>
+    <div class="dot p" style="left:31%;top:63%"></div><div class="lbl" style="left:31%;top:67%">Макс · 44 %</div>
+    <div class="dot p" style="left:70%;top:74%"></div><div class="lbl" style="left:70%;top:78%">Настя · 38 %</div>
+  </div>`;
+
+const demo = (title) => `
+  <div class="demo">
+    ${title ? `<h3>${title}</h3>` : ''}
+    ${map()}
+    <div class="stars">
+      ${SET.map(([n, v]) => `<div class="srow"><span class="nm">${n}</span><span class="sset">${stars(v)} <b>${v}</b></span></div>`).join('')}
+    </div>
+    <div class="demo-cap">${T.demoCap}</div>
+  </div>`;
+
+/* zero: как показать «активных за неделю», когда их ноль (вопрос формы, plans/52). */
+const metrics = (zero) => `
+  <div class="metrics">
+    <h3>${T.metricsTitle}</h3>
+    <ul>
+      ${T.metrics.map(([n, s]) => `<li><span class="n">${n}</span> ${s}</li>`).join('')}
+      <li class="${zero === 'hide' ? 'zero' : ''}">${
+        zero === 'hide'
+          ? '<em>строка «за неделю» скрыта, пока никто не заходил</em>'
+          : zero === 'word'
+            ? '<span class="n">На этой неделе</span> Вы можете стать первым, кто здесь появится.'
+            : '<span class="n">0</span> человек заходили за последнюю неделю — Пространство живёт и считает прямо сейчас.'
+      }</li>
+    </ul>
+    <div class="join">${T.join}</div>
+  </div>`;
+
+const diffs = () => `
+  <div class="sect">
+    <div class="sect-h">Чем мы отличаемся</div>
+    <div class="diffs">
+      ${T.diffs.map(([h, p]) => `<div class="diff"><h4>${h}</h4><p>${p}</p></div>`).join('')}
+    </div>
+  </div>`;
+
+const cta = (hint) => `
+  <div class="cta">
+    <div class="btn primary">${T.ctaPrimary}</div>
+    ${hint ? `<div class="hint-under">${T.ctaHint}</div>` : ''}
+    <div class="btn ghost">${T.ctaSecondary}</div>
+  </div>`;
+
+/* ═══ ЧЕТЫРЕ ВАРИАНТА ═══ */
+const V = {
+  1: {
+    note: '<b>V1 «Карта сверху».</b> Человека берёт ИГРА: карта со звёздами занимает первый экран, хук одной строкой над ней, вход сразу под картой. Буквальное исполнение В2 — «интерактив и красивая карта должна быть прямо перед глазами, и звёзды». Три «фичи» уходят, их место ниже занимают четыре отличия. <b>Риск:</b> человек играет, не поняв, куда попал.',
+    html: `
+      <div class="pad">
+        <div class="eyebrow">${T.eyebrow}</div>
+        <h1>${T.title}</h1>
+        <div class="sub">${T.sub}</div>
+        ${demo('')}
+        ${cta(true)}
+      </div>
+      <div class="fold"></div>
+      <div class="pad">
+        <div class="anchor">${T.anchor}</div>
+        ${diffs()}
+        <div class="sect">${metrics('zero')}</div>
+      </div>`,
+  },
+  2: {
+    note: '<b>V2 «Два столба».</b> Берёт ОБЕЩАНИЕМ И ИГРОЙ разом: слева хук, обещание и вход, справа карта. На 390 столбы становятся стопкой — и это надо увидеть, потому что там вариант рискует стать V1. Блок метрик стоит сразу под входом. <b>Ставка:</b> ничего важного не спрятано ниже сгиба.',
+    html: `
+      <div class="pad">
+        <div class="cols">
+          <div>
+            <div class="eyebrow" style="text-align:left">${T.eyebrow}</div>
+            <h1 style="text-align:left">${T.title}</h1>
+            <div class="sub" style="text-align:left;margin-inline:0">${T.sub}</div>
+            <div class="pain" style="text-align:left">${T.pain}</div>
+            ${cta(true)}
+          </div>
+          <div>${demo('Попробуйте прямо здесь')}</div>
+        </div>
+        <div class="sect">${metrics('zero')}</div>
+      </div>
+      <div class="fold"></div>
+      <div class="pad">
+        <div class="anchor">${T.anchor}</div>
+        ${diffs()}
+      </div>`,
+  },
+  3: {
+    note: '<b>V3 «Витрина первой».</b> Берёт ЧИСЛАМИ: под хуком сразу зелёный блок живых метрик, карта ниже. Исполняет заказ владельца 02.08 — «отдельный привлекательный, с зелёным окрасом, посмотрите какие мы крутые и рабочие». <b>Риск, названный прямо:</b> вперёд выходят наши самые слабые числа — 94 человека и ноль активных за неделю. Здесь строка нуля показана СЛОВОМ, а не цифрой — сравните с V1/V2.',
+    html: `
+      <div class="pad">
+        <div class="eyebrow">${T.eyebrow}</div>
+        <h1>${T.title}</h1>
+        <div class="sub">${T.sub}</div>
+        <div class="sect">${metrics('word')}</div>
+        ${cta(true)}
+      </div>
+      <div class="fold"></div>
+      <div class="pad">
+        ${demo('Попробуйте прямо здесь')}
+        <div class="anchor">${T.anchor}</div>
+        ${diffs()}
+      </div>`,
+  },
+  4: {
+    note: '<b>V4 «Игра сама вносит внутрь».</b> Единственный вариант, исполняющий Ваше решение №009 В3 дословно: <i>«вход анонимом замаскировать в интерактив… ведём пользователя за ручку»</i>. Большой кнопки «войти гостем» нет вовсе — панель перехода ПОЯВЛЯЕТСЯ, когда человек подвигал звёзды. Дверь для тех, у кого аккаунт есть, стоит отдельно и постоянно — вверху справа. Строка нуля здесь СКРЫТА до первого живого человека. <b>Риск:</b> Вы можете счесть, что вход перестал быть виден с первого взгляда, — и это законный повод вариант отклонить.',
+    html: `
+      <div class="top-signin"><a>Войти →</a></div>
+      <div class="pad" style="padding-top:10px">
+        <div class="eyebrow">${T.eyebrow}</div>
+        <h1 style="font-size:22px">${T.title}</h1>
+        <div class="pain">${T.pain}</div>
+        ${demo('Поставьте звёзды — и посмотрите, кто окажется рядом')}
+        <div class="emerge">
+          <div class="emerge-flag">появилось после ваших звёзд</div>
+          <div class="t">Алиса — Ваша самая сильная связь: 61 %</div>
+          <div class="s">Внутри Пространства таких людей больше, и они настоящие.</div>
+          <div class="btn primary">Смотреть больше</div>
+          <div class="hint-under" style="margin-top:7px">${T.ctaHint}</div>
+        </div>
+      </div>
+      <div class="fold"></div>
+      <div class="pad">
+        <div class="sub">${T.sub}</div>
+        <div class="anchor">${T.anchor}</div>
+        <div class="sect">${metrics('hide')}</div>
+        ${diffs()}
+      </div>`,
+  },
+};
+
+let current = '1';
+const stage = document.getElementById('stage');
+
+function render() {
+  document.getElementById('screen').innerHTML = `<div class="screen">${V[current].html}</div>`;
+  document.getElementById('note').innerHTML = V[current].note;
+}
+
+document.querySelectorAll('.picker button[data-v]').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    current = b.dataset.v;
+    render();
+  };
+});
+
+document.getElementById('theme').onclick = (e) => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  e.target.textContent = dark ? '☾ тёмная' : '☀ светлая';
+};
+
+document.getElementById('width').onclick = (e) => {
+  const wide = stage.dataset.w === '1440';
+  stage.dataset.w = wide ? '390' : '1440';
+  e.target.textContent = wide ? 'Телефон 390' : 'Десктоп 1440';
+  render();
+};
+
+render();
+</script>
+</body>
+</html>
