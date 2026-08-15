@@ -55,7 +55,7 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-import { initializeApp } from 'firebase-admin/app';
+import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { computeRelation } from '../src/lib/similarity/similarity.ts';
 import { computeSpaceStats, dayKey, snapshotOf } from '../src/lib/model/stats.ts';
