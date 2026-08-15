@@ -68,3 +68,8 @@ src/lib/content/dims-build.json
 KAIF_ADAPTATION_TASK.superseded.md
 .kaif/backup-*/
 .kaif/refresh-marker.json
+# Расписка стейджа (`plans/53` фаза 5): состояние МАШИНЫ, а не история проекта. В git ей делать
+# нечего — иначе расписка, снятая на одной машине, открывала бы дверь в бой на любой другой.
+.kaif/stage-receipt.json
+# Журнал обходов замка стейджа: тоже состояние машины. Дверь его НЕ читает — он для человека.
+.kaif/stage-bypass.log

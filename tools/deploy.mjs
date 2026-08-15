@@ -48,9 +48,12 @@
  *   node tools/deploy.mjs --selftest — доказать стоп-правило контура, ничего не выкатывая
  */
 import { execSync } from 'node:child_process';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CONTOURS, contourFromArgv } from './lib/contours.mjs';
+
+/** Расписка стейджа — свидетель того, что ЭТОТ код уже проехал предрелизный рубеж. */
+const RECEIPT = '.kaif/stage-receipt.json';
 
 /**
  * СТОП-ПРАВИЛО КОНТУРА (критерий П8) — ВЕСЬ вердикт одной функцией, чтобы самопроверка судила
@@ -201,6 +204,95 @@ async function liveHash(site) {
  */
 console.log(`\n🎯 КОНТУР ВЫКАТА: ${CONTOUR.title} · проект ${CONTOUR.project} · база ${CONTOUR.database}\n   сайт ${CONTOUR.site}`);
 
+/** Состояние репозитория: чем удостоверяется «это тот же код». */
+function repoState() {
+	const git = (command) => execSync(command, { encoding: 'utf8' }).trim();
+	return { commit: git('git rev-parse HEAD'), dirty: git('git status --porcelain').length > 0 };
+}
+
+/*
+ * 🔴 ЗАМОК ФАЗЫ 5: В БОЙ — ТОЛЬКО ЧЕРЕЗ СТЕЙДЖ (интервью №033, В5 = А).
+ *
+ * Решение принято словами «обязателен, МЕХАНИЗМОМ», и основание названо там же: «агент сам решит,
+ * когда проверить» уже провалилось трижды подряд в ночь на 2026-08-15 (`bugs/124`). Правило,
+ * которое можно забыть, здесь уже не работало — поэтому оно живёт в двери, а не в документе.
+ *
+ * ЧЕМ УДОСТОВЕРЯЕТСЯ «ТА ЖЕ СБОРКА». Не хешем рантайма: он рождается заново на каждой сборке, и
+ * сравнение по нему запрещало бы выкат всегда. Удостоверяет КОММИТ: расписка стейджа несёт sha
+ * HEAD и признак грязного дерева, а дверь боя требует совпадения и чистоты. Незакоммиченная
+ * правка — это по определению код, которого на стейдже не было.
+ *
+ * ⚠️ ЧЕСТНАЯ ГРАНИЦА, названная вслух: бой собирается со свежим снимком витрины лендинга, а
+ * стейдж — нет (П9). То есть на стейдже проверен тот же КОД с другим числом на витрине. Замок
+ * стережёт код, а не число; притвориться, будто он стережёт байты, было бы враньём.
+ */
+function requireStagePass() {
+	const now = repoState();
+	const auth = process.argv.indexOf('--auth-owner');
+	if (auth !== -1) {
+		const words = process.argv[auth + 1];
+		if (!words || words.startsWith('--')) {
+			console.error('\n🔴 `--auth-owner` требует ДОСЛОВНЫХ слов владельца в кавычках. Без них замок не снимается.');
+			process.exit(1);
+		}
+		console.log(`\n⚠️  ЗАМОК СТЕЙДЖА СНЯТ СЛОВОМ ВЛАДЕЛЬЦА: «${words}»`);
+		console.log('   Это исключение, а не режим работы: оно ОДНОРАЗОВО и записывается в журнал.');
+		/*
+		 * 🔑 ОБХОД НЕ ВЫПИСЫВАЕТ РАСПИСКУ, и это поймано на себе: первая редакция писала обычную
+		 * расписку, то есть одно слово владельца открывало дверь и ВСЕМ ПОСЛЕДУЮЩИМ выкатам того же
+		 * коммита. Исключение, которое действует дальше одного раза, — это уже не исключение, а
+		 * молчаливая отмена правила. Журнал — отдельный файл, и дверь его никогда не читает.
+		 */
+		appendFileSync(
+			'.kaif/stage-bypass.log',
+			`${new Date().toISOString()}\t${now.commit}\tdirty=${now.dirty}\t${words}\n`,
+		);
+		return;
+	}
+
+	const remedy =
+		'\n   Лечение: `npm run deploy -- --stage`, затем повторить выкат в бой.' +
+		'\n   Исключение — только словом владельца: `npm run deploy -- --auth-owner "<его слова>"`.';
+
+	if (!existsSync(RECEIPT)) {
+		console.error(`\n🔴 ЗАМОК: расписки стейджа нет (${RECEIPT}). Эта сборка не проходила предрелизный рубеж.${remedy}`);
+		process.exit(1);
+	}
+	const receipt = JSON.parse(readFileSync(RECEIPT, 'utf8'));
+	// Пояс поверх подтяжек: расписка со следом обхода не считается пропуском ни при каких условиях.
+	if (receipt.bypass) {
+		console.error(`\n🔴 ЗАМОК: расписка несёт след обхода («${receipt.bypass}») — пропуском она не является.${remedy}`);
+		process.exit(1);
+	}
+	if (receipt.commit !== now.commit) {
+		console.error(
+			`\n🔴 ЗАМОК: на стейдже проверялся ДРУГОЙ коммит.` +
+				`\n   стейдж: ${String(receipt.commit).slice(0, 8)} (${receipt.at})\n   сейчас: ${now.commit.slice(0, 8)}${remedy}`,
+		);
+		process.exit(1);
+	}
+	if (now.dirty || receipt.dirty) {
+		console.error(
+			'\n🔴 ЗАМОК: в дереве есть незакоммиченные правки — значит в бой поедет код, которого на стейдже не было.' +
+				`\n   грязно сейчас: ${now.dirty} · было грязно при прогоне стейджа: ${receipt.dirty}${remedy}`,
+		);
+		process.exit(1);
+	}
+	console.log(`\n🔓 ЗАМОК СТЕЙДЖА ОТКРЫТ: коммит ${now.commit.slice(0, 8)} проверен на стейдже ${receipt.at}`);
+}
+
+if (CONTOUR.name === 'prod') requireStagePass();
+
+/*
+ * `--gate-only` — спросить замок, ничего не выкатывая. Существует по двум причинам: так замок
+ * проверяется мутациями (иначе каждая проверка стоила бы выката в бой), и так сессия может узнать
+ * «пустят ли меня» ДО того, как начнёт собирать.
+ */
+if (process.argv.includes('--gate-only')) {
+	console.log('\n(--gate-only: замок опрошен, выкат не запускался)');
+	process.exit(0);
+}
+
 // Снимок соседнего контура ДО выката: им доказывается, что мы в него не выстрелили (П8).
 const alien = Object.values(CONTOURS).find((item) => item.name !== CONTOUR.name);
 const alienBefore = await liveHash(alien.site);
@@ -253,5 +345,16 @@ if (CONTOUR.name === 'stage') {
 }
 run('🔑 СМОУК ПОД СЕССИЕЙ — вход и все экраны', `node tools/verify-prod-signed-in.mjs --base ${CONTOUR.site}`);
 run('публичный смоук гостем', `node tools/verify-prod-b4.mjs --base ${CONTOUR.site}`);
+
+/*
+ * РАСПИСКА СТЕЙДЖА пишется ТОЛЬКО здесь — то есть только после того, как все проверки прошли:
+ * дверь выходит ненулевым кодом на первой же неудаче и до этой строки не доживает. Расписка,
+ * выписанная авансом, открывала бы дверь в бой для сборки, которая на стейдже упала.
+ */
+if (CONTOUR.name === 'stage') {
+	const state = repoState();
+	writeFileSync(RECEIPT, JSON.stringify({ ...state, hash: builtHash, at: new Date().toISOString() }, null, '\t'));
+	console.log(`\n🧾 расписка стейджа выписана: коммит ${state.commit.slice(0, 8)}${state.dirty ? ' ⚠️ дерево ГРЯЗНОЕ — дверь в бой её не примет' : ''}`);
+}
 
 console.log(`\n✅ ВЫКАТ В ${CONTOUR.title} ЗАВЕРШЁН И ПРОВЕРЕН: сборка целая, легла в свой контур, заголовки верны, приложение работает под сессией.`);
