@@ -298,6 +298,13 @@ const alien = Object.values(CONTOURS).find((item) => item.name !== CONTOUR.name)
 const alienBefore = await liveHash(alien.site);
 console.log(`   соседний контур (${alien.title}) до выката: ${alienBefore ?? 'не прочитан'}`);
 
+/*
+ * Контуры обязаны совпадать там, где они изображают друг друга (`bugs/133`): прогон по стейджу,
+ * отвечающему иначе, чем бой, ничего не репетирует. Проверка статическая и стоит миллисекунды,
+ * поэтому стоит ДО выката, а не после — расхождение ловится прежде, чем уедет.
+ */
+run('контуры совпадают там, где обязаны (bugs/133)', 'node tools/verify-contour-parity.mjs');
+
 firebase('правила и индексы Firestore', 'firestore');
 
 if (!skipBuild) {
