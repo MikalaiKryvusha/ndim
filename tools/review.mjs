@@ -1320,9 +1320,14 @@ async function main() {
 		 */
 		case 'open': {
 			if (!docPath) return usage(), 1;
-			const code = await cmdOpen(docPath);
-			// null — сервер жив, выход произойдёт после записи решения; число — отказ предполёта.
-			return code === undefined ? null : code;
+			const result = await cmdOpen(docPath);
+			// 🔴 ТОЛЬКО ЧИСЛО — это код возврата. `cmdOpen` при успехе отдаёт АДРЕС поднятой
+			// страницы (строку), и прежняя проверка `=== undefined` пропускала его прямиком в
+			// `process.exit('http://127.0.0.1:58239/')` — Node падал на этом, сервер умирал через
+			// миг после того, как браузер уже открылся, и владелец видел ERR_CONNECTION_REFUSED.
+			// Поймано владельцем на живой домашке 2026-08-15 (`bugs/128`). Проверяем ТИП, а не
+			// частное значение: контракт «число = отказ предполёта, всё прочее = сервер жив».
+			return typeof result === 'number' ? result : null;
 		}
 		case 'render': {
 			if (!docPath) return usage(), 1;
