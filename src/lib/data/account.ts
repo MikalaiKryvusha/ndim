@@ -37,7 +37,7 @@ import {
   type UserCredential,
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, devAuth, isStand } from '../firebase.ts';
+import { db, devAuth, isStage, isStand } from '../firebase.ts';
 import { SITE_ORIGIN } from '../site.ts';
 import type { Uid } from '../model/schema.ts';
 
@@ -128,9 +128,16 @@ export function currentAccount(): AccountFacts | null {
  *
  * У продукта один дом — `ndimspace.app` (`site.ts`). Пусть письмо всегда ведёт домой, откуда
  * бы человек ни начал. На стенде — origin как есть, иначе письмо уводило бы разработчика в бой.
+ *
+ * 🔴 И ТО ЖЕ САМОЕ ДЛЯ СТЕЙДЖА (`bugs/129`, 2026-08-15). Правило «всё, что не стенд, — бой»
+ * пережило появление третьего контура и сломало на нём вход: приложение стейджа просило Firebase
+ * отправить ссылку на `ndimspace.app`, которого нет в authorized domains проекта `ndim-stage`, —
+ * тот отказывал, и человек видел «Не удалось создать аккаунт». Поймал владелец, живой попыткой
+ * войти. Условие теперь называет ДОМ, а не отсутствие стенда: канонический домен принадлежит
+ * бою, у остальных контуров дом — их собственный origin.
  */
 function loginLinkOrigin(): string {
-  return isStand() ? location.origin : SITE_ORIGIN;
+  return isStand() || isStage() ? location.origin : SITE_ORIGIN;
 }
 
 /** Ключ, под которым помним почту между отправкой письма и переходом по ссылке. */
