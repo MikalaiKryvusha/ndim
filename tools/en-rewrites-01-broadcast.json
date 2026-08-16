@@ -1,0 +1,218 @@
+[
+ {
+  "slug": "taxi-42djfcub",
+  "find": "created by Ted Willis, aired on BBC from 1963 to 1964, depicting",
+  "replace": "created by Ted Willis, which the BBC carried across 1963 and 1964, depicting",
+  "why": "справочный оборот «aired on … from … to» заменён на живую конструкцию; канал и оба года на месте"
+ },
+ {
+  "slug": "voyage-to-the-bottom-of-the-sea-7cpa22y7",
+  "find": "An American science fiction television series that aired on ABC from September 14, 1964, to March 31, 1968, created by Irwin Allen.",
+  "replace": "An American science fiction television series by Irwin Allen, which ABC carried for four years — from its first episode on September 14, 1964 until the last on March 31, 1968.",
+  "why": "справочная формула дат превращена в рассказ; обе даты и канал сохранены"
+ },
+ {
+  "slug": "tales-from-the-crypt-7qghn3ft",
+  "find": [
+   "The series aired on HBO from 1989 to 1996, producing 7 seasons and 93 episodes.",
+   "a wisecracking corpse voiced by John Kassir"
+  ],
+  "replace": [
+   "HBO carried the show for seven years, 1989 through 1996, and it grew to 7 seasons and 93 episodes.",
+   "a wisecracking corpse to whom John Kassir gave his voice"
+  ],
+  "why": "два маркера в одном тексте — даты эфира и «voiced by»; годы, число сезонов, серий и имя актёра на месте"
+ },
+ {
+  "slug": "hawaiian-eye-dneyztu6",
+  "find": "An American detective television series that aired on ABC from October 1959 to April 1963.",
+  "replace": "An American detective television series that ran on ABC for four seasons, beginning in October 1959 and ending in April 1963.",
+  "why": "убран справочный оборот; обе даты и канал сохранены"
+ },
+ {
+  "slug": "law-order-true-crime-dyxncwwz",
+  "find": "it is the sixth spin-off of the \"Law & Order\" franchise and aired on NBC from September 26 to November 14, 2017.",
+  "replace": "it is the sixth spin-off of the \"Law & Order\" franchise, and NBC ran it over seven autumn weeks in 2017, between September 26 and November 14.",
+  "why": "справочная формула дат снята; канал, обе даты и год на месте"
+ },
+ {
+  "slug": "the-purge-esft6r4s",
+  "find": "expands upon the film franchise of the same name and aired on USA Network from September 4, 2018, to December 17, 2019.",
+  "replace": "expands upon the film franchise of the same name; USA Network carried it between September 4, 2018 and December 17, 2019.",
+  "why": "оборот заменён; обе даты и канал сохранены"
+ },
+ {
+  "slug": "misfits-j2q3ecor",
+  "find": "created by Howard Overman, which aired on E4 from 2009 to 2013.",
+  "replace": "created by Howard Overman, which E4 carried across five years, 2009 through 2013.",
+  "why": "убран справочный оборот; канал и оба года на месте"
+ },
+ {
+  "slug": "21-jump-street-jhydrevh",
+  "find": "The show aired from April 12, 1987, to April 27, 1991, totaling 103 episodes over five seasons.",
+  "replace": "The show ran for four years — from April 12, 1987 to April 27, 1991 — and reached 103 episodes across five seasons.",
+  "why": "снят оборот «totaling N episodes»; обе даты, 103 серии и пять сезонов сохранены"
+ },
+ {
+  "slug": "rawhide-q2c0woig",
+  "find": "An American Western television series that aired on CBS from January 9, 1959, to December 7, 1965, encompassing 8 seasons and 217 black-and-white episodes.",
+  "replace": "An American Western that CBS carried for almost seven years, from January 9, 1959 to December 7, 1965, across 8 seasons and 217 black-and-white episodes.",
+  "why": "справочная формула снята; обе даты, сезоны и число серий на месте"
+ },
+ {
+  "slug": "law-order-trial-by-jury-qtrl0bfk",
+  "find": "it is the fourth spin-off of the original \"Law & Order\" and aired on NBC from March 3, 2005, to January 21, 2006.",
+  "replace": "it is the fourth spin-off of the original \"Law & Order\", and NBC carried it for a single season, between March 3, 2005 and January 21, 2006.",
+  "why": "оборот заменён; канал и обе даты сохранены"
+ },
+ {
+  "slug": "fallen-angels-tgurxwqu",
+  "find": "created by Steve Golin and William Horberg, aired on Showtime from 1993 to 1995.",
+  "replace": "created by Steve Golin and William Horberg, ran on Showtime across 1993, 1994 and 1995.",
+  "why": "убран справочный оборот; канал и годы сохранены"
+ },
+ {
+  "slug": "the-love-boat-bvkc6kcp",
+  "find": "created by Wilford Lloyd Baumes, which aired on ABC from September 24, 1977, to May 24, 1986.",
+  "replace": "created by Wilford Lloyd Baumes, which ABC carried for nine years, from September 24, 1977 until May 24, 1986.",
+  "why": "оборот снят; обе даты и канал на месте"
+ },
+ {
+  "slug": "bronco-c9udacur",
+  "find": "An American Western television series that aired on ABC from 1958 to 1962, produced by William T. Orr.",
+  "replace": "An American Western produced by William T. Orr, which ABC carried across 1958 through 1962.",
+  "why": "справочный оборот снят; канал и оба года сохранены"
+ },
+ {
+  "slug": "american-playhouse-ciowhhyh",
+  "find": "An American anthology television series that aired on PBS from 1982 to 1993. The show featured a collection of standalone dramatic presentations, adapting works by renowned American authors and playwrights. It premiered on January 12, 1982, with the episode \"The Shady Hill Kidnapping,\" written and narrated by John Cheever and directed by Paul Bogart.",
+  "replace": "An American anthology television series that PBS carried across 1982 through 1993. The show featured a collection of standalone dramatic presentations, adapting works by renowned American authors and playwrights. It opened on January 12, 1982 with the episode \"The Shady Hill Kidnapping,\" written and narrated by John Cheever and directed by Paul Bogart.",
+  "why": "снято сразу два маркера — «aired on … from … to» и «premiered on»; все даты и имена на месте"
+ },
+ {
+  "slug": "agatha-christie-s-poirot-e8ozvot1",
+  "find": "The British detective television series, which aired on ITV from January 8, 1989, to November 13, 2013, is based",
+  "replace": "The British detective television series, which ITV carried for almost twenty-five years — from January 8, 1989 to November 13, 2013 — is based",
+  "why": "справочная формула снята; канал и обе даты сохранены"
+ },
+ {
+  "slug": "entourage-fi14lxng",
+  "find": "created by Doug Ellin, aired on HBO from July 18, 2004, to September 11, 2011, spanning eight seasons and 96 episodes.",
+  "replace": "created by Doug Ellin, which HBO carried between July 18, 2004 and September 11, 2011, across eight seasons and 96 episodes.",
+  "why": "оборот снят; обе даты, сезоны и серии на месте"
+ },
+ {
+  "slug": "superhero-kindergarten-gcl81wda",
+  "find": [
+   "follows former gym teacher Arnold Armstrong (voiced by Arnold Schwarzenegger), who gains",
+   "The first season comprises 26 episodes and aired on the streaming service Kartoon Channel from April 23 to October 22, 2021."
+  ],
+  "replace": [
+   "follows former gym teacher Arnold Armstrong, whom Arnold Schwarzenegger voices, and who gains",
+   "The first season comprises 26 episodes, which the Kartoon Channel streaming service carried between April 23 and October 22, 2021."
+  ],
+  "why": "два маркера в одном тексте — «voiced by» и даты эфира; имя актёра, обе даты, год и число серий на месте"
+ },
+ {
+  "slug": "trying-times-inm8zphd",
+  "find": "created by Jon S. Denny, which aired on PBS from 1987 to 1989.",
+  "replace": "created by Jon S. Denny, which PBS carried across 1987, 1988 and 1989.",
+  "why": "убран справочный оборот; канал и оба года сохранены"
+ },
+ {
+  "slug": "the-andy-griffith-show-iapdquke",
+  "find": "An American sitcom that aired on CBS from October 3, 1960, to April 1, 1968, created by Sheldon Leonard.",
+  "replace": "An American sitcom by Sheldon Leonard, which CBS carried for eight years, from October 3, 1960 until April 1, 1968.",
+  "why": "справочная формула снята; обе даты и канал на месте"
+ },
+ {
+  "slug": "tales-of-wells-fargo-j7zzaqz8",
+  "find": "An American Western television series that aired on NBC from 1957 to 1962, produced by Nat Holt and Earle Lyon.",
+  "replace": "An American Western produced by Nat Holt and Earle Lyon, which NBC carried across 1957 through 1962.",
+  "why": "оборот снят; канал, годы и продюсеры сохранены"
+ },
+ {
+  "slug": "the-guns-of-will-sonnett-nnogveaj",
+  "find": "An American Western television series that aired on ABC from 1967 to 1969, it follows",
+  "replace": "An American Western that ABC carried across 1967 through 1969; it follows",
+  "why": "убран справочный оборот; канал и оба года на месте"
+ },
+ {
+  "slug": "foyle-s-war-ox93icyl",
+  "find": "\"Foyle's War\" aired on ITV from October 2002 to January 2015.",
+  "replace": "\"Foyle's War\" ran on ITV for thirteen years, opening in October 2002 and closing in January 2015.",
+  "why": "справочная формула снята; канал и обе даты сохранены"
+ },
+ {
+  "slug": "life-with-bonnie-te7m5em4",
+  "find": "It aired on ABC from 2002 to 2004, encompassing two seasons.",
+  "replace": "ABC carried it for two seasons, across 2002 through 2004.",
+  "why": "оборот снят; канал, годы и число сезонов на месте"
+ },
+ {
+  "slug": "that-70s-show-ttdr0lao",
+  "find": "An American teen sitcom that aired on Fox from August 23, 1998, to May 18, 2006.",
+  "replace": "An American teen sitcom that Fox carried for eight years, from August 23, 1998 until May 18, 2006.",
+  "why": "справочная формула снята; канал и обе даты сохранены"
+ },
+ {
+  "slug": "seven-days-unx0bcza",
+  "find": "The show aired on the UPN network from 1998 to 2001, encompassing three seasons with a total of 66 episodes.",
+  "replace": "The UPN network carried the show for three seasons, across 1998 through 2001, reaching 66 episodes.",
+  "why": "оборот снят; сеть, годы, сезоны и число серий на месте"
+ },
+ {
+  "slug": "hearts-afire-uwlyrhfd",
+  "find": "An American sitcom that aired on CBS from 1992 to 1995, created by Linda Bloodworth-Thomason and Harry Thomason.",
+  "replace": "An American sitcom by Linda Bloodworth-Thomason and Harry Thomason, which CBS carried across 1992 through 1995.",
+  "why": "справочный оборот снят; канал, годы и авторы сохранены"
+ },
+ {
+  "slug": "dark-shadows-wvclnqyp",
+  "find": "created by Dan Curtis, aired on ABC from 1966 to 1971 and became",
+  "replace": "created by Dan Curtis, ran on ABC across 1966 through 1971 and became",
+  "why": "убран справочный оборот; канал и оба года на месте"
+ },
+ {
+  "slug": "the-mickey-mouse-club-x7tuje1y",
+  "find": "The show originally aired on ABC from 1955 to 1959 and was later revived in new formats in 1977 and 1989.",
+  "replace": "ABC carried the show from 1955 through 1959, and it returned in new formats in 1977 and 1989.",
+  "why": "оборот снят; канал и все четыре года сохранены"
+ },
+ {
+  "slug": "maya-marty-xyxay0bo",
+  "find": "the show aired on NBC from May 31 to July 12, 2016, encompassing six episodes.",
+  "replace": "NBC carried the show over six weeks in 2016, between May 31 and July 12, for six episodes.",
+  "why": "справочная формула снята; канал, обе даты, год и число серий на месте"
+ },
+ {
+  "slug": "arthur-xxqqzrrl",
+  "find": "It aired on PBS Kids from 1996 to 2022, becoming",
+  "replace": "PBS Kids carried it for twenty-six years, 1996 through 2022, making it",
+  "why": "оборот снят; канал и оба года сохранены"
+ },
+ {
+  "slug": "abc-afterschool-special-yplurd3l",
+  "find": "it aired on ABC from October 4, 1972, to January 23, 1997.",
+  "replace": "ABC carried it for a quarter of a century, from October 4, 1972 until January 23, 1997.",
+  "why": "справочная формула снята; канал и обе даты на месте"
+ },
+ {
+  "slug": "bosom-buddies-ypmozx96",
+  "find": "and Robert L. Boyett, aired on ABC from November 27, 1980, to March 27, 1982.",
+  "replace": "and Robert L. Boyett, which ABC carried between November 27, 1980 and March 27, 1982.",
+  "why": "оборот снят; канал и обе даты сохранены"
+ },
+ {
+  "slug": "ugly-americans-zgji6eoe",
+  "find": "aired on Comedy Central from March 17, 2010, to April 25, 2012, totaling 31 episodes over two seasons. The plot centers on the life of Mark Lilly (voiced by Matt Oberg), a social worker",
+  "replace": "ran on Comedy Central between March 17, 2010 and April 25, 2012, reaching 31 episodes over two seasons. The plot centers on the life of Mark Lilly, whom Matt Oberg voices, a social worker",
+  "why": "контрольный случай §10: сняты сразу три маркера — даты, «totaling N episodes» и «voiced by»; все числа и имена на месте"
+ },
+ {
+  "slug": "a-league-of-their-own-zhylxlgx",
+  "find": "The series aired on CBS from April 10 to 24, 1993, with two additional episodes broadcast on August 13, 1993;",
+  "replace": "CBS carried the series over two weeks in 1993, between April 10 and 24, and showed two further episodes on August 13, 1993;",
+  "why": "справочная формула снята; канал, все даты и год сохранены"
+ }
+]

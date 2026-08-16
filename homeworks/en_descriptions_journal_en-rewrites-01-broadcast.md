@@ -1,0 +1,420 @@
+# Журнал правок английских описаний каталога
+
+> **Кто правил:** агент, по `AUTHOR_STYLOMETRY.md` · **Разрешение:** интервью №025, В6 = А
+> (правки текстов пишет агент, владелец вычитывает ПОСТФАКТУМ одной страницей).
+> **Шаг:** `plans/56` шаг 3 · **Прибор:** `tools/rewrite-en-descriptions.mjs`
+
+Правило правки: **менялся СТИЛЬ, а не факты.** Ни один год, ни одно число, ни одно имя из
+исходного текста не удалены — это проверяет сам прибор и отказывается писать иначе.
+
+Правок в этой партии: **34** · записано: **0** · пропущено: **0**
+
+---
+
+## `taxi-42djfcub`
+
+*справочный оборот «aired on … from … to» заменён на живую конструкцию; канал и оба года на месте*
+
+**Было:**
+
+> A British comedy-drama television series created by Ted Willis, aired on BBC from 1963 to 1964, depicting the daily lives of London taxi drivers. The story centers on Sid Stone (Sid James), the owner and driver of a cab firm, who shares part of a house with his colleagues Fred Cuddell (Bill Owen) and Terry Mills (Ray Brooks). Sid, streetwise yet conscientious, often interferes in the lives of his colleagues and customers, leading to various comedic and dramatic situations. The first season, comprising 12 episodes, also featured Artro Morris, Michael Kilgarriff, among others. In the second season, broadcast in 1964, female characters were introduced, and Fred Cuddell's role was written out. Despite low ratings for the first season, the series continued. Of the 26 episodes produced, only one is known to exist due to the practice of wiping tapes.​
+
+**Стало:**
+
+> A British comedy-drama television series created by Ted Willis, which the BBC carried across 1963 and 1964, depicting the daily lives of London taxi drivers. The story centers on Sid Stone (Sid James), the owner and driver of a cab firm, who shares part of a house with his colleagues Fred Cuddell (Bill Owen) and Terry Mills (Ray Brooks). Sid, streetwise yet conscientious, often interferes in the lives of his colleagues and customers, leading to various comedic and dramatic situations. The first season, comprising 12 episodes, also featured Artro Morris, Michael Kilgarriff, among others. In the second season, broadcast in 1964, female characters were introduced, and Fred Cuddell's role was written out. Despite low ratings for the first season, the series continued. Of the 26 episodes produced, only one is known to exist due to the practice of wiping tapes.​
+
+## `voyage-to-the-bottom-of-the-sea-7cpa22y7`
+
+*справочная формула дат превращена в рассказ; обе даты и канал сохранены*
+
+**Было:**
+
+> An American science fiction television series that aired on ABC from September 14, 1964, to March 31, 1968, created by Irwin Allen. The story centers on the adventures of the futuristic nuclear submarine SSRN Seaview, designed by Admiral Harriman Nelson (Richard Basehart) and commanded by Captain Lee Crane (David Hedison). Initially, the series explored Cold War themes, espionage, and scientific discoveries, but over time shifted towards fantastical plots involving sea monsters, aliens, and paranormal phenomena. It was the first of Allen's four science fiction television series and the longest-running, comprising 110 episodes over four seasons, with 32 episodes filmed in black and white and 78 in color. The production utilized sets and models from the 1961 film of the same name. The series had a significant impact on the science fiction genre on television, becoming a cult classic due to its unique atmosphere and innovative approach to underwater adventures.​
+
+**Стало:**
+
+> An American science fiction television series by Irwin Allen, which ABC carried for four years — from its first episode on September 14, 1964 until the last on March 31, 1968. The story centers on the adventures of the futuristic nuclear submarine SSRN Seaview, designed by Admiral Harriman Nelson (Richard Basehart) and commanded by Captain Lee Crane (David Hedison). Initially, the series explored Cold War themes, espionage, and scientific discoveries, but over time shifted towards fantastical plots involving sea monsters, aliens, and paranormal phenomena. It was the first of Allen's four science fiction television series and the longest-running, comprising 110 episodes over four seasons, with 32 episodes filmed in black and white and 78 in color. The production utilized sets and models from the 1961 film of the same name. The series had a significant impact on the science fiction genre on television, becoming a cult classic due to its unique atmosphere and innovative approach to underwater adventures.​
+
+## `tales-from-the-crypt-7qghn3ft`
+
+*два маркера в одном тексте — даты эфира и «voiced by»; годы, число сезонов, серий и имя актёра на месте*
+
+**Было:**
+
+> The 1989 American horror anthology television series, created by William Gaines and Steven Dodd, is based on the 1950s EC Comics, including "Tales from the Crypt," "The Haunt of Fear," and "The Vault of Horror." The series aired on HBO from 1989 to 1996, producing 7 seasons and 93 episodes. Each episode presented a standalone story, often with a twist ending and elements of dark humor. The show was hosted by the Cryptkeeper, a wisecracking corpse voiced by John Kassir. Airing on the premium cable channel HBO allowed the series to include more explicit content, such as graphic violence, sexual situations, and strong language. Many renowned actors appeared in the series, including William Sadler, Patricia Arquette, Timothy Dalton, Kirk Douglas, Tim Curry, Whoopi Goldberg, Steve Buscemi, Lea Thompson, Demi Moore, Brad Pitt, Christopher Reeve, Martin Sheen, Dan Aykroyd, Michael J. Fox, Brooke Shields, Joe Pesci, Ewan McGregor, Daniel Craig, and Arnold Schwarzenegger. The series received critical acclaim and became a cult classic in the horror genre. It also inspired several films and an animated spin-off, "Tales from the Cryptkeeper."​
+
+**Стало:**
+
+> The 1989 American horror anthology television series, created by William Gaines and Steven Dodd, is based on the 1950s EC Comics, including "Tales from the Crypt," "The Haunt of Fear," and "The Vault of Horror." HBO carried the show for seven years, 1989 through 1996, and it grew to 7 seasons and 93 episodes. Each episode presented a standalone story, often with a twist ending and elements of dark humor. The show was hosted by the Cryptkeeper, a wisecracking corpse to whom John Kassir gave his voice. Airing on the premium cable channel HBO allowed the series to include more explicit content, such as graphic violence, sexual situations, and strong language. Many renowned actors appeared in the series, including William Sadler, Patricia Arquette, Timothy Dalton, Kirk Douglas, Tim Curry, Whoopi Goldberg, Steve Buscemi, Lea Thompson, Demi Moore, Brad Pitt, Christopher Reeve, Martin Sheen, Dan Aykroyd, Michael J. Fox, Brooke Shields, Joe Pesci, Ewan McGregor, Daniel Craig, and Arnold Schwarzenegger. The series received critical acclaim and became a cult classic in the horror genre. It also inspired several films and an animated spin-off, "Tales from the Cryptkeeper."​
+
+## `hawaiian-eye-dneyztu6`
+
+*убран справочный оборот; обе даты и канал сохранены*
+
+**Было:**
+
+> An American detective television series that aired on ABC from October 1959 to April 1963. The story follows private investigators Tracy Steele (Anthony Eisley) and his partner Tom Lopaka (Robert Conrad), who run the "Hawaiian Eye" agency in Honolulu, Hawaii. Their primary client is the Hawaiian Village Hotel, which provides the agency with a luxurious office in exchange for security services. Assisting in their investigations are photographer and singer Cricket Blake (Connie Stevens) and ukulele-playing cab driver Kim Quisado (Poncie Ponce). Later, engineer-turned-detective Greg McKenzie (Grant Williams) joins the team, and after Tracy Steele's departure, hotel social director Philip Barton (Troy Donahue) steps in. The series was part of a lineup of Warner Bros. detective shows, including "77 Sunset Strip" and "Surfside 6," and comprises 4 seasons with a total of 134 episodes.
+
+**Стало:**
+
+> An American detective television series that ran on ABC for four seasons, beginning in October 1959 and ending in April 1963. The story follows private investigators Tracy Steele (Anthony Eisley) and his partner Tom Lopaka (Robert Conrad), who run the "Hawaiian Eye" agency in Honolulu, Hawaii. Their primary client is the Hawaiian Village Hotel, which provides the agency with a luxurious office in exchange for security services. Assisting in their investigations are photographer and singer Cricket Blake (Connie Stevens) and ukulele-playing cab driver Kim Quisado (Poncie Ponce). Later, engineer-turned-detective Greg McKenzie (Grant Williams) joins the team, and after Tracy Steele's departure, hotel social director Philip Barton (Troy Donahue) steps in. The series was part of a lineup of Warner Bros. detective shows, including "77 Sunset Strip" and "Surfside 6," and comprises 4 seasons with a total of 134 episodes.
+
+## `law-order-true-crime-dyxncwwz`
+
+*справочная формула дат снята; канал, обе даты и год на месте*
+
+**Было:**
+
+> An American true crime anthology television series created by René Balcer, it is the sixth spin-off of the "Law & Order" franchise and aired on NBC from September 26 to November 14, 2017. The first season, titled "The Menendez Murders," consists of eight episodes and focuses on the real-life case of brothers Lyle (Miles Gaston Villanueva) and Erik Menendez (Gus Halper), who, in 1989, shot and killed their wealthy parents, José and Kitty Menendez, in Beverly Hills. The series delves deeply into the crime itself and the subsequent trial, highlighting the efforts of defense attorney Leslie Abramson (Edie Falco) to prove that the brothers acted under the influence of years of physical and emotional abuse inflicted by their parents. It also examines how the media turned the case into a national sensation and how public opinion affected the judicial proceedings. The narrative pays particular attention to the internal struggles of the characters, their motivations, and moral dilemmas, adding depth and drama to the story. Despite positive critical reception and strong performances, especially by Edie Falco, the series was not renewed for a second season and remains the sole installment in this anthology.
+
+**Стало:**
+
+> An American true crime anthology television series created by René Balcer, it is the sixth spin-off of the "Law & Order" franchise, and NBC ran it over seven autumn weeks in 2017, between September 26 and November 14. The first season, titled "The Menendez Murders," consists of eight episodes and focuses on the real-life case of brothers Lyle (Miles Gaston Villanueva) and Erik Menendez (Gus Halper), who, in 1989, shot and killed their wealthy parents, José and Kitty Menendez, in Beverly Hills. The series delves deeply into the crime itself and the subsequent trial, highlighting the efforts of defense attorney Leslie Abramson (Edie Falco) to prove that the brothers acted under the influence of years of physical and emotional abuse inflicted by their parents. It also examines how the media turned the case into a national sensation and how public opinion affected the judicial proceedings. The narrative pays particular attention to the internal struggles of the characters, their motivations, and moral dilemmas, adding depth and drama to the story. Despite positive critical reception and strong performances, especially by Edie Falco, the series was not renewed for a second season and remains the sole installment in this anthology.
+
+## `the-purge-esft6r4s`
+
+*оборот заменён; обе даты и канал сохранены*
+
+**Было:**
+
+> An American horror anthology television series created by James DeMonaco, "The Purge" expands upon the film franchise of the same name and aired on USA Network from September 4, 2018, to December 17, 2019. Set in an alternate America where an annual 12-hour period known as "The Purge" legalizes all crimes, including murder, the first season (set in 2027) follows multiple characters: Marine Miguel Guerrero (Gabriel Chavarria) searching for his sister Penelope (Jessica Garza) who joined a death cult; executive Jane Barbour (Amanda Warren) seeking revenge; and married couple Jenna (Hannah Emily Anderson) and Rick Betancourt (Colin Woodell) attending a Purge party to secure investment. The second season (set between 2036 and 2037) explores the aftermath of Purge Night, featuring stories of ex-cops turned bank robbers, a detective investigating suspicious scientist deaths, college students on a deadly scavenger hunt, and a couple uncovering a hitman's motive. The series was canceled after two seasons in May 2020.
+
+**Стало:**
+
+> An American horror anthology television series created by James DeMonaco, "The Purge" expands upon the film franchise of the same name; USA Network carried it between September 4, 2018 and December 17, 2019. Set in an alternate America where an annual 12-hour period known as "The Purge" legalizes all crimes, including murder, the first season (set in 2027) follows multiple characters: Marine Miguel Guerrero (Gabriel Chavarria) searching for his sister Penelope (Jessica Garza) who joined a death cult; executive Jane Barbour (Amanda Warren) seeking revenge; and married couple Jenna (Hannah Emily Anderson) and Rick Betancourt (Colin Woodell) attending a Purge party to secure investment. The second season (set between 2036 and 2037) explores the aftermath of Purge Night, featuring stories of ex-cops turned bank robbers, a detective investigating suspicious scientist deaths, college students on a deadly scavenger hunt, and a couple uncovering a hitman's motive. The series was canceled after two seasons in May 2020.
+
+## `misfits-j2q3ecor`
+
+*убран справочный оборот; канал и оба года на месте*
+
+**Было:**
+
+> A British comedy-drama television series created by Howard Overman, which aired on E4 from 2009 to 2013. The plot centers on five young offenders—Kelly, Nathan, Curtis, Alisha, and Simon—who, during their community service, are struck by a mysterious storm that grants them supernatural abilities. Each acquires a unique power reflecting their personal issues and character traits. The series combines elements of black humor, drama, and science fiction, exploring themes of responsibility, friendship, and the consequences of possessing superpowers. The main roles were portrayed by Antonia Thomas (Alisha), Iwan Rheon (Simon), Lauren Socha (Kelly), Nathan Stewart-Jarrett (Curtis), and Robert Sheehan (Nathan). The show received critical acclaim for its original take on the superhero genre and won several awards, including the BAFTA Television Award for Best Drama Series in 2010.
+
+**Стало:**
+
+> A British comedy-drama television series created by Howard Overman, which E4 carried across five years, 2009 through 2013. The plot centers on five young offenders—Kelly, Nathan, Curtis, Alisha, and Simon—who, during their community service, are struck by a mysterious storm that grants them supernatural abilities. Each acquires a unique power reflecting their personal issues and character traits. The series combines elements of black humor, drama, and science fiction, exploring themes of responsibility, friendship, and the consequences of possessing superpowers. The main roles were portrayed by Antonia Thomas (Alisha), Iwan Rheon (Simon), Lauren Socha (Kelly), Nathan Stewart-Jarrett (Curtis), and Robert Sheehan (Nathan). The show received critical acclaim for its original take on the superhero genre and won several awards, including the BAFTA Television Award for Best Drama Series in 2010.
+
+## `21-jump-street-jhydrevh`
+
+*снят оборот «totaling N episodes»; обе даты, 103 серии и пять сезонов сохранены*
+
+**Было:**
+
+> The 1987 American crime drama television series created by Stephen J. Cannell and Patrick Hasburgh follows a special police unit composed of young-looking officers who go undercover in schools, colleges, and other youth-related venues to investigate crimes involving teenagers. The main characters include Officer Tom Hanson (Johnny Depp), Officer Doug Penhall (Peter DeLuise), Officer Judy Hoffs (Holly Robinson Peete), Officer Harry Truman Ioki (Dustin Nguyen), and Captain Adam Fuller (Steven Williams). The series addresses pressing social issues such as drugs, violence, racism, and juvenile delinquency, delving into the personal and professional challenges faced by the young officers. As Fox's first drama series, it played a significant role in establishing the network's popularity and marked a breakthrough in Johnny Depp's career. The show aired from April 12, 1987, to April 27, 1991, totaling 103 episodes over five seasons.​
+
+**Стало:**
+
+> The 1987 American crime drama television series created by Stephen J. Cannell and Patrick Hasburgh follows a special police unit composed of young-looking officers who go undercover in schools, colleges, and other youth-related venues to investigate crimes involving teenagers. The main characters include Officer Tom Hanson (Johnny Depp), Officer Doug Penhall (Peter DeLuise), Officer Judy Hoffs (Holly Robinson Peete), Officer Harry Truman Ioki (Dustin Nguyen), and Captain Adam Fuller (Steven Williams). The series addresses pressing social issues such as drugs, violence, racism, and juvenile delinquency, delving into the personal and professional challenges faced by the young officers. As Fox's first drama series, it played a significant role in establishing the network's popularity and marked a breakthrough in Johnny Depp's career. The show ran for four years — from April 12, 1987 to April 27, 1991 — and reached 103 episodes across five seasons.​
+
+## `rawhide-q2c0woig`
+
+*справочная формула снята; обе даты, сезоны и число серий на месте*
+
+**Было:**
+
+> An American Western television series that aired on CBS from January 9, 1959, to December 7, 1965, encompassing 8 seasons and 217 black-and-white episodes. The narrative follows an ongoing cattle drive from San Antonio, Texas, to Sedalia, Missouri, led by seasoned trail boss Gil Favor (Eric Fleming) and his young, ambitious assistant Rowdy Yates (Clint Eastwood). Throughout the journey, the crew faces numerous challenges, including Native American attacks, natural disasters, internal conflicts, and moral dilemmas. Other key members of the team include cook Wishbone (Paul Brinegar), cowhands Jim Quince (Steve Raines), Hey Soos (Robert Cabal), Mushy (James Murdock), Joe Scarlet (Rocky Shahan), and Pete Nolan (Sheb Wooley). The series is renowned for its iconic theme song "Rawhide" and marked one of Clint Eastwood's early significant roles, launching his illustrious career. Produced and directed by Charles Marquis Warren, Thomas Carr, Ted Post, Christian Nyby, Harmon Jones, Jesse Hibbs, Justus Addiss, and Don McDougall, each contributed to the show's development. "Rawhide" is considered a classic of American television and a quintessential example of the Western genre.
+
+**Стало:**
+
+> An American Western that CBS carried for almost seven years, from January 9, 1959 to December 7, 1965, across 8 seasons and 217 black-and-white episodes. The narrative follows an ongoing cattle drive from San Antonio, Texas, to Sedalia, Missouri, led by seasoned trail boss Gil Favor (Eric Fleming) and his young, ambitious assistant Rowdy Yates (Clint Eastwood). Throughout the journey, the crew faces numerous challenges, including Native American attacks, natural disasters, internal conflicts, and moral dilemmas. Other key members of the team include cook Wishbone (Paul Brinegar), cowhands Jim Quince (Steve Raines), Hey Soos (Robert Cabal), Mushy (James Murdock), Joe Scarlet (Rocky Shahan), and Pete Nolan (Sheb Wooley). The series is renowned for its iconic theme song "Rawhide" and marked one of Clint Eastwood's early significant roles, launching his illustrious career. Produced and directed by Charles Marquis Warren, Thomas Carr, Ted Post, Christian Nyby, Harmon Jones, Jesse Hibbs, Justus Addiss, and Don McDougall, each contributed to the show's development. "Rawhide" is considered a classic of American television and a quintessential example of the Western genre.
+
+## `law-order-trial-by-jury-qtrl0bfk`
+
+*оборот заменён; канал и обе даты сохранены*
+
+**Было:**
+
+> An American legal drama television series created by Dick Wolf and René Balcer, it is the fourth spin-off of the original "Law & Order" and aired on NBC from March 3, 2005, to January 21, 2006. The series focuses on criminal trials in New York City, beginning with the arraignment and culminating in the verdict, emphasizing the preparation by both the prosecution and defense, as well as the workings of the jury. The main characters include Assistant District Attorney Tracey Kibre (Bebe Neuwirth), her colleague Kelly Gaffney (Amy Carlson), investigator Hector Salazar (Kirk Acevedo), and District Attorney Arthur Branch (Fred Thompson). Unlike other entries in the franchise, the show delves deeply into the pre-trial process, including witness interviews, evidence analysis, and strategic planning by both sides. Despite its unique approach, the series was canceled after one season due to low ratings, attributed to competition from other television programs in the same time slot. A total of 13 episodes were produced, with 12 airing on NBC and the final episode broadcast on Court TV. The series was praised for its in-depth portrayal of the judicial system and realistic depiction of legal procedures.
+
+**Стало:**
+
+> An American legal drama television series created by Dick Wolf and René Balcer, it is the fourth spin-off of the original "Law & Order", and NBC carried it for a single season, between March 3, 2005 and January 21, 2006. The series focuses on criminal trials in New York City, beginning with the arraignment and culminating in the verdict, emphasizing the preparation by both the prosecution and defense, as well as the workings of the jury. The main characters include Assistant District Attorney Tracey Kibre (Bebe Neuwirth), her colleague Kelly Gaffney (Amy Carlson), investigator Hector Salazar (Kirk Acevedo), and District Attorney Arthur Branch (Fred Thompson). Unlike other entries in the franchise, the show delves deeply into the pre-trial process, including witness interviews, evidence analysis, and strategic planning by both sides. Despite its unique approach, the series was canceled after one season due to low ratings, attributed to competition from other television programs in the same time slot. A total of 13 episodes were produced, with 12 airing on NBC and the final episode broadcast on Court TV. The series was praised for its in-depth portrayal of the judicial system and realistic depiction of legal procedures.
+
+## `fallen-angels-tgurxwqu`
+
+*убран справочный оборот; канал и годы сохранены*
+
+**Было:**
+
+> The 1993 American neo-noir anthology television series, created by Steve Golin and William Horberg, aired on Showtime from 1993 to 1995. Set in a somber post-World War II Los Angeles, prior to John F. Kennedy's presidency, each of the 15 episodes is based on works by renowned crime writers such as Raymond Chandler, James Ellroy, Cornell Woolrich, Jim Thompson, and Dashiell Hammett. Episodes were directed by notable filmmakers including Tom Hanks, Steven Soderbergh, Alfonso Cuarón, Tom Cruise, and Kiefer Sutherland. The cast featured actors like Gary Oldman, Laura Dern, Bill Pullman, Danny Glover, Eric Stoltz, Brendan Fraser, and Mädchen Amick. The series emulated classic noir aesthetics, incorporating signature visual styles and musical elements, including songs by Patti Page and Billie Holiday. Despite mixed critical reviews, the series was praised for its atmospheric storytelling and visual style, earning nominations for Emmy and CableACE awards.​
+
+**Стало:**
+
+> The 1993 American neo-noir anthology television series, created by Steve Golin and William Horberg, ran on Showtime across 1993, 1994 and 1995. Set in a somber post-World War II Los Angeles, prior to John F. Kennedy's presidency, each of the 15 episodes is based on works by renowned crime writers such as Raymond Chandler, James Ellroy, Cornell Woolrich, Jim Thompson, and Dashiell Hammett. Episodes were directed by notable filmmakers including Tom Hanks, Steven Soderbergh, Alfonso Cuarón, Tom Cruise, and Kiefer Sutherland. The cast featured actors like Gary Oldman, Laura Dern, Bill Pullman, Danny Glover, Eric Stoltz, Brendan Fraser, and Mädchen Amick. The series emulated classic noir aesthetics, incorporating signature visual styles and musical elements, including songs by Patti Page and Billie Holiday. Despite mixed critical reviews, the series was praised for its atmospheric storytelling and visual style, earning nominations for Emmy and CableACE awards.​
+
+## `the-love-boat-bvkc6kcp`
+
+*оборот снят; обе даты и канал на месте*
+
+**Было:**
+
+> An American romantic comedy-drama television series created by Wilford Lloyd Baumes, which aired on ABC from September 24, 1977, to May 24, 1986. The series is set aboard the fictional cruise ship "Pacific Princess," where the ship's crew and passengers embark on various romantic and comedic adventures during voyages to exotic destinations. The main cast includes Captain Merrill Stubing (Gavin MacLeod), Doctor Adam Bricker (Bernie Kopell), bartender Isaac Washington (Ted Lange), purser Burl "Gopher" Smith (Fred Grandy), cruise director Julie McCoy (Lauren Tewes), and the captain's daughter Vicki Stubing (Jill Whelan). Each episode features standalone stories, often with guest appearances by well-known stars such as Tom Hanks, Joan Collins, Gene Kelly, and many others. The series is known for its lighthearted and optimistic tone, blending romance, humor, and drama, which contributed to its popularity among a wide audience and influenced the cruise industry by boosting its growth in the 1980s.​
+
+**Стало:**
+
+> An American romantic comedy-drama television series created by Wilford Lloyd Baumes, which ABC carried for nine years, from September 24, 1977 until May 24, 1986. The series is set aboard the fictional cruise ship "Pacific Princess," where the ship's crew and passengers embark on various romantic and comedic adventures during voyages to exotic destinations. The main cast includes Captain Merrill Stubing (Gavin MacLeod), Doctor Adam Bricker (Bernie Kopell), bartender Isaac Washington (Ted Lange), purser Burl "Gopher" Smith (Fred Grandy), cruise director Julie McCoy (Lauren Tewes), and the captain's daughter Vicki Stubing (Jill Whelan). Each episode features standalone stories, often with guest appearances by well-known stars such as Tom Hanks, Joan Collins, Gene Kelly, and many others. The series is known for its lighthearted and optimistic tone, blending romance, humor, and drama, which contributed to its popularity among a wide audience and influenced the cruise industry by boosting its growth in the 1980s.​
+
+## `bronco-c9udacur`
+
+*справочный оборот снят; канал и оба года сохранены*
+
+**Было:**
+
+> An American Western television series that aired on ABC from 1958 to 1962, produced by William T. Orr. The main character, Bronco Layne (Ty Hardin), is a former Confederate officer who, after the Civil War, roams the Old West encountering various adventures and historical figures such as Billy the Kid, Jesse James, and Theodore Roosevelt. The series was initially created as a replacement for "Cheyenne" during a contract dispute with actor Clint Walker but later became a standalone project. Bronco often crossed paths with other Warner Bros. Western characters, such as "Sugarfoot" and "Cheyenne." A total of 4 seasons and 68 episodes were produced. The series was filmed in California and also broadcast in the United Kingdom. The cast included Robert Colbert, Mike Road, and Morris Ankrum. Music for the series was composed by Mack David and Jay Livingston. The show was recognized for its dynamic storytelling and charismatic lead, becoming one of the popular Westerns of its time.
+
+**Стало:**
+
+> An American Western produced by William T. Orr, which ABC carried across 1958 through 1962. The main character, Bronco Layne (Ty Hardin), is a former Confederate officer who, after the Civil War, roams the Old West encountering various adventures and historical figures such as Billy the Kid, Jesse James, and Theodore Roosevelt. The series was initially created as a replacement for "Cheyenne" during a contract dispute with actor Clint Walker but later became a standalone project. Bronco often crossed paths with other Warner Bros. Western characters, such as "Sugarfoot" and "Cheyenne." A total of 4 seasons and 68 episodes were produced. The series was filmed in California and also broadcast in the United Kingdom. The cast included Robert Colbert, Mike Road, and Morris Ankrum. Music for the series was composed by Mack David and Jay Livingston. The show was recognized for its dynamic storytelling and charismatic lead, becoming one of the popular Westerns of its time.
+
+## `american-playhouse-ciowhhyh`
+
+*снято сразу два маркера — «aired on … from … to» и «premiered on»; все даты и имена на месте*
+
+**Было:**
+
+> An American anthology television series that aired on PBS from 1982 to 1993. The show featured a collection of standalone dramatic presentations, adapting works by renowned American authors and playwrights. It premiered on January 12, 1982, with the episode "The Shady Hill Kidnapping," written and narrated by John Cheever and directed by Paul Bogart. Over 13 seasons, "American Playhouse" offered viewers a diverse array of stories, ranging from classic literary adaptations to contemporary dramas exploring complex themes and human relationships. The series served as a launching pad for many actors, including John Malkovich, Laura Linney, and Ben Stiller, providing them with opportunities to showcase their talents in various roles. Additionally, "American Playhouse" was among the first U.S. television programs to implement audio description services for visually impaired audiences, highlighting its commitment to accessibility and inclusivity. The final episode, "In the Wings: Angels in America on Broadway," aired on January 1, 1994, offering viewers a behind-the-scenes look at the creation of Tony Kushner's acclaimed play. Throughout its run, the series received critical acclaim and made a significant contribution to bringing American dramatic literature to television audiences.
+
+**Стало:**
+
+> An American anthology television series that PBS carried across 1982 through 1993. The show featured a collection of standalone dramatic presentations, adapting works by renowned American authors and playwrights. It opened on January 12, 1982 with the episode "The Shady Hill Kidnapping," written and narrated by John Cheever and directed by Paul Bogart. Over 13 seasons, "American Playhouse" offered viewers a diverse array of stories, ranging from classic literary adaptations to contemporary dramas exploring complex themes and human relationships. The series served as a launching pad for many actors, including John Malkovich, Laura Linney, and Ben Stiller, providing them with opportunities to showcase their talents in various roles. Additionally, "American Playhouse" was among the first U.S. television programs to implement audio description services for visually impaired audiences, highlighting its commitment to accessibility and inclusivity. The final episode, "In the Wings: Angels in America on Broadway," aired on January 1, 1994, offering viewers a behind-the-scenes look at the creation of Tony Kushner's acclaimed play. Throughout its run, the series received critical acclaim and made a significant contribution to bringing American dramatic literature to television audiences.
+
+## `agatha-christie-s-poirot-e8ozvot1`
+
+*справочная формула снята; канал и обе даты сохранены*
+
+**Было:**
+
+> The British detective television series, which aired on ITV from January 8, 1989, to November 13, 2013, is based on Agatha Christie's works featuring the Belgian detective Hercule Poirot. The lead role was portrayed by David Suchet, whose performance is considered definitive. Each of the 70 episodes, spanning 13 seasons, adapts one of Christie's novels or short stories, encompassing the entire literary canon of Poirot. Set in the 1930s and 1940s, the series meticulously recreates the era's ambiance through authentic sets, costumes, and musical scores. In the early seasons, Poirot is often accompanied by Captain Arthur Hastings (Hugh Fraser), Inspector James Japp (Philip Jackson), and secretary Felicity Lemon (Pauline Moran). Later episodes introduce novelist Ariadne Oliver (Zoë Wanamaker) and valet George (David Yelland). The series is renowned for its high production values, faithful adaptations, and in-depth character development, exploring not only the mysteries but also the moral complexities faced by Poirot. The final episode, "Curtain: Poirot's Last Case," concludes the series, remaining true to the original work and highlighting the protagonist's tragedy and humanity.
+
+**Стало:**
+
+> The British detective television series, which ITV carried for almost twenty-five years — from January 8, 1989 to November 13, 2013 — is based on Agatha Christie's works featuring the Belgian detective Hercule Poirot. The lead role was portrayed by David Suchet, whose performance is considered definitive. Each of the 70 episodes, spanning 13 seasons, adapts one of Christie's novels or short stories, encompassing the entire literary canon of Poirot. Set in the 1930s and 1940s, the series meticulously recreates the era's ambiance through authentic sets, costumes, and musical scores. In the early seasons, Poirot is often accompanied by Captain Arthur Hastings (Hugh Fraser), Inspector James Japp (Philip Jackson), and secretary Felicity Lemon (Pauline Moran). Later episodes introduce novelist Ariadne Oliver (Zoë Wanamaker) and valet George (David Yelland). The series is renowned for its high production values, faithful adaptations, and in-depth character development, exploring not only the mysteries but also the moral complexities faced by Poirot. The final episode, "Curtain: Poirot's Last Case," concludes the series, remaining true to the original work and highlighting the protagonist's tragedy and humanity.
+
+## `entourage-fi14lxng`
+
+*оборот снят; обе даты, сезоны и серии на месте*
+
+**Было:**
+
+> An American comedy-drama television series created by Doug Ellin, aired on HBO from July 18, 2004, to September 11, 2011, spanning eight seasons and 96 episodes. The narrative follows rising Hollywood actor Vincent Chase (Adrian Grenier) as he navigates the complexities of the entertainment industry in Los Angeles, accompanied by his close-knit group of childhood friends from Queens, New York. His inner circle includes best friend and manager Eric "E" Murphy (Kevin Connolly), older half-brother and struggling actor Johnny "Drama" Chase (Kevin Dillon), and friend and driver Salvatore "Turtle" Assante (Jerry Ferrara). Central to their journey is Vince's agent, Ari Gold (Jeremy Piven), a charismatic and aggressive figure whose unorthodox methods often lead to conflicts, particularly with Eric. The series offers a satirical glimpse into Hollywood's inner workings, portraying the group's experiences with auditions, film productions, personal relationships, and the temptations of fame. Loosely based on the real-life experiences of executive producer Mark Wahlberg, "Entourage" has been acclaimed for its authentic depiction of male friendship and the behind-the-scenes aspects of the film industry.​
+
+**Стало:**
+
+> An American comedy-drama television series created by Doug Ellin, which HBO carried between July 18, 2004 and September 11, 2011, across eight seasons and 96 episodes. The narrative follows rising Hollywood actor Vincent Chase (Adrian Grenier) as he navigates the complexities of the entertainment industry in Los Angeles, accompanied by his close-knit group of childhood friends from Queens, New York. His inner circle includes best friend and manager Eric "E" Murphy (Kevin Connolly), older half-brother and struggling actor Johnny "Drama" Chase (Kevin Dillon), and friend and driver Salvatore "Turtle" Assante (Jerry Ferrara). Central to their journey is Vince's agent, Ari Gold (Jeremy Piven), a charismatic and aggressive figure whose unorthodox methods often lead to conflicts, particularly with Eric. The series offers a satirical glimpse into Hollywood's inner workings, portraying the group's experiences with auditions, film productions, personal relationships, and the temptations of fame. Loosely based on the real-life experiences of executive producer Mark Wahlberg, "Entourage" has been acclaimed for its authentic depiction of male friendship and the behind-the-scenes aspects of the film industry.​
+
+## `superhero-kindergarten-gcl81wda`
+
+*два маркера в одном тексте — «voiced by» и даты эфира; имя актёра, обе даты, год и число серий на месте*
+
+**Было:**
+
+> The 2021 American animated superhero television series created by Fabian Nicieza follows former gym teacher Arnold Armstrong (voiced by Arnold Schwarzenegger), who gains incredible superpowers after an encounter with a mysterious comet, becoming Captain Fantastic, one of Earth's greatest protectors. During a battle with his arch-nemesis, Dr. Superior, he loses his powers, but particles of his superpowers are transferred to six nearby infants. Five years later, Arnold, now known as Mr. Arnold, works undercover as a kindergarten teacher, training these children to harness and use their unique abilities for good. The series blends comedy, adventure, and moral lessons, exploring themes of responsibility, friendship, and self-discovery. The first season comprises 26 episodes and aired on the streaming service Kartoon Channel from April 23 to October 22, 2021.
+
+**Стало:**
+
+> The 2021 American animated superhero television series created by Fabian Nicieza follows former gym teacher Arnold Armstrong, whom Arnold Schwarzenegger voices, and who gains incredible superpowers after an encounter with a mysterious comet, becoming Captain Fantastic, one of Earth's greatest protectors. During a battle with his arch-nemesis, Dr. Superior, he loses his powers, but particles of his superpowers are transferred to six nearby infants. Five years later, Arnold, now known as Mr. Arnold, works undercover as a kindergarten teacher, training these children to harness and use their unique abilities for good. The series blends comedy, adventure, and moral lessons, exploring themes of responsibility, friendship, and self-discovery. The first season comprises 26 episodes, which the Kartoon Channel streaming service carried between April 23 and October 22, 2021.
+
+## `trying-times-inm8zphd`
+
+*убран справочный оборот; канал и оба года сохранены*
+
+**Было:**
+
+> A Canadian-American anthology comedy television series created by Jon S. Denny, which aired on PBS from 1987 to 1989. The series consisted of standalone episodes, each presenting an independent comedic story without laugh tracks, featuring a central character as the narrator. The project featured renowned actors, including Rosanna Arquette, Candice Bergen, David Byrne, Jeff Daniels, Geena Davis, Teri Garr, Hope Lange, Catherine O'Hara, and Steven Wright. Scripts were written by authors such as Christopher Durang, Spaulding Gray, Bernard Slade, and Wendy Wasserstein. Filming took place in Vancouver to reduce costs. The series became PBS's first original comedy and was co-produced with the Canadian Broadcasting Corporation, which aired it as part of a larger anthology series titled "Lies From Lotus Land."
+
+**Стало:**
+
+> A Canadian-American anthology comedy television series created by Jon S. Denny, which PBS carried across 1987, 1988 and 1989. The series consisted of standalone episodes, each presenting an independent comedic story without laugh tracks, featuring a central character as the narrator. The project featured renowned actors, including Rosanna Arquette, Candice Bergen, David Byrne, Jeff Daniels, Geena Davis, Teri Garr, Hope Lange, Catherine O'Hara, and Steven Wright. Scripts were written by authors such as Christopher Durang, Spaulding Gray, Bernard Slade, and Wendy Wasserstein. Filming took place in Vancouver to reduce costs. The series became PBS's first original comedy and was co-produced with the Canadian Broadcasting Corporation, which aired it as part of a larger anthology series titled "Lies From Lotus Land."
+
+## `the-andy-griffith-show-iapdquke`
+
+*справочная формула снята; обе даты и канал на месте*
+
+**Было:**
+
+> An American sitcom that aired on CBS from October 3, 1960, to April 1, 1968, created by Sheldon Leonard. The series follows Sheriff Andy Taylor (Andy Griffith) in the fictional town of Mayberry, North Carolina. Andy is a widower raising his young son, Opie (Ron Howard), with the help of his aunt, Bee Taylor (Frances Bavier). His deputy is the bumbling yet well-meaning cousin, Barney Fife (Don Knotts), whose attempts at law enforcement often lead to humorous situations. The show focuses on the everyday lives and relationships of Mayberry's residents, including barber Floyd Lawson (Howard McNear), gas station attendants Gomer Pyle (Jim Nabors) and Goober Pyle (George Lindsey), among other colorful characters. The series was known for its warm atmosphere, humor, and moral lessons reflecting small-town American values. A total of 249 episodes were produced over eight seasons, with 159 in black and white and 90 in color. The show consistently ranked in the top ten Nielsen ratings and concluded its final season at number one, a rare achievement. It spawned spin-offs, including "Gomer Pyle, U.S.M.C." and "Mayberry R.F.D.," as well as the reunion telemovie "Return to Mayberry" (1986). The series has had a lasting impact on American pop culture and remains beloved for its charm and universal themes.​
+
+**Стало:**
+
+> An American sitcom by Sheldon Leonard, which CBS carried for eight years, from October 3, 1960 until April 1, 1968. The series follows Sheriff Andy Taylor (Andy Griffith) in the fictional town of Mayberry, North Carolina. Andy is a widower raising his young son, Opie (Ron Howard), with the help of his aunt, Bee Taylor (Frances Bavier). His deputy is the bumbling yet well-meaning cousin, Barney Fife (Don Knotts), whose attempts at law enforcement often lead to humorous situations. The show focuses on the everyday lives and relationships of Mayberry's residents, including barber Floyd Lawson (Howard McNear), gas station attendants Gomer Pyle (Jim Nabors) and Goober Pyle (George Lindsey), among other colorful characters. The series was known for its warm atmosphere, humor, and moral lessons reflecting small-town American values. A total of 249 episodes were produced over eight seasons, with 159 in black and white and 90 in color. The show consistently ranked in the top ten Nielsen ratings and concluded its final season at number one, a rare achievement. It spawned spin-offs, including "Gomer Pyle, U.S.M.C." and "Mayberry R.F.D.," as well as the reunion telemovie "Return to Mayberry" (1986). The series has had a lasting impact on American pop culture and remains beloved for its charm and universal themes.​
+
+## `tales-of-wells-fargo-j7zzaqz8`
+
+*оборот снят; канал, годы и продюсеры сохранены*
+
+**Было:**
+
+> An American Western television series that aired on NBC from 1957 to 1962, produced by Nat Holt and Earle Lyon. The show centers on Jim Hardie (Dale Robertson), a special agent for the Wells Fargo company operating in the American West during the 1870s and 1880s. Hardie investigates crimes, escorts stagecoaches, protects shipments, and confronts outlaws, facing various dangers. Initially presented in black-and-white with 30-minute episodes, the series transitioned to color and expanded to 60-minute episodes in its final season. A total of 201 episodes were produced. The series featured guest appearances by actors such as Joyce Meadows, Patricia Owens, and Phillip Pine. "Tales of Wells Fargo" became one of the most popular television shows of its time, ranking third in the Nielsen ratings during the 1957–1958 season with a rating of 35.2.
+
+**Стало:**
+
+> An American Western produced by Nat Holt and Earle Lyon, which NBC carried across 1957 through 1962. The show centers on Jim Hardie (Dale Robertson), a special agent for the Wells Fargo company operating in the American West during the 1870s and 1880s. Hardie investigates crimes, escorts stagecoaches, protects shipments, and confronts outlaws, facing various dangers. Initially presented in black-and-white with 30-minute episodes, the series transitioned to color and expanded to 60-minute episodes in its final season. A total of 201 episodes were produced. The series featured guest appearances by actors such as Joyce Meadows, Patricia Owens, and Phillip Pine. "Tales of Wells Fargo" became one of the most popular television shows of its time, ranking third in the Nielsen ratings during the 1957–1958 season with a rating of 35.2.
+
+## `the-guns-of-will-sonnett-nnogveaj`
+
+*убран справочный оборот; канал и оба года на месте*
+
+**Было:**
+
+> An American Western television series that aired on ABC from 1967 to 1969, it follows former Army scout Will Sonnett (Walter Brennan) and his grandson Jeff (Dack Rambo) as they search for Will's son and Jeff's father, James Sonnett (Jason Evers), a renowned gunslinger on the run. James left his family in his youth, leaving his son in the care of his father. Will, possessing exceptional firearm skills, often asserts, "No brag, just fact," emphasizing his reputation. In each episode, the protagonists encounter the aftermath of James's actions, learning conflicting accounts: some view him as a ruthless killer, others as a defender of justice. The series explores themes of family, redemption, and legacy, depicting Will and Jeff navigating the perils of the Wild West in their quest to reunite with James. In the series finale, the three Sonnetts become lawmen in a small town, symbolizing the culmination of their long journey. The series comprises two seasons and 50 episodes, noted for its rich storytelling and complex characters.​
+
+**Стало:**
+
+> An American Western that ABC carried across 1967 through 1969; it follows former Army scout Will Sonnett (Walter Brennan) and his grandson Jeff (Dack Rambo) as they search for Will's son and Jeff's father, James Sonnett (Jason Evers), a renowned gunslinger on the run. James left his family in his youth, leaving his son in the care of his father. Will, possessing exceptional firearm skills, often asserts, "No brag, just fact," emphasizing his reputation. In each episode, the protagonists encounter the aftermath of James's actions, learning conflicting accounts: some view him as a ruthless killer, others as a defender of justice. The series explores themes of family, redemption, and legacy, depicting Will and Jeff navigating the perils of the Wild West in their quest to reunite with James. In the series finale, the three Sonnetts become lawmen in a small town, symbolizing the culmination of their long journey. The series comprises two seasons and 50 episodes, noted for its rich storytelling and complex characters.​
+
+## `foyle-s-war-ox93icyl`
+
+*справочная формула снята; канал и обе даты сохранены*
+
+**Было:**
+
+> A British detective television series created by screenwriter and author Anthony Horowitz, "Foyle's War" aired on ITV from October 2002 to January 2015. Set in England during and shortly after the Second World War, primarily in the town of Hastings, Sussex, the series follows Detective Chief Superintendent Christopher Foyle (Michael Kitchen), a widower known for his methodical approach, integrity, and pursuit of justice. Despite his desire to contribute directly to the war effort, his requests for transfer are denied, leading him to investigate crimes on the home front, including murder, profiteering, and corruption amid wartime chaos. He is assisted by his driver, Samantha "Sam" Stewart (Honeysuckle Weeks), and Detective Sergeant Paul Milner (Anthony Howell), a former soldier who lost a leg in combat. In later seasons, after retiring from the police force, Foyle is recruited by MI5 to tackle cases involving Cold War espionage. The series is acclaimed for its historical accuracy, complex character development, and intricate storylines that explore the moral complexities of wartime Britain.
+
+**Стало:**
+
+> A British detective television series created by screenwriter and author Anthony Horowitz, "Foyle's War" ran on ITV for thirteen years, opening in October 2002 and closing in January 2015. Set in England during and shortly after the Second World War, primarily in the town of Hastings, Sussex, the series follows Detective Chief Superintendent Christopher Foyle (Michael Kitchen), a widower known for his methodical approach, integrity, and pursuit of justice. Despite his desire to contribute directly to the war effort, his requests for transfer are denied, leading him to investigate crimes on the home front, including murder, profiteering, and corruption amid wartime chaos. He is assisted by his driver, Samantha "Sam" Stewart (Honeysuckle Weeks), and Detective Sergeant Paul Milner (Anthony Howell), a former soldier who lost a leg in combat. In later seasons, after retiring from the police force, Foyle is recruited by MI5 to tackle cases involving Cold War espionage. The series is acclaimed for its historical accuracy, complex character development, and intricate storylines that explore the moral complexities of wartime Britain.
+
+## `life-with-bonnie-te7m5em4`
+
+*оборот снят; канал, годы и число сезонов на месте*
+
+**Было:**
+
+> The 2002 American comedy television series, created by Bonnie Hunt and Don Lake, follows the life of Bonnie Malloy (Bonnie Hunt), the host of the morning talk show "Morning Chicago", as she navigates the challenges of balancing her professional responsibilities with her family life. The series focuses on her daily struggles involving raising children, her relationship with husband Mark Malloy (Mark Derwin), and interactions with coworkers, including producer Tony Russo (David Alan Grier). Known for its improvisational style and blend of comedic and dramatic elements, the show received positive critical acclaim and was nominated for an Emmy Award for Outstanding Lead Actress in a Comedy Series. It aired on ABC from 2002 to 2004, encompassing two seasons.​
+
+**Стало:**
+
+> The 2002 American comedy television series, created by Bonnie Hunt and Don Lake, follows the life of Bonnie Malloy (Bonnie Hunt), the host of the morning talk show "Morning Chicago", as she navigates the challenges of balancing her professional responsibilities with her family life. The series focuses on her daily struggles involving raising children, her relationship with husband Mark Malloy (Mark Derwin), and interactions with coworkers, including producer Tony Russo (David Alan Grier). Known for its improvisational style and blend of comedic and dramatic elements, the show received positive critical acclaim and was nominated for an Emmy Award for Outstanding Lead Actress in a Comedy Series. ABC carried it for two seasons, across 2002 through 2004.​
+
+## `that-70s-show-ttdr0lao`
+
+*справочная формула снята; канал и обе даты сохранены*
+
+**Было:**
+
+> An American teen sitcom that aired on Fox from August 23, 1998, to May 18, 2006. The series follows the lives of a group of six teenagers living in the fictional town of Point Place, Wisconsin, from 1976 to 1979. The main characters include Eric Forman (Topher Grace), a witty and sarcastic young man living with his parents, Red (Kurtwood Smith) and Kitty (Debra Jo Rupp); Donna Pinciotti (Laura Prepon), a feminist and Eric's neighbor, with whom he shares a romantic relationship; Steven Hyde (Danny Masterson), a rebellious friend of Eric who is later adopted by the Forman family; Michael Kelso (Ashton Kutcher), a handsome but dim-witted guy; Jackie Burkhart (Mila Kunis), a spoiled and wealthy girl who initially dates Kelso and later Hyde; and Fez (Wilmer Valderrama), a foreign exchange student with a mysterious background. The series explores themes of teenage love, friendship, family dynamics, and social issues of the 1970s, including sexual attitudes, drug use, and distrust of the government. The show also features supporting characters such as Bob Pinciotti (Don Stark), Donna's father, and Laurie Forman (Lisa Robin Kelly), Eric's older sister. The series was praised for its humor and accurate portrayal of 1970s culture, becoming a cult favorite among audiences.
+
+**Стало:**
+
+> An American teen sitcom that Fox carried for eight years, from August 23, 1998 until May 18, 2006. The series follows the lives of a group of six teenagers living in the fictional town of Point Place, Wisconsin, from 1976 to 1979. The main characters include Eric Forman (Topher Grace), a witty and sarcastic young man living with his parents, Red (Kurtwood Smith) and Kitty (Debra Jo Rupp); Donna Pinciotti (Laura Prepon), a feminist and Eric's neighbor, with whom he shares a romantic relationship; Steven Hyde (Danny Masterson), a rebellious friend of Eric who is later adopted by the Forman family; Michael Kelso (Ashton Kutcher), a handsome but dim-witted guy; Jackie Burkhart (Mila Kunis), a spoiled and wealthy girl who initially dates Kelso and later Hyde; and Fez (Wilmer Valderrama), a foreign exchange student with a mysterious background. The series explores themes of teenage love, friendship, family dynamics, and social issues of the 1970s, including sexual attitudes, drug use, and distrust of the government. The show also features supporting characters such as Bob Pinciotti (Don Stark), Donna's father, and Laurie Forman (Lisa Robin Kelly), Eric's older sister. The series was praised for its humor and accurate portrayal of 1970s culture, becoming a cult favorite among audiences.
+
+## `seven-days-unx0bcza`
+
+*оборот снят; сеть, годы, сезоны и число серий на месте*
+
+**Было:**
+
+> The 1998 American science fiction television series, created by Christopher and Zachary Crowe, centers around a secret government initiative called "Project Backstep," designed to prevent catastrophic events through time travel. The protagonist, former CIA operative and Navy SEAL Frank Parker (Jonathan LaPaglia), serves as the pilot of an experimental time machine known as the Chronosphere, which was developed using alien technology recovered from the 1947 Roswell incident. This device allows a single individual to travel back exactly seven days to alter the course of events and avert disasters. Operating from a clandestine base called "Never Never Land" in the Nevada desert, Parker is supported by a team of scientists and military personnel, including Dr. Olga Vukavitch (Justina Vail), Captain Craig Donovan (Don Franklin), Dr. Bradley Talmadge (Alan Scarfe), and Dr. Isaac Mentnor (Norman Lloyd). The series blends elements of thriller, drama, and science fiction, delving into themes of temporal paradoxes, moral dilemmas, and personal sacrifice. Despite the seven-day limitation on time travel, the team confronts numerous complex scenarios requiring unconventional solutions. The show aired on the UPN network from 1998 to 2001, encompassing three seasons with a total of 66 episodes.
+
+**Стало:**
+
+> The 1998 American science fiction television series, created by Christopher and Zachary Crowe, centers around a secret government initiative called "Project Backstep," designed to prevent catastrophic events through time travel. The protagonist, former CIA operative and Navy SEAL Frank Parker (Jonathan LaPaglia), serves as the pilot of an experimental time machine known as the Chronosphere, which was developed using alien technology recovered from the 1947 Roswell incident. This device allows a single individual to travel back exactly seven days to alter the course of events and avert disasters. Operating from a clandestine base called "Never Never Land" in the Nevada desert, Parker is supported by a team of scientists and military personnel, including Dr. Olga Vukavitch (Justina Vail), Captain Craig Donovan (Don Franklin), Dr. Bradley Talmadge (Alan Scarfe), and Dr. Isaac Mentnor (Norman Lloyd). The series blends elements of thriller, drama, and science fiction, delving into themes of temporal paradoxes, moral dilemmas, and personal sacrifice. Despite the seven-day limitation on time travel, the team confronts numerous complex scenarios requiring unconventional solutions. The UPN network carried the show for three seasons, across 1998 through 2001, reaching 66 episodes.
+
+## `hearts-afire-uwlyrhfd`
+
+*справочный оборот снят; канал, годы и авторы сохранены*
+
+**Было:**
+
+> An American sitcom that aired on CBS from 1992 to 1995, created by Linda Bloodworth-Thomason and Harry Thomason. The series centers on John Hartman (John Ritter), a senator's aide, and Georgie Anne Lahti (Markie Post), a liberal political journalist. Their professional disagreements gradually evolve into a romantic relationship. In the first season, set in Washington, D.C., John and Georgie work together, navigating various political and personal situations. Supporting characters include Billy Bob Davis (Billy Bob Thornton), Mavis Davis (Wendie Jo Sperber), Dee Dee Starr (Beth Broderick), and Senator Strobe Smithers (George Gaynes). In the second season, the couple moves to John's hometown, where he takes over the local newspaper, leading to a change in setting and new storylines. The series blends elements of political satire and romantic comedy, exploring themes of love, career, and family values.
+
+**Стало:**
+
+> An American sitcom by Linda Bloodworth-Thomason and Harry Thomason, which CBS carried across 1992 through 1995. The series centers on John Hartman (John Ritter), a senator's aide, and Georgie Anne Lahti (Markie Post), a liberal political journalist. Their professional disagreements gradually evolve into a romantic relationship. In the first season, set in Washington, D.C., John and Georgie work together, navigating various political and personal situations. Supporting characters include Billy Bob Davis (Billy Bob Thornton), Mavis Davis (Wendie Jo Sperber), Dee Dee Starr (Beth Broderick), and Senator Strobe Smithers (George Gaynes). In the second season, the couple moves to John's hometown, where he takes over the local newspaper, leading to a change in setting and new storylines. The series blends elements of political satire and romantic comedy, exploring themes of love, career, and family values.
+
+## `dark-shadows-wvclnqyp`
+
+*убран справочный оборот; канал и оба года на месте*
+
+**Было:**
+
+> The American gothic television series, created by Dan Curtis, aired on ABC from 1966 to 1971 and became a cult classic due to its unique blend of soap opera and supernatural elements. The story begins with the arrival of governess Victoria Winters (Alexandra Isles) at the Collinwood estate in Maine, where she encounters the mysteries and secrets of the Collins family. Later, the series introduces Barnabas Collins (Jonathan Frid), a 175-year-old vampire who becomes the central figure of the narrative. The show delves into themes of curses, witches, werewolves, zombies, time travel, and parallel worlds, creating a rich and dark atmosphere. Other key characters include Dr. Julia Hoffman (Grayson Hall), who attempts to cure Barnabas of his vampirism, and Angelique Bouchard (Lara Parker), a witch who plays a significant role in the Collins family's fate. Despite a limited budget and live broadcasts that led to technical errors, the series garnered a devoted audience and had a significant impact on subsequent works in the horror and fantasy genres.
+
+**Стало:**
+
+> The American gothic television series, created by Dan Curtis, ran on ABC across 1966 through 1971 and became a cult classic due to its unique blend of soap opera and supernatural elements. The story begins with the arrival of governess Victoria Winters (Alexandra Isles) at the Collinwood estate in Maine, where she encounters the mysteries and secrets of the Collins family. Later, the series introduces Barnabas Collins (Jonathan Frid), a 175-year-old vampire who becomes the central figure of the narrative. The show delves into themes of curses, witches, werewolves, zombies, time travel, and parallel worlds, creating a rich and dark atmosphere. Other key characters include Dr. Julia Hoffman (Grayson Hall), who attempts to cure Barnabas of his vampirism, and Angelique Bouchard (Lara Parker), a witch who plays a significant role in the Collins family's fate. Despite a limited budget and live broadcasts that led to technical errors, the series garnered a devoted audience and had a significant impact on subsequent works in the horror and fantasy genres.
+
+## `the-mickey-mouse-club-x7tuje1y`
+
+*оборот снят; канал и все четыре года сохранены*
+
+**Было:**
+
+> "The Mickey Mouse Club" is a 1955 American children's television variety show created by Walt Disney and Hal Adelquist. The show featured a mix of musical performances, comedy sketches, educational segments, and animated shorts from the Disney studio. The program was hosted by Jimmie Dodd, who also composed the iconic theme song "Mickey Mouse March," and Roy Williams, a well-known Disney cartoonist. Central to the show were the "Mouseketeers," a group of talented child performers who participated in various acts and segments. Notable Mouseketeers included Annette Funicello, Bobby Burgess, Darlene Gillespie, and Cubby O'Brien. Each weekday had its own thematic focus: Monday was "Fun with Music Day," Tuesday was "Guest Star Day," Wednesday was "Anything Can Happen Day," Thursday was "Circus Day," and Friday was "Talent Round-Up Day." The show also featured popular serials such as "Spin and Marty," which followed the adventures of two boys at a summer ranch, and "The Hardy Boys," based on the eponymous series of detective novels. "The Mickey Mouse Club" became a cultural phenomenon and significantly influenced subsequent children's programming. The show originally aired on ABC from 1955 to 1959 and was later revived in new formats in 1977 and 1989.
+
+**Стало:**
+
+> "The Mickey Mouse Club" is a 1955 American children's television variety show created by Walt Disney and Hal Adelquist. The show featured a mix of musical performances, comedy sketches, educational segments, and animated shorts from the Disney studio. The program was hosted by Jimmie Dodd, who also composed the iconic theme song "Mickey Mouse March," and Roy Williams, a well-known Disney cartoonist. Central to the show were the "Mouseketeers," a group of talented child performers who participated in various acts and segments. Notable Mouseketeers included Annette Funicello, Bobby Burgess, Darlene Gillespie, and Cubby O'Brien. Each weekday had its own thematic focus: Monday was "Fun with Music Day," Tuesday was "Guest Star Day," Wednesday was "Anything Can Happen Day," Thursday was "Circus Day," and Friday was "Talent Round-Up Day." The show also featured popular serials such as "Spin and Marty," which followed the adventures of two boys at a summer ranch, and "The Hardy Boys," based on the eponymous series of detective novels. "The Mickey Mouse Club" became a cultural phenomenon and significantly influenced subsequent children's programming. ABC carried the show from 1955 through 1959, and it returned in new formats in 1977 and 1989.
+
+## `maya-marty-xyxay0bo`
+
+*справочная формула снята; канал, обе даты, год и число серий на месте*
+
+**Было:**
+
+> The 2016 American television variety show, created by Lorne Michaels, is a blend of comedy sketches, musical performances, and celebrity appearances. Hosted by Maya Rudolph and Martin Short, both former cast members of Saturday Night Live, the show aired on NBC from May 31 to July 12, 2016, encompassing six episodes. Each episode featured guest stars such as Tom Hanks, Miley Cyrus, Jimmy Fallon, Larry David, Steve Martin, Tina Fey, Emma Stone, and others. Regular performers included Kenan Thompson and Mikey Day. The show was filmed at Studio 6A in NBC Studios, New York City, the same location as Saturday Night Live. Despite its star-studded lineup and variety of segments, the show received mixed reviews from critics, who noted its similarity to SNL and a lack of originality. Nevertheless, "Maya & Marty" was remembered by viewers for its warm atmosphere, the sincerity of its hosts, and vibrant musical performances.​
+
+**Стало:**
+
+> The 2016 American television variety show, created by Lorne Michaels, is a blend of comedy sketches, musical performances, and celebrity appearances. Hosted by Maya Rudolph and Martin Short, both former cast members of Saturday Night Live, NBC carried the show over six weeks in 2016, between May 31 and July 12, for six episodes. Each episode featured guest stars such as Tom Hanks, Miley Cyrus, Jimmy Fallon, Larry David, Steve Martin, Tina Fey, Emma Stone, and others. Regular performers included Kenan Thompson and Mikey Day. The show was filmed at Studio 6A in NBC Studios, New York City, the same location as Saturday Night Live. Despite its star-studded lineup and variety of segments, the show received mixed reviews from critics, who noted its similarity to SNL and a lack of originality. Nevertheless, "Maya & Marty" was remembered by viewers for its warm atmosphere, the sincerity of its hosts, and vibrant musical performances.​
+
+## `arthur-xxqqzrrl`
+
+*оборот снят; канал и оба года сохранены*
+
+**Было:**
+
+> An American-Canadian animated television series for children, based on the books by Marc Brown, centers on the life of anthropomorphic aardvark Arthur Read, his family, and friends in the fictional city of Elwood City. Arthur is a third-grade student at Lakewood Elementary School, living with his parents, younger sisters Dora Winifred (D.W.) and Kate, and their dog Pal. The series addresses everyday situations children face: friendship, family dynamics, school challenges, as well as more serious topics like asthma, dyslexia, cancer, diabetes, and autism spectrum disorders. Each episode comprises two 11-minute stories, often accompanied by live-action segments featuring children. The theme song "Believe in Yourself" is performed by Ziggy Marley and the Melody Makers. The show has been praised for its realistic portrayal of children's issues, diverse characters, and encouragement of reading and learning. It aired on PBS Kids from 1996 to 2022, becoming the longest-running children's animated series in the U.S.​
+
+**Стало:**
+
+> An American-Canadian animated television series for children, based on the books by Marc Brown, centers on the life of anthropomorphic aardvark Arthur Read, his family, and friends in the fictional city of Elwood City. Arthur is a third-grade student at Lakewood Elementary School, living with his parents, younger sisters Dora Winifred (D.W.) and Kate, and their dog Pal. The series addresses everyday situations children face: friendship, family dynamics, school challenges, as well as more serious topics like asthma, dyslexia, cancer, diabetes, and autism spectrum disorders. Each episode comprises two 11-minute stories, often accompanied by live-action segments featuring children. The theme song "Believe in Yourself" is performed by Ziggy Marley and the Melody Makers. The show has been praised for its realistic portrayal of children's issues, diverse characters, and encouragement of reading and learning. PBS Kids carried it for twenty-six years, 1996 through 2022, making it the longest-running children's animated series in the U.S.​
+
+## `abc-afterschool-special-yplurd3l`
+
+*справочная формула снята; канал и обе даты на месте*
+
+**Было:**
+
+> An American anthology television series created in 1972 in the United States by director Guy Fraumeni, it aired on ABC from October 4, 1972, to January 23, 1997. Each episode presented a standalone dramatic or documentary story aimed at a teenage audience, addressing contemporary social issues such as illiteracy, substance abuse, and teenage pregnancy. Some episodes were produced in animated format or as documentaries. The series received critical acclaim and was honored with 51 Daytime Emmy Awards and four Peabody Awards for its contribution to youth education.
+
+**Стало:**
+
+> An American anthology television series created in 1972 in the United States by director Guy Fraumeni, ABC carried it for a quarter of a century, from October 4, 1972 until January 23, 1997. Each episode presented a standalone dramatic or documentary story aimed at a teenage audience, addressing contemporary social issues such as illiteracy, substance abuse, and teenage pregnancy. Some episodes were produced in animated format or as documentaries. The series received critical acclaim and was honored with 51 Daytime Emmy Awards and four Peabody Awards for its contribution to youth education.
+
+## `bosom-buddies-ypmozx96`
+
+*оборот снят; канал и обе даты сохранены*
+
+**Было:**
+
+> An American sitcom created by Chris Thompson, Thomas L. Miller, and Robert L. Boyett, aired on ABC from November 27, 1980, to March 27, 1982. The series follows two young advertising professionals in New York City—Kip Wilson (Tom Hanks) and Henry Desmond (Peter Scolari)—who, facing financial difficulties, disguise themselves as women to live in the affordable all-female "Susan B. Anthony Hotel." Under the aliases Buffy and Hildegarde, they strive to maintain their secret while navigating work responsibilities and personal relationships. Supporting characters include Amy Cassidy (Wendie Jo Sperber), a colleague aware of their secret; Ruth Dunbar (Holland Taylor), their boss; Sonny Lumet (Donna Dixon), Kip's love interest; Isabelle Hammond (Telma Hopkins), a hotel resident and manager in season two; and Lilly Sinclair (Lucille Benson), the hotel manager in season one. The show is noted for its humor, improvisational exchanges between the leads, and satire on gender stereotypes. Although initially successful, it was canceled after two seasons but served as a launching pad for Tom Hanks's career.​
+
+**Стало:**
+
+> An American sitcom created by Chris Thompson, Thomas L. Miller, and Robert L. Boyett, which ABC carried between November 27, 1980 and March 27, 1982. The series follows two young advertising professionals in New York City—Kip Wilson (Tom Hanks) and Henry Desmond (Peter Scolari)—who, facing financial difficulties, disguise themselves as women to live in the affordable all-female "Susan B. Anthony Hotel." Under the aliases Buffy and Hildegarde, they strive to maintain their secret while navigating work responsibilities and personal relationships. Supporting characters include Amy Cassidy (Wendie Jo Sperber), a colleague aware of their secret; Ruth Dunbar (Holland Taylor), their boss; Sonny Lumet (Donna Dixon), Kip's love interest; Isabelle Hammond (Telma Hopkins), a hotel resident and manager in season two; and Lilly Sinclair (Lucille Benson), the hotel manager in season one. The show is noted for its humor, improvisational exchanges between the leads, and satire on gender stereotypes. Although initially successful, it was canceled after two seasons but served as a launching pad for Tom Hanks's career.​
+
+## `ugly-americans-zgji6eoe`
+
+*контрольный случай §10: сняты сразу три маркера — даты, «totaling N episodes» и «voiced by»; все числа и имена на месте*
+
+**Было:**
+
+> The American animated sitcom, created by Devin Clark and developed by David M. Stern, aired on Comedy Central from March 17, 2010, to April 25, 2012, totaling 31 episodes over two seasons. The plot centers on the life of Mark Lilly (voiced by Matt Oberg), a social worker employed at the Department of Integration in an alternate version of New York City inhabited by monsters and other creatures. Mark strives to help various immigrants, including zombies, vampires, and demons, integrate into society. His roommate, Randall Skeffington (Kurt Metzger), became a zombie to impress a girl, while his boss and occasional girlfriend, Callie Maggotbone (Natasha Leggero), is a succubus and the daughter of Satan. Among Mark's colleagues are the wizard Leonard Powers (Randy Pearlstein), the demon Twayne Boneraper (Michael-Leon Wooley), and the Law Enforcement Division head Francis Grimes (Larry Murphy). The series explores themes of cultural diversity and integration through the lens of black comedy and satire, depicting absurd and humorous situations arising from the coexistence of humans and supernatural beings. The first season's production was handled by Cuppa Coffee Studios in Toronto, while the second season was produced by Big Jump Entertainment in Ottawa. Despite positive critical reception, the series was canceled after the second season due to funding difficulties. In 2014, a mobile game app based on the series was released.
+
+**Стало:**
+
+> The American animated sitcom, created by Devin Clark and developed by David M. Stern, ran on Comedy Central between March 17, 2010 and April 25, 2012, reaching 31 episodes over two seasons. The plot centers on the life of Mark Lilly, whom Matt Oberg voices, a social worker employed at the Department of Integration in an alternate version of New York City inhabited by monsters and other creatures. Mark strives to help various immigrants, including zombies, vampires, and demons, integrate into society. His roommate, Randall Skeffington (Kurt Metzger), became a zombie to impress a girl, while his boss and occasional girlfriend, Callie Maggotbone (Natasha Leggero), is a succubus and the daughter of Satan. Among Mark's colleagues are the wizard Leonard Powers (Randy Pearlstein), the demon Twayne Boneraper (Michael-Leon Wooley), and the Law Enforcement Division head Francis Grimes (Larry Murphy). The series explores themes of cultural diversity and integration through the lens of black comedy and satire, depicting absurd and humorous situations arising from the coexistence of humans and supernatural beings. The first season's production was handled by Cuppa Coffee Studios in Toronto, while the second season was produced by Big Jump Entertainment in Ottawa. Despite positive critical reception, the series was canceled after the second season due to funding difficulties. In 2014, a mobile game app based on the series was released.
+
+## `a-league-of-their-own-zhylxlgx`
+
+*справочная формула снята; канал, все даты и год сохранены*
+
+**Было:**
+
+> The 1993 American sitcom, based on the 1992 film of the same name, follows the Rockford Peaches, an all-female baseball team during World War II. The series aired on CBS from April 10 to 24, 1993, with two additional episodes broadcast on August 13, 1993; a total of six episodes were produced, one of which remained unaired. The cast included Sam McMurray as Coach Jimmy Dugan, Carey Lowell as Dottie Hinson, Christine Elise as Kit Keller, Tracy Nelson as Evelyn Gardner, Megan Cavanagh as Marla Hooch, Tracy Reiner as Betty Horn, Wendy Makkena as Mae Mordabito, and Katie Rich as Doris Murphy. Despite featuring some actors from the original film, such as Megan Cavanagh and Tracy Reiner, the series failed to replicate the movie's success and was canceled after one season. Episode plots featured Dottie's return to the team after her husband was called back into service, a game between the girls and Jimmy's former teammates, the team acquiring a chimpanzee as a new mascot, a date between Jimmy and Dottie, the team's participation in a dance marathon, and Jimmy hiring a new shortstop based on her looks. In 2020, Amazon Prime Video ordered a reboot of the series, which premiered in 2022, offering a new interpretation of the story with a focus on issues of race and sexuality.​
+
+**Стало:**
+
+> The 1993 American sitcom, based on the 1992 film of the same name, follows the Rockford Peaches, an all-female baseball team during World War II. CBS carried the series over two weeks in 1993, between April 10 and 24, and showed two further episodes on August 13, 1993; a total of six episodes were produced, one of which remained unaired. The cast included Sam McMurray as Coach Jimmy Dugan, Carey Lowell as Dottie Hinson, Christine Elise as Kit Keller, Tracy Nelson as Evelyn Gardner, Megan Cavanagh as Marla Hooch, Tracy Reiner as Betty Horn, Wendy Makkena as Mae Mordabito, and Katie Rich as Doris Murphy. Despite featuring some actors from the original film, such as Megan Cavanagh and Tracy Reiner, the series failed to replicate the movie's success and was canceled after one season. Episode plots featured Dottie's return to the team after her husband was called back into service, a game between the girls and Jimmy's former teammates, the team acquiring a chimpanzee as a new mascot, a date between Jimmy and Dottie, the team's participation in a dance marathon, and Jimmy hiring a new shortstop based on her looks. In 2020, Amazon Prime Video ordered a reboot of the series, which premiered in 2022, offering a new interpretation of the story with a focus on issues of race and sexuality.​
