@@ -28,6 +28,7 @@ import {
   slicePage,
   summarize,
   toCard,
+  VOTE_SATURATION,
   type HubPlace,
   type HubSummary,
 } from './catalog-hub';
@@ -50,7 +51,10 @@ const { hubs, tail, prior } = groupByKind(DIMS as readonly DimPage[]);
  * посчитанное число обязано быть видно: молча уехавшая опора переставила бы весь топ каталога, и
  * заметить это было бы нечем.
  */
-console.log(`[catalog] опора взвешивания: m = ${prior.m} голосов · C = ${prior.c.toFixed(4)}`);
+console.log(
+  `[catalog] опора взвешивания: m = ${prior.m} голосов · C = ${prior.c.toFixed(4)} · ` +
+    `СКО = ${prior.sd.toFixed(4)} · насыщение веса голосов = ${VOTE_SATURATION}`,
+);
 
 /** Сводки семи хабов — для индексной страницы каталога и для полосы соседей. */
 export const HUB_SUMMARIES: readonly HubSummary[] = summarize(hubs);
