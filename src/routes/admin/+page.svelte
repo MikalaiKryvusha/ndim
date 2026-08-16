@@ -51,9 +51,26 @@
     await goto('/', { replaceState: true });
   });
 
+  /*
+   * 🔴 ИМЯ РАЗДЕЛА ИСПРАВЛЕНО ПО СЛОВУ ВЛАДЕЛЬЦА (интервью №035, 2026-08-16 11:01, дословно):
+   * «*там сейчас "менеджер измерений", а я хотел Панель Администратора - общую. И через нее
+   * открывается панель, и там внутри разные инструменты администратора, один из них - Менеджер
+   * измерений*».
+   *
+   * То есть иерархия ровно двухуровневая: РАЗДЕЛ — «Панель администратора», а «Менеджер
+   * измерений» — один из ИНСТРУМЕНТОВ внутри него. Прежняя редакция подменяла раздел его
+   * единственным инструментом, и второму инструменту в такой раздел было бы некуда приехать.
+   */
   const t = {
-    title: { ru: 'Менеджер измерений', en: 'Dimension Manager' },
+    title: { ru: 'Панель администратора', en: 'Admin Panel' },
     admin: { ru: 'админ', en: 'admin' },
+    tools: { ru: 'Инструменты', en: 'Tools' },
+    dims: { ru: 'Менеджер измерений', en: 'Dimension Manager' },
+    dimsAbout: {
+      ru: 'Каталог измерений: создать, отредактировать, разобрать предложенные людьми.',
+      en: 'The dimension catalogue: create, edit, review what people suggested.',
+    },
+    soon: { ru: 'скоро', en: 'soon' },
     coming: {
       ru: 'Комната «Измерения» появится здесь в следующей фазе.',
       en: 'The Dimensions room will appear here in the next phase.',
@@ -78,6 +95,23 @@
         <!-- Признак «админ»: человек видит, что он в служебном разделе, а не в продукте. -->
         <span class="badge"><Icon name="edit" size={13} />{t.admin[lang]}</span>
       </h1>
+
+      <!--
+        СПИСОК ИНСТРУМЕНТОВ — форма, заданная владельцем: раздел общий, инструменты внутри.
+        Сегодня инструмент один и он ещё не построен (комната «Измерения» — фаза 4 эпика,
+        план `plans/44`), поэтому строка честно помечена «скоро» и не притворяется дверью.
+        Второй инструмент приезжает В ЭТОТ ЖЕ список, а не переименовывает раздел.
+      -->
+      <h2 class="tools-title">{t.tools[lang]}</h2>
+      <ul class="tools">
+        <li class="tool">
+          <span class="tool-head">
+            <span class="tool-name">{t.dims[lang]}</span>
+            <span class="soon">{t.soon[lang]}</span>
+          </span>
+          <span class="tool-about">{t.dimsAbout[lang]}</span>
+        </li>
+      </ul>
 
       <!-- Пустое место под комнату фазы 4 — границу фазы держим честно. -->
       <p class="coming">{t.coming[lang]}</p>
@@ -135,6 +169,57 @@
     border-radius: 999px;
     padding: 2px 9px;
     text-transform: lowercase;
+  }
+  .tools-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--dim);
+    margin: 0 0 8px;
+  }
+  .tools {
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  /* Карточка инструмента — та же форма, что у карточек продукта: панель, кромка, тень. */
+  .tool {
+    display: grid;
+    gap: 3px;
+    padding: 12px 14px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+  }
+  .tool-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tool-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--heading);
+  }
+  .soon {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--faint);
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+  .tool-about {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--dim);
+  }
+  @media (min-width: 1024px) {
+    .tools {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
   .coming {
     color: var(--dim);
