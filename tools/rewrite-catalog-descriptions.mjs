@@ -33,6 +33,7 @@
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const JOURNAL_DIR = 'homeworks';
 const SNAPSHOT = 'src/lib/content/dims-build.json';
@@ -143,6 +144,15 @@ if (process.argv.includes('--selftest')) {
 }
 
 // ── Рабочий режим ───────────────────────────────────────────────────────────────────────────
+/*
+ * 🔴 НЕ ИСПОЛНЯЕТСЯ ПРИ ИМПОРТЕ. Это ТРЕТИЙ файл проекта, пойманный на одном и том же: у него
+ * есть экспорт (`checkEdit`), значит его будут подключать, — и без этой проверки подключение
+ * запускало рабочий режим, пытаясь разобрать чужой аргумент как файл правок.
+ *
+ * Класс закреплён: **файл, у которого есть и экспорт, и работа на верхнем уровне, обязан
+ * спрашивать, запустили его или подключили.** Ловилось трижды за сутки — значит это правило.
+ */
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 const file = process.argv[2];
 const apply = process.argv.includes('--apply');
 
@@ -293,3 +303,5 @@ const out = `${JOURNAL_DIR}/catalog_descriptions_journal_${stamp}.md`;
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, journalText(edits, { applied, skipped }), 'utf8');
 console.log(`журнал: ${out}`);
+
+}
