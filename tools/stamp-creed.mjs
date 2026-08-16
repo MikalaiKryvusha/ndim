@@ -72,13 +72,30 @@ for (const file of DOCS) {
     continue;
   }
   const text = readFileSync(file, 'utf8');
+  /*
+   * ⚠️ СРАВНЕНИЕ НЕ ЗАВИСИТ ОТ ПЕРЕВОДОВ СТРОК. У проекта `core.autocrlf=true`, и файл, тронутый
+   * редактором после прогона, переезжает на CRLF целиком. Побайтовое сравнение объявляло такие
+   * файлы «разошедшимися» при дословно одинаковом тексте — поймано на трёх документах сразу.
+   * Пишем в файл его СОБСТВЕННЫМ переводом строк, чтобы не переворачивать весь документ.
+   */
+  const norm = (s) => s.replace(/\r\n/g, '\n');
+  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const asFile = (s) => (eol === '\r\n' ? s.replace(/\n/g, '\r\n') : s);
 
   // Уже стоит наш блок — обновляем его содержимое (текст мог поправиться в одном месте).
   if (text.includes(OPEN) && text.includes(CLOSE)) {
     const re = new RegExp(`${OPEN}[\\s\\S]*?${CLOSE}`);
-    const next = text.replace(re, BLOCK);
-    if (next !== text) {
-      if (!CHECK) writeFileSync(file, next, 'utf8');
+    const next = text.replace(re, asFile(BLOCK));
+    if (norm(next) !== norm(text)) {
+      // ⚠️ `--check` НИЧЕГО НЕ ПИШЕТ. Первая редакция считала расхождение «обновлением» и правила
+      // файлы даже в режиме проверки — то есть проверка меняла то, что проверяет. Поймано на
+      // прогоне закрытия сессии: `--check` доложил «обновлено 3» вместо отказа.
+      if (CHECK) {
+        missing += 1;
+        console.log(`❌ ТЕКСТ РАЗОШЁЛСЯ: ${file}`);
+        continue;
+      }
+      writeFileSync(file, next, 'utf8');
       refreshed += 1;
       console.log(`🔄 обновлён: ${file}`);
     } else {
