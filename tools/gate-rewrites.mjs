@@ -25,7 +25,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { words, longestCommonRun, RUN_THRESHOLD } from './measure-wikipedia-overlap.mjs';
+import { words, longestCommonRun, RUN_THRESHOLD, isInsideQuotes } from './measure-wikipedia-overlap.mjs';
 import { checkEdit } from './rewrite-catalog-descriptions.mjs';
 
 const arg = (n, d = null) => {
@@ -130,7 +130,8 @@ for (const e of все) {
     continue;
   }
   const остаток = longestCommonRun(words(e.replace), статья.words);
-  if (остаток.length >= RUN_THRESHOLD) {
+  // Ряд внутри кавычек — ЦИТАТА, и совпадать с Википедией она обязана: так сказал человек.
+  if (остаток.length >= RUN_THRESHOLD && !isInsideQuotes(остаток.text, e.replace)) {
     брак.push({ ...e, беда: `остался дословный ряд ${остаток.length} слов: «${остаток.text.slice(0, 70)}»` });
     continue;
   }
@@ -145,7 +146,8 @@ for (const e of все) {
    * вылеченной нельзя, поэтому она уходит в годные С ПОМЕТКОЙ, а сводка называет число отдельно.
    */
   const целиком = longestCommonRun(words(after), статья.words);
-  const вылечена = целиком.length < RUN_THRESHOLD;
+  // Та же поблажка цитате: совпадение внутри кавычек не делает запись копией.
+  const вылечена = целиком.length < RUN_THRESHOLD || isInsideQuotes(целиком.text, after);
   if (!вылечена) частично += 1;
   годные.push({
     slug: e.slug,
