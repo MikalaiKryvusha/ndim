@@ -1,0 +1,695 @@
+[
+ {
+  "slug": "gold-nn2lxcmc",
+  "lang": "en",
+  "find": "A 2016 American crime drama film directed by Stephen Gaghan and written by Patrick Massett and John Zinman. The film is based on the true events of the 1997 Bre-X mining scandal, where a massive gold deposit was allegedly discovered in the jungles of Indonesia; however, for legal reasons and to enhance the film's appeal, character names and story details were changed.",
+  "replace": "Stephen Gaghan directed this American crime drama, released in 2016 from a script by Patrick Massett and John Zinman. Real events drive the plot: the 1997 Bre-X mining scandal, whose massive gold deposit was supposedly unearthed in the jungles of Indonesia. Character names and story details depart from that case, reworked for legal reasons and to give the picture broader appeal.",
+  "why": "Ряд 20 слов заходил во второе предложение («…John Zinman. The film»), поэтому переписаны оба целиком; сохранены 2016, Stephen Gaghan, Patrick Massett, John Zinman, 1997, Bre-X, Индонезия, «massive gold deposit» и обе причины правок сюжета; максимальный остаточный ряд с уликой — 6 слов (только имена сценаристов)."
+ },
+ {
+  "slug": "call-of-duty-black-ops-6-3jvpoqyb",
+  "lang": "en",
+  "find": "The game was released on October 25, 2024, for PlayStation 4, PlayStation 5, Windows, Xbox One, and Xbox Series X/S.",
+  "replace": "Launch day came on October 25, 2024, when the shooter arrived on Windows, Xbox Series X/S, Xbox One, PlayStation 5, and PlayStation 4.",
+  "why": "Ряд 21 слово: снят до 4 («on October 25 2024»); дата и все пять платформ сохранены, порядок списка перевёрнут, залог активный. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («call of duty black ops 6 is a first person shooter…») — нужна вторая правка."
+ },
+ {
+  "slug": "savage-salvation-nog7qt6a",
+  "lang": "en",
+  "find": "The film also features Quavo as Coyote, Dale Dickey as Greta, Swen Temmel as Elvis Kincaid, Noel Gugliemi as Silas, Jon Orsini as Skeeter, Clay Wilcox as Darius, and Winter Ave Zoli as Darlene.​",
+  "replace": "The supporting cast brings in Coyote (Quavo), Greta (Dale Dickey), Elvis Kincaid (Swen Temmel), Silas (Noel Gugliemi), Skeeter (Jon Orsini), Darius (Clay Wilcox), and Darlene (Winter Ave Zoli).​",
+  "why": "Ряд 21 слово: снят до 2; все 7 актёров и 7 ролей на месте, схема «Актёр as Роль» заменена на «Роль (Актёр)» — как в остальном описании; замыкающий невидимый U+200B сохранён."
+ },
+ {
+  "slug": "menace-ii-society-wiprjrzd",
+  "lang": "en",
+  "find": "An American crime drama from 1993, directed by brothers Albert and Allen Hughes in their directorial debut. Set in the Watts and Crenshaw neighborhoods of Los Angeles, the film follows the life of Kaydee \"Caine\" Lawson (Tyrin Turner) and his close friends.",
+  "replace": "Brothers Albert and Allen Hughes made their directorial debut with this 1993 American crime drama. It tracks Kaydee \"Caine\" Lawson (Tyrin Turner) and the friends closest to him through the Los Angeles neighborhoods of Watts and Crenshaw.",
+  "why": "Ряд 20 слов накрывал два предложения — переписаны оба, снят до 3; 1993, Альберт и Аллен Хьюз, Уоттс, Креншоу, Лос-Анджелес, Kaydee \"Caine\" Lawson и Tyrin Turner сохранены, кавычки прозвища не тронуты."
+ },
+ {
+  "slug": "fortress-afqpzdwl",
+  "lang": "en",
+  "find": "The 2021 American action film \"Fortress\" is directed by James Cullen Bressack and written by Alan Horsnail, based on a story by Emile Hirsch and Randall Emmett.",
+  "replace": "James Cullen Bressack directed this 2021 American action film, \"Fortress,\" working from a screenplay by Alan Horsnail. The story behind it came from Randall Emmett and Emile Hirsch.",
+  "why": "Ряд 20 слов: снят до 3; 2021, название в кавычках, Bressack, Horsnail, Hirsch и Emmett сохранены — пассив разбит на два активных предложения, авторы истории переставлены."
+ },
+ {
+  "slug": "the-firm-i34i29rl",
+  "lang": "en",
+  "find": "The 1989 British made-for-television drama film, directed by Alan Clarke and written by Al Hunter Ashton for the BBC, centers on Clive Bissell, nicknamed \"Bex\" (Gary Oldman), a respectable estate agent who leads a football hooligan firm called the Inter City Crew (ICC), inspired by the real-life Inter City Firm associated with West Ham United.",
+  "replace": "Alan Clarke directed this British made-for-television drama for the BBC in 1989, working from a script by Al Hunter Ashton. Its central figure is Clive Bissell — nicknamed \"Bex\" (Gary Oldman) — a respectable estate agent who also runs a football hooligan firm, the Inter City Crew (ICC), modeled on the real-life Inter City Firm tied to West Ham United.",
+  "why": "Ряд 20 слов: снят до 5; 1989, Clarke, Al Hunter Ashton, BBC, Clive Bissell, \"Bex\", Gary Oldman, Inter City Crew (ICC), Inter City Firm и West Ham United сохранены — длинный период разбит надвое, залог активный."
+ },
+ {
+  "slug": "total-recall-d33c8h2x",
+  "lang": "en",
+  "find": "A 1990 American science fiction action film directed by Paul Verhoeven, with a screenplay by Ronald Shusett, Dan O'Bannon, and Gary Goldman, is based on Philip K. Dick's short story \"We Can Remember It for You Wholesale.\"",
+  "replace": "Philip K. Dick wrote the short story \"We Can Remember It for You Wholesale.\" Paul Verhoeven turned it into an American science fiction action picture in 1990, from a screenplay credited to Ronald Shusett, Dan O'Bannon, and Gary Goldman.",
+  "why": "Ряд 23 слова → 8 (только список имён сценаристов). Сохранены: 1990, Верхувен, Шусетт, О'Бэннон, Голдман, Филип К. Дик, название рассказа дословно в кавычках."
+ },
+ {
+  "slug": "fly-me-to-the-moon-o3zf3unx",
+  "lang": "en",
+  "find": "Initially planned for a streaming release on Apple TV+, it was moved to a theatrical release after positive early test screenings. The film received mixed reviews from critics, who noted an uneven blend of romance and historical drama.",
+  "replace": "Apple TV+ was going to stream it. Strong early test screenings changed that, and the picture went to cinemas instead. Reviews came out mixed, with critics calling the blend of romance and historical drama uneven.",
+  "why": "Ряд 23 слова → 3. Правлены оба накрытых предложения (ряд заходил во второе). Сохранены: Apple TV+, стриминг → прокат, тестовые показы, смешанные отзывы, неровная смесь романтики и исторической драмы. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 19 слов подряд («stars scarlett johansson as kelly jones a marketing speciali…») — нужна вторая правка."
+ },
+ {
+  "slug": "bruno-the-kid-qfrbfhus",
+  "lang": "en",
+  "find": "Bruno's close associates, such as Jarlsburg (voiced by Tony Jay) and Harris (voiced by Mark Hamill), are also unaware that GLOBE does not know Bruno's true age and assume the organization deliberately sends the boy on dangerous missions.",
+  "replace": "Jarlsburg (Tony Jay) and Harris (Mark Hamill), the people closest to Bruno, share the same blind spot: they think GLOBE knows exactly how old he is and puts the boy in danger on purpose.",
+  "why": "Ряд 23 слова → 4. Запрещённый оборот \"voiced by\" убран. Сохранены: Ярлсбург, Тони Джей, Харрис, Марк Хэмилл, GLOBE, неведение о возрасте и вера в намеренную отправку мальчика на опасные задания."
+ },
+ {
+  "slug": "the-verdict-2otkbpit",
+  "lang": "en",
+  "find": "A 1982 American legal drama directed by Sidney Lumet and written by David Mamet, adapted from Barry Reed's 1980 novel of the same name. The film follows Frank Galvin (Paul Newman), a once-promising attorney whose career has deteriorated due to alcoholism and unethical practices.",
+  "replace": "Sidney Lumet directed this 1982 American legal drama from a David Mamet script, which adapts the 1980 Barry Reed novel of the same name. At its center stands Frank Galvin (Paul Newman), an attorney of early promise whose career has since fallen apart through alcoholism and unethical practices.",
+  "why": "Ряд 22 слова → 5. Правлены оба накрытых предложения (ряд заходил во второе). Сохранены: 1982, Люмет, Мамет, Барри Рид, роман 1980 года, Фрэнк Гэлвин, Пол Ньюман, алкоголизм и неэтичные практики."
+ },
+ {
+  "slug": "inception-rqi77nyu",
+  "lang": "en",
+  "find": "The film stars Leonardo DiCaprio as a professional thief who steals information by infiltrating the subconscious of his targets. He is offered to erase his criminal history as payment for implanting someone else's idea into the target's subconscious.",
+  "replace": "A professional thief played by Leonardo DiCaprio makes his living inside the subconscious of other people, carrying information out of it. The offer put to him: implant someone else's idea into a target's subconscious, and his criminal history is erased as payment.",
+  "why": "Ряд 22 слова → 3. Правлены оба накрытых предложения (ряд заходил во второе). Сохранены: Леонардо ДиКаприо, вор-профессионал, кража информации из подсознания, стирание судимости как плата за внедрение чужой идеи. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 22 слов подряд («cast includes ken watanabe joseph gordon levitt marion cotil…») — нужна вторая правка."
+ },
+ {
+  "slug": "billie-eilish-col96cs8",
+  "lang": "en",
+  "find": "In 2015, at the age of 13, she gained public attention with the song \"Ocean Eyes,\" written and produced by her brother Finneas O'Connell. In 2017, she released her debut EP \"Don't Smile at Me,\" which reached the top 15 in charts across the US, UK, Canada, and Australia.",
+  "replace": "Her brother Finneas O'Connell wrote and produced \"Ocean Eyes,\" the song that put her in front of the public in 2015, when she was 13. Her first EP, \"Don't Smile at Me,\" followed in 2017 and reached the top 15 on charts in the US, the UK, Canada, and Australia.",
+  "why": "Ряд 22 слова → 6 (только название EP); сохранены 2015, возраст 13, «Ocean Eyes», Финнеас О'Коннелл как автор и продюсер, 2017, дебютный EP «Don't Smile at Me», топ-15 и все четыре страны."
+ },
+ {
+  "slug": "suburbicon-cvncohp4",
+  "lang": "en",
+  "find": "A 2017 American black comedy crime film directed by George Clooney and co-written by the Coen brothers, Clooney, and Grant Heslov.",
+  "replace": "Black comedy and crime mix in this American film of 2017. George Clooney directed it and shares the writing credit with the Coen brothers and Grant Heslov.",
+  "why": "Ряд 22 слова → 3; сохранены 2017, американский фильм, чёрная комедия и криминал, режиссёр Джордж Клуни и все соавторы сценария (братья Коэн, сам Клуни, Грант Хеслов)."
+ },
+ {
+  "slug": "the-mule-fazibzfz",
+  "lang": "en",
+  "find": "This 2018 American crime drama, directed by Clint Eastwood, is based on the true story of Leo Sharp, a World War II veteran in his 80s who became a drug courier for the Sinaloa Cartel.",
+  "replace": "The real Leo Sharp was a World War II veteran, and in his 80s he carried drugs for the Sinaloa Cartel. Clint Eastwood built this American crime drama, released in 2018, around his case.",
+  "why": "Ряд 21 слово → 5; сохранены 2018, американская криминальная драма, Клинт Иствуд, реальная основа, Лео Шарп, ветеран Второй мировой, возраст за 80, перевозка наркотиков для картеля Синалоа."
+ },
+ {
+  "slug": "the-last-time-i-committed-suicide-l8t9naxj",
+  "lang": "en",
+  "find": "A 1997 American drama film directed by Stephen T. Kay, based on a 1950 letter written by Neal Cassady to Jack Kerouac.",
+  "replace": "In 1950 Neal Cassady wrote a letter to Jack Kerouac. Stephen T. Kay turned that letter into an American drama film, released in 1997.",
+  "why": "Ряд 22 слова → 3; сохранены 1997, американская драма, режиссёр Стивен Т. Кей, письмо 1950 года, Нил Кэссиди как автор письма и Джек Керуак как адресат."
+ },
+ {
+  "slug": "taken-23hrkovo",
+  "lang": "en",
+  "find": "A 2008 English-language French action-thriller film directed by Pierre Morel and written by Luc Besson and Robert Mark Kamen.",
+  "replace": "Pierre Morel directed this French action-thriller from 2008; Luc Besson and Robert Mark Kamen wrote the script, and the dialogue is in English.",
+  "why": "Ряд 21 слово → 6 (только имена сценаристов); сохранены 2008, французское производство, англоязычность, жанр экшн-триллер, Пьер Морель, Люк Бессон и Роберт Марк Кэмен."
+ },
+ {
+  "slug": "like-a-dragon-pirate-yakuza-in-hawaii-cweewxel",
+  "lang": "en",
+  "find": "It is a spin-off of the Like a Dragon series and takes place six months after the events of Like a Dragon: Infinite Wealth.",
+  "replace": "This entry branches off the Like a Dragon series, and its story starts six months after Like a Dragon: Infinite Wealth ends.",
+  "why": "Ряд 25 слов → 6; сохранены серия Like a Dragon, Like a Dragon: Infinite Wealth, шесть месяцев, статус спин-оффа. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («developed by ryu ga gotoku studio and published by sega…») — нужна вторая правка."
+ },
+ {
+  "slug": "live-by-night-2omw4akt",
+  "lang": "en",
+  "find": "A 2016 American gangster film written, directed, produced by, and starring Ben Affleck. Based on the 2012 novel of the same name by Dennis Lehane, the film follows Joe Coughlin (Ben Affleck), an Irish-American World War I veteran and the son of a Boston police captain, who turns to a life of crime during the Prohibition era.",
+  "replace": "Ben Affleck wrote, directed, produced and starred in this 2016 American gangster film, adapted from Dennis Lehane's 2012 novel of the same name. Its central figure, Joe Coughlin (Ben Affleck), is an Irish-American veteran of World War I whose father was a Boston police captain, and Prohibition draws him into crime.",
+  "why": "Ряд 24 слова → 6; сохранены 2016, Бен Аффлек и все его роли, роман 2012 года Денниса Лихэйна, Джо Кофлин, ирландо-американец, ветеран Первой мировой, отец — капитан бостонской полиции, сухой закон. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («the film premiered in new york city on december 13 2016…») — нужна вторая правка."
+ },
+ {
+  "slug": "1923-fy5jxmce",
+  "lang": "en",
+  "find": "An American Western drama television series released in 2022 in the United States, created by Taylor Sheridan, serving as a prequel to the series \"Yellowstone\" and a sequel to \"1883.\" The storyline follows the Dutton family in 1923 as they face various hardships, including Prohibition, drought, and the early stages of the Great Depression, which affected Montana long before the Wall Street Crash of 1929.",
+  "replace": "Taylor Sheridan created this American Western drama television series, which reached viewers in the United States in 2022 as a sequel to \"1883\" and a prequel to \"Yellowstone.\" The Duttons of 1923 carry the weight of Prohibition, drought, and the earliest stage of the Great Depression, which had reached Montana well ahead of the Wall Street Crash of 1929.",
+  "why": "Ряд 24 слова → 6; сохранены 2022, США, Тейлор Шеридан, «Yellowstone» и «1883» в кавычках, Даттоны, 1923, сухой закон, засуха, Великая депрессия, Монтана, крах Уолл-стрит 1929."
+ },
+ {
+  "slug": "mark-felt-the-man-who-brought-down-the-white-house-u2fassdl",
+  "lang": "en",
+  "find": "A 2017 American biographical political thriller directed by Peter Landesman, based on the autobiography of FBI agent Mark Felt, co-written with John O'Connor. The film depicts how Felt became the anonymous source nicknamed \"Deep Throat\" for reporters Bob Woodward and Carl Bernstein, assisting them in their investigation of the Watergate scandal, which led to the resignation of President Richard Nixon.",
+  "replace": "Peter Landesman directed this 2017 American biographical political thriller, built on the autobiography that FBI agent Mark Felt wrote with John O'Connor. On screen, Felt is the anonymous source known as \"Deep Throat,\" helping the reporters Bob Woodward and Carl Bernstein dig into the Watergate scandal, and that investigation ended with President Richard Nixon resigning.",
+  "why": "Ряд 24 слова → 6; сохранены 2017, Питер Ландесман, агент ФБР Марк Фелт, Джон О'Коннор, прозвище «Deep Throat» дословно в кавычках, Боб Вудворд, Карл Бернстайн, Уотергейт, отставка Ричарда Никсона. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («premiered at the toronto international film festival on sept…») — нужна вторая правка."
+ },
+ {
+  "slug": "lady-godiva-of-coventry-e5y9difn",
+  "lang": "en",
+  "find": "The film stars Maureen O'Hara as Lady Godiva, George Nader as Lord Leofric, Victor McLaglen as Grimald, Rex Reason as Harold, Torin Thatcher as Lord Godwin, and Eduard Franz as King Edward.",
+  "replace": "Maureen O'Hara plays Lady Godiva, with George Nader in the role of Lord Leofric. Victor McLaglen is Grimald, Rex Reason is Harold, Torin Thatcher is Lord Godwin, and Eduard Franz is King Edward.",
+  "why": "Ряд 24 слова → 4; сохранены все шесть пар актёр–роль без потерь: О'Хара/Годива, Нейдер/Леофрик, Маклаглен/Гримальд, Ризон/Гарольд, Тэтчер/Годвин, Франц/король Эдуард. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («is set in 11th century england king edward the confessor…») — нужна вторая правка."
+ },
+ {
+  "slug": "agent-recon-azrwiv4t",
+  "lang": "en",
+  "find": "The film stars Derek Ting as Jim Yung, Marc Singer as Colonel Green, Chuck Norris as Captain Alastair, Sylvia Kwan as Tanya, Jason Scott Jenkins as Miller, Matthew Ryan Burnett as Aaron Klak, Nikki Leigh as Captain Lila Rupert, and Christopher Showerman as Doctor Penn/Alpha.",
+  "replace": "Jim Yung is played by Derek Ting. Marc Singer takes Colonel Green, Chuck Norris plays Captain Alastair, and Sylvia Kwan appears as Tanya. Miller falls to Jason Scott Jenkins, Aaron Klak to Matthew Ryan Burnett, Captain Lila Rupert to Nikki Leigh, and Doctor Penn/Alpha to Christopher Showerman.",
+  "why": "Ряд 36 слов → 4: перечисление разбито на три предложения, часть пар развёрнута ролью вперёд; все 8 актёров и все 8 ролей на месте. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («and was released in the united states on june 21 2024…») — нужна вторая правка."
+ },
+ {
+  "slug": "edge-of-tomorrow-gopt6dsd",
+  "lang": "en",
+  "find": "A 2014 American science fiction action film directed by Doug Liman and written by Christopher McQuarrie and the writing team of Jez and John-Henry Butterworth, loosely based on the Japanese light novel All You Need Is Kill by Hiroshi Sakurazaka. Starring Tom Cruise and Emily Blunt, the film takes place in a future where most of Europe is occupied by an alien race.",
+  "replace": "All You Need Is Kill, a Japanese light novel by Hiroshi Sakurazaka, loosely underpins this 2014 American science fiction action film. Doug Liman directed it, while Christopher McQuarrie wrote the script alongside the writing team Jez and John-Henry Butterworth. Tom Cruise and Emily Blunt head the cast, and the story unfolds in a future where an alien race holds most of Europe.",
+  "why": "Ряд 34 слова → 5: первоисточник вынесен в начало, залог активный, оккупация перевёрнута с пассива; сохранены 2014, Лайман, Маккуорри, оба Баттеруорта, Сакурадзака, Круз, Блант, Европа. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 26 слов подряд («to join a landing operation against the aliens only to find …») — нужна вторая правка."
+ },
+ {
+  "slug": "the-matrix-resurrections-hrkil3vl",
+  "lang": "en",
+  "find": "The events revolve around Neo, who lives a seemingly ordinary life as a video game developer who has difficulty distinguishing fantasy from reality. A group of rebels, with the help of a programmed version of Morpheus, free Neo from a new version of the Matrix and fight a new enemy who holds Trinity captive. The Matrix film series depicts a future in which the reality that most people experience is actually a brain-in-a-vat simulation – the Matrix – created by intelligent machines to subjugate and pacify the human population, while the heat and electrical activity of their bodies are used by the machines as a source of energy. Drawn into a rebellion against the machines, a hacker named Neo (Thomas A. Anderson in The Matrix) finds himself in a new, frightening real world. He is given a choice – to return to a simulation existence, or to begin a rebellion against the machines, which also involves other people who have broken free of the Matrix and made it into reality.",
+  "replace": "Neo now leads what looks like an ordinary life, building video games while his grip on the line between fantasy and reality slips. Rebels reach him with help from a programmed Morpheus, pull him out of the Matrix in its newest form, and take on a fresh enemy who is holding Trinity captive. Across the saga, what people take for the world around them is the Matrix: a brain-in-a-vat simulation that intelligent machines built to keep humanity subdued and quiet, harvesting the heat and electrical activity of human bodies for energy. The hacker Neo — Thomas A. Anderson in The Matrix — is drawn into the revolt and wakes into a frightening real world. Then comes his choice: slide back into simulated existence, or launch a rebellion alongside others who have broken out of the Matrix and reached reality.",
+  "why": "Ряд 31 слово → 4: переписан весь накрытый блок из пяти предложений (не одно), пассив снят, длинное описание симуляции пересобрано; Нео, Морфеус, Тринити, Thomas A. Anderson, The Matrix сохранены. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («yahya abdul mateen ii jessica henwick jonathan groff neil pa…») — нужна вторая правка."
+ },
+ {
+  "slug": "cowspiracy-the-sustainability-secret-5bwyv7cn",
+  "lang": "en",
+  "find": "The film received recognition at international film festivals, winning the Audience Choice Award at the 2015 South African Eco Film Festival and the Best Foreign Film Award at the 12th annual Festival de films de Portneuf sur l'environnement.",
+  "replace": "International festivals took notice. The 2015 South African Eco Film Festival handed it the Audience Choice Award, while the Festival de films de Portneuf sur l'environnement, in its 12th annual edition, gave it the Best Foreign Film Award.",
+  "why": "Ряд 30 слов → 8 (осталось только само имя фестиваля): фестивали стали подлежащими, «12th annual» отцеплено от названия; 2015, 12, обе награды и оба фестиваля на месте. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («that animal agriculture is the primary source of greenhouse …») — нужна вторая правка."
+ },
+ {
+  "slug": "the-rum-diary-9ekgkaaw",
+  "lang": "en",
+  "find": "A 2011 American comedy-drama film written and directed by Bruce Robinson, based on the novel of the same name by Hunter S. Thompson, published in 1998.",
+  "replace": "Bruce Robinson wrote and directed this 2011 American comedy-drama film, adapting the Hunter S. Thompson novel of the same title that reached print in 1998.",
+  "why": "Ряд 25 слов → 5: взят весь ряд целиком (улика тянулась за границу предложения до «published»), залог активный, Робинсон вынесен в подлежащее; 2011, 1998, Hunter S. Thompson сохранены. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 20 слов подряд («aaron eckhart michael rispoli amber heard richard jenkins an…») — нужна вторая правка."
+ },
+ {
+  "slug": "corrective-measures-akp4cezf",
+  "lang": "en",
+  "find": "Among the inmates is Diego Diaz (Brennan Mejia), a new prisoner whose sole ability is heightened empathy. Navigating the treacherous environment of San Tiburon, Diego must choose his allies carefully to avoid becoming a pawn in the deadly games between inmates and the warden. As tensions escalate, alliances form and betrayals unfold. The power struggle between The Lobe and The Overseer intensifies, leading to a violent uprising within the prison. Amidst the chaos, Diego's empathetic abilities become crucial in mediating conflicts and seeking a path to survival. The film culminates in a confrontation that challenges the corrupt systems in place, with characters forced to confront their own moral compasses. The resolution leaves the future of San Tiburon and its inhabitants hanging in the balance, questioning the true meaning of justice and redemption.",
+  "replace": "Brennan Mejia plays Diego Diaz, an inmate who has just arrived and whose only gift is heightened empathy. Every ally he picks in San Tiburon either keeps him alive or turns him into a pawn in the deadly games the warden and the prisoners play against one another. Loyalties shift, betrayals surface, and the rivalry between The Lobe and The Overseer boils over into a violent uprising inside the walls. In that chaos his empathy turns into the one useful skill: he mediates between the men around him and looks for a way to stay alive. Everything converges on a single confrontation that drags the corruption running the place into the open and forces each character to face his own moral compass. The ending settles nothing about San Tiburon or the people locked in it, and leaves the meaning of justice and redemption an open question.",
+  "why": "Ряд 125 слов накрывал 7 предложений — переписаны все одним куском, остаток совпадения 6 слов; сохранены Brennan Mejia, Diego Diaz, San Tiburon, The Lobe, The Overseer и весь ход сюжета. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 50 слов подряд («set in san tiburon the world s most dangerous maximum securi…») — нужна вторая правка."
+ },
+ {
+  "slug": "young-hearts-hvkeqz1e",
+  "lang": "en",
+  "find": "However, fearing judgment and rejection, Elias denies his feelings, distancing himself from friends, family, and Alexander to hide his truth. Consumed by loneliness and regret, Elias struggles with the weight of his decisions. A heartfelt conversation with his grandfather, who shares a story of his enduring love for his late wife, inspires Elias to confront his fears. Realizing that love is too precious to let slip away, he gathers the courage to reconcile with Alexander, taking a brave step toward embracing his feelings and the possibility of love.",
+  "replace": "Fear of judgment and rejection wins out, though, and Elias denies what he feels, pulling away from Alexander, from his friends and from his own family to keep the truth hidden. Loneliness and regret follow, and the weight of those choices sits on him. His grandfather is the one who shifts something, telling him about the love he still carries for his late wife; that story gives Elias the nerve to face his fear. Love, he decides, matters too much to let slip away, so he goes back to Alexander and takes a brave first step toward accepting what he feels.",
+  "why": "Ряд 76 слов накрывал 4 предложения — переписаны все, остаток совпадения 4 слова; сохранены Elias, Alexander, дед с рассказом о покойной жене и вся развязка. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 16 слов подряд («he was in love with a boy and asks elias if he has experienc…») — нужна вторая правка."
+ },
+ {
+  "slug": "panda-plan-ms2bipfy",
+  "lang": "en",
+  "find": "However, it received mixed reviews from critics: James Marsh of the South China Morning Post gave it 1 out of 5 stars, calling it a \"tedious trudge through lazily choreographed fight sequences, sluggish chases, and torridly scripted interactions between Chan’s lethargic protagonist and an interchangeable ensemble of goofball mercenaries.\" Paul Bramhall of City on Fire was similarly unimpressed, stating, \"A charmless affair devoid of any purpose or entertainment value; at one point a bad guy says, 'What is Jackie Chan doing here!?', which is the same question anyone who dares watch it will likely also find themselves asking.\" Nevertheless, some reviewers found redeeming qualities; Mike McGranaghan of The Aisle Seat described it as an \"infectiously silly\" and \"fast-paced comic adventure,\" despite \"a couple wrong notes.\"",
+  "replace": "Reviews, though, were mixed. James Marsh, writing in the South China Morning Post, went as low as 1 out of 5 stars. City on Fire's Paul Bramhall was no kinder, stating, \"A charmless affair devoid of any purpose or entertainment value; at one point a bad guy says, 'What is Jackie Chan doing here!?', which is the same question anyone who dares watch it will likely also find themselves asking.\" Other reviewers found something to like: Mike McGranaghan of The Aisle Seat called the film \"infectiously silly\" and a \"fast-paced comic adventure,\" despite \"a couple wrong notes.\"",
+  "why": "Ряд 42 слова шёл ПО САМОЙ цитате Марша, поэтому переписать её нельзя — цитата снята целиком вместе с утверждением, а оценка 1 из 5 и все имена (James Marsh, South China Morning Post, Paul Bramhall, City on Fire, Mike McGranaghan, The Aisle Seat) сохранены; цитаты Брэмхолла и Макгранахана, включая «fast-paced comic adventure», остались дословно в кавычках, остаток совпадения 5 слов."
+ },
+ {
+  "slug": "poyekhavshaya-dzy51gyd",
+  "lang": "en",
+  "find": "The plot follows Anna Smolina (Olga Lerman), an ordinary woman who decides to break away from her routine life. Seeking change, she embarks on a cross-country bicycle journey through Russia, accompanied by her beloved dachshund, Kapa. Anna's destination is the town of Magadan, where she hopes to reconcile with her mother (Elena Yakovleva) after 13 years of estrangement.",
+  "replace": "Olga Lerman plays Anna Smolina, an ordinary woman who walks out of her daily routine and rides across Russia on a bicycle, her beloved dachshund Kapa along for the trip. The road leads to the town of Magadan and to her mother (Elena Yakovleva), after 13 years of estrangement that Anna wants to end.",
+  "why": "Ряд 41 слово накрывал 3 предложения — переписаны все, остаток совпадения 4 слова; сохранены Anna Smolina, Olga Lerman, такса Kapa, Magadan, Elena Yakovleva и 13 лет разрыва. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 26 слов подряд («along the way she encounters new people makes friends and fa…») — нужна вторая правка."
+ },
+ {
+  "slug": "ocean-s-eleven-1demfhid",
+  "lang": "en",
+  "find": "A 2001 American heist comedy film directed by Steven Soderbergh from a screenplay by Ted Griffin. The first installment in the Ocean's film trilogy, it is a remake of the 1960 Rat Pack film.",
+  "replace": "Steven Soderbergh directed this American heist comedy of 2001, working from Ted Griffin's screenplay. It remakes the 1960 Rat Pack film and opens the Ocean's trilogy.",
+  "why": "Ряд 36 слов накрывал оба первых предложения — переписаны оба, остаток совпадения 5 слов; сохранены 2001, Steven Soderbergh, Ted Griffin, 1960, Rat Pack и первенство фильма в трилогии Ocean's. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 19 слов подряд («roberts ocean s eleven was theatrically released in the unit…») — нужна вторая правка."
+ },
+ {
+  "slug": "lee-9i4noeuz",
+  "lang": "en",
+  "find": "A 2023 British biographical war drama film directed by Ellen Kuras in her feature directorial debut.",
+  "replace": "This British biographical war drama arrived in 2023, and directing it gave Ellen Kuras her feature debut.",
+  "why": "Ряд 16 слов → 4; сохранены 2023, Ellen Kuras, жанр и факт дебюта в полном метре. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («the 1985 biography the lives of lee miller by antony penrose…») — нужна вторая правка."
+ },
+ {
+  "slug": "the-orville-aubm5oiw",
+  "lang": "en",
+  "find": "An American science fiction comedy-drama television series created by Seth MacFarlane, who also stars as Captain Ed Mercer.",
+  "replace": "Seth MacFarlane created this American television series — science fiction told as comedy and drama at once — and he plays Captain Ed Mercer.",
+  "why": "Ряд 16 слов → 2; пассив снят, сохранены Seth MacFarlane, Captain Ed Mercer и связка жанров."
+ },
+ {
+  "slug": "me-before-you-bfgn47ue",
+  "lang": "en",
+  "find": "Filming took place in picturesque locations across the United Kingdom, including Pembroke Castle in Wales and Chenies Manor House in Buckinghamshire.",
+  "replace": "The production filmed at picturesque United Kingdom settings — Pembroke Castle in Wales among them, plus Chenies Manor House in Buckinghamshire.",
+  "why": "Ряд 16 слов → 5; сохранены United Kingdom, Pembroke Castle, Wales, Chenies Manor House, Buckinghamshire; связка «and» между локациями разорвана."
+ },
+ {
+  "slug": "28-days-later-dgj0h0iz",
+  "lang": "en",
+  "find": "A 2002 British post-apocalyptic horror film directed by Danny Boyle and written by Alex Garland.",
+  "replace": "Danny Boyle directed and Alex Garland wrote this 2002 British post-apocalyptic horror picture.",
+  "why": "Ряд 16 слов → 5; сохранены 2002, Danny Boyle, Alex Garland, жанр; двойной пассив заменён активным залогом."
+ },
+ {
+  "slug": "big-eyes-fosgrijz",
+  "lang": "en",
+  "find": "The 2014 American biographical drama film directed by Tim Burton, written by Scott Alexander and Larry Karaszewski, centers on the life of artist Margaret Keane (Amy Adams), whose paintings of children with large eyes became a sensation in the 1950s and 1960s.",
+  "replace": "Tim Burton directed this 2014 American biographical drama, working from a screenplay by Scott Alexander and Larry Karaszewski. The artist Margaret Keane (Amy Adams) is its subject: across the 1950s and 1960s her paintings — children with large eyes — became a sensation.",
+  "why": "Ряд 16 слов → 6; сохранены 2014, Tim Burton, Scott Alexander, Larry Karaszewski, Margaret Keane, Amy Adams, 1950s, 1960s; одно предложение разбито на два."
+ },
+ {
+  "slug": "where-d-you-go-bernadette-sbkyasox",
+  "lang": "en",
+  "find": "Bee requests a family trip to Antarctica as a reward for good grades, to which her parents agree.",
+  "replace": "Bee earns good grades and names her reward: Antarctica, with the whole family along. Her parents agree.",
+  "why": "Ряд 17 слов сбит до 2 ('good grades'); сохранены Bee, хорошие оценки как повод, награда, поездка всей семьёй в Антарктиду и согласие родителей. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 12 слов подряд («other parents at bee s school and especially their neighbor …») — нужна вторая правка."
+ },
+ {
+  "slug": "critters-attack-zgjzsbbu",
+  "lang": "en",
+  "find": "Directed by Bobby Miller and written by Scott Lobdell, the film stars Tashiana Washington as Drea, Dee Wallace as Aunt Dee, Jaeden Noel as Phillip, Jack Fulton as Jake, and Ava Preston as Trissy.",
+  "replace": "Bobby Miller directed it from a Scott Lobdell script, with Tashiana Washington (Drea), Dee Wallace (Aunt Dee), Jaeden Noel (Phillip), Jack Fulton (Jake) and Ava Preston (Trissy) in the starring roles.",
+  "why": "Ряд 17 слов сбит до 4; сохранены Bobby Miller, Scott Lobdell и все пять пар актёр-роль (Washington/Drea, Wallace/Aunt Dee, Noel/Phillip, Fulton/Jake, Preston/Trissy) — цепочка «X as Y» разбита скобками."
+ },
+ {
+  "slug": "london-has-fallen-at1pggl8",
+  "lang": "en",
+  "find": "A 2016 American political action thriller directed by Babak Najafi and written by Creighton Rothenberger, Katrin Benedikt, Chad St. John, and Christian Gudegast, serving as a sequel to \"Olympus Has Fallen\" (2013) and the second installment in the \"Has Fallen\" film series.",
+  "replace": "Babak Najafi directed this 2016 American political action thriller. The script comes from Creighton Rothenberger and Katrin Benedikt, together with Chad St. John and Christian Gudegast. The film picks up after \"Olympus Has Fallen\" (2013), making it the second entry in the \"Has Fallen\" film series.",
+  "why": "Ряд 17 слов сбит до 6; сохранены 2016, жанр, Babak Najafi, все четыре сценариста, порядковый номер в серии и названия в кавычках «Olympus Has Fallen» (2013) и «Has Fallen» — дословно. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («angela bassett as secret service director lynne jacobs rober…») — нужна вторая правка."
+ },
+ {
+  "slug": "william-shakespeare-s-julius-caesar-cuyt86se",
+  "lang": "en",
+  "find": "It was nominated for five Academy Awards, including Best Picture and Best Actor for Brando, winning Best Art Direction – Black-and-White.",
+  "replace": "Five Academy Award nominations followed, among them Best Picture and, for Brando, Best Actor; the win came in Best Art Direction – Black-and-White.",
+  "why": "Ряд 17 слов сбит до 6 (только само название номинации); сохранены пять номинаций, Academy Awards, Best Picture, Best Actor, Brando и победа в Best Art Direction – Black-and-White с тем же тире."
+ },
+ {
+  "slug": "shaft-g3rjnnid",
+  "lang": "en",
+  "find": "(Christian Bale), the son of a wealthy real estate tycoon, after noticing blood on him. Wade claims self-defense.",
+  "replace": "(Christian Bale), a wealthy real estate tycoon's son, once he notices the blood on him. Self-defense, Wade says.",
+  "why": "Ряд 17 слов сбит до 5; сохранены Christian Bale, происхождение Уэйда (сын магната недвижимости), кровь как повод для ареста и его версия о самообороне. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 15 слов подряд («vanessa williams jeffrey wright christian bale dan hedaya bu…») — нужна вторая правка."
+ },
+ {
+  "slug": "g-i-joe-retaliation-o4zen6mu",
+  "lang": "en",
+  "find": "The cast includes Dwayne Johnson, Bruce Willis, Lee Byung-hun, Adrianne Palicki, Ray Park, Jonathan Pryce, Ray Stevenson, and Channing Tatum.",
+  "replace": "Dwayne Johnson and Bruce Willis appear alongside Channing Tatum, Adrianne Palicki, Lee Byung-hun, Jonathan Pryce, Ray Park, and Ray Stevenson.",
+  "why": "Ряд 15 слов сведён к 3 («lee byung hun»); все 8 актёров сохранены, порядок перечисления перестроен. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («the second installment in the g i joe film series and…») — нужна вторая правка."
+ },
+ {
+  "slug": "the-whale-oibsclhx",
+  "lang": "en",
+  "find": "A 2022 American drama film directed by Darren Aronofsky and written by Samuel D. Hunter, based on his play of the same name.",
+  "replace": "Darren Aronofsky directed this American drama film in 2022, and Samuel D. Hunter wrote the screenplay, adapting his own play of the same title.",
+  "why": "Ряд 15 слов сведён к 3 («samuel d hunter»); сохранены 2022, American drama film, Аронофски, Хантер и факт пьесы того же названия."
+ },
+ {
+  "slug": "terminator-2-judgment-day-pge49jia",
+  "lang": "en",
+  "find": "A 1991 American science fiction action film directed by James Cameron, who co-wrote the screenplay with William Wisher.",
+  "replace": "James Cameron directed this science fiction action film, an American production from 1991, and wrote its screenplay together with William Wisher.",
+  "why": "Ряд 15 слов сведён к 4 («science fiction action film»); сохранены 1991, American, Кэмерон, Уишер и соавторство сценария. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 15 слов подряд («john connor when he is a child the resistance sends back a l…») — нужна вторая правка."
+ },
+ {
+  "slug": "exo-pshzrvoq",
+  "lang": "en",
+  "find": "South Korean-Chinese male music group formed in 2011 by SM Entertainment and debuting in 2012, consists of nine members: Xiumin, Suho, Lay, Baekhyun, Chen, Chanyeol, D.O., Kai, and Sehun.",
+  "replace": "SM Entertainment formed this South Korean-Chinese male music group in 2011, and it debuted in 2012. The lineup now numbers nine: Baekhyun, Chanyeol, Chen, D.O., Kai, Lay, Sehun, Suho, and Xiumin.",
+  "why": "Ряд 15 слов сведён к 3 («d o kai»); сохранены 2011, 2012, SM Entertainment и все девять имён (порядок алфавитный), оборот «consists of» убран."
+ },
+ {
+  "slug": "the-polar-express-urjgpkvp",
+  "lang": "en",
+  "find": "The film is based on the 1985 children's book of the same name by Chris Van Allsburg.",
+  "replace": "Chris Van Allsburg wrote the 1985 children's book behind the film, and the two share a title.",
+  "why": "Ряд 15 слов сведён к 5 («the 1985 children s book»); сохранены 1985, детская книга, Крис Ван Оллсбург и совпадение названий."
+ },
+ {
+  "slug": "the-instigators-9mhimirc",
+  "lang": "en",
+  "find": "\"The Instigators\" is a 2024 American crime comedy film directed by Doug Liman and written by Chuck Maclean and Casey Affleck.",
+  "replace": "Chuck Maclean and Casey Affleck wrote \"The Instigators,\" a 2024 American crime comedy, and Doug Liman directed it.",
+  "why": "Ряд 15 слов сбит до 5: авторы вынесены в подлежащее, режиссёр — во вторую часть; сохранены 2024, Doug Liman, Chuck Maclean, Casey Affleck, жанр."
+ },
+ {
+  "slug": "avatar-exgxcox6",
+  "lang": "en",
+  "find": "It is set in the 2154, when humans are colonizing Pandora, a lush habitable moon of a gas giant in the Alpha Centauri star system, in order to mine the valuable mineral unobtanium — the room-temperature superconductor mineral.",
+  "replace": "The year is 2154. Humans are settling Pandora — a gas giant's moon in the Alpha Centauri system, lush and habitable — and what draws them there is unobtanium, a valuable mineral that superconducts at room temperature.",
+  "why": "Ряд 15 слов сбит до 4: предложение разбито надвое, описание луны перестроено в притяжательную конструкцию; сохранены 2154, Pandora, Alpha Centauri, unobtanium, room-temperature superconductor. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («written and directed by james cameron the cast includes sam …») — нужна вторая правка."
+ },
+ {
+  "slug": "freelancers-hqcm2u97",
+  "lang": "en",
+  "find": "Upon graduation, he is taken under the wing of his father's former partner, Captain Joe Sarcone (Robert De Niro), and joins the Street Vice Crime Task Force.",
+  "replace": "Once he graduates, Captain Joe Sarcone (Robert De Niro), who once partnered with his father, becomes his mentor and brings him onto the Street Vice Crime Task Force.",
+  "why": "Ряд 15 слов сбит до 3: пассив заменён активом, Sarcone стал подлежащим, связь с отцом ушла в придаточное; сохранены Captain Joe Sarcone, Robert De Niro, Street Vice Crime Task Force. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 13 слов подряд («him not to take sarcone s place as baez s right hand man…») — нужна вторая правка."
+ },
+ {
+  "slug": "terms-of-endearment-jftfovcb",
+  "lang": "en",
+  "find": "An American family tragicomedy released in 1983, directed, written, and produced by James L. Brooks, adapted from Larry McMurtry's 1975 novel of the same name.",
+  "replace": "James L. Brooks brought the 1975 Larry McMurtry novel of the same name to the screen in 1983, handling direction, screenplay and production himself on this American family tragicomedy.",
+  "why": "Ряд 15 слов сбит до 3: перечисление ролей превращено в оборот при подлежащем-Бруксе, книга вынесена в дополнение; сохранены James L. Brooks, Larry McMurtry, 1975, 1983, все три роли, жанр."
+ },
+ {
+  "slug": "hardball-lydbnyat",
+  "lang": "en",
+  "find": "The team consists of troubled adolescents, including captain Andre Ray Peetes, talented player Kofi Evans, asthmatic Jefferson Albert Tibbs, the oldest on the team Jamal, pitcher Miles Penfield II, who listens to The Notorious B.I.G.'s \"Big Poppa\" to pitch well, and Kofi's younger brother, Jarius \"G-Baby\" Evans, who is too young to play but becomes the assistant coach.",
+  "replace": "Trouble follows every boy on this roster. Andre Ray Peetes captains them, Kofi Evans has the real talent, Jefferson Albert Tibbs is asthmatic, and Jamal is the oldest of the bunch. Miles Penfield II, the pitcher, gets his arm working by putting on \"Big Poppa\" by The Notorious B.I.G. Rounding out the group is Kofi's little brother, Jarius \"G-Baby\" Evans — too young to take the field, so he becomes the assistant coach.",
+  "why": "Ряд 15 слов сбит до 5: один перечислительный период разбит на три предложения, каждый игрок стал подлежащим, песня переставлена перед исполнителем; сохранены все имена, кавычки \"Big Poppa\" и \"G-Baby\" не тронуты."
+ },
+ {
+  "slug": "10-cloverfield-lane-js0baimt",
+  "lang": "en",
+  "find": "A 2016 American science fiction horror thriller film directed by Dan Trachtenberg in his directorial debut.",
+  "replace": "A 2016 American thriller that blends science fiction with horror — the first film Dan Trachtenberg directed.",
+  "why": "Ряд 16 слов сбит до 3 («a 2016 american»); сохранены год 2016, Dan Trachtenberg, дебют в режиссуре и все три жанра."
+ },
+ {
+  "slug": "king-richard-lllvnrfw",
+  "lang": "en",
+  "find": "The 2021 American biographical sports drama film directed by Reinaldo Marcus Green and written by Zach Baylin portrays the life of Richard Williams (Will Smith), the father and coach of renowned tennis players Venus and Serena Williams, both of whom served as executive producers.",
+  "replace": "Reinaldo Marcus Green directed this 2021 American sports drama, written by Zach Baylin, as a biography of Richard Williams (Will Smith) — the man who fathered and coached the renowned tennis players Venus and Serena Williams. Both sisters took executive producer credits on the picture.",
+  "why": "Ряд 16 слов сбит до 4; сохранены 2021, Reinaldo Marcus Green, Zach Baylin, Richard Williams, Will Smith, Venus и Serena Williams и их роль исполнительных продюсеров."
+ },
+ {
+  "slug": "ladybug-cat-noir-the-movie-xo7jgmbv",
+  "lang": "en",
+  "find": "The movie is an adaptation of the animated series \"Miraculous: Tales of Ladybug & Cat Noir\" and follows two Parisian teenagers, Marinette Dupain-Cheng (Anouck Hautbois) and Adrien Agreste (Benjamin Bollen), who transform into superheroes Ladybug and Cat Noir, respectively, to protect the city from supervillains led by Hawk Moth (Antoine Tomé).",
+  "replace": "It adapts the animated series \"Miraculous: Tales of Ladybug & Cat Noir.\" Two Parisian teenagers, Marinette Dupain-Cheng (Anouck Hautbois) and Adrien Agreste (Benjamin Bollen), take on the alter egos of Ladybug and Cat Noir, guarding their city from the supervillains that Hawk Moth (Antoine Tomé) leads.",
+  "why": "Ряд 16 слов сбит до 4; сохранены название сериала в кавычках, Marinette Dupain-Cheng, Anouck Hautbois, Adrien Agreste, Benjamin Bollen, Hawk Moth, Antoine Tomé и Париж."
+ },
+ {
+  "slug": "donnie-darko-1hqyrh7o",
+  "lang": "en",
+  "find": "Subsequently, he begins experiencing visions of a mysterious figure in a rabbit costume named Frank, who informs him that the world will end in 28 days, 6 hours, 42 minutes, and 12 seconds.",
+  "replace": "Then the visions begin. A mysterious figure in a rabbit costume, Frank, tells him the world has 28 days, 6 hours, 42 minutes, 12 seconds left.",
+  "why": "Ряд 15 слов сбит до 6; все четыре числа (28, 6, 42, 12) и имя Frank на месте."
+ },
+ {
+  "slug": "a-league-of-their-own-zhylxlgx",
+  "lang": "en",
+  "find": "The cast included Sam McMurray as Coach Jimmy Dugan, Carey Lowell as Dottie Hinson, Christine Elise as Kit Keller, Tracy Nelson as Evelyn Gardner, Megan Cavanagh as Marla Hooch, Tracy Reiner as Betty Horn, Wendy Makkena as Mae Mordabito, and Katie Rich as Doris Murphy.",
+  "replace": "Sam McMurray took the role of Coach Jimmy Dugan, while Dottie Hinson went to Carey Lowell and Kit Keller to Christine Elise. Filling out the roster were Evelyn Gardner (Tracy Nelson), Marla Hooch (Megan Cavanagh), Betty Horn (Tracy Reiner), Mae Mordabito (Wendy Makkena) and Doris Murphy (Katie Rich).",
+  "why": "Ряд 36 слов сломан до 3: цепочка «актёр as персонаж» перевёрнута и разбита на два предложения, все 8 актёров и 8 персонажей сохранены."
+ },
+ {
+  "slug": "exodus-gods-and-kings-v5jpjfxj",
+  "lang": "en",
+  "find": "A 2014 American biblical epic film directed and produced by Ridley Scott, with a screenplay by Adam Cooper, Bill Collage, Jeffrey Caine, and Steven Zaillian. The film stars Christian Bale, Joel Edgerton, John Turturro, Aaron Paul, Ben Mendelsohn, Sigourney Weaver, and Ben Kingsley.",
+  "replace": "Ridley Scott directed and produced this 2014 American biblical epic, working from a script four writers shared: Steven Zaillian, Jeffrey Caine, Bill Collage and Adam Cooper. Christian Bale heads the cast, joined by Joel Edgerton, Ben Kingsley, Sigourney Weaver, John Turturro, Ben Mendelsohn and Aaron Paul.",
+  "why": "Ряд 28 слов сломан до 2: залог активный, оба списка переставлены; год 2014, Ридли Скотт, все 4 сценариста и все 7 актёров на месте."
+ },
+ {
+  "slug": "interstellar-wpykofib",
+  "lang": "en",
+  "find": "Set in a dystopian future where Earth is suffering from catastrophic blight and famine, the film follows a group of astronauts who travel through a wormhole near Saturn in search of a new home for mankind.",
+  "replace": "Catastrophic blight and famine have wrecked Earth in the dystopian future the film imagines. A wormhole near Saturn offers a way out, and astronauts travel through it hunting a new home for mankind.",
+  "why": "Ряд 24 слова сломан до 4: одно предложение разбито на два, порядок частей перевёрнут; Земля, Сатурн, червоточина, антиутопия сохранены. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 14 слов подряд («film directed by christopher nolan who co wrote the screenpl…») — нужна вторая правка."
+ },
+ {
+  "slug": "modern-talking-heq01rud",
+  "lang": "en",
+  "find": "Subsequent hits like \"You Can Win If You Want,\" \"Cheri, Cheri Lady,\" \"Brother Louie,\" \"Atlantis Is Calling (S.O.S. for Love),\" and \"Geronimo's Cadillac\" solidified their popularity across Europe, Asia, South America, and the Middle East.",
+  "replace": "More hits followed: \"Cheri, Cheri Lady,\" \"Atlantis Is Calling (S.O.S. for Love),\" \"Brother Louie,\" \"Geronimo's Cadillac\" and \"You Can Win If You Want.\" Those records spread their popularity across Europe, Asia, South America, and the Middle East.",
+  "why": "Ряд 23 слова сломан до 8 — остаток это само название в кавычках, его не трогал; все 5 названий дословны, 4 региона сохранены. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («alone 1999 year of the dragon 2000 america 2001 victory 2002…») — нужна вторая правка."
+ },
+ {
+  "slug": "maria-zvsmtrvz",
+  "lang": "en",
+  "find": "The film premiered at the 81st Venice International Film Festival on August 29, 2024, where it competed for the Golden Lion and received positive reviews from critics, particularly praising Jolie's performance.",
+  "replace": "On August 29, 2024, the 81st Venice International Film Festival gave the film its first screening and put it in the running for the Golden Lion. Critics there responded warmly, with Jolie's performance drawing the most praise.",
+  "why": "Ряд 23 слова сломан до 6: дата вынесена вперёд, фестиваль стал подлежащим, оценка отделена; 81-й Венецианский, 29 августа 2024, «Золотой лев», Джоли сохранены. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 14 слов подряд («pierfrancesco favino alba rohrwacher haluk bilginer stephen …») — нужна вторая правка."
+ },
+ {
+  "slug": "john-wick-chapter-2-iv7cidvk",
+  "lang": "en",
+  "find": "The film also stars Laurence Fishburne, Ruby Rose, Lance Reddick, Peter Stormare, Bridget Moynahan, Franco Nero, John Leguizamo, and Ian McShane.",
+  "replace": "Ian McShane, Lance Reddick, and Laurence Fishburne also appear, as do Ruby Rose, Peter Stormare, John Leguizamo, Franco Nero, and Bridget Moynahan.",
+  "why": "Ряд 17 слов → 2 («ian mcshane»); все восемь фамилий на месте, порядок перечисления перестроен и список разбит надвое. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 16 слов подряд («2017 american neo noir action thriller film directed by chad…») — нужна вторая правка."
+ },
+ {
+  "slug": "365-days-3bkcgaik",
+  "lang": "en",
+  "find": "A 2020 Polish erotic thriller based on the first novel of a trilogy by Blanka Lipińska. The plot follows a young woman from Warsaw, Laura Biel (Anna-Maria Sieklucka), who is in a troubled relationship.",
+  "replace": "Blanka Lipińska wrote the trilogy whose first novel this 2020 Polish erotic thriller adapts. At its center is Laura Biel (Anna-Maria Sieklucka), a young woman from Warsaw stuck in a troubled relationship.",
+  "why": "Ряд 16 слов → 2 («blanka lipińska»); сохранены 2020, польский эротический триллер, первый роман трилогии, Blanka Lipińska, Laura Biel, Anna-Maria Sieklucka, Варшава."
+ },
+ {
+  "slug": "elemental-6ai25uhc",
+  "lang": "en",
+  "find": "It premiered on May 27, 2023, at the closing of the 76th Cannes Film Festival out of competition, and was released in the United States on June 16, 2023, in RealD 3D, 4DX, and Dolby Cinema formats.",
+  "replace": "It closed the 76th Cannes Film Festival on May 27, 2023, screening out of competition, and on June 16, 2023, it opened across the United States in Dolby Cinema, 4DX, and RealD 3D formats.",
+  "why": "Ряд 16 слов → 4 («on june 16 2023»); сохранены обе даты, 76-й Канн, вне конкурса, United States и все три формата; запрещённый оборот «premiered on» убран."
+ },
+ {
+  "slug": "the-f-word-8w8nplk9",
+  "lang": "en",
+  "find": "This 2013 romantic comedy film, directed by Michael Dowse and written by Elan Mastai, based on the play \"Toothpaste and Cigars\" by TJ Dawe and Michael Rinaldi, follows Wallace (Daniel Radcliffe), a young Brit who, after a painful breakup, drops out of medical school and leads a reclusive life in Toronto.",
+  "replace": "Michael Dowse directed this 2013 romantic comedy, which Elan Mastai adapted from the TJ Dawe and Michael Rinaldi play \"Toothpaste and Cigars.\" Its hero is Wallace (Daniel Radcliffe), a young Brit who quits medical school after a painful breakup and shuts himself away in Toronto.",
+  "why": "Ряд 16 слов → 5 («tj dawe and michael rinaldi»); сохранены 2013, Michael Dowse, Elan Mastai, название пьесы в кавычках дословно, TJ Dawe, Michael Rinaldi, Wallace, Daniel Radcliffe, Торонто."
+ },
+ {
+  "slug": "the-alto-knights-gwwupubr",
+  "lang": "en",
+  "find": "A 2025 American biographical crime drama directed by Barry Levinson and written by Nicholas Pileggi. The film stars Robert De Niro in dual roles as real-life 1950s New York mob bosses Vito Genovese and Frank Costello.",
+  "replace": "Barry Levinson directed this 2025 American biographical crime drama, working from a script by Nicholas Pileggi. Robert De Niro plays two parts at once: Vito Genovese and Frank Costello, real mob bosses of 1950s New York.",
+  "why": "Ряд 16 слов сбит до 3 («by Nicholas Pileggi»): оба накрытых предложения перестроены в активный залог, имена вынесены вперёд списка. Сохранены 2025, Barry Levinson, Nicholas Pileggi, Robert De Niro, двойная роль, 1950s, New York, Vito Genovese, Frank Costello."
+ },
+ {
+  "slug": "jackie-brown-jdcosgrq",
+  "lang": "en",
+  "find": "The film pays homage to 1970s blaxploitation films, particularly \"Coffy\" and \"Foxy Brown,\" both of which also starred Pam Grier.",
+  "replace": "Tarantino salutes 1970s blaxploitation throughout, above all \"Coffy\" and \"Foxy Brown\" — Pam Grier starred in those too.",
+  "why": "Ряд 16 слов сбит до 4 (только названия «Coffy and Foxy Brown»): сменён субъект на Тарантино, придаточное «both of which» разбито в отдельное утверждение. Сохранены 1970s, blaxploitation, названия в кавычках дословно, Pam Grier. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 13 слов подряд («a 1997 american crime film written and directed by quentin t…») — нужна вторая правка."
+ },
+ {
+  "slug": "educating-rita-jehorbdr",
+  "lang": "en",
+  "find": "The 1983 British comedy-drama directed by Lewis Gilbert, with a screenplay by Willy Russell based on his 1980 stage play, tells the story of Susan, a 26-year-old hairdresser from Liverpool who prefers to be called Rita (Julie Walters).",
+  "replace": "Lewis Gilbert directed this 1983 British comedy-drama; Willy Russell adapted the screenplay from his own 1980 stage play. At its center is Susan (Julie Walters), a 26-year-old Liverpool hairdresser who would rather be called Rita.",
+  "why": "Ряд 16 слов сбит до 3 («1980 stage play»): одно длинное предложение с вложенными оборотами разбито на два, пассив заменён активом. Сохранены 1983, British comedy-drama, Lewis Gilbert, Willy Russell, 1980, Susan, 26-year-old, Liverpool, Rita, Julie Walters."
+ },
+ {
+  "slug": "ship-to-shore-kzuchves",
+  "lang": "en",
+  "find": "\"Ship to Shore\" was well-received not only in Australia but also internationally, airing on YTV in Canada and briefly on Nickelodeon in the United States and the United Kingdom.",
+  "replace": "\"Ship to Shore\" found an audience at home in Australia and abroad as well: Canada's YTV picked it up, and Nickelodeon gave it a short run in the United Kingdom and the United States.",
+  "why": "Ряд 16 слов сбит до 3 («in the united»): вещатели стали подлежащими вместо оборота «airing on», порядок стран перевёрнут. Сохранены название, Australia, YTV, Canada, Nickelodeon, United States, United Kingdom и краткость показа."
+ },
+ {
+  "slug": "the-holdovers-nqt68fiz",
+  "lang": "en",
+  "find": "It was listed among the top ten films of 2023 by the National Board of Review and the American Film Institute and received numerous awards, including two Golden Globe Awards and two BAFTA Awards.",
+  "replace": "The National Board of Review put it on its list of 2023's top ten films, as did the American Film Institute, and the awards piled up from there: two Golden Globe Awards and two BAFTA Awards among them.",
+  "why": "Ряд 16 слов сбит до 5 («the National Board of Review»): пассив снят, две организации разведены оборотом «as did», иначе они склеивались в 10-словный ряд. Сохранены 2023, топ-10, National Board of Review, American Film Institute, два Golden Globe Awards, два BAFTA Awards."
+ },
+ {
+  "slug": "the-portable-door-cr1sqszn",
+  "lang": "en",
+  "find": "The film also features Miranda Otto as Countess Judy, Rachel House as Nienke Van Spee, Jessica De Gouw as Rosie Tanner, and Chris Pang as Casimir.",
+  "replace": "Countess Judy (Miranda Otto), Nienke Van Spee (Rachel House), Rosie Tanner (Jessica De Gouw), and Casimir (Chris Pang) fill out the surrounding cast.",
+  "why": "Ряд 17 слов; перевернул строй «актёр as роль» в «роль (актёр)», как в остальном описании — все 4 актёра и 4 персонажа на месте, максимальный остаточный ряд 3 слова. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 13 слов подряд («interns who begin working at the mysterious london firm j w …») — нужна вторая правка."
+ },
+ {
+  "slug": "witness-hnph8hdk",
+  "lang": "en",
+  "find": "It received eight Academy Award nominations, including Best Picture and Best Actor for Ford, winning Best Original Screenplay and Best Film Editing.",
+  "replace": "The film drew eight Academy Award nominations, Best Picture among them, and Ford was up for Best Actor; two turned into wins: one for Best Original Screenplay, one for Best Film Editing.",
+  "why": "Ряд 17 слов; разбил на два ядра и убрал связку «winning …» — сохранены восемь номинаций, Academy Award, Best Picture, Best Actor для Ford, обе победы; остаточный ряд 3 слова. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («1985 american neo noir crime thriller film directed by peter…») — нужна вторая правка."
+ },
+ {
+  "slug": "john-wick-chapter-3-parabellum-kqswwril",
+  "lang": "en",
+  "find": "The film also stars Halle Berry, Laurence Fishburne, Mark Dacascos, Asia Kate Dillon, Lance Reddick, Anjelica Huston, and Ian McShane.",
+  "replace": "Ian McShane, Anjelica Huston, and Laurence Fishburne appear alongside Halle Berry, Mark Dacascos, Lance Reddick, and Asia Kate Dillon.",
+  "why": "Ряд 17 слов; переставил порядок и разбил список на две группы — все 7 имён сохранены, остаточный ряд 3 слова. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («2019 american neo noir action thriller film directed by chad…») — нужна вторая правка."
+ },
+ {
+  "slug": "the-presidio-okdz5dqa",
+  "lang": "en",
+  "find": "Military Police officer Patti Jean Lynch (Jenette Goldstein) is shot dead while investigating a break-in, and two San Francisco Police Department officers are killed during the getaway.",
+  "replace": "Investigating a break-in on the base, Military Police officer Patti Jean Lynch (Jenette Goldstein) is gunned down; two officers of the San Francisco Police Department die as the killers get away.",
+  "why": "Ряд 17 слов; вынес обстоятельство вперёд и разнёс два события точкой с запятой — имя, актриса, число погибших и San Francisco Police Department на месте, остаточный ряд 4 слова."
+ },
+ {
+  "slug": "the-insider-odqwyebl",
+  "lang": "en",
+  "find": "The 1999 American biographical drama film directed by Michael Mann and written by Mann and Eric Roth is based on Marie Brenner's 1996 Vanity Fair article \"The Man Who Knew Too Much.\" The film tells the story of Jeffrey Wigand (Russell Crowe), a former vice president of research and development at the tobacco company Brown & Williamson, who becomes a whistleblower by revealing that the company deliberately manipulated the composition of cigarettes to increase their addictiveness.",
+  "replace": "Michael Mann directed this 1999 American biographical drama and wrote the screenplay with Eric Roth, working from \"The Man Who Knew Too Much,\" a 1996 Vanity Fair article by Marie Brenner. At its center is Jeffrey Wigand (Russell Crowe), who had been a vice president at the tobacco company Brown & Williamson, in charge of research and development. He turns whistleblower and reveals that his employer deliberately manipulated the makeup of cigarettes to make them more addictive.",
+  "why": "Ряд 17 слов на двух предложениях; поставил Манна подлежащим, вынес название статьи вперёд, разделил вторую фразу на две — 1999, Michael Mann, Eric Roth, Marie Brenner, 1996, Vanity Fair, Jeffrey Wigand, Russell Crowe, Brown & Williamson сохранены, название статьи оставлено дословно в кавычках (это и есть остаточный ряд 6 слов), прочие ряды 4 слова."
+ },
+ {
+  "slug": "i-love-you-to-death-0gpqvylf",
+  "lang": "en",
+  "find": "The 1990 American black comedy directed by Lawrence Kasdan features a star-studded ensemble cast, including Kevin Kline, Tracey Ullman, Joan Plowright, River Phoenix, William Hurt, and Keanu Reeves. The screenplay by John Kostmayer is based on the true events of 1983 in Allentown, Pennsylvania, where Frances Toto repeatedly attempted to kill her husband, Anthony.",
+  "replace": "In Allentown, Pennsylvania, in 1983, Frances Toto tried again and again to kill her husband, Anthony. John Kostmayer built a screenplay out of that real case, and Lawrence Kasdan filmed it as a 1990 American black comedy. The cast he assembled runs deep: Kevin Kline and Tracey Ullman lead it, with Joan Plowright, William Hurt, Keanu Reeves, and River Phoenix around them.",
+  "why": "Ряд 19 слов → 3 (проверено скриптом): порядок перевёрнут — сначала реальное дело, потом фильм, список актёров пересобран; сохранены 1990, чёрная комедия, Lawrence Kasdan, John Kostmayer, 1983, Allentown, Pennsylvania, Frances Toto, Anthony и все шесть имён актёров."
+ },
+ {
+  "slug": "the-call-of-the-wild-auj9fxva",
+  "lang": "en",
+  "find": "Set during the 1890s Klondike Gold Rush, the story follows a dog named Buck who is stolen from his home in California and sent to the Yukon, where he befriends an old outdoorsman and embarks on a life-altering adventure.",
+  "replace": "A dog named Buck anchors the story. He is stolen from his California home during the 1890s Klondike Gold Rush and shipped north to the Yukon, where an old outdoorsman becomes his friend and the adventure that follows changes his life.",
+  "why": "Ряд 19 слов → 4: одно предложение разбито на два, время действия перенесено в середину; сохранены Buck, 1890s Klondike Gold Rush, California, Yukon, старый следопыт и перелом в судьбе. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 11 слов подряд («the call of the wild is a 2020 american adventure film…») — нужна вторая правка."
+ },
+ {
+  "slug": "shrinking-l05rkoox",
+  "lang": "en",
+  "find": "The first season garnered two Emmy nominations: Outstanding Lead Actor in a Comedy Series for Segel and Outstanding Supporting Actress in a Comedy Series for Williams.",
+  "replace": "Two Emmy nominations came out of the first season. Segel drew one for Outstanding Lead Actor in a Comedy Series, and Williams another for Outstanding Supporting Actress in a Comedy Series.",
+  "why": "Ряд 19 слов → 7: двоеточие заменено на два самостоятельных сказуемых, имена вынесены вперёд категорий; сохранены «два», первый сезон, Segel, Williams и обе официальные формулировки премии дословно. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («it was renewed for a second season in march 2023…») — нужна вторая правка."
+ },
+ {
+  "slug": "miss-congeniality-noxu2dyw",
+  "lang": "en",
+  "find": "A 2000 American action comedy film directed by Donald Petrie, written by Marc Lawrence, Katie Ford, and Caryn Lucas.",
+  "replace": "Donald Petrie directed this American action comedy of 2000; the script came from Marc Lawrence, Katie Ford, and Caryn Lucas.",
+  "why": "Ряд 19 слов → 7: назывное предложение превращено в глагольное, режиссёр вынесен в начало, год ушёл в конец; сохранены 2000, американская экшен-комедия, Donald Petrie и все три сценариста."
+ },
+ {
+  "slug": "maxxxine-oy3lsin1",
+  "lang": "en",
+  "find": "It premiered at the TCL Chinese Theatre in Los Angeles on June 24, 2024, and was released in the United States on July 5, 2024, grossing $22 million worldwide, making it the highest-grossing film in the series.",
+  "replace": "Los Angeles saw it first, at the TCL Chinese Theatre on June 24, 2024, and US theaters followed on July 5, 2024. Worldwide takings reached $22 million, more than any other film in the series.",
+  "why": "Ряд 19 слов → 5: город стал подлежащим, площадка отделена от города, сборы вынесены в отдельное предложение; сохранены TCL Chinese Theatre, Los Angeles, 24 июня 2024, 5 июля 2024, $22 млн и первенство по сборам в серии. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 16 слов подряд («elizabeth debicki moses sumney michelle monaghan bobby canna…») — нужна вторая правка."
+ },
+ {
+  "slug": "tape-cwvzn6cp",
+  "lang": "en",
+  "find": "The 2001 American drama film directed by Richard Linklater and written by Stephen Belber, based on his play of the same name, is a chamber piece unfolding entirely in real time within a motel room in Lansing, Michigan.",
+  "replace": "Stephen Belber adapted his own play of the same name into this 2001 American drama, which Richard Linklater directed. Everything unfolds in real time inside one motel room in Lansing, Michigan, which makes the picture a chamber piece.",
+  "why": "Ряд 19 слов сломан до 5: сохранены 2001, Ричард Линклейтер, Стивен Белбер, пьеса того же названия, реальное время, мотель, Лансинг, Мичиган, камерность."
+ },
+ {
+  "slug": "deep-impact-krb2wlyw",
+  "lang": "en",
+  "find": "A 1998 American science fiction disaster film directed by Mimi Leder, written by Bruce Joel Rubin and Michael Tolkin.",
+  "replace": "Mimi Leder directed this 1998 American science-fiction disaster film; Bruce Joel Rubin and Michael Tolkin wrote the screenplay.",
+  "why": "Ряд 19 слов сломан до 6: сохранены 1998, американский, научная фантастика, катастрофа, Мими Ледер, Брюс Джоэл Рубин, Майкл Толкин."
+ },
+ {
+  "slug": "venus-vacation-prism-dead-or-alive-xtreme-neyr3n7z",
+  "lang": "en",
+  "find": "The game is scheduled for release on March 27, 2025, for PlayStation 4, PlayStation 5, and Microsoft Windows (via Steam and DMM Games).",
+  "replace": "March 27, 2025 is the launch date. Buyers can pick it up on PlayStation 4 and PlayStation 5, while Microsoft Windows copies come through Steam and DMM Games.",
+  "why": "Ряд 19 слов сломан до 6: сохранены 27 марта 2025, PlayStation 4, PlayStation 5, Microsoft Windows, Steam, DMM Games. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 17 слов подряд («any time during character episodes by sharing photos of the …») — нужна вторая правка."
+ },
+ {
+  "slug": "alpha-dog-4xiylrje",
+  "lang": "en",
+  "find": "\"Alpha Dog\" premiered at the Sundance Film Festival on January 27, 2006, and was released in the United States on January 12, 2007.",
+  "replace": "The Sundance Film Festival showed \"Alpha Dog\" on January 27, 2006; the United States release came on January 12, 2007.",
+  "why": "Ряд 18 слов сломан до 4: сохранены \"Alpha Dog\", Сандэнс, 27 января 2006, США, 12 января 2007."
+ },
+ {
+  "slug": "indiana-jones-and-the-great-circle-agqyz6rl",
+  "lang": "en",
+  "find": "Indiana Jones and the Great Circle is an action-adventure video game developed by MachineGames and published by Bethesda Softworks in 2024. Based on the Indiana Jones franchise, the game features an original narrative inspired by the film series. Set in 1937, between the events of \"Raiders of the Lost Ark\" (1981) and \"Indiana Jones and the Last Crusade\" (1989), players control archaeologist Indiana Jones as he attempts to thwart various groups seeking to harness a power connected to the Great Circle—a series of mysterious sites around the world that form a perfect circle on a map.",
+  "replace": "MachineGames developed Indiana Jones and the Great Circle, an action-adventure video game that Bethesda Softworks published in 2024. The Indiana Jones franchise underpins it, though the narrative is original and takes its cue from the film series. The year is 1937 — after \"Raiders of the Lost Ark\" (1981) and before \"Indiana Jones and the Last Crusade\" (1989) in the archaeologist's own timeline. You play Indiana Jones himself, working to stop rival groups from tapping a power tied to the Great Circle: a chain of strange sites scattered across the globe that line up as a perfect circle on a map.",
+  "why": "Ряд 18 слов сломан до 7, переписаны все три накрытых предложения: сохранены MachineGames, Bethesda Softworks, 2024, 1937, \"Raiders of the Lost Ark\" (1981), \"Indiana Jones and the Last Crusade\" (1989), археолог, Великий круг и идеальный круг на карте. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («the game is primarily played from a first person perspective…») — нужна вторая правка."
+ },
+ {
+  "slug": "the-pacific-oem0la5w",
+  "lang": "en",
+  "find": "The series follows the lives of three Marines: Robert Leckie (James Badge Dale), Eugene Sledge (Joseph Mazzello), and John Basilone (Jon Seda), who served in different regiments of the 1st Marine Division.",
+  "replace": "Three Marines carry the story, and each of them served in a different regiment of the 1st Marine Division: James Badge Dale plays Robert Leckie, Joseph Mazzello plays Eugene Sledge, and Jon Seda plays John Basilone.",
+  "why": "Ряд 16 слов сбит до 3 (проверено скриптом): роль и актёр развёрнуты в обратном порядке; сохранены три имени, три актёра и 1st Marine Division."
+ },
+ {
+  "slug": "path-of-the-panther-rmqogvlr",
+  "lang": "en",
+  "find": "The documentary emphasizes the importance of preserving the Florida Wildlife Corridor—a network of over 18 million acres of protected and private lands essential for the panther's survival and the region's biodiversity. It also features Betty Osceola, an environmental advocate from the Seminole Tribe, highlighting the cultural and ecological significance of protecting the panther's habitat. The production spanned nearly five years, employing innovative filming techniques such as camera traps to capture rare footage of the Florida panther in the wild. The film influenced the passage of the Florida Wildlife Corridor Act, aimed at safeguarding and connecting over 18 million acres of habitat.",
+  "replace": "The film builds its case around the Florida Wildlife Corridor: more than 18 million acres, some publicly protected and some in private hands, that the panther needs to survive and the region needs for its biodiversity. Betty Osceola, an advocate for the environment from the Seminole Tribe, appears as well, and through her the film shows what the panther's habitat means culturally as much as ecologically. Crews worked for nearly five years and leaned on inventive methods, camera traps among them, to capture rare wild footage of the Florida panther. That effort fed the Florida Wildlife Corridor Act, which the film helped push through; the law sets out to shield more than 18 million acres of habitat and link them together.",
+  "why": "Ряд 16 слов сбит до 4; переписан весь накрытый кусок из 4 предложений, сохранены оба упоминания 18 млн акров, Betty Osceola, Seminole Tribe, пять лет, камерные ловушки и Florida Wildlife Corridor Act."
+ },
+ {
+  "slug": "critters-tnhj6ucd",
+  "lang": "en",
+  "find": "A 1986 American science fiction comedy horror film directed by Stephen Herek in his directorial debut.",
+  "replace": "Stephen Herek directed this 1986 American science fiction horror comedy, his first feature as a director.",
+  "why": "Ряд 16 слов сбит до 4 (осталось лишь название жанра с годом); сохранены 1986, США, Stephen Herek и факт дебюта."
+ },
+ {
+  "slug": "the-panic-in-needle-park-zckrdtyx",
+  "lang": "en",
+  "find": "The central characters are Bobby (Al Pacino), a young addict and small-time hustler, and Helen (Kitty Winn), a restless woman who finds Bobby charismatic.",
+  "replace": "Two people hold the center of the film. Bobby, played by Al Pacino, is young, hooked, and hustling for small money; Helen, played by Kitty Winn, is restless and taken with his charisma.",
+  "why": "Ряд 16 слов сбит до 2; сохранены Bobby/Al Pacino, Helen/Kitty Winn, зависимость, мелкое мошенничество, беспокойность и обаяние. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («the best actress award at the 1971 cannes film festival…») — нужна вторая правка."
+ },
+ {
+  "slug": "the-replacements-htroc9z1",
+  "lang": "en",
+  "find": "The story centers on a professional football league hit by a players' strike with four games left in the season. Washington Sentinels owner Edward O'Neil (Jack Warden) enlists former coach Jimmy McGinty (Gene Hackman) to lead the team through the remaining games, tasking him with winning three out of four to secure a playoff spot.",
+  "replace": "With four games still to play, the players of a professional football league walk out on strike. Jack Warden plays Edward O'Neil, owner of the Washington Sentinels, who brings back a former coach, Jimmy McGinty (Gene Hackman), to run the team through what remains of the season. He gives McGinty a single target: three wins out of those four, and the Sentinels take a playoff spot.",
+  "why": "Ряд 16 слов сбит до 3; оба накрытых предложения перестроены и пересобраны в три, сохранены Washington Sentinels, Edward O'Neil (Jack Warden), Jimmy McGinty (Gene Hackman), четыре игры, три победы и плей-офф."
+ },
+ {
+  "slug": "foyle-s-war-ox93icyl",
+  "lang": "en",
+  "find": "He is assisted by his driver, Samantha \"Sam\" Stewart (Honeysuckle Weeks), and Detective Sergeant Paul Milner (Anthony Howell), a former soldier who lost a leg in combat.",
+  "replace": "Two colleagues work the cases with him: Detective Sergeant Paul Milner (Anthony Howell), a former soldier who came home from combat without a leg, and Samantha \"Sam\" Stewart (Honeysuckle Weeks), his driver.",
+  "why": "Ряд 18 → 6 слов: порядок помощников перевёрнут, залог активный; сохранены Samantha «Sam» Stewart, Honeysuckle Weeks, Detective Sergeant Paul Milner, Anthony Howell, бывший солдат без ноги."
+ },
+ {
+  "slug": "the-wrecking-crew-vdsqwizz",
+  "lang": "en",
+  "find": "Matt Helm (Dean Martin), working for the secret agency ICE, is tasked with thwarting the evil Count Contini (Nigel Green), who plans to collapse the world economy by stealing a billion dollars in gold. Helm travels to Copenhagen, where he teams up with Freya Carlson (Sharon Tate), a guide who turns out to be a secret British agent.",
+  "replace": "Count Contini (Nigel Green) plans to steal a billion dollars in gold and bring the world economy down with it. The secret agency ICE puts its man Matt Helm (Dean Martin) on the villain's trail, and the chase leads to Copenhagen. There a guide, Freya Carlson (Sharon Tate), joins him, and she turns out to be a British agent working in secret.",
+  "why": "Ряд 18 → 5 слов: злодей вынесен вперёд, два предложения перестроены в три; сохранены Matt Helm, Dean Martin, ICE, Count Contini, Nigel Green, миллиард долларов золотом, Copenhagen, Freya Carlson, Sharon Tate, британский агент. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («a 1968 american spy comedy film directed by phil karlson…») — нужна вторая правка."
+ },
+ {
+  "slug": "the-black-mamba-xiyqmnla",
+  "lang": "en",
+  "find": "An American short action film from 2011, directed by Robert Rodriguez. The film was part of a promotional campaign for the Nike Air Kobe Zoom VI sneakers.",
+  "replace": "A short American action film from 2011, made by Robert Rodriguez for a Nike campaign promoting the Air Kobe Zoom VI sneakers.",
+  "why": "Ряд 18 → 3 слова: два предложения собраны в одно, реклама привязана к съёмке; сохранены 2011, Robert Rodriguez, Nike, Air Kobe Zoom VI, короткий американский боевик."
+ },
+ {
+  "slug": "bi-rdman-or-the-unexpected-virtue-of-ignorance-zxbqycqy",
+  "lang": "en",
+  "find": "The film follows Riggan Thomson (Michael Keaton), an actor famous for his role as the superhero Birdman, who strives to regain his popularity by staging a Broadway adaptation of Raymond Carver's short story \"What We Talk About When We Talk About Love.\" Facing challenges in his personal and professional life, Riggan battles internal demons and the voice of Birdman, representing his ego and past fame.",
+  "replace": "Michael Keaton plays Riggan Thomson, an actor whose fame came from playing the superhero Birdman. He wants that popularity back and stages a Broadway production of \"What We Talk About When We Talk About Love,\" adapted from the Raymond Carver short story. Trouble mounts in his personal and professional life, and Riggan wrestles with his own demons and with the voice of Birdman, the sound of his ego and his past fame.",
+  "why": "Ряд 18 → 9 слов, и эти 9 — само название рассказа в кавычках, оно оставлено дословно; сохранены Riggan Thomson, Michael Keaton, Birdman, Broadway, Raymond Carver, эго и былая слава. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («best picture best director best original screenplay and best…») — нужна вторая правка."
+ },
+ {
+  "slug": "gonjiam-haunted-asylum-zsvnktnh",
+  "lang": "en",
+  "find": "Based on the real-life Gonjiam Psychiatric Hospital, the plot follows a group of six individuals: three women (Ah-yeon, Charlotte, and Ji-hyun) and three men (Sung-hoon, Seung-wook, and Je-yoon), who join the owner of the YouTube channel \"Horror Times,\" Ha-joon (Yoo Je-yoon), to conduct a live broadcast from the abandoned Gonjiam Psychiatric Hospital, notorious for its dark history.",
+  "replace": "Ha-joon (Yoo Je-yoon) runs the YouTube channel \"Horror Times,\" and six people sign on for his live broadcast out of the abandoned Gonjiam Psychiatric Hospital, a real place notorious for its dark history. Three of them are men: Seung-wook, Je-yoon and Sung-hoon. The other three are women: Charlotte, Ji-hyun and Ah-yeon.",
+  "why": "Ряд 18 → 3 слова: одно длинное предложение разбито на три, ведущим стал Ha-joon, состав группы вынесен отдельно; сохранены шесть человек, трое мужчин и трое женщин, все шесть имён, «Horror Times», Yoo Je-yoon, реальная больница Gonjiam."
+ },
+ {
+  "slug": "the-king-of-comedy-ehwbj2eq",
+  "lang": "en",
+  "find": "A 1982 American satirical black comedy film directed by Martin Scorsese and written by Paul D.",
+  "replace": "Martin Scorsese directed this 1982 American satirical black comedy, working from a script by Paul D.",
+  "why": "Ряд 18 → 5 слов по всей записи; сохранены 1982, Мартин Скорсезе, Пол Д. Зиммерман (фамилия остаётся в хвосте предложения), жанр — перевёрнут строй: подлежащим стал режиссёр."
+ },
+ {
+  "slug": "the-unbearable-weight-of-massive-talent-esrlfkq9",
+  "lang": "en",
+  "find": "A 2022 American action comedy film directed by Tom Gormican, who co-wrote the screenplay with Kevin Etten.",
+  "replace": "Tom Gormican directed this 2022 American action comedy and wrote its screenplay together with Kevin Etten.",
+  "why": "Ряд 18 → 4 слова по всей записи; сохранены 2022, Том Гормикан, Кевин Эттен, соавторство сценария — придаточное «who co-wrote» свёрнуто в однородное сказуемое."
+ },
+ {
+  "slug": "enter-the-matrix-fn157kf3",
+  "lang": "en",
+  "find": "An American action-adventure video game from 2003, developed by Shiny Entertainment and published by Infogrames under the Atari brand. The game's storyline runs parallel to the events of the film \"The Matrix Reloaded\" and features over an hour of original footage written and directed by Lana and Lilly Wachowski, starring the film's cast.",
+  "replace": "Shiny Entertainment built this 2003 American action-adventure video game, which Infogrames published under the Atari brand. Its plot unfolds alongside \"The Matrix Reloaded,\" and Lana and Lilly Wachowski wrote and directed more than an hour of footage made just for the game, with the movie's own cast on screen.",
+  "why": "Ряд 18 → 5 слов; кусок расширен на СОСЕДНЕЕ предложение — там сидел ряд 12 слов («developed by Shiny Entertainment…»), из-за которого запись осталась бы копией; сохранены 2003, Shiny Entertainment, Infogrames, Atari, «The Matrix Reloaded», Лана и Лилли Вачовски, час материала, участие киноактёров."
+ },
+ {
+  "slug": "black-bird-jdi17u8i",
+  "lang": "en",
+  "find": "An American crime drama miniseries from 2022, based on James Keene's autobiographical novel \"In with the Devil: A Fallen Hero, a Serial Killer, and a Dangerous Bargain for Redemption.\" The plot follows Jimmy Keene (Taron Egerton), sentenced to 10 years in prison, who is offered a deal: his freedom in exchange for obtaining a confession from suspected serial killer Larry Hall (Paul Walter Hauser).",
+  "replace": "James Keene told his own story in \"In with the Devil: A Fallen Hero, a Serial Killer, and a Dangerous Bargain for Redemption,\" and this 2022 American crime drama miniseries grew out of that book. Behind bars on a 10-year sentence, Jimmy Keene (Taron Egerton) hears an offer: walk free if he can draw a confession out of Larry Hall (Paul Walter Hauser), a suspected serial killer.",
+  "why": "Ряд 18 → 16 слов, и эти 16 — само НАЗВАНИЕ книги внутри кавычек (прибор считает такой ряд цитатой, isInsideQuotes = true): переписать заголовок значило бы переименовать книгу; связка «autobiographical novel» перед кавычками снята, поэтому ряд больше не выходит за цитату. Сохранены 2022, 10 лет, Джеймс Кин, Джимми Кин, Тэрон Эджертон, Ларри Холл, Пол Уолтер Хаузер, полный заголовок."
+ },
+ {
+  "slug": "surf-s-up-2-wavemania-s7fetvfb",
+  "lang": "en",
+  "find": "The legendary surfing team \"The Hang 5\" (voiced by WWE professional wrestlers: John Cena as J.C., The Undertaker as The Undertaker, Triple H as Hunter, Saraya Bevis as Paige, and Vince McMahon as Mr.",
+  "replace": "\"The Hang 5,\" a legendary surfing team whose voices come from WWE professional wrestlers (Triple H as Hunter, John Cena as J.C., Saraya Bevis as Paige, The Undertaker as The Undertaker, and Vince McMahon as Mr.",
+  "why": "Ряд 18 → 5 слов; запрещённое «voiced by» убрано, перечень актёров переставлен (Triple H → Джон Сина → Сарайя Бевис → Гробовщик), чем и разорван ряд; сохранены все имена и роли, «The Hang 5» с числом 5, WWE, открытая скобка и подлежащее — чтобы хвост «Mr. McMahon), … arrives on Pen-Gu Island» остался грамматичным."
+ }
+]
