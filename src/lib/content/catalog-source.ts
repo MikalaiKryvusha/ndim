@@ -29,7 +29,7 @@ import {
   summarize,
   toCard,
   VOTE_BONUS,
-  VOTE_KNEE,
+  VOTE_HALF,
   type HubPlace,
   type HubSummary,
 } from './catalog-hub';
@@ -54,7 +54,7 @@ const { hubs, tail, prior } = groupByKind(DIMS as readonly DimPage[]);
  */
 console.log(
   `[catalog] опора взвешивания: m = ${prior.m} голосов · C = ${prior.c.toFixed(4)} · ` +
-    `перегиб веса голосов ${VOTE_KNEE}, полный вес стоит ${VOTE_BONUS} балла (№036 В2)`,
+    `гипербола голосов: половина веса на ${VOTE_HALF} голосах, полный вес ${VOTE_BONUS} балла (№036 В2)`,
 );
 
 /** Сводки семи хабов — для индексной страницы каталога и для полосы соседей. */

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Вес числа голосов в рейтинге — характер кривой</title>
+<title>Вес числа голосов — характер кривой</title>
 <!--
   ГРАФИК ДЛЯ РЕШЕНИЯ ВЛАДЕЛЬЦА (интервью №036, В2).
 
@@ -11,8 +11,12 @@
   Я понимаю математику не цифрами, а когда вижу характер графика визуально… и смогу тебе
   подсказать, норм формула, или нет, когда увижу график».
 
+  🔄 ТРЕТЬЯ РЕДАКЦИЯ. Первые две сравнивали ПАРАМЕТРЫ одной формулы. Владелец снял это
+  ограничение: «может не логарифм, а степень, экспонента, гипербола - любую формулу используй…
+  главное - характер кривой». Поэтому здесь рядом стоят РАЗНЫЕ СЕМЬИ, а не разные настройки
+  одной.
+
   Страница САМОДОСТАТОЧНА: ни одного внешнего запроса, обе темы ОС, всё рисуется inline-SVG.
-  Кривые строятся тем же кодом, что и продукт: min(1, ln(1+v) / ln(1+НАСЫЩЕНИЕ)).
 -->
 <style>
   :root {
@@ -20,14 +24,14 @@
     --bg: #f7f5f1; --panel: #fffdfa; --edge: #e2ddd4; --text: #26221d;
     --dim: #6f675c; --faint: #948b7e; --head: #14110d;
     --grid: #e8e3da; --axis: #b9b1a5;
-    --c20: #1f7ae0; --c10: #d98324; --c50: #2e9e6b; --c200: #a05ad6; --lin: #c0392b;
+    --f1: #1f7ae0; --f2: #d98324; --f3: #2e9e6b; --f4: #a05ad6; --now: #c0392b;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #16181c; --panel: #1d2026; --edge: #2e333c; --text: #e6e8ec;
       --dim: #9aa2ae; --faint: #767f8c; --head: #f2f4f7;
       --grid: #262b33; --axis: #4a515c;
-      --c20: #4ea3ff; --c10: #ffab4d; --c50: #4cd39a; --c200: #c48cff; --lin: #ff7a6b;
+      --f1: #4ea3ff; --f2: #ffab4d; --f3: #4cd39a; --f4: #c48cff; --now: #ff7a6b;
     }
   }
   * { box-sizing: border-box; }
@@ -35,7 +39,7 @@
     margin: 0; padding: 1.5rem 1rem 4rem; background: var(--bg); color: var(--text);
     font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif;
   }
-  main { max-width: 62rem; margin: 0 auto; }
+  main { max-width: 64rem; margin: 0 auto; }
   h1 { font-size: clamp(1.3rem, 3.5vw, 1.9rem); color: var(--head); margin: 0 0 .3rem; }
   .lede { color: var(--dim); margin: 0 0 1.6rem; }
   .card {
@@ -45,198 +49,211 @@
   h2 { font-size: 1.05rem; color: var(--head); margin: 0 0 .2rem; }
   .sub { color: var(--faint); font-size: .88rem; margin: 0 0 .9rem; }
   .plot { width: 100%; height: auto; display: block; overflow: visible; }
-  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; margin-top: .7rem; font-size: .88rem; }
-  .legend span { display: inline-flex; align-items: center; gap: .4rem; color: var(--dim); }
-  .swatch { width: 22px; height: 3px; border-radius: 2px; display: inline-block; }
-  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin-top: .3rem; }
-  th, td { padding: .35rem .5rem; border-bottom: 1px solid var(--edge); text-align: right; }
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; margin-top: .8rem; font-size: .9rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .45rem; color: var(--dim); }
+  .swatch { width: 24px; height: 3px; border-radius: 2px; display: inline-block; flex: none; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { padding: .4rem .5rem; border-bottom: 1px solid var(--edge); text-align: right; }
   th:first-child, td:first-child { text-align: left; }
   th { color: var(--faint); font-weight: 600; }
-  b.hot { color: var(--c20); }
-  .note { font-size: .9rem; color: var(--dim); margin: .8rem 0 0; }
-  .q { background: var(--panel); border: 1px solid var(--edge); border-left: 4px solid var(--c20);
+  tr.now { font-weight: 700; color: var(--f1); }
+  .note { font-size: .9rem; color: var(--dim); margin: .9rem 0 0; }
+  .q { background: var(--panel); border: 1px solid var(--edge); border-left: 4px solid var(--f1);
        border-radius: 0 12px 12px 0; padding: .9rem 1rem; margin-top: 1.6rem; }
-  .q h2 { margin-bottom: .4rem; }
+  .q p { margin: 0 0 .7rem; }
+  .q p:last-child { margin: 0; }
+  b.hot { color: var(--f1); }
 </style>
 </head>
 <body>
 <main>
-  <h1>Вес числа голосов — характер кривой</h1>
+  <h1>Вес числа голосов — четыре разных характера</h1>
   <p class="lede">
-    По горизонтали — сколько людей оценило объект. По вертикали — какой вес это даёт его месту
-    в рейтинге: 0 — голоса не влияют, 1 — влияют в полную силу и дальше уже не растут.
+    По горизонтали — сколько людей оценило объект. По вертикали — какой вес это даёт его месту в
+    рейтинге: 0 — голоса не влияют, 1 — влияют в полную силу. Здесь <b>четыре разные формулы</b>,
+    а не четыре настройки одной. Выбирайте характер.
   </p>
 
   <div class="card">
     <h2>Крупный план: первые 50 голосов</h2>
-    <p class="sub">Здесь видно главное — насколько быстро кривая выходит на плато.</p>
+    <p class="sub">Здесь виден перегиб — как круто кривая берёт с места.</p>
     <svg class="plot" id="near" viewBox="0 0 900 430" role="img"
-         aria-label="Кривые веса голосов при разных точках насыщения, первые 50 голосов"></svg>
-    <div class="legend">
-      <span><i class="swatch" style="background:var(--c20);height:5px"></i><b class="hot">опора 1000 — стоит в коде</b></span>
-      <span><i class="swatch" style="background:var(--c10)"></i>опора 100 — круче, но плоско справа</span>
-      <span><i class="swatch" style="background:var(--c50)"></i>опора 300</span>
-      <span><i class="swatch" style="background:var(--lin)"></i>опора 5000 — самая пологая</span>
-      <span><i class="swatch" style="background:var(--faint)"></i>прямая — для сравнения характера</span>
-    </div>
+         aria-label="Четыре семейства кривых веса голосов, первые 50 голосов"></svg>
+    <div class="legend" id="leg"></div>
   </div>
 
   <div class="card">
-    <h2>Общий план: до 250 голосов</h2>
-    <p class="sub">Тот же набор кривых. Отсюда видно, что после насыщения линия идёт ровно.</p>
-    <svg class="plot" id="far" viewBox="0 0 900 380" role="img"
-         aria-label="Те же кривые на диапазоне до 250 голосов"></svg>
+    <h2>Общий план: до 300 голосов</h2>
+    <p class="sub">Здесь видно, сохраняется ли разница на больших числах — то, чего не хватало экспоненте.</p>
+    <svg class="plot" id="far" viewBox="0 0 900 390" role="img"
+         aria-label="Те же четыре семейства на диапазоне до 300 голосов"></svg>
   </div>
 
   <div class="card">
-    <h2>Что даёт в числах кривая с опорой 1000</h2>
-    <p class="sub">Прибавка к месту в баллах: полное насыщение стоит 1,0 балла (Ваш выбор — «оценка важнее»).</p>
-    <table id="tbl">
-      <thead><tr><th>Голосов</th><th>Вес</th><th>Прибавка, баллов</th><th>Шаг от предыдущей строки</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <h2>Те же четыре формулы в числах</h2>
+    <p class="sub">Синяя строка — то, что стоит в коде сейчас. Смотрите две нижние строки: они и есть спор.</p>
+    <table id="tbl"><thead></thead><tbody></tbody></table>
     <p class="note" id="realcase"></p>
   </div>
 
   <div class="q">
-    <h2>Вернул логарифм — и вот развилка, которую решать Вам</h2>
-    <p style="margin:0 0 .7rem">
-      Вы сказали про экспоненту: «почти нет разницы на высоких числах, слишком быстро оно
-      насытилось». Это её природа — у экспоненты плато <b>жёсткое</b>, за ним 50 и 500 голосов
-      становятся неразличимы. У логарифма плато не наступает никогда: каждое <b>удвоение</b> числа
-      голосов добавляет одинаковую прибавку, поэтому 100 и 200 различаются так же ощутимо, как 5 и
-      10. Поэтому логарифм вернулся.
+    <h2>Что выбрать</h2>
+    <p>
+      Вы сказали: зелёная ближе всего, но нужно резче выгнуть кверху. Я снял ограничение семьи —
+      теперь рядом стоят четыре разных характера, и все они начинаются круто.
     </p>
-    <p style="margin:0 0 .7rem">
-      <b>А снять эту развилку нельзя никакой формулой — это арифметика.</b> Если на 20 голосах вес
-      уже 0,99, то на всё, что выше, остаётся 0,01. «Прижать к единице на 20» и «сохранить разницу
-      на 200» несовместимы: запас один, и его надо куда-то отдать. Опора — это и есть ручка, которой
-      Вы решаете куда.
+    <p>
+      <b class="hot">Синяя</b> — логарифм, выгнутый вверх степенью. <b style="color:var(--f2)">Оранжевая</b> —
+      гипербола: самый резкий подъём с места. <b style="color:var(--f3)">Зелёная</b> — чистый логарифм,
+      прежний. <b style="color:var(--f4)">Фиолетовая</b> — степенной корень.
     </p>
-    <p style="margin:0">
-      Синяя (опора 1000): 5 → 0,26 · 20 → 0,44 · 50 → 0,57 · 100 → 0,67 · 200 → 0,77. Разница
-      справа живая. Оранжевая (100) круче слева, но справа плоская — та самая жалоба. Красная (5000)
-      самая пологая, разница держится дольше всех, но растёт медленно везде.
-      Ткните пальцем, какая ближе.
+    <p id="tradeoff"></p>
+    <p>
+      И про нагрузку, раз Вы о ней спросили: <b>эта формула считается один раз на сборке, а не у
+      человека в браузере</b>. Страницы каталога пререндерены в готовый HTML, порядок вычисляется
+      при сборке сайта. В бою процессор на неё не тратится вовсе — так что выбирать можно по
+      характеру, а не по цене счёта. Если всё же считать копейки: гипербола — это одно деление,
+      чистый логарифм — один вызов логарифма, синяя — логарифм плюс степень.
     </p>
+    <p>Назовите цвет — поставлю его и закрою вопрос.</p>
   </div>
 </main>
 
 <script>
 (() => {
-  // Насыщение, стоящее в коде СЕЙЧАС. Одно место на всю страницу: подписи, точки, таблица и
-  // живой пример считаются от него, иначе картинка разъедется с продуктом молча.
-  const CURRENT = 1000;  // опора полного веса, стоящая в коде (VOTE_KNEE)
-  const SATS = [
-    { knee: 100,  color: 'var(--c10)', w: 1.8 },
-    { knee: 300,  color: 'var(--c50)', w: 1.8 },
-    { knee: 1000, color: 'var(--c20)', w: 4 },
-    { knee: 5000, color: 'var(--lin)', w: 1.8 },
+  const KNEE = 300;   // опора: столько голосов дают полный вес (VOTE_KNEE)
+  const BEND = 0.7;   // выгиб степенью (VOTE_BEND)
+
+  // ЧЕТЫРЕ РАЗНЫХ СЕМЬИ. Первая — то, что стоит в коде (`catalog-hub.ts` → voteWeight).
+  const FAMILIES = [
+    {
+      name: 'логарифм, выгнутый степенью',
+      formula: '(ln(1+v) / ln(301)) ^ 0,7',
+      color: 'var(--f1)', w: 4, now: true,
+      fn: (v) => Math.min(1, (Math.log(1 + v) / Math.log(1 + KNEE)) ** BEND),
+    },
+    {
+      name: 'гипербола',
+      formula: 'v / (v + 10)',
+      color: 'var(--f2)', w: 2,
+      fn: (v) => v / (v + 10),
+    },
+    {
+      name: 'чистый логарифм',
+      formula: 'ln(1+v) / ln(301)',
+      color: 'var(--f3)', w: 2,
+      fn: (v) => Math.min(1, Math.log(1 + v) / Math.log(1 + KNEE)),
+    },
+    {
+      name: 'степенной корень',
+      formula: '(v / 300) ^ 0,35',
+      color: 'var(--f4)', w: 2,
+      fn: (v) => Math.min(1, (v / KNEE) ** 0.35),
+    },
   ];
-  // Формула продукта, один в один: src/lib/content/catalog-hub.ts → voteWeight
-  const weight = (v, knee) => (v <= 0 ? 0 : Math.min(1, Math.log(1 + v) / Math.log(1 + knee)));
+  const W = (f, v) => (v <= 0 ? 0 : f.fn(v));
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (n, a) => {
+    const e = document.createElementNS(NS, n);
+    for (const k in a) e.setAttribute(k, a[k]);
+    return e;
+  };
 
   function draw(id, maxV, ticks) {
     const svg = document.getElementById(id);
-    const W = 900, H = svg.viewBox.baseVal.height;
-    const L = 58, R = 24, T = 18, B = 46;
-    const px = v => L + (v / maxV) * (W - L - R);
-    const py = w => T + (1 - w) * (H - T - B);
-    const el = (n, a) => {
-      const e = document.createElementNS('http://www.w3.org/2000/svg', n);
-      for (const k in a) e.setAttribute(k, a[k]);
-      return e;
-    };
-    const add = e => svg.appendChild(e);
+    const H = svg.viewBox.baseVal.height;
+    const L = 58, R = 26, T = 20, B = 46;
+    const px = (v) => L + (v / maxV) * (900 - L - R);
+    const py = (w) => T + (1 - w) * (H - T - B);
+    const add = (e) => svg.appendChild(e);
 
-    // Сетка по вертикали (вес) и подписи
     for (let i = 0; i <= 5; i++) {
-      const w = i / 5, y = py(w);
-      add(el('line', { x1: L, y1: y, x2: W - R, y2: y, stroke: 'var(--grid)', 'stroke-width': 1 }));
+      const y = py(i / 5);
+      add(el('line', { x1: L, y1: y, x2: 900 - R, y2: y, stroke: 'var(--grid)', 'stroke-width': 1 }));
       const t = el('text', { x: L - 10, y: y + 4, fill: 'var(--faint)', 'font-size': 12, 'text-anchor': 'end' });
-      t.textContent = w.toFixed(1);
+      t.textContent = (i / 5).toFixed(1);
       add(t);
     }
-    // Сетка по горизонтали (голоса)
     for (const v of ticks) {
-      const x = px(v);
-      add(el('line', { x1: x, y1: T, x2: x, y2: H - B, stroke: 'var(--grid)', 'stroke-width': 1 }));
-      const t = el('text', { x, y: H - B + 20, fill: 'var(--faint)', 'font-size': 12, 'text-anchor': 'middle' });
+      add(el('line', { x1: px(v), y1: T, x2: px(v), y2: H - B, stroke: 'var(--grid)', 'stroke-width': 1 }));
+      const t = el('text', { x: px(v), y: H - B + 20, fill: 'var(--faint)', 'font-size': 12, 'text-anchor': 'middle' });
       t.textContent = v;
       add(t);
     }
-    // Оси
     add(el('line', { x1: L, y1: T, x2: L, y2: H - B, stroke: 'var(--axis)', 'stroke-width': 1.5 }));
-    add(el('line', { x1: L, y1: H - B, x2: W - R, y2: H - B, stroke: 'var(--axis)', 'stroke-width': 1.5 }));
-    const xl = el('text', { x: (L + W - R) / 2, y: H - 8, fill: 'var(--dim)', 'font-size': 13, 'text-anchor': 'middle' });
+    add(el('line', { x1: L, y1: H - B, x2: 900 - R, y2: H - B, stroke: 'var(--axis)', 'stroke-width': 1.5 }));
+    const xl = el('text', { x: (L + 900 - R) / 2, y: H - 8, fill: 'var(--dim)', 'font-size': 13, 'text-anchor': 'middle' });
     xl.textContent = 'сколько людей оценило';
     add(xl);
-    const yl = el('text', { x: 14, y: (T + H - B) / 2, fill: 'var(--dim)', 'font-size': 13, 'text-anchor': 'middle',
-                            transform: `rotate(-90 14 ${(T + H - B) / 2})` });
+    const ym = (T + H - B) / 2;
+    const yl = el('text', { x: 14, y: ym, fill: 'var(--dim)', 'font-size': 13, 'text-anchor': 'middle',
+                            transform: `rotate(-90 14 ${ym})` });
     yl.textContent = 'вес голосов';
     add(yl);
 
-    // Прямая — для сравнения характера (не логарифм)
-    const lin = [];
-    for (let v = 0; v <= maxV; v += maxV / 400) lin.push(`${px(v)},${py(Math.min(1, v / CURRENT))}`);
-    add(el('polyline', { points: lin.join(' '), fill: 'none', stroke: 'var(--faint)',
-                         'stroke-width': 1.6, 'stroke-dasharray': '5 4', opacity: .8 }));
-
-    // Логарифмические кривые
-    for (const s of SATS) {
+    for (const f of FAMILIES) {
       const pts = [];
-      for (let v = 0; v <= maxV; v += maxV / 600) pts.push(`${px(v)},${py(weight(v, s.knee))}`);
-      add(el('polyline', { points: pts.join(' '), fill: 'none', stroke: s.color,
-                           'stroke-width': s.w, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+      for (let v = 0; v <= maxV; v += maxV / 700) pts.push(`${px(v)},${py(W(f, v))}`);
+      add(el('polyline', { points: pts.join(' '), fill: 'none', stroke: f.color,
+                           'stroke-width': f.w, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
     }
 
-    // Опорные точки на действующей кривой + отметка сегодняшнего потолка каталога.
-    for (const v of [5, 10, 20]) {
-      if (v > maxV) continue;
-      const w = weight(v, CURRENT);
-      add(el('circle', { cx: px(v), cy: py(w), r: 5, fill: 'var(--c20)' }));
-      const t = el('text', { x: px(v) + 9, y: py(w) - 8, fill: 'var(--c20)', 'font-size': 12, 'font-weight': 600 });
-      t.textContent = `${v} → ${w.toFixed(2)}`;
-      add(t);
-    }
     // Где сегодня кончаются данные: максимум по каталогу — 14 голосов.
-    if (maxV >= 14) {
-      const x = px(14);
-      add(el('line', { x1: x, y1: T, x2: x, y2: H - B, stroke: 'var(--lin)',
-                       'stroke-width': 1.4, 'stroke-dasharray': '3 4', opacity: .9 }));
-      const t = el('text', { x: x + 6, y: T + 14, fill: 'var(--lin)', 'font-size': 11.5, 'font-weight': 600 });
-      t.textContent = 'потолок каталога сегодня — 14';
-      add(t);
-    }
+    const x14 = px(14);
+    add(el('line', { x1: x14, y1: T, x2: x14, y2: H - B, stroke: 'var(--now)',
+                     'stroke-width': 1.4, 'stroke-dasharray': '3 4', opacity: .9 }));
+    const t14 = el('text', { x: x14 + 6, y: T + 14, fill: 'var(--now)', 'font-size': 11.5, 'font-weight': 600 });
+    t14.textContent = 'потолок каталога сегодня — 14';
+    add(t14);
   }
 
   draw('near', 50, [0, 5, 10, 20, 30, 40, 50]);
-  draw('far', 250, [0, 20, 50, 100, 150, 200, 250]);
+  draw('far', 300, [0, 20, 50, 100, 150, 200, 250, 300]);
 
-  // Таблица чисел
-  const rows = [1, 2, 5, 10, 20, 50, 100, 200, 205, 400, 1000];
-  const body = document.querySelector('#tbl tbody');
-  let prev = null;
-  for (const v of rows) {
-    const w = weight(v, CURRENT);
-    const tr = document.createElement('tr');
-    const step = prev === null ? '—' : (w - prev).toFixed(3);
-    tr.innerHTML = `<td>${v}</td><td>${w.toFixed(3)}</td><td>${(w * 1).toFixed(3)}</td><td>${step}</td>`;
-    if (v === CURRENT) tr.style.fontWeight = '700';
-    if (v === 14) tr.style.color = 'var(--lin)';
-    body.appendChild(tr);
-    prev = w;
+  // Легенда
+  const leg = document.getElementById('leg');
+  for (const f of FAMILIES) {
+    const s = document.createElement('span');
+    s.innerHTML = `<i class="swatch" style="background:${f.color};height:${f.now ? 5 : 3}px"></i>` +
+      (f.now ? `<b class="hot">${f.name} — сейчас в коде</b>` : f.name);
+    leg.appendChild(s);
   }
 
-  // Живой пример из боя
-  const hp = weight(14, CURRENT), hotd = weight(1, CURRENT);
+  // Таблица: строки — число голосов, столбцы — семьи
+  const rows = [1, 2, 5, 10, 14, 20, 50, 100, 200, 300];
+  const thead = document.querySelector('#tbl thead');
+  thead.innerHTML = '<tr><th>Голосов</th>' + FAMILIES.map((f) => `<th>${f.name}</th>`).join('') + '</tr>';
+  const tbody = document.querySelector('#tbl tbody');
+  for (const v of rows) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${v}${v === 14 ? ' — потолок сегодня' : ''}</td>` +
+      FAMILIES.map((f) => `<td>${W(f, v).toFixed(3)}</td>`).join('');
+    if (v === 1) tr.className = 'now';
+    tbody.appendChild(tr);
+  }
+  // Отдельной строкой — то, ради чего всё затевалось: разница на больших числах.
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td><b>разница 50 → 200</b></td>' +
+    FAMILIES.map((f) => `<td><b>${(W(f, 200) - W(f, 50)).toFixed(3)}</b></td>`).join('');
+  tbody.appendChild(tr);
+
+  // Размен «крутизна против цены одного голоса» — числа СЧИТАЮТСЯ, а не пишутся рукой.
+  // Первая редакция этого абзаца несла написанное на глаз «у фиолетовой 0,33» при настоящих
+  // 0,136: выдуманное число на странице, которую я отправляю владельцу, — дефект по определению.
+  const byOne = FAMILIES.map((f) => ({ n: f.name, w: W(f, 1) })).sort((a, b) => a.w - b.w);
+  document.getElementById('tradeoff').innerHTML =
+    '<b>Единственный размен, который не убрать никакой формулой:</b> чем резче кривая берёт с ' +
+    'места, тем дороже стоит ОДИН голос. Сегодня один голос весит ' +
+    byOne.map((x) => `${x.w.toFixed(3)} (${x.n})`).join(' · ') +
+    '. Смотрите строку «1 голос» в таблице — это и есть цена крутизны.';
+
+  const now = FAMILIES[0];
   document.getElementById('realcase').textContent =
-    `Живой пример из боя: «Гарри Поттер» — 14 голосов, вес ${hp.toFixed(2)}. ` +
-    `«Дом Дракона» — 1 голос, вес ${hotd.toFixed(2)}. Разница ${(hp - hotd).toFixed(2)} балла — ` +
-    `её хватает, чтобы четырнадцать голосов перевесили одинокую десятку. ` +
-    `Честная цена этой опоры: сегодняшний потолок каталога (14 голосов) стоит в начале подъёма, ` +
-    `то есть голоса пока работают неполной силой — запас отдан различению БОЛЬШИХ чисел, которых ` +
-    `у нас ещё нет.`;
+    `Живой пример из боя по кривой, стоящей в коде: «Гарри Поттер» — 14 голосов, вес ` +
+    `${W(now, 14).toFixed(2)}; «Дом Дракона» — 1 голос, вес ${W(now, 1).toFixed(2)}. ` +
+    `Разницы ${(W(now, 14) - W(now, 1)).toFixed(2)} балла хватает, чтобы четырнадцать голосов ` +
+    `перевесили одинокую десятку.`;
 })();
 </script>
 </body>
