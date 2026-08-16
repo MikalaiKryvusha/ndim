@@ -74,8 +74,21 @@ export function checkEdit(edit) {
     const lost = numbers(edit.before).filter((n) => !numbers(edit.after).includes(n));
     if (lost.length) problems.push(`потеряны числа: ${[...new Set(lost)].join(', ')}`);
 
-    const left = MARKERS_BY_LANG[lang].filter((re) => re.test(edit.after));
-    if (left.length) problems.push(`маркер остался: ${left.length}`);
+    /*
+     * 🔴 МАРКЕР ЗАПРЕЩЁН В ТОМ, ЧТО Я НАПИСАЛ, а в остальном тексте он лишь повод посмотреть.
+     *
+     * Первая редакция проверяла ВЕСЬ текст — и заблокировала две законные правки: описания
+     * содержали «В главных ролях» в другом предложении, которого правка не касалась. Для русских
+     * маркеров это неизбежно: они обычные фразы, а не улики сами по себе.
+     *
+     * Ценность прежней проверки при этом настоящая (она поймала «voiced by», уцелевшее внутри
+     * моей же замены) — поэтому она не снята, а сужена до фрагмента правки.
+     */
+    const где = edit.replace !== undefined
+      ? [edit.replace].flat().join(' ')
+      : edit.after;
+    const left = MARKERS_BY_LANG[lang].filter((re) => re.test(где));
+    if (left.length) problems.push(`маркер остался в самой правке: ${left.length}`);
   }
   return problems;
 }
@@ -191,7 +204,7 @@ if (expandFailures.length) {
   console.log(`\n❌ правок, которые не удалось разложить: ${expandFailures.length} — ничего не записано.`);
   process.exit(1);
 }
-console.log(`\n═══ ПИСАРЬ EN-ОПИСАНИЙ ═══`);
+console.log(`\n═══ ПИСАРЬ ОПИСАНИЙ КАТАЛОГА ═══`);
 console.log(`Правок в файле: ${edits.length}`);
 console.log(apply ? 'Режим: ЗАПИСЬ В БОЕВОЙ КАТАЛОГ\n' : 'Режим: сухой прогон (ничего не пишется)\n');
 
