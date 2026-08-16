@@ -1,0 +1,14 @@
+[
+ {
+  "slug": "ugly-americans-zgji6eoe",
+  "find": "a social worker employed at the Department of Integration in an alternate version of New York City inhabited by monsters and other creatures",
+  "replace": "a social worker at the city's Department of Integration, in a New York where people share the streets with monsters and other non-human residents",
+  "why": "🔴 НАСТОЯЩИЙ дефект §10, а не маркер: сверка с английской Википедией показала почти дословный ряд в 20 слов («a social worker employed by the Department of Integration, in an alternate reality version of New York City inhabited by monsters and other creatures»). Первая партия сняла с этого текста даты и «voiced by», но сам заимствованный ряд остался. Факты сохранены полностью."
+ },
+ {
+  "slug": "the-andy-griffith-show-iapdquke",
+  "find": "A total of 249 episodes were produced over eight seasons, with 159 in black and white and 90 in color.",
+  "replace": "Eight seasons brought 249 episodes in all: the first 159 in black and white, the remaining 90 in color.",
+  "why": "🔴 Второй настоящий дефект, найденный той же сверкой: у Википедии «a total of 249 half-hour episodes spanning eight seasons—159 in black and white and 90 in color». Первая партия сняла даты эфира, но соседний ряд остался почти дословным. Все три числа на месте."
+ }
+]

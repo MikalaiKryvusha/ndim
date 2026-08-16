@@ -5,14 +5,12 @@
 > **Статус:** список снят; **правок в данных 0** — переформулировка ждёт фазы 3 эпика
 > `plans/40` (интервью №025 В6 = А) · **Исходящее:** вход фазы 3 (правка EN-описаний)
 
-Проверено записей каталога: **5111** · записей с маркерами: **279** · предложений-находок: **347**.
+Проверено записей каталога: **5111** · записей с маркерами: **245** · предложений-находок: **309**.
 
 Частота маркеров (одно предложение может нести несколько):
 
-- `voiced by` — 199
-- `premiered on` — 114
-- `aired on … from … to` — 33
-- `totaling N episodes` — 2
+- `voiced by` — 196
+- `premiered on` — 113
 
 **Чего этот список НЕ доказывает:** маркер ≠ дословное заимствование (это стилевой
 запах, кандидат на вычитку, а не приговор); отсутствие маркера ≠ чистота (греп ловит
@@ -27,10 +25,6 @@
 ## `1923-fy5jxmce` · Телесериал · 1923
 
 - [premiered on] «The series consists of two seasons with eight episodes each; the first season premiered on December 18, 2022, and the second and final season concluded on April 6, 2025.»
-
-## `21-jump-street-jhydrevh` · Телесериал · 21 Jump Street​
-
-- [totaling N episodes] «The show aired from April 12, 1987, to April 27, 1991, totaling 103 episodes over five seasons.​»
 
 ## `47-ronin-jevgczbf` · Фильм · 47 Ronin
 
@@ -56,38 +50,17 @@
 
 - [premiered on] «The series premiered on August 12, 2022, on Amazon Prime Video, with a total of 8 episodes.»
 
-## `a-league-of-their-own-zhylxlgx` · Телесериал · A League of Their Own​
-
-- [aired on … from … to] «The series aired on CBS from April 10 to 24, 1993, with two additional episodes broadcast on August 13, 1993; a total of six episodes were produced, one of which remained unaired.»
-
 ## `a-murder-of-quality-wwum84we` · Фильм · A Murder of Quality
 
 - [premiered on] «It premiered on 10 April 1991 on ITV in the United Kingdom.»
-
-## `abc-afterschool-special-yplurd3l` · Телесериал · ABC Afterschool Special
-
-- [aired on … from … to] «An American anthology television series created in 1972 in the United States by director Guy Fraumeni, it aired on ABC from October 4, 1972, to January 23, 1997.»
 
 ## `abigail-xpvrhxp9` · Фильм · Abigail
 
 - [premiered on] «It premiered on April 7, 2024, at the Overlook Film Festival and was theatrically released in the United States on April 19, 2024.»
 
-## `agatha-christie-s-poirot-e8ozvot1` · Телесериал · Agatha Christie's Poirot
-
-- [aired on … from … to] «The British detective television series, which aired on ITV from January 8, 1989, to November 13, 2013, is based on Agatha Christie's works featuring the Belgian detective Hercule Poirot.»
-
-## `american-playhouse-ciowhhyh` · Телесериал · American Playhouse
-
-- [aired on … from … to] «An American anthology television series that aired on PBS from 1982 to 1993.»
-- [premiered on] «It premiered on January 12, 1982, with the episode "The Shady Hill Kidnapping," written and narrated by John Cheever and directed by Paul Bogart.»
-
 ## `american-traitor-the-trial-of-axis-sally-ndrowoig` · Фильм · American Traitor: The Trial of Axis Sally
 
 - [premiered on] «The film premiered on May 28, 2021, distributed by Vertical Entertainment and Redbox Entertainment.»
-
-## `arthur-xxqqzrrl` · Телесериал · Arthur
-
-- [aired on … from … to] «It aired on PBS Kids from 1996 to 2022, becoming the longest-running children's animated series in the U.S.​»
 
 ## `babes-in-toyland-f6mibbla` · Фильм · Babes in Toyland
 
@@ -131,10 +104,6 @@
 
 - [voiced by] «She is joined by mercenary Roland (Kevin Hart), explosive expert Tiny Tina (Ariana Greenblatt), psycho Krieg (Florian Munteanu), scientist Patricia Tannis (Jamie Lee Curtis), and the sarcastic robot Claptrap (voiced by Jack Black).»
 
-## `bosom-buddies-ypmozx96` · Телесериал · Bosom Buddies​
-
-- [aired on … from … to] «Boyett, aired on ABC from November 27, 1980, to March 27, 1982.»
-
 ## `br-tal-legend-y1e4qvmh` · Видеоигра · Brütal Legend
 
 - [voiced by] «One of the game's highlights is its star-studded voice cast: Eddie is voiced by renowned musician and actor Jack Black, with additional performances from Ozzy Osbourne, Lemmy Kilmister, and Rob Halford.»
@@ -142,10 +111,6 @@
 ## `bridgerton-y6hr30u8` · Телесериал · Bridgerton
 
 - [voiced by] «Mysterious Lady Whistledown (voiced by Julie Andrews) publishes anonymous gossip, influencing the characters’ fates.»
-
-## `bronco-c9udacur` · Телесериал · Bronco
-
-- [aired on … from … to] «An American Western television series that aired on ABC from 1958 to 1962, produced by William T.»
 
 ## `brother-bear-vi3elx0d` · Фильм · Brother Bear
 
@@ -196,10 +161,6 @@
 ## `cyberpunk-2077-d03vtwtg` · Видеоигра · Cyberpunk 2077
 
 - [voiced by] «Set in the dystopian metropolis of Night City, controlled by powerful corporations, the game follows V (voiced by Gavin Drea / Cherami Leigh in English, Ilya Khvostikov / Olga Zubkova in Russian), a mercenary enhanced with cybernetic implants, who becomes entangled in a deadly struggle after acquiring a biochip containing the digital consciousness of legendary rocker-rebel Johnny Silverhand (Keanu Reeves).»
-
-## `dark-shadows-wvclnqyp` · Телесериал · Dark Shadows
-
-- [aired on … from … to] «The American gothic television series, created by Dan Curtis, aired on ABC from 1966 to 1971 and became a cult classic due to its unique blend of soap opera and supernatural elements.»
 
 ## `dc-league-of-super-pets-ov8wxi4a` · Фильм · DC League of Super-Pets
 
@@ -260,10 +221,6 @@
 
 - [premiered on] «It premiered on May 27, 2023, at the closing of the 76th Cannes Film Festival out of competition, and was released in the United States on June 16, 2023, in RealD 3D, 4DX, and Dolby Cinema formats.»
 
-## `entourage-fi14lxng` · Телесериал · Entourage
-
-- [aired on … from … to] «An American comedy-drama television series created by Doug Ellin, aired on HBO from July 18, 2004, to September 11, 2011, spanning eight seasons and 96 episodes.»
-
 ## `epic-g9pscpqp` · Фильм · Epic
 
 - [voiced by] «(voiced by Amanda Seyfried), who, after her mother's death, returns to live with her estranged father, Professor Bomba (Jason Sudeikis), obsessed with discovering a hidden miniature world in the forest.»
@@ -275,10 +232,6 @@
 ## `extreme-ghostbusters-hfu0u1ng` · Телесериал · Extreme Ghostbusters
 
 - [voiced by] «Egon Spengler (voiced by Maurice LaMarche), who continues to reside in the firehouse, monitors the containment unit, and teaches a course on paranormal phenomena at a local college.»
-
-## `fallen-angels-tgurxwqu` · Телесериал · Fallen Angels​
-
-- [aired on … from … to] «The 1993 American neo-noir anthology television series, created by Steve Golin and William Horberg, aired on Showtime from 1993 to 1995.»
 
 ## `fallout-tu06zsj5` · Телесериал · Fallout
 
@@ -303,10 +256,6 @@
 ## `formula-1-drive-to-survive-sscgcz6j` · Телесериал · Formula 1: Drive to Survive
 
 - [premiered on] «The British documentary television series, which premiered on Netflix on March 8, 2019, is a collaborative project between Netflix and Formula One, offering an unprecedented behind-the-scenes look at the Formula One World Championship.»
-
-## `foyle-s-war-ox93icyl` · Телесериал · Foyle's War
-
-- [aired on … from … to] «A British detective television series created by screenwriter and author Anthony Horowitz, "Foyle's War" aired on ITV from October 2002 to January 2015.»
 
 ## `fullmetal-alchemist-ng8goojl` · Телесериал · Fullmetal Alchemist
 
@@ -364,14 +313,6 @@
 ## `happy-feet-uty4tg23` · Фильм · Happy Feet
 
 - [voiced by] «The protagonist, Mumble (voiced by Elijah Wood), is born with an extraordinary talent for tap dancing but lacks the ability to sing, making him an outcast in a society where singing is paramount.»
-
-## `hawaiian-eye-dneyztu6` · Телесериал · Hawaiian Eye
-
-- [aired on … from … to] «An American detective television series that aired on ABC from October 1959 to April 1963.»
-
-## `hearts-afire-uwlyrhfd` · Телесериал · Hearts Afire
-
-- [aired on … from … to] «An American sitcom that aired on CBS from 1992 to 1995, created by Linda Bloodworth-Thomason and Harry Thomason.»
 
 ## `hellboy-ii-the-golden-army-wgutnle9` · Фильм · Hellboy II: The Golden Army
 
@@ -488,14 +429,6 @@
 
 - [premiered on] «The first season, comprising 10 episodes, premiered on Citytv on February 22, 2024, and became the top-rated prime-time drama of the year in Canada, attracting 1.1 million viewers for its debut.»
 
-## `law-order-trial-by-jury-qtrl0bfk` · Телесериал · Law & Order: Trial by Jury
-
-- [aired on … from … to] «An American legal drama television series created by Dick Wolf and René Balcer, it is the fourth spin-off of the original "Law & Order" and aired on NBC from March 3, 2005, to January 21, 2006.»
-
-## `law-order-true-crime-dyxncwwz` · Телесериал · Law & Order: True Crime
-
-- [aired on … from … to] «An American true crime anthology television series created by René Balcer, it is the sixth spin-off of the "Law & Order" franchise and aired on NBC from September 26 to November 14, 2017.»
-
 ## `lego-batman-the-movie-dc-super-heroes-unite-7nex8uzr` · Фильм · Lego Batman: The Movie – DC Super Heroes Unite
 
 - [voiced by] «However, the ceremony is interrupted by the arrival of the Joker (voiced by Christopher Corey Smith) and other notorious villains, including the Riddler, Penguin, Two-Face, and Catwoman, who wreak havoc.»
@@ -506,10 +439,6 @@
 ## `liberty-s-kids-v5v57wij` · Телесериал · Liberty's Kids
 
 - [voiced by] «The main characters include James Hiller (voiced by Chris Lundquist), a young American filled with enthusiasm and patriotism; Sarah Phillips (Reo Jones), an English girl striving to understand the new country; and Henri LeFevbre (Kathleen Barr), a French teenager who becomes a friend and ally to James and Sarah.»
-
-## `life-with-bonnie-te7m5em4` · Телесериал · Life with Bonnie​
-
-- [aired on … from … to] «It aired on ABC from 2002 to 2004, encompassing two seasons.​»
 
 ## `lightyear-4aoj6de6` · Фильм · Lightyear
 
@@ -563,10 +492,6 @@
 
 - [premiered on] «An American legal drama television series that premiered on September 22, 2024, on CBS.»
 
-## `maya-marty-xyxay0bo` · Телешоу · Maya & Marty​
-
-- [aired on … from … to] «Hosted by Maya Rudolph and Martin Short, both former cast members of Saturday Night Live, the show aired on NBC from May 31 to July 12, 2016, encompassing six episodes.»
-
 ## `megamind-rvtvhxcx` · Фильм · Megamind
 
 - [voiced by] «This 2010 American animated superhero comedy film, directed by Tom McGrath, follows Megamind (voiced by Will Ferrell), a highly intelligent alien supervillain who finally defeats his longtime nemesis, the superhero Metro Man (Brad Pitt).»
@@ -582,10 +507,6 @@
 ## `miraculous-world-london-at-the-edge-of-time-gybp60pz` · Фильм · Miraculous World: London, At the Edge of Time
 
 - [premiered on] «The film premiered on October 5, 2024, with a runtime of 47 minutes.»
-
-## `misfits-j2q3ecor` · Телесериал · Misfits
-
-- [aired on … from … to] «A British comedy-drama television series created by Howard Overman, which aired on E4 from 2009 to 2013.»
 
 ## `mission-impossible-dead-reckoning-part-one-h6sumhyq` · Фильм · Mission: Impossible – Dead Reckoning Part One
 
@@ -693,10 +614,6 @@
 - [voiced by] «There, he forms an unlikely partnership with an insecure young man, Linguini (voiced by Lou Romano / Ivan Chaban), secretly guiding him in the art of cooking.»
 - [voiced by] «Meanwhile, the restaurant is under threat from the stern food critic Anton Ego (voiced by Peter O’Toole / Vasily Bochkaryov).»
 
-## `rawhide-q2c0woig` · Телесериал · Rawhide
-
-- [aired on … from … to] «An American Western television series that aired on CBS from January 9, 1959, to December 7, 1965, encompassing 8 seasons and 217 black-and-white episodes.»
-
 ## `rebel-ridge-lucz1c65` · Фильм · Rebel Ridge
 
 - [premiered on] «It premiered on Netflix on September 6, 2024, and received positive reviews from critics for its intense storyline and strong performances.»
@@ -741,10 +658,6 @@
 ## `secret-level-y3yrrhmv` · Телесериал · Secret Level
 
 - [premiered on] «The series premiered on December 10, 2024, on Amazon Prime Video and was renewed for a second season due to positive reception from audiences and critics.»
-
-## `seven-days-unx0bcza` · Телесериал · Seven Days
-
-- [aired on … from … to] «The show aired on the UPN network from 1998 to 2001, encompassing three seasons with a total of 66 episodes.»
 
 ## `shark-tale-cgypw7je` · Фильм · Shark Tale
 
@@ -817,11 +730,6 @@
 
 - [premiered on] «The film premiered on August 15, 2024.»
 
-## `superhero-kindergarten-gcl81wda` · Телесериал · Superhero Kindergarten
-
-- [voiced by] «The 2021 American animated superhero television series created by Fabian Nicieza follows former gym teacher Arnold Armstrong (voiced by Arnold Schwarzenegger), who gains incredible superpowers after an encounter with a mysterious comet, becoming Captain Fantastic, one of Earth's greatest protectors.»
-- [aired on … from … to] «The first season comprises 26 episodes and aired on the streaming service Kartoon Channel from April 23 to October 22, 2021.»
-
 ## `surf-s-up-2-wavemania-s7fetvfb` · Фильм · Surf's Up 2: WaveMania
 
 - [voiced by] «The 2017 American animated comedy film, directed by Henry Yu, serves as a sequel to the 2007 film "Surf's Up." The story once again centers on the crested penguin Cody Maverick (voiced by Jeremy Shada), who, despite his acquired surfing experience, feels a stagnation in his career and craves new adventures.»
@@ -839,23 +747,6 @@
 
 - [premiered on] «The series premiered on April 15, 2022, on The Roku Channel in the United States and on Amazon Prime Video internationally.»
 
-## `tales-from-the-crypt-7qghn3ft` · Телесериал · Tales from the Crypt​
-
-- [aired on … from … to] «The 1989 American horror anthology television series, created by William Gaines and Steven Dodd, is based on the 1950s EC Comics, including "Tales from the Crypt," "The Haunt of Fear," and "The Vault of Horror." The series aired on HBO from 1989 to 1996, producing 7 seasons and 93 episodes.»
-- [voiced by] «The show was hosted by the Cryptkeeper, a wisecracking corpse voiced by John Kassir.»
-
-## `tales-of-wells-fargo-j7zzaqz8` · Телесериал · Tales of Wells Fargo
-
-- [aired on … from … to] «An American Western television series that aired on NBC from 1957 to 1962, produced by Nat Holt and Earle Lyon.»
-
-## `taxi-42djfcub` · Телесериал · Taxi!​
-
-- [aired on … from … to] «A British comedy-drama television series created by Ted Willis, aired on BBC from 1963 to 1964, depicting the daily lives of London taxi drivers.»
-
-## `that-70s-show-ttdr0lao` · Телесериал · That '70s Show
-
-- [aired on … from … to] «An American teen sitcom that aired on Fox from August 23, 1998, to May 18, 2006.»
-
 ## `that-time-i-got-reincarnated-as-a-slime-z65ri5ch` · Телесериал · That Time I Got Reincarnated as a Slime
 
 - [voiced by] «The story follows Satoru Mikami, an ordinary office worker who dies and is reincarnated in another world… as a slime named Rimuru Tempest (voiced by Takuma Terashima).»
@@ -867,10 +758,6 @@
 ## `the-agency-xx2lv8fm` · Телесериал · The Agency
 
 - [premiered on] «The series premiered on November 29, 2024, on Paramount+ with Showtime, and was renewed for a second season in December 2024.​»
-
-## `the-andy-griffith-show-iapdquke` · Телесериал · The Andy Griffith Show
-
-- [aired on … from … to] «An American sitcom that aired on CBS from October 3, 1960, to April 1, 1968, created by Sheldon Leonard.»
 
 ## `the-ant-bully-t1ypwodv` · Фильм · The Ant Bully​
 
@@ -914,10 +801,6 @@
 ## `the-good-dinosaur-ep56q6wz` · Фильм · The Good Dinosaur
 
 - [voiced by] «Set in an alternate Earth where the asteroid that would have caused the extinction of dinosaurs passes by, allowing dinosaurs to evolve into intelligent beings, the story follows a young Apatosaurus named Arlo (voiced by Raymond Ochoa) who, due to a tragic accident, finds himself far from his home and family.»
-
-## `the-guns-of-will-sonnett-nnogveaj` · Телесериал · The Guns of Will Sonnett​
-
-- [aired on … from … to] «An American Western television series that aired on ABC from 1967 to 1969, it follows former Army scout Will Sonnett (Walter Brennan) and his grandson Jeff (Dack Rambo) as they search for Will's son and Jeff's father, James Sonnett (Jason Evers), a renowned gunslinger on the run.»
 
 ## `the-hunger-games-catching-fire-x0r3yrau` · Фильм · The Hunger Games: Catching Fire
 
@@ -974,17 +857,9 @@
 
 - [voiced by] «The main characters are voiced by Sergey Burunov (Kuzya) and Garik Kharlamov (Nafanya), with actors Mark Bogatyrev (Natasha's father), Evgeniya Malakhova (Natasha's mother), Ekaterina Stulova and Alika Smekhova (Baba-Yaga), and young actress Sofia Petrova as Natasha.»
 
-## `the-love-boat-bvkc6kcp` · Телесериал · The Love Boat​
-
-- [aired on … from … to] «An American romantic comedy-drama television series created by Wilford Lloyd Baumes, which aired on ABC from September 24, 1977, to May 24, 1986.»
-
 ## `the-men-who-built-america-frontiersmen-1nkcd4m4` · Телесериал · The Men Who Built America: Frontiersmen
 
 - [premiered on] «Filmed in Wellington, New Zealand, the series premiered on the History Channel on March 7, 2018, with executive producers Leonardo DiCaprio, Jennifer Davisson, and Stephen David.»
-
-## `the-mickey-mouse-club-x7tuje1y` · Телесериал · The Mickey Mouse Club
-
-- [aired on … from … to] «The show originally aired on ABC from 1955 to 1959 and was later revived in new formats in 1977 and 1989.»
 
 ## `the-movies-ijoq2od1` · Телесериал · The Movies
 
@@ -1013,10 +888,6 @@
 ## `the-polar-express-urjgpkvp` · Фильм · The Polar Express​
 
 - [premiered on] «It premiered on October 13, 2004, at the Chicago International Film Festival and was released in the United States on November 10, 2004.»
-
-## `the-purge-esft6r4s` · Телесериал · The Purge
-
-- [aired on … from … to] «An American horror anthology television series created by James DeMonaco, "The Purge" expands upon the film franchise of the same name and aired on USA Network from September 4, 2018, to December 17, 2019.»
 
 ## `the-pursuit-of-love-vpcb8cgg` · Телесериал · The Pursuit of Love
 
@@ -1135,10 +1006,6 @@
 
 - [premiered on] «The film premiered on August 2, 2024.»
 
-## `trying-times-inm8zphd` · Телесериал · Trying Times
-
-- [aired on … from … to] «Denny, which aired on PBS from 1987 to 1989.»
-
 ## `turning-red-3hw7xhyt` · Фильм · Turning Red
 
 - [voiced by] «Set in Toronto in 2002, the story follows 13-year-old Chinese-Canadian girl Meilin Lee (voiced by Rosalie Chiang), who strives to be a dutiful daughter and top student, aiming to meet the expectations of her strict and caring mother, Ming (Sandra Oh).»
@@ -1147,11 +1014,6 @@
 
 - [premiered on] «It premiered on September 8, 2022, at the Guggenheim Museum Bilbao and was theatrically released in Spain on September 16, 2022.»
 
-## `ugly-americans-zgji6eoe` · Телесериал · Ugly Americans
-
-- [aired on … from … to · totaling N episodes] «Stern, aired on Comedy Central from March 17, 2010, to April 25, 2012, totaling 31 episodes over two seasons.»
-- [voiced by] «The plot centers on the life of Mark Lilly (voiced by Matt Oberg), a social worker employed at the Department of Integration in an alternate version of New York City inhabited by monsters and other creatures.»
-
 ## `universal-soldier-the-return-rmfzzppw` · Фильм · Universal Soldier: The Return
 
 - [voiced by] «(voiced by Michael Jai White) grows increasingly deadly.»
@@ -1159,10 +1021,6 @@
 ## `vikings-gza62rsf` · Телесериал · Vikings
 
 - [premiered on] «It premiered on March 3, 2013, on the History channel.»
-
-## `voyage-to-the-bottom-of-the-sea-7cpa22y7` · Телесериал · Voyage to the Bottom of the Sea
-
-- [aired on … from … to] «An American science fiction television series that aired on ABC from September 14, 1964, to March 31, 1968, created by Irwin Allen.»
 
 ## `wag-the-dog-npeemiir` · Фильм · Wag the Dog​
 
