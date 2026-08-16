@@ -486,6 +486,9 @@ V4 и помечены `вид=выведено-из-решения` в `plans/5
 ## Стражи, которые надо держать зелёными
 
 `npm test` (**284**) · `npm run test:sync` (**77**) · `npm run check` · `npm run typecheck` ·
+🆕 **ЯРУС 2 ГРАФИКИ** (`plans/46`): `node tools/verify-tier2-prefetch.mjs` (**7**, по собранному
+сайту + preview: нет префетча в сыром HTML И есть 3 ссылки в живом head, `saveData` — ноль;
+2 мутации) ·
 🆕 **СЕМЕЙСТВО ТЕСТ** (`plans/47`, голова очереди `plans/49`): `node tools/verify-test-pages.mjs`
 (**89** по собранному сайту — 8 страниц, содержание в сыром HTML, без noindex, canonical, hreflang
 с самоссылкой, ПДн, словарь, sitemap ровно 8; сервера не поднимает; 3 мутации) ·

@@ -7,6 +7,8 @@
   // Персонажи вымышленные: оценки реальных людей не покидают сервер синхронизации
   // (интервью №002, В4). Реальные точки появятся в гостевом режиме (plans/03, этап 2).
   // Ничего не сохраняется и не отправляется: состояние живёт в памяти страницы.
+  import { onMount } from 'svelte';
+
   import { computeRelation, MAX_RATING } from '$lib/similarity/similarity';
   import { track } from '$lib/data/funnel';
   // Правило владельца «графика не появляется на горячую» (bugs/69): лица персонажей
@@ -87,6 +89,40 @@
   //    кроп лица — в кружках и на карте, полная иллюстрация — в оверлее по тапу ──
   const avatarFace = (id: string) => `/img/personas/${id}_face.png`;
   const avatarFull = (id: string) => `/img/personas/${id}.png`;
+
+  /*
+   * ── ЯРУС 2 ГОТОВНОСТИ ГРАФИКИ (`ideas/27` шаг 3б, план `plans/46`, рецепт `researches/36` §3) ──
+   *
+   * Полные иллюстрации персонажей весят ~1,2 МБ каждая и до этой правки ехали В МОМЕНТ ТАПА по
+   * зуму — «на горячую», ровно то, что владелец запретил правилом готовности графики. Греем их
+   * в HTTP-кэше В ФОНЕ, когда страница уже загрузилась и браузер простаивает.
+   *
+   * 🔴 Ссылки ставятся ТОЛЬКО скриптом и ТОЛЬКО после `load` (правило 1 `researches/36` §2): в
+   * исходном HTML их быть не должно — иначе префетч соревнуется за канал с самой отрисовкой
+   * лендинга, и Perf 100 уезжает. Стережёт `tools/verify-tier2-prefetch.mjs` с ОБЕИХ сторон:
+   * «нет в сыром HTML» и «есть в живом `head`».
+   *
+   * Уважаем экономию трафика (`saveData`) и молчим при провале: префетч — подсказка браузеру,
+   * а не опора. Зум умеет жить без кэша ровно как раньше.
+   */
+  const warmFullPersonas = () => {
+    if ((navigator as { connection?: { saveData?: boolean } }).connection?.saveData === true) return;
+    for (const p of PERSONAS) {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.as = 'image';
+      link.href = avatarFull(p.id);
+      document.head.append(link);
+    }
+  };
+  const idle = (cb: () => void) =>
+    'requestIdleCallback' in window
+      ? (window as unknown as { requestIdleCallback: (c: () => void) => void }).requestIdleCallback(cb)
+      : setTimeout(cb, 2000);
+  onMount(() => {
+    if (document.readyState === 'complete') idle(warmFullPersonas);
+    else window.addEventListener('load', () => idle(warmFullPersonas), { once: true });
+  });
 
   // Какой персонаж увеличен по тапу (null — оверлей закрыт)
   let zoomed = $state<(typeof PERSONAS)[number] | null>(null);
