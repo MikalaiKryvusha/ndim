@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Вес числа голосов в рейтинге — характер кривой</title>
+<!--
+  ГРАФИК ДЛЯ РЕШЕНИЯ ВЛАДЕЛЬЦА (интервью №036, В2).
+
+  Заказан им дословно 2026-08-16: «нарисуй мне график весов рейтинга и количество оценок.
+  Я понимаю математику не цифрами, а когда вижу характер графика визуально… и смогу тебе
+  подсказать, норм формула, или нет, когда увижу график».
+
+  Страница САМОДОСТАТОЧНА: ни одного внешнего запроса, обе темы ОС, всё рисуется inline-SVG.
+  Кривые строятся тем же кодом, что и продукт: min(1, ln(1+v) / ln(1+НАСЫЩЕНИЕ)).
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f5f1; --panel: #fffdfa; --edge: #e2ddd4; --text: #26221d;
+    --dim: #6f675c; --faint: #948b7e; --head: #14110d;
+    --grid: #e8e3da; --axis: #b9b1a5;
+    --c20: #1f7ae0; --c10: #d98324; --c50: #2e9e6b; --c200: #a05ad6; --lin: #c0392b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c; --panel: #1d2026; --edge: #2e333c; --text: #e6e8ec;
+      --dim: #9aa2ae; --faint: #767f8c; --head: #f2f4f7;
+      --grid: #262b33; --axis: #4a515c;
+      --c20: #4ea3ff; --c10: #ffab4d; --c50: #4cd39a; --c200: #c48cff; --lin: #ff7a6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 1.5rem 1rem 4rem; background: var(--bg); color: var(--text);
+    font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 62rem; margin: 0 auto; }
+  h1 { font-size: clamp(1.3rem, 3.5vw, 1.9rem); color: var(--head); margin: 0 0 .3rem; }
+  .lede { color: var(--dim); margin: 0 0 1.6rem; }
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    padding: 1rem 1.1rem 1.2rem; margin-bottom: 1.4rem;
+  }
+  h2 { font-size: 1.05rem; color: var(--head); margin: 0 0 .2rem; }
+  .sub { color: var(--faint); font-size: .88rem; margin: 0 0 .9rem; }
+  .plot { width: 100%; height: auto; display: block; overflow: visible; }
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; margin-top: .7rem; font-size: .88rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .4rem; color: var(--dim); }
+  .swatch { width: 22px; height: 3px; border-radius: 2px; display: inline-block; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin-top: .3rem; }
+  th, td { padding: .35rem .5rem; border-bottom: 1px solid var(--edge); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--faint); font-weight: 600; }
+  b.hot { color: var(--c20); }
+  .note { font-size: .9rem; color: var(--dim); margin: .8rem 0 0; }
+  .q { background: var(--panel); border: 1px solid var(--edge); border-left: 4px solid var(--c20);
+       border-radius: 0 12px 12px 0; padding: .9rem 1rem; margin-top: 1.6rem; }
+  .q h2 { margin-bottom: .4rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Вес числа голосов — характер кривой</h1>
+  <p class="lede">
+    По горизонтали — сколько людей оценило объект. По вертикали — какой вес это даёт его месту
+    в рейтинге: 0 — голоса не влияют, 1 — влияют в полную силу и дальше уже не растут.
+  </p>
+
+  <div class="card">
+    <h2>Крупный план: первые 50 голосов</h2>
+    <p class="sub">Здесь видно главное — насколько быстро кривая выходит на плато.</p>
+    <svg class="plot" id="near" viewBox="0 0 900 430" role="img"
+         aria-label="Кривые веса голосов при разных точках насыщения, первые 50 голосов"></svg>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--c10)"></i>насыщение на 10</span>
+      <span><i class="swatch" style="background:var(--c20)"></i><b class="hot">насыщение на 20 — сейчас в коде</b></span>
+      <span><i class="swatch" style="background:var(--c50)"></i>насыщение на 50</span>
+      <span><i class="swatch" style="background:var(--c200)"></i>насыщение на 200</span>
+      <span><i class="swatch" style="background:var(--lin)"></i>прямая (не логарифм) — для сравнения характера</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Общий план: до 250 голосов</h2>
+    <p class="sub">Тот же набор кривых. Отсюда видно, что после насыщения линия идёт ровно.</p>
+    <svg class="plot" id="far" viewBox="0 0 900 380" role="img"
+         aria-label="Те же кривые на диапазоне до 250 голосов"></svg>
+  </div>
+
+  <div class="card">
+    <h2>Что кривая «насыщение на 20» даёт в числах</h2>
+    <p class="sub">Прибавка к месту в баллах: полное насыщение стоит 1,0 балла (Ваш выбор — «оценка важнее»).</p>
+    <table id="tbl">
+      <thead><tr><th>Голосов</th><th>Вес</th><th>Прибавка, баллов</th><th>Шаг от предыдущей строки</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p class="note" id="realcase"></p>
+  </div>
+
+  <div class="q">
+    <h2>Что я прошу подсказать</h2>
+    <p style="margin:0">
+      Посмотрите на характер синей кривой. Она круто идёт вверх на первых голосах, к десятому
+      уже отдаёт три четверти своей силы, а к двадцатому упирается в потолок и дальше не растёт
+      совсем. Если характер верный — так и оставляю. Если кривая должна выходить на плато
+      позже (мягче) или раньше (резче) — покажите пальцем, какая из соседних линий ближе, и я
+      поставлю её.
+    </p>
+  </div>
+</main>
+
+<script>
+(() => {
+  const SATS = [
+    { sat: 10,  color: 'var(--c10)',  w: 2 },
+    { sat: 20,  color: 'var(--c20)',  w: 3.6 },
+    { sat: 50,  color: 'var(--c50)',  w: 2 },
+    { sat: 200, color: 'var(--c200)', w: 2 },
+  ];
+  // Формула продукта, один в один: src/lib/content/catalog-hub.ts → voteWeight
+  const weight = (v, sat) => Math.min(1, Math.log(1 + v) / Math.log(1 + sat));
+
+  function draw(id, maxV, ticks) {
+    const svg = document.getElementById(id);
+    const W = 900, H = svg.viewBox.baseVal.height;
+    const L = 58, R = 24, T = 18, B = 46;
+    const px = v => L + (v / maxV) * (W - L - R);
+    const py = w => T + (1 - w) * (H - T - B);
+    const el = (n, a) => {
+      const e = document.createElementNS('http://www.w3.org/2000/svg', n);
+      for (const k in a) e.setAttribute(k, a[k]);
+      return e;
+    };
+    const add = e => svg.appendChild(e);
+
+    // Сетка по вертикали (вес) и подписи
+    for (let i = 0; i <= 5; i++) {
+      const w = i / 5, y = py(w);
+      add(el('line', { x1: L, y1: y, x2: W - R, y2: y, stroke: 'var(--grid)', 'stroke-width': 1 }));
+      const t = el('text', { x: L - 10, y: y + 4, fill: 'var(--faint)', 'font-size': 12, 'text-anchor': 'end' });
+      t.textContent = w.toFixed(1);
+      add(t);
+    }
+    // Сетка по горизонтали (голоса)
+    for (const v of ticks) {
+      const x = px(v);
+      add(el('line', { x1: x, y1: T, x2: x, y2: H - B, stroke: 'var(--grid)', 'stroke-width': 1 }));
+      const t = el('text', { x, y: H - B + 20, fill: 'var(--faint)', 'font-size': 12, 'text-anchor': 'middle' });
+      t.textContent = v;
+      add(t);
+    }
+    // Оси
+    add(el('line', { x1: L, y1: T, x2: L, y2: H - B, stroke: 'var(--axis)', 'stroke-width': 1.5 }));
+    add(el('line', { x1: L, y1: H - B, x2: W - R, y2: H - B, stroke: 'var(--axis)', 'stroke-width': 1.5 }));
+    const xl = el('text', { x: (L + W - R) / 2, y: H - 8, fill: 'var(--dim)', 'font-size': 13, 'text-anchor': 'middle' });
+    xl.textContent = 'сколько людей оценило';
+    add(xl);
+    const yl = el('text', { x: 14, y: (T + H - B) / 2, fill: 'var(--dim)', 'font-size': 13, 'text-anchor': 'middle',
+                            transform: `rotate(-90 14 ${(T + H - B) / 2})` });
+    yl.textContent = 'вес голосов';
+    add(yl);
+
+    // Прямая — для сравнения характера (не логарифм)
+    const lin = [];
+    for (let v = 0; v <= maxV; v += maxV / 400) lin.push(`${px(v)},${py(Math.min(1, v / 20))}`);
+    add(el('polyline', { points: lin.join(' '), fill: 'none', stroke: 'var(--lin)',
+                         'stroke-width': 1.6, 'stroke-dasharray': '5 4', opacity: .75 }));
+
+    // Логарифмические кривые
+    for (const s of SATS) {
+      const pts = [];
+      for (let v = 0; v <= maxV; v += maxV / 600) pts.push(`${px(v)},${py(weight(v, s.sat))}`);
+      add(el('polyline', { points: pts.join(' '), fill: 'none', stroke: s.color,
+                           'stroke-width': s.w, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+    }
+
+    // Точки, которые владелец называл словами: 5, 10, 20
+    for (const v of [5, 10, 20]) {
+      if (v > maxV) continue;
+      const w = weight(v, 20);
+      add(el('circle', { cx: px(v), cy: py(w), r: 5, fill: 'var(--c20)' }));
+      const t = el('text', { x: px(v) + 9, y: py(w) - 8, fill: 'var(--c20)', 'font-size': 12, 'font-weight': 600 });
+      t.textContent = `${v} → ${w.toFixed(2)}`;
+      add(t);
+    }
+  }
+
+  draw('near', 50, [0, 5, 10, 20, 30, 40, 50]);
+  draw('far', 250, [0, 20, 50, 100, 150, 200, 250]);
+
+  // Таблица чисел
+  const rows = [1, 2, 3, 5, 8, 10, 15, 20, 25, 50, 200, 205];
+  const body = document.querySelector('#tbl tbody');
+  let prev = null;
+  for (const v of rows) {
+    const w = weight(v, 20);
+    const tr = document.createElement('tr');
+    const step = prev === null ? '—' : (w - prev).toFixed(3);
+    tr.innerHTML = `<td>${v}</td><td>${w.toFixed(3)}</td><td>${(w * 1).toFixed(3)}</td><td>${step}</td>`;
+    if (v === 20) tr.style.fontWeight = '700';
+    body.appendChild(tr);
+    prev = w;
+  }
+
+  // Живой пример из боя
+  const hp = weight(14, 20), hotd = weight(1, 20);
+  document.getElementById('realcase').textContent =
+    `Живой пример из боя: «Гарри Поттер» — 14 голосов, вес ${hp.toFixed(2)}, прибавка ${hp.toFixed(2)} балла. ` +
+    `«Дом Дракона» — 1 голос, вес ${hotd.toFixed(2)}. Разница в прибавке ${(hp - hotd).toFixed(2)} балла — ` +
+    `её хватает, чтобы четырнадцать голосов перевесили одинокую десятку.`;
+})();
+</script>
+</body>
+</html>
