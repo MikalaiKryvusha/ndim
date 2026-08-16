@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Место объекта в своём виде — проблема и четыре выхода</title>
+<!--
+  МАКЕТЫ ДЛЯ РЕШЕНИЯ ВЛАДЕЛЬЦА (интервью №036, В1).
+
+  Заказаны им дословно 2026-08-16: «*не понимаю проблему. Наверное, нужно чтобы ты еще проще
+  пояснил и нарисовал макеты с визуализацией проблемы*».
+
+  Способ выбран тот, что сработал в тот же день с графиком веса голосов: варианты стоят РЯДОМ,
+  на БОЕВЫХ числах, и владелец выбирает глазами. Все числа на странице — вывод прибора
+  `node tools/measure-catalog-place.mjs` по снимку каталога от 2026-08-16; ни одно не набрано
+  руками.
+
+  Страница САМОДОСТАТОЧНА: ни одного внешнего запроса, обе темы ОС, всё рисуется inline-SVG.
+  Проверяется съёмщиком `node tools/shoot-catalog-place.mjs` (кадры — `test-results/catalog-place/`).
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f5f1; --panel: #fffdfa; --edge: #e2ddd4; --text: #26221d;
+    --dim: #6f675c; --faint: #948b7e; --head: #14110d;
+    --star: #e0a712; --accent: #1f7ae0; --warn: #c0392b; --good: #2e9e6b;
+    --tint: #f0ece4; --shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c; --panel: #1d2026; --edge: #2e333c; --text: #e6e8ec;
+      --dim: #9aa2ae; --faint: #767f8c; --head: #f2f4f7;
+      --star: #ffc23d; --accent: #4ea3ff; --warn: #ff7a6b; --good: #4cd39a;
+      --tint: #232830; --shadow: 0 1px 2px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 1.5rem 1rem 5rem; background: var(--bg); color: var(--text);
+    font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 66rem; margin: 0 auto; }
+  h1 { font-size: clamp(1.3rem, 3.5vw, 1.9rem); color: var(--head); margin: 0 0 .3rem; }
+  .lede { color: var(--dim); margin: 0 0 .4rem; max-width: 46rem; }
+  .stamp { color: var(--faint); font-size: .85rem; margin: 0 0 2rem; }
+  h2 {
+    font-size: 1.15rem; color: var(--head); margin: 2.4rem 0 .3rem;
+    padding-top: 1.4rem; border-top: 1px solid var(--edge);
+  }
+  h2:first-of-type { border-top: 0; padding-top: 0; }
+  h3 { font-size: 1rem; color: var(--head); margin: 0 0 .2rem; }
+  .sub { color: var(--faint); font-size: .9rem; margin: 0 0 1rem; max-width: 44rem; }
+  p { max-width: 44rem; }
+
+  /* ── КАРТОЧКА-ДОСЬЕ: копия боевой вёрстки страницы каталога ──────────────── */
+  .card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    padding: .9rem 1rem; box-shadow: var(--shadow); max-width: 24rem;
+  }
+  .card .title { font-size: 1.05rem; font-weight: 700; color: var(--head); margin: 0 0 .55rem; }
+  .rate {
+    display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; min-height: 26px;
+    margin: 0 0 .75rem; padding-bottom: .75rem; border-bottom: 1px solid var(--edge);
+  }
+  .stars { display: flex; gap: 2px; font-size: 1.15rem; line-height: 1; }
+  .stars i { font-style: normal; color: var(--edge); }
+  .stars i.on { color: var(--star); }
+  .val { font-size: 1.9rem; font-weight: 800; line-height: 1; color: var(--head); }
+  .meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .brandname {
+    font-size: .68rem; font-weight: 600; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .votes { font-size: .82rem; color: var(--dim); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: .3rem .8rem; margin: 0; font-size: .9rem; }
+  dt { color: var(--faint); }
+  dd { margin: 0; color: var(--text); }
+  dd.place { font-weight: 600; }
+  dd.place.bad { color: var(--warn); }
+  dd.place.good { color: var(--good); }
+  .absent { color: var(--faint); font-style: italic; font-size: .85rem; margin: .5rem 0 0; }
+
+  /* ── СЕТКИ ────────────────────────────────────────────────────────────────── */
+  .row { display: flex; flex-wrap: wrap; gap: 1.1rem; align-items: flex-start; }
+  /* Два на два, а не четыре в ряд: варианты сравниваются попарно, и на любом экране
+     карточка остаётся достаточно широкой, чтобы примеры читались одной строкой. */
+  .variants {
+    display: grid; gap: 1.1rem; max-width: 58rem;
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  }
+  .variant {
+    background: var(--tint); border: 1px solid var(--edge); border-radius: 16px; padding: 1rem;
+  }
+  .variant .card { max-width: none; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: .15rem;
+  }
+  .cost { font-size: .88rem; color: var(--dim); margin: .8rem 0 0; }
+  .cost b { color: var(--text); }
+  .stack { display: flex; flex-direction: column; gap: .7rem; margin-top: .9rem; }
+  .mini {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 10px;
+    padding: .5rem .65rem; font-size: .88rem;
+  }
+  .mini .nm { font-weight: 600; color: var(--head); }
+  .mini .ln { color: var(--dim); }
+  .mini .ln.off { color: var(--faint); font-style: italic; }
+
+  figure { margin: 0; }
+  svg { width: 100%; height: auto; display: block; overflow: visible; }
+  figcaption { font-size: .88rem; color: var(--dim); margin-top: .5rem; }
+  .num { font-weight: 800; color: var(--warn); }
+  .key {
+    background: var(--tint); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+    padding: .8rem 1rem; margin: 1.2rem 0; max-width: 44rem;
+  }
+  .key p { margin: 0; }
+  table { border-collapse: collapse; font-size: .9rem; margin-top: .8rem; }
+  th, td { padding: .35rem .7rem; border-bottom: 1px solid var(--edge); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--faint); font-weight: 600; }
+  .ask {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    padding: 1.1rem 1.2rem; margin-top: 2.5rem; box-shadow: var(--shadow);
+  }
+  .ask h2 { border: 0; padding: 0; margin: 0 0 .4rem; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Место объекта в своём виде — проблема на картинках</h1>
+<p class="lede">
+  Речь про одну строку, которую я хотел добавить на карточку каждого объекта каталога:
+  <b>«151-е место среди 981 оценённого фильма»</b>. Механизм построен и покрыт тестами,
+  но я не выпустил строку — и ниже показываю, почему.
+</p>
+<p class="stamp">
+  Все числа — боевые, снимок каталога 16 августа 2026, прибор <code>tools/measure-catalog-place.mjs</code>.
+</p>
+
+<h2>1. Что это за строка</h2>
+<p class="sub">Вот как она выглядела бы на настоящей карточке — фильм с самым большим числом голосов во всём Пространстве.</p>
+
+<div class="row">
+  <div class="card">
+    <p class="title">Гарри Поттер и философский камень</p>
+    <p class="rate">
+      <span class="stars" aria-hidden="true"><i class="on">★</i><i class="on">★</i><i class="on">★</i><i class="on">★</i><i class="on">★</i><i class="on">★</i><i class="on">★</i><i class="on">★</i><i>★</i><i>★</i></span>
+      <span class="val">8,4</span>
+      <span class="meta"><span class="brandname">NDim Space Rating</span><span class="votes">оценили 14 человек</span></span>
+    </p>
+    <dl>
+      <dt>Вид</dt><dd>Фильм</dd>
+      <dt>Год</dt><dd>2001</dd>
+      <dt>Автор</dt><dd>Крис Коламбус</dd>
+      <dt>Место</dt><dd class="place bad">151-е из 981</dd>
+    </dl>
+  </div>
+  <div style="max-width:26rem">
+    <p>
+      Человек, пришедший из поиска, читает эту строку одним движением: <b>«151-е — так себе
+      фильм»</b>.
+    </p>
+    <p>
+      А на самом деле это фильм, который <b>оценило больше людей, чем любой другой объект во всём
+      Пространстве</b>. Никакой другой строки, объясняющей это, на карточке нет.
+    </p>
+  </div>
+</div>
+
+<h2>2. Проблема — тремя картинками</h2>
+
+<h3>Картинка 1. Одинаковые объекты стоят на разных местах</h3>
+<p class="sub">
+  Вот шесть подряд идущих мест в списке фильмов. У всех шести — одна и та же оценка и одно и то же
+  число голосов. Числа совпадают до последнего знака.
+</p>
+
+<figure>
+<!-- Холст 240, а не 210: шестая строка кончается на 204, и подписи под ней нужно место —
+     при 210 она вылезала за холст и садилась на подпись под картинкой (поймано кадром). -->
+<svg viewBox="0 0 900 240" role="img" aria-label="Шесть объектов с одинаковыми числами на шести разных местах">
+  <g font-family="-apple-system, Segoe UI, Roboto, sans-serif">
+    <g id="tieRows"></g>
+  </g>
+</svg>
+<figcaption>
+  Порядок между ними определяет <b>первая буква адреса страницы</b> — больше нечем: данные
+  одинаковые. «91-е» и «96-е» здесь не означают ничего.
+</figcaption>
+</figure>
+
+<div class="key">
+  <p>
+    И это не редкий случай. <span class="num">96 %</span> оценённых фильмов (937 из 981) стоят
+    в такой группе близнецов. Самая большая группа — <b>191 фильм с оценкой 10,0 при одном
+    голосе</b>: они занимают <b>места с 242-го по 432-е</b>. Сто девяносто одно разное место при
+    полностью одинаковых данных.
+  </p>
+</div>
+
+<h3>Картинка 2. Один голос двигает объект на сотни мест</h3>
+<p class="sub">
+  Что произойдёт, если один человек поставит объекту обычную среднюю оценку — «5». Это наименьшее
+  событие, которое вообще может случиться с объектом.
+</p>
+
+<figure>
+<svg viewBox="0 0 900 260" role="img" aria-label="Сдвиг места от одного голоса">
+  <g id="moveChart" font-family="-apple-system, Segoe UI, Roboto, sans-serif"></g>
+</svg>
+<figcaption>
+  Фильм со 100-го места уезжает на <b>508-е</b> — на <span class="num">408 мест</span> вниз от
+  одного-единственного голоса. Место сегодня говорит не об объекте, а о том, кто случайно зашёл.
+</figcaption>
+</figure>
+
+<h3>Картинка 3. Почему так — голосов пока мало</h3>
+<p class="sub">Сколько в среднем голосов у объектов на разных участках списка фильмов.</p>
+
+<figure>
+<svg viewBox="0 0 900 220" role="img" aria-label="Среднее число голосов по полосам мест">
+  <g id="bandChart" font-family="-apple-system, Segoe UI, Roboto, sans-serif"></g>
+</svg>
+<figcaption>
+  В голове списка (места 1–50) у объекта в среднем <b>5,4 голоса</b> и <b>ни одного</b> объекта с
+  единственным голосом. К хвосту остаётся 1,6 голоса, и у двух третей объектов голос ровно один.
+  <b>Голова списка данными обеспечена, середина и хвост — нет.</b>
+</figcaption>
+</figure>
+
+<h2>3. Четыре выхода</h2>
+<p class="sub">
+  Одни и те же три фильма показаны во всех четырёх вариантах, чтобы разницу было видно сразу.
+  Средний из них — «На Западном фронте без перемен» — как раз один из 55 близнецов «10,0 × 2».
+</p>
+
+<div class="variants">
+
+  <div class="variant">
+    <span class="tag">Вариант 1</span>
+    <h3>Место всем, у кого есть голоса</h3>
+    <p class="sub">Как задумывалось: строка есть у каждого оценённого объекта.</p>
+    <div class="stack">
+      <div class="mini"><div class="nm">Побег из Шоушенка</div><div class="ln">9,4 · 12 голосов · <b>3-е из 981</b></div></div>
+      <div class="mini"><div class="nm">На Западном фронте без перемен</div><div class="ln">10,0 · 2 голоса · <b>92-е из 981</b></div></div>
+      <div class="mini"><div class="nm">Гарри Поттер и философский камень</div><div class="ln">8,4 · 14 голосов · <b>151-е из 981</b></div></div>
+    </div>
+    <p class="cost"><b>Цена:</b> самый честный вариант по замыслу и самый неверный по факту — 96 % чисел взяты из группы близнецов, а выглядят как точное измерение. Лидер каталога по голосам получает клеймо «151-е».</p>
+  </div>
+
+  <div class="variant">
+    <span class="tag">Вариант 2</span>
+    <h3>Только голова списка — первые 50</h3>
+    <p class="sub">Ниже 50-го места строки нет вовсе, как нет строки «Год» у объекта без года.</p>
+    <div class="stack">
+      <div class="mini"><div class="nm">Побег из Шоушенка</div><div class="ln">9,4 · 12 голосов · <b>3-е из 981</b></div></div>
+      <div class="mini"><div class="nm">На Западном фронте без перемен</div><div class="ln off">10,0 · 2 голоса · строки места нет</div></div>
+      <div class="mini"><div class="nm">Гарри Поттер и философский камень</div><div class="ln off">8,4 · 14 голосов · строки места нет</div></div>
+    </div>
+    <p class="cost"><b>Цена:</b> показываем факт только там, где он лестен — это осознанный выбор витрины. И у фильма с максимумом голосов во всём Пространстве строки не будет: 151-е место в топ-50 не попадает.</p>
+  </div>
+
+  <div class="variant">
+    <span class="tag">Вариант 3</span>
+    <h3>Не номер, а полка</h3>
+    <p class="sub">Точность, которую данные выдерживают: «в десятке», «в полусотне», «в первой сотне», «в верхней четверти». Ниже — ничего.</p>
+    <div class="stack">
+      <div class="mini"><div class="nm">Побег из Шоушенка</div><div class="ln">9,4 · 12 голосов · <b>в десятке лучших фильмов</b></div></div>
+      <div class="mini"><div class="nm">На Западном фронте без перемен</div><div class="ln">10,0 · 2 голоса · <b>в первой сотне фильмов</b></div></div>
+      <div class="mini"><div class="nm">Гарри Поттер и философский камень</div><div class="ln">8,4 · 14 голосов · <b>в верхней четверти фильмов</b></div></div>
+    </div>
+    <p class="cost"><b>Цена:</b> строка есть у всех и ни разу не врёт точностью, которой нет. Но полка — новая сущность, которой в продукте пока нет нигде, и её границы придётся объяснять человеку.</p>
+  </div>
+
+  <div class="variant">
+    <span class="tag">Вариант 4</span>
+    <h3>Не место, а сколько людей высказалось</h3>
+    <p class="sub">Строка говорит не «который по счёту», а «насколько этой оценке можно верить».</p>
+    <div class="stack">
+      <div class="mini"><div class="nm">Побег из Шоушенка</div><div class="ln">9,4 · <b>один из самых обсуждаемых фильмов Пространства</b></div></div>
+      <div class="mini"><div class="nm">На Западном фронте без перемен</div><div class="ln off">10,0 · 2 голоса · строки нет, голосов мало</div></div>
+      <div class="mini"><div class="nm">Гарри Поттер и философский камень</div><div class="ln">8,4 · <b>ни один объект Пространства не собрал больше голосов</b></div></div>
+    </div>
+    <p class="cost"><b>Цена:</b> единственный вариант, где Поттер выглядит так, как он того заслуживает, и где строка укрепляет доверие к NDSR, а не спорит с ним. Но это уже не «место» — исходная задача остаётся нерешённой.</p>
+  </div>
+
+</div>
+
+<h2>4. Что меняется, когда голосов станет много</h2>
+<p>
+  Проблема временная и уйдёт сама. Место станет осмысленным, когда у объектов в середине списка
+  будет не один-два голоса, а десятки: тогда близнецов не останется, и один новый голос перестанет
+  двигать строку на сотни мест. Сегодня максимум по всему каталогу — 14 голосов.
+</p>
+<table>
+  <thead><tr><th>Вид</th><th>Оценено</th><th>Максимум голосов</th><th>С одним голосом</th></tr></thead>
+  <tbody id="kindsTbl"></tbody>
+</table>
+
+<div class="ask">
+  <h2>Вопрос</h2>
+  <p style="margin:0">
+    Какой из четырёх вариантов ставим на карточку? Любой из них — минуты работы: механизм уже
+    построен и покрыт тестами, отличается только то, что показывает строка.
+  </p>
+</div>
+
+</main>
+
+<script>
+/*
+ * Все числа ниже — вывод `node tools/measure-catalog-place.mjs` (снимок 2026-08-16). Они лежат
+ * ОДНИМ набором, чтобы страницу можно было обновить одной заменой, а не правкой разметки в
+ * восьми местах: расхождение картинки с прибором — это ровно тот класс дефекта, ради которого
+ * снимок вообще делается прибором.
+ */
+const TIES = [
+  { rank: 91, title: 'Вторая жизнь Уве' },
+  { rank: 92, title: 'На Западном фронте без перемен' },
+  { rank: 93, title: 'Анна' },
+  { rank: 94, title: 'Анора' },
+  { rank: 95, title: 'Плохие парни 2' },
+  { rank: 96, title: 'Бэтмен: Начало' },
+];
+const MOVES = [
+  { rank: 1, after: 10, label: '1-е' },
+  { rank: 10, after: 65, label: '10-е' },
+  { rank: 50, after: 231, label: '50-е' },
+  { rank: 100, after: 508, label: '100-е' },
+  { rank: 491, after: 613, label: '491-е' },
+];
+const BANDS = [
+  { name: 'места 1–50', votes: 5.40, one: 0 },
+  { name: 'места 51–100', votes: 4.32, one: 0 },
+  { name: 'середина', votes: 3.03, one: 0 },
+  { name: 'хвост (50 последних)', votes: 1.62, one: 64 },
+];
+const KINDS = [
+  ['Фильмы', 981, 14, '46 %'],
+  ['Видеоигры', 422, 9, '61 %'],
+  ['Сериалы', 118, 11, '38 %'],
+  ['Романы', 85, 11, '45 %'],
+  ['Практики', 122, 11, '50 %'],
+  ['Музыканты', 123, 7, '45 %'],
+];
+
+const SVG = 'http://www.w3.org/2000/svg';
+const el = (name, attrs, text) => {
+  const n = document.createElementNS(SVG, name);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+/* ── Картинка 1: шесть близнецов ─────────────────────────────────────────── */
+{
+  const g = document.getElementById('tieRows');
+  TIES.forEach((t, i) => {
+    const y = 12 + i * 32;
+    g.appendChild(el('rect', { x: 0, y, width: 900, height: 26, rx: 6, fill: css('--tint') }));
+    g.appendChild(el('text', { x: 14, y: y + 18, 'font-size': 15, 'font-weight': 700, fill: css('--warn') }, `${t.rank}-е`));
+    g.appendChild(el('text', { x: 78, y: y + 18, 'font-size': 15, fill: css('--text') }, t.title));
+    g.appendChild(el('text', { x: 640, y: y + 18, 'font-size': 15, 'font-weight': 700, fill: css('--star') }, '10,0'));
+    g.appendChild(el('text', { x: 700, y: y + 18, 'font-size': 14, fill: css('--dim') }, '2 голоса'));
+  });
+  const y = 12 + TIES.length * 32 + 6;
+  g.appendChild(el('text', { x: 78, y: y + 12, 'font-size': 14, fill: css('--faint') }, 'и так ещё 49 фильмов с теми же числами — всего 55, места с 91-го по 145-е'));
+}
+
+/* ── Картинка 2: сдвиг от одного голоса ──────────────────────────────────── */
+{
+  const g = document.getElementById('moveChart');
+  const X0 = 60, X1 = 860, Y0 = 40, H = 170, OF = 981;
+  const x = (rank) => X0 + ((rank - 1) / (OF - 1)) * (X1 - X0);
+
+  g.appendChild(el('text', { x: X0, y: 20, 'font-size': 13, fill: css('--faint') }, 'место в списке фильмов: 1-е слева, 981-е справа'));
+  g.appendChild(el('line', { x1: X0, y1: Y0, x2: X1, y2: Y0, stroke: css('--edge'), 'stroke-width': 2 }));
+  for (const r of [1, 250, 500, 750, 981]) {
+    g.appendChild(el('line', { x1: x(r), y1: Y0 - 5, x2: x(r), y2: Y0 + 5, stroke: css('--edge'), 'stroke-width': 2 }));
+    g.appendChild(el('text', { x: x(r), y: Y0 - 12, 'font-size': 12, fill: css('--faint'), 'text-anchor': 'middle' }, String(r)));
+  }
+  MOVES.forEach((m, i) => {
+    const y = Y0 + 26 + i * ((H - 26) / MOVES.length);
+    const from = x(m.rank), to = x(m.after);
+    g.appendChild(el('line', { x1: from, y1: y, x2: to, y2: y, stroke: css('--warn'), 'stroke-width': 2, 'stroke-linecap': 'round' }));
+    g.appendChild(el('polygon', { points: `${to},${y} ${to - 9},${y - 4.5} ${to - 9},${y + 4.5}`, fill: css('--warn') }));
+    g.appendChild(el('circle', { cx: from, cy: y, r: 4, fill: css('--accent') }));
+    g.appendChild(el('text', { x: X0 - 8, y: y + 4, 'font-size': 13, fill: css('--dim'), 'text-anchor': 'end' }, m.label));
+    const moved = m.after - m.rank;
+    g.appendChild(el('text', { x: to + 10, y: y + 4, 'font-size': 13, 'font-weight': 700, fill: css('--warn') }, `${m.after}-е — вниз на ${moved} мест`));
+  });
+}
+
+/* ── Картинка 3: голоса по полосам ───────────────────────────────────────── */
+{
+  const g = document.getElementById('bandChart');
+  const X0 = 190, X1 = 700, Y0 = 26, BH = 34, GAP = 12, MAX = 6;
+  BANDS.forEach((b, i) => {
+    const y = Y0 + i * (BH + GAP);
+    const w = (b.votes / MAX) * (X1 - X0);
+    g.appendChild(el('rect', { x: X0, y, width: X1 - X0, height: BH, rx: 8, fill: css('--tint') }));
+    g.appendChild(el('rect', { x: X0, y, width: w, height: BH, rx: 8, fill: i === BANDS.length - 1 ? css('--warn') : css('--accent'), opacity: .85 }));
+    g.appendChild(el('text', { x: X0 - 12, y: y + 22, 'font-size': 14, fill: css('--text'), 'text-anchor': 'end' }, b.name));
+    g.appendChild(el('text', { x: X0 + w + 12, y: y + 22, 'font-size': 14, 'font-weight': 700, fill: css('--text') }, `${b.votes.toFixed(2).replace('.', ',')} голоса`));
+    if (b.one) g.appendChild(el('text', { x: X0 + w + 130, y: y + 22, 'font-size': 13, fill: css('--warn') }, `· у ${b.one} % ровно один голос`));
+  });
+}
+
+/* ── Таблица видов ───────────────────────────────────────────────────────── */
+{
+  const tb = document.getElementById('kindsTbl');
+  for (const [name, rated, max, one] of KINDS) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${name}</td><td>${rated}</td><td>${max}</td><td>${one}</td>`;
+    tb.appendChild(tr);
+  }
+}
+</script>
+</body>
+</html>
