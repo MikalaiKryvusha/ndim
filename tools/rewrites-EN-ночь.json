@@ -1,5 +1,474 @@
 [
  {
+  "slug": "insomnia-5ul3dkfi",
+  "lang": "en",
+  "find": "The 2002 American psychological thriller directed by Christopher Nolan and written by Hillary Seitz is a remake of the 1997 Norwegian film of the same name.",
+  "replace": "Hillary Seitz wrote the screenplay and Christopher Nolan directed this 2002 American psychological thriller, which reworks a Norwegian picture from 1997 that shared its title.",
+  "why": "Ряд 13 слов сбит до 2; сохранены 2002, 1997, Кристофер Нолан, Хиллари Зайц, американский психологический триллер, ремейк норвежского фильма того же названия."
+ },
+ {
+  "slug": "glengarry-glen-ross-69s1ndrq",
+  "lang": "en",
+  "find": "The 1992 American drama film directed by James Foley and written by David Mamet is based on his 1984 Pulitzer Prize-winning play.",
+  "replace": "David Mamet adapted his own Pulitzer Prize-winning play of 1984 for the screen, and James Foley directed the resulting 1992 American drama film.",
+  "why": "Ряд 13 слов сбит до 4; сохранены 1992, 1984, Джеймс Фоули, Дэвид Мэмет, Пулитцеровская премия, основа — его собственная пьеса. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 13 слов подряд («grossing 10 7 million in north america against a 12 5 millio…») — нужна вторая правка."
+ },
+ {
+  "slug": "perfect-days-6ihwn7fo",
+  "lang": "en",
+  "find": "A co-production between Japan and Germany, the film follows the life of Hirayama (Kōji Yakusho), a public toilet cleaner in Tokyo.",
+  "replace": "Japan and Germany co-produced it, and the story stays with Hirayama (Kōji Yakusho), who cleans public toilets in Tokyo.",
+  "why": "Ряд 13 слов сбит до 3; сохранены Япония и Германия как копродукция, Хираяма, Кодзи Якусё, уборщик общественных туалетов, Токио. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («2023 at the 76th cannes film festival where it competed…») — нужна вторая правка."
+ },
+ {
+  "slug": "the-legend-of-heroes-trails-through-daybreak-ii-7ivg5mgz",
+  "lang": "en",
+  "find": "The game was released in Japan in 2022, with the English version becoming available on February 14, 2025, for PlayStation 4, PlayStation 5, Nintendo Switch, and Windows.",
+  "replace": "Japan got the game in 2022; the English version reached Windows, Nintendo Switch, PlayStation 5 and PlayStation 4 on February 14, 2025.",
+  "why": "Ряд 13 слов сбит до 4 (список платформ развёрнут в обратном порядке); сохранены 2022, 14 февраля 2025, PlayStation 4, PlayStation 5, Nintendo Switch, Windows, Япония."
+ },
+ {
+  "slug": "the-creature-walks-among-us-85ljj2xh",
+  "lang": "en",
+  "find": "The 1956 American science fiction horror film directed by John Sherwood is the third and final installment of the Creature from the Black Lagoon trilogy.",
+  "replace": "John Sherwood directed this American science fiction horror film of 1956, which closes the Creature from the Black Lagoon trilogy as its third entry.",
+  "why": "Ряд 13 слов сбит до 7 (остаток — само название трилогии); сохранены 1956, Джон Шервуд, научно-фантастический хоррор, третья и завершающая часть трилогии «Creature from the Black Lagoon»."
+ },
+ {
+  "slug": "lightyear-4aoj6de6",
+  "lang": "en",
+  "find": "A 2022 American animated science fiction action-adventure film produced by Pixar Animation Studios and released by Walt Disney Pictures.",
+  "replace": "Pixar Animation Studios built this American animated feature — a science-fiction action-adventure — and Walt Disney Pictures released it in 2022.",
+  "why": "Ряд 14 слов сбит до 4: сохранены 2022, американский, жанр, Pixar Animation Studios, Walt Disney Pictures."
+ },
+ {
+  "slug": "the-bad-news-bears-8ffoao97",
+  "lang": "en",
+  "find": "The 1976 American sports comedy film directed by Michael Ritchie and written by Bill Lancaster follows Morris Buttermaker (Walter Matthau), a former minor league baseball player turned pool cleaner and alcoholic.",
+  "replace": "Michael Ritchie directed this American sports comedy of 1976, working from a script by Bill Lancaster. Its central figure is Morris Buttermaker (Walter Matthau) — an alcoholic who cleans pools for a living after a minor league baseball career.",
+  "why": "Ряд 14 слов сбит до 3: сохранены 1976, Michael Ritchie, Bill Lancaster, Morris Buttermaker, Walter Matthau, бывший игрок низшей лиги, чистильщик бассейнов, алкоголик."
+ },
+ {
+  "slug": "the-tearsmith-8lnnd6wf",
+  "lang": "en",
+  "find": "The story follows eight-year-old Nica, who becomes orphaned after her parents die in a car accident and is sent to the oppressive Sunnycreek Orphanage, where she befriends a girl named Adeline.",
+  "replace": "The story picks up with Nica at eight years old, orphaned when a car accident kills her parents. The oppressive Sunnycreek Orphanage takes her in, and there she makes a friend, a girl called Adeline.",
+  "why": "Ряд 14 слов сбит до 4 (включая стык со следующим предложением): сохранены Nica, восемь лет, автокатастрофа, Sunnycreek Orphanage, Adeline. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 14 слов подряд («their new home rigel is hostile toward nica flashbacks revea…») — нужна вторая правка."
+ },
+ {
+  "slug": "the-local-stigmatic-abdvbjfr",
+  "lang": "en",
+  "find": "The film was shot in the late 1980s and had its premiere at the Museum of Modern Art in New York City in March 1990 but did not receive a theatrical release.",
+  "replace": "The shoot took place in the late 1980s, and the first screening came in March 1990 at New York City's Museum of Modern Art. It never reached theaters.",
+  "why": "Ряд 14 слов сбит до 4: сохранены конец 1980-х, март 1990, Museum of Modern Art, New York City, отсутствие проката. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 13 слов подряд («it was released on dvd as part of the al pacino box set…») — нужна вторая правка."
+ },
+ {
+  "slug": "next-goal-wins-b2d5ftqw",
+  "lang": "en",
+  "find": "The film premiered at the Toronto International Film Festival on September 10, 2023, and was released theatrically on November 17, 2023.",
+  "replace": "The Toronto International Film Festival showed it first, on September 10, 2023; it reached theaters on November 17, 2023.",
+  "why": "Ряд 14 слов сбит до 5: сохранены Toronto International Film Festival, 10 сентября 2023, 17 ноября 2023. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 12 слов подряд («the first openly transgender athlete to compete in a world c…») — нужна вторая правка."
+ },
+ {
+  "slug": "tom-and-jerry-the-fast-and-the-furry-yiyglgut",
+  "lang": "en",
+  "find": "Other contestants include elderly Grammy with her dog Squirty, dark lord and florist Gorthan, superstar Steed Dirkly, single mother of four known as \"Soccer Mom,\" and a scientist named Dr.",
+  "replace": "The rest of the field lines up like this: elderly Grammy with her dog Squirty; Gorthan, a florist who is also a dark lord; the superstar Steed Dirkly; \"Soccer Mom,\" a single mother raising four children; and a scientist, Dr.",
+  "why": "Ряд был 14 слов, стал 3. Сохранены все имена (Grammy, Squirty, Gorthan, Steed Dirkly, Dr.), кавычки \"Soccer Mom\", число четверых детей; хвост стыкуется с \"Dr. Professor\"."
+ },
+ {
+  "slug": "multiversus-ylkrr1au",
+  "lang": "en",
+  "find": "A platform fighting game developed by Player First Games and published by Warner Bros.",
+  "replace": "Player First Games built this platform fighter; the publisher is Warner Bros.",
+  "why": "Ряд был 14 слов, стал 4. Сохранены разработчик Player First Games, издатель Warner Bros. Games (стык со следующим словом \"Games\") и жанр."
+ },
+ {
+  "slug": "brazil-zqtbk4mg",
+  "lang": "en",
+  "find": "A 1985 American dystopian science fiction black comedy film directed by Terry Gilliam and written by Gilliam, Tom Stoppard, and Charles McKeown.",
+  "replace": "Terry Gilliam directed this American black comedy of 1985, a dystopian science fiction story he wrote together with Charles McKeown and Tom Stoppard.",
+  "why": "Ряд был 14 слов, стал 3. Сохранены год 1985, жанры, режиссёр Terry Gilliam и все три сценариста (Gilliam, Tom Stoppard, Charles McKeown)."
+ },
+ {
+  "slug": "big-0ti8hlzy",
+  "lang": "en",
+  "find": "It became the first feature film directed by a woman to gross over $100 million at the box office.​",
+  "replace": "No feature film with a woman directing had passed $100 million at the box office before this one.​",
+  "why": "Ряд был 13 слов, стал 2. Сохранены сумма $100 million, факт первенства, «feature film», «woman», «box office» и концевой невидимый символ."
+ },
+ {
+  "slug": "on-a-clear-day-you-can-see-forever-14zttf9h",
+  "lang": "en",
+  "find": "Under hypnosis, it is revealed that Daisy is the reincarnation of Lady Melinda Winifred Waine Tentrees, a seductive 19th-century aristocrat born as the illegitimate daughter of a kitchen maid.",
+  "replace": "Hypnosis opens up a past life. In the 19th century, Daisy lived as a seductive aristocrat named Lady Melinda Winifred Waine Tentrees, the illegitimate daughter of a kitchen maid.",
+  "why": "Ряд был 13 слов, стал 5 — и это само имя Lady Melinda Winifred Waine Tentrees, которое убирать нельзя. Сохранены гипноз, Daisy, XIX век, «seductive», аристократка, незаконная дочь кухарки."
+ },
+ {
+  "slug": "field-of-dreams-m7mhivau",
+  "lang": "en",
+  "find": "The 1989 American sports fantasy drama, directed by Phil Alden Robinson and based on Canadian novelist W.",
+  "replace": "Phil Alden Robinson directed this 1989 American sports fantasy drama. Canadian novelist W.",
+  "why": "Ряд 14 слов упал до 6; сохранены 1989, Phil Alden Robinson, W. P. Kinsella, «Shoeless Joe» и стык с хвостом предложения."
+ },
+ {
+  "slug": "dark-waters-mgiqjwbh",
+  "lang": "en",
+  "find": "An American legal thriller released in 2019, directed by Todd Haynes and written by Mario Correa and Matthew Michael Carnahan.",
+  "replace": "Mario Correa and Matthew Michael Carnahan wrote this American legal thriller, released in 2019, and Todd Haynes directed it.",
+  "why": "Ряд 14 слов упал до 6; сохранены 2019, Todd Haynes, Mario Correa, Matthew Michael Carnahan, жанр и национальность."
+ },
+ {
+  "slug": "scream-oasjb6wz",
+  "lang": "en",
+  "find": "A 1996 American slasher film directed by Wes Craven and written by Kevin Williamson.",
+  "replace": "Kevin Williamson wrote the script and Wes Craven directed this 1996 American slasher film.",
+  "why": "Ряд 14 слов упал до 4; сохранены 1996, Wes Craven, Kevin Williamson и жанр American slasher film."
+ },
+ {
+  "slug": "sabrina-ogy5kmt7",
+  "lang": "en",
+  "find": "The 1995 American romantic comedy-drama directed by Sydney Pollack is a remake of Billy Wilder's 1954 film of the same name, which was based on the 1953 play \"Sabrina Fair\" by Samuel A.",
+  "replace": "Sydney Pollack's 1995 American romantic comedy-drama reworks a film Billy Wilder had made in 1954 under the same title; Wilder in turn drew on the 1953 play \"Sabrina Fair,\" written by Samuel A.",
+  "why": "Ряд 14 слов упал до 2; сохранены 1995, Sydney Pollack, Billy Wilder, 1954, 1953, название \"Sabrina Fair\" дословно в кавычках и Samuel A. Taylor."
+ },
+ {
+  "slug": "sea-hunt-oopamqqo",
+  "lang": "en",
+  "find": "An American action-adventure television series that aired in syndication from 1958 to 1961, created by Ivan Tors.",
+  "replace": "Ivan Tors created this American action-adventure series for television, and it ran in syndication between 1958 and 1961.",
+  "why": "Ряд 14 слов упал до 3; сохранены Ivan Tors, 1958, 1961, синдикация и жанр, запрещённый оборот «aired … from … to» убран."
+ },
+ {
+  "slug": "t-a-t-u-ifea2ew1",
+  "lang": "en",
+  "find": "Their debut album, \"200 Po Vstrechnoy\" (2001), achieved commercial success in Eastern Europe, and its English-language counterpart, \"200 km/h in the Wrong Lane\" (2002), brought international fame with hits like \"All the Things She Said\" and \"Not Gonna Get Us.\" The album was certified platinum in Europe and became the first album by a foreign group to reach number one in Japan.",
+  "replace": "Their 2001 debut, \"200 Po Vstrechnoy,\" did well commercially in Eastern Europe, while the English-language version that followed in 2002, \"200 km/h in the Wrong Lane,\" made them famous far beyond it. \"All the Things She Said\" was a hit around the world, and so was \"Not Gonna Get Us.\" Platinum certification followed in Europe, and in Japan no foreign group had ever put an album at number one until this one did.",
+  "why": "Ряд 17 → 3 слова; сохранены оба альбома с годами (2001, 2002), обе песни, платина в Европе и первенство иностранной группы в Японии."
+ },
+ {
+  "slug": "american-playhouse-ciowhhyh",
+  "lang": "en",
+  "find": "It opened on January 12, 1982 with the episode \"The Shady Hill Kidnapping,\" written and narrated by John Cheever and directed by Paul Bogart.",
+  "replace": "John Cheever wrote the opening episode, \"The Shady Hill Kidnapping,\" and narrated it himself; Paul Bogart directed, and it reached viewers on January 12, 1982.",
+  "why": "Ряд 15 → 4 слова (остаток — название эпизода); сохранены дата 12 января 1982, Джон Чивер как автор и чтец, Пол Богарт как режиссёр."
+ },
+ {
+  "slug": "kingdom-of-the-planet-of-the-apes-ctacovgi",
+  "lang": "en",
+  "find": "The 2024 American science fiction action film, directed by Wes Ball and written by Josh Friedman, is the fourth installment in the rebooted \"Planet of the Apes\" series and the tenth overall in the franchise.",
+  "replace": "Wes Ball directed this American science fiction action film from 2024, working from a script by Josh Friedman. It comes fourth among the rebooted \"Planet of the Apes\" films and tenth in the franchise as a whole.",
+  "why": "Ряд 15 → 5 слов (остаток — жанровая формула); сохранены 2024, Уэс Болл, Джош Фридман, четвёртое место в перезапуске и десятое во франшизе."
+ },
+ {
+  "slug": "avowed-fc52j88x",
+  "lang": "en",
+  "find": "Players take on the role of an envoy from the Aedyr Empire, tasked with investigating a mysterious plague called the \"Dream Scourge.\" Gameplay combines the use of magic, melee weapons, and firearms, allowing players to mix spells and physical attacks for powerful combinations.",
+  "replace": "The player character is an envoy of the Aedyr Empire, sent to look into a strange plague known as the \"Dream Scourge.\" Combat mixes magic with melee weapons and firearms, and players chain spells and physical blows together for powerful combinations.",
+  "why": "Ряд 15 → 3 слова; сохранены Аэдирская империя, посланник, чума \"Dream Scourge\", магия, ближнее оружие, огнестрел и связки заклинаний с ударами. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («developed by obsidian entertainment and published by xbox ga…») — нужна вторая правка."
+ },
+ {
+  "slug": "what-the-health-niw8ad19",
+  "lang": "en",
+  "find": "Through these interviews, he explores the alleged connections between the meat, dairy, and pharmaceutical industries, as well as various health organizations.",
+  "replace": "In those interviews he presses the claim that health organizations, meat and dairy producers, and pharmaceutical companies are all tied to one another.",
+  "why": "Ряд 14 → 3 слова: перестроил залог и порядок перечисления, сохранил отрасли (мясная, молочная, фармацевтическая), организации здравоохранения и хедж «alleged» через «claim»; кавычки с названием фильма не тронуты. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 13 слов подряд («what the health was funded via an indiegogo campaign in marc…») — нужна вторая правка."
+ },
+ {
+  "slug": "what-we-did-on-our-holiday-nlv0fpss",
+  "lang": "en",
+  "find": "The 2014 British comedy-drama directed by Andy Hamilton and Guy Jenkin follows Doug (David Tennant) and Abi (Rosamund Pike), a couple on the verge of divorce, who travel with their three children — Lottie (Emilia Jones), Mickey (Bobby Smalldridge), and Jess (Harriet Turnbull) — to the Scottish Highlands to celebrate Doug's father Gordie's (Billy Connolly) 75th birthday.",
+  "replace": "Andy Hamilton and Guy Jenkin directed this 2014 British comedy-drama. Doug (David Tennant) and Abi (Rosamund Pike) are on the verge of divorce, yet they still head to the Scottish Highlands to celebrate the 75th birthday of Doug's father, Gordie (Billy Connolly). The three children come along too: Lottie, played by Emilia Jones; Mickey, played by Bobby Smalldridge; and Jess, played by Harriet Turnbull.",
+  "why": "Ряд 14 → 4 слова: разбил одно длинное предложение на три и вынес детей отдельно, сохранил 2014, Andy Hamilton, Guy Jenkin, David Tennant, Rosamund Pike, Emilia Jones, Bobby Smalldridge, Harriet Turnbull, Billy Connolly, Scottish Highlands и 75-летие."
+ },
+ {
+  "slug": "revolution-npwalzm2",
+  "lang": "en",
+  "find": "When a mob seizes Tom's boat and goods to fund the revolution, his son enlists in the Continental Army as a drummer boy against his father's wishes.",
+  "replace": "A mob seizes Tom's boat and goods to bankroll the revolution. Ned, against his father's wishes, signs up as a drummer boy in the Continental Army.",
+  "why": "Ряд 14 → 5 слов: разбил на два предложения и переставил «против воли отца» в середину, сохранил Tom, Ned, Continental Army и drummer boy."
+ },
+ {
+  "slug": "arizona-dream-ofgeo2gl",
+  "lang": "en",
+  "find": "\"Arizona Dream\" won the Silver Bear – Special Jury Prize at the 43rd Berlin International Film Festival and has become a cult classic known for its unique atmosphere and profound themes about the search for meaning and dreams.​",
+  "replace": "The 43rd Berlin International Film Festival gave \"Arizona Dream\" its Silver Bear – Special Jury Prize, and the film has since turned into a cult classic, prized for its strange atmosphere and its deep questions about the search for meaning and dreams.",
+  "why": "Ряд 14 → 6 слов (осталось только неразрывное имя фестиваля): сменил залог — награду вручает фестиваль, сохранил 43rd Berlin International Film Festival, Silver Bear – Special Jury Prize, статус культовой классики и название в кавычках дословно."
+ },
+ {
+  "slug": "casino-royale-pugpgppw",
+  "lang": "en",
+  "find": "The 2006 spy film is the twenty-first in the Eon Productions James Bond series and the third screen adaptation of Ian Fleming's 1953 novel of the same name.",
+  "replace": "Eon Productions released this spy film in 2006, the twenty-first in its James Bond series. It is also the third screen version of the 1953 Ian Fleming novel that shares its title.",
+  "why": "Ряд 14 → 3 слова: сделал Eon Productions подлежащим и разнёс на два предложения, сохранил 2006, twenty-first, James Bond, третью экранизацию, 1953 и Ian Fleming."
+ },
+ {
+  "slug": "gotham-city-impostors-p4crtws0",
+  "lang": "en",
+  "find": "A multiplayer first-person shooter developed by Monolith Productions and published by Warner Bros. Interactive Entertainment, set in the DC Comics universe.",
+  "replace": "Monolith Productions built this multiplayer first-person shooter inside the DC Comics universe; Warner Bros. Interactive Entertainment released it.",
+  "why": "ряд 14 слов → 4; сохранены Monolith Productions, Warner Bros. Interactive Entertainment, DC Comics и жанр — разработчик стал подлежащим, издатель вынесен во вторую часть."
+ },
+ {
+  "slug": "the-patriot-r2jlbu1l",
+  "lang": "en",
+  "find": "The film received positive reviews from critics and was nominated for three Academy Awards: Best Cinematography, Best Original Score, and Best Sound.​",
+  "replace": "Critics responded warmly, and three Academy Award nominations followed: Best Cinematography, Best Original Score, Best Sound.​",
+  "why": "ряд 14 слов → 5; сохранены отзывы критиков, число «три» и точные названия всех трёх номинаций «Оскара» — пассив снят, перечень подан списком."
+ },
+ {
+  "slug": "beetlejuice-beetlejuice-ughvo4d3",
+  "lang": "en",
+  "find": "The film stars Michael Keaton, Winona Ryder, and Catherine O'Hara reprising their roles from the original, alongside new cast members Justin Theroux, Monica Bellucci, Jenna Ortega, and Willem Dafoe.",
+  "replace": "Michael Keaton, Winona Ryder, Catherine O'Hara — all three return from the original, and Justin Theroux, Monica Bellucci, Jenna Ortega and Willem Dafoe join them.",
+  "why": "ряд 14 слов → 4; сохранены все семь имён, их порядок и деление на вернувшихся и новых — оборот «the film stars … reprising» убран, актёры стали подлежащим."
+ },
+ {
+  "slug": "rising-son-vbgbaxvr",
+  "lang": "en",
+  "find": "His elder son, Des (Tate Donovan), a successful lawyer, perceives his accomplishments as hollow attempts to please his father and urges his younger brother, Charlie (Matt Damon), to break free from Gus's control and pursue his own path.",
+  "replace": "Des (Tate Donovan), the elder son, has built a successful law career, yet he reads his own achievements as hollow bids for his father's approval; he tells Charlie (Matt Damon), the younger brother, to get out from under Gus and choose a path of his own.",
+  "why": "ряд 14 слов → 3; сохранены Des (Tate Donovan), Charlie (Matt Damon), Gus, старшинство братьев, профессия юриста и мотив «угодить отцу» — предложение разбито и начато с имени. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 12 слов подряд («a 1990 american made for television drama directed by john d…») — нужна вторая правка."
+ },
+ {
+  "slug": "2-guns-vjzjobcm",
+  "lang": "en",
+  "find": "A 2013 American action comedy film directed by Baltasar Kormákur, based on the comic book series of the same name by Steven Grant and Mateus Santolouco, published in 2007 by Boom! Studios.",
+  "replace": "Baltasar Kormákur directed this 2013 American action comedy, adapting the comic book series of the same name that Steven Grant and Mateus Santolouco created for Boom! Studios in 2007.",
+  "why": "ряд 14 слов → 5; сохранены Baltasar Kormákur, 2013, Steven Grant, Mateus Santolouco, Boom! Studios и 2007 — активный залог; find продлён до «Studios.», так как ряд тянулся за границу предложения."
+ },
+ {
+  "slug": "law-order-toronto-criminal-intent-22tfw4sy",
+  "lang": "en",
+  "find": "The series was renewed for a second and third season in June 2024.",
+  "replace": "June 2024 brought two more seasons at once — a second and a third.",
+  "why": "ряд 13 слов → 3; сохранены июнь 2024 и обе продлённые сезона — дата вынесена в начало, пассив «was renewed» снят"
+ },
+ {
+  "slug": "slacker-uprising-captain-mike-across-america-3lnoy6sm",
+  "lang": "en",
+  "find": "Moore visits college campuses, organizing rallies and events featuring celebrities such as Eddie Vedder (Pearl Jam), Roseanne Barr, Joan Baez, Tom Morello (Rage Against the Machine), R.E.M., Steve Earle, and Viggo Mortensen.",
+  "replace": "Moore stops at college campuses, staging rallies and events whose guests include Eddie Vedder of Pearl Jam, Rage Against the Machine's Tom Morello, Joan Baez, Steve Earle, R.E.M., Roseanne Barr, and Viggo Mortensen.",
+  "why": "ряд 13 слов → 4; сохранены все имена и группы (Eddie Vedder, Pearl Jam, Roseanne Barr, Joan Baez, Tom Morello, Rage Against the Machine, R.E.M., Steve Earle, Viggo Mortensen) — скобки развёрнуты в притяжательные обороты, порядок перечисления переставлен"
+ },
+ {
+  "slug": "ozark-45f6ets0",
+  "lang": "en",
+  "find": "An American crime drama television series created by Bill Dubuque and Mark Williams in 2017.",
+  "replace": "Bill Dubuque and Mark Williams created this American crime drama series for television in 2017.",
+  "why": "ряд 13 слов → 5; сохранены Bill Dubuque, Mark Williams, 2017, американский криминальный сериал — авторы вынесены в подлежащее, фрагмент стал активным предложением"
+ },
+ {
+  "slug": "sin-city-a-dame-to-kill-for-4ht1mlp1",
+  "lang": "en",
+  "find": "A 2014 American crime anthology film and the sequel to the 2005 film \"Sin City.\" Directed by Robert Rodriguez and Frank Miller, who also wrote the screenplay based on his graphic novel \"A Dame to Kill For.\" The film comprises several interwoven storylines set in the dark and corrupt Basin City.",
+  "replace": "Robert Rodriguez and Frank Miller shared the direction of this 2014 American crime anthology film, a sequel to 2005's \"Sin City.\" Miller also wrote the screenplay, adapting his own graphic novel \"A Dame to Kill For.\" Several storylines interweave through Basin City, a place both dark and corrupt.",
+  "why": "ряд 13 слов → 5; сохранены 2014, 2005, Robert Rodriguez, Frank Miller, названия «Sin City» и «A Dame to Kill For» в кавычках дословно, Basin City — режиссёры выведены в подлежащее, «the 2005 film» свёрнуто в «2005's», третье предложение перестроено"
+ },
+ {
+  "slug": "barney-s-version-5pdgfyci",
+  "lang": "en",
+  "find": "The film received critical acclaim, with Paul Giamatti winning the Golden Globe Award for Best Actor in a Motion Picture – Musical or Comedy.",
+  "replace": "Critics praised the film, and Paul Giamatti took home Best Actor in a Motion Picture – Musical or Comedy at the Golden Globe Awards.",
+  "why": "ряд 13 слов → 9; сохранены Paul Giamatti и полное название категории «Best Actor in a Motion Picture – Musical or Comedy» вместе с «Golden Globe» — премия перенесена в конец, чем разорвано официальное словосочетание"
+ },
+ {
+  "slug": "return-to-sender-qikwkys5",
+  "lang": "en",
+  "find": "Her friend sets her up on a blind date with a man named Kevin, but on the day of the date, a different man arrives, whom she assumes is Kevin.",
+  "replace": "A friend arranges a blind date for her with someone named Kevin. On the day itself, a different man shows up, and she takes him for Kevin.",
+  "why": "Ряд 14 слов срезан до 3; сохранены подруга, слепое свидание, имя Кевин, день свидания, чужой мужчина и её ошибка."
+ },
+ {
+  "slug": "baldur-s-gate-ii-shadows-of-amn-t6mrzj14",
+  "lang": "en",
+  "find": "A 2000 role-playing video game developed by BioWare and published by Interplay Entertainment, Baldur’s Gate II: Shadows of Amn is the sequel to Baldur’s Gate and is based on the Advanced Dungeons & Dragons 2nd Edition rules.",
+  "replace": "BioWare built Baldur’s Gate II: Shadows of Amn, and Interplay Entertainment published it in 2000. A sequel to Baldur’s Gate, the role-playing game plays by Advanced Dungeons & Dragons 2nd Edition rules.",
+  "why": "Ряд 14 слов срезан до 2; сохранены BioWare, Interplay Entertainment, 2000, полное название, статус сиквела и правила Advanced Dungeons & Dragons 2nd Edition."
+ },
+ {
+  "slug": "the-seed-of-the-sacred-fig-tmqbe9kz",
+  "lang": "en",
+  "find": "Starring Soheila Golestani, Missagh Zareh, and Mahsa Rostami, it premiered on May 24, 2024, at the 77th Cannes Film Festival, where it was nominated for the Palme d'Or and won the Special Jury Prize.",
+  "replace": "Soheila Golestani, Missagh Zareh and Mahsa Rostami lead the cast. The 77th Cannes Film Festival gave the film its first screening on May 24, 2024, then nominated it for the Palme d'Or and awarded it the Special Jury Prize.",
+  "why": "Ряд 14 слов срезан до 5 (остаток — само имя фестиваля); сохранены три актёра, 24 мая 2024, 77-й Каннский кинофестиваль, номинация на «Золотую пальмовую ветвь» и приз жюри; запрещённое «premiered on» убрано. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 12 слов подряд («premiere rasoulof was sentenced to eight years in prison by …») — нужна вторая правка."
+ },
+ {
+  "slug": "that-70s-show-ttdr0lao",
+  "lang": "en",
+  "find": "The series follows the lives of a group of six teenagers living in the fictional town of Point Place, Wisconsin, from 1976 to 1979.",
+  "replace": "Six teenagers carry the story, which runs between 1976 and 1979 in the fictional Wisconsin town of Point Place.",
+  "why": "Ряд 14 слов срезан до 4; сохранены шесть подростков, вымышленность города, Point Place, Wisconsin и годы 1976–1979."
+ },
+ {
+  "slug": "the-promise-vzesn4yr",
+  "lang": "en",
+  "find": "The film received mixed reviews from critics and was a box office bomb, grossing approximately $12 million against a $90 million budget.",
+  "replace": "Critics split over the film, and it bombed at the box office: roughly $12 million came back on a $90 million budget.",
+  "why": "Ряд 14 слов срезан до 2; сохранены смешанные отзывы критиков, провал в прокате, около $12 млн сборов и бюджет $90 млн. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 12 слов подряд («a 2016 american epic historical war drama film directed by t…») — нужна вторая правка."
+ },
+ {
+  "slug": "wallace-gromit-vengeance-most-fowl-wh6howlq",
+  "lang": "en",
+  "find": "The 2024 British animated comedy film, produced by Aardman Animations in association with the BBC and Netflix, is the sixth installment in the Wallace & Gromit series and the second feature-length film following \"The Curse of the Were-Rabbit\" (2005).",
+  "replace": "Aardman Animations made this 2024 British animated comedy together with the BBC and Netflix. Sixth in the Wallace & Gromit series, it is also the second entry to run at feature length, after \"The Curse of the Were-Rabbit\" (2005).",
+  "why": "Ряд 14 → 7 слов; сохранены 2024, Aardman, BBC, Netflix, «шестой», «второй», цитата названия «The Curse of the Were-Rabbit» (2005) дословно."
+ },
+ {
+  "slug": "baldur-s-gate-y8xzro8n",
+  "lang": "en",
+  "find": "A 1998 role-playing video game developed by BioWare and published by Interplay Entertainment, Baldur’s Gate became one of the most influential RPGs of its time, revitalizing interest in the genre and setting a foundation for future Infinity Engine games.",
+  "replace": "BioWare built this role-playing video game, and Interplay Entertainment put it out in 1998. Baldur’s Gate ranks among the most influential RPGs of its era: it pulled players back to the genre and laid the groundwork for the Infinity Engine games that followed.",
+  "why": "Ряд 14 → 4 слова; сохранены 1998, BioWare, Interplay Entertainment, Baldur’s Gate, Infinity Engine и оба утверждения о влиянии на жанр."
+ },
+ {
+  "slug": "analyze-that-czoeg15h",
+  "lang": "en",
+  "find": "A 2002 American crime comedy directed by Harold Ramis, serving as a sequel to the 1999 film \"Analyze This.\" The film stars Robert De Niro as mobster Paul Vitti and Billy Crystal as psychiatrist Dr.",
+  "replace": "Harold Ramis directed this 2002 American crime comedy, a sequel that picks up from the 1999 film \"Analyze This.\" Robert De Niro plays the mobster Paul Vitti, and Billy Crystal plays the psychiatrist, Dr.",
+  "why": "Ряд 14 → 5 слов; сохранены 2002, 1999, Harold Ramis, «Analyze This», Robert De Niro, Paul Vitti, Billy Crystal и стык с идущим следом «Ben Sobel»."
+ },
+ {
+  "slug": "collateral-beauty-eovu8irb",
+  "lang": "en",
+  "find": "The 2016 American fantasy drama film directed by David Frankel and written by Allan Loeb follows Howard Inlet (Will Smith), a successful New York advertising executive who falls into deep depression after the tragic death of his six-year-old daughter.",
+  "replace": "David Frankel directed this American fantasy drama from 2016, working from a script by Allan Loeb. Will Smith plays Howard Inlet, a successful advertising executive in New York whose six-year-old daughter dies—a loss that sinks him into deep depression.",
+  "why": "Ряд 14 → 3 слова; сохранены 2016, David Frankel, Allan Loeb, Howard Inlet, Will Smith, Нью-Йорк и шестилетняя дочь."
+ },
+ {
+  "slug": "carnal-knowledge-ns2whdt0",
+  "lang": "en",
+  "find": "A 1971 American comedy-drama film directed by Mike Nichols and written by Jules Feiffer, \"Carnal Knowledge\" explores the sexual and emotional lives of two men, Jonathan Fuerst (Jack Nicholson) and Sandy (Art Garfunkel), from their college days at Amherst in the late 1940s through their adulthood in the 1970s.",
+  "replace": "Mike Nichols directed \"Carnal Knowledge,\" working from a script by Jules Feiffer. The 1971 American comedy-drama charts the sexual and emotional lives of two men, Jonathan Fuerst (Jack Nicholson) and Sandy (Art Garfunkel), from their college years at Amherst in the late 1940s into adulthood in the 1970s.",
+  "why": "Ряд был 15 слов, стало 4 («1971 american comedy drama»): фраза разбита на две, авторство вынесено вперёд активным залогом; сохранены 1971, Mike Nichols, Jules Feiffer, «Carnal Knowledge», Jonathan Fuerst (Jack Nicholson), Sandy (Art Garfunkel), Amherst, 1940s, 1970s."
+ },
+ {
+  "slug": "backdraft-o5bccvq2",
+  "lang": "en",
+  "find": "\"Backdraft\" received three Academy Award nominations for Best Sound, Best Sound Editing, and Best Visual Effects.",
+  "replace": "Three Academy Award nominations went to \"Backdraft\": Best Visual Effects, Best Sound Editing, and Best Sound.",
+  "why": "Ряд был 15 слов, стало 5: подлежащим сделаны номинации, порядок категорий перевёрнут; сохранены «три», Academy Award, Best Sound, Best Sound Editing, Best Visual Effects, «Backdraft». ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («film directed by ron howard and written by gregory widen…») — нужна вторая правка."
+ },
+ {
+  "slug": "hi-mom-sbcirycx",
+  "lang": "en",
+  "find": "\"Hi, Mom\" received critical acclaim and became the third highest-grossing film of 2021, earning over $848 million, and was the highest-grossing film by a solo female director until \"Barbie\" in 2023.",
+  "replace": "Critics praised \"Hi, Mom,\" and its take of more than $848 million made it the third-biggest earner of 2021. No solo female director had a bigger hit until \"Barbie\" in 2023.",
+  "why": "Ряд был 15 слов, стало 6: одно предложение разбито на два, рекорд подан отрицанием вместо превосходной степени; сохранены признание критики, третье место 2021, $848 млн, «Barbie», 2023."
+ },
+ {
+  "slug": "legend-tgvcrpzw",
+  "lang": "en",
+  "find": "A 2015 British-French biographical crime thriller directed by Brian Helgeland, based on John Pearson's book \"The Profession of Violence: The Rise and Fall of the Kray Twins.\" The film tells the story of twin brothers Ronald and Reginald Kray (both portrayed by Tom Hardy), who were influential figures in London's criminal underworld during the 1960s. Reggie Kray, a former boxer, seeks to expand his influence in the city's criminal underworld. His brother Ronnie, suffering from paranoid schizophrenia, is confined to a psychiatric hospital, but Reggie manages to secure his release. Together, they begin to establish control over nightclubs and other illicit enterprises through violence and extortion. Reggie starts a romantic relationship with Frances Shea (Emily Browning), his driver's sister, and they soon marry. However, his criminal activities and Ronnie's aggressive behavior lead to tension in their relationship. The brothers strike a deal with the American Mafia, represented by Angelo Bruno (Chazz Palminteri), to expand their influence. Meanwhile, Detective Leonard \"Nipper\" Read (Christopher Eccleston) of Scotland Yard initiates an investigation into their activities, aiming to bring them to justice. The film intricately portrays the rise and fall of the Kray twins, their internal conflicts, and their impact on London's criminal world during that era.",
+  "replace": "Brian Helgeland directed this 2015 British-French biographical crime thriller, adapting John Pearson's \"The Profession of Violence,\" subtitled \"The Rise and Fall of the Kray Twins.\" Tom Hardy plays both twins, Ronald and Reginald Kray, who ran much of London's criminal underworld in the 1960s. Reggie, once a boxer, wants to widen his hold on the city's underworld. Ronnie has paranoid schizophrenia and sits in a psychiatric hospital until Reggie gets him released. Side by side, the brothers take over nightclubs and other illegal ventures by beating and extorting their way in. Reggie courts Frances Shea (Emily Browning), the sister of his driver, and marries her, though his crimes and Ronnie's aggression soon strain the marriage. To reach further, the twins cut a deal with the American Mafia through Angelo Bruno (Chazz Palminteri). At Scotland Yard, Detective Leonard \"Nipper\" Read (Christopher Eccleston) opens an investigation meant to bring them to justice. What the film lays out in detail is the brothers' ascent, their collapse, the fights between them, and the mark they left on criminal London of that decade.",
+  "why": "Ряд был 15 слов, стало 8 — и остаток это сам подзаголовок книги в кавычках, который убирать нельзя; переписан весь накрытый кусок (оба накрытых предложения = всё описание), заглавие книги оставлено дословно, но подано названием + подзаголовком, финальная фраза больше не повторяет «the rise and fall of the Kray twins»; сохранены 2015, British-French, Brian Helgeland, John Pearson, Ronald и Reginald Kray, Tom Hardy, 1960s, Frances Shea (Emily Browning), Angelo Bruno (Chazz Palminteri), Leonard «Nipper» Read (Christopher Eccleston), Scotland Yard, American Mafia."
+ },
+ {
+  "slug": "machete-kills-undzgezh",
+  "lang": "en",
+  "find": "The 2013 American action exploitation film directed by Robert Rodriguez, with a screenplay by Kyle Ward based on a story by Robert and Marcel Rodriguez, serves as a sequel to \"Machete\" (2010) and is the third film inspired by a fake trailer from \"Grindhouse\" (2007).",
+  "replace": "Robert Rodriguez directed this 2013 American action exploitation picture, and Kyle Ward wrote the screenplay from a story by Robert and Marcel Rodriguez. It is a sequel to \"Machete\" (2010), and the third film to grow out of a fake trailer from \"Grindhouse\" (2007).",
+  "why": "Ряд был 15 слов, стало 4: длинный период разбит на два, режиссёр и сценарист стали подлежащими; сохранены 2013, Robert Rodriguez, Kyle Ward, Marcel Rodriguez, «Machete» (2010), «Grindhouse» (2007), «третий фильм»."
+ },
+ {
+  "slug": "viva-zapata-ytu2vgxf",
+  "lang": "en",
+  "find": "The film received critical acclaim and was nominated for five Academy Awards, with Anthony Quinn winning for Best Supporting Actor.",
+  "replace": "Critics praised the film. Five Academy Award nominations followed, and one of them became a win — Anthony Quinn for Best Supporting Actor.",
+  "why": "Ряд 15 слов сбит до 4; сохранены пять номинаций Академии, Anthony Quinn, Best Supporting Actor и признание критиков."
+ },
+ {
+  "slug": "prince-of-the-city-zpvzcssg",
+  "lang": "en",
+  "find": "One of his partners commits suicide during interrogation, and his cousin in the mafia, who had been assisting Ciello, ends up dead.",
+  "replace": "Under interrogation, one partner takes his own life. The mafia cousin who had been helping Ciello also ends up dead.",
+  "why": "Ряд 15 слов сбит до 2; сохранены самоубийство напарника на допросе, кузен в мафии, помощь Ciello и его гибель. ⚠️ ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ: после правки в описании ещё 10 слов подряд («skimming money from criminals and supplying informants with …») — нужна вторая правка."
+ },
+ {
+  "slug": "look-who-s-talking-too-1qfgp1f8",
+  "lang": "en",
+  "find": "The 1990 American romantic comedy, directed by Amy Heckerling, is the sequel to \"Look Who’s Talking\" and the second installment in the franchise.",
+  "replace": "Director Amy Heckerling made this American romantic comedy in 1990 — the franchise’s second entry, following \"Look Who’s Talking\".",
+  "why": "Ряд 14 слов сбит до 4; сохранены 1990, американская романтическая комедия, Amy Heckerling, название \"Look Who’s Talking\" дословно в кавычках, вторая часть франшизы."
+ },
+ {
+  "slug": "more-american-graffiti-25jgey5b",
+  "lang": "en",
+  "find": "The 1979 American coming-of-age comedy film, written and directed by Bill L. Norton, serves as a sequel to the 1973 film \"American Graffiti\" and chronicles the lives of the original characters over four consecutive New Year's Eves from 1964 to 1967.",
+  "replace": "Bill L. Norton wrote and directed this American coming-of-age comedy, out in 1979 as a sequel to the 1973 \"American Graffiti\". It carries the original characters through four straight New Year's Eves, 1964 to 1967.",
+  "why": "Ряд 14 слов сбит до 5; find расширен за ложную границу предложения на \"Bill L.\", ряд шёл дальше в \"Norton\". Сохранены 1979, Bill L. Norton, 1973, \"American Graffiti\", четыре кануна Нового года, 1964–1967."
+ },
+ {
+  "slug": "the-platform-3hmkyofi",
+  "lang": "en",
+  "find": "A 2019 Spanish dystopian thriller directed by Galder Gaztelu-Urrutia. The film is set in a large industrial tower called the \"Vertical Self-Management Center,\" where inmates are held in a multi-level prison.",
+  "replace": "This Spanish dystopian thriller of 2019 came from director Galder Gaztelu-Urrutia. Inside a vast industrial tower — the \"Vertical Self-Management Center\" — inmates are held in a prison that runs across many levels.",
+  "why": "Ряд 14 слов через два предложения сбит до 3; сохранены 2019, испанский дистопичный триллер, Galder Gaztelu-Urrutia, промышленная башня, название \"Vertical Self-Management Center\" дословно, многоуровневая тюрьма."
+ },
+ {
+  "slug": "reflections-in-a-golden-eye-caozvr51",
+  "lang": "en",
+  "find": "Set on a U.S. Army post in the South in the late 1940s, the film focuses on six central characters: Major Weldon Penderton (Marlon Brando), his wife Leonora (Elizabeth Taylor), Lieutenant Colonel Morris Langdon (Brian Keith), his wife Alison (Julie Harris), their flamboyant Filipino houseboy Anacleto (Zorro David), and Private L.G. Williams (Robert Forster).",
+  "replace": "The story unfolds in the South, on a U.S. Army post, in the late 1940s, and six people stand at its center: Major Weldon Penderton (Marlon Brando) and his wife Leonora (Elizabeth Taylor); Lieutenant Colonel Morris Langdon (Brian Keith) and his wife Alison (Julie Harris); Anacleto (Zorro David), the flamboyant Filipino houseboy of the Langdons; and Private L.G. Williams (Robert Forster).",
+  "why": "Ряд 14 слов сбит до 7: место, время и все шесть персонажей с актёрами сохранены, порядок и связки перестроены."
+ },
+ {
+  "slug": "the-gangster-the-cop-the-devil-dvjqemsz",
+  "lang": "en",
+  "find": "The film premiered on May 15, 2019, in South Korea and was also screened out of competition in the \"Midnight Screenings\" section at the 2019 Cannes Film Festival, receiving positive reviews for its dynamic plot and strong performances.",
+  "replace": "In South Korea the film reached cinemas on May 15, 2019, and the 2019 Cannes Film Festival also showed it in the \"Midnight Screenings\" section, out of competition. Reviews were positive: critics praised the drive of the plot and the strength of the performances.",
+  "why": "Ряд 14 слов сбит до 5: дата 15.05.2019, Южная Корея, Канны-2019 и секция \"Midnight Screenings\" в кавычках сохранены дословно; \"premiered on\" убрано."
+ },
+ {
+  "slug": "once-upon-a-time-in-venice-ev0spaz2",
+  "lang": "en",
+  "find": "A 2017 American crime comedy film directed by Mark Cullen in his directorial debut, co-written with his brother Robb Cullen.",
+  "replace": "Mark Cullen stepped behind the camera for the first time on this American crime comedy from 2017, working from a script he wrote with his brother Robb Cullen.",
+  "why": "Ряд 14 слов сбит до 3: 2017, жанр, дебют Марка Каллена и соавторство брата Робба Каллена сохранены, фраза пересобрана в активный залог."
+ },
+ {
+  "slug": "predestination-h107qjjy",
+  "lang": "en",
+  "find": "The 2014 Australian science fiction thriller directed by Michael and Peter Spierig is based on the 1959 short story “All You Zombies” by Robert A. Heinlein.",
+  "replace": "Michael and Peter Spierig directed this 2014 Australian science fiction thriller, an adaptation of “All You Zombies”, Robert A. Heinlein's short story from 1959.",
+  "why": "Ряд 14 слов сбит до 3: 2014, 1959, братья Спириг и Роберт А. Хайнлайн сохранены, название “All You Zombies” оставлено дословно в кавычках."
+ },
+ {
+  "slug": "invictus-8zwcdc1k",
+  "lang": "en",
+  "find": "A 2009 American biographical sports drama directed by Clint Eastwood, with a screenplay by Anthony Peckham, based on John Carlin's book \"Playing the Enemy: Nelson Mandela and the Game That Made a Nation.\" The film focuses on events in South Africa following the end of apartheid and the election of Nelson Mandela (Morgan Freeman) as president.",
+  "replace": "Clint Eastwood directed this 2009 American biographical sports drama, working from Anthony Peckham's screenplay, which adapts \"Playing the Enemy: Nelson Mandela and the Game That Made a Nation,\" a book by John Carlin. Apartheid has just ended in South Africa, Nelson Mandela (Morgan Freeman) has been elected president, and the story picks up there.",
+  "why": "Ряд 13 → 12, и остаток целиком лежит внутри кавычек названия книги (ворота такое прощают, короче название сделать нельзя); сохранены 2009, Клинт Иствуд, Энтони Пекхэм, Джон Карлин, дословное название книги, ЮАР, апартеид, Нельсон Мандела, Морган Фримен, пост президента."
+ },
+ {
+  "slug": "cowboys-aliens-aborocpp",
+  "lang": "en",
+  "find": "The 2011 American science fiction Western film directed by Jon Favreau is based on the 2006 graphic novel of the same name created by Scott Mitchell Rosenberg.",
+  "replace": "Jon Favreau directed this 2011 American science fiction Western, adapting Scott Mitchell Rosenberg's 2006 graphic novel of the same name.",
+  "why": "Ряд 13 → 6: имя автора вынесено вперёд, поэтому ряд рвётся и не дотягивается до соседнего «Set in»; сохранены 2011, 2006, Джон Фавро, Скотт Митчелл Розенберг, жанр и указание на одноимённый графический роман."
+ },
+ {
+  "slug": "men-in-black-international-aoevpago",
+  "lang": "en",
+  "find": "Directed by F. Gary Gray and written by Art Marcum and Matt Holloway, the film stars Chris Hemsworth as Agent H, Tessa Thompson as Agent M, Rebecca Ferguson as Riza Stavros, Kumail Nanjiani as the voice of Pawny, Rafe Spall as Agent C, Liam Neeson as High T, and Emma Thompson reprising her role as Agent O.",
+  "replace": "F. Gary Gray directed the film from a script by Art Marcum and Matt Holloway. Chris Hemsworth appears as Agent H opposite Tessa Thompson as Agent M, with Rebecca Ferguson (Riza Stavros), Rafe Spall (Agent C), Liam Neeson (High T), Kumail Nanjiani as the voice of Pawny, and Emma Thompson back once more as Agent O.",
+  "why": "Ряд 13 → 6; find расширен влево до «Directed by F.» (разбивка предложений резала на «F.», а ряд начинался именно там); сохранены Ф. Гэри Грэй, Арт Маркум, Мэтт Холлоуэй и весь состав с ролями — Хемсворт, Тесса Томпсон, Фергюсон, Наджиани, Сполл, Нисон, Эмма Томпсон."
+ },
+ {
+  "slug": "the-last-tycoon-ap1yz77g",
+  "lang": "en",
+  "find": "Nonetheless, Kazan's direction was recognized with an Academy Award nomination for Best Art Direction (Gene Callahan, Jack T. Collis, and Jerry Wunderlich).",
+  "replace": "Even so, the production did draw an Academy Award nomination under Kazan: Gene Callahan, Jack T. Collis, and Jerry Wunderlich were cited for Best Art Direction.",
+  "why": "Ряд 14 → 8: имена переставлены перед категорией, поэтому ряд обрывается на списке и не переходит в следующее предложение; сохранены Казан, номинация «Оскара», Best Art Direction, Джин Каллахан, Джек Т. Коллис, Джерри Уандерлич."
+ },
+ {
+  "slug": "fire-emblem-heroes-akbwozvu",
+  "lang": "en",
+  "find": "A tactical role-playing game developed by Intelligent Systems and published by Nintendo for mobile devices.",
+  "replace": "Intelligent Systems developed this tactical role-playing game, and Nintendo released it for mobile devices.",
+  "why": "Ряд 13 → 4: пассив «developed by … published by» превращён в активный залог с разработчиком в подлежащем; сохранены Intelligent Systems, Nintendo, жанр tactical role-playing и мобильные устройства."
+ },
+ {
   "slug": "gold-nn2lxcmc",
   "lang": "en",
   "find": "A 2016 American crime drama film directed by Stephen Gaghan and written by Patrick Massett and John Zinman. The film is based on the true events of the 1997 Bre-X mining scandal, where a massive gold deposit was allegedly discovered in the jungles of Indonesia; however, for legal reasons and to enhance the film's appeal, character names and story details were changed.",

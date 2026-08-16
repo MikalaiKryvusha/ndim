@@ -117,8 +117,10 @@
    · ✅ **ГОТОВЫ И ЖДУТ ОДНОЙ КОМАНДЫ КАЖДАЯ** (сухой прогон пройден, журналы вычитки —
      `homeworks/catalog_descriptions_journal_*`):
      `node tools/rewrite-catalog-descriptions.mjs tools/rewrites-RU-ночь.json --apply` — **103**
-     `node tools/rewrite-catalog-descriptions.mjs tools/rewrites-EN-ночь.json --apply` — **99**
-     Это **88 % русских копий** (103 из 117) и **15 % английских** (99 из 654).
+     `node tools/rewrite-catalog-descriptions.mjs tools/rewrites-EN-ночь.json --apply` — **166**
+     Это **88 % русских копий** (103 из 117) и **25 % английских** (166 из 654).
+   · ⏭ Остаток английских — **488 записей, 98 партий по 5**. Конвейер повторяется одной командой,
+     очередь пересобирается прибором: `node tools/build-rewrite-worklist.mjs --lang en --min-run 10`.
    · Собраны фан-аутом (10+10 агентов на русском, 6+6 на английском, 1,85 млн токенов) и приняты
      **машиной, а не мнением**: `tools/gate-rewrites.mjs` меряет остаточный ряд тем же прибором и
      по тому же порогу, статью берёт из кэша свода.
