@@ -1,0 +1,20 @@
+[
+ {
+  "slug": "hawaiian-eye-dneyztu6",
+  "find": "Their primary client is the Hawaiian Village Hotel, which provides the agency with a luxurious office in exchange for security services. Assisting in their investigations are photographer and singer Cricket Blake (Connie Stevens) and ukulele-playing cab driver Kim Quisado (Poncie Ponce).",
+  "replace": "The Hawaiian Village Hotel keeps them on retainer: security work in return for a handsome office on the hotel grounds. Two friends help on cases — Cricket Blake (Connie Stevens), who photographs and sings, and cab driver Kim Quisado (Poncie Ponce), never seen without his ukulele.",
+  "why": "🔴 Дословный ряд из английской Википедии: «Their principal client is the Hawaiian Village Hotel, which in exchange for security services, provides the agency with a luxurious…» плюс дословное «ukulele-playing cab driver Kim Quisado (Poncie Ponce)». Все имена, актёры и факты сохранены."
+ },
+ {
+  "slug": "that-70s-show-ttdr0lao",
+  "find": "The series follows the lives of a group of six teenagers living in the fictional town of Point Place, Wisconsin, from 1976 to 1979.",
+  "replace": "Six teenage friends grow up together in Point Place, Wisconsin — a town that exists only on television — across the years 1976 to 1979.",
+  "why": "🔴 Почти дословное предложение Википедии: «The series focuses on the lives of a group of six teenage friends living in the fictional town of Point Place, Wisconsin, from 1976 to 1979». Ряд около 20 слов; оба года и число героев на месте."
+ },
+ {
+  "slug": "foyle-s-war-ox93icyl",
+  "find": "He is assisted by his driver, Samantha \"Sam\" Stewart (Honeysuckle Weeks), and Detective Sergeant Paul Milner (Anthony Howell), a former soldier who lost a leg in combat.",
+  "replace": "Two people work at his side: his driver Samantha \"Sam\" Stewart (Honeysuckle Weeks) and Detective Sergeant Paul Milner (Anthony Howell), a former soldier who lost a leg in combat.",
+  "why": "🔴 Дословный ряд в 17 слов: у Википедии «he is assisted by his driver, Samantha \"Sam\" Stewart (Honeysuckle Weeks), and Detective Sergeant Paul Milner (Anthony Howell)». Имена и актёры сохранены."
+ }
+]
