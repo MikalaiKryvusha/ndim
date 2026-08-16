@@ -14,6 +14,9 @@
  */
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+// Места пересчитываются ТЕМ ЖЕ кодом, что и в продукте: повтор формулы в страже дал бы второй
+// источник истины, и он разъехался бы с первым при следующей правке порядка (а её уже меняли).
+import { groupByKind, placesIn } from '../src/lib/content/catalog-hub.ts';
 
 const BUILD = 'build';
 const LANGS = ['ru', 'en'];
@@ -110,18 +113,22 @@ console.log('\n— приватность: на публичной страни�
   check('ни одной утечки данных человека', hits.length === 0, hits.slice(0, 3).join(' · '));
 }
 
+// Каталог читается ОДИН раз на весь прогон: им пользуются и правило оценок, и сверка мест.
+const dimsAll = JSON.parse(
+  readFileSync(
+    existsSync('src/lib/content/dims-build.json')
+      ? 'src/lib/content/dims-build.json'
+      : 'src/lib/content/dims-slice.json',
+    'utf8',
+  ),
+);
+const bySlugAll = new Map(dimsAll.map((d) => [d.slug, d]));
+
 // ── Строка «Правило оценок» на СОБРАННЫХ страницах ──────────────────────────
 console.log('\n— правило показа оценок (интервью №021 В1, №022 В1 = А) —');
 {
-  const dims = JSON.parse(
-    readFileSync(
-      existsSync('src/lib/content/dims-build.json')
-        ? 'src/lib/content/dims-build.json'
-        : 'src/lib/content/dims-slice.json',
-      'utf8',
-    ),
-  );
-  const bySlug = new Map(dims.map((d) => [d.slug, d]));
+  const dims = dimsAll;
+  const bySlug = bySlugAll;
   let starsAtZero = 0;
   let countMissing = 0;
   let countAtZero = 0;
@@ -186,6 +193,70 @@ console.log('\n— правило показа оценок (интервью �
   check('счётчика НЕТ там, где голосов нет', countAtZero === 0, `нарушений: ${countAtZero}`);
   check('🏷 «NDim Space Rating» назван везде, где есть оценка', brandMissing === 0, `нарушений: ${brandMissing}`);
   check('🏷 бренд-имени НЕТ там, где оценок нет', brandAtZero === 0, `нарушений: ${brandAtZero}`);
+}
+
+// ── Место объекта в своём виде (интервью №036, В5 — «ставим всем, у кого есть оценка») ──────
+console.log('\n— место объекта среди оценённых своего вида —');
+{
+  /*
+   * 🔴 ЭТО ПРОВЕРКА ПАРЫ «ИСТИНА ↔ ЗЕРКАЛО», а не наличия строки. Одно и то же число человек
+   * видит в ДВУХ местах: номером строки на странице хаба и строкой «Место» на карточке. Страж
+   * пересчитывает места ТЕМ ЖЕ кодом, которым их считает продукт (`groupByKind` + `placesIn`),
+   * и сверяет с числом, которое реально стоит в отданном HTML. Проверка «строка есть» пропустила
+   * бы расхождение, а расхождение означает, что две публичные поверхности говорят об одном
+   * объекте разное.
+   *
+   * ⛔ Порога по месту НЕТ — решение владельца (№036 В5). Поэтому здесь же стережётся и обратное:
+   * ни одной страницы с голосами, где строка места пропала бы «сама».
+   */
+  const items = dimsAll.map((d) => ({
+    slug: d.slug,
+    type: d.type,
+    rating: d.rating ?? 0,
+    rates: d.rates ?? 0,
+  }));
+  const { hubs } = groupByKind(items);
+  const truth = new Map();
+  for (const list of hubs.values()) for (const [slug, p] of placesIn(list)) truth.set(slug, p);
+
+  let missing = 0;
+  let atZero = 0;
+  let mismatch = 0;
+  let matched = 0;
+  let firstBad = '';
+
+  for (const f of sample('ru')) {
+    const slug = f.replace(/\.html$/, '');
+    const d = bySlugAll.get(slug);
+    if (!d) continue;
+    const text = visible(read('ru', f));
+    const m = text.match(/(\d+)-е среди (\d+) оценённых/);
+    const want = truth.get(slug);
+
+    if ((d.rates ?? 0) === 0) {
+      if (m) atZero += 1;
+      continue;
+    }
+    if (!want) continue; // хвостовой вид: места среди 25 не бывает — это не поломка
+    if (!m) {
+      missing += 1;
+      if (!firstBad) firstBad = slug;
+      continue;
+    }
+    if (Number(m[1]) !== want.rank || Number(m[2]) !== want.of) {
+      mismatch += 1;
+      if (!firstBad) firstBad = `${slug}: страница «${m[1]} среди ${m[2]}», каталог «${want.rank} среди ${want.of}»`;
+      continue;
+    }
+    matched += 1;
+  }
+
+  check('строка места ЕСТЬ у всех оценённых объектов известных видов', missing === 0,
+    `нарушений: ${missing}${firstBad && missing ? ` (${firstBad})` : ''}`);
+  check('строки места НЕТ там, где голосов нет', atZero === 0, `нарушений: ${atZero}`);
+  check('число на карточке совпадает с местом в хабе', mismatch === 0,
+    `сверено ${matched}${mismatch ? `, расхождений ${mismatch}: ${firstBad}` : ''}`);
+  check('сверка вообще состоялась', matched > 0, `страниц с местом: ${matched}`);
 }
 
 // ── Языковые адреса: hreflang двусторонний, lang честный ────────────────────
