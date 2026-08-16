@@ -1,7 +1,7 @@
 /**
- * ПИСАРЬ EN-ОПИСАНИЙ КАТАЛОГА — `plans/56` шаг 3 (фаза 3 эпика `plans/40`).
+ * ПИСАРЬ ОПИСАНИЙ КАТАЛОГА (оба языка) — `plans/56` шаг 3 (фаза 3 эпика `plans/40`).
  *
- * Что делает: переносит подготовленные переформулировки английских описаний в БОЕВОЙ каталог и
+ * Что делает: переносит подготовленные переформулировки описаний в БОЕВОЙ каталог и
  * ведёт журнал «что было → что стало». Сами тексты пишет агент по `AUTHOR_STYLOMETRY.md` и кладёт
  * в файл правок; этот прибор их только ПРОВЕРЯЕТ И ЗАПИСЫВАЕТ.
  *
@@ -14,8 +14,10 @@
  *      `before` правки. Не совпало — правка ПРОПУСКАЕТСЯ и называется вслух. Это защита от
  *      работы поверх чужого изменения: правки готовятся по снимку `dims-build.json`, а снимок
  *      к моменту записи может отстать от базы.
- *   3. **ТОЛЬКО ОДНО ПОЛЕ.** Пишется `description.en` и ничего больше (`merge` по вложенному
- *      ключу). Русское описание, теги, рейтинги и служебные поля прибор не трогает вовсе.
+ *   3. **ТОЛЬКО ОДНО ПОЛЕ.** Пишется `description.<язык>` и ничего больше (`merge` по вложенному
+ *      ключу). Второй язык, теги, рейтинги и служебные поля прибор не трогает вовсе.
+ *      🔴 Язык называется в самой правке полем `lang` (`en` по умолчанию) — и он же выбирает
+ *      набор запрещённых маркеров: русскую правку нельзя проверить английским списком.
  *
  * ⚠️ ЖУРНАЛ — ЧАСТЬ РАБОТЫ, А НЕ ОТЧЁТНОСТЬ. Владелец разрешил агенту править эти тексты ровно
  * на условии вычитки ПОСТФАКТУМ (интервью №025, В6 = А). Без журнала правка неотличима от
@@ -23,11 +25,11 @@
  * числе в сухом прогоне.
  *
  * Запуск:
- *   node tools/rewrite-en-descriptions.mjs <правки.json>            # сухой прогон
- *   node tools/rewrite-en-descriptions.mjs <правки.json> --apply    # записать в боевой каталог
- *   node tools/rewrite-en-descriptions.mjs --selftest               # проверить сам прибор
+ *   node tools/rewrite-catalog-descriptions.mjs <правки.json>            # сухой прогон
+ *   node tools/rewrite-catalog-descriptions.mjs <правки.json> --apply    # записать в боевой каталог
+ *   node tools/rewrite-catalog-descriptions.mjs --selftest               # проверить сам прибор
  *
- * Форма файла правок: [{ "slug": "…", "before": "…", "after": "…", "why": "…" }]
+ * Форма файла правок: [{ "slug": "…", "lang": "ru|en", "find": "…", "replace": "…", "why": "…" }]
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -43,23 +45,36 @@ const SNAPSHOT = 'src/lib/content/dims-build.json';
  * дёшево: все ЧИСЛА и все ГОДЫ исходника обязаны остаться в результате. Прибор не судит смысл —
  * он не даёт тексту молча похудеть.
  */
+/**
+ * Маркеры справочного стиля по языкам. Английские — сито §10; русские — сито заказа владельца
+ * 2026-08-16 («и русские текста нужно будет править»).
+ *
+ * ⚠️ ЗДЕСЬ ОНИ РАБОТАЮТ УЖЕ НЕ СИТОМ, А ЗАПРЕТОМ: прибор не даёт записать правку, в которой
+ * маркер уцелел. Это разные роли одного списка, и путать их нельзя — в грепе маркер лишь
+ * повод посмотреть, здесь он признак того, что правка своей работы не сделала.
+ */
+const MARKERS_BY_LANG = {
+  en: [/voiced by/i, /premiered on/i, /totaling \d+ episodes/i, /consists of \d+ seasons/i,
+    /aired on .{0,80}? from .+? to /i],
+  ru: [/премьера состоялась/i, /В главных ролях/i, /[СC]ъёмки проходили/i, /роль исполн(ил|ила|или)/i,
+    /транслировал(ся|ась|ись)/i, /состоит из \d+ сезон/i],
+};
+
 export function checkEdit(edit) {
   const problems = [];
+  const lang = edit.lang ?? 'en';
   if (!edit.slug) problems.push('нет slug');
+  if (!MARKERS_BY_LANG[lang]) problems.push(`неизвестный язык «${lang}»`);
   if (!edit.before) problems.push('нет before');
   if (!edit.after) problems.push('нет after');
   if (edit.before && edit.after && edit.before === edit.after) problems.push('after равен before');
 
-  if (edit.before && edit.after) {
+  if (edit.before && edit.after && MARKERS_BY_LANG[lang]) {
     const numbers = (s) => (s.match(/\b\d{1,4}(?:,\d{3})*\b/g) ?? []).map((n) => n.replace(/,/g, ''));
     const lost = numbers(edit.before).filter((n) => !numbers(edit.after).includes(n));
     if (lost.length) problems.push(`потеряны числа: ${[...new Set(lost)].join(', ')}`);
 
-    // Маркеры справочного стиля — ровно те, ради которых шаг существует. Остались — правка не
-    // сделала своей работы, и говорить об этом должен прибор, а не следующий греп через неделю.
-    const MARKERS = [/voiced by/i, /premiered on/i, /totaling \d+ episodes/i, /consists of \d+ seasons/i,
-      /aired on .{0,80}? from .+? to /i];
-    const left = MARKERS.filter((re) => re.test(edit.after));
+    const left = MARKERS_BY_LANG[lang].filter((re) => re.test(edit.after));
     if (left.length) problems.push(`маркер остался: ${left.length}`);
   }
   return problems;
@@ -68,11 +83,11 @@ export function checkEdit(edit) {
 /** Журнал для вычитки владельцем — страницей, а не списком идентификаторов. */
 export function journalText(edits, { applied, skipped }) {
   const lines = [
-    '# Журнал правок английских описаний каталога',
+    '# Журнал правок описаний каталога',
     '',
     '> **Кто правил:** агент, по `AUTHOR_STYLOMETRY.md` · **Разрешение:** интервью №025, В6 = А',
     '> (правки текстов пишет агент, владелец вычитывает ПОСТФАКТУМ одной страницей).',
-    `> **Шаг:** \`plans/56\` шаг 3 · **Прибор:** \`tools/rewrite-en-descriptions.mjs\``,
+    `> **Шаг:** \`plans/56\` шаг 3 · **Прибор:** \`tools/rewrite-catalog-descriptions.mjs\``,
     '',
     'Правило правки: **менялся СТИЛЬ, а не факты.** Ни один год, ни одно число, ни одно имя из',
     'исходного текста не удалены — это проверяет сам прибор и отказывается писать иначе.',
@@ -119,7 +134,7 @@ const file = process.argv[2];
 const apply = process.argv.includes('--apply');
 
 if (!file || !existsSync(file)) {
-  console.error('нужен файл правок: node tools/rewrite-en-descriptions.mjs <правки.json> [--apply]');
+  console.error('нужен файл правок: node tools/rewrite-catalog-descriptions.mjs <правки.json> [--apply]');
   process.exit(1);
 }
 
@@ -139,7 +154,8 @@ function expand(entry, snapshotBySlug) {
   if (entry.before !== undefined) return entry;
   const d = snapshotBySlug.get(entry.slug);
   if (!d) return { ...entry, before: '', after: '', _problem: 'нет в снимке каталога' };
-  const before = d.description?.en ?? '';
+  const lang = entry.lang ?? 'en';
+  const before = d.description?.[lang] ?? '';
 
   /*
    * Фрагментов может быть НЕСКОЛЬКО на один текст, и это не удобство, а необходимость: в одном
@@ -202,7 +218,7 @@ for (const e of edits) {
   if (!d) {
     console.log(`  ⚠️ ${e.slug}: нет в снимке каталога`);
     drifted += 1;
-  } else if ((d.description?.en ?? '') !== e.before) {
+  } else if ((d.description?.[e.lang ?? 'en'] ?? '') !== e.before) {
     console.log(`  ⚠️ ${e.slug}: «до» разошлось со снимком`);
     drifted += 1;
   }
@@ -230,7 +246,8 @@ if (apply) {
     if (!d) continue;
     const ref = db.collection('dims').doc(d.id);
     const snap = await ref.get();
-    const live = snap.exists ? (snap.data()?.description?.en ?? '') : null;
+    const lang = e.lang ?? 'en';
+    const live = snap.exists ? (snap.data()?.description?.[lang] ?? '') : null;
     if (live !== e.before) {
       // 🔴 Отказ, а не «перезапишем поверх»: раз текст в базе не тот, из которого готовилась
       // правка, значит его кто-то менял — и наша правка построена на устаревшем основании.
@@ -238,8 +255,8 @@ if (apply) {
       skipped += 1;
       continue;
     }
-    await ref.set({ description: { en: e.after } }, { merge: true });
-    rollback.push({ slug: e.slug, before: e.after, after: e.before, why: `откат правки ${stamp}` });
+    await ref.set({ description: { [lang]: e.after } }, { merge: true });
+    rollback.push({ slug: e.slug, lang, before: e.after, after: e.before, why: `откат правки ${stamp}` });
     applied += 1;
   }
   console.log(`\n✅ записано: ${applied} · пропущено: ${skipped}`);
@@ -252,14 +269,14 @@ if (apply) {
   if (rollback.length) {
     const back = `${file.replace(/\.json$/, '')}--rollback.json`;
     writeFileSync(back, JSON.stringify(rollback, null, 1), 'utf8');
-    console.log(`откат: node tools/rewrite-en-descriptions.mjs ${back} --apply`);
+    console.log(`откат: node tools/rewrite-catalog-descriptions.mjs ${back} --apply`);
   }
 } else {
   console.log('\nℹ сухой прогон: чтобы записать, добавьте --apply');
 }
 
 // 4. Журнал — всегда.
-const out = `${JOURNAL_DIR}/en_descriptions_journal_${stamp}.md`;
+const out = `${JOURNAL_DIR}/catalog_descriptions_journal_${stamp}.md`;
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, journalText(edits, { applied, skipped }), 'utf8');
 console.log(`журнал: ${out}`);
