@@ -89,6 +89,12 @@ async function step(ids, name, fn) {
     if (r?.skip) record('skip', ids, name, r.detail);
     else record(r?.ok ? 'pass' : 'fail', ids, name, r?.detail ?? '');
   } catch (e) {
+    // Падение окружения не выдаётся за дефект продукта (`bugs/134`), но и не прощается: прогон
+    // остаётся красным, потому что «не смогли проверить» ≠ «проверили, всё хорошо».
+    if (e?.environment || /ERR_CONNECTION|fetch failed|net::ERR/i.test(String(e.message ?? e))) {
+      record('fail', ids, name, `🔌 ${String(e.message ?? e).split('\n')[0].slice(0, 200)}`);
+      return;
+    }
     record('fail', ids, name, `упал: ${String(e.message ?? e).split('\n')[0].slice(0, 200)}`);
   }
 }
@@ -97,14 +103,49 @@ const section = (title) => console.log(`\n── ${title} ──`);
 
 /* ─────────────────────────── База и почта эмулятора ─────────────────────────── */
 
+/**
+ * 🔴 ОКРУЖЕНИЕ ≠ ПРОДУКТ (`bugs/134`).
+ *
+ * Стенд умеет умирать посреди прогона (нехватка памяти), и тогда исправный продукт выдаёт четыре
+ * «провала»: «оценки в базе нет», «кнопки „Выйти" нет», консоль в `ERR_CONNECTION_RESET`. Сессия,
+ * поверившая такому отчёту, идёт чинить целое — это тот самый ложный диагноз, которым проект уже
+ * платил. Поэтому падение окружения носит СВОЁ ИМЯ и не выдаёт себя за дефект.
+ *
+ * Прогон при этом остаётся КРАСНЫМ: ворота обязаны закрыться, когда проверить не удалось. Молчать
+ * здесь нельзя — «не смогли проверить» и «проверили, всё хорошо» это разные вещи.
+ */
+class EnvironmentDown extends Error {
+  constructor(what) {
+    super(`ОКРУЖЕНИЕ УПАЛО: ${what}. Это не дефект продукта — стенд не отвечает (bugs/134).`);
+    this.environment = true;
+  }
+}
+
 /** Документ Firestore эмулятора. `Bearer owner` обязателен: REST идёт ЧЕРЕЗ ПРАВИЛА. */
 async function doc(path) {
-  const res = await fetch(`${FIRESTORE}/v1/projects/${PROJECT}/databases/(default)/documents/${path}`, {
-    headers: { Authorization: 'Bearer owner' },
-  });
+  let res;
+  try {
+    res = await fetch(`${FIRESTORE}/v1/projects/${PROJECT}/databases/(default)/documents/${path}`, {
+      headers: { Authorization: 'Bearer owner' },
+    });
+  } catch (e) {
+    throw new EnvironmentDown(`эмулятор Firestore (${FIRESTORE}) не отвечает`);
+  }
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Firestore ${res.status} на ${path}`);
   return res.json();
+}
+
+/** Живо ли окружение прямо сейчас — спрашивается у самих портов, а не у памяти о них. */
+async function environmentAlive() {
+  for (const url of [FIRESTORE, AUTH]) {
+    try {
+      await fetch(`${url}/`, { signal: AbortSignal.timeout(2000) });
+    } catch {
+      return false;
+    }
+  }
+  return true;
 }
 
 /** Адрес из «письма»: код берётся у эмулятора Auth (`EXP-0045`), но заказывает его сам продукт. */
@@ -164,8 +205,20 @@ function sessionOf(page) {
 
 /* ─────────────────────────── Браузер ─────────────────────────── */
 
-/** Отказы правил гостю — ожидаемое поведение продукта, а не дефект. Фильтр узкий намеренно. */
-const EXPECTED = /permission|insufficient permissions|Missing or insufficient/i;
+/**
+ * Что НЕ считается дефектом в консоли. Фильтр узкий намеренно: широкий спрятал бы `TypeError`,
+ * которым падала склейка версий (`bugs/124`), — а это единственный класс, ради которого смоук под
+ * сессией вообще появился.
+ *
+ * 1. **Отказы правил гостю** — штатное поведение продукта: правила честно не пускают его в чужое.
+ * 2. **`Could not reach Cloud Firestore backend` / `Connection failed N times`** — сообщение
+ *    ТРАНСПОРТА о переподключении, а не ошибка приложения. Всплывает на собранном артефакте, где
+ *    старт быстрее, чем готовность эмулятора. 🔑 Глушить его безопасно ровно потому, что настоящую
+ *    недоступность базы ловит не консоль, а вердикты кейсов: без базы падают и оценка, и пересчёт,
+ *    и вход. То есть у этого класса есть свой прибор, и он не консоль.
+ */
+const EXPECTED =
+  /permission|insufficient permissions|Missing or insufficient|Could not reach Cloud Firestore backend|Connection failed \d+ times/i;
 
 async function person(browser) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'ru-RU' });
@@ -197,6 +250,13 @@ let profileRestore = null;
 
 try {
   console.log(`НАБОР SMOKE · контур ${BASE}${IS_STAND ? ' (стенд)' : ''}`);
+
+  // Контроль прибора ПЕРЕД прогоном (`EXP-0082`): на мёртвом окружении набор судить не может, и
+  // сказать об этом надо ДО того, как он выдаст семнадцать «провалов» исправного продукта.
+  if (IS_STAND && !(await environmentAlive())) {
+    record('fail', '—', 'Окружение живо (контроль прибора)', '🔌 эмуляторы 8181/9099 не отвечают — поднимите `npm run stand` (bugs/134)');
+    throw new EnvironmentDown('эмуляторы не отвечают на старте прогона');
+  }
 
   /* ═══ Новый человек ═══ */
   section('Новый человек');
@@ -449,8 +509,19 @@ try {
       await page.waitForTimeout(1500);
       const saved = await doc(`points/${devUid}/dims/${target}`);
       const value = saved?.fields?.value?.integerValue ?? saved?.fields?.value?.doubleValue ?? null;
-      const dirty = (await doc(`points/${devUid}`))?.fields?.dirty?.booleanValue === true;
       if (saved) ratedDim = target;
+      /*
+       * 🔑 ФЛАГ `dirty` ЗДЕСЬ НЕ СУДИТСЯ, и это не упрощение, а лечение ЛОТЕРЕИ.
+       *
+       * Первая редакция требовала `dirty === true` через полторы секунды после оценки. Цикл
+       * сервера синхронизации на стенде — 15 с, и когда он попадал в это окно, флаг успевал
+       * СНЯТЬСЯ: страж краснел на исправном продукте примерно раз в десять прогонов. Страж-лотерея
+       * приучает игнорировать красное — это дороже, чем всё, что он стережёт.
+       *
+       * Смысл флага при этом не потерян: его НАБЛЮДАЕМОЕ следствие — пересчёт связей, и его
+       * судит следующий кейс (`NDIM-REL-003`), который ЖДЁТ результата, а не ловит мгновение.
+       * Мутация «оценка не помечает точку грязной» проверена: она краснит именно тот кейс.
+       */
       /*
        * Экран обязан показать то же самое, но ИМЕННО ТАМ, КУДА ПРОДУКТ КЛАДЁТ ОЦЕНЁННОЕ.
        * Оценённая карточка УЛЕТАЕТ из ленты «Все» во вкладку «Мой NDim ID» (это и есть смысл
@@ -464,8 +535,8 @@ try {
       const lit = await mine.locator('.stars button.fill').count();
       await shot(page, '08-rated');
       return {
-        ok: Number(value) === 8 && dirty && lit === 9,
-        detail: `база value=${value}, dirty=${dirty}, во вкладке «Мой NDim ID» зажжено звёзд ${lit} (ждали 9: это 0…8)`,
+        ok: Number(value) === 8 && lit === 9,
+        detail: `база value=${value}, во вкладке «Мой NDim ID» зажжено звёзд ${lit} (ждали 9: это 0…8)`,
       };
     });
 
