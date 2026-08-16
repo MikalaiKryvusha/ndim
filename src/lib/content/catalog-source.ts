@@ -24,9 +24,11 @@ import {
   hubPath,
   pageCount,
   PER_PAGE,
+  placesIn,
   slicePage,
   summarize,
   toCard,
+  type HubPlace,
   type HubSummary,
 } from './catalog-hub';
 import {
@@ -63,6 +65,21 @@ export const CATALOG_TOTAL = DIMS.length;
 export const CATALOG_RATED =
   HUB_SUMMARIES.reduce((s, h) => s + h.rated, 0) +
   TAIL_ITEMS.filter((d) => (Number.isFinite(d.rates) ? Math.floor(d.rates) : 0) >= 1).length;
+
+/**
+ * МЕСТА ОЦЕНЁННЫХ ОБЪЕКТОВ В СВОИХ ВИДАХ (`plans/56` шаг 2) — считаются ОДИН РАЗ на сборку.
+ *
+ * Загрузчик карточки зовут 10 222 раза; искать место перебором списка вида означало бы
+ * пройти каталог заново на каждой странице. Здесь это `Map`, то есть поиск за константу.
+ *
+ * Хвостовые виды (25 объектов шести видов) места НЕ получают: у вида из одного объекта «1-е
+ * место среди 1» — не факт, а насмешка. Их карточки просто останутся без строки места.
+ */
+const PLACES = new Map<string, HubPlace>();
+for (const list of hubs.values()) for (const [slug, place] of placesIn(list)) PLACES.set(slug, place);
+
+/** Место объекта среди оценённых своего вида либо `null`, если места у него нет. */
+export const placeOf = (slug: string): HubPlace | null => PLACES.get(slug) ?? null;
 
 /** Один хаб целиком, в утверждённом порядке. */
 export const hubItems = (kind: KindKey): readonly DimPage[] => hubs.get(kind) ?? [];

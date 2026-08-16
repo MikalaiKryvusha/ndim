@@ -24,6 +24,7 @@ import {
   hubPath,
   makeComparator,
   pageCount,
+  placesIn,
   slicePage,
   summarize,
   toCard,
@@ -226,6 +227,88 @@ test('боевой каталог: в голове каждого хаба не�
     }
   }
 });
+
+/*
+ * ── МЕСТО ОБЪЕКТА В СВОЁМ ВИДЕ (`plans/56` шаг 2) ────────────────────────────────────────────
+ *
+ * Мутации, которые эти тесты обязаны ронять:
+ *   · считать место среди ВСЕХ объектов вида, а не среди оценённых — знаменатель раздувается с
+ *     981 до 2774, и каждая карточка начинает утверждать неправду;
+ *   · выдать место неоценённому объекту — «3106-е место» из ряда, разведённого по алфавиту адреса;
+ *   · разойтись с номером строки на странице хаба — две публичные поверхности скажут об одном
+ *     объекте разное, и заметит это человек, а не сборка.
+ */
+
+test('место считается среди ОЦЕНЁННЫХ, а не среди всех объектов вида', () => {
+  const list = [
+    item({ slug: 'a-rated', rates: 10, rating: 9 }),
+    item({ slug: 'b-rated', rates: 10, rating: 8 }),
+    item({ slug: 'c-empty' }),
+    item({ slug: 'd-empty' }),
+  ].sort(compareForHub);
+
+  const places = placesIn(list);
+  assert.equal(places.size, 2, 'мест ровно столько, сколько оценённых');
+  // Знаменатель — 2 (оценённые), а НЕ 4 (все). Мутация «of = sortedList.length» роняет обе строки.
+  assert.deepEqual(places.get('a-rated'), { rank: 1, of: 2 });
+  assert.deepEqual(places.get('b-rated'), { rank: 2, of: 2 });
+});
+
+test('🔴 неоценённый объект места НЕ получает — иначе это выдуманный факт', () => {
+  const list = [item({ slug: 'rated', rates: 3, rating: 7 }), item({ slug: 'empty' })].sort(compareForHub);
+  const places = placesIn(list);
+  assert.equal(places.has('empty'), false, 'неоценённому выдано место');
+  assert.equal(places.get('rated')?.rank, 1);
+});
+
+test('места идут подряд от единицы и ни одно не повторяется', () => {
+  const list = Array.from({ length: 7 }, (_, i) =>
+    item({ slug: `s${i}`, rates: i < 5 ? 2 : 0, rating: 10 - i }),
+  ).sort(compareForHub);
+  const ranks = [...placesIn(list).values()].map((p) => p.rank).sort((a, b) => a - b);
+  assert.deepEqual(ranks, [1, 2, 3, 4, 5]);
+});
+
+test('пустой список и список без единой оценки мест не порождают', () => {
+  assert.equal(placesIn([]).size, 0);
+  assert.equal(placesIn([item({ slug: 'x' }), item({ slug: 'y' })]).size, 0);
+});
+
+test('🔑 ПАРА «истина ↔ зеркало»: место карточки = номер её строки на странице хаба', () => {
+  const { hubs } = groupByKind(catalog);
+  for (const key of KIND_KEYS) {
+    const list = hubs.get(key) ?? [];
+    if (!list.length) continue;
+    const places = placesIn(list);
+    // Номер строки хаба считается как `firstRank + i` = (page-1)*PER_PAGE + i + 1, то есть
+    // сквозной индекс по списку + 1. Для ОЦЕНЁННЫХ он обязан совпасть с местом на карточке.
+    list.forEach((d, i) => {
+      const place = places.get(d.slug);
+      if (!place) return;
+      assert.equal(
+        place.rank,
+        i + 1,
+        `${key}/${d.slug}: карточка говорит «${place.rank}-е», хаб показывает «${i + 1}-е»`,
+      );
+    });
+  }
+});
+
+if (full) {
+  test('боевой каталог: знаменатель места совпадает со сводкой «с оценками»', () => {
+    const { hubs } = groupByKind(catalog);
+    const byKey = Object.fromEntries(summarize(hubs).map((h) => [h.key, h]));
+    for (const key of KIND_KEYS) {
+      const list = hubs.get(key) ?? [];
+      const places = placesIn(list);
+      if (!places.size) continue;
+      const of = [...places.values()][0].of;
+      assert.equal(of, byKey[key].rated, `${key}: знаменатель места разошёлся со сводкой хаба`);
+    }
+    // Замер 2026-08-14, который держит вся арифметика фазы: фильмов оценено 981 из 2774.
+    assert.equal([...placesIn(hubs.get('movie') ?? []).values()][0].of, 981);
+  });
+}
 
 if (full) {
   test('боевой каталог: числа замера 2026-08-14 держатся', () => {

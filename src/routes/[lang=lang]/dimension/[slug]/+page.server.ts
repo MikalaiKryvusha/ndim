@@ -36,7 +36,7 @@ import { DIMS, DIMS_SOURCE } from '$lib/content/dims-source';
 import { ratingView } from '$lib/content/dims-rating';
 import { kindKeyOf, kindTitle } from '$lib/content/dim-kind';
 import { catalogPath, hubPath } from '$lib/content/catalog-hub';
-import { neighboursFor } from '$lib/content/catalog-source';
+import { neighboursFor, placeOf } from '$lib/content/catalog-source';
 import { CATALOG_COPY } from '$lib/content/catalog-copy';
 import { dimJsonLd } from '$lib/content/dim-jsonld';
 import { LANGS, X_DEFAULT, pick, type Lang } from '$lib/content/langs';
@@ -162,6 +162,10 @@ export function load({ params }: { params: { lang: string; slug: string } }): Di
     ],
     jsonLd,
     up,
+    // Место среди ОЦЕНЁННЫХ своего вида (`plans/56` шаг 2). Считано один раз на сборку, здесь —
+    // поиск по `Map`. У неоценённых и хвостовых видов места нет, и это `null`, а не ноль:
+    // ноль читался бы как «нулевое место», а его не существует.
+    place: placeOf(dim.slug),
     neighbours: neighboursFor(dim.slug, lang),
     // Правило показа оценок решается в ОДНОМ месте на весь проект — одно внутри приложения и
     // снаружи (интервью №022). Шаблон получает его готовым.
