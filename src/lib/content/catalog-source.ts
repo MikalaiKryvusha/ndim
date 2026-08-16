@@ -28,6 +28,7 @@ import {
   slicePage,
   summarize,
   toCard,
+  VOTE_BONUS,
   VOTE_SATURATION,
   type HubPlace,
   type HubSummary,
@@ -53,7 +54,7 @@ const { hubs, tail, prior } = groupByKind(DIMS as readonly DimPage[]);
  */
 console.log(
   `[catalog] опора взвешивания: m = ${prior.m} голосов · C = ${prior.c.toFixed(4)} · ` +
-    `СКО = ${prior.sd.toFixed(4)} · насыщение веса голосов = ${VOTE_SATURATION}`,
+    `вес голосов насыщается на ${VOTE_SATURATION} и стоит ${VOTE_BONUS} балла (№036 В2 = B)`,
 );
 
 /** Сводки семи хабов — для индексной страницы каталога и для полосы соседей. */
