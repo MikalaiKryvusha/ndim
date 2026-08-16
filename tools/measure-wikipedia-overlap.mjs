@@ -170,6 +170,27 @@ export function looksLikeList(runText) {
   return years.length >= 3;
 }
 
+/**
+ * СОБСТВЕННОЕ НАЗВАНИЕ ОБЪЕКТА — не заимствование, сколько бы слов в нём ни было.
+ *
+ * Поймано первым большим сводом: «Властелин колец: Возвращение короля» дал ряд в 10 слов —
+ * «the lord of the rings the return of the king». Это ИМЯ фильма, стоящее и у нас, и в статье;
+ * назвать его копией значит потребовать переименовать произведение.
+ *
+ * Проверка точная, а не эвристическая: ряд сравнивается с названием объекта на обоих языках,
+ * и если он в них укладывается — это имя. Признак «мало служебных слов» здесь не срабатывает
+ * как раз потому, что английские названия полны артиклей и предлогов.
+ */
+export function isOwnTitle(runText, dim) {
+  const run = String(runText).trim();
+  if (!run) return false;
+  for (const lang of ['ru', 'en']) {
+    const t = words(dim.title?.[lang] ?? '').join(' ');
+    if (t && (t.includes(run) || run.includes(t))) return true;
+  }
+  return false;
+}
+
 // ── САМОТЕСТ: ядро проверяется на ПОДТВЕРЖДЁННЫХ полем случаях ──────────────────────────────
 if (process.argv.includes('--selftest')) {
   /*
@@ -358,7 +379,9 @@ for (const [i, d] of targets.entries()) {
   const theirs = article ? words(article.text) : null;
   const run = theirs ? longestCommonRun(ours, theirs) : { length: 0, text: '' };
   const sh = theirs ? sharedShingles(ours, theirs) : 0;
-  const verdict = verdictOf({ run: run.length, shingles: sh, articleWords: theirs ? theirs.length : null, runText: run.text });
+  const базовый = verdictOf({ run: run.length, shingles: sh, articleWords: theirs ? theirs.length : null, runText: run.text });
+  // Совпало собственное название объекта — это имя, а не заимствование (см. `isOwnTitle`).
+  const verdict = базовый === 'copied' && isOwnTitle(run.text, d) ? 'names' : базовый;
 
   if (verdict === 'copied') copied += 1;
   else if (verdict === 'suspect') suspect += 1;
