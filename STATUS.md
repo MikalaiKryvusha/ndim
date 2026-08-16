@@ -114,10 +114,11 @@
    76 слов** — целые абзацы дословно. Это и был настоящий масштаб задачи, невидимый до прибора.
    · 🔴 **АНГЛИЙСКИЙ СВОД ЗАКОНЧЕН ПОЛНОСТЬЮ: 5111 записей → 654 настоящих копии (12,8 %)**,
      121 перечень имён, 4296 чистых, **40 НЕ ПРОВЕРЕНО** (это не «чисто» — статья не нашлась).
-   · Готовы и ЖДУТ ОДНОЙ КОМАНДЫ КАЖДАЯ:
-     `node tools/rewrite-catalog-descriptions.mjs tools/rewrites-RU-ночь.json --apply` (**57**)
-     `node tools/rewrite-catalog-descriptions.mjs tools/rewrites-EN-ночь.json --apply` (**99**)
-     Обе прошли сухой прогон; журналы вычитки — `homeworks/catalog_descriptions_journal_*`.
+   · ✅ **ГОТОВЫ И ЖДУТ ОДНОЙ КОМАНДЫ КАЖДАЯ** (сухой прогон пройден, журналы вычитки —
+     `homeworks/catalog_descriptions_journal_*`):
+     `node tools/rewrite-catalog-descriptions.mjs tools/rewrites-RU-ночь.json --apply` — **103**
+     `node tools/rewrite-catalog-descriptions.mjs tools/rewrites-EN-ночь.json --apply` — **99**
+     Это **88 % русских копий** (103 из 117) и **15 % английских** (99 из 654).
    · Собраны фан-аутом (10+10 агентов на русском, 6+6 на английском, 1,85 млн токенов) и приняты
      **машиной, а не мнением**: `tools/gate-rewrites.mjs` меряет остаточный ряд тем же прибором и
      по тому же порогу, статью берёт из кэша свода.
