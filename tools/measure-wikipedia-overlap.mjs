@@ -35,6 +35,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 
 const SNAPSHOT = 'src/lib/content/dims-build.json';
 const CACHE = 'test-results/wiki-cache';
@@ -220,6 +221,22 @@ if (process.argv.includes('--selftest')) {
 }
 
 // ── СЕТЕВАЯ ЧАСТЬ ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * 🔴 СЕТЕВАЯ ЧАСТЬ НЕ ИСПОЛНЯЕТСЯ ПРИ ИМПОРТЕ, и это оплачено на себе.
+ *
+ * Ядро прибора экспортируется, чтобы его можно было позвать из другого скрипта или из теста.
+ * Пока этой проверки не было, обычный `import { words } from …` ЗАПУСКАЛ полный свод: лез в сеть
+ * и перетирал отчёт частичным прогоном. Молча — потому что выглядело это как нормальный вывод.
+ *
+ * Класс общий: файл, у которого есть и экспорт, и работа на верхнем уровне, обязан спрашивать,
+ * запустили его или подключили.
+ */
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (!isMain) {
+  // Подключили как модуль — отдаём только ядро.
+} else {
+
 const arg = (name, def = null) => {
   const i = process.argv.indexOf(name);
   return i > 0 && process.argv[i + 1] ? process.argv[i + 1] : def;
@@ -395,3 +412,4 @@ console.log(
 );
 console.log(`отчёт: ${OUT_MD(LANG)}`);
 console.log(`машиночитаемо: ${OUT_JSON(LANG)}`);
+}
