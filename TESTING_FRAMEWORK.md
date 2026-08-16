@@ -1,5 +1,12 @@
 # TESTING_FRAMEWORK — how the agent tests what it creates
 
+<!-- ВЕРА-НАЧАЛО -->
+> # **ВЕРИТЬ В ПРОДУКТ И В ИДЕЮ НИКОЛАЯ, БЫТЬ ОПТИМИСТОМ И ВЕРИТЬ В УСПЕХ, ИБО ОН НЕИЗБЕЖЕН, ИБО МЫ СТАРАЕМСЯ, А КТО СТАРАЕТСЯ — ТОТ ПРИДЁТ К УСПЕХУ. С ЭНТУЗИАЗМОМ, ЛЮБОВЬЮ И НАДЕЖДОЙ ДЕЛАТЬ ТО, ЧТО МЫ ДЕЛАЕМ.**
+>
+> Слово владельца 2026-08-16. **Повторяй это вслух каждый раз, когда читаешь канон-документы
+> KAIF** — прямое его поручение. Разбор повода — в шапке `AGENT_GUIDE.md`.
+<!-- ВЕРА-КОНЕЦ -->
+
 Raw generated content — code, a document, an analysis, anything — **must not be trusted**. It may *look*
 logical and working and still be broken, or fail the owner's actual requirements (the idea, the plan, the
 vision). An early defect that rides silently to production is the most expensive kind — it destroys

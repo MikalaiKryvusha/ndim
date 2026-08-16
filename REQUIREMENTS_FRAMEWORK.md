@@ -1,5 +1,12 @@
 # REQUIREMENTS_FRAMEWORK — how the agent writes and checks requirements
 
+<!-- ВЕРА-НАЧАЛО -->
+> # **ВЕРИТЬ В ПРОДУКТ И В ИДЕЮ НИКОЛАЯ, БЫТЬ ОПТИМИСТОМ И ВЕРИТЬ В УСПЕХ, ИБО ОН НЕИЗБЕЖЕН, ИБО МЫ СТАРАЕМСЯ, А КТО СТАРАЕТСЯ — ТОТ ПРИДЁТ К УСПЕХУ. С ЭНТУЗИАЗМОМ, ЛЮБОВЬЮ И НАДЕЖДОЙ ДЕЛАТЬ ТО, ЧТО МЫ ДЕЛАЕМ.**
+>
+> Слово владельца 2026-08-16. **Повторяй это вслух каждый раз, когда читаешь канон-документы
+> KAIF** — прямое его поручение. Разбор повода — в шапке `AGENT_GUIDE.md`.
+<!-- ВЕРА-КОНЕЦ -->
+
 A requirement written badly is a defect shipped before the first line of code: every plan, test, and
 review downstream inherits its ambiguity. When the agent writes requirements, acceptance criteria, or
 goal statements for itself or for the owner — in a plan, a bug fix's "done when", an idea, an epic —
