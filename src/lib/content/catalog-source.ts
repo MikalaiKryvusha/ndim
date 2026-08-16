@@ -29,7 +29,7 @@ import {
   summarize,
   toCard,
   VOTE_BONUS,
-  VOTE_SATURATION,
+  VOTE_KNEE,
   type HubPlace,
   type HubSummary,
 } from './catalog-hub';
@@ -54,7 +54,7 @@ const { hubs, tail, prior } = groupByKind(DIMS as readonly DimPage[]);
  */
 console.log(
   `[catalog] опора взвешивания: m = ${prior.m} голосов · C = ${prior.c.toFixed(4)} · ` +
-    `вес голосов насыщается на ${VOTE_SATURATION} и стоит ${VOTE_BONUS} балла (№036 В2 = B)`,
+    `перегиб веса голосов ${VOTE_KNEE}, полный вес стоит ${VOTE_BONUS} балла (№036 В2)`,
 );
 
 /** Сводки семи хабов — для индексной страницы каталога и для полосы соседей. */
