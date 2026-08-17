@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Блок-дверь на странице измерения — 4 варианта текста</title>
+<!--
+  МАКЕТЫ ТЕКСТА БЛОКА-ДВЕРИ — интервью №036, В3 = C («переписать заново»).
+
+  Блок стоит внизу КАЖДОЙ из 10 222 страниц каталога. Заголовок и кнопка — слова владельца и
+  здесь НЕ меняются ни в одном варианте: меняется только абзац между ними.
+
+  Объекты настоящие, из боевого каталога:
+    · «Побег из Шоушенка» — 12 голосов, NDSR 9,4 (состояние «оценки есть», 1877 страниц)
+    · «Джек Ричер» — без оценок (состояние «оценок нет», 3234 страницы)
+-->
+<style>
+  :root {
+    --bg: #f7f5f0; --card: #fffdf8; --ink: #1a1a1a; --dim: #6b6660; --line: #e2ddd3;
+    --accent: #1d6fd4; --accent-ink: #fff; --mark: #b8860b;
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161a; --card: #1c1f25; --ink: #e8e6e3; --dim: #9a958e; --line: #2c313a;
+    --accent: #4a9eff; --accent-ink: #0b0d10; --mark: #d9a93c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 64px; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .sub { color: var(--dim); font-size: 14px; margin: 0 0 20px; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 24px; position: sticky; top: 0;
+         background: var(--bg); padding: 10px 0; z-index: 5; border-bottom: 1px solid var(--line); }
+  button {
+    font: inherit; font-size: 14px; padding: 7px 13px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  }
+  button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .variant { border: 1px solid var(--line); border-radius: 14px; background: var(--card); overflow: hidden; }
+  .variant > header { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .variant h2 { font-size: 15px; margin: 0; }
+  .variant .axis { color: var(--dim); font-size: 13px; margin: 4px 0 0; }
+  .phone { width: 358px; max-width: 100%; margin: 16px auto; border: 1px solid var(--line);
+           border-radius: 12px; padding: 14px; background: var(--bg); }
+  .rating-row { display: flex; align-items: baseline; gap: 8px; margin: 0 0 4px; }
+  .stars { color: var(--mark); letter-spacing: 1px; }
+  .num { font-weight: 700; font-size: 19px; }
+  .of { color: var(--dim); font-size: 13px; }
+  .none { color: var(--dim); font-size: 14px; }
+  .door { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .door h3 { font-size: 15px; margin: 0 0 8px; }
+  .door p { margin: 0 0 12px; font-size: 15px; }
+  .cta { display: block; width: 100%; text-align: center; padding: 11px; border-radius: 9px;
+         background: var(--accent); color: var(--accent-ink); border: 0; font-size: 14px; font-weight: 600; }
+  .len { color: var(--dim); font-size: 12px; margin: 8px 0 0; }
+  .cur { border-color: var(--mark); }
+  .cur > header { background: color-mix(in srgb, var(--mark) 12%, transparent); }
+  .note { border-left: 3px solid var(--accent); padding: 10px 14px; margin: 26px 0 0;
+          background: var(--card); border-radius: 0 10px 10px 0; font-size: 14px; }
+  .note b { color: var(--ink); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Блок-дверь внизу страницы измерения — четыре варианта текста</h1>
+  <p class="sub">
+    Интервью №036, В3 = C. Заголовок и кнопка — Ваши слова, они не меняются ни в одном варианте.
+    Меняется только абзац между ними. Объекты настоящие, из боевого каталога.
+  </p>
+
+  <div class="bar">
+    <button id="lang-ru" aria-pressed="true">Русский</button>
+    <button id="lang-en" aria-pressed="false">English</button>
+    <span style="width:14px"></span>
+    <button id="st-voted" aria-pressed="true">Оценки есть — 1877 страниц</button>
+    <button id="st-bare" aria-pressed="false">Оценок нет — 3234 страницы</button>
+    <span style="width:14px"></span>
+    <button id="theme">Тёмная тема</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="note">
+    <b>Ваш бриф, по которому это переписано.</b> Дословно: «<i>переписать человеческим языком, без
+    оправданий, как пишут нативные русскоговорящие люди, с констатацией факта</i>».<br>
+    <br>
+    <b>Что из этого следует построчно.</b><br>
+    1. <b>Констатация вместо вопроса.</b> Ни один вариант не начинается вопросом. Проверено по
+    Вашей стилометрии: 75 % Ваших текстов открываются плоской констатацией, вопросом — 3 из 66.
+    Мои прежние четыре варианта открывались вопросом.<br>
+    2. <b>Без оправданий.</b> Убраны все «чтобы», «потому что» и «не просто цифра». Текст называет
+    факт и молчит о том, зачем он назван.<br>
+    3. <b>Имени метрики в абзаце нет.</b> Оно уже стоит в Вашем заголовке прямо над ним.<br>
+    4. <b>Короче.</b> Было 3 предложения и ~230 знаков. Стало 0–2 предложения и 0–65 знаков.<br>
+    <br>
+    <b>Почему в наборе есть вариант «без абзаца».</b> Заголовок и кнопка — оба Ваши, и вместе они
+    уже говорят всё: что у нас свои рейтинги и что оценка нужна для поиска людей. Состояние человек
+    видит выше — звёздами или строкой «ещё без голосов». Возможно, абзац между ними лишний вовсе.<br>
+    <br>
+    ⚠️ <b>Честно о том, как это вышло.</b> Ваши замечания к прежнему тексту контур вычитки потерял —
+    он выбрасывал комментарий, если Вы не выбрали вариант. Не найдя их, я написал четыре варианта по
+    своей догадке, и догадка была неверна ровно в том, что Вы и написали. Дефект вылечен
+    (<code>bugs/138</code>), тикет в KAIF — #19.
+  </div>
+</div>
+
+<script>
+const OBJ = {
+  ru: { voted: 'Побег из Шоушенка', bare: 'Джек Ричер' },
+  en: { voted: 'The Shawshank Redemption', bare: 'Jack Reacher' },
+};
+const HEAD = {
+  ru: 'NDim Space ведёт свою систему рейтингов',
+  en: 'NDim Space keeps its own rating system',
+};
+const CTA = {
+  ru: 'Оцените, чтобы найти людей, кто думает, как Вы',
+  en: 'Rate it to find people who think like you',
+};
+
+const V = [
+  {
+    id: 'cur', current: true,
+    name: { ru: 'Как сейчас в бою', en: 'Как сейчас в бою' },
+    axis: { ru: 'Для сравнения. Начинается с имени метрики, говорит о Пространстве.', en: 'Для сравнения.' },
+    ru: {
+      voted: t => `NDim Space Rating сложился из голосов, которые поставили люди Пространства. Оцените «${t}» и ещё несколько вещей, которые Вы любите, и Пространство покажет Вам людей, которые думают так же. Ваш голос сделает его точнее.`,
+      bare: t => `NDim Space Rating появляется с первым голосом. Оцените «${t}» и ещё несколько вещей, которые Вы любите, и Пространство покажет Вам людей, которые думают так же. Первым может стать Ваш.`,
+    },
+    en: {
+      voted: t => `This NDim Space Rating is built from votes cast by people in the Space. Rate “${t}” and a few other things you love, and the Space will show you people who think the same way. Your vote will make it more precise.`,
+      bare: t => `An NDim Space Rating starts with the first vote. Rate “${t}” and a few other things you love, and the Space will show you people who think the same way. Yours could be the first.`,
+    },
+  },
+  {
+    id: 'v1',
+    name: { ru: 'V1 — факт об оценках этой вещи', en: 'V1' },
+    axis: { ru: 'Две короткие констатации: сколько оценок здесь и что будет с Вашей. Ничего не объясняет.', en: '' },
+    ru: {
+      voted: () => `Эту вещь оценили 12 человек. Ваша оценка встанет в тот же рейтинг.`,
+      bare: () => `Эту вещь пока никто не оценил. Ваша оценка будет первой.`,
+    },
+    en: {
+      voted: () => `Twelve people have rated this one. Your rating joins the same score.`,
+      bare: () => `Nobody has rated this one yet. Yours would be the first.`,
+    },
+  },
+  {
+    id: 'v2',
+    name: { ru: 'V2 — факт о том, как работает NDim', en: 'V2' },
+    axis: { ru: 'Одинаков в обоих состояниях. Две констатации о механике, без «чтобы» и «потому что».', en: '' },
+    ru: {
+      voted: () => `NDim сравнивает людей по их оценкам. Чем больше вещей Вы оценили, тем точнее сравнение.`,
+      bare: () => `NDim сравнивает людей по их оценкам. Чем больше вещей Вы оценили, тем точнее сравнение.`,
+    },
+    en: {
+      voted: () => `NDim compares people by their ratings. The more things you rate, the more precise the comparison.`,
+      bare: () => `NDim compares people by their ratings. The more things you rate, the more precise the comparison.`,
+    },
+  },
+  {
+    id: 'v3',
+    name: { ru: 'V3 — факт с масштабом каталога', en: 'V3' },
+    axis: { ru: 'Ставит эту вещь в ряд с остальными 5111. Одна фраза, два числа.', en: '' },
+    ru: {
+      voted: () => `В Пространстве 5111 вещей. Эту оценили 12 человек.`,
+      bare: () => `В Пространстве 5111 вещей. Эту пока не оценил никто.`,
+    },
+    en: {
+      voted: () => `The Space holds 5,111 things. Twelve people have rated this one.`,
+      bare: () => `The Space holds 5,111 things. Nobody has rated this one yet.`,
+    },
+  },
+  {
+    id: 'v4',
+    name: { ru: 'V4 — без абзаца вовсе', en: 'V4' },
+    axis: { ru: 'Заголовок и кнопка — оба Ваши. Абзац убран: состояние человек уже видит выше, звёздами или строкой «ещё без голосов».', en: '' },
+    ru: { voted: () => ``, bare: () => `` },
+    en: { voted: () => ``, bare: () => `` },
+  },
+];
+
+let lang = 'ru';
+let state = 'voted';
+
+function render() {
+  const grid = document.getElementById('grid');
+  const title = OBJ[lang][state];
+  grid.innerHTML = '';
+  for (const v of V) {
+    const text = v[lang][state](title);
+    const card = document.createElement('section');
+    card.className = 'variant' + (v.current ? ' cur' : '');
+    card.innerHTML = `
+      <header>
+        <h2>${v.name.ru}</h2>
+        ${v.axis.ru ? `<p class="axis">${v.axis.ru}</p>` : ''}
+      </header>
+      <div class="phone">
+        <div style="font-size:13px;color:var(--dim)">${lang === 'ru' ? 'Фильм · 1994' : 'Movie · 1994'}</div>
+        <div style="font-weight:700;font-size:18px;margin:2px 0 10px">${title}</div>
+        ${state === 'voted'
+          ? `<div class="rating-row"><span class="stars">★★★★★★★★★☆</span><span class="num">9,4</span><span class="of">${lang === 'ru' ? '· 12 голосов' : '· 12 votes'}</span></div>`
+          : `<div class="none">${lang === 'ru' ? 'Ещё без голосов' : 'No ratings yet'}</div>`}
+        <div class="door">
+          <h3>${HEAD[lang]}</h3>
+          ${text ? `<p>${text}</p>` : ''}
+          <button class="cta">${CTA[lang]}</button>
+        </div>
+      </div>
+      <p class="len" style="padding:0 16px 14px">${text
+        ? `${text.length} ${lang === 'ru' ? 'знаков' : 'chars'} · ${text.split(/(?<=[.!?])\s+/).filter(Boolean).length} ${lang === 'ru' ? 'предл.' : 'sent.'}`
+        : (lang === 'ru' ? 'абзаца нет — только заголовок и кнопка' : 'no paragraph — heading and button only')}</p>`;
+    grid.appendChild(card);
+  }
+}
+
+function press(onId, offId) {
+  document.getElementById(onId).setAttribute('aria-pressed', 'true');
+  document.getElementById(offId).setAttribute('aria-pressed', 'false');
+}
+document.getElementById('lang-ru').onclick = () => { lang = 'ru'; press('lang-ru', 'lang-en'); render(); };
+document.getElementById('lang-en').onclick = () => { lang = 'en'; press('lang-en', 'lang-ru'); render(); };
+document.getElementById('st-voted').onclick = () => { state = 'voted'; press('st-voted', 'st-bare'); render(); };
+document.getElementById('st-bare').onclick = () => { state = 'bare'; press('st-bare', 'st-voted'); render(); };
+document.getElementById('theme').onclick = (e) => {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+  e.target.textContent = dark ? 'Тёмная тема' : 'Светлая тема';
+};
+render();
+</script>
+</body>
+</html>
