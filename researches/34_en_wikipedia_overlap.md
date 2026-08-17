@@ -3,254 +3,114 @@
 > **Прибор:** `tools/measure-wikipedia-overlap.mjs` · **Порог:** дословный ряд от 10 слов ·
 > **Заказ владельца:** «пиши скрипт» (2026-08-16) — сверка машиной вместо чтения статей глазами.
 
-Записей в прогоне: **5111** · копий: **654** · перечней имён: **121** · подозрительных: **0** ·
-чистых: **4296** · 🔴 НЕ ПРОВЕРЕНО: **40**
+Записей в прогоне: **5111** · копий: **533** · перечней имён: **134** · подозрительных: **0** ·
+чистых: **4404** · 🔴 НЕ ПРОВЕРЕНО: **40**
 
 ⚠️ «Не проверено» — это НЕ «чисто»: статья не найдена либо сеть не ответила. Такие записи
 обязаны быть перепрогнаны, а не засчитаны (`EXP-0165`: «нет записи» — утверждение о поиске).
 
 | Запись | Статья | Вердикт | Ряд | Улика |
 |---|---|---|---|---|
-| `corrective-measures-akp4cezf` | Corrective Measures | copied | 125 | a new prisoner whose sole ability is heightened empathy navigating the treacherous environment of san tiburon diego must |
 | `300-pctinjpo` | 300 (film) | names | 91 | limited series of the same name by frank miller and lynn varley the film like its source material is a fictionalized ret |
-| `young-hearts-hvkeqz1e` | Young Hearts (2024 film) | copied | 76 | friends family and alexander to hide his truth consumed by loneliness and regret elias struggles with the weight of his  |
 | `dredd-9z4rmlfx` | Dredd | names | 67 | karl urban stars as judge dredd a law enforcer given the power of judge jury and executioner in a vast dystopic metropol |
-| `panda-plan-ms2bipfy` | Panda Plan | copied | 42 | 1 out of 5 stars calling it a tedious trudge through lazily choreographed fight sequences sluggish chases and torridly s |
+| `corrective-measures-akp4cezf` | Corrective Measures | copied | 50 | set in san tiburon the world s most dangerous maximum security prison designed to incarcerate supervillains and enhanced |
 | `the-terminator-isl2hxdu` | The Terminator | names | 41 | a 1984 american science fiction action film directed by james cameron written by cameron and gale anne hurd and produced |
-| `poyekhavshaya-dzy51gyd` | Poyekhavshaya | copied | 41 | to break away from her routine life seeking change she embarks on a cross country bicycle journey through russia accompa |
-| `ocean-s-eleven-1demfhid` | Ocean's Eleven | copied | 36 | a 2001 american heist comedy film directed by steven soderbergh from a screenplay by ted griffin the first installment i |
-| `agent-recon-azrwiv4t` | Agent Recon | copied | 36 | derek ting as jim yung marc singer as colonel green chuck norris as captain alastair sylvia kwan as tanya jason scott je |
-| `a-league-of-their-own-zhylxlgx` | A League of Their Own (1993 TV series) | copied | 36 | sam mcmurray as coach jimmy dugan carey lowell as dottie hinson christine elise as kit keller tracy nelson as evelyn gar |
-| `edge-of-tomorrow-gopt6dsd` | Edge of Tomorrow | copied | 34 | japanese light novel all you need is kill by hiroshi sakurazaka starring tom cruise and emily blunt the film takes place |
-| `the-matrix-resurrections-hrkil3vl` | The Matrix Resurrections | copied | 31 | distinguishing fantasy from reality a group of rebels with the help of a programmed version of morpheus free neo from a  |
-| `cowspiracy-the-sustainability-secret-5bwyv7cn` | Cowspiracy | copied | 30 | the audience choice award at the 2015 south african eco film festival and the best foreign film award at the 12th annual |
-| `exodus-gods-and-kings-v5jpjfxj` | Exodus: Gods and Kings | copied | 28 | by adam cooper bill collage jeffrey caine and steven zaillian the film stars christian bale joel edgerton john turturro  |
+| `panda-plan-ms2bipfy` | Panda Plan | copied | 37 | a charmless affair devoid of any purpose or entertainment value at one point a bad guy says what is jackie chan doing he |
 | `richard-jewell-z5movwfu` | Richard Jewell (film) | names | 27 | book the suspect an olympic bombing the fbi the media and richard jewell the man caught in the middle by kent alexander  |
+| `edge-of-tomorrow-gopt6dsd` | Edge of Tomorrow | copied | 26 | to join a landing operation against the aliens only to find himself experiencing a time loop as he tries to find a way t |
+| `poyekhavshaya-dzy51gyd` | Poyekhavshaya | copied | 26 | along the way she encounters new people makes friends and faces various challenges by the end of her journey anna gains  |
 | `north-kqve5zeq` | North (1994 film) | names | 26 | 1984 novel north the tale of a 9 year old boy who becomes a free agent and travels the world in search of the perfect pa |
 | `beating-hearts-2okuxqaf` | Beating Hearts | names | 25 | includes mallory wanecque malik frikah alain chabat benoît poelvoorde vincent lacoste jean pascal zadi élodie bouchez ka |
-| `the-rum-diary-9ekgkaaw` | The Rum Diary (film) | copied | 25 | a 2011 american comedy drama film written and directed by bruce robinson based on the novel of the same name by hunter s |
-| `like-a-dragon-pirate-yakuza-in-hawaii-cweewxel` | Like a Dragon: Pirate Yakuza in Hawaii | copied | 25 | it is a spin off of the like a dragon series and takes place six months after the events of like a dragon infinite wealt |
 | `road-house-sehaqkss` | Road House (2024 film) | names | 25 | daniela melchior billy magnussen jessica williams joaquim de almeida jd pardo austin post and conor mcgregor road house  |
 | `expend4bles-ui7inbwz` | Expend4bles | names | 25 | an ensemble cast including jason statham sylvester stallone curtis 50 cent jackson megan fox dolph lundgren tony jaa iko |
-| `live-by-night-2omw4akt` | Live by Night (film) | copied | 24 | film written directed produced by and starring ben affleck based on the 2012 novel of the same name by dennis lehane the |
-| `1923-fy5jxmce` | 1923 (TV series) | copied | 24 | various hardships including prohibition drought and the early stages of the great depression which affected montana long |
-| `mark-felt-the-man-who-brought-down-the-white-house-u2fassdl` | Mark Felt: The Man Who Brought Down the White House | copied | 24 | written with john o connor the film depicts how felt became the anonymous source nicknamed deep throat for reporters bob |
-| `lady-godiva-of-coventry-e5y9difn` | Lady Godiva of Coventry | copied | 24 | maureen o hara as lady godiva george nader as lord leofric victor mclaglen as grimald rex reason as harold torin thatche |
 | `asteroid-city-lcgwdeqf` | Asteroid City | names | 24 | the ensemble cast includes jason schwartzman scarlett johansson tom hanks jeffrey wright tilda swinton bryan cranston ed |
-| `interstellar-wpykofib` | Interstellar (film) | copied | 24 | set in a dystopian future where earth is suffering from catastrophic blight and famine the film follows a group of astro |
 | `borderlands-4elq9i6u` | Borderlands (film) | names | 23 | borderlands is a 2024 american science fiction action comedy film directed and co written by eli roth based on the video |
-| `total-recall-d33c8h2x` | Total Recall (1990 film) | copied | 23 | a 1990 american science fiction action film directed by paul verhoeven with a screenplay by ronald shusett dan o bannon  |
 | `sausage-party-gaqfux4i` | Sausage Party | names | 23 | jonah hill bill hader michael cera james franco danny mcbride craig robinson paul rudd nick kroll david krumholtz edward |
-| `modern-talking-heq01rud` | Modern Talking | copied | 23 | you can win if you want cheri cheri lady brother louie atlantis is calling s o s for love and geronimo s cadillac |
-| `fly-me-to-the-moon-o3zf3unx` | Fly Me to the Moon (2024 film) | copied | 23 | planned for a streaming release on apple tv it was moved to a theatrical release after positive early test screenings th |
-| `bruno-the-kid-qfrbfhus` | Bruno the Kid | copied | 23 | such as jarlsburg voiced by tony jay and harris voiced by mark hamill are also unaware that globe does not know bruno s |
 | `mika-u8kkmbyt` | Mika (singer) | names | 23 | the boy who knew too much 2009 the origin of love 2012 no place in heaven 2015 my name is michael holbrook 2019 |
-| `maria-zvsmtrvz` | Maria (2024 film) | copied | 23 | the film premiered at the 81st venice international film festival on august 29 2024 where it competed for the golden lio |
-| `the-verdict-2otkbpit` | The Verdict | copied | 22 | directed by sidney lumet and written by david mamet adapted from barry reed s 1980 novel of the same name the film |
-| `inception-rqi77nyu` | Inception | copied | 22 | the film stars leonardo dicaprio as a professional thief who steals information by infiltrating the subconscious of his  |
-| `billie-eilish-col96cs8` | Billie Eilish | copied | 22 | written and produced by her brother finneas o connell in 2017 she released her debut ep don t smile at me which |
-| `suburbicon-cvncohp4` | Suburbicon | copied | 22 | a 2017 american black comedy crime film directed by george clooney and co written by the coen brothers clooney and grant |
+| `inception-rqi77nyu` | Inception | names | 22 | cast includes ken watanabe joseph gordon levitt marion cotillard elliot page tom hardy cillian murphy tom berenger dilee |
 | `the-monuments-men-enfmdfkm` | The Monuments Men | names | 22 | book the monuments men allied heroes nazi thieves and the greatest treasure hunt in history by robert m edsel and bret w |
-| `the-mule-fazibzfz` | The Mule (2018 film) | copied | 22 | story of leo sharp a world war ii veteran in his 80s who became a drug courier for the sinaloa cartel the |
-| `the-last-time-i-committed-suicide-l8t9naxj` | The Last Time I Committed Suicide | copied | 22 | a 1997 american drama film directed by stephen t kay based on a 1950 letter written by neal cassady to jack kerouac |
 | `home-and-away-sw3e7hkj` | Home and Away | names | 22 | children frank morgan alex papps carly morris sharyn hodgson lynn davenport helena bozich steven matheson adam willits a |
-| `taken-23hrkovo` | Taken (film) | copied | 21 | a 2008 english language french action thriller film directed by pierre morel and written by luc besson and robert mark k |
-| `call-of-duty-black-ops-6-3jvpoqyb` | Call of Duty: Black Ops 6 | copied | 21 | the game was released on october 25 2024 for playstation 4 playstation 5 windows xbox one and xbox series x s |
 | `i-m-not-there-dvv9lsth` | I'm Not There | names | 21 | six actors depicting different facets of dylan s public personas christian bale cate blanchett marcus carl franklin rich |
 | `house-of-lies-kawqcpcw` | House of Lies | names | 21 | based on martin kihn s book house of lies how management consultants steal your watch and then tell you the time |
-| `savage-salvation-nog7qt6a` | Savage Salvation | copied | 21 | dale dickey as greta swen temmel as elvis kincaid noel gugliemi as silas jon orsini as skeeter clay wilcox as darius |
-| `menace-ii-society-wiprjrzd` | Menace II Society | copied | 20 | in their directorial debut set in the watts and crenshaw neighborhoods of los angeles the film follows the life of |
-| `fortress-afqpzdwl` | Fortress (2021 film) | copied | 20 | directed by james cullen bressack and written by alan horsnail based on a story by emile hirsch and randall emmett |
+| `the-rum-diary-9ekgkaaw` | The Rum Diary (film) | copied | 20 | aaron eckhart michael rispoli amber heard richard jenkins and giovanni ribisi filming began in puerto rico in march 2009 |
 | `smile-b2itxznk` | Smile (2022 film) | names | 20 | smile is a 2022 american supernatural psychological horror film written and directed by parker finn in his feature direc |
-| `the-firm-i34i29rl` | The Firm (1989 film) | copied | 20 | 1989 british made for television drama film directed by alan clarke and written by al hunter ashton for the bbc |
-| `gold-nn2lxcmc` | Gold (2016 film) | copied | 20 | a 2016 american crime drama film directed by stephen gaghan and written by patrick massett and john zinman the film |
 | `public-enemies-tf0kys7c` | Public Enemies (2009 film) | names | 20 | john red hamilton jason clarke homer van meter stephen dorff harry pierpont david wenham and baby face nelson stephen gr |
-| `i-love-you-to-death-0gpqvylf` | I Love You to Death | copied | 19 | kevin kline tracey ullman joan plowright river phoenix william hurt and keanu reeves the screenplay by john kostmayer is |
 | `hellboy-0wagu8ty` | Hellboy (2019 film) | names | 19 | inspiration from the comic books darkness calls the wild hunt the storm and the fury and hellboy in mexico |
+| `ocean-s-eleven-1demfhid` | Ocean's Eleven | names | 19 | roberts ocean s eleven was theatrically released in the united states on december 7 2001 by warner bros pictures |
 | `ensign-pulver-66fhurkd` | Ensign Pulver | names | 19 | millie perkins larry hagman kay medford peter marshall jack nicholson richard gautier george lindsey james farentino and |
 | `horizon-an-american-saga-chapter-1-8trdnczb` | Horizon: An American Saga – Chapter 1 | names | 19 | horizon an american saga chapter 1 is a 2024 american epic western film directed and produced by kevin costner |
-| `the-call-of-the-wild-auj9fxva` | The Call of the Wild (2020 film) | copied | 19 | is stolen from his home in california and sent to the yukon where he befriends an old outdoorsman and |
-| `shrinking-l05rkoox` | Shrinking (TV series) | copied | 19 | outstanding lead actor in a comedy series for segel and outstanding supporting actress in a comedy series for williams |
-| `miss-congeniality-noxu2dyw` | Miss Congeniality (film) | copied | 19 | a 2000 american action comedy film directed by donald petrie written by marc lawrence katie ford and caryn lucas |
-| `maxxxine-oy3lsin1` | MaXXXine | copied | 19 | at the tcl chinese theatre in los angeles on june 24 2024 and was released in the united states |
-| `tape-cwvzn6cp` | Tape (2001 film) | copied | 19 | drama film directed by richard linklater and written by stephen belber based on his play of the same name |
-| `deep-impact-krb2wlyw` | Deep Impact (film) | copied | 19 | a 1998 american science fiction disaster film directed by mimi leder written by bruce joel rubin and michael tolkin |
-| `venus-vacation-prism-dead-or-alive-xtreme-neyr3n7z` | Venus Vacation Prism: Dead or Alive Xtreme | copied | 19 | on march 27 2025 for playstation 4 playstation 5 and microsoft windows via steam and dmm games similar to |
-| `alpha-dog-4xiylrje` | Alpha Dog | copied | 18 | sundance film festival on january 27 2006 and was released in the united states on january 12 2007 |
+| `fly-me-to-the-moon-o3zf3unx` | Fly Me to the Moon (2024 film) | copied | 19 | stars scarlett johansson as kelly jones a marketing specialist and channing tatum as cole davis a nasa launch director |
 | `the-big-year-73pehhqp` | The Big Year | names | 18 | non fiction book the big year a tale of man nature and fowl obsession by mark obmascik the |
 | `the-15-17-to-paris-aswfgt2s` | The 15:17 to Paris | names | 18 | autobiography the 15 17 to paris the true story of a terrorist a train and three american heroes |
-| `indiana-jones-and-the-great-circle-agqyz6rl` | Indiana Jones and the Great Circle | copied | 18 | between the events of raiders of the lost ark 1981 and indiana jones and the last crusade 1989 |
-| `the-king-of-comedy-ehwbj2eq` | The King of Comedy (film) | copied | 18 | a 1982 american satirical black comedy film directed by martin scorsese and written by paul d zimmerman the |
-| `the-unbearable-weight-of-massive-talent-esrlfkq9` | The Unbearable Weight of Massive Talent | copied | 18 | a 2022 american action comedy film directed by tom gormican who co wrote the screenplay with kevin etten |
-| `enter-the-matrix-fn157kf3` | Enter the Matrix | copied | 18 | of the film the matrix reloaded and features over an hour of original footage written and directed by |
-| `black-bird-jdi17u8i` | Black Bird (miniseries) | copied | 18 | autobiographical novel in with the devil a fallen hero a serial killer and a dangerous bargain for redemption |
 | `love-in-a-cold-climate-k1o47490` | Love in a Cold Climate (1980 TV series) | names | 18 | novels the pursuit of love 1945 and love in a cold climate 1949 set between 1924 and 1940 |
 | `bad-boys-pxfe4p6s` | Bad Boys (1995 film) | names | 18 | three sequels bad boys ii 2003 bad boys for life 2020 and bad boys ride or die 2024 |
-| `surf-s-up-2-wavemania-s7fetvfb` | Surf's Up 2: WaveMania | copied | 18 | john cena as j c the undertaker as the undertaker triple h as hunter saraya bevis as paige |
 | `eagles-vx360ise` | Eagles (band) | names | 18 | glenn frey guitar vocals don henley drums vocals bernie leadon guitar vocals and randy meisner bass guitar vocals |
-| `foyle-s-war-ox93icyl` | Foyle's War | copied | 18 | he is assisted by his driver samantha sam stewart honeysuckle weeks and detective sergeant paul milner anthony howell |
-| `the-wrecking-crew-vdsqwizz` | The Wrecking Crew (1968 film) | copied | 18 | to collapse the world economy by stealing a billion dollars in gold helm travels to copenhagen where he |
-| `the-black-mamba-xiyqmnla` | The Black Mamba (film) | copied | 18 | directed by robert rodriguez the film was part of a promotional campaign for the nike air kobe zoom |
-| `bi-rdman-or-the-unexpected-virtue-of-ignorance-zxbqycqy` | Birdman (film) | copied | 18 | a broadway adaptation of raymond carver s short story what we talk about when we talk about love |
-| `gonjiam-haunted-asylum-zsvnktnh` | Gonjiam: Haunted Asylum | copied | 18 | three women ah yeon charlotte and ji hyun and three men sung hoon seung wook and je yoon |
 | `the-last-duel-3llnswew` | The Last Duel (2021 film) | names | 17 | book the last duel a true story of crime scandal and trial by combat in medieval france |
 | `black-mass-5ikljygy` | Black Mass (film) | names | 17 | book black mass the true story of an unholy alliance between the fbi and the irish mob |
-| `the-portable-door-cr1sqszn` | The Portable Door | copied | 17 | miranda otto as countess judy rachel house as nienke van spee jessica de gouw as rosie tanner |
-| `witness-hnph8hdk` | Witness (1985 film) | copied | 17 | nominations including best picture and best actor for ford winning best original screenplay and best film editing |
-| `john-wick-chapter-3-parabellum-kqswwril` | John Wick: Chapter 3 – Parabellum | copied | 17 | halle berry laurence fishburne mark dacascos asia kate dillon lance reddick anjelica huston and ian mcshane the |
-| `the-presidio-okdz5dqa` | The Presidio (film) | copied | 17 | is shot dead while investigating a break in and two san francisco police department officers are killed |
-| `the-insider-odqwyebl` | The Insider (film) | copied | 17 | based on marie brenner s 1996 vanity fair article the man who knew too much the film |
 | `super-mario-maker-2-s03gtl0r` | Super Mario Maker 2 | names | 17 | including super mario bros super mario bros 3 super mario world new super mario bros u and |
-| `where-d-you-go-bernadette-sbkyasox` | Where'd You Go, Bernadette (film) | copied | 17 | bee requests a family trip to antarctica as a reward for good grades to which her parents |
 | `abigail-xpvrhxp9` | Abigail (2024 film) | names | 17 | abigail is a 2024 american vampire horror comedy film directed by matt bettinelli olpin and tyler gillett |
-| `critters-attack-zgjzsbbu` | Critters Attack! | copied | 17 | tashiana washington as drea dee wallace as aunt dee jaeden noel as phillip jack fulton as jake |
-| `london-has-fallen-at1pggl8` | London Has Fallen | copied | 17 | directed by babak najafi and written by creighton rothenberger katrin benedikt chad st john and christian gudegast |
-| `william-shakespeare-s-julius-caesar-cuyt86se` | William Shakespeare's Julius Caesar | copied | 17 | academy awards including best picture and best actor for brando winning best art direction black and white |
-| `shaft-g3rjnnid` | Shaft (2000 film) | copied | 17 | the son of a wealthy real estate tycoon after noticing blood on him wade claims self defense |
-| `t-a-t-u-ifea2ew1` | T.A.T.u. | copied | 17 | in europe and became the first album by a foreign group to reach number one in japan |
-| `john-wick-chapter-2-iv7cidvk` | John Wick: Chapter 2 | copied | 17 | ruby rose lance reddick peter stormare bridget moynahan franco nero john leguizamo and ian mcshane the film |
+| `venus-vacation-prism-dead-or-alive-xtreme-neyr3n7z` | Venus Vacation Prism: Dead or Alive Xtreme | copied | 17 | any time during character episodes by sharing photos of the participants in game a popularity gauge increases |
 | `knox-goes-away-2iz7rdgv` | Knox Goes Away | names | 16 | suzy nakamura joanna kulig ray mckinnon john hoogenakker lela loren marcia gay harden and al pacino |
-| `365-days-3bkcgaik` | 365 Days (2020 film) | copied | 16 | based on the first novel of a trilogy by blanka lipińska the plot follows a young |
-| `elemental-6ai25uhc` | Elemental (2023 film) | copied | 16 | in the united states on june 16 2023 in reald 3d 4dx and dolby cinema formats |
-| `the-f-word-8w8nplk9` | The F Word (2013 film) | copied | 16 | by elan mastai based on the play toothpaste and cigars by tj dawe and michael rinaldi |
-| `lee-9i4noeuz` | Lee (2023 film) | copied | 16 | a 2023 british biographical war drama film directed by ellen kuras in her feature directorial debut |
-| `the-orville-aubm5oiw` | The Orville | copied | 16 | an american science fiction comedy drama television series created by seth macfarlane who also stars as |
-| `me-before-you-bfgn47ue` | Me Before You | copied | 16 | locations across the united kingdom including pembroke castle in wales and chenies manor house in buckinghamshire |
-| `28-days-later-dgj0h0iz` | 28 Days Later | copied | 16 | a 2002 british post apocalyptic horror film directed by danny boyle and written by alex garland |
-| `big-eyes-fosgrijz` | Big Eyes | copied | 16 | 2014 american biographical drama film directed by tim burton written by scott alexander and larry karaszewski |
+| `alpha-dog-4xiylrje` | Alpha Dog | copied | 16 | is based on the true story of the kidnapping and murder of nicholas markowitz in 2000 |
 | `love-in-a-cold-climate-gwsrdnje` | Love in a Cold Climate (2001 TV series) | names | 16 | nancy mitford s novels the pursuit of love 1945 and love in a cold climate 1949 |
-| `the-alto-knights-gwwupubr` | The Alto Knights | copied | 16 | directed by barry levinson and written by nicholas pileggi the film stars robert de niro in |
-| `jackie-brown-jdcosgrq` | Jackie Brown | copied | 16 | pays homage to 1970s blaxploitation films particularly coffy and foxy brown both of which also starred |
+| `young-hearts-hvkeqz1e` | Young Hearts (2024 film) | copied | 16 | he was in love with a boy and asks elias if he has experienced true love |
+| `black-bird-jdi17u8i` | Black Bird (miniseries) | copied | 16 | in with the devil a fallen hero a serial killer and a dangerous bargain for redemption |
 | `what-just-happened-jdvtdsor` | What Just Happened (2008 film) | names | 16 | based on the 2002 book what just happened bitter hollywood tales from the front line by |
-| `educating-rita-jehorbdr` | Educating Rita (film) | copied | 16 | directed by lewis gilbert with a screenplay by willy russell based on his 1980 stage play |
-| `ship-to-shore-kzuchves` | Ship to Shore (TV series) | copied | 16 | on ytv in canada and briefly on nickelodeon in the united states and the united kingdom |
 | `the-good-shepherd-mlzfavde` | The Good Shepherd (film) | names | 16 | the good shepherd is a 2006 american spy film produced and directed by robert de niro |
-| `the-holdovers-nqt68fiz` | The Holdovers | copied | 16 | films of 2023 by the national board of review and the american film institute and received |
-| `the-pacific-oem0la5w` | The Pacific (miniseries) | copied | 16 | marines robert leckie james badge dale eugene sledge joseph mazzello and john basilone jon seda who |
-| `path-of-the-panther-rmqogvlr` | Path of the Panther | copied | 16 | the florida wildlife corridor a network of over 18 million acres of protected and private lands |
+| `maxxxine-oy3lsin1` | MaXXXine | names | 16 | elizabeth debicki moses sumney michelle monaghan bobby cannavale halsey lily collins giancarlo esposito and kevin bacon |
 | `george-michael-rovyesd3` | George Michael | names | 16 | two grammy awards three brit awards twelve billboard music awards and four mtv video music awards |
-| `critters-tnhj6ucd` | Critters (film) | copied | 16 | a 1986 american science fiction comedy horror film directed by stephen herek in his directorial debut |
-| `the-panic-in-needle-park-zckrdtyx` | The Panic in Needle Park | copied | 16 | pacino a young addict and small time hustler and helen kitty winn a restless woman who |
+| `billie-eilish-col96cs8` | Billie Eilish | copied | 16 | best new artist record of the year song of the year and album of the year |
 | `smile-2-e8jmseqh` | Smile 2 | names | 16 | smile 2 is a 2024 american supernatural psychological horror film written and directed by parker finn |
-| `the-replacements-htroc9z1` | The Replacements (film) | copied | 16 | a players strike with four games left in the season washington sentinels owner edward o neil |
-| `10-cloverfield-lane-js0baimt` | 10 Cloverfield Lane | copied | 16 | a 2016 american science fiction horror thriller film directed by dan trachtenberg in his directorial debut |
-| `king-richard-lllvnrfw` | King Richard (film) | copied | 16 | 2021 american biographical sports drama film directed by reinaldo marcus green and written by zach baylin |
+| `john-wick-chapter-2-iv7cidvk` | John Wick: Chapter 2 | copied | 16 | 2017 american neo noir action thriller film directed by chad stahelski and written by derek kolstad |
 | `super-mario-maker-lwa1rcgv` | Super Mario Maker | names | 16 | super mario bros super mario bros 3 super mario world and new super mario bros u |
 | `three-thousand-years-of-longing-os0ttavu` | Three Thousand Years of Longing | copied | 16 | is based on a s byatt s short story the djinn in the nightingale s eye |
 | `carlito-s-way-u3gb1s4m` | Carlito's Way | names | 16 | based on the novels carlito s way 1975 and after hours 1979 by judge edwin torres |
-| `ladybug-cat-noir-the-movie-xo7jgmbv` | Ladybug & Cat Noir: The Movie | copied | 16 | superheroes ladybug and cat noir respectively to protect the city from supervillains led by hawk moth |
-| `donnie-darko-1hqyrh7o` | Donnie Darko | copied | 15 | that the world will end in 28 days 6 hours 42 minutes and 12 seconds |
 | `the-doors-9aufv7k2` | The Doors | names | 15 | strange days 1967 waiting for the sun 1968 the soft parade 1969 morrison hotel 1970 |
-| `the-instigators-9mhimirc` | The Instigators | copied | 15 | comedy film directed by doug liman and written by chuck maclean and casey affleck the |
 | `red-riding-hood-dvfcxz3c` | Red Riding Hood (2011 film) | names | 15 | red riding hood is a 2011 american romantic fantasy horror film directed by catherine hardwicke |
-| `avatar-exgxcox6` | Avatar (franchise) | copied | 15 | pandora a lush habitable moon of a gas giant in the alpha centauri star system |
 | `total-eclipse-fshpd7vd` | Total Eclipse (film) | names | 15 | relationship between 19th century french poets arthur rimbaud leonardo dicaprio and paul verlaine david thewlis |
-| `freelancers-hqcm2u97` | Freelancers (film) | copied | 15 | he is taken under the wing of his father s former partner captain joe sarcone |
-| `terms-of-endearment-jftfovcb` | Terms of Endearment | copied | 15 | directed written and produced by james l brooks adapted from larry mcmurtry s 1975 novel |
 | `super-size-me-kbjaa2ii` | Super Size Me | names | 15 | super size me is a 2004 american documentary film directed by and starring morgan spurlock |
-| `hardball-lydbnyat` | Hardball (film) | copied | 15 | who listens to the notorious b i g s big poppa to pitch well and |
-| `g-i-joe-retaliation-o4zen6mu` | G.I. Joe: Retaliation | copied | 15 | lee byung hun adrianne palicki ray park jonathan pryce ray stevenson and channing tatum the |
-| `the-whale-oibsclhx` | The Whale (2022 film) | copied | 15 | drama film directed by darren aronofsky and written by samuel d hunter based on his |
-| `terminator-2-judgment-day-pge49jia` | Terminator 2: Judgment Day | copied | 15 | a 1991 american science fiction action film directed by james cameron who co wrote the |
-| `exo-pshzrvoq` | Exo | copied | 15 | consists of nine members xiumin suho lay baekhyun chen chanyeol d o kai and sehun |
+| `terminator-2-judgment-day-pge49jia` | Terminator 2: Judgment Day | copied | 15 | john connor when he is a child the resistance sends back a less advanced reprogrammed |
 | `red-dragon-pzgja15q` | Red Dragon (novel) | names | 15 | william blake s painting the great red dragon and the woman clothed with the sun |
-| `the-polar-express-urjgpkvp` | The Polar Express (film) | copied | 15 | based on the 1985 children s book of the same name by chris van allsburg |
-| `american-playhouse-ciowhhyh` | American Playhouse | copied | 15 | the shady hill kidnapping written and narrated by john cheever and directed by paul bogart |
-| `kingdom-of-the-planet-of-the-apes-ctacovgi` | Kingdom of the Planet of the Apes | copied | 15 | 2024 american science fiction action film directed by wes ball and written by josh friedman |
 | `look-who-s-talking-dqlsieit` | Look Who's Talking | names | 15 | two sequels look who s talking too 1990 and look who s talking now 1993 |
-| `avowed-fc52j88x` | Avowed | copied | 15 | the role of an envoy from the aedyr empire tasked with investigating a mysterious plague |
+| `shaft-g3rjnnid` | Shaft (2000 film) | names | 15 | vanessa williams jeffrey wright christian bale dan hedaya busta rhymes toni collette and richard roundtree |
 | `deadpool-2-kea3joiu` | Deadpool 2 | names | 15 | sequel to deadpool 2016 and the eleventh installment in the x men film series the |
-| `carnal-knowledge-ns2whdt0` | Carnal Knowledge (film) | copied | 15 | a 1971 american comedy drama film directed by mike nichols and written by jules feiffer |
 | `strike-o1jms58b` | Strike (TV series) | names | 15 | the cormoran strike novel series written by j k rowling under the pseudonym robert galbraith |
-| `backdraft-o5bccvq2` | Backdraft (film) | copied | 15 | received three academy award nominations for best sound best sound editing and best visual effects |
-| `hi-mom-sbcirycx` | Hi, Mom (2021 film) | copied | 15 | the highest grossing film by a solo female director until barbie in 2023 the film |
-| `legend-tgvcrpzw` | Legend (2015 film) | copied | 15 | book the profession of violence the rise and fall of the kray twins the film |
-| `machete-kills-undzgezh` | Machete Kills | copied | 15 | 2013 american action exploitation film directed by robert rodriguez with a screenplay by kyle ward |
 | `radioactive-xouqkbqy` | Radioactive (film) | names | 15 | the 2010 graphic novel radioactive marie pierre curie a tale of love and fallout by |
-| `viva-zapata-ytu2vgxf` | Viva Zapata! | copied | 15 | and was nominated for five academy awards with anthony quinn winning for best supporting actor |
-| `prince-of-the-city-zpvzcssg` | Prince of the City | copied | 15 | one of his partners commits suicide during interrogation and his cousin in the mafia who |
-| `look-who-s-talking-too-1qfgp1f8` | Look Who's Talking Too | copied | 14 | sequel to look who s talking and the second installment in the franchise the |
-| `more-american-graffiti-25jgey5b` | More American Graffiti | copied | 14 | 1979 american coming of age comedy film written and directed by bill l norton |
-| `the-platform-3hmkyofi` | The Platform (film) | copied | 14 | directed by galder gaztelu urrutia the film is set in a large industrial tower |
-| `lightyear-4aoj6de6` | Lightyear (film) | copied | 14 | a 2022 american animated science fiction action adventure film produced by pixar animation studios |
-| `the-bad-news-bears-8ffoao97` | The Bad News Bears | copied | 14 | 1976 american sports comedy film directed by michael ritchie and written by bill lancaster |
-| `the-tearsmith-8lnnd6wf` | The Tearsmith | copied | 14 | to the oppressive sunnycreek orphanage where she befriends a girl named adeline years later |
-| `the-local-stigmatic-abdvbjfr` | The Local Stigmatic | copied | 14 | at the museum of modern art in new york city in march 1990 but |
-| `next-goal-wins-b2d5ftqw` | Next Goal Wins (2023 film) | copied | 14 | premiered at the toronto international film festival on september 10 2023 and was released |
+| `the-tearsmith-8lnnd6wf` | The Tearsmith | copied | 14 | their new home rigel is hostile toward nica flashbacks reveal that at sunnycreek all |
 | `house-of-gucci-b9pl0jlh` | House of Gucci | names | 14 | book the house of gucci a sensational story of murder madness glamour and greed |
-| `reflections-in-a-golden-eye-caozvr51` | Reflections in a Golden Eye (film) | copied | 14 | a u s army post in the south in the late 1940s the film |
-| `the-gangster-the-cop-the-devil-dvjqemsz` | The Gangster, the Cop, the Devil | copied | 14 | out of competition in the midnight screenings section at the 2019 cannes film festival |
-| `once-upon-a-time-in-venice-ev0spaz2` | Once Upon a Time in Venice | copied | 14 | a 2017 american crime comedy film directed by mark cullen in his directorial debut |
 | `american-made-eyqfczh0` | American Made (film) | names | 14 | domhnall gleeson sarah wright alejandro edda mauricio mejía caleb landry jones and jesse plemons |
 | `tom-and-jerry-the-movie-ghe8pwti` | Tom and Jerry: The Movie | copied | 14 | based on the characters tom and jerry created by william hanna and joseph barbera |
-| `predestination-h107qjjy` | Predestination (film) | copied | 14 | is based on the 1959 short story all you zombies by robert a heinlein |
-| `field-of-dreams-m7mhivau` | Field of Dreams | copied | 14 | directed by phil alden robinson and based on canadian novelist w p kinsella s |
-| `dark-waters-mgiqjwbh` | Dark Waters (2019 film) | copied | 14 | directed by todd haynes and written by mario correa and matthew michael carnahan the |
-| `scream-oasjb6wz` | Scream (1996 film) | copied | 14 | a 1996 american slasher film directed by wes craven and written by kevin williamson |
-| `sabrina-ogy5kmt7` | Sabrina (1995 film) | copied | 14 | is a remake of billy wilder s 1954 film of the same name which |
-| `sea-hunt-oopamqqo` | Sea Hunt | copied | 14 | an american action adventure television series that aired in syndication from 1958 to 1961 |
-| `gotham-city-impostors-p4crtws0` | Gotham City Impostors | copied | 14 | developed by monolith productions and published by warner bros interactive entertainment set in the |
 | `the-assassination-of-jesse-james-by-the-coward-robert-ford-qriwrju4` | The Assassination of Jesse James by the Coward Robert Ford | names | 14 | sam shepard mary louise parker paul schneider jeremy renner zooey deschanel and sam rockwell |
-| `the-patriot-r2jlbu1l` | The Patriot (2000 film) | copied | 14 | was nominated for three academy awards best cinematography best original score and best sound |
 | `stray-kids-u2todfrw` | Stray Kids | names | 14 | eight members bang chan lee know changbin hyunjin han felix seungmin and i n |
-| `beetlejuice-beetlejuice-ughvo4d3` | Beetlejuice Beetlejuice | copied | 14 | the film stars michael keaton winona ryder and catherine o hara reprising their roles |
 | `stevie-wonder-undmnyng` | Stevie Wonder | names | 14 | innervisions 1973 fulfillingness first finale 1974 and songs in the key of life 1976 |
-| `rising-son-vbgbaxvr` | Rising Son (film) | copied | 14 | his younger brother charlie matt damon to break free from gus s control and |
-| `2-guns-vjzjobcm` | 2 Guns | copied | 14 | by steven grant and mateus santolouco published in 2007 by boom studios the film |
-| `wallace-gromit-vengeance-most-fowl-wh6howlq` | Wallace & Gromit: Vengeance Most Fowl | copied | 14 | and the second feature length film following the curse of the were rabbit 2005 |
 | `marilyn-manson-xpnxwyts` | Marilyn Manson (band) | copied | 14 | mechanical animals 1998 holy wood in the shadow of the valley of death 2000 |
 | `the-jackal-xyvoy86j` | The Jackal (1997 film) | names | 14 | a loose remake of the 1973 film the day of the jackal which was |
-| `baldur-s-gate-y8xzro8n` | Baldur's Gate (video game) | copied | 14 | a 1998 role playing video game developed by bioware and published by interplay entertainment |
-| `analyze-that-czoeg15h` | Analyze That | copied | 14 | a sequel to the 1999 film analyze this the film stars robert de niro |
 | `supergirl-ec8xni75` | Supergirl (1984 film) | names | 14 | faye dunaway hart bochner peter cook mia farrow brenda vaccaro and peter o toole |
-| `collateral-beauty-eovu8irb` | Collateral Beauty | copied | 14 | 2016 american fantasy drama film directed by david frankel and written by allan loeb |
 | `blue-moon-j8xthckn` | Blue Moon (2025 film) | names | 14 | blue moon premiered at the 75th berlin international film festival on february 18 2025 |
-| `what-the-health-niw8ad19` | What the Health | copied | 14 | between the meat dairy and pharmaceutical industries as well as various health organizations the |
-| `what-we-did-on-our-holiday-nlv0fpss` | What We Did on Our Holiday | copied | 14 | their three children lottie emilia jones mickey bobby smalldridge and jess harriet turnbull to |
-| `revolution-npwalzm2` | Revolution (1985 film) | copied | 14 | enlists in the continental army as a drummer boy against his father s wishes |
-| `arizona-dream-ofgeo2gl` | Arizona Dream | copied | 14 | won the silver bear special jury prize at the 43rd berlin international film festival |
-| `casino-royale-pugpgppw` | Casino Royale (2006 film) | copied | 14 | the third screen adaptation of ian fleming s 1953 novel of the same name |
-| `return-to-sender-qikwkys5` | Return to Sender (2015 film) | copied | 14 | her friend sets her up on a blind date with a man named kevin |
-| `baldur-s-gate-ii-shadows-of-amn-t6mrzj14` | Baldur's Gate II: Shadows of Amn | copied | 14 | a 2000 role playing video game developed by bioware and published by interplay entertainment |
-| `the-seed-of-the-sacred-fig-tmqbe9kz` | The Seed of the Sacred Fig | copied | 14 | the 77th cannes film festival where it was nominated for the palme d or |
-| `that-70s-show-ttdr0lao` | That '70s Show | copied | 14 | living in the fictional town of point place wisconsin from 1976 to 1979 the |
-| `the-promise-vzesn4yr` | The Promise (2016 film) | copied | 14 | the film received mixed reviews from critics and was a box office bomb grossing |
+| `foyle-s-war-ox93icyl` | Foyle's War | copied | 14 | his driver samantha sam stewart honeysuckle weeks and detective sergeant paul milner anthony howell |
+| `interstellar-wpykofib` | Interstellar (film) | copied | 14 | film directed by christopher nolan who co wrote the screenplay with his brother jonathan |
 | `hangin-in-xnlknfrj` | Hangin' In | names | 14 | many young canadian actors including eric mccormack keanu reeves jessica steen and mark humphrey |
-| `tom-and-jerry-the-fast-and-the-furry-yiyglgut` | Tom and Jerry: The Fast and the Furry | copied | 14 | dog squirty dark lord and florist gorthan superstar steed dirkly single mother of four |
-| `multiversus-ylkrr1au` | MultiVersus | copied | 14 | fighting game developed by player first games and published by warner bros games the |
 | `red-hot-chili-peppers-yoemynd8` | Red Hot Chili Peppers | names | 14 | red hot chili peppers were inducted into the rock and roll hall of fame |
-| `brazil-zqtbk4mg` | Brazil (1985 film) | copied | 14 | dystopian science fiction black comedy film directed by terry gilliam and written by gilliam |
-| `big-0ti8hlzy` | Big (film) | copied | 13 | the first feature film directed by a woman to gross over 100 million |
-| `on-a-clear-day-you-can-see-forever-14zttf9h` | On a Clear Day You Can See Forever (film) | copied | 13 | is the reincarnation of lady melinda winifred waine tentrees a seductive 19th century |
-| `law-order-toronto-criminal-intent-22tfw4sy` | Law & Order Toronto: Criminal Intent | copied | 13 | the series was renewed for a second and third season in june 2024 |
-| `slacker-uprising-captain-mike-across-america-3lnoy6sm` | Captain Mike Across America | copied | 13 | rage against the machine r e m steve earle and viggo mortensen the |
-| `ozark-45f6ets0` | Ozark (TV series) | copied | 13 | an american crime drama television series created by bill dubuque and mark williams |
-| `sin-city-a-dame-to-kill-for-4ht1mlp1` | Sin City: A Dame to Kill For | copied | 13 | to the 2005 film sin city directed by robert rodriguez and frank miller |
-| `barney-s-version-5pdgfyci` | Barney's Version (film) | copied | 13 | golden globe award for best actor in a motion picture musical or comedy |
-| `insomnia-5ul3dkfi` | Insomnia (2002 film) | copied | 13 | is a remake of the 1997 norwegian film of the same name the |
-| `glengarry-glen-ross-69s1ndrq` | Glengarry Glen Ross (film) | copied | 13 | 1992 american drama film directed by james foley and written by david mamet |
-| `perfect-days-6ihwn7fo` | Perfect Days | copied | 13 | takuma takasaki a co production between japan and germany the film follows the |
-| `the-legend-of-heroes-trails-through-daybreak-ii-7ivg5mgz` | The Legend of Heroes: Trails Through Daybreak II | copied | 13 | on february 14 2025 for playstation 4 playstation 5 nintendo switch and windows |
-| `the-creature-walks-among-us-85ljj2xh` | The Creature Walks Among Us | copied | 13 | the third and final installment of the creature from the black lagoon trilogy |
-| `invictus-8zwcdc1k` | Invictus (film) | copied | 13 | book playing the enemy nelson mandela and the game that made a nation |
-| `cowboys-aliens-aborocpp` | Cowboys & Aliens | copied | 13 | graphic novel of the same name created by scott mitchell rosenberg set in |
+| `maria-zvsmtrvz` | Maria (2024 film) | names | 14 | pierfrancesco favino alba rohrwacher haluk bilginer stephen ashfield valeria golino and kodi smit mcphee |
+| `glengarry-glen-ross-69s1ndrq` | Glengarry Glen Ross (film) | copied | 13 | grossing 10 7 million in north america against a 12 5 million budget |
+| `the-local-stigmatic-abdvbjfr` | The Local Stigmatic | copied | 13 | it was released on dvd as part of the al pacino box set |
 | `t-i-m-acdwcoli` | T.I.M. (film) | names | 13 | product a humanoid artificial intelligence robot named t i m technologically integrated manservant |
-| `men-in-black-international-aoevpago` | Men in Black: International | copied | 13 | directed by f gary gray and written by art marcum and matt holloway |
-| `the-last-tycoon-ap1yz77g` | The Last Tycoon (1976 film) | copied | 13 | for best art direction gene callahan jack t collis and jerry wunderlich the |
-| `fire-emblem-heroes-akbwozvu` | Fire Emblem Heroes | copied | 13 | tactical role playing game developed by intelligent systems and published by nintendo for |
 | `project-x-bw7hm4kn` | Project X (2012 film) | copied | 13 | thomas thomas mann costa oliver cooper and j b jonathan daniel brown who |
+| `the-portable-door-cr1sqszn` | The Portable Door | copied | 13 | interns who begin working at the mysterious london firm j w wells co |
 | `hitchcock-cuxwz1tc` | Hitchcock (film) | names | 13 | based on stephen rebello s book alfred hitchcock and the making of psycho |
 | `tom-and-jerry-blast-off-to-mars-dmwowijz` | Tom and Jerry: Blast Off to Mars | copied | 13 | the film was released on dvd and vhs on january 18 2005 and |
 | `dragnet-en0kqwaq` | Dragnet (1987 film) | copied | 13 | based on the radio and television crime drama of the same name the |
 | `perimeter-2-new-earth-gki8v6ad` | Perimeter (video game) | copied | 13 | a real time strategy video game developed by russian studio k d lab |
 | `vanilla-sky-hthsgfew` | Vanilla Sky | copied | 13 | is an english language remake of the 1997 spanish film open your eyes |
 | `mona-lisa-huowrer4` | Mona Lisa (film) | copied | 13 | a low level working class gangster recently released after seven years in prison |
+| `freelancers-hqcm2u97` | Freelancers (film) | copied | 13 | him not to take sarcone s place as baez s right hand man |
 | `a-i-artificial-intelligence-ipxjwgnd` | A.I. Artificial Intelligence | copied | 13 | short story supertoys last all summer long by brian aldiss set in a |
 | `gran-turismo-j0iaqaud` | Gran Turismo (film) | copied | 13 | directed by neill blomkamp from a screenplay by jason hall and zach baylin |
 | `the-cabin-in-the-woods-j5frizch` | The Cabin in the Woods | copied | 13 | science fiction comedy horror film directed by drew goddard in his directorial debut |
 | `the-order-j60b38r0` | The Order (2001 film) | copied | 13 | day rudy cafmeyer jean claude van damme a thief and smuggler of valuable |
 | `always-be-my-maybe-jwmnitgz` | Always Be My Maybe | copied | 13 | with marcus when he and his father are hired to install air conditioning |
 | `sleepless-in-seattle-jbgvqw0y` | Sleepless in Seattle | copied | 13 | atop the empire state building in new york city on valentine s day |
+| `jackie-brown-jdcosgrq` | Jackie Brown | copied | 13 | a 1997 american crime film written and directed by quentin tarantino based on |
 | `death-s-game-liyrwhu4` | Death's Game | copied | 13 | on the webtoon of the same name by lee won sik and ggulchan |
 | `confessions-of-a-dangerous-mind-m4yd1udc` | Confessions of a Dangerous Mind (film) | copied | 13 | 2002 american biographical spy film directed by george clooney in his directorial debut |
 | `s-t-a-l-k-e-r-clear-sky-mkafbbdw` | S.T.A.L.K.E.R.: Clear Sky | copied | 13 | a prequel to s t a l k e r shadow of chernobyl |
@@ -280,6 +140,7 @@
 | `the-roundup-punishment-mezj9764` | The Roundup: Punishment | copied | 13 | in south korea on april 24 2024 in imax and 4dx formats the |
 | `nancy-drew-mkzgmjsb` | Nancy Drew (2007 film) | copied | 13 | roberts as she moves to los angeles with her father carson tate donovan |
 | `american-traitor-the-trial-of-axis-sally-ndrowoig` | American Traitor: The Trial of Axis Sally | copied | 13 | swen temmel as billy owen thomas kretschmann as joseph goebbels mitch pileggi as |
+| `what-the-health-niw8ad19` | What the Health | names | 13 | what the health was funded via an indiegogo campaign in march 2016 raising |
 | `arcadian-nw2it7pf` | Arcadian (film) | names | 13 | arcadian is a 2024 post apocalyptic action horror film directed by benjamin brewer |
 | `ithaca-ok20w5r0` | Ithaca (film) | copied | 13 | it is based on the 1943 novel the human comedy by william saroyan |
 | `zombieland-q8hxjsyc` | Zombieland | copied | 13 | 2009 american post apocalyptic zombie comedy film directed by ruben fleischer in his |
@@ -313,12 +174,14 @@
 | `south-of-midnight-7bmzzvjm` | South of Midnight | copied | 12 | released on april 8 2025 for windows and xbox series x s |
 | `strong-woman-do-bong-soon-7h3d1xjd` | Strong Girl Bong-soon | copied | 12 | dreams of creating a video game with herself as the main character |
 | `tales-from-the-crypt-7qghn3ft` | Tales from the Crypt (TV series) | copied | 12 | american horror anthology television series created by william gaines and steven dodd |
+| `invictus-8zwcdc1k` | Invictus (film) | copied | 12 | playing the enemy nelson mandela and the game that made a nation |
 | `wicked-part-i-8bifb49a` | Wicked (2024 film) | copied | 12 | wicked the life and times of the wicked witch of the west |
 | `ghostbusters-8et6tr4x` | Ghostbusters | copied | 12 | directed by ivan reitman and written by dan aykroyd and harold ramis |
 | `the-apprentice-8g9rcz41` | The Apprentice (2024 film) | copied | 12 | it premiered at the 77th cannes film festival on may 20 2024 |
 | `transformers-rise-of-the-beasts-98ngbg1x` | Transformers: Rise of the Beasts | copied | 12 | by joby harold darnell metayer josh peters erich hoeber and jon hoeber |
 | `the-nice-guys-9nipdxav` | The Nice Guys | names | 12 | 2016 american neo noir buddy action comedy film directed by shane black |
 | `celebrity-awhwwl9r` | Celebrity (1998 film) | copied | 12 | a 1998 american comedy drama film written and directed by woody allen |
+| `next-goal-wins-b2d5ftqw` | Next Goal Wins (2023 film) | copied | 12 | the first openly transgender athlete to compete in a world cup qualifier |
 | `taxi-b3tbi1mm` | Taxi (TV series) | copied | 12 | created by james l brooks stan daniels david davis and ed weinberger |
 | `jersey-boys-b6cfpv3k` | Jersey Boys (film) | copied | 12 | musical of the same name the film tells the story of the |
 | `road-to-perdition-cupe4hkb` | Road to Perdition | copied | 12 | of the same name by max allan collins and richard piers rayner |
@@ -334,18 +197,21 @@
 | `how-to-lose-a-guy-in-10-days-jis4lam4` | How to Lose a Guy in 10 Days | copied | 12 | book of the same name by michele alexander and jeannie long the |
 | `the-queen-of-air-and-darkness-ks6oc2wm` | The Queen of Air and Darkness | names | 12 | the queen of air and darkness is the second book in the |
 | `extraordinary-measures-ls3cnax7` | Extraordinary Measures (film) | copied | 12 | is based on the true story of john and aileen crowley whose |
+| `field-of-dreams-m7mhivau` | Field of Dreams | copied | 12 | the ghosts of baseball legends including shoeless joe jackson ray liotta and |
 | `shawn-mendes-nepuinqu` | Shawn Mendes | copied | 12 | named him one of the 100 most influential people in the world |
 | `sweeney-todd-the-demon-barber-of-fleet-street-nqyk0rqu` | Sweeney Todd: The Demon Barber of Fleet Street (2007 film) | copied | 12 | by stephen sondheim and hugh wheeler which in turn is based on |
 | `i-care-a-lot-pythcl4b` | I Care a Lot | copied | 12 | 2020 american black comedy crime film written and directed by j blakeson |
 | `author-author-qd9iu2cw` | Author! Author! (film) | copied | 12 | of five children four from her previous marriages and their biological son |
 | `the-matrix-reloaded-qk7spuk4` | The Matrix Reloaded | names | 12 | keanu reeves laurence fishburne carrie anne moss hugo weaving and gloria foster |
 | `machete-rervoahv` | Machete (2010 film) | copied | 12 | 2010 american exploitation action film directed by robert rodriguez and ethan maniquis |
+| `where-d-you-go-bernadette-sbkyasox` | Where'd You Go, Bernadette (film) | copied | 12 | other parents at bee s school and especially their neighbor audrey griffin |
 | `behind-the-candelabra-sxplfg9t` | Behind the Candelabra | copied | 12 | directed by steven soderbergh and written by richard lagravenese based on the |
 | `vice-tehzcg26` | Vice (2015 film) | copied | 12 | a 2015 american science fiction action film directed by brian a miller |
 | `first-kill-tnfo6knt` | First Kill (2017 film) | copied | 12 | directed by steven c miller and written by nick gordon the film |
 | `starship-troopers-traitor-of-mars-u17vlqyq` | Starship Troopers: Traitor of Mars | copied | 12 | animated military science fiction film directed by shinji aramaki and masaru matsumoto |
 | `charlie-and-the-chocolate-factory-ufrtiwt6` | Charlie and the Chocolate Factory (film) | copied | 12 | musical fantasy film directed by tim burton and written by john august |
 | `prince-unfmdf6w` | Prince (musician) | copied | 12 | was inducted into the rock and roll hall of fame in 2004 |
+| `rising-son-vbgbaxvr` | Rising Son (film) | copied | 12 | a 1990 american made for television drama directed by john david coles |
 | `mlb-the-show-23-vdhtkqib` | MLB The Show 23 | copied | 12 | game developed by san diego studio and published by sony interactive entertainment |
 | `silent-hill-vjixgi9l` | Silent Hill (film series) | copied | 12 | based on the video game series of the same name by konami |
 | `m-i-a-wvatfbcm` | M.I.A. (rapper) | copied | 12 | she was appointed member of the order of the british empire mbe |
@@ -386,11 +252,13 @@
 | `mortal-kombat-x-rrwjknwu` | Mortal Kombat (2011 video game) | copied | 12 | game developed by netherrealm studios and published by warner bros interactive entertainment |
 | `bill-ted-s-bogus-journey-s370ldrq` | Bill & Ted's Bogus Journey | copied | 12 | in the year 2691 former gym teacher turned terrorist chuck de nomolos |
 | `the-amityville-horror-swecmdcz` | The Amityville Horror (2005 film) | copied | 12 | serves as a remake of the 1979 film of the same name |
+| `the-seed-of-the-sacred-fig-tmqbe9kz` | The Seed of the Sacred Fig | copied | 12 | premiere rasoulof was sentenced to eight years in prison by iranian authorities |
 | `armageddon-u6a3gssa` | Armageddon (1998 film) | copied | 12 | a 1998 american science fiction disaster film directed by michael bay and |
 | `romeo-santos-ud0h2hk6` | Romeo Santos | names | 12 | formula vol 1 2011 formula vol 2 2014 golden 2017 utopía 2019 |
 | `psych-out-vepfvgie` | Psych-Out | copied | 12 | a deaf runaway who arrives in san francisco s haight ashbury district |
 | `tropic-thunder-vl8p1omu` | Tropic Thunder | copied | 12 | when their frustrated director steve coogan drops them in the middle of |
 | `br-no-vq7oghvh` | Brüno | copied | 12 | written by sacha baron cohen anthony hines dan mazer and jeff schaffer |
+| `the-promise-vzesn4yr` | The Promise (2016 film) | copied | 12 | a 2016 american epic historical war drama film directed by terry george |
 | `hellboy-ii-the-golden-army-wgutnle9` | Hellboy II: The Golden Army | copied | 12 | a 2008 american superhero film based on the dark horse comics character |
 | `borderlands-2-tiny-tina-s-assault-on-dragon-keep-xxyeu3cj` | Borderlands 2: Tiny Tina's Assault on Dragon Keep | copied | 12 | tiny tina s assault on dragon keep a wonderlands one shot adventure |
 | `we-live-in-time-xyosi98n` | We Live in Time | copied | 12 | romantic drama film directed by john crowley and written by nick payne |
@@ -405,12 +273,15 @@
 | `the-post-1alw8x90` | The Post (film) | copied | 11 | by steven spielberg and written by liz hannah and josh singer |
 | `pink-floyd-1dmbfxec` | Pink Floyd discography | names | 11 | wish you were here 1975 animals 1977 and the wall 1979 |
 | `kanye-west-1cbqiyzy` | Kanye West | names | 11 | graduation 2007 808s heartbreak 2008 my beautiful dark twisted fantasy 2010 |
+| `live-by-night-2omw4akt` | Live by Night (film) | copied | 11 | the film premiered in new york city on december 13 2016 |
 | `bowling-for-columbine-2up7hdpe` | Bowling for Columbine | copied | 11 | cannes film festival and the césar award for best foreign film |
 | `the-appaloosa-2vzeg87t` | The Appaloosa | copied | 11 | matt fletcher marlon brando a mexican american buffalo hunter who returns |
 | `superman-2xdypn2t` | Superman (1978 film) | copied | 11 | the death of his adoptive father he travels to the arctic |
 | `the-legend-of-tarzan-2jmuxbtp` | The Legend of Tarzan (film) | copied | 11 | grossed 356 7 million worldwide against a budget of 180 million |
+| `call-of-duty-black-ops-6-3jvpoqyb` | Call of Duty: Black Ops 6 | names | 11 | call of duty black ops 6 is a first person shooter |
 | `universal-soldier-day-of-reckoning-3d5ort06` | Universal Soldier: Day of Reckoning | copied | 11 | a 2012 american science fiction action film directed by john hyams |
 | `bad-boys-ride-or-die-4jgi7chi` | Bad Boys: Ride or Die | names | 11 | joe pantoliano vanessa hudgens alexander ludwig paola núñez and jacob scipio |
+| `cowspiracy-the-sustainability-secret-5bwyv7cn` | Cowspiracy | copied | 11 | that animal agriculture is the primary source of greenhouse gas emissions |
 | `planet-51-5cb7wg7u` | Planet 51 | copied | 11 | co production between spain the united kingdom and the united states |
 | `driving-miss-daisy-5jukgd2c` | Driving Miss Daisy | copied | 11 | directed by bruce beresford and written by alfred uhry based on |
 | `pirates-of-the-caribbean-dead-man-s-chest-6tvq5rpi` | Pirates of the Caribbean: Dead Man's Chest | names | 11 | pirates of the caribbean dead man s chest is a 2006 |
@@ -423,10 +294,13 @@
 | `sunset-boulevard-8wyk8snh` | Sunset Boulevard (film) | copied | 11 | co written by wilder charles brackett and d m marshman jr |
 | `youngblood-8zgqi9sy` | Youngblood (1986 film) | copied | 11 | dean travels to canada to try out for the hamilton mustangs |
 | `little-women-9dppan8c` | Little Women (2019 film) | copied | 11 | directed by greta gerwig it is the seventh film adaptation of |
+| `lee-9i4noeuz` | Lee (2023 film) | names | 11 | the 1985 biography the lives of lee miller by antony penrose |
 | `memento-9xjspuve` | Memento (film) | names | 11 | short story memento mori by his brother jonathan nolan the film |
 | `the-circle-9iekvuwg` | The Circle (2017 film) | copied | 11 | by ponsoldt and dave eggers based on eggers s 2013 novel |
 | `cube-zero-a2aqcu4l` | Cube Zero | copied | 11 | the third installment in the cube series and a prequel to |
+| `agent-recon-azrwiv4t` | Agent Recon | copied | 11 | and was released in the united states on june 21 2024 |
 | `free-money-agqtokh0` | Free Money (film) | names | 11 | sutton junction vale perkins highwater mansonville and mont owl s head |
+| `the-call-of-the-wild-auj9fxva` | The Call of the Wild (2020 film) | names | 11 | the call of the wild is a 2020 american adventure film |
 | `super-metroid-bjbbp05g` | Super Metroid | copied | 11 | bounty hunter samus aran who travels to the planet zebes to |
 | `south-park-the-stick-of-truth-br66a8vy` | South Park: The Stick of Truth | copied | 11 | developed by obsidian entertainment in collaboration with south park digital studios |
 | `muse-byhjivjp` | Muse (band) | copied | 11 | mtv europe music awards and eight nme awards in 2012 they |
@@ -434,6 +308,7 @@
 | `celine-dion-dso5ssqv` | Celine Dion albums discography | names | 11 | falling into you 1996 and let s talk about love 1997 |
 | `the-teahouse-of-the-august-moon-epvofiwu` | The Teahouse of the August Moon (film) | copied | 11 | the island of okinawa following the end of world war ii |
 | `roar-evqzhnop` | Roar (1997 TV series) | copied | 11 | fantasy adventure television series created by shaun cassidy and ron koslow |
+| `avatar-exgxcox6` | Avatar (franchise) | copied | 11 | written and directed by james cameron the cast includes sam worthington |
 | `presumed-innocent-eglvh6wu` | Presumed Innocent (TV series) | copied | 11 | premiered on apple tv on june 12 2024 in july 2024 |
 | `the-fugitive-es97jjhr` | The Fugitive (1993 film) | copied | 11 | a team of u s marshals led by deputy samuel gerard |
 | `your-fault-fnbkzbgj` | Your Fault (film) | copied | 11 | 2024 spanish romantic drama film directed by domingo gonzález based on |
@@ -443,8 +318,10 @@
 | `hitman-s-wife-s-bodyguard-ftra4dyh` | Hitman's Wife's Bodyguard | copied | 11 | is a sequel to the 2017 film the hitman s bodyguard |
 | `assassin-s-creed-shadows-gabpcyky` | Assassin's Creed Shadows | copied | 11 | is the fourteenth main installment in the assassin s creed series |
 | `harry-styles-gboqgg7x` | Harry Styles | copied | 11 | became the first man to appear solo on the cover of |
+| `modern-talking-heq01rud` | Modern Talking | names | 11 | alone 1999 year of the dragon 2000 america 2001 victory 2002 |
 | `a-streetcar-named-desire-hfx5enba` | A Streetcar Named Desire (1951 film) | copied | 11 | was selected for preservation in the united states national film registry |
 | `my-life-in-ruins-hkbvugkn` | My Life in Ruins | copied | 11 | life he shows her how to have fun be more engaging |
+| `witness-hnph8hdk` | Witness (1985 film) | names | 11 | 1985 american neo noir crime thriller film directed by peter weir |
 | `nightmare-alley-hxnbjcd0` | Nightmare Alley (2021 film) | copied | 11 | a charming and ambitious carnival worker with a mysterious past who |
 | `gasoline-alley-hd3kucai` | Gasoline Alley (2022 film) | copied | 11 | was the last person to see one of the victims alive |
 | `the-6th-day-hsg2yrnl` | The 6th Day | copied | 11 | a 2000 american science fiction action film directed by roger spottiswoode |
@@ -457,6 +334,7 @@
 | `the-war-with-grandpa-jaha3zbx` | The War with Grandpa | copied | 11 | screws from peter s furniture and rewriting his school report ed |
 | `where-to-invade-next-jxfc8u7u` | Where to Invade Next | copied | 11 | countries such as italy france finland tunisia slovenia germany and portugal |
 | `midnight-runners-kofmvv9m` | Midnight Runners | copied | 11 | a 2017 south korean action comedy film directed by jason kim |
+| `john-wick-chapter-3-parabellum-kqswwril` | John Wick: Chapter 3 – Parabellum | names | 11 | 2019 american neo noir action thriller film directed by chad stahelski |
 | `d-j-vu-kxhkhagj` | Déjà Vu (2006 film) | copied | 11 | directed by tony scott written by bill marsilii and terry rossio |
 | `pay-it-forward-l6qebhn6` | Pay It Forward (film) | copied | 11 | on the novel of the same name by catherine ryan hyde |
 | `stay-hungry-l79mcppu` | Stay Hungry | copied | 11 | a golden globe for best acting debut in a motion picture |
@@ -469,6 +347,7 @@
 | `x-men-first-class-nq8o8zwi` | X-Men: First Class | copied | 11 | invites her to live with him as his sister in 1962 |
 | `control-nr81gqf3` | Control (video game) | names | 11 | jesse faden the new director of the federal bureau of control |
 | `surrogates-ntnhhgyc` | Surrogates | copied | 11 | a 2009 american science fiction action film directed by jonathan mostow |
+| `g-i-joe-retaliation-o4zen6mu` | G.I. Joe: Retaliation | copied | 11 | the second installment in the g i joe film series and |
 | `ferrari-ozbawgfa` | Ferrari (2023 film) | names | 11 | biography enzo ferrari the man the cars the races the machine |
 | `the-lone-ranger-pot7mepm` | The Lone Ranger (TV series) | names | 11 | the lone ranger is an american western television series that aired |
 | `the-ipcress-file-pbdkbsnn` | The Ipcress File (film) | copied | 11 | list of the 100 best british films of the 20th century |
@@ -499,6 +378,7 @@
 | `return-to-paradise-aqefi2h0` | Return to Paradise (1998 film) | copied | 11 | directed by joseph ruben written by wesley strick and bruce robinson |
 | `man-of-tai-chi-asfiye5t` | Man of Tai Chi | copied | 11 | martial arts film directed by keanu reeves in his directorial debut |
 | `resident-evil-afterlife-anu8e2o4` | Resident Evil: Afterlife | copied | 11 | it is the fourth installment in the resident evil film series |
+| `london-has-fallen-at1pggl8` | London Has Fallen | copied | 11 | angela bassett as secret service director lynne jacobs robert forster as |
 | `need-for-speed-prostreet-au6bul9o` | Need for Speed: ProStreet | copied | 11 | game developed by ea black box and published by electronic arts |
 | `team-fortress-2-auntt32n` | Team Fortress 2 | copied | 11 | multiplayer first person shooter game developed and published by valve corporation |
 | `sleepers-b60fev4j` | Sleepers (film) | copied | 11 | based on lorenzo carcaterra s 1995 book of the same name |
@@ -522,6 +402,7 @@
 | `white-bird-h79olk8r` | White Bird (film) | copied | 11 | novel of the same name by r j palacio serving as |
 | `dmx-hf67cs6u` | DMX | copied | 11 | his second album flesh of my flesh blood of my blood |
 | `maluma-hhkaa7hg` | Maluma | copied | 11 | been nominated for a grammy award for best latin pop album |
+| `the-matrix-resurrections-hrkil3vl` | The Matrix Resurrections | names | 11 | yahya abdul mateen ii jessica henwick jonathan groff neil patrick harris |
 | `air-force-one-ipcef4jk` | Air Force One (film) | copied | 11 | two academy award nominations for best sound and best film editing |
 | `catching-fire-isjrdooe` | Catching Fire | copied | 11 | after winning the 74th hunger games katniss everdeen and peeta mellark |
 | `ride-in-the-whirlwind-jd0ezmk0` | Ride in the Whirlwind | names | 11 | cowboys vern cameron mitchell wes jack nicholson and otis tom filer |
@@ -597,6 +478,7 @@
 | `awakenings-5v6wnngz` | Awakenings | copied | 10 | best picture best actor de niro and best adapted screenplay |
 | `widow-clicquot-64merim0` | Widow Clicquot | copied | 10 | a screenplay by erin dignam and christopher monger based on |
 | `gardener-of-eden-64p3ny8z` | Gardener of Eden | copied | 10 | premiered at the tribeca film festival on april 26 2007 |
+| `perfect-days-6ihwn7fo` | Perfect Days | copied | 10 | 2023 at the 76th cannes film festival where it competed |
 | `city-by-the-sea-71z9wjy6` | City by the Sea | names | 10 | city by the sea is a 2002 american crime drama |
 | `kid-cudi-743ldj4q` | Kid Cudi discography | copied | 10 | debut album man on the moon the end of day |
 | `the-whole-ten-yards-74uqpndw` | The Whole Ten Yards | copied | 10 | a sequel to the 2000 film the whole nine yards |
@@ -617,11 +499,13 @@
 | `assault-on-precinct-13-ae5va3z4` | Assault on Precinct 13 (2005 film) | copied | 10 | a 2005 action thriller film directed by jean françois richet |
 | `hot-fuzz-ak2a7ekg` | Hot Fuzz | copied | 10 | a 2007 british action comedy film directed by edgar wright |
 | `centurion-aovjoglm` | Centurion (film) | copied | 10 | disappearance of the roman empire s ninth legion in caledonia |
+| `indiana-jones-and-the-great-circle-agqyz6rl` | Indiana Jones and the Great Circle | copied | 10 | the game is primarily played from a first person perspective |
 | `nowhere-to-run-blrrbhjf` | Nowhere to Run (1993 film) | copied | 10 | a 1993 american action film directed by robert harmon the |
 | `starship-troopers-invasion-buftsuui` | Starship Troopers: Invasion | copied | 10 | film directed by shinji aramaki it is the fourth installment |
 | `command-conquer-4-tiberian-twilight-bsdxmw7a` | Command & Conquer 4: Tiberian Twilight | copied | 10 | the global defense initiative gdi and the brotherhood of nod |
 | `stonehearst-asylum-clgcozo4` | Stonehearst Asylum | copied | 10 | short story the system of doctor tarr and professor fether |
 | `the-maze-runner-culwcpbh` | The Maze Runner (film) | copied | 10 | dystopian science fiction film directed by wes ball in his |
+| `like-a-dragon-pirate-yakuza-in-hawaii-cweewxel` | Like a Dragon: Pirate Yakuza in Hawaii | copied | 10 | developed by ryu ga gotoku studio and published by sega |
 | `magic-mike-cyxytwcv` | Magic Mike | copied | 10 | 2012 american independent comedy drama film directed by steven soderbergh |
 | `need-for-speed-payback-cnmcihrb` | Need for Speed Payback | copied | 10 | game developed by ghost games and published by electronic arts |
 | `halo-reach-derej7rx` | Halo: Reach | copied | 10 | re released as part of halo the master chief collection |
@@ -643,6 +527,7 @@
 | `jerry-marge-go-large-imhs2tix` | Jerry & Marge Go Large | copied | 10 | a 2022 american comedy drama film directed by david frankel |
 | `rome-total-war-jqqchnqt` | Rome: Total War | copied | 10 | a strategy video game developed by the creative assembly and |
 | `dodgeball-a-true-underdog-story-kbgvej8y` | Dodgeball: A True Underdog Story | copied | 10 | a dodgeball tournament in las vegas with a 50 000 |
+| `shrinking-l05rkoox` | Shrinking (TV series) | copied | 10 | it was renewed for a second season in march 2023 |
 | `g-i-joe-the-rise-of-cobra-l4tdnqys` | G.I. Joe: The Rise of Cobra | copied | 10 | the first installment in the g i joe film series |
 | `the-witcher-lggt3gy4` | The Witcher (video game) | copied | 10 | the order of the flaming rose and the scoia tael |
 | `kickboxer-retaliation-lxmhezgw` | Kickboxer: Retaliation | copied | 10 | renato sobral using a move he calls the hurricane armbar |
@@ -681,6 +566,7 @@
 | `robocop-ttpf0ehf` | RoboCop | copied | 10 | 1987 american science fiction action film directed by paul verhoeven |
 | `s-t-a-l-k-e-r-call-of-pripyat-tzr3whdl` | S.T.A.L.K.E.R.: Call of Pripyat | copied | 10 | in the s t a l k e r series |
 | `diana-gurtskaya-tzqiifdk` | Diana Gurtskaya | copied | 10 | a member of the public chamber of the russian federation |
+| `mark-felt-the-man-who-brought-down-the-white-house-u2fassdl` | Mark Felt: The Man Who Brought Down the White House | copied | 10 | premiered at the toronto international film festival on september 8 |
 | `interview-with-the-vampire-u4oz8e5x` | Interview with the Vampire (film) | copied | 10 | film directed by neil jordan and written by anne rice |
 | `our-brand-is-crisis-u7uhsbzf` | Our Brand Is Crisis (2015 film) | copied | 10 | 2015 american comedy drama film directed by david gordon green |
 | `need-for-speed-underground-usoydhpc` | Need for Speed: Underground | copied | 10 | developed by ea black box and published by electronic arts |
@@ -697,6 +583,7 @@
 | `children-of-heaven-ygvwb9by` | Children of Heaven (1997 film) | copied | 10 | nominated for an academy award for best foreign language film |
 | `bedtime-story-ygle7mrk` | Bedtime Story (1964 film) | copied | 10 | a small european country seducing wealthy women into donating money |
 | `nirvana-zaezws3r` | Nirvana (band) | copied | 10 | was inducted into the rock and roll hall of fame |
+| `the-panic-in-needle-park-zckrdtyx` | The Panic in Needle Park | copied | 10 | the best actress award at the 1971 cannes film festival |
 | `terminator-3-rise-of-the-machines-zm73pilh` | Terminator 3: Rise of the Machines | copied | 10 | members of the future human resistance as john connor s |
 | `the-beguiled-zvhpx5xt` | The Beguiled (1971 film) | copied | 10 | miss martha farnsworth seminary for young ladies in rural mississippi |
 | `the-good-doctor-zuhq0hgn` | The Good Doctor (American TV series) | copied | 10 | of the 2013 south korean series of the same name |
@@ -710,10 +597,12 @@
 | `plants-vs-zombies-2-it-s-about-time-dazyesbe` | Plants vs. Zombies 2 | copied | 10 | game developed by popcap games and published by electronic arts |
 | `wrath-of-the-titans-decgztfd` | Wrath of the Titans | copied | 10 | a sequel to the 2010 film clash of the titans |
 | `the-great-escaper-dxpprjnm` | The Great Escaper | copied | 10 | is based on the true story of 90 year old |
+| `lady-godiva-of-coventry-e5y9difn` | Lady Godiva of Coventry | copied | 10 | is set in 11th century england king edward the confessor |
 | `red-sonja-eo3elkih` | Red Sonja (1985 film) | copied | 10 | with a man unless he defeats her in fair combat |
 | `predators-ee02o3kc` | Predators (2010 film) | copied | 10 | 2010 american science fiction action film directed by nimród antal |
 | `gran-turismo-7-exswi1va` | Gran Turismo 7 | copied | 10 | developed by polyphony digital and published by sony interactive entertainment |
 | `morning-glory-f6euyhjb` | Morning Glory (2010 film) | copied | 10 | directed by roger michell and written by aline brosh mckenna |
+| `avowed-fc52j88x` | Avowed | copied | 10 | developed by obsidian entertainment and published by xbox game studios |
 | `the-report-fgq3cg92` | The Report (2019 film) | copied | 10 | political drama film written and directed by scott z burns |
 | `the-tourist-fqv4xbfc` | The Tourist (2010 film) | copied | 10 | is a remake of the 2005 french film anthony zimmer |
 | `sons-of-thunder-fassspwl` | Sons of Thunder (TV series) | copied | 10 | crime drama television series created by aaron and chuck norris |
@@ -731,7 +620,6 @@
 | `the-tree-of-life-hpcjxwai` | The Tree of Life (film) | copied | 10 | the palme d or at the 2011 cannes film festival |
 | `equilibrium-iluiwve3` | Equilibrium (film) | copied | 10 | starring christian bale emily watson and taye diggs the film |
 | `blackpink-ina5wzu6` | Blackpink | copied | 10 | tour by a female group and asian act in history |
-| `the-andy-griffith-show-iapdquke` | The Andy Griffith Show | copied | 10 | 159 in black and white and 90 in color the |
 | `dead-for-a-dollar-iks5ytk9` | Dead for a Dollar | copied | 10 | was released in the united states on september 30 2022 |
 | `spy-kids-armageddon-jr7va3u5` | Spy Kids | copied | 10 | spy kids all the time in the world 2011 the |
 | `two-many-chefs-jd3sl3so` | Two Many Chefs | copied | 10 | suffers from a mental condition that prevents him from recognizing |
@@ -746,6 +634,7 @@
 | `delirium-numyd3dt` | Delirium (2018 film) | copied | 10 | topher grace patricia clarkson callan mulvey and genesis rodriguez the |
 | `jonah-hex-nocfsneb` | Jonah Hex (film) | copied | 10 | based on the dc comics character of the same name |
 | `wolfenstein-the-old-blood-nzvxrrhv` | Wolfenstein: The Old Blood | copied | 10 | video game developed by machinegames and published by bethesda softworks |
+| `backdraft-o5bccvq2` | Backdraft (film) | copied | 10 | film directed by ron howard and written by gregory widen |
 | `chinese-coffee-ohvplk5o` | Chinese Coffee | copied | 10 | 1987 at the apple corps theatre in new york city |
 | `thor-love-and-thunder-ol6qzldu` | Thor: Love and Thunder | copied | 10 | and the 29th film in the marvel cinematic universe mcu |
 | `the-china-study-the-most-comprehensive-study-of-nutrition-ev-pbqafmzd` | The China Study | copied | 10 | t colin campbell and his son thomas m campbell ii |
@@ -773,6 +662,7 @@
 | `regarding-henry-tnxu0n7f` | Regarding Henry | copied | 10 | directed by mike nichols and written by j j abrams |
 | `medal-of-honor-allied-assault-breakthrough-uflquv3n` | Medal of Honor: Allied Assault | copied | 10 | the second expansion pack for medal of honor allied assault |
 | `x-men-dark-phoenix-uyphnuf7` | Dark Phoenix (film) | names | 10 | x men dark phoenix is a 2019 american superhero film |
+| `the-wrecking-crew-vdsqwizz` | The Wrecking Crew (1968 film) | copied | 10 | a 1968 american spy comedy film directed by phil karlson |
 | `moana-2-vghhztsj` | Moana 2 | copied | 10 | musical adventure film produced by walt disney animation studios the |
 | `spartacus-w2qg4aoz` | Spartacus (film) | copied | 10 | 1960 american epic historical drama film directed by stanley kubrick |
 | `it-ends-with-us-wt9eic0o` | It Ends with Us (film) | copied | 10 | film directed by justin baldoni and written by christy hall |
@@ -784,5 +674,7 @@
 | `the-secret-life-of-walter-mitty-z6fcb2gm` | The Secret Life of Walter Mitty (2013 film) | copied | 10 | a remake of the 1947 film of the same name |
 | `x-men-days-of-future-past-zq7wlyt3` | X-Men: Days of Future Past | copied | 10 | is the seventh installment in the x men film series |
 | `jungle-zqvus2ro` | Jungle (2017 film) | copied | 10 | based on the true story of israeli adventurer yossi ghinsberg |
+| `bi-rdman-or-the-unexpected-virtue-of-ignorance-zxbqycqy` | Birdman (film) | copied | 10 | best picture best director best original screenplay and best cinematography |
 | `skrillex-zlgyoake` | Skrillex | copied | 10 | albums quest for fire and don t get too close |
+| `prince-of-the-city-zpvzcssg` | Prince of the City | copied | 10 | skimming money from criminals and supplying informants with stolen drugs |
 | `thief-the-dark-project-zwdu1b4h` | Thief: The Dark Project | copied | 10 | players take on the role of garrett a master thief |
