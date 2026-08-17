@@ -25,6 +25,8 @@ import { readFileSync } from 'node:fs';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
+import { missingMandatoryTags, looksLikeProperName } from './lib/tag-conventions.mjs';
+
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
   return i === -1 ? fallback : process.argv[i + 1];
@@ -64,6 +66,43 @@ if (CONTOUR === 'stand') {
 
 const batch = JSON.parse(readFileSync(FILE, 'utf8'));
 const items = batch.candidates ?? [];
+
+/*
+ * ── 🔴 ВОРОТА ОБЯЗАТЕЛЬНЫХ ТЕГОВ (`bugs/144`, заказ владельца о «высокой гарантии») ───────────
+ *
+ * Стоят ДО первой записи и до сухого прогона: кандидат без обязательных тегов своего вида в
+ * очередь владельца не попадает вовсе. Приёмку описаний можно забыть запустить — мимо этих ворот
+ * пройти нельзя, и в этом вся разница между правилом и гарантией.
+ *
+ * ⚠️ Ворота НЕ дописывают теги молча. Тихая дописка сделала бы файл партии и базу разными
+ * правдами: агент правит файл, а в очередь уезжает что-то другое. Прибор называет недостающее и
+ * останавливается — правка стоит одной строки в партии.
+ */
+const tagFaults = [];
+for (const item of items) {
+  const missing = missingMandatoryTags(item);
+  if (missing.length > 0) {
+    tagFaults.push(`${item.title?.ru ?? item.wikidata} (${item.type?.ru ?? 'вид не назван'}): нет ${missing.join(', ')}`);
+  }
+}
+if (tagFaults.length > 0) {
+  console.error('\n🔴 ВЫГРУЗКА ОСТАНОВЛЕНА: обязательные теги вида не проставлены.');
+  console.error('   Соглашение выведено замером каталога — candidates/tag-conventions.json');
+  console.error('   (перевывести: node tools/measure-catalog-tags.mjs)\n');
+  for (const f of tagFaults) console.error(`   · ${f}`);
+  console.error('\n⛔ В очередь владельца не положено НИ ОДНОГО кандидата.');
+  process.exit(1);
+}
+
+/* Имена собственные — ПРЕДУПРЕЖДЕНИЕ, а не отказ: машина не умеет отличить имя от жанра без
+ * словаря, и приговор здесь стоил бы ложных отказов. Решение остаётся за агентом и владельцем. */
+for (const item of items) {
+  const suspicious = (item.tags ?? []).filter(looksLikeProperName);
+  if (suspicious.length > 0) {
+    console.warn(`  ⚠️ ${item.title?.ru}: теги с заглавной — ${suspicious.join(', ')}.`);
+    console.warn('     Владелец тегами описывает СУТЬ объекта, а не имена собственные (bugs/144).');
+  }
+}
 console.log(`\n═══ КАНДИДАТЫ В ОЧЕРЕДЬ ВЫЧИТКИ ═══`);
 console.log(`  файл партии: ${FILE}`);
 console.log(`  контур: ${CONTOUR}${APPLY ? '' : '  (СУХОЙ ПРОГОН — ничего не пишется)'}`);

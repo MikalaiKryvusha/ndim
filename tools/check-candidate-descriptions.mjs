@@ -32,6 +32,7 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 
 import { words, longestCommonRun, RUN_THRESHOLD, looksLikeList } from './measure-wikipedia-overlap.mjs';
+import { missingMandatoryTags, looksLikeProperName } from './lib/tag-conventions.mjs';
 
 /** Коридор объёма, выведенный из текстов владельца (разбор в шапке). */
 export const MIN_CHARS = 900;
@@ -128,6 +129,22 @@ let unverified = 0;
 for (const c of items) {
   const name = c.title?.ru ?? c.wikidata;
   const lines = [];
+
+  /*
+   * ── ТЕГИ (`bugs/144`) ────────────────────────────────────────────────────────────────────
+   * Обязательные — ОТКАЗ: соглашение выведено замером каталога, и запись без них выпадает из
+   * ряда своего вида. Имена собственные — предупреждение: машина не отличит имя от жанра без
+   * словаря, и приговор здесь давал бы ложные отказы.
+   */
+  const missingTags = missingMandatoryTags(c);
+  if (missingTags.length > 0) {
+    problems.push(`${name}: нет обязательных тегов вида «${c.type?.ru ?? '?'}» — ${missingTags.join(', ')}`);
+  }
+  const properNames = (c.tags ?? []).filter(looksLikeProperName);
+  const tagMark = missingTags.length === 0 ? '✅' : '❌';
+  lines.push(`  ${tagMark} теги: ${(c.tags ?? []).length} шт.`
+    + (missingTags.length ? ` · НЕТ ОБЯЗАТЕЛЬНЫХ: ${missingTags.join(', ')}` : ' · обязательные на месте')
+    + (properNames.length ? ` · ⚠️ с заглавной: ${properNames.join(', ')}` : ''));
   for (const lang of LANGS) {
     const text = c.description?.[lang] ?? '';
     const chars = text.length;
