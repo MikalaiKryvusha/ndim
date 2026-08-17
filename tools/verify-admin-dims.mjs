@@ -187,10 +187,16 @@ console.log('Статика (build/):');
       'иначе проверка ниже зелена бессодержательно');
 
     const publicPages = ['build/ru.html', 'build/en.html'];
-    const dimPage = existsSync('build/ru/dimension')
-      ? `build/ru/dimension/${readdirSync('build/ru/dimension')[0]}`
-      : null;
-    if (dimPage !== null) publicPages.push(dimPage);
+    /*
+     * ⚠️ Берём именно .html: рядом с каждой страницей каталога лежит ОДНОИМЁННАЯ ПАПКА с
+     * `__data.json`, и первая запись каталога — как раз она. Прежняя редакция читала папку как
+     * файл и роняла страж ИСКЛЮЧЕНИЕМ вместо провала проверки — класс `EXP-0156`, из-за которого
+     * страж однажды молчал две недели.
+     */
+    if (existsSync('build/ru/dimension')) {
+      const page = readdirSync('build/ru/dimension').find((name) => name.endsWith('.html'));
+      if (page !== undefined) publicPages.push(`build/ru/dimension/${page}`);
+    }
     const guilty = [];
     for (const page of publicPages) {
       if (!existsSync(page)) continue;
