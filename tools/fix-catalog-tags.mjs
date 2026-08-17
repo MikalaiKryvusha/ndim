@@ -23,11 +23,11 @@
  * целиком и по умолчанию ТОЛЬКО ПОКАЗЫВАЕТ: массовая правка чужих записей — решение владельца,
  * а не побочный эффект починки агентской ошибки.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-import { missingMandatoryTags } from './lib/tag-conventions.mjs';
+import { missingMandatoryTags, looksLikeProperName, mandatoryTagsFor } from './lib/tag-conventions.mjs';
 
 const argOf = (name, def = null) => {
   const i = process.argv.indexOf(name);
@@ -42,10 +42,18 @@ if (!BATCH && !ALL) {
   console.error('Задай область: --batch <файл партии> либо --all');
   process.exit(2);
 }
-if (ALL && APPLY) {
-  console.error('🔴 `--all --apply` запрещено этим прибором.');
-  console.error('   Массовая правка тегов чужих записей — решение владельца, а не починка агентом');
-  console.error('   собственной ошибки. Покажи ему числа сухим прогоном и спроси.');
+/*
+ * 🔴 ЗАМОК МАССОВОЙ ПРАВКИ. Теги каталога ставил ВЛАДЕЛЕЦ, и трогать их пачкой — не починка
+ * агентом своей ошибки, а правка чужой работы. Снимается только его ДОСЛОВНЫМИ словами, и они
+ * уезжают в файл отката вместе со снимком «до»: через месяц никто не вспомнит, по чьему слову
+ * изменились 85 записей.
+ */
+const AUTH = argOf('--auth-owner', null);
+if (ALL && APPLY && !AUTH) {
+  console.error('🔴 `--all --apply` требует слова владельца.');
+  console.error('   Массовая правка тегов, которые ставил он, — его решение, а не побочный эффект');
+  console.error('   починки агентской ошибки. Покажи числа сухим прогоном и спроси.');
+  console.error('   Снять замок: --auth-owner "<его дословные слова>"');
   process.exit(2);
 }
 
@@ -97,8 +105,31 @@ if (BATCH) {
   }
 }
 
+/*
+ * ── ПОЛНАЯ КАРТИНА НЕПОРЯДКА (только `--all`) ───────────────────────────────────────────────
+ *
+ * Прибор чинит ОДНУ вещь — недостающие обязательные теги. Но молчать о соседних видах непорядка
+ * он не имеет права: «зелёный отчёт» о том, что прибор умеет, читается как «в каталоге порядок».
+ * Поэтому остальное НАЗЫВАЕТСЯ числом и оставляется владельцу.
+ */
+if (ALL) {
+  const noTags = targets.filter((t) => !Array.isArray(t.data.tags) || t.data.tags.length === 0);
+  const withProper = targets.filter((t) => (t.data.tags ?? []).some(looksLikeProperName));
+  const noKind = targets.filter((t) => String(t.data?.type?.ru ?? '').trim() === '');
+  const unknownKind = targets.filter(
+    (t) => String(t.data?.type?.ru ?? '').trim() !== '' && mandatoryTagsFor(t.data?.type?.ru).length === 0,
+  );
+  console.log('📋 КАРТИНА КАТАЛОГА (чиню только первую строку, остальное — Вам числом):');
+  console.log(`   · нет обязательных тегов вида ......... ${targets.filter((t) => missingMandatoryTags(t.data).length > 0).length}   ← ЭТО ЧИНЮ`);
+  console.log(`   · тегов нет вовсе ..................... ${noTags.length}`);
+  console.log(`   · есть тег с заглавной буквы ......... ${withProper.length}   (прокси имени собственного; аббревиатуры жанров сюда не считаются)`);
+  console.log(`   · вид не назван вовсе ................ ${noKind.length}`);
+  console.log(`   · вид вне соглашения (редкий) ........ ${unknownKind.length}\n`);
+}
+
 let touched = 0;
 let clean = 0;
+const rollback = [];
 for (const t of targets) {
   const missing = missingMandatoryTags(t.data);
   // В режиме партии правка нужна и тогда, когда обязательные теги на месте: набор мог разойтись
@@ -129,7 +160,26 @@ for (const t of targets) {
   console.log(`  ${APPLY ? '✅' : '·'} ${t.title ?? t.id}`);
   if (added.length) console.log(`       + ${added.join(', ')}`);
   if (dropped.length) console.log(`       − ${dropped.join(', ')}   ← уходит, названо явно`);
+  // Снимок «до» пишется ВСЕГДА, даже в сухом прогоне: файл отката, появившийся только вместе с
+  // записью, бесполезен ровно в тот момент, когда он нужен, — когда запись уже прошла.
+  rollback.push({ id: t.id, title: t.title ?? null, before: kept, after: next });
   if (APPLY) await db.collection('dims').doc(t.id).update({ tags: next });
+}
+
+/*
+ * ФАЙЛ ОТКАТА — рядом с приборами, как у переписчика описаний (`tools/rewrites-*--rollback.json`).
+ * Несёт снимок «до», снимок «после» и ДОСЛОВНЫЕ слова владельца, которыми снят замок: через месяц
+ * никто не вспомнит, по чьему слову изменились 85 записей, а файл ответит.
+ */
+if (rollback.length > 0) {
+  const name = `tools/tags-${BATCH ? 'batch' : 'all'}--rollback.json`;
+  writeFileSync(name, `${JSON.stringify({
+    contour: CONTOUR,
+    applied: APPLY,
+    auth: AUTH,
+    records: rollback,
+  }, null, 2)}\n`, 'utf8');
+  console.log(`\n📄 Откат: ${name} (${rollback.length} записей, снимок «до» и «после»)`);
 }
 
 console.log('\n──────────────────────────────────────────────────────────────');
