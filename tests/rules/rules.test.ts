@@ -636,7 +636,19 @@ describe('Оси и заявки на них', () => {
 
   test('админ правит оси', async () => {
     const db = admin('root').firestore();
-    await assertSucceeds(setDoc(doc(db, 'dims/calm'), { title: { ru: 'Спокойствие' }, stars: 1, rates: 1, rating: 1 }));
+    // 🔧 Фикстура дополнена английским названием 2026-08-17 (`plans/44` шаг 1): правила
+    // каталога стали проверять ГРАНИЦЫ, и название теперь обязано быть на оба языка —
+    // без него измерение не попадает в индекс каталога и человек не видит его вовсе.
+    // Предмет теста не изменился: он о ПРАВЕ админа, а не о форме записи; форму стерегут
+    // отдельные тесты ниже («Каталог измерений — границы записи»).
+    await assertSucceeds(
+      setDoc(doc(db, 'dims/calm'), {
+        title: { ru: 'Спокойствие', en: 'Calm' },
+        stars: 1,
+        rates: 1,
+        rating: 1,
+      }),
+    );
   });
 
   test('пользователь предлагает новую ось', async () => {
@@ -668,6 +680,150 @@ describe('Оси и заявки на них', () => {
 
     const db = verified(BOB).firestore();
     await assertFails(getDoc(doc(db, 'suggestions/s1')));
+  });
+});
+
+describe('Каталог измерений — границы записи (plans/44 шаг 1)', () => {
+  /*
+   * ПОЧЕМУ ГРАНИЦЫ, А НЕ ТОЛЬКО ПРАВО. Каталог — 5111 записей труда владельца и лицо
+   * продукта на 10 222 публичных страницах. Право писать сюда стояло с первого коммита
+   * правил (`allow write: if isAdmin()`), а вот ФОРМУ не стерёг никто: измерение без
+   * названия молча не попадает в индекс каталога, и человек не видит его вовсе.
+   *
+   * Все ожидания ниже сняты ЗОНДОМ по боевой базе 2026-08-17, а не выведены из плана:
+   * `year` — строка у всех 5111 (у восьми это диапазон), `title` заполнен на оба языка
+   * у всех 5111, `name` лежит тоже у всех 5111. Операционный план требовал «год число» —
+   * замер это опроверг.
+   */
+
+  /** Валидное измерение по канону `DimDoc`. Именованный набор — чтобы отказы отличались одним полем. */
+  const validDim = () => ({
+    title: { ru: 'Одиссея', en: 'The Odyssey' },
+    description: { ru: 'Фильм Кристофера Нолана.', en: 'A film by Christopher Nolan.' },
+    type: { ru: 'Фильм', en: 'Film' },
+    author: { ru: 'Кристофер Нолан', en: 'Christopher Nolan' },
+    year: '2026',
+    tags: ['кино', 'эпос'],
+    stars: 0,
+    rates: 0,
+    rating: 0,
+  });
+
+  test('админ создаёт измерение по канону', async () => {
+    const db = admin('root').firestore();
+    await assertSucceeds(setDoc(doc(db, 'dims/odyssey'), validDim()));
+  });
+
+  test('🔒 создать измерение не может НИКТО, кроме админа', async () => {
+    // Право стояло и раньше; тест держит его на месте при переписанном блоке правил.
+    await assertFails(setDoc(doc(anonymous().firestore(), 'dims/odyssey'), validDim()));
+    await assertFails(setDoc(doc(verified(BOB).firestore(), 'dims/odyssey'), validDim()));
+    await assertFails(setDoc(doc(unverified(BOB).firestore(), 'dims/odyssey'), validDim()));
+    await assertFails(setDoc(doc(guest(GHOST).firestore(), 'dims/odyssey'), validDim()));
+  });
+
+  test('🔒 в НОВОЕ измерение поле `name` не идёт (решение владельца В4 = В)', async () => {
+    const db = admin('root').firestore();
+    await assertFails(
+      setDoc(doc(db, 'dims/odyssey'), { ...validDim(), name: { ru: 'Одиссея', en: 'The Odyssey' } }),
+    );
+  });
+
+  test('правка существующего измерения С полем `name` проходит — легаси терпится до прополки', async () => {
+    // 🔑 Асимметрия намеренная и она о ПОРЯДКЕ РАБОТ: `name` лежит у всех 5111 боевых
+    // записей, а прополка (шаг 7) ждёт отдельного слова владельца и бэкапа. Симметричный
+    // запрет заперл бы правку любого существующего измерения до прополки.
+    await seed(async (db) => {
+      await setDoc(doc(db, 'dims/odyssey'), { ...validDim(), name: { ru: 'Одиссея', en: 'The Odyssey' } });
+    });
+
+    const db = admin('root').firestore();
+    await assertSucceeds(
+      setDoc(doc(db, 'dims/odyssey'), {
+        ...validDim(),
+        name: { ru: 'Одиссея', en: 'The Odyssey' },
+        year: '2027',
+      }),
+    );
+  });
+
+  test('🔒 измерение без названия на ОБА языка отвергается — иначе его не увидит никто', async () => {
+    const db = admin('root').firestore();
+    const { title, ...withoutTitle } = validDim();
+    await assertFails(setDoc(doc(db, 'dims/d1'), withoutTitle));
+    await assertFails(setDoc(doc(db, 'dims/d2'), { ...validDim(), title: { ru: 'Одиссея' } }));
+    await assertFails(setDoc(doc(db, 'dims/d3'), { ...validDim(), title: { en: 'The Odyssey' } }));
+    await assertFails(setDoc(doc(db, 'dims/d4'), { ...validDim(), title: { ru: '', en: '' } }));
+    await assertFails(setDoc(doc(db, 'dims/d5'), { ...validDim(), title: 'Одиссея' }));
+  });
+
+  test('🔒 поля очереди вычитки в каталог не просачиваются — это фаза 6 эпика', async () => {
+    const db = admin('root').firestore();
+    await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), status: 'pending' }));
+    await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), wikidata: 'Q20909133' }));
+    // И обычная опечатка в имени поля — тот же механизм ловит её заодно.
+    await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), titel: { ru: 'x', en: 'y' } }));
+  });
+
+  test('год — СТРОКА, включая диапазон; числом он отвергается', async () => {
+    const db = admin('root').firestore();
+    // Замер: у восьми боевых записей год длиннее четырёх знаков — это диапазоны.
+    await assertSucceeds(setDoc(doc(db, 'dims/d1'), { ...validDim(), year: '1966–1969' }));
+    await assertFails(setDoc(doc(db, 'dims/d2'), { ...validDim(), year: 2026 }));
+  });
+
+  test('🔒 сводка оценок вне границ шкалы отвергается', async () => {
+    const db = admin('root').firestore();
+    await assertFails(setDoc(doc(db, 'dims/d1'), { ...validDim(), rating: 11 }));
+    await assertFails(setDoc(doc(db, 'dims/d2'), { ...validDim(), rating: -1 }));
+    await assertFails(setDoc(doc(db, 'dims/d3'), { ...validDim(), rates: -1 }));
+    // stars не может превышать 10 × rates — это и есть настоящий инвариант шкалы.
+    await assertFails(setDoc(doc(db, 'dims/d4'), { ...validDim(), stars: 31, rates: 3, rating: 10 }));
+    await assertFails(setDoc(doc(db, 'dims/d5'), { ...validDim(), rating: '10' }));
+  });
+
+  test('🔑 ноль — законная оценка: stars = 0 при ненулевом rates проходит', async () => {
+    // Ловушка канона (`AGENT_GUIDE` → шкала 0…10): «rates > 0 значит stars > 0» ЛОЖНО.
+    // Измерению, которому все поставили ноль, честно полагается stars = 0; в бою таких два.
+    const db = admin('root').firestore();
+    await assertSucceeds(setDoc(doc(db, 'dims/d1'), { ...validDim(), stars: 0, rates: 3, rating: 0 }));
+  });
+
+  test('🔒 измерение удаляет только админ', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'dims/odyssey'), validDim());
+    });
+
+    await assertFails(deleteDoc(doc(verified(BOB).firestore(), 'dims/odyssey')));
+    await assertFails(deleteDoc(doc(guest(GHOST).firestore(), 'dims/odyssey')));
+    await assertSucceeds(deleteDoc(doc(admin('root').firestore(), 'dims/odyssey')));
+  });
+
+  /*
+   * ИНДЕКС КАТАЛОГА — отдельная форма в той же коллекции. Шаг 4 `plans/44` пишет строку
+   * индекса ТЕМ ЖЕ батчем, что документ измерения, то есть это КЛИЕНТСКАЯ запись; без
+   * своего правила она была бы отвергнута валидацией измерения (у индекса нет `title`).
+   * Сервер синхронизации ходит Admin SDK и правил не касается — поэтому сегодня такой
+   * отказ был бы невидим и вскрылся бы только в фазе 4.
+   */
+  test('админ пишет индекс каталога, у которого своя форма', async () => {
+    const db = admin('root').firestore();
+    await assertSucceeds(
+      setDoc(doc(db, 'dims/dims_list'), { dims_list: '{"calm":{"ru":"Спокойствие","en":"Calm"}}' }),
+    );
+  });
+
+  test('🔒 индекс каталога не пишет ни обычный человек, ни гость', async () => {
+    const payload = { dims_list: '{}' };
+    await assertFails(setDoc(doc(verified(BOB).firestore(), 'dims/dims_list'), payload));
+    await assertFails(setDoc(doc(guest(GHOST).firestore(), 'dims/dims_list'), payload));
+    await assertFails(setDoc(doc(anonymous().firestore(), 'dims/dims_list'), payload));
+  });
+
+  test('🔒 в индекс не положить лишнего поля и не подменить строку картой', async () => {
+    const db = admin('root').firestore();
+    await assertFails(setDoc(doc(db, 'dims/dims_list'), { dims_list: '{}', smuggled: 1 }));
+    await assertFails(setDoc(doc(db, 'dims/dims_list'), { dims_list: { calm: 'Спокойствие' } }));
   });
 });
 
