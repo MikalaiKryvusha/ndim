@@ -20,18 +20,7 @@
  * фазы («полной пересборки не было»). Шаг 0 этого же плана назвал верную развязку словами
  * «панель может не знать про индекс вовсе».
  */
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  serverTimestamp,
-  setDoc,
-  Timestamp,
-  where,
-} from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 import { db } from '../firebase.ts';
 import { parseDimsIndex } from '../model/feed.ts';
@@ -61,16 +50,33 @@ export interface AdminDim extends DimDoc {
 }
 
 /**
- * Список каталога для комнаты.
+ * Измерения, заведённые в ЭТОЙ вкладке и ещё не попавшие в индекс каталога.
  *
- * ДВА источника, и второй нужен не «на всякий случай». Индекс обновляет сервер синхронизации
- * своим циклом (на стенде 15 с, в бою 60 с), поэтому измерение, только что заведённое из
- * панели, в индексе ещё не лежит. Без второго источника владелец, обновив страницу сразу после
- * создания, не нашёл бы свою запись — и завёл бы её второй раз.
+ * Живёт в памяти модуля намеренно: это замена лишнему запросу к базе, а не кеш. Индекс ведёт
+ * сервер синхронизации своим циклом, и до конца цикла новая запись существует только у нас.
+ * Перезагрузка вкладку обнуляет — и это честно: после перезагрузки правда о каталоге одна,
+ * и она в индексе.
+ */
+const createdThisSession = new Map<string, AdminDimRow>();
+
+/**
+ * Список каталога для комнаты — **РОВНО ОДНО ЧТЕНИЕ** документа `dims/dims_list`.
  *
- * Второй запрос — та же дельта, что делает сервер: документы, созданные не раньше отметки
- * свежести индекса. Обычно он приносит НОЛЬ документов, поэтому цена его — один запрос, а не
- * обход каталога.
+ * 🔴🔴 ОДИН ЗАПРОС — ПРЯМОЕ УКАЗАНИЕ ВЛАДЕЛЬЦА 2026-08-17, дословно: «*нужно убедиться, что
+ * менеджер грузит весь список измерений только одним запросом димс лист*». Это применение его же
+ * канона: «*я весь первый NDim писал так, чтобы ЭКОНОМИТЬ ЗАПРОСЫ К БАЗЕ!!! Везде, где могу*».
+ * Замерено прибором `tools/measure-admin-dims-reads.mjs`: открытие комнаты стоит **1 чтение**.
+ *
+ * ⛔ **ЧЕГО ЗДЕСЬ БЫЛО И ПОЧЕМУ УБРАНО.** Первая редакция читала ВТОРОЙ источник — дельту
+ * `dims where time.created >= built.at`, — чтобы только что заведённое измерение было видно до
+ * того, как сервер синхронизации внесёт его в индекс. Заплатка стоила лишнего запроса на КАЖДОМ
+ * открытии комнаты ради случая, который случается раз в день. Владелец эту цену не принял, и он
+ * прав: то же самое покрывается БЕЗ обращения к базе — созданная строка добавляется в список
+ * из памяти страницы (`rememberCreated` ниже).
+ *
+ * ⚠️ Честная граница, которая от этого осталась: если перезагрузить страницу в течение цикла
+ * синхронизации после создания, новой записи в списке не будет — индекс её ещё не знает. Экран
+ * говорит об этом словами прямо в ответе на создание, а не оставляет человека догадываться.
  */
 export async function loadAdminCatalog(): Promise<AdminCatalog> {
   const store = db();
@@ -88,26 +94,15 @@ export async function loadAdminCatalog(): Promise<AdminCatalog> {
     });
   }
 
-  // Отметка свежести индекса. Нет её — дельту не спрашиваем: без опоры запрос стал бы обходом
-  // всего каталога, а это ровно то, чего канон экономии не разрешает.
-  const builtAt: unknown = snapshot.data()?.built?.at;
+  /*
+   * Созданное в этой сессии, чего индекс ещё не знает. Держится в памяти модуля, а не
+   * дочитывается из базы: цена — ноль запросов.
+   */
   let awaiting = 0;
-  if (typeof builtAt === 'number') {
-    const fresh = await getDocs(
-      query(collection(store, 'dims'), where('time.created', '>=', Timestamp.fromMillis(builtAt))),
-    );
-    for (const found of fresh.docs) {
-      if (rows.has(found.id)) continue;
-      const data = found.data() as Partial<DimDoc>;
-      rows.set(found.id, {
-        id: found.id,
-        ru: data.title?.ru ?? '',
-        en: data.title?.en ?? '',
-        year: typeof data.year === 'string' ? data.year : '',
-        awaitingIndex: true,
-      });
-      awaiting += 1;
-    }
+  for (const row of createdThisSession.values()) {
+    if (rows.has(row.id)) continue;
+    rows.set(row.id, row);
+    awaiting += 1;
   }
 
   /*
@@ -147,7 +142,20 @@ export async function loadDimForEdit(id: string): Promise<AdminDim | null> {
 export async function createDim(draft: DimDraft): Promise<string> {
   const store = db();
   const ref = doc(collection(store, 'dims'));
-  await setDoc(ref, { ...draftToDoc(draft), time: { created: serverTimestamp() } });
+  const payload = draftToDoc(draft);
+  await setDoc(ref, { ...payload, time: { created: serverTimestamp() } });
+
+  /*
+   * Запоминаем строку В ПАМЯТИ — чтобы список показал её сразу и БЕЗ второго запроса к базе.
+   * Это и есть замена убранной дельте (указание владельца «только одним запросом димс лист»).
+   */
+  createdThisSession.set(ref.id, {
+    id: ref.id,
+    ru: payload.title.ru ?? '',
+    en: payload.title.en ?? '',
+    year: typeof payload.year === 'string' ? payload.year : '',
+    awaitingIndex: true,
+  });
   return ref.id;
 }
 
@@ -192,4 +200,27 @@ export async function updateDim(current: AdminDim, draft: DimDraft): Promise<voi
  */
 export async function removeDim(id: string): Promise<void> {
   await deleteDoc(doc(db(), 'dims', id));
+  // Если удалили то, что сами и завели в этой вкладке, — убрать из памяти, иначе список
+  // показывал бы призрак записи, которой в базе больше нет.
+  createdThisSession.delete(id);
+}
+
+/**
+ * Правка изменила название? Значит и запомненная строка обязана обновиться, иначе список покажет
+ * старое имя у записи, которую индекс ещё не знает. Пара «истина ↔ зеркало» внутри одной вкладки.
+ */
+export function rememberEdited(current: AdminDim, draft: DimDraft): void {
+  if (!createdThisSession.has(current.id)) return;
+  const payload = draftToDoc(draft, {
+    stars: current.stars,
+    rates: current.rates,
+    rating: current.rating,
+  });
+  createdThisSession.set(current.id, {
+    id: current.id,
+    ru: payload.title.ru ?? '',
+    en: payload.title.en ?? '',
+    year: typeof payload.year === 'string' ? payload.year : '',
+    awaitingIndex: true,
+  });
 }

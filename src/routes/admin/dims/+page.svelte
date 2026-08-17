@@ -23,10 +23,10 @@
    * рисуется только кольцо ожидания, а каталог не читается вовсе (стережёт `verify-admin-home`,
    * п.4: «в пререндеренном HTML раздела нет данных»).
    *
-   * ⏳ УДАЛЕНИЯ ЗДЕСЬ НЕТ НАМЕРЕННО. `plans/44` шаг 4 помечает текст подтверждения удаления как
-   * `STOP-ASK`: «формулировку СНАЧАЛА показать владельцу — это текст с последствиями». Удаление
-   * измерения снимает оценки живых людей из математики связей, и такой текст агент не выдумывает.
-   * Вопрос владельцу — `interviews/interview_038_dims_room_forks.md`.
+   * 🗑 УДАЛЕНИЕ ЕСТЬ, и его текст принадлежит владельцу: интервью №038, В1 = **B** (2026-08-17).
+   * Шаг 4 плана помечал эту формулировку `STOP-ASK` («текст с последствиями»), поэтому агент её не
+   * выдумывал — владелец выбрал вариант, прочитав все четыре и цену каждого. Подробности и разбор
+   * моего снятого возражения — у `openDeleteConfirm` ниже.
    */
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -40,11 +40,14 @@
     createDim,
     loadAdminCatalog,
     loadDimForEdit,
+    rememberEdited,
+    removeDim,
     updateDim,
     type AdminCatalog,
     type AdminDim,
     type AdminDimRow,
   } from '$lib/data/admin-dims';
+  import { unitRu } from '$lib/ui/format';
   import {
     EMPTY_DRAFT,
     docToDraft,
@@ -151,6 +154,7 @@
         draft = { ...EMPTY_DRAFT };
       } else {
         await updateDim(editing, draft);
+        rememberEdited(editing, draft);
         saved = { ok: true, text: 'Правка записана. Оценки людей не тронуты.' };
       }
       await refresh();
@@ -161,6 +165,79 @@
       };
     } finally {
       saving = false;
+    }
+  }
+
+  /*
+   * ── УДАЛЕНИЕ ─────────────────────────────────────────────────────────────────────────────
+   *
+   * 🔴 ТЕКСТ ПОДТВЕРЖДЕНИЯ — РЕШЕНИЕ ВЛАДЕЛЬЦА (интервью №038, В1 = **B**, 2026-08-17).
+   * Он выбрал короткое предупреждение без механики, прочитав все четыре варианта и названную
+   * цену каждого. Дословно его вариант:
+   *
+   *   «Удалить измерение «Название»?»
+   *   «Оценки N человек по этому измерению перестанут работать. Действие необратимо.»
+   *   [Удалить измерение] · [Отменить]
+   *
+   * ⛔ Переписывать нельзя: это текст с последствиями, и он принадлежит ему.
+   * 🔑 Я возражал против слова «необратимо» и БЫЛ НЕПРАВ: повторное создание записи с тем же
+   * названием получает НОВЫЙ идентификатор, поэтому прежние оценки к нему уже не привяжутся —
+   * отменить удаление действительно нечем. Возражение снято, слово его точнее моего.
+   */
+  let confirmingDelete = $state(false);
+  let deleting = $state(false);
+  /** Узел подтверждения — нужен, чтобы ПОКАЗАТЬ его человеку, а не только вставить в разметку. */
+  let confirmNode = $state<HTMLElement | null>(null);
+
+  /**
+   * 🔴 ПОДТВЕРЖДЕНИЕ ОБЯЗАНО ПОПАСТЬ В ЭКРАН, а не просто появиться в разметке.
+   *
+   * Поймано КАДРОМ стража, а не проверкой: форма из десяти полей длиннее экрана, подтверждение
+   * встаёт под кнопками — и на 900 точках высоты оно оказывалось ЗА нижней кромкой. Регулярки по
+   * тексту при этом были зелёными: они судили DOM, а человек не видел ответа на своё нажатие и
+   * решил бы, что кнопка не работает.
+   *
+   * Это ровно тот класс, о котором канон говорит: «у ВИДИМОГО дефекта приёмка ПИКСЕЛЬНАЯ, а не
+   * габаритная» — и почему контрольный кадр обязателен (`EXP-0082`).
+   */
+  function openDeleteConfirm(): void {
+    confirmingDelete = true;
+    requestAnimationFrame(() => confirmNode?.scrollIntoView({ block: 'center' }));
+  }
+
+  /**
+   * Первая фраза варианта B названа числом людей. У измерения без оценок она была бы неправдой
+   * («оценки 0 человек перестанут работать» — ничего не перестанет), поэтому при нуле остаётся
+   * только вторая фраза владельца. Это не второй текст, а пропуск утверждения, которое ложно.
+   */
+  const deleteWarning = $derived.by((): string => {
+    const rates = editing?.rates ?? 0;
+    const irreversible = 'Действие необратимо.';
+    if (rates === 0) return irreversible;
+    return `Оценки ${rates} ${unitRu(rates, ['человека', 'человек', 'человек'])} по этому измерению перестанут работать. ${irreversible}`;
+  });
+
+  async function confirmDelete(): Promise<void> {
+    if (editing === null) return;
+    deleting = true;
+    saved = null;
+    try {
+      await removeDim(editing.id);
+      confirmingDelete = false;
+      editing = null;
+      draft = { ...EMPTY_DRAFT };
+      // Отбор снимается: иначе человек возвращается в каталог, где по старому запросу
+      // «ничего не нашлось» — и это читается как «каталог опустел». Поймано на кадре стража.
+      search = '';
+      await refresh();
+      tab = 'catalog';
+    } catch (error) {
+      saved = {
+        ok: false,
+        text: `Не удалено: ${error instanceof Error ? error.message : 'отказ базы'}`,
+      };
+    } finally {
+      deleting = false;
     }
   }
 
@@ -312,8 +389,41 @@
               </button>
               {#if editing !== null}
                 <button onclick={startCreate}>{t.cancel}</button>
+                <!--
+                  Удаление стоит ОТДЕЛЬНО от кнопок записи и не носит вида основного действия:
+                  оно снимает труд людей, а не правит текст. Первый тап только открывает
+                  подтверждение — одиночного нажатия не хватает.
+                -->
+                {#if !confirmingDelete}
+                  <button class="danger" onclick={openDeleteConfirm}>
+                    <Icon name="trash" size={14} />
+                    Удалить измерение
+                  </button>
+                {/if}
               {/if}
             </div>
+
+            {#if editing !== null && confirmingDelete}
+              <!--
+                ТЕКСТ ВЛАДЕЛЬЦА, вариант B интервью №038. Не переписывать.
+                Подтверждение живёт в самой карточке, а не в браузерном `confirm`: системный
+                диалог не слушает тему продукта и не проверяем стражем.
+              -->
+              <div class="confirm" bind:this={confirmNode}>
+                <p class="confirm-head">
+                  Удалить измерение «{editing.title?.ru ?? editing.title?.en}»?
+                </p>
+                <p class="confirm-body">{deleteWarning}</p>
+                <div class="acts">
+                  <button class="danger" onclick={confirmDelete} disabled={deleting}>
+                    Удалить измерение
+                  </button>
+                  <button onclick={() => (confirmingDelete = false)} disabled={deleting}>
+                    Отменить
+                  </button>
+                </div>
+              </div>
+            {/if}
           </div>
         </section>
       {/if}
@@ -571,6 +681,32 @@
   .acts button:disabled {
     opacity: 0.6;
     cursor: default;
+  }
+  /* Удаление окрашено кромкой, а не заливкой: это не основное действие экрана. */
+  .acts button.danger {
+    color: #d50000;
+    border-color: #d50000;
+    background: var(--panel);
+  }
+  .confirm {
+    display: grid;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid #d50000;
+    border-radius: 12px;
+    background: var(--bg);
+  }
+  .confirm-head {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--heading);
+  }
+  .confirm-body {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
   }
 
   .hold {

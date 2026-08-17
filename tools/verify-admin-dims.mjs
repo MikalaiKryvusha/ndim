@@ -339,11 +339,21 @@ try {
     const seededRates = Number(seeded?.fields?.rates?.integerValue ?? 0);
     check(seededRates === 12, 'контроль прибора: сводка перед правкой НЕнулевая', `rates ${seededRates}`);
 
-    // Правим через ЭКРАН, а не через базу: предмет проверки — путь человека.
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.rows li', { timeout: 15000 });
+    /*
+     * Правим через ЭКРАН, а не через базу: предмет проверки — путь человека.
+     *
+     * ⚠️ БЕЗ ПЕРЕЗАГРУЗКИ, и это не удобство. Указание владельца 2026-08-17 — список грузится
+     * ОДНИМ запросом `dims_list`, — значит только что созданная запись видна из памяти вкладки,
+     * пока сервер синхронизации не внёс её в индекс. Перезагрузка эту память стирает, и страж
+     * мерил бы не продукт, а скорость цикла синхронизации.
+     */
+    await page.locator('.tabs button', { hasText: 'Каталог' }).click();
+    await page.waitForSelector('.rows li', { timeout: 8000 });
     await page.locator('input[type="search"]').fill(MARK.slice(0, 10));
     await page.waitForTimeout(300);
+    const foundFresh = await page.locator('.rows li').count();
+    check(foundFresh === 1, 'п.4а0: 🔑 созданное видно в списке СРАЗУ и без второго запроса к базе',
+      `строк ${foundFresh}`);
     await page.locator('.rows li .rowbtn').first().click();
     await page.waitForSelector('.form', { timeout: 8000 });
     const notice = await page.locator('.warn').first().innerText().catch(() => '');
@@ -366,6 +376,64 @@ try {
     check(f.time?.mapValue?.fields?.created?.timestampValue !== undefined,
       'п.4г: метка создания пережила правку — запись не стала «новой» заново');
     await page.screenshot({ path: `${OUT}/edited.png`, fullPage: false });
+  }
+
+  // ── п.8 · удаление: текст владельца дословно, и одного нажатия не хватает ────────────────
+  console.log('\nУдаление — текст владельца, вариант B интервью №038 (п.8):');
+  if (createdId === null) {
+    check(false, 'п.8: нечем мерить — документ не создался');
+  } else {
+    // Карточка уже открыта на правку после п.4, у неё rates = 12.
+    const before = (await listDims()).length;
+    await page.locator('.acts button.danger').first().click();
+    await page.waitForSelector('.confirm', { timeout: 5000 });
+
+    const head = await page.locator('.confirm-head').innerText();
+    const body = await page.locator('.confirm-body').innerText();
+    check(/^Удалить измерение «.+»\?$/u.test(head.trim()),
+      'п.8а: заголовок подтверждения — формулировка владельца', head.trim());
+    check(body.includes('перестанут работать') && body.includes('Действие необратимо.'),
+      'п.8б: 🔴 текст варианта B стоит ДОСЛОВНО', body.trim());
+    check(/Оценки 12 человек/u.test(body),
+      'п.8в: число людей названо и склонено верно', body.trim().slice(0, 60));
+    check(!/навсегда/iu.test(body), 'п.8г: запрещённого слова «навсегда» в тексте нет');
+
+    const midway = (await listDims()).length;
+    check(midway === before, 'п.8д: 🔑 открытие подтверждения НИЧЕГО не удалило',
+      `${before} → ${midway}`);
+    /*
+     * 🔴 ПОДТВЕРЖДЕНИЕ ОБЯЗАНО ПОПАСТЬ В ЭКРАН, а не только в разметку.
+     *
+     * Эту проверку добавил КАДР, а не рассуждение: форма из десяти полей длиннее экрана, и
+     * подтверждение вставало ЗА нижней кромкой. Все проверки текста выше были при этом
+     * зелёными — они судят DOM. Человек же не видел ответа на своё нажатие.
+     * Мера — пересечение прямоугольника узла с вьюпортом, а не `isVisible()`: тот про
+     * разметку и стили, и про положение относительно экрана не говорит ничего.
+     */
+    const inView = await page.locator('.confirm').evaluate((node) => {
+      const r = node.getBoundingClientRect();
+      return r.top < window.innerHeight && r.bottom > 0 && r.height > 0;
+    });
+    check(inView, 'п.8д2: 🔑 подтверждение ПОПАЛО В ЭКРАН, а не осталось за кромкой');
+    // Кадр — контрольный (`EXP-0082`): текст владельца обязан читаться глазами.
+    await page.screenshot({ path: `${OUT}/confirm-delete.png`, fullPage: false });
+
+    // Отмена обязана вернуть всё как было — иначе «Отменить» декоративна.
+    await page.locator('.confirm .acts button', { hasText: 'Отменить' }).click();
+    await page.waitForTimeout(400);
+    const afterCancel = (await listDims()).length;
+    check(afterCancel === before && (await findProbe()) !== null,
+      'п.8е: «Отменить» действительно отменяет — измерение на месте', `${afterCancel}`);
+
+    // И только теперь удаляем по-настоящему.
+    await page.locator('.acts button.danger').first().click();
+    await page.waitForSelector('.confirm', { timeout: 5000 });
+    await page.locator('.confirm .acts button.danger').click();
+    await page.waitForTimeout(1500);
+    const gone = await findProbe();
+    check(gone === null, 'п.8ж: 🔑 после подтверждения измерения в БАЗЕ нет');
+    if (gone === null) createdId = null;
+    await page.screenshot({ path: `${OUT}/deleted.png`, fullPage: false });
   }
 
   console.log('\nКонсоль (п.7):');
