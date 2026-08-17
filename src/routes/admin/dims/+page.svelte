@@ -45,6 +45,7 @@
     loadDimForEdit,
     rejectCandidate,
     rememberEdited,
+    returnCandidate,
     removeDim,
     updateDim,
     type AdminCatalog,
@@ -97,6 +98,19 @@
   let queue = $state<readonly DimCandidate[] | null>(null);
   /** По какому кандидату идёт работа: чтобы кнопки гасли только у него, а не у всей очереди. */
   let judging = $state<string | null>(null);
+
+  /*
+   * Комментарии владельца агенту — по одному на карточку, ключ = идентификатор кандидата
+   * (`bugs/142`). Карточек в очереди много, поле у каждой своё, и общий черновик перепутал бы их
+   * между собой.
+   *
+   * 🔑 ОДИН комментарий на карточку, а не по одному на каждое поле, — и это не выбор агента:
+   * так устроен УТВЕРЖДЁННЫЙ владельцем макет V1 «Стопка» (`design/dims-manager-mockups.html`,
+   * блок «ваш комментарий агенту»). Строка метаплана `plans/30` про «комментарий крепится к
+   * КОНКРЕТНОМУ ПОЛЮ» — довод отрасли, написанный агентом ДО показа макетов; выбор владельца
+   * старше довода агента. Захочет точнее — это одна его строка правки, а не переделка контура.
+   */
+  const ownerNotes = $state<Record<string, string>>({});
 
   let draft = $state<DimDraft>({ ...EMPTY_DRAFT });
   /** Что правим. `null` — заводим новое. */
@@ -168,6 +182,40 @@
       saved = {
         ok: false,
         text: `Не отклонено: ${error instanceof Error ? error.message : 'отказ базы'}`,
+      };
+    } finally {
+      judging = null;
+    }
+  }
+
+  /**
+   * ВЕРНУТЬ НА ДОРАБОТКУ: кандидат уходит из очереди с комментарием владельца, в каталог не
+   * пишется НИЧЕГО (`bugs/142`).
+   *
+   * Это обратное плечо контура «агент предлагает → владелец судит»: без него у почти хорошей
+   * карточки оставались бы только «одобрить как есть» и «отклонить», то есть работа разведки
+   * терялась бы из-за одной формулировки.
+   */
+  async function sendBack(candidate: DimCandidate): Promise<void> {
+    const note = (ownerNotes[candidate.id] ?? '').trim();
+    // Второй рубеж: кнопку гасит разметка, но правило «возврат без объяснения не даёт агенту
+    // ничего» обязано жить и здесь — иначе оно держалось бы на одном атрибуте `disabled`.
+    if (note === '') return;
+    judging = candidate.id;
+    saved = null;
+    try {
+      await returnCandidate(candidate, note);
+      saved = {
+        ok: true,
+        text: `«${candidate.title.ru}» возвращено на доработку. В каталог не записано ничего; `
+          + 'агент прочтёт Ваш комментарий и вернёт карточку в очередь.',
+      };
+      delete ownerNotes[candidate.id];
+      await refresh();
+    } catch (error) {
+      saved = {
+        ok: false,
+        text: `Не возвращено: ${error instanceof Error ? error.message : 'отказ базы'}`,
       };
     } finally {
       judging = null;
@@ -449,12 +497,40 @@
                     <div class="cand-note"><b>Замечание агента:</b> {c.agentNote}</div>
                   {/if}
 
+                  <!--
+                    ДВА ПОЛЯ КОММЕНТАРИЯ, РАЗНЫЕ (решение владельца 2026-08-02, `bugs/142`):
+                    выше — что агент написал ему (только чтение), здесь — что он пишет агенту.
+                    Одно поле на двоих затёрло бы одну из сторон и сделало бы диалог невозможным.
+                    Форма — из утверждённого макета V1 «Стопка».
+                  -->
+                  <label class="cand-say">
+                    <span class="who">Ваш комментарий агенту</span>
+                    <textarea
+                      rows="2"
+                      bind:value={ownerNotes[c.id]}
+                      disabled={judging !== null}
+                      placeholder="Что поправить в этой карточке"
+                    ></textarea>
+                  </label>
+
                   <div class="acts">
                     <button class="ok" onclick={() => approve(c)} disabled={judging !== null}>
                       Одобрить
                     </button>
                     <button onclick={() => editBeforeApprove(c)} disabled={judging !== null}>
                       Правка перед одобрением
+                    </button>
+                    <!--
+                      🔴 Кнопка неактивна при пустом комментарии: возврат без объяснения не даёт
+                      агенту ничего и стоит владельцу повторной вычитки. Это не защита от ошибки,
+                      а смысл самого действия.
+                    -->
+                    <button
+                      class="back"
+                      onclick={() => sendBack(c)}
+                      disabled={judging !== null || (ownerNotes[c.id] ?? '').trim() === ''}
+                    >
+                      Вернуть на доработку
                     </button>
                     <button class="danger" onclick={() => reject(c)} disabled={judging !== null}>
                       Отклонить
@@ -968,6 +1044,45 @@
     border-left: 3px solid var(--primary);
     background: var(--panel);
     border-radius: 0 8px 8px 0;
+  }
+
+  /*
+    Поле комментария владельца агенту (`bugs/142`, форма из утверждённого макета V1 «Стопка»).
+    Стоит ПОСЛЕДНИМ перед кнопками, потому что его пишут, уже прочитав карточку целиком.
+  */
+  .cand-say {
+    display: grid;
+    gap: 5px;
+  }
+  .cand-say .who {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--faint);
+  }
+  .cand-say textarea {
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--edge);
+    border-radius: 10px;
+    padding: 8px 10px;
+    /* Растёт вниз, а не в стороны: горизонтальный размер карточки — общий для всей очереди. */
+    resize: vertical;
+  }
+  .cand-say textarea:disabled {
+    opacity: 0.6;
+  }
+  /*
+    Возврат окрашен кромкой: это не основное действие («Одобрить») и не разрушительное
+    («Отклонить»), а третий по весу путь — и вес читается цветом.
+  */
+  .acts button.back {
+    color: var(--primary);
+    border-color: var(--primary);
+    background: var(--panel);
   }
 
   .hold {

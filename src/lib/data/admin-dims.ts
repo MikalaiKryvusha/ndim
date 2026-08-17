@@ -226,9 +226,18 @@ export interface DimCandidate {
   readonly author?: { readonly ru: string; readonly en: string };
   readonly year?: string;
   readonly tags?: readonly string[];
-  readonly status: 'pending' | 'approved' | 'rejected';
+  readonly status: 'pending' | 'approved' | 'rejected' | 'returned';
   readonly source?: { readonly registry: string; readonly id: string; readonly sitelinks: number };
+  /**
+   * 🔴 ДВА ПОЛЯ КОММЕНТАРИЯ, И ПУТАТЬ ИХ НЕЛЬЗЯ (`bugs/142`, решение владельца 2026-08-02:
+   * «*помимо поля комментария автора — заполняемое, делаем ещё статичное текстовое поле
+   * комментария ИИ агента владельцу*»):
+   *   · `agentNote` — что агент написал ВЛАДЕЛЬЦУ (только для чтения на экране);
+   *   · `ownerNote` — что владелец написал АГЕНТУ, возвращая карточку на доработку.
+   * Одно поле на двоих затёрло бы одну из сторон и сделало бы диалог невозможным.
+   */
   readonly agentNote?: string;
+  readonly ownerNote?: string;
 }
 
 /**
@@ -291,6 +300,34 @@ export async function rejectCandidate(candidate: DimCandidate): Promise<void> {
   await setDoc(doc(db(), 'dim_candidates', candidate.id), {
     ...candidateRecord(candidate),
     status: 'rejected',
+  });
+}
+
+/**
+ * ВОЗВРАТ НА ДОРАБОТКУ: кандидат уходит из очереди с комментарием владельца, в каталог не
+ * пишется НИЧЕГО.
+ *
+ * 🔴 Четвёртое действие, которого не хватало (`bugs/142`, слово владельца: «*Я хотел написать
+ * комментарий в кандидате и нажать кнопку [Вернуть на доработку]*»). Метаплан `plans/30` фаза 6
+ * называл четыре действия, агент построил три — и рассуждение «возврат нужен реже всего» было
+ * неверным: возврат нужен ровно тогда, когда карточка ПОЧТИ хороша, то есть в самом частом
+ * случае. Отклонить хорошего кандидата из-за одной формулировки значит потерять работу разведки.
+ *
+ * 🔑 `agentNote` при этом НЕ затирается: он приезжает из `candidateRecord` вместе с остальным
+ * телом. Комментарий владельца ложится в СВОЁ поле — это обратное плечо контура, и агент читает
+ * возвращённое запросом по статусу `returned`.
+ *
+ * Пустой комментарий сюда не доходит: возврат без объяснения не даёт агенту ничего и стоит
+ * владельцу повторной вычитки. Кнопку гасит экран, а этот отказ — второй рубеж на случай
+ * вызова мимо экрана.
+ */
+export async function returnCandidate(candidate: DimCandidate, note: string): Promise<void> {
+  const comment = note.trim();
+  if (comment === '') throw new Error('Возврат на доработку требует комментария');
+  await setDoc(doc(db(), 'dim_candidates', candidate.id), {
+    ...candidateRecord(candidate),
+    status: 'returned',
+    ownerNote: comment,
   });
 }
 

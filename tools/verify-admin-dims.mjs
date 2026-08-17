@@ -224,6 +224,25 @@ await grantAdmin();
 const browser = await chromium.launch();
 let createdId = null;
 
+/**
+ * Ждёт, пока карточка кандидата УЙДЁТ из очереди, и отвечает, дождалась ли.
+ *
+ * 🔑 Почему ожидание, а не мгновенный счёт. Экран печатает ответ («одобрено», «возвращено») ДО
+ * того, как перечитает очередь: `saved` ставится перед `await refresh()`. Проверка сразу после
+ * появления ответа — гонка, и она даёт стража-лотерею: зелёного от везения планировщика.
+ * Поймано на себе прогоном 2026-08-17 (п.9у покраснела на исправном продукте).
+ * Потолок ожидания обязателен: без него «карточка не ушла» превратилось бы в вечное ожидание
+ * вместо честного провала.
+ */
+async function waitGone(page, cardText, timeout = 8000) {
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    if ((await page.locator('.cand', { hasText: cardText }).count()) === 0) return true;
+    if (Date.now() > deadline) return false;
+    await page.waitForTimeout(150);
+  }
+}
+
 /** Цепочка навигаций главного фрейма — событийно, а не опросом (капкан стража дома). */
 function recordNav(page) {
   const chain = [];
@@ -575,8 +594,7 @@ try {
     check(judged?.fields?.approvedDimId?.stringValue === approvedDimId,
       'п.9з: 🔑 кандидат несёт ссылку на РОЖДЁННОЕ измерение — решение владельца прослеживается');
 
-    const stillQueued = await page.locator('.cand', { hasText: MARK_CAND }).count();
-    check(stillQueued === 0, 'п.9и: одобренный ушёл из очереди', `осталось ${stillQueued}`);
+    check(await waitGone(page, MARK_CAND), 'п.9и: одобренный ушёл из очереди');
 
     // ── Отклонение НЕ пишет в каталог ────────────────────────────────────────────────────
     await putCandidate(`${CAND_ID}-rej`, {
@@ -600,6 +618,55 @@ try {
       'п.9к: отклонённый помечен «rejected»', String(rejected?.fields?.status?.stringValue));
     check((await listDims()).length === beforeReject,
       'п.9л: 🔑 отклонение НЕ записало в каталог ничего', `${beforeReject}`);
+
+    /*
+     * ── ВОЗВРАТ НА ДОРАБОТКУ (`bugs/142`) ──────────────────────────────────────────────────
+     *
+     * Четвёртое действие владельца, которого агент не построил: метаплан `plans/30` фаза 6
+     * называл ЧЕТЫРЕ («одобрить · отредактировать · отклонить · вернуть с комментарием»), в
+     * комнате их было три. Нашёл владелец первым же прогоном контура.
+     *
+     * Кандидат заводится С НЕПУСТЫМ `agentNote` намеренно: главный риск правки — затереть одну
+     * сторону диалога другой, и проверить это можно только на карточке, где есть обе.
+     */
+    await putCandidate(`${CAND_ID}-back`, {
+      title: { mapValue: { fields: { ru: { stringValue: `${MARK_CAND} возврат` }, en: { stringValue: 'Queue probe return' } } } },
+      description: { mapValue: { fields: { ru: { stringValue: 'Проба возврата.' }, en: { stringValue: 'Return probe.' } } } },
+      status: { stringValue: 'pending' },
+      agentNote: { stringValue: 'Год в источниках расходится, поставил первое издание.' },
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.cand', { timeout: 15000 });
+
+    const backCard = page.locator('.cand', { hasText: `${MARK_CAND} возврат` }).first();
+    const backBtn = backCard.locator('.acts button.back');
+
+    check(await backBtn.count() === 1, 'п.9м: 🔴 у карточки есть кнопка «Вернуть на доработку»');
+    check(await backBtn.isDisabled(),
+      'п.9н: 🔑 при ПУСТОМ комментарии кнопка неактивна — возврат без объяснения агенту ничего не даёт');
+
+    const NOTE = 'Описание короткое. Перепиши вики-подобно, 900…1400 знаков.';
+    await backCard.locator('.cand-say textarea').fill(NOTE);
+    await page.waitForTimeout(200);
+    check(!(await backBtn.isDisabled()), 'п.9о: с непустым комментарием кнопка ожила');
+
+    const beforeBack = (await listDims()).length;
+    await backBtn.click();
+    await page.waitForSelector('.result', { timeout: 15000 });
+
+    const sentBack = await getCandidate(`${CAND_ID}-back`);
+    check(sentBack?.fields?.status?.stringValue === 'returned',
+      'п.9п: кандидат помечен «returned»', String(sentBack?.fields?.status?.stringValue));
+    check(sentBack?.fields?.ownerNote?.stringValue === NOTE,
+      'п.9р: 🔑 комментарий ВЛАДЕЛЬЦА записан в своё поле `ownerNote`',
+      String(sentBack?.fields?.ownerNote?.stringValue).slice(0, 50));
+    check(sentBack?.fields?.agentNote?.stringValue === 'Год в источниках расходится, поставил первое издание.',
+      'п.9с: 🔴 комментарий АГЕНТА НЕ ЗАТЁРТ — поля разные, диалог двусторонний',
+      String(sentBack?.fields?.agentNote?.stringValue).slice(0, 50));
+    check((await listDims()).length === beforeBack,
+      'п.9т: 🔑 возврат НЕ завёл измерение (вердикт снят с базы)', `${beforeBack}`);
+    check(await waitGone(page, `${MARK_CAND} возврат`),
+      'п.9у: возвращённый ушёл из очереди — владельцу он больше не показывается');
   }
 
   console.log('\nКонсоль (п.7):');
@@ -619,6 +686,7 @@ try {
   if (bornLeft !== null) await deleteDim(bornLeft.id);
   await deleteCandidate(CAND_ID);
   await deleteCandidate(`${CAND_ID}-rej`);
+  await deleteCandidate(`${CAND_ID}-back`);
 
   const leftover = await findProbe();
   const candLeft = await getCandidate(CAND_ID);

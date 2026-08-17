@@ -889,11 +889,52 @@ describe('Очередь кандидатов на вычитку — dim_candid
     await assertFails(setDoc(doc(db, 'dim_candidates/c4'), withoutStatus));
   });
 
-  test('все три законных статуса проходят', async () => {
+  test('все ЧЕТЫРЕ законных статуса проходят', async () => {
     const db = admin('root').firestore();
-    for (const status of ['pending', 'approved', 'rejected']) {
+    for (const status of ['pending', 'approved', 'rejected', 'returned']) {
       await assertSucceeds(setDoc(doc(db, `dim_candidates/s-${status}`), { ...candidate(), status }));
     }
+  });
+
+  /*
+   * ── ВОЗВРАТ НА ДОРАБОТКУ (`bugs/142`) ────────────────────────────────────────────────────
+   *
+   * Четвёртое действие владельца. Правила ОБЯЗАНЫ его пропустить — до этой правки словарь
+   * статусов знал три значения, и возврат отвергался бы молча, оставляя владельца с выбором
+   * «одобрить или потерять».
+   */
+  test('🆕 возврат на доработку принимается вместе с комментарием владельца', async () => {
+    const db = admin('root').firestore();
+    await assertSucceeds(
+      setDoc(doc(db, 'dim_candidates/back'), {
+        ...candidate(),
+        status: 'returned',
+        ownerNote: 'Описание короткое, перепиши вики-подобно.',
+      }),
+    );
+  });
+
+  test('🔑 возврат НЕ затирает комментарий агента — поля разные, диалог двусторонний', async () => {
+    const db = admin('root').firestore();
+    await assertSucceeds(
+      setDoc(doc(db, 'dim_candidates/both'), {
+        ...candidate(),
+        status: 'returned',
+        agentNote: 'Год в источниках расходится, поставил первое издание.',
+        ownerNote: 'Год верный, правь описание.',
+      }),
+    );
+    const saved = await getDoc(doc(db, 'dim_candidates/both'));
+    assert.equal(saved.data()?.agentNote, 'Год в источниках расходится, поставил первое издание.');
+    assert.equal(saved.data()?.ownerNote, 'Год верный, правь описание.');
+  });
+
+  test('🔒 опечатка в статусе возврата отвергается так же, как любая другая', async () => {
+    // `returnd`/`return` — самые вероятные описки нового статуса. Кандидат с таким статусом
+    // не попал бы НИ в очередь (`pending`), НИ в выборку возвращённых — то есть исчез бы молча.
+    const db = admin('root').firestore();
+    await assertFails(setDoc(doc(db, 'dim_candidates/r1'), { ...candidate(), status: 'returnd' }));
+    await assertFails(setDoc(doc(db, 'dim_candidates/r2'), { ...candidate(), status: 'return' }));
   });
 });
 

@@ -42,7 +42,13 @@ const APPLY = process.argv.includes('--apply');
 let db;
 if (CONTOUR === 'stand') {
   process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8181';
-  initializeApp({ projectId: 'demo-ndim-dev' });
+  /*
+   * Проект берётся из окружения, если его выставил `firebase emulators:exec --project …`, и
+   * только иначе — проектом стенда. Так прибор попадает В ТУ ЖЕ базу, из которой его читает
+   * вызвавший, а не в соседнюю: константа здесь молча уводила запись в `demo-ndim-dev`, и
+   * страж круга (`verify-candidate-return-loop.mjs`) видел пустоту при исправном приборе.
+   */
+  initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'demo-ndim-dev' });
   db = getFirestore();
 } else {
   const { serviceAccount } = await import('./lib/credentials.mjs');
@@ -78,16 +84,40 @@ for (const item of items) {
   const existing = await ref.get();
 
   /*
-   * 🔑 РАЗОБРАННОГО НЕ ТРОГАЕМ. Кандидат, который владелец уже одобрил или отклонил, повторным
+   * 🔑 РАЗОБРАННОГО НЕ ТРОГАЕМ. Кандидат, которого владелец одобрил или отклонил, повторным
    * прогоном не возвращается в очередь: это стёрло бы его решение и заставило судить дважды.
+   *
+   * 🔴 НО «ВОЗВРАЩЁН НА ДОРАБОТКУ» — НЕ РЕШЕНИЕ, А ЗАДАНИЕ АГЕНТУ (`bugs/142`). Карточка со
+   * статусом `returned` обязана приниматься обратно: в этом и состоит обратное плечо контура —
+   * агент правит по комментарию владельца и кладёт исправленное в очередь.
+   * ⚠️ Прежняя редакция условия — `status !== 'pending'` — читала «разобран» как «всё, что не
+   * ожидает», и с появлением четвёртого статуса замкнула бы контур в тупик: возвращённая
+   * карточка не вернулась бы к владельцу НИКОГДА. Это тот же класс, что `bugs/129` и `bugs/140`:
+   * условие «всё, что не X, — это Y» живёт ровно до появления Z. Поэтому список назван
+   * ПОИМЁННО, а не отрицанием.
    */
-  if (existing.exists && existing.data()?.status !== 'pending') {
-    console.log(`  ⏭ ${item.title.ru} — уже разобран (${existing.data()?.status}), не тронут`);
+  const DECIDED = ['approved', 'rejected'];
+  const previous = existing.exists ? existing.data()?.status : null;
+  if (DECIDED.includes(previous)) {
+    console.log(`  ⏭ ${item.title.ru} — решение владельца принято (${previous}), не тронут`);
     skipped += 1;
     continue;
   }
+  if (previous === 'returned') {
+    const note = existing.data()?.ownerNote ?? '';
+    console.log(`  ↩ ${item.title.ru} — был возвращён владельцем, кладём исправленное обратно`);
+    if (note !== '') console.log(`     его замечание: ${note}`);
+  }
+
+  /*
+   * Замечание владельца ПЕРЕЖИВАЕТ повторную выгрузку: он написал его один раз, и стереть его
+   * записью исправленного значило бы потерять единственный след того, почему карточка менялась.
+   * Читать его дальше умеет `tools/read-returned-candidates.mjs`.
+   */
+  const keptOwnerNote = existing.exists ? existing.data()?.ownerNote : undefined;
 
   const payload = {
+    ...(keptOwnerNote === undefined ? {} : { ownerNote: keptOwnerNote }),
     title: item.title,
     description: item.description,
     type: item.type,
