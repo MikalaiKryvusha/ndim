@@ -70,12 +70,13 @@
       ru: 'Каталог измерений: создать, отредактировать, разобрать предложенные людьми.',
       en: 'The dimension catalogue: create, edit, review what people suggested.',
     },
-    soon: { ru: 'скоро', en: 'soon' },
-    coming: {
-      ru: 'Комната «Измерения» появится здесь в следующей фазе.',
-      en: 'The Dimensions room will appear here in the next phase.',
-    },
   } as const;
+  /*
+   * 🗑 Сняты 2026-08-17 вместе с постройкой комнаты: пометка «скоро» и обещание «появится в
+   * следующей фазе». Текст, переживший своё исполнение, — это ровно тот класс, который канон
+   * называет «пункт „ждём X“ обязан нести дешёвую проверку, случилось ли X»; здесь проверка
+   * механическая — строка ведёт в живую комнату, и её отсутствие уронило бы страж.
+   */
 </script>
 
 <svelte:head>
@@ -102,19 +103,23 @@
         план `plans/44`), поэтому строка честно помечена «скоро» и не притворяется дверью.
         Второй инструмент приезжает В ЭТОТ ЖЕ список, а не переименовывает раздел.
       -->
+      <!--
+        🆕 2026-08-17: инструмент стал ДВЕРЬЮ — комната «Измерения» построена (`plans/44` фаза 4).
+        Пометка «скоро» снята вместе с обещанием, которое она несла; строка теперь ведёт внутрь.
+        Второй инструмент приезжает В ЭТОТ ЖЕ список, а не переименовывает раздел.
+      -->
       <h2 class="tools-title">{t.tools[lang]}</h2>
       <ul class="tools">
-        <li class="tool">
-          <span class="tool-head">
-            <span class="tool-name">{t.dims[lang]}</span>
-            <span class="soon">{t.soon[lang]}</span>
-          </span>
-          <span class="tool-about">{t.dimsAbout[lang]}</span>
+        <li>
+          <a class="tool" href="/admin/dims">
+            <span class="tool-head">
+              <span class="tool-name">{t.dims[lang]}</span>
+              <Icon name="chevron" size={14} />
+            </span>
+            <span class="tool-about">{t.dimsAbout[lang]}</span>
+          </a>
         </li>
       </ul>
-
-      <!-- Пустое место под комнату фазы 4 — границу фазы держим честно. -->
-      <p class="coming">{t.coming[lang]}</p>
     </main>
 
     <BottomNav active="menu" {lang} />
@@ -184,8 +189,11 @@
     gap: 8px;
   }
   /* Карточка инструмента — та же форма, что у карточек продукта: панель, кромка, тень. */
+  /* Инструмент стал ссылкой: подчёркивание снимаем, вид карточки остаётся прежним. */
   .tool {
     display: grid;
+    text-decoration: none;
+    color: inherit;
     gap: 3px;
     padding: 12px 14px;
     background: var(--panel);
@@ -203,14 +211,6 @@
     font-weight: 600;
     color: var(--heading);
   }
-  .soon {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--faint);
-    border: 1px solid var(--edge);
-    border-radius: 999px;
-    padding: 1px 8px;
-  }
   .tool-about {
     font-size: 13px;
     line-height: 1.45;
@@ -220,10 +220,6 @@
     .tools {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-  }
-  .coming {
-    color: var(--dim);
-    font-size: 14px;
   }
   .hold {
     min-height: 100dvh;
