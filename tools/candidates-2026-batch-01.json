@@ -1,0 +1,158 @@
+{
+  "_": [
+    "ДЕСЯТЬ КАНДИДАТОВ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 1, 2026-08-17.",
+    "Заказ владельца: «10 из них оформишь кандидатами, я вычитаю и попробую одобрить».",
+    "",
+    "ОТКУДА ЧТО ВЗЯТО, чтобы вычитка знала цену каждой строки:",
+    "· названия, вид, год, режиссёр, сценарист, жанр, композитор, состав — ИЗ WIKIDATA по QID",
+    "  (запрос wbgetentities, факты разрешены в имена). Ни одно поле не взято из памяти модели.",
+    "· ОПИСАНИЯ НАПИСАНЫ АГЕНТОМ по этим фактам. Текст Википедии не копировался ни в одном:",
+    "  это лицензионное требование (CC BY-SA) и прямой заказ владельца о вычистке заимствований.",
+    "· sitelinks — число языковых разделов Википедии об объекте, принятая мера известности.",
+    "",
+    "⚠️ ГОД У ДВУХ ЗАПИСЕЙ НАЗВАН ЧЕСТНО: у «Хамнета» и «Сентиментальной ценности» реестр даёт",
+    "2025 (премьера на фестивале), широкий прокат — 2026. Год взят по первой дате реестра."
+  ],
+  "candidates": [
+    {
+      "wikidata": "Q131547207",
+      "sitelinks": 61,
+      "title": { "ru": "Одиссея", "en": "The Odyssey" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Кристофер Нолан", "en": "Christopher Nolan" },
+      "year": "2026",
+      "tags": ["фэнтези", "приключения", "античность", "Нолан"],
+      "description": {
+        "ru": "Кристофер Нолан снял поэму Гомера как приключенческое кино. Он же написал сценарий, музыку сочинил Людвиг Йёранссон. Одиссея играют Мэтт Деймон, рядом с ним Энн Хэтэуэй, Том Холланд и Лупита Нионго. Дорога домой длиной в десять лет показана как путь человека, который держит слово, данное самому себе.",
+        "en": "Christopher Nolan turned Homer's poem into an adventure film. He wrote the screenplay himself, and Ludwig Göransson composed the score. Matt Damon plays Odysseus, with Anne Hathaway, Tom Holland and Lupita Nyong'o beside him. The ten-year road home is shown as the path of a man who keeps the promise he made to himself."
+      },
+      "agentNote": ""
+    },
+    {
+      "wikidata": "Q113244935",
+      "sitelinks": 49,
+      "title": { "ru": "Человек-паук: Новый день", "en": "Spider-Man: Brand New Day" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Дестин Дэниел Креттон", "en": "Destin Daniel Cretton" },
+      "year": "2026",
+      "tags": ["супергерои", "Marvel", "приключения", "фантастика"],
+      "description": {
+        "ru": "Четвёртый фильм о Питере Паркере с Томом Холландом. Поставил его Дестин Дэниел Креттон, сценарий написали Крис МакКенна и Эрик Соммерс, музыку — Майкл Джаккино. Вместе с Холландом играют Зендея, Джейкоб Баталон и Сэди Синк. Картина продолжает Кинематографическую вселенную Marvel и открывает Питеру жизнь, в которой его прошлое забыто всеми.",
+        "en": "The fourth film about Peter Parker with Tom Holland. Destin Daniel Cretton directed it, Chris McKenna and Erik Sommers wrote the screenplay, and Michael Giacchino composed the score. Zendaya, Jacob Batalon and Sadie Sink play alongside Holland. The film continues the Marvel Cinematic Universe and opens a life in which everyone has forgotten Peter's past."
+      },
+      "agentNote": ""
+    },
+    {
+      "wikidata": "Q107105860",
+      "sitelinks": 46,
+      "title": { "ru": "Проект «Конец света»", "en": "Project Hail Mary" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Фил Лорд и Крис Миллер", "en": "Phil Lord and Chris Miller" },
+      "year": "2026",
+      "tags": ["научная фантастика", "космос", "приключения", "Энди Вейер"],
+      "description": {
+        "ru": "Научная фантастика Фила Лорда и Криса Миллера по роману Энди Вейера, сценарий Дрю Годдарда. Райан Гослинг играет школьного учителя, который просыпается на корабле в чужой системе и не помнит, зачем он там. Рядом с ним Сандра Хюллер, Милана Вайнтруб и Лайонел Бойс, музыку написал Дэниэл Пембертон. Человек спасает Землю расчётом и упорством.",
+        "en": "Science fiction by Phil Lord and Chris Miller after Andy Weir's novel, written by Drew Goddard. Ryan Gosling plays a schoolteacher who wakes up on a ship in another star system with no memory of why he is there. Sandra Hüller, Milana Vayntrub and Lionel Boyce play beside him, and Daniel Pemberton composed the score. A man saves the Earth with arithmetic and persistence."
+      },
+      "agentNote": ""
+    },
+    {
+      "wikidata": "Q116677364",
+      "sitelinks": 46,
+      "title": { "ru": "Майкл", "en": "Michael" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Антуан Фукуа", "en": "Antoine Fuqua" },
+      "year": "2026",
+      "tags": ["биография", "музыка", "драма", "Майкл Джексон"],
+      "description": {
+        "ru": "Биография Майкла Джексона, поставленная Антуаном Фукуа по сценарию Джона Логана. Джексона играет его племянник Джаафар Джексон, рядом с ним Колман Доминго, Ниа Лонг и Майлз Теллер. Фильм идёт по дороге от ребёнка из Гэри до человека, чью музыку узнают в любой точке мира.",
+        "en": "A biography of Michael Jackson directed by Antoine Fuqua from a screenplay by John Logan. Jackson is played by his nephew Jaafar Jackson, with Colman Domingo, Nia Long and Miles Teller beside him. The film follows the road from a child in Gary to a man whose music is recognised anywhere in the world."
+      },
+      "agentNote": ""
+    },
+    {
+      "wikidata": "Q122741016",
+      "sitelinks": 39,
+      "title": { "ru": "Хамнет", "en": "Hamnet" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Хлоя Чжао", "en": "Chloé Zhao" },
+      "year": "2025",
+      "tags": ["драма", "биография", "костюмированная драма", "Шекспир"],
+      "description": {
+        "ru": "Драма Хлои Чжао по роману Мэгги О’Фаррелл, сценарий они написали вдвоём. Джесси Бакли и Пол Мескал играют родителей мальчика по имени Хамнет — сына Уильяма Шекспира, умершего в одиннадцать лет. Музыку написал Макс Рихтер. Фильм говорит о том, как горе одной семьи становится «Гамлетом».",
+        "en": "A drama by Chloé Zhao after Maggie O'Farrell's novel, which the two of them wrote together. Jessie Buckley and Paul Mescal play the parents of a boy named Hamnet, the son of William Shakespeare who died at eleven. Max Richter composed the score. The film speaks of how one family's grief becomes Hamlet."
+      },
+      "agentNote": "Год 2025 по реестру: премьера на фестивале в августе 2025, широкий прокат — январь 2026."
+    },
+    {
+      "wikidata": "Q130284179",
+      "sitelinks": 39,
+      "title": { "ru": "Сентиментальная ценность", "en": "Sentimental Value" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Йоаким Триер", "en": "Joachim Trier" },
+      "year": "2025",
+      "tags": ["драма", "комедийная драма", "семья", "Норвегия"],
+      "description": {
+        "ru": "Норвежская комедийная драма Йоакима Триера по сценарию Эскиля Фогта. Ренате Реинсве и Стеллан Скарсгард играют дочь и отца-режиссёра, который возвращается в семью с готовым сценарием о ней самой. В картине также Эль Фэннинг и Инга Ибсдоттер Лиллеос, музыку написала Ханя Рани.",
+        "en": "A Norwegian comedy drama by Joachim Trier from a screenplay by Eskil Vogt. Renate Reinsve and Stellan Skarsgård play a daughter and her film-director father, who returns to the family with a finished screenplay about her. Elle Fanning and Inga Ibsdotter Lilleaas also appear, and Hania Rani composed the score."
+      },
+      "agentNote": "Год 2025 по реестру: премьера в Канне в мае 2025, прокат продолжился в 2026."
+    },
+    {
+      "wikidata": "Q134611972",
+      "sitelinks": 36,
+      "title": { "ru": "Дьявол носит Prada 2", "en": "The Devil Wears Prada 2" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Дэвид Френкель", "en": "David Frankel" },
+      "year": "2026",
+      "tags": ["комедия", "драма", "мода", "продолжение"],
+      "description": {
+        "ru": "Продолжение фильма 2006 года, поставленное тем же Дэвидом Френкелем по сценарию Алин Брош Маккенны. Мерил Стрип снова играет Миранду Пристли, Энн Хэтэуэй — Энди, и вместе с ними возвращаются Эмили Блант и Стэнли Туччи. Музыку написал Теодор Шапиро. Двадцать лет спустя мир глянцевых журналов держится уже не на тираже.",
+        "en": "A sequel to the 2006 film, directed by the same David Frankel from a screenplay by Aline Brosh McKenna. Meryl Streep plays Miranda Priestly again, Anne Hathaway plays Andy, and Emily Blunt and Stanley Tucci return with them. Theodore Shapiro composed the score. Twenty years on, the world of glossy magazines rests on something other than circulation."
+      },
+      "agentNote": ""
+    },
+    {
+      "wikidata": "Q124246549",
+      "sitelinks": 33,
+      "title": { "ru": "Мандалорец и Грогу", "en": "The Mandalorian and Grogu" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Джон Фавро", "en": "Jon Favreau" },
+      "year": "2026",
+      "tags": ["космический вестерн", "Звёздные войны", "приключения"],
+      "description": {
+        "ru": "Космический вестерн Джона Фавро, сценарий он написал вместе с Дейвом Филони. Педро Паскаль играет мандалорца Дина Джарина, который идёт по галактике вдвоём с малышом Грогу. В фильме также Сигурни Уивер, музыку написал Людвиг Йёранссон. Это первый выход «Мандалорца» с экрана телевизора на большой экран.",
+        "en": "A space western by Jon Favreau, written together with Dave Filoni. Pedro Pascal plays the Mandalorian Din Djarin, travelling the galaxy with the child Grogu. Sigourney Weaver also appears, and Ludwig Göransson composed the score. This is the first time the Mandalorian steps from the television screen to the cinema screen."
+      },
+      "agentNote": ""
+    },
+    {
+      "wikidata": "Q129423731",
+      "sitelinks": 33,
+      "title": { "ru": "28 лет спустя: Храм костей", "en": "28 Years Later: The Bone Temple" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Ниа Дакоста", "en": "Nia DaCosta" },
+      "year": "2026",
+      "tags": ["ужасы", "постапокалипсис", "фантастика", "продолжение"],
+      "description": {
+        "ru": "Вторая часть новой трилогии о заражённой Британии. Поставила её Ниа Дакоста по сценарию Алекса Гарленда, музыку написала Хильдюр Гвюднадоуттир. Играют Алфи Уильямс, Аарон Тейлор-Джонсон, Джек О’Коннелл и Эмма Лэйрд. Фильм продолжает историю «28 дней спустя» через двадцать восемь лет после вспышки.",
+        "en": "The second part of the new trilogy about infected Britain. Nia DaCosta directed it from a screenplay by Alex Garland, and Hildur Guðnadóttir composed the score. Alfie Williams, Aaron Taylor-Johnson, Jack O'Connell and Emma Laird star. The film continues the story of 28 Days Later, twenty-eight years after the outbreak."
+      },
+      "agentNote": ""
+    },
+    {
+      "wikidata": "Q124758309",
+      "sitelinks": 31,
+      "title": { "ru": "Крик 7", "en": "Scream 7" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Кевин Уильямсон", "en": "Kevin Williamson" },
+      "year": "2026",
+      "tags": ["ужасы", "слэшер", "триллер", "продолжение"],
+      "description": {
+        "ru": "Седьмой «Крик», и впервые его поставил Кевин Уильямсон — автор сценария самого первого фильма. Сценарий он написал вместе с Гаем Бусиком, музыку — Марко Белтрами. Нив Кэмпбелл возвращается к роли Сидни Прескотт, рядом с ней Кортни Кокс, Изабель Мэй и Джоэль Макхейл.",
+        "en": "The seventh Scream, and the first one directed by Kevin Williamson, who wrote the screenplay of the very first film. He wrote this script with Guy Busick, and Marco Beltrami composed the score. Neve Campbell returns as Sidney Prescott, with Courteney Cox, Isabel May and Joel McHale beside her."
+      },
+      "agentNote": ""
+    }
+  ]
+}

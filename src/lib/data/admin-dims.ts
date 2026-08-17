@@ -20,7 +20,17 @@
  * фазы («полной пересборки не было»). Шаг 0 этого же плана назвал верную развязку словами
  * «панель может не знать про индекс вовсе».
  */
-import { collection, deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from 'firebase/firestore';
 
 import { db } from '../firebase.ts';
 import { parseDimsIndex } from '../model/feed.ts';
@@ -203,6 +213,94 @@ export async function removeDim(id: string): Promise<void> {
   // Если удалили то, что сами и завели в этой вкладке, — убрать из памяти, иначе список
   // показывал бы призрак записи, которой в базе больше нет.
   createdThisSession.delete(id);
+}
+
+// ── ОЧЕРЕДЬ КАНДИДАТОВ НА ВЫЧИТКУ ───────────────────────────────────────────────────────────
+
+/** Кандидат в измерения: то, что агент предложил, а владелец ещё не судил. */
+export interface DimCandidate {
+  readonly id: string;
+  readonly title: { readonly ru: string; readonly en: string };
+  readonly description: { readonly ru: string; readonly en: string };
+  readonly type?: { readonly ru: string; readonly en: string };
+  readonly author?: { readonly ru: string; readonly en: string };
+  readonly year?: string;
+  readonly tags?: readonly string[];
+  readonly status: 'pending' | 'approved' | 'rejected';
+  readonly source?: { readonly registry: string; readonly id: string; readonly sitelinks: number };
+  readonly agentNote?: string;
+}
+
+/**
+ * Очередь на вычитку — только неразобранное.
+ *
+ * Запрос ПО СТАТУСУ, а не перебор коллекции: это и есть механизм «агент видит неутверждённые
+ * запросом» из метаплана, и он же держит цену чтения при росте очереди.
+ */
+export async function loadCandidateQueue(): Promise<readonly DimCandidate[]> {
+  const found = await getDocs(
+    query(collection(db(), 'dim_candidates'), where('status', '==', 'pending')),
+  );
+  const rows = found.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<DimCandidate, 'id'>) }));
+  // Самое известное — первым: у владельца ограниченное внимание, и тратить его надо на то, что
+  // принесёт больше поисков. Тай-брейк по идентификатору — порядок обязан быть полным.
+  return rows.sort(
+    (a, b) => (b.source?.sitelinks ?? 0) - (a.source?.sitelinks ?? 0) || a.id.localeCompare(b.id),
+  );
+}
+
+/** Кандидат — в черновик формы, чтобы его можно было ПРАВИТЬ перед одобрением. */
+export function candidateToDraft(candidate: DimCandidate): DimDraft {
+  return {
+    titleRu: candidate.title?.ru ?? '',
+    titleEn: candidate.title?.en ?? '',
+    descriptionRu: candidate.description?.ru ?? '',
+    descriptionEn: candidate.description?.en ?? '',
+    typeRu: candidate.type?.ru ?? '',
+    typeEn: candidate.type?.en ?? '',
+    authorRu: candidate.author?.ru ?? '',
+    authorEn: candidate.author?.en ?? '',
+    year: candidate.year ?? '',
+    tags: (candidate.tags ?? []).join(', '),
+  };
+}
+
+/**
+ * ОДОБРЕНИЕ: рождает измерение и закрывает кандидата.
+ *
+ * 🔴 Измерение создаётся ТЕМ ЖЕ `createDim`, которым его создаёт ручная форма. Второго пути записи
+ * в каталог нет и не будет — это прямое требование метаплана («одобрение = создание измерения
+ * механизмом фазы 4»). Второй путь означал бы вторую валидацию, второй набор полей и молчаливое
+ * расхождение между тем, что заводит рука, и тем, что заводит одобрение.
+ *
+ * Порядок шагов намеренный: СНАЧАЛА измерение, ПОТОМ отметка кандидата. Если запись каталога не
+ * прошла, кандидат остаётся в очереди — владелец нажмёт снова. Обратный порядок оставил бы
+ * кандидата «одобренным» без измерения, то есть потерял бы его решение молча.
+ */
+export async function approveCandidate(candidate: DimCandidate, draft: DimDraft): Promise<string> {
+  const dimId = await createDim(draft);
+  await setDoc(
+    doc(db(), 'dim_candidates', candidate.id),
+    { ...candidateRecord(candidate), status: 'approved', approvedDimId: dimId },
+  );
+  return dimId;
+}
+
+/** ОТКЛОНЕНИЕ: кандидат уходит из очереди, в каталог не пишется ничего. */
+export async function rejectCandidate(candidate: DimCandidate): Promise<void> {
+  await setDoc(doc(db(), 'dim_candidates', candidate.id), {
+    ...candidateRecord(candidate),
+    status: 'rejected',
+  });
+}
+
+/**
+ * Тело кандидата без служебных полей вычитки. Пишем документ ЦЕЛИКОМ, а не слиянием: правила
+ * требуют статус в каждой записи, а слияние оставило бы решение зависеть от того, что уже лежало.
+ */
+function candidateRecord(candidate: DimCandidate): Record<string, unknown> {
+  const { id, status, ...rest } = candidate;
+  return { ...rest };
 }
 
 /**

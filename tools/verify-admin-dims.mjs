@@ -97,6 +97,40 @@ async function deleteDim(id) {
   await fetch(`${docsUrl}/dims/${id}`, { method: 'DELETE', headers: owner });
 }
 
+/** Ищет измерение каталога по русскому названию — так проверяется рождение из кандидата. */
+async function findDimByTitle(ru) {
+  for (const d of await listDims()) {
+    if (d.fields?.title?.mapValue?.fields?.ru?.stringValue === ru) {
+      return { id: d.name.split('/').pop(), fields: d.fields };
+    }
+  }
+  return null;
+}
+
+// ── Очередь кандидатов: свои записи прогона ─────────────────────────────────────────────────
+const CAND_ID = 'guard-probe-candidate';
+const MARK_CAND = 'Проба очереди стража';
+const MARK_CAND_EN = 'Guard queue probe';
+let approvedDimId = null;
+
+/** Кладёт кандидата REST'ом эмулятора — так же, как это делает прибор агента через Admin SDK. */
+async function putCandidate(id, fields) {
+  await fetch(`${docsUrl}/dim_candidates/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...owner },
+    body: JSON.stringify({ fields }),
+  });
+}
+
+async function getCandidate(id) {
+  const r = await fetch(`${docsUrl}/dim_candidates/${id}`, { headers: owner });
+  return r.ok ? r.json() : null;
+}
+
+async function deleteCandidate(id) {
+  await fetch(`${docsUrl}/dim_candidates/${id}`, { method: 'DELETE', headers: owner });
+}
+
 /** Клейм админа dev-пользователю — идемпотентно, как это делает сид и страж дома. */
 async function grantAdmin() {
   const call = (path, body, headers = {}) =>
@@ -436,6 +470,92 @@ try {
     await page.screenshot({ path: `${OUT}/deleted.png`, fullPage: false });
   }
 
+  // ── п.9 · ОЧЕРЕДЬ КАНДИДАТОВ: агент предлагает, владелец судит ────────────────────────────
+  console.log('\nОчередь кандидатов (п.9):');
+  {
+    /*
+     * Страж заводит СВОЕГО кандидата, а не судит настоящих: разобранный кандидат из очереди не
+     * возвращается (и не должен — это стёрло бы решение владельца), поэтому прогон, судивший
+     * живую запись, был бы одноразовым. Свой кандидат делает страж повторяемым.
+     */
+    await putCandidate(CAND_ID, {
+      title: { mapValue: { fields: { ru: { stringValue: MARK_CAND }, en: { stringValue: MARK_CAND_EN } } } },
+      description: { mapValue: { fields: { ru: { stringValue: 'Проба очереди.' }, en: { stringValue: 'Queue probe.' } } } },
+      type: { mapValue: { fields: { ru: { stringValue: 'Проба' }, en: { stringValue: 'Probe' } } } },
+      year: { stringValue: '2026' },
+      status: { stringValue: 'pending' },
+      source: { mapValue: { fields: {
+        registry: { stringValue: 'wikidata' },
+        id: { stringValue: 'Q131547207' },
+        sitelinks: { integerValue: '61' },
+      } } },
+      agentNote: { stringValue: '' },
+    });
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.tabs button', { timeout: 15000 });
+    await page.locator('.tabs button', { hasText: 'Очередь' }).click();
+    await page.waitForSelector('.cand', { timeout: 10000 });
+
+    const cards = await page.locator('.cand').count();
+    check(cards > 0, 'п.9а: очередь показывает кандидатов', `карточек ${cards}`);
+
+    const probeCard = page.locator('.cand', { hasText: MARK_CAND }).first();
+    const text = await probeCard.innerText();
+    // 🔴 Требование метаплана: карточка обязана показывать, ЧТО проверить. Иначе пачка
+    // правдоподобных карточек превращает владельца в штамп «Одобрить» — названный отраслью
+    // главный риск таких очередей.
+    check(text.includes('Q131547207'), 'п.9б: 🔑 источник назван разрешимым идентификатором');
+    check(/61 языковых разделов/u.test(text), 'п.9в: известность названа числом');
+    check(text.includes('Проба очереди.') && text.includes('Queue probe.'),
+      'п.9г: описание видно на ОБА языка — вычитывать есть что');
+    await page.screenshot({ path: `${OUT}/queue.png`, fullPage: false });
+
+    // ── Одобрение рождает измерение ТЕМ ЖЕ путём, что ручная форма ───────────────────────
+    const dimsBefore = (await listDims()).length;
+    await probeCard.locator('.acts button.ok').click();
+    await page.waitForSelector('.result', { timeout: 15000 });
+
+    const born = await findDimByTitle(MARK_CAND);
+    check(born !== null, 'п.9д: 🔑 одобрение ЗАВЕЛО измерение в каталоге (вердикт снят с базы)');
+    if (born !== null) approvedDimId = born.id;
+    check((await listDims()).length === dimsBefore + 1,
+      'п.9е: в каталоге стало ровно на одно измерение больше');
+
+    const judged = await getCandidate(CAND_ID);
+    check(judged?.fields?.status?.stringValue === 'approved',
+      'п.9ж: кандидат помечен «approved», а не остался в очереди',
+      String(judged?.fields?.status?.stringValue));
+    check(judged?.fields?.approvedDimId?.stringValue === approvedDimId,
+      'п.9з: 🔑 кандидат несёт ссылку на РОЖДЁННОЕ измерение — решение владельца прослеживается');
+
+    const stillQueued = await page.locator('.cand', { hasText: MARK_CAND }).count();
+    check(stillQueued === 0, 'п.9и: одобренный ушёл из очереди', `осталось ${stillQueued}`);
+
+    // ── Отклонение НЕ пишет в каталог ────────────────────────────────────────────────────
+    await putCandidate(`${CAND_ID}-rej`, {
+      title: { mapValue: { fields: { ru: { stringValue: `${MARK_CAND} отказ` }, en: { stringValue: 'Queue probe reject' } } } },
+      description: { mapValue: { fields: { ru: { stringValue: 'Проба отказа.' }, en: { stringValue: 'Reject probe.' } } } },
+      status: { stringValue: 'pending' },
+      agentNote: { stringValue: '' },
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.tabs button', { timeout: 15000 });
+    await page.locator('.tabs button', { hasText: 'Очередь' }).click();
+    await page.waitForSelector('.cand', { timeout: 10000 });
+
+    const beforeReject = (await listDims()).length;
+    await page.locator('.cand', { hasText: `${MARK_CAND} отказ` }).first()
+      .locator('.acts button.danger').click();
+    await page.waitForSelector('.result', { timeout: 15000 });
+
+    const rejected = await getCandidate(`${CAND_ID}-rej`);
+    check(rejected?.fields?.status?.stringValue === 'rejected',
+      'п.9к: отклонённый помечен «rejected»', String(rejected?.fields?.status?.stringValue));
+    check((await listDims()).length === beforeReject,
+      'п.9л: 🔑 отклонение НЕ записало в каталог ничего', `${beforeReject}`);
+  }
+
   console.log('\nКонсоль (п.7):');
   check(consoleErrors.length === 0, 'п.7: консоль чиста за весь проход',
     consoleErrors.slice(0, 2).join(' | '));
@@ -447,8 +567,17 @@ try {
   const probe = await findProbe();
   if (probe !== null) await deleteDim(probe.id);
   if (createdId !== null) await deleteDim(createdId);
+  // Измерение, рождённое из кандидата, и сами пробные кандидаты — тоже след прогона.
+  if (approvedDimId !== null) await deleteDim(approvedDimId);
+  const bornLeft = await findDimByTitle(MARK_CAND);
+  if (bornLeft !== null) await deleteDim(bornLeft.id);
+  await deleteCandidate(CAND_ID);
+  await deleteCandidate(`${CAND_ID}-rej`);
+
   const leftover = await findProbe();
-  check(leftover === null, '🧹 след прогона убран — измерения пробы в базе нет');
+  const candLeft = await getCandidate(CAND_ID);
+  check(leftover === null && (await findDimByTitle(MARK_CAND)) === null && candLeft === null,
+    '🧹 след прогона убран — ни измерений пробы, ни пробных кандидатов в базе нет');
   await browser.close();
 }
 

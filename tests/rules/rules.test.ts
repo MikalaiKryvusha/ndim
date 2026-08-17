@@ -833,6 +833,70 @@ describe('Каталог измерений — границы записи (pla
   });
 });
 
+describe('Очередь кандидатов на вычитку — dim_candidates (plans/30 фаза 6)', () => {
+  /*
+   * 🔴 ГЛАВНОЕ, ЧТО ЗДЕСЬ СТЕРЕЖЁТСЯ: кандидат — ещё НЕ измерение, и людям он не виден НИКАК.
+   * Лёжа в `dims/`, он попал бы в индекс каталога и на публичную страницу. Отдельная коллекция
+   * плюс «читает только админ» делают это невозможным по построению.
+   *
+   * ⛔ И инвариант В3 = А: у ИИ-агента клейма админа НЕТ, поэтому пути «агент → каталог» в
+   * правилах не существует вовсе. Агент кладёт кандидата через Admin SDK (как сервер
+   * синхронизации) и завести измерение не может.
+   */
+  const candidate = () => ({
+    title: { ru: 'Одиссея', en: 'The Odyssey' },
+    description: { ru: 'Фильм Кристофера Нолана.', en: 'A film by Christopher Nolan.' },
+    type: { ru: 'Фильм', en: 'Film' },
+    author: { ru: 'Кристофер Нолан', en: 'Christopher Nolan' },
+    year: '2026',
+    tags: ['фэнтези'],
+    status: 'pending',
+    source: { registry: 'wikidata', id: 'Q131547207', sitelinks: 61 },
+    agentNote: '',
+  });
+
+  test('админ читает и пишет очередь', async () => {
+    const db = admin('root').firestore();
+    await assertSucceeds(setDoc(doc(db, 'dim_candidates/c1'), candidate()));
+    await assertSucceeds(getDoc(doc(db, 'dim_candidates/c1')));
+  });
+
+  test('🔒 очередь НЕ ВИДИТ никто, кроме админа — ни человек, ни гость, ни не вошедший', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'dim_candidates/c1'), candidate());
+    });
+
+    await assertFails(getDoc(doc(verified(BOB).firestore(), 'dim_candidates/c1')));
+    await assertFails(getDoc(doc(guest(GHOST).firestore(), 'dim_candidates/c1')));
+    await assertFails(getDoc(doc(anonymous().firestore(), 'dim_candidates/c1')));
+    await assertFails(getDoc(doc(unverified(BOB).firestore(), 'dim_candidates/c1')));
+  });
+
+  test('🔒 в очередь не пишет никто, кроме админа', async () => {
+    await assertFails(setDoc(doc(verified(BOB).firestore(), 'dim_candidates/c1'), candidate()));
+    await assertFails(setDoc(doc(guest(GHOST).firestore(), 'dim_candidates/c1'), candidate()));
+    await assertFails(setDoc(doc(anonymous().firestore(), 'dim_candidates/c1'), candidate()));
+  });
+
+  test('🔒 статус вне словаря отвергается — иначе кандидат зависает молча', async () => {
+    // Очередь спрашивает `pending`. Опечатка в статусе делает кандидата невидимым для запроса,
+    // и он не попадает НИ в одну выборку — ни в очередь, ни в разобранные.
+    const db = admin('root').firestore();
+    await assertFails(setDoc(doc(db, 'dim_candidates/c1'), { ...candidate(), status: 'pendng' }));
+    await assertFails(setDoc(doc(db, 'dim_candidates/c2'), { ...candidate(), status: '' }));
+    await assertFails(setDoc(doc(db, 'dim_candidates/c3'), { ...candidate(), status: 1 }));
+    const { status, ...withoutStatus } = candidate();
+    await assertFails(setDoc(doc(db, 'dim_candidates/c4'), withoutStatus));
+  });
+
+  test('все три законных статуса проходят', async () => {
+    const db = admin('root').firestore();
+    for (const status of ['pending', 'approved', 'rejected']) {
+      await assertSucceeds(setDoc(doc(db, `dim_candidates/s-${status}`), { ...candidate(), status }));
+    }
+  });
+});
+
 describe('Гость (анонимный вход) — может трудиться над своим, невидим для других', () => {
   // Решения интервью №004: В1 = гостю дать «пощупать» по-настоящему, В3 = гость невидим другим.
   // Правила гарантируют невидимость сами, не полагаясь на дисциплину клиента.

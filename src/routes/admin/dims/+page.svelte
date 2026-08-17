@@ -37,15 +37,20 @@
   import SideRail from '$lib/ui/SideRail.svelte';
   import { adminVerdict, type AdminState } from '$lib/data/admin';
   import {
+    approveCandidate,
+    candidateToDraft,
     createDim,
     loadAdminCatalog,
+    loadCandidateQueue,
     loadDimForEdit,
+    rejectCandidate,
     rememberEdited,
     removeDim,
     updateDim,
     type AdminCatalog,
     type AdminDim,
     type AdminDimRow,
+    type DimCandidate,
   } from '$lib/data/admin-dims';
   import { unitRu } from '$lib/ui/format';
   import {
@@ -65,8 +70,25 @@
   let loadFailed = $state(false);
 
   /** Какая вкладка открыта. Форма правки — та же вкладка «Создать», с предзаполнением. */
-  let tab = $state<'catalog' | 'form'>('catalog');
+  let tab = $state<'catalog' | 'form' | 'queue'>('catalog');
   let search = $state('');
+
+  /*
+   * ── ОЧЕРЕДЬ КАНДИДАТОВ (фаза 6 эпика `ideas/29`) ─────────────────────────────────────────
+   *
+   * Заказ владельца 2026-08-17: «*чтобы ИИ агент мог новые кандидаты измерений создавать Николаю
+   * под вычитку, и чтобы николай быстрее их одобрял, и чтобы мы новые хайповые объекты культуры
+   * быстро заливали в пространство*».
+   *
+   * 🔴 Кандидаты живут в СВОЕЙ коллекции `dim_candidates`, не в каталоге: лёжа в `dims/`, они
+   * попали бы в индекс и на публичную страницу до всякого одобрения. Инвариант В3 = А держится
+   * правилами, а не этим экраном.
+   * 🔑 Одобрение рождает измерение ТЕМ ЖЕ путём, что ручная форма (`createDim`) — второго пути
+   * записи в каталог не существует.
+   */
+  let queue = $state<readonly DimCandidate[] | null>(null);
+  /** По какому кандидату идёт работа: чтобы кнопки гасли только у него, а не у всей очереди. */
+  let judging = $state<string | null>(null);
 
   let draft = $state<DimDraft>({ ...EMPTY_DRAFT });
   /** Что правим. `null` — заводим новое. */
@@ -96,6 +118,70 @@
       // вещи, и молча показать первое вместо второго значит соврать (правило трёх дверей).
       loadFailed = true;
     }
+    // Очередь читается отдельным запросом по статусу и своим отказом каталог не роняет.
+    try {
+      queue = await loadCandidateQueue();
+    } catch {
+      queue = null;
+    }
+  }
+
+  /** Одобрить кандидата как есть: рождается измерение, кандидат уходит из очереди. */
+  async function approve(candidate: DimCandidate): Promise<void> {
+    judging = candidate.id;
+    saved = null;
+    try {
+      await approveCandidate(candidate, candidateToDraft(candidate));
+      saved = {
+        ok: true,
+        text: `«${candidate.title.ru}» одобрено и заведено в каталог. В индексе появится после `
+          + 'ближайшего цикла синхронизации, на публичной странице — после следующей сборки сайта.',
+      };
+      await refresh();
+    } catch (error) {
+      saved = {
+        ok: false,
+        text: `Не одобрено: ${error instanceof Error ? error.message : 'отказ базы'}`,
+      };
+    } finally {
+      judging = null;
+    }
+  }
+
+  /** Отклонить: кандидат уходит из очереди, в каталог не пишется НИЧЕГО. */
+  async function reject(candidate: DimCandidate): Promise<void> {
+    judging = candidate.id;
+    saved = null;
+    try {
+      await rejectCandidate(candidate);
+      saved = { ok: true, text: `«${candidate.title.ru}» отклонено. В каталог не записано ничего.` };
+      await refresh();
+    } catch (error) {
+      saved = {
+        ok: false,
+        text: `Не отклонено: ${error instanceof Error ? error.message : 'отказ базы'}`,
+      };
+    } finally {
+      judging = null;
+    }
+  }
+
+  /**
+   * Правка перед одобрением: кандидат уезжает в ту же форму, что и ручное создание.
+   * ⚠️ После правки нажимается «Создать измерение» — то есть измерение рождается тем же путём,
+   * а кандидат остаётся в очереди до отдельного решения. Это честнее, чем гадать за владельца,
+   * считать ли правку одобрением.
+   */
+  function editBeforeApprove(candidate: DimCandidate): void {
+    editing = null;
+    draft = candidateToDraft(candidate);
+    problems = [];
+    saved = {
+      ok: true,
+      text: `Кандидат «${candidate.title.ru}» открыт на правку. Нажмите «Создать измерение», `
+        + 'когда текст Вас устроит; сам кандидат останется в очереди.',
+    };
+    tab = 'form';
   }
 
   /**
@@ -279,8 +365,16 @@
         <span class="badge"><Icon name="edit" size={13} />{t.admin}</span>
       </h1>
 
-      <!-- Вкладки V1: каталог и создание — соседние, ничего не спрятано. -->
+      <!-- Вкладки V1: очередь, каталог и создание — соседние, ничего не спрятано. -->
       <div class="tabs">
+        <!--
+          Очередь стоит ПЕРВОЙ, когда в ней есть что судить: это то, ради чего владелец просил
+          комнату («чтобы николай быстрее их одобрял»). Пустую очередь вперёд не выносим.
+        -->
+        <button class:on={tab === 'queue'} onclick={() => (tab = 'queue')}>
+          Очередь
+          {#if queue !== null && queue.length > 0}<span class="count">{queue.length}</span>{/if}
+        </button>
         <button class:on={tab === 'catalog'} onclick={() => (tab = 'catalog')}>
           {t.tabCatalog}
           {#if catalog !== null}<span class="count">{catalog.rows.length}</span>{/if}
@@ -288,7 +382,83 @@
         <button class:on={tab === 'form'} onclick={startCreate}>{t.tabForm}</button>
       </div>
 
+      {#if tab === 'queue'}
+        <section class="card">
+          <div class="h">
+            <span>Кандидаты на вычитку</span>
+            {#if queue !== null}<span class="pill">{queue.length}</span>{/if}
+          </div>
+
+          {#if saved !== null}
+            <p class="result" class:bad={!saved.ok}>{saved.text}</p>
+          {/if}
+
+          {#if queue === null}
+            <Loading {lang} />
+          {:else if queue.length === 0}
+            <p class="warn">
+              Очередь пуста. Агент положит сюда новых кандидатов — каждый с источником и числом
+              языковых разделов Википедии, по которому видно известность объекта.
+            </p>
+          {:else}
+            <ul class="queue">
+              {#each queue as c (c.id)}
+                <!--
+                  🔴 КАРТОЧКА ОБЯЗАНА ПОКАЗЫВАТЬ, ЧТО ПРОВЕРИТЬ (требование метаплана и названный
+                  отраслью главный риск таких очередей): источник с разрешимым идентификатором,
+                  число известности, оба языка описания. Иначе пачка правдоподобных карточек
+                  превращает вычитку в штамп «Одобрить».
+                -->
+                <li class="cand">
+                  <div class="cand-head">
+                    <span class="cand-kind">{c.type?.ru ?? 'Измерение'}</span>
+                    <span class="cand-name">{c.title.ru}</span>
+                    {#if c.year}<span class="ry">{c.year}</span>{/if}
+                  </div>
+                  <div class="cand-en">{c.title.en}</div>
+
+                  {#if c.author?.ru}<div class="cand-line"><b>Автор:</b> {c.author.ru}</div>{/if}
+                  <div class="cand-line"><b>Описание (ru):</b> {c.description.ru}</div>
+                  <div class="cand-line"><b>Description (en):</b> {c.description.en}</div>
+                  {#if c.tags && c.tags.length > 0}
+                    <div class="cand-line"><b>Теги:</b> {c.tags.join(', ')}</div>
+                  {/if}
+
+                  <div class="cand-src">
+                    {#if c.source}
+                      <a href={`https://www.wikidata.org/wiki/${c.source.id}`} target="_blank" rel="noreferrer">
+                        {c.source.registry} · {c.source.id}
+                      </a>
+                      <span class="pill">{c.source.sitelinks} языковых разделов Википедии</span>
+                    {:else}
+                      <span class="pill">источник не назван</span>
+                    {/if}
+                  </div>
+
+                  {#if c.agentNote}
+                    <div class="cand-note"><b>Замечание агента:</b> {c.agentNote}</div>
+                  {/if}
+
+                  <div class="acts">
+                    <button class="ok" onclick={() => approve(c)} disabled={judging !== null}>
+                      Одобрить
+                    </button>
+                    <button onclick={() => editBeforeApprove(c)} disabled={judging !== null}>
+                      Правка перед одобрением
+                    </button>
+                    <button class="danger" onclick={() => reject(c)} disabled={judging !== null}>
+                      Отклонить
+                    </button>
+                  </div>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+        </section>
+      {/if}
+
       {#if tab === 'catalog'}
+        <!-- Каталог -->
         <section class="card">
           {#if loadFailed}
             <p class="warn">{t.failed}</p>
@@ -707,6 +877,77 @@
     font-size: 13px;
     line-height: 1.5;
     color: var(--text);
+  }
+
+  /* ── Очередь кандидатов ─────────────────────────────────────────────────── */
+  .queue {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+  }
+  /* Карточка кандидата — та же форма, что у карточек продукта; названия не обрезаются. */
+  .cand {
+    display: grid;
+    gap: 5px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+  }
+  .cand-head {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cand-kind {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--primary);
+    align-self: center;
+  }
+  .cand-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--heading);
+  }
+  .cand-en {
+    font-size: 14px;
+    color: var(--dim);
+  }
+  .cand-line {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .cand-line b,
+  .cand-note b {
+    color: var(--dim);
+    font-weight: 600;
+  }
+  .cand-src {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 2px;
+    font-size: 12px;
+  }
+  .cand-src a {
+    color: var(--primary);
+  }
+  .cand-note {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+    padding: 7px 10px;
+    border-left: 3px solid var(--primary);
+    background: var(--panel);
+    border-radius: 0 8px 8px 0;
   }
 
   .hold {
