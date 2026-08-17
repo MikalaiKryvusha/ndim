@@ -524,15 +524,77 @@ try {
     check(afterCancel === before && (await findProbe()) !== null,
       'п.8е: «Отменить» действительно отменяет — измерение на месте', `${afterCancel}`);
 
+    /*
+     * 🔑 СТАВИМ ПРЕДУСЛОВИЕ, А НЕ ЖДЁМ УДАЧИ (`bugs/147`). В бою между удалением и ближайшей
+     * пересборкой индекса запись в индексе ЛЕЖИТ — на этом дефект и держался. На стенде сервер
+     * синхронизации ходит циклом в 15 с и уносит её сам, поэтому проверка «нет в списке» была
+     * зелена по ЧУЖОЙ причине и не покраснела на мутации.
+     *
+     * Поэтому строка индекса вписывается ЯВНО перед удалением: прогон воспроизводит боевое
+     * состояние, а не надеется в него попасть. Это фикстура опыта, а не подделка поведения —
+     * продукт по-прежнему судится по тому, что он показывает человеку.
+     * ⚠️ Сервер синхронизации стенда следующим циклом честно пересоберёт индекс; на боевой
+     * механизм это не влияет никак — прогон живёт только на эмуляторе.
+     */
+    const idxUrl = `${docsUrl}/dims/dims_list`;
+    const idxNow = await fetch(idxUrl, { headers: owner }).then((r) => r.json());
+    const idxMap = JSON.parse(idxNow?.fields?.dims_list?.stringValue ?? '{}');
+    idxMap[createdId] = { ru: `${MARK} (правлено)`, en: MARK_EN, year: '1966–1969' };
+    await fetch(`${idxUrl}?updateMask.fieldPaths=dims_list`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...owner },
+      body: JSON.stringify({ fields: { dims_list: { stringValue: JSON.stringify(idxMap) } } }),
+    });
+
     // И только теперь удаляем по-настоящему.
     await page.locator('.acts button.danger').first().click();
     await page.waitForSelector('.confirm', { timeout: 5000 });
     await page.locator('.confirm .acts button.danger').click();
     await page.waitForTimeout(1500);
+    const deletedId = createdId;
     const gone = await findProbe();
     check(gone === null, 'п.8ж: 🔑 после подтверждения измерения в БАЗЕ нет');
     if (gone === null) createdId = null;
     await page.screenshot({ path: `${OUT}/deleted.png`, fullPage: false });
+
+    /*
+     * 🔴 п.8з — ВЕРДИКТ СНИМАЕТСЯ И С ЭКРАНА (`bugs/147`, нашёл владелец первой же пробой).
+     *
+     * Прежде удаление судилось ТОЛЬКО по базе, и «в базе нет» я принял за «на экране нет». А
+     * список комнаты читается из ИНДЕКСА каталога, который ведёт сервер синхронизации своим
+     * циклом: сразу после удаления индекс о записи ещё помнит и честно её показывает. Человек
+     * нажимает «Удалить», возвращается к списку — и видит запись на месте.
+     *
+     * 🔑 Проверка идёт ПО ЭКРАНУ, а не по памяти модуля: предмет спора — что видит человек.
+     */
+    /*
+     * 🔑 КОНТРОЛЬ ПРИБОРА ПЕРВЫМ, и он здесь обязателен (`EXP-0070`, `EXP-0082`).
+     *
+     * Проверка «удалённого нет в списке» доказывает ПАМЯТЬ ПРОДУКТА только пока индекс каталога
+     * ещё помнит запись. Сервер синхронизации стенда ходит циклом в 15 с и уносит её сам — и
+     * тогда список чист по чужой причине, а проверка зелена на сломанном коде. Поймано на себе:
+     * первая редакция этой проверки НЕ покраснела на мутации.
+     *
+     * Поэтому сначала спрашиваем индекс. Запись в нём — предмет спора существует, вердикт
+     * законен. Записи нет — прогон честно ОБЪЯВЛЯЕТ проверку пропущенной вместо зелёной.
+     */
+    const indexDoc = await fetch(`${docsUrl}/dims/dims_list`, { headers: owner }).then((r) => r.json());
+    const indexRaw = indexDoc?.fields?.dims_list?.stringValue ?? '{}';
+    const indexStillHas = deletedId !== null && Object.hasOwn(JSON.parse(indexRaw), deletedId);
+
+    await page.locator('.tabs button', { hasText: 'Каталог' }).click();
+    await page.waitForSelector('.rows li, .warn', { timeout: 8000 }).catch(() => null);
+    await page.locator('input[type="search"]').fill(MARK.slice(0, 10));
+    await page.waitForTimeout(400);
+    const ghosts = await page.locator('.rows li').count();
+
+    if (indexStillHas) {
+      check(ghosts === 0, 'п.8з: 🔴 удалённого НЕТ В СПИСКЕ, хотя индекс о нём ещё помнит (bugs/147)',
+        `строк с этим названием ${ghosts}`);
+    } else {
+      skip('п.8з: удалённого нет в списке',
+        'индекс уже пересобран сервером синхронизации — вердикт был бы зелёным по чужой причине');
+    }
   }
 
   // ── п.9 · ОЧЕРЕДЬ КАНДИДАТОВ: агент предлагает, владелец судит ────────────────────────────
@@ -677,8 +739,17 @@ try {
 } finally {
   // ── 🧹 Уборка и ПРОВЕРКА уборки (правило класса bugs/103) ────────────────────────────────
   console.log('\nУборка:');
-  const probe = await findProbe();
-  if (probe !== null) await deleteDim(probe.id);
+  /*
+   * 🔑 УБИРАЕМ ВСЕ ПРОБЫ, А НЕ ПЕРВУЮ. `findProbe` возвращает первое совпадение, и этого хватало,
+   * пока прогон всегда доходил до конца. Прогон, упавший в середине (или мутационный, где
+   * удаление намеренно сломано), оставляет измерение пробы в базе — и следующий заход убирает
+   * ОДНО, а видит несколько. Числа поехали именно так: «строк 4» вместо одной, причём краснел
+   * при этом ИСПРАВНЫЙ продукт.
+   */
+  for (const doc of await listDims()) {
+    const ru = doc.fields?.title?.mapValue?.fields?.ru?.stringValue ?? '';
+    if (ru.startsWith(MARK)) await deleteDim(doc.name.split('/').pop());
+  }
   if (createdId !== null) await deleteDim(createdId);
   // Измерение, рождённое из кандидата, и сами пробные кандидаты — тоже след прогона.
   if (approvedDimId !== null) await deleteDim(approvedDimId);
@@ -687,6 +758,32 @@ try {
   await deleteCandidate(CAND_ID);
   await deleteCandidate(`${CAND_ID}-rej`);
   await deleteCandidate(`${CAND_ID}-back`);
+
+  /*
+   * 🧹 СЛЕД В ИНДЕКСЕ — тоже след (правило класса `bugs/103`: база стенда общая, и страж,
+   * ПИШУЩИЙ в неё, обязан вернуть её в исходное состояние).
+   *
+   * Проверка п.8з вписывает строку пробы в `dims_list`, чтобы поставить боевое предусловие.
+   * Не убрав её, прогон оставляет ПРИЗРАКА: следующий заход видит запись, которой в базе нет,
+   * и краснеет на исправном продукте. Поймано на себе в тот же вечер — «строк 4» вместо одной.
+   */
+  const idxDoc = await fetch(`${docsUrl}/dims/dims_list`, { headers: owner }).then((r) => r.json());
+  const idxMap = JSON.parse(idxDoc?.fields?.dims_list?.stringValue ?? '{}');
+  const ghosts = Object.entries(idxMap).filter(([, v]) => String(v?.ru ?? '').startsWith(MARK));
+  if (ghosts.length > 0) {
+    for (const [id] of ghosts) delete idxMap[id];
+    await fetch(`${docsUrl}/dims/dims_list?updateMask.fieldPaths=dims_list`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...owner },
+      body: JSON.stringify({ fields: { dims_list: { stringValue: JSON.stringify(idxMap) } } }),
+    });
+  }
+  const idxAfter = JSON.parse(
+    (await fetch(`${docsUrl}/dims/dims_list`, { headers: owner }).then((r) => r.json()))
+      ?.fields?.dims_list?.stringValue ?? '{}',
+  );
+  check(!Object.values(idxAfter).some((v) => String(v?.ru ?? '').startsWith(MARK)),
+    '🧹 след пробы убран И ИЗ ИНДЕКСА — иначе следующий прогон краснеет на исправном продукте');
 
   const leftover = await findProbe();
   const candLeft = await getCandidate(CAND_ID);

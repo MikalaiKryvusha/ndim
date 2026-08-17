@@ -403,9 +403,16 @@ if (full) {
     const { hubs, tail } = groupByKind(catalog);
     const sums = summarize(hubs);
     const byKey = Object.fromEntries(sums.map((h) => [h.key, h]));
-    assert.equal(catalog.length, 5111);
+    /*
+     * 🔄 Перемерено 2026-08-18 после первого пополнения каталога с переноса: владелец одобрил
+     * десять кандидатов-фильмов. Сдвинулись РОВНО ДВЕ величины — размер каталога и число
+     * фильмов, обе на десять. Оценённых фильмов по-прежнему 981 (новые записи без оценок),
+     * страниц по-прежнему 47 и 89 (десять карточек в разбивку не влезли новой страницей),
+     * хвост 25 — тот же. Сойдись числа иначе, правкой констант это не закрывалось бы.
+     */
+    assert.equal(catalog.length, 5121);
     assert.equal(tail.length, 25);
-    assert.equal(byKey.movie.count, 2774);
+    assert.equal(byKey.movie.count, 2784);
     assert.equal(byKey.movie.rated, 981);
     assert.equal(byKey.movie.pages, 47);
     assert.equal(byKey['video-game'].count, 1221);
