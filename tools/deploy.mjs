@@ -175,15 +175,40 @@ function checkBuildIntegrity() {
 	return hash;
 }
 
-/** Хеш рантайма, который контур отдаёт ЖИВЫМ людям прямо сейчас. `null` — не удалось прочитать. */
-async function liveHash(site) {
-	try {
-		const response = await fetch(`${site}/ru`, { redirect: 'follow' });
-		const html = await response.text();
-		return html.match(/__sveltekit_([a-z0-9]+)/)?.[1] ?? null;
-	} catch {
-		return null;
+/**
+ * Хеш рантайма, который контур отдаёт ЖИВЫМ людям прямо сейчас. `null` — не удалось прочитать.
+ *
+ * 🔴 ПОЧЕМУ ЗДЕСЬ ПОВТОРЫ, А НЕ ОДИН ЗАПРОС (`bugs/137`, 2026-08-17). Первая редакция спрашивала
+ * контур ОДИН раз и сразу после релиза хостинга. Замер попадания (П8) получил `null`, напечатал
+ * «сайт отдаёт не прочитан» и закрыл дверь кодом 1 — а стейдж в эту самую минуту отдавал РОВНО
+ * нашу сборку `feh4jj`: проверено вручную через минуту после отказа. То есть дверь покрасила
+ * КРАСНЫМ исправный выкат.
+ *
+ * 🔑 Ложный красный дороже, чем кажется, и вот чем именно: он не пишет расписку стейджа, а без
+ * расписки заперт выкат в бой. Один сетевой чих откладывал бы бой на целую пересборку.
+ *
+ * И ещё одно, менее очевидное: `null` означает «Я НЕ СМОГ ПРОЧИТАТЬ», а сравнение
+ * `targetAfter !== builtHash` трактует его как «ТАМ ДРУГАЯ СБОРКА». Это утверждение о ПОИСКЕ,
+ * поданное как утверждение о мире (`EXP-0165`) — поэтому функция теперь возвращает и ПРИЧИНУ,
+ * а вызывающий печатает её словами: «не прочитан» и «отдаётся другое» лечатся по-разному.
+ */
+async function liveHash(site, { tries = 6, pauseMs = 2500 } = {}) {
+	let why = 'не пробовали';
+	for (let attempt = 1; attempt <= tries; attempt += 1) {
+		try {
+			const response = await fetch(`${site}/ru`, { redirect: 'follow' });
+			const html = await response.text();
+			const hash = html.match(/__sveltekit_([a-z0-9]+)/)?.[1] ?? null;
+			if (hash) return { hash, why: null };
+			why = `HTTP ${response.status}, но в разметке нет __sveltekit_<хеш>`;
+		} catch (error) {
+			why = `запрос не удался: ${error.message}`;
+		}
+		// Хостинг раскатывает релиз не мгновенно: пауза здесь — не «на всякий случай», а
+		// единственная разница между исправным выкатом и ложным красным.
+		if (attempt < tries) await new Promise((resolve) => setTimeout(resolve, pauseMs));
 	}
+	return { hash: null, why };
 }
 
 /*
@@ -426,7 +451,7 @@ if (process.argv.includes('--gate-only')) {
 
 // Снимок соседнего контура ДО выката: им доказывается, что мы в него не выстрелили (П8).
 const alien = Object.values(CONTOURS).find((item) => item.name !== CONTOUR.name);
-const alienBefore = await liveHash(alien.site);
+const alienBefore = (await liveHash(alien.site)).hash;
 console.log(`   соседний контур (${alien.title}) до выката: ${alienBefore ?? 'не прочитан'}`);
 
 /*
@@ -467,12 +492,25 @@ firebase(`выкат в ${CONTOUR.title}`, 'hosting');
  * контура подряд, и жёсткое неравенство краснело бы на исправной работе.
  */
 console.log('\n══ 🔑 замер попадания в контур (П8) ══');
-const targetAfter = await liveHash(CONTOUR.site);
-const alienAfter = await liveHash(alien.site);
-console.log(`  цель  ${CONTOUR.title}: сборка ${builtHash} · сайт отдаёт ${targetAfter ?? 'не прочитан'}`);
+const target = await liveHash(CONTOUR.site);
+const alienAfter = (await liveHash(alien.site)).hash;
+console.log(`  цель  ${CONTOUR.title}: сборка ${builtHash} · сайт отдаёт ${target.hash ?? 'не прочитан'}`);
 console.log(`  сосед ${alien.title}: было ${alienBefore ?? 'не прочитан'} · стало ${alienAfter ?? 'не прочитан'}`);
-if (targetAfter !== builtHash) {
-	console.error(`\n🔴 ${CONTOUR.title} отдаёт НЕ ту сборку, которую мы собрали. Выкат не дошёл до цели.`);
+if (target.hash === null) {
+	// Отдельная ветка намеренно: «не смог прочитать» — это НЕ «там другая сборка», и лечится
+	// оно другим. Слить их в одно сообщение значило бы отправить сессию искать не ту поломку.
+	console.error(
+		`\n🔴 ХЕШ ${CONTOUR.title} НЕ ПРОЧИТАН после ${6} попыток — причина: ${target.why}.` +
+			`\n   Это утверждение о ПОИСКЕ, а не о мире: выкат мог дойти, а замер — нет.` +
+			`\n   Проверить руками: ${CONTOUR.site}/ru и сверить __sveltekit_ с ${builtHash}.`,
+	);
+	process.exit(1);
+}
+if (target.hash !== builtHash) {
+	console.error(
+		`\n🔴 ${CONTOUR.title} отдаёт НЕ ту сборку, которую мы собрали (${target.hash} вместо ${builtHash}).` +
+			'\n   Выкат не дошёл до цели.',
+	);
 	process.exit(1);
 }
 if (alienBefore !== null && alienAfter !== alienBefore) {
