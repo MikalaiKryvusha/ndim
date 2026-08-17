@@ -24,7 +24,9 @@
  * только СМОТРИТ и печатает список.
  *
  * Запуск: node tools/scout-wikidata-candidates.mjs [--year 2026] [--min-sitelinks 12] [--limit 400]
- * Пишет: researches/41_new_culture_scout_<год>.md  (+ JSON рядом, для следующего шага)
+ * Пишет: candidates/scouts/<год>_wikidata_new_releases.md — ТЕЗИСНЫЙ СПИСОК (+ JSON в
+ *         test-results/, из него агент пишет развёрнутые объекты в candidates/batches/).
+ *         Устройство мастерской и правила заполнения — candidates/README.md.
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
@@ -39,7 +41,7 @@ const YEAR = Number(arg('--year', '2026'));
 const MIN_SITELINKS = Number(arg('--min-sitelinks', '12'));
 const LIMIT = Number(arg('--limit', '400'));
 const SNAPSHOT = 'src/lib/content/dims-build.json';
-const OUT_MD = `researches/41_new_culture_scout_${YEAR}.md`;
+const OUT_MD = `candidates/scouts/${arg('--out', `${YEAR}_wikidata_new_releases`)}.md`;
 const OUT_JSON = `test-results/scout-candidates-${YEAR}.json`;
 
 /**
@@ -154,7 +156,7 @@ const rows = fresh
   .map((f, i) => `| ${i + 1} | ${f.titleRu || '—'} | ${f.titleEn || '—'} | ${f.kindRu} | ${f.year} | ${f.sitelinks} | [\`${f.qid}\`](https://www.wikidata.org/wiki/${f.qid}) |`)
   .join('\n');
 
-const md = `# Исследование 41 — Разведка новинок культуры ${YEAR} года, которых в каталоге НЕТ
+const md = `# Разведка ${YEAR}: новинки культуры, которых в каталоге НЕТ
 
 > **Создан:** 2026-08-17 · **Родитель:** заказ владельца в чате 2026-08-17 · **Статус:** разведка
 > проведена машиной, список ниже · **Исходящее:** 10 записей уходят кандидатами на вычитку
