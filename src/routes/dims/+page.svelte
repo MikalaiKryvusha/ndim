@@ -67,7 +67,7 @@
   } from '$lib/model/feed';
   import { technicalDetail } from '$lib/ui/errors';
   import { GRADE_FACES } from '$lib/ui/emojiscale';
-  import { votesUnit, type Lang } from '$lib/ui/format';
+  import { localizedText, votesUnit, type Lang } from '$lib/ui/format';
   // Правило показа оценок — ОДНО на приложение и на публичные страницы (интервью №022).
   import { ratingView } from '$lib/content/dims-rating';
   import { lang as currentLang } from '$lib/ui/lang.svelte';
@@ -691,8 +691,11 @@
 
   // ── Показ ────────────────────────────────────────────────────────────────────────────────
 
-  const loc = (value: Localized | undefined | null): string =>
-    value ? (value[lang] ?? value.ru ?? value.en ?? '') : '';
+  /* Лестница языков — общая (`bugs/150`). Пустая строка запирала её и в каталоге: ряд вышел бы
+     без названия. Замер боя 2026-08-18 дал здесь ЧИСТО (0 из 5121) — правка профилактическая,
+     чтобы третья копия не разошлась с двумя починенными. Пустую строку наружу отдаём как и
+     раньше: экран каталога подставляет её в разметку, а не проверяет на `null`. */
+  const loc = (value: Localized | undefined | null): string => localizedText(value, lang) ?? '';
 
   /**
    * Цвет бейджа типа. Тип — свободный текст из 1.x, поэтому раскрашиваем по СМЫСЛУ,

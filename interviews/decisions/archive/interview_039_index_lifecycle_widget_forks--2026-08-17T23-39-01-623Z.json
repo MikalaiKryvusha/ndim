@@ -1,0 +1,14 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_039_index_lifecycle_widget_forks.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-17T23:39:01.623Z",
+	"comment": "",
+	"answers": {
+		"В4": {
+			"choice": "",
+			"text": "давай опросы раз в час, при часовых синхронизациях. будет 24 опроса в сутки.",
+			"comment": ""
+		}
+	}
+}

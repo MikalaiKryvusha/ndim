@@ -609,7 +609,11 @@
     background: color-mix(in srgb, var(--bg) 45%, rgba(4, 10, 20, 0.55));
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    cursor: zoom-out;
+    /* 🖱 Палец, а не лупа (`bugs/151`, слово владельца 2026-08-18 об открытом фото). Здесь это
+       БЛИЗНЕЦ правки в `Avatar.svelte`: тот же жест «открытый портрет закрывается нажатием»,
+       и разный курсор на нём был бы разным языком в одном продукте. Остальные три курсора
+       этого файла уже пальцы — лупа выбивалась одна. */
+    cursor: pointer;
     animation: overlay-in 0.18s ease-out;
   }
   .sheet {

@@ -32,7 +32,15 @@
     type RelationsScreenData,
   } from '$lib/data/relations';
   import { technicalDetail } from '$lib/ui/errors';
-  import { bornWithAge, dateOnly, dateTime, dimsUnit, starsUnit, type Lang } from '$lib/ui/format';
+  import {
+    bornWithAge,
+    dateOnly,
+    dateTime,
+    dimsUnit,
+    localizedText,
+    starsUnit,
+    type Lang,
+  } from '$lib/ui/format';
   import { lang as currentLang } from '$lib/ui/lang.svelte';
   import { MOTION } from '$lib/ui/motion';
   // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
@@ -240,11 +248,23 @@
     noName: { ru: 'Без имени', en: 'No name' },
   } as const;
 
-  const loc = (value: Localized | null): string | null =>
-    value ? (value[lang] ?? value.ru ?? value.en) : null;
+  /*
+   * 🔴 ЛЕСТНИЦА ЯЗЫКОВ — ОДНА НА ПРОДУКТ (`bugs/150`). Здесь стояла своя копия
+   * `value[lang] ?? value.ru ?? value.en`, и она запиралась на пустой строке: `??` ловит
+   * отсутствие, а не пустоту. Владелец увидел итог в бою и назвал его «мёртвой душой» — карточка
+   * без единой буквы, пустой кружок вместо лица (`name.slice(0,1)` от пустой строки пуст тоже).
+   * Замер боя: таких карточек 5 из 331, и у ТРЁХ имя лежало рядом на английском.
+   */
+  const loc = (value: Localized | null): string | null => localizedText(value, lang);
 
-  function guestTitle(card: { guestName: Localized | null; guestNick: Localized | null }): string {
-    return loc(card.guestName) ?? loc(card.guestNick) ?? t.noName[lang];
+  type Titled = { guestName: Localized | null; guestNick: Localized | null };
+
+  /** Настоящее имя человека или `null`. Отдельно от `guestTitle`, потому что «имени нет» —
+      это факт, на который опирается и текст, и вид кружка (`bugs/150`). */
+  const guestName = (card: Titled): string | null => loc(card.guestName) ?? loc(card.guestNick);
+
+  function guestTitle(card: Titled): string {
+    return guestName(card) ?? t.noName[lang];
   }
 
   /**
@@ -324,6 +344,7 @@
                 name={guestTitle(card)}
                 has={card.guestAvatar}
                 size={46}
+                nameless={guestName(card) === null}
               />
               <button type="button" class="who" aria-expanded="true" onclick={() => (expanded = null)}>
                 <b>{guestTitle(card)}</b>
@@ -336,6 +357,7 @@
                   has={card.guestAvatar}
                   size={46}
                   peek={false}
+                  nameless={guestName(card) === null}
                 />
                 <b>{guestTitle(card)}</b>
               </button>
@@ -487,10 +509,26 @@
   .mono { font-family: var(--mono); font-size: 11px; word-break: break-word; }
   .hint { font-size: 11.5px; color: var(--dim); line-height: 1.45; }
 
+  /*
+   * 🔴 У КАРТОЧЕК СВЯЗЕЙ ТЕНИ НЕТ (`bugs/149`, слово владельца 2026-08-18): «*в карточках
+   * измерений в прошлой сессии агент починил тени, а в карточках связей тени так и остались
+   * сломанными — нужно аналогичным образом починить. убрать их*».
+   *
+   * 🔑 Механизм тот же, что у карточек измерений (`bugs/148`), и он замерен, а не угадан: токен
+   * `--card-shadow` в тёмной теме это ДВЕ тени сразу — волосяное кольцо `0 0 0 1px` (его видно
+   * как «внутреннюю») и большая мягкая `0 24px 60px` снаружи. Подъём на 1px сдвигает обе, а
+   * `transition: box-shadow` перерисовывает их в том же кадре, что и рамку.
+   *
+   * Осталось ровно то, что он оставил у измерений: подъём на 1px и подкраска рамки. Тень снята
+   * и в покое, и на наведении, и убрана из перехода — анимировать то, чего нет, стоит кадров
+   * впустую.
+   * ⚠️ Правка адресная: `.card` здесь ОБЛАСТНОЙ класс экрана «Связи» (Svelte scoped), общего
+   * `.card` в проекте нет вовсе — каждый экран объявляет свой. Тени других экранов не тронуты.
+   */
   .card {
     background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 14px;
-    box-shadow: var(--card-shadow);
-    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: none;
+    transition: border-color 0.18s ease, transform 0.18s ease;
   }
   @media (hover: hover) {
     .card:hover {

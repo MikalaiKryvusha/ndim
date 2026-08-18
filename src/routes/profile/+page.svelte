@@ -25,7 +25,7 @@
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
   // `dateOnly` ушла вместе со строкой «В Пространстве с …» (см. `accountLine`).
-  import { dateTime, num as decimal, starsUnit, type Lang } from '$lib/ui/format';
+  import { dateTime, num as decimal, localizedText, starsUnit, type Lang } from '$lib/ui/format';
   import { lang as currentLang } from '$lib/ui/lang.svelte';
   import { preloadAvatars } from '$lib/data/avatar';
   // Жест «потянуть вниз» (интервью №006, В1=А — все четыре главных экрана).
@@ -917,11 +917,19 @@
   const BORN_FIELD_KEYS = ['year', 'month', 'day'] as const;
 
   // ── Отображение значений ──
-  const loc = (value: Localized | undefined | null): string | null =>
-    value ? (value[lang] ?? value.ru ?? value.en) : null;
+  /* Лестница языков — общая (`bugs/150`): своя копия запиралась на пустой строке и показывала
+     «не указано» там, где значение есть на другом языке. Замер боя — 5 карточек из 331. */
+  const loc = (value: Localized | undefined | null): string | null => localizedText(value, lang);
 
   const MONTHS_RU = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
   const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  /** Настоящее имя человека или `null` — факт, на который опирается вид кружка (`bugs/150`). */
+  function personName(value: unknown): string | null {
+    if (value === undefined || value === null) return null;
+    const name = value as { first: Localized; nick: Localized };
+    return loc(name.first) ?? loc(name.nick);
+  }
 
   function formatValue(property: string, value: unknown): string {
     if (value === undefined || value === null) return t.noValue[lang];
@@ -1416,11 +1424,14 @@
         {#snippet headCard(me: NonNullable<typeof data>)}
         <div class="card head-card" in:fade={{ duration: MOTION.base }}>
           <div class="head-who">
+            <!-- `nameless` — свой профиль тоже показывает фирменный знак вместо буквы запасного
+                 слова (`bugs/150`): человек без имени видит себя так же, как его видят другие. -->
             <Avatar
               uid={me.uid}
               name={formatValue('name', me.values.name)}
               has={me.values.avatar === true}
               size={54}
+              nameless={personName(me.values.name) === null}
             />
             <span class="head-idn">
               <b>{formatValue('name', me.values.name)}</b>

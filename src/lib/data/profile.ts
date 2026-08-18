@@ -185,7 +185,7 @@ export async function ensureSpaceExists(uid: Uid, language: 'ru' | 'en' = 'ru'):
 }
 
 /**
- * Штамп «грязной» точки. Гость обязан честно называть свою точку гостевой —
+ * Штамп «NDim ID обновлён». Гость обязан честно называть свою точку гостевой —
  * правила (`honestGuestFlag` в firestore.rules) отвергнут запись без `guest: true`,
  * а сервер синхронизации по этому флагу не пускает гостя в чужие relations.
  */
@@ -255,7 +255,7 @@ async function fetchProfileScreen(uid: Uid): Promise<ProfileScreenData> {
 }
 
 /**
- * Сохраняет оценку по оси и помечает точку «грязной» — сервер синхронизации пересчитает связи.
+ * Сохраняет оценку по оси и помечает NDim ID обновлённым — сервер синхронизации пересчитает связи.
  * Оба документа — одним атомарным батчем: оценка без флага потерялась бы для пересчёта.
  */
 export async function saveRating(uid: Uid, dimId: string, value: number): Promise<void> {
@@ -269,7 +269,7 @@ export async function saveRating(uid: Uid, dimId: string, value: number): Promis
   afterMyRatingChanged();
 }
 
-/** Удаляет оценку (крестик на карточке) и тоже помечает точку «грязной». */
+/** Удаляет оценку (крестик на карточке) и тоже помечает NDim ID обновлённым. */
 export async function removeRating(uid: Uid, dimId: string): Promise<void> {
   const store = db();
   const batch = writeBatch(store);

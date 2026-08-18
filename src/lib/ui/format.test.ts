@@ -8,7 +8,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { ageAt, bornWithAge, monthYearSince, versionLabel, yearsUnit } from './format.ts';
+import {
+  ageAt,
+  bornWithAge,
+  localizedText,
+  monthYearSince,
+  versionLabel,
+  yearsUnit,
+} from './format.ts';
 
 // День берём из середины месяца: так перевод UTC → местное время не утащит дату в соседний месяц.
 const midMonth = (year: number, month: number) => new Date(year, month, 15).getTime();
@@ -118,4 +125,37 @@ test('версия: номера сборки нет — нет и скобок 
   // Строка из окружения тоже считается числом: Docker передаёт SYNC_BUILD строкой.
   assert.equal(versionLabel('0.2.0', '17'), '0.2 (17)');
   assert.equal(versionLabel('0.2.0', 'dev'), '0.2');
+});
+
+/*
+ * ── СПУСК ПО ЛОКАЛЯМ (`bugs/150`) ───────────────────────────────────────────────────────────
+ *
+ * Заказ владельца 2026-08-18 и канон 1.x: имени нет на языке зрителя — показываем на ближайшем
+ * наличествующем. Дефект, ради которого тесты написаны, ловится ровно первым случаем: пустая
+ * строка — это ЗНАЧЕНИЕ, и прежнее `value[lang] ?? value.ru ?? value.en` на ней останавливалось,
+ * пряча существующее имя. В бою таких карточек было 5 из 331, у трёх имя лежало на английском.
+ */
+test('локали: пустая строка не запирает спуск — берём ближайший язык, где текст есть', () => {
+  // Ровно форма боевой записи, с которой владелец пришёл: `first.ru=""`, `first.en` заполнен.
+  assert.equal(localizedText({ ru: '', en: 'Andrew' }, 'ru'), 'Andrew');
+  assert.equal(localizedText({ ru: 'Андрей', en: '' }, 'en'), 'Андрей');
+});
+
+test('локали: спуск начинается с языка зрителя, а не с русского', () => {
+  assert.equal(localizedText({ ru: 'Андрей', en: 'Andrew' }, 'en'), 'Andrew');
+  assert.equal(localizedText({ ru: 'Андрей', en: 'Andrew' }, 'ru'), 'Андрей');
+});
+
+test('локали: одни пробелы — это тоже пусто, а края текста подрезаются', () => {
+  assert.equal(localizedText({ ru: '   ', en: 'Andrew' }, 'ru'), 'Andrew');
+  // Неразрывный пробел в качестве всего значения — пусто (внутри текста его никто не трогает).
+  assert.equal(localizedText({ ru: ' ', en: 'Andrew' }, 'ru'), 'Andrew');
+  assert.equal(localizedText({ ru: '  Андрей  ', en: null }, 'ru'), 'Андрей');
+});
+
+test('локали: показывать нечего — null, а не выдуманное слово', () => {
+  assert.equal(localizedText({ ru: null, en: null }, 'ru'), null);
+  assert.equal(localizedText({ ru: '', en: '' }, 'ru'), null);
+  assert.equal(localizedText(null, 'ru'), null);
+  assert.equal(localizedText(undefined, 'en'), null);
 });

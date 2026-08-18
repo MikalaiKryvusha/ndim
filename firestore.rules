@@ -223,7 +223,7 @@ service cloud.firestore {
     match /points/{ownerId} {
       allow read: if isSelf(ownerId);
 
-      // Клиент помечает свою точку «грязной», чтобы сервер синхронизации пересчитал связи.
+      // Клиент помечает свой NDim ID обновлённым, чтобы сервер синхронизации пересчитал связи.
       // Снять флаг клиент не может: это делает сервер синхронизации. Флаг `guest` — честный
       // (honestGuestFlag): по нему сервер синхронизации не пускает гостя в чужие relations (В3).
       allow create: if isSelf(ownerId) && request.resource.data.dirty == true && honestGuestFlag();

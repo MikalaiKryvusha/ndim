@@ -458,10 +458,23 @@ console.log('\n— блок 5б: что произносит голос —');
 {
 	const { scopeOf } = await import('./review.mjs');
 	const { parseMeta, readMd: rmd } = await import('./lib/review-core.mjs');
+	/*
+	 * 🔴 ОБРАЗЦЫ ИЩУТСЯ ПО НОМЕРУ, А НЕ ПО ПОЛНОМУ ИМЕНИ. Здесь стояли жёсткие пути, и страж
+	 * покраснел молча и не по делу: ревизия беклога закрыла оба документа, дописав в имя тег
+	 * `_DONE_` (`bugs/104` → `bugs/104_DONE_…`, `plans/27` → `plans/27_DONE_…`). Проверялся при
+	 * этом скоуп — «баг это баг, план это план», — к которому переименование отношения не имеет.
+	 *
+	 * Красный страж по устаревшему поводу опаснее отсутствующего: он приучает себя пропускать,
+	 * а этот сторожит контур вычитки владельца. Поймано 2026-08-18 попутным прогоном.
+	 */
+	const byNumber = (dir, number) => {
+		const hit = readdirSync(join(ROOT, dir)).find((f) => new RegExp(`^${number}[_.]`).test(f));
+		return hit ? `${dir}/${hit}` : `${dir}/${number}_НЕ_НАЙДЕН.md`;
+	};
 	const cases = [
-		['interviews/interview_010_gates_forks.md', 'интервью'],
-		['bugs/104_relation_card_expands_only_by_name.md', 'баг'],
-		['plans/27_owner_reviews_contour.md', 'план'],
+		[byNumber('interviews', 'interview_010'), 'интервью'],
+		[byNumber('bugs', '104'), 'баг'],
+		[byNumber('plans', '27'), 'план'],
 	];
 	for (const [rel, kind] of cases) {
 		const p = join(ROOT, rel);
