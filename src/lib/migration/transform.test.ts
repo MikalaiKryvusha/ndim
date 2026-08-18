@@ -134,11 +134,11 @@ describe('Оценки: труд человека не теряется', () => 
     assert.ok(dims.has('удалённое-измерение'));
   });
 
-  test('точка с оценками помечается грязной — сервер синхронизации пересчитает её', () => {
+  test('NDim ID с оценками помечается обновлённым — сервер синхронизации пересчитает его', () => {
     assert.equal(migratePoint(point, NOW).point.dirty, true);
   });
 
-  test('пустая точка не помечается грязной: считать по ней нечего', () => {
+  test('пустой NDim ID не помечается обновлённым: считать по нему нечего', () => {
     const empty = migratePoint({ owner_uid: 'u2', user_dims: {} }, NOW);
     assert.equal(empty.point.dirty, false);
     assert.equal(empty.dims.size, 0);

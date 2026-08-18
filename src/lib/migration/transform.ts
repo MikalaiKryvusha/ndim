@@ -210,7 +210,7 @@ export function migratePoint(legacy: LegacyPoint, now: Millis): MigratedPoint {
 
   const point: PointDoc = {
     // Точка пересчитывается заново после миграции: 2.0 считает связи своим ядром.
-    // Пустую точку помечать грязной незачем — считать по ней нечего.
+    // Пустой NDim ID помечать обновлённым незачем — считать по нему нечего.
     dirty: dims.size > 0,
     updated: toMillis(legacy.time?.updated, now),
     lastSync: legacy.sync_status === 'synchronized' ? toMillis(legacy.time?.last_sync, now) : null,

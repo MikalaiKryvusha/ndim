@@ -75,7 +75,7 @@ async function seedCatalog(n, { ageMs = 30 * 24 * 60 * 60 * 1000 } = {}) {
 	await db.doc('dims/dims_list').set({ dims_list: JSON.stringify(index) });
 }
 
-/** Две точки с общими оценками; первая грязная, иначе цикл выйдет ДО обслуживания индекса. */
+/** Два NDim ID с общими оценками; первый обновлённый, иначе цикл выйдет ДО обслуживания индекса. */
 async function seedWork() {
 	for (const [uid, dirty] of [['alice', true], ['bob', false]]) {
 		await db.doc(`points/${uid}`).set({ dirty, updated: 1, lastSync: null, firstSeen: 1 });

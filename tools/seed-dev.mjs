@@ -388,7 +388,7 @@ try {
 
     await db.doc(`users/${uid}/groups/g-club`).set({ name: 'Клуб', memberCount: 0, created: now });
 
-    // Точка владельца стенда — «грязная»: серверу синхронизации есть что пересчитать сразу.
+    // NDim ID владельца стенда — «обновлённый»: серверу синхронизации есть что пересчитать сразу.
     await db.doc(`points/${uid}`).set({ dirty: true, updated: now, lastSync: null });
     for (const [dimId, value] of Object.entries(MY_RATINGS)) {
       await db.doc(`points/${uid}/dims/${dimId}`).set({ value });

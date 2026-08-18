@@ -157,7 +157,7 @@ describe('Сервер синхронизации пишет статистик�
     const before = (await db.doc('space/server').get()).data();
     const statsBefore = (await db.doc('space/stats').get()).data();
 
-    const recomputed = await runCycle(); // грязных точек не осталось
+    const recomputed = await runCycle(); // обновлённых NDim ID не осталось
     assert.equal(recomputed, 0);
 
     const after = (await db.doc('space/server').get()).data();
