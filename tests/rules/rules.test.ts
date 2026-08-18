@@ -516,6 +516,74 @@ describe('Оценки по осям — не видит никто, кроме 
     await assertFails(setDoc(doc(db, 'points/alice'), { dirty: false, updated: 2, lastSync: 2 }));
     await assertSucceeds(setDoc(doc(db, 'points/alice'), { dirty: true, updated: 2, lastSync: 1 }));
   });
+
+  /*
+   * bugs/153 — БЕЛЫЙ СПИСОК ПОЛЕЙ ТОЧКИ.
+   *
+   * `firstSeen` ставит сервер синхронизации, и на нём держится окно новичка: пока отметка
+   * молода, человека считают КАЖДЫЙ цикл вне очереди. Пока правила не ограничивали набор
+   * полей, клиент переписывал её сам и оставался новичком навсегда — привилегия была
+   * подделываемой, а платил за неё проект (эпик 60).
+   *
+   * У ПОДКОЛЛЕКЦИИ оценок такая защита стояла с самого начала («лишние поля в документе оси
+   * отвергаются», выше). У родительского документа её не было — асимметрия, а не замысел.
+   */
+  test('🔒 клиент не может подделать firstSeen — это поле сервера синхронизации (bugs/153)', async () => {
+    const db = verified(ALICE).firestore();
+    await assertFails(
+      setDoc(doc(db, 'points/alice'), { dirty: true, updated: 2, firstSeen: 2 }, { merge: true }),
+    );
+  });
+
+  test('🔒 произвольные поля в документе точки отвергаются (bugs/153)', async () => {
+    const db = verified(ALICE).firestore();
+    await assertFails(
+      setDoc(doc(db, 'points/alice'), { dirty: true, updated: 2, escort: 3 }, { merge: true }),
+    );
+    // И на СОЗДАНИИ тоже: у Боба точки нет, путь документа — его собственный uid.
+    const bob = verified(BOB).firestore();
+    await assertFails(setDoc(doc(bob, 'points/bob'), { dirty: true, updated: 2, мусор: 'x' }));
+  });
+
+  test('🔒 клиент не может стереть серверное поле, записав документ без него (bugs/153)', async () => {
+    // Отметку кладём здесь, а не полагаемся на общий сид: сид точки её не содержит, и без этой
+    // строки тест был бы зелёным потому, что стирать оказалось нечего.
+    await seed(async (db) => {
+      await setDoc(doc(db, 'points/alice'), { dirty: false, updated: 1, lastSync: 1, firstSeen: 1 });
+    });
+    const db = verified(ALICE).firestore();
+    // Запись БЕЗ merge затирает документ целиком — вместе с `firstSeen`, который поставил
+    // сервер. Для правил это тоже изменение серверного поля, и оно должно быть отвергнуто.
+    await assertFails(setDoc(doc(db, 'points/alice'), { dirty: true, updated: 2 }));
+  });
+
+  /*
+   * 🔑 ОБРАТНАЯ СТОРОНА БЕЛОГО СПИСКА, без которой он опасен: закрыв лишнее, легко закрыть и
+   * нужное. Клиент пишет точку через `set(..., { merge: true })`, и при слиянии правила видят
+   * документ ЦЕЛИКОМ — вместе с `firstSeen`, которого запись не касалась. Проверка по итоговым
+   * ключам отвергла бы законное сохранение оценки у КАЖДОГО, кому сервер уже проставил отметку.
+   */
+  test('законная оценка проходит и после белого списка — даже когда сервер уже ставил firstSeen', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'points/alice'), {
+        dirty: false,
+        updated: 1,
+        lastSync: 1,
+        firstSeen: 1, // ← отметка сервера синхронизации, лежит в документе
+      });
+    });
+    const db = verified(ALICE).firestore();
+    await assertSucceeds(
+      setDoc(doc(db, 'points/alice'), { dirty: true, updated: 2, lastSync: null }, { merge: true }),
+    );
+  });
+
+  test('первая оценка СОЗДАЁТ точку и после белого списка', async () => {
+    // Путь документа — это uid, поэтому «новый человек» здесь Боб, а не выдуманный путь Алисы:
+    // чужой путь отверг бы `isSelf`, и тест был бы зелёным по НЕВЕРНОЙ причине.
+    const db = verified(BOB).firestore();
+    await assertSucceeds(setDoc(doc(db, 'points/bob'), { dirty: true, updated: 2, lastSync: null }));
+  });
 });
 
 describe('Связи — приватны и неприкосновенны', () => {

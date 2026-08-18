@@ -223,11 +223,38 @@ service cloud.firestore {
     match /points/{ownerId} {
       allow read: if isSelf(ownerId);
 
+      /*
+       * 🔴 БЕЛЫЙ СПИСОК ПОЛЕЙ (bugs/153). До него правила требовали от клиента ровно одного —
+       * `dirty == true`, — а набор полей не ограничивали ничем. Проба на эмуляторе прошла
+       * зелёной: клиент записывал себе `firstSeen`, `lastSync` и произвольный мусор.
+       *
+       * Цена этого была не теоретической. `firstSeen` ставит СЕРВЕР синхронизации
+       * (`sync-server/index.mjs:1141`), и на нём держится окно новичка (`index.mjs:1048`):
+       * пока отметка молода, человек считается КАЖДЫЙ цикл вне очереди. Клиент, переписывающий
+       * её при каждой оценке, оставался новичком навсегда — то есть привилегия была
+       * подделываемой, а платил за неё проект (эпик 60, `bugs/152`).
+       *
+       * ⚠️ Здесь `diff().affectedKeys()`, а НЕ привычный проекту `keys().hasOnly` — и это не
+       * разнобой. Клиент пишет точку через `set(..., { merge: true })`, а при слиянии
+       * `request.resource.data` — это документ ЦЕЛИКОМ, вместе с серверными полями, которые
+       * запись не трогала. `keys().hasOnly` отверг бы законное сохранение оценки у любого, кому
+       * сервер уже проставил `firstSeen`. Сравнивать надо ИЗМЕНЁННОЕ, а не итоговое.
+       *
+       * Создание — случай простой: прежнего документа нет, сравнивать не с чем, работает
+       * обычный `keys().hasOnly`.
+       */
+      function clientPointFields() {
+        return ['dirty', 'updated', 'lastSync', 'guest'];
+      }
+
       // Клиент помечает свой NDim ID обновлённым, чтобы сервер синхронизации пересчитал связи.
       // Снять флаг клиент не может: это делает сервер синхронизации. Флаг `guest` — честный
       // (honestGuestFlag): по нему сервер синхронизации не пускает гостя в чужие relations (В3).
-      allow create: if isSelf(ownerId) && request.resource.data.dirty == true && honestGuestFlag();
-      allow update: if isSelf(ownerId) && request.resource.data.dirty == true && honestGuestFlag();
+      allow create: if isSelf(ownerId) && request.resource.data.dirty == true && honestGuestFlag()
+                    && request.resource.data.keys().hasOnly(clientPointFields());
+      allow update: if isSelf(ownerId) && request.resource.data.dirty == true && honestGuestFlag()
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(clientPointFields());
       allow delete: if isSelf(ownerId);
 
       match /dims/{dimId} {
