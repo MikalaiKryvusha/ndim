@@ -22,6 +22,11 @@
 //     тихий период на неё не действует: первый топ — уже следующим циклом после первой
 //     оценки, и всю первую сессию топ освежается каждым циклом. В 1.x новички ждали
 //     до часа и жаловались, что связей нет, — отсюда и идея;
+//   · ЭСКОРТ НОВИЧКА ИСЧЕРПАЕМ (`plans/62`, интервью №040 В1): пересчётов вне очереди
+//     не больше ТРЁХ, дальше человек уходит в общий ритм. Счёт живёт полем `escortRuns`
+//     на самой точке и потому переживает рестарт контейнера — привилегия раздаётся один
+//     раз на человека, а не заново на каждый выкат образа. Значение, равное потолку, —
+//     терминальная отметка «эскорт окончен»;
 //   · гигиена осиротевших гостей — раз в сутки (в полном проходе), а не каждую минуту;
 //   · холостой цикл стоит один запрос (выборка dirty) и одну запись (сердцебиение).
 //
@@ -56,7 +61,7 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import { cert, initializeApp } from 'firebase-admin/app';
-import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { computeRelation } from '../src/lib/similarity/similarity.ts';
 import { computeSpaceStats, dayKey, snapshotOf } from '../src/lib/model/stats.ts';
 // Потолок топа объявлен в схеме, а не здесь: его же показывает профиль человека
@@ -107,6 +112,22 @@ const PAIR_GRACE_DAYS = 1;
 const QUIET_MS = Number(process.env.SYNC_QUIET_SECONDS ?? 120) * 1000;
 /** Окно новичка: столько после первого расчёта тихий период на точку не действует. */
 const NEWCOMER_MS = Number(process.env.SYNC_NEWCOMER_MINUTES ?? 30) * 60 * 1000;
+/**
+ * ПОТОЛОК ЭСКОРТА НОВИЧКА — три пересчёта, и человек уходит в общий ритм (`plans/62` шаг 1).
+ *
+ * 🔵 Число назначил владелец, интервью №040 В1, дословно: «*после трёх пересчётов — эскорт
+ * новичка прекращаем, переводим его на общую очередь*». Оно не подбиралось замером и агентом
+ * не пересматривается: это обещание человеку, а не настройка. Ручки окружения у него нет
+ * намеренно — переменная среды позволила бы контуру раздавать другое обещание молча.
+ *
+ * Состояние эскорта живёт ПОЛЯМИ НА ТОЧКЕ (`escortRuns`, `escortLastAt`), а не своей
+ * коллекцией: точка и так читается выборкой и пишется транзакцией снятия `dirty`, поэтому
+ * хранение стоит НОЛЬ лишних чтений и НОЛЬ лишних записей. Разбор трёх вариантов с ценой —
+ * `plans/62` шаг 1. Подделать поля клиент не может: белый список `points/{uid}` в
+ * `firestore.rules` пропускает от него только `dirty`, `updated`, `lastSync`, `guest`
+ * (`bugs/153`).
+ */
+const ESCORT_MAX_RUNS = 3;
 /**
  * ЧАС СУТОК ночного полного прохода — **по UTC**, ровно как в 1.x.
  *
@@ -366,6 +387,10 @@ async function loadPoint(owner) {
     // сервер синхронизации впервые его увидел (firstSeen ставит он сам, ниже).
     updated: typeof data.updated === 'number' ? data.updated : null,
     firstSeen: typeof data.firstSeen === 'number' ? data.firstSeen : null,
+    // Состояние эскорта новичка (`plans/62` шаг 1). Читается ОТСЮДА, а не из памяти процесса,
+    // — в этом весь смысл выбора места: рестарт контейнера не раздаёт эскорт заново.
+    escortRuns: typeof data.escortRuns === 'number' ? data.escortRuns : null,
+    escortLastAt: typeof data.escortLastAt === 'number' ? data.escortLastAt : null,
   };
 }
 
@@ -952,6 +977,31 @@ async function reportServer(now, success = null) {
 }
 
 /**
+ * Идёт ли у этого человека эскорт новичка (`plans/62` шаг 1, интервью №040 В1).
+ *
+ * Чистая функция от ДВУХ полей документа точки — намеренно без третьего флага «эскорт
+ * активен». Флаг пришлось бы держать согласованным со счётчиком, а расходятся такие пары
+ * молча: ровно из-за этого класса `plans/58` запретил хранить тегом «ждёт сборки».
+ *
+ * Правило целиком:
+ *   · `escortRuns` есть  → эскорт идёт, пока пересчётов истрачено меньше потолка;
+ *                          значение, равное потолку, — терминальная отметка «эскорт окончен»;
+ *   · `escortRuns` нет   → эскорт полагается только тому, кого сервер синхронизации ещё НИ
+ *                          РАЗУ не считал (`firstSeen` пуст).
+ *
+ * 🔑 Вторая строка правила заодно снимает вопрос миграции: все 342 боевые точки уже несут
+ * `firstSeen`, поэтому старожилы читаются как «эскорт окончен» без единой правки данных.
+ *
+ * ⚠️ Граница на СЕГОДНЯ: функция отвечает «эскорт ещё не исчерпан», а не «пересчёт положен
+ * прямо сейчас». Окно 30 минут тишины и отложенный расчёт через 10 минут — шаги 4 и 5 того же
+ * плана; пока рядом с этой проверкой продолжает действовать прежнее окно `NEWCOMER_MS`.
+ */
+export function escortActive({ firstSeen, escortRuns }) {
+  if (typeof escortRuns === 'number') return escortRuns < ESCORT_MAX_RUNS;
+  return typeof firstSeen !== 'number';
+}
+
+/**
  * Дверь для тестов устойчивости (bugs/91): взведённая, роняет БЛИЖАЙШИЙ commitInChunks
  * ровно один раз — так тест воспроизводит транзиентный сбой Firestore посреди ночного
  * прохода без ковыряния в сети. В бою дверь никогда не взводится (ничего не экспортирует
@@ -965,6 +1015,27 @@ export const _testFailNextCommit = { armed: false };
  * В бою всегда null.
  */
 export const _testBetweenCommitAndRelease = { hook: null };
+
+/**
+ * Дверь для теста рестарта (`plans/62` шаг 1): сбрасывает ВСЮ память процесса — ровно то, что
+ * теряет контейнер при перезапуске, и ничего сверх этого.
+ *
+ * Дверь нужна потому, что иначе «рестарт» в тесте пришлось бы изображать новым процессом, а с
+ * ним уехала бы и база: проверять надо ПЕРЕЖИВАНИЕ состояния теми же данными. Сброс делается
+ * поимённо, а не «всё, что похоже на кэш»: забытое здесь поле дало бы тесту зелёный на
+ * состоянии, которое рестарт на самом деле не переживает.
+ *
+ * ⚠️ `lastFullPassAt` тоже обнуляется — так и в бою: отметка ночного прохода заново читается
+ * из `space/server` первым циклом нового процесса (`bugs/85`).
+ */
+export function _testRestartProcess() {
+  pointsCache = null;
+  writtenTops = null;
+  writtenDimRatings = null;
+  seededDimsCount = null;
+  lastPublishedPeople = null;
+  lastFullPassAt = null;
+}
 
 /** Пишет операции пачками по BATCH_LIMIT: полный проход большого Пространства не влезает в один батч. */
 async function commitInChunks(writes) {
@@ -1043,9 +1114,22 @@ export async function runCycle() {
   // всех: суточная партия важнее недописанной сессии.
   const ready = [];
   let deferred = 0;
+  /*
+   * 🔴 КТО В ЭСКОРТЕ — РЕШАЕТСЯ ЗДЕСЬ И ЗАПОМИНАЕТСЯ, а не выводится заново при записи.
+   *
+   * Ниже по циклу (`firstSeen` для статистики) точке новичка ПРОСТАВЛЯЕТСЯ отметка «сервер
+   * увидел впервые» — прямо в кэше процесса. То есть к моменту записи признак «его ещё ни разу
+   * не считали», на котором стоит эскорт, уже стёрт своей же строкой. Спроси мы там — новичок
+   * никогда бы не получил `escortRuns`, и потолок в три пересчёта не наступил бы ни для кого.
+   * Поэтому решение принимается ОДИН раз, по сырым данным документа, и живёт этим набором.
+   */
+  const escortUids = new Set();
   for (const doc of dirtySnap.docs) {
-    const { updated, firstSeen } = doc.data();
-    const young = typeof firstSeen !== 'number' || startedAt - firstSeen < NEWCOMER_MS;
+    const { updated, firstSeen, escortRuns } = doc.data();
+    const escorting = escortActive({ firstSeen, escortRuns });
+    if (escorting) escortUids.add(doc.id);
+    const young =
+      escorting && (typeof firstSeen !== 'number' || startedAt - firstSeen < NEWCOMER_MS);
     const resting = typeof updated === 'number' && startedAt - updated < QUIET_MS;
     if (!fullPass && !young && resting) deferred += 1;
     else ready.push(doc);
@@ -1317,23 +1401,73 @@ export async function runCycle() {
   if (_testBetweenCommitAndRelease.hook) await _testBetweenCommitAndRelease.hook();
 
   let dirtyKept = 0;
+  let escortSpent = 0;
+  let escortFinished = 0;
   for (const uid of readyUids) {
     const point = pointsCache.get(uid);
     const seenUpdated = point?.updated ?? null;
     const firstSeen = point?.firstSeen ?? now;
     const ref = db.doc(`points/${uid}`);
+    /*
+     * СЧЁТЧИК ЭСКОРТА ТРАТИТСЯ ЗДЕСЬ, И ТРАТИТСЯ ЗА УЖЕ СДЕЛАННУЮ РАБОТУ (`plans/62` шаг 1).
+     *
+     * К этой строке топ человека посчитан и закоммичен выше — значит пересчёт СОСТОЯЛСЯ, и
+     * эскорт обязан его засчитать. Место выбрано не ради удобства: транзакция снятия `dirty`
+     * уже пишет в этот самый документ с `merge: true`, поэтому счётчик едет ПОПУТНО — ноль
+     * лишних записей. Своя коллекция стоила бы записи на каждое событие (разбор — план).
+     *
+     * ⚠️ Считаем только тех, у кого эскорт ИДЁТ. Старожил попадает в `readyUids` на общих
+     * основаниях, и трогать ему `escortRuns` нельзя: отметка «эскорт окончен» у него уже
+     * стоит, а вторая трата обнулила бы смысл терминального значения.
+     */
+    const escorting = escortUids.has(uid);
+    const runs = escorting ? (point?.escortRuns ?? 0) + 1 : null;
+    const exhausted = runs === ESCORT_MAX_RUNS;
+    const escortPatch = escorting
+      ? {
+          escortRuns: runs,
+          // Якорь окна 30 минут (шаги 4–5). У исчерпавшего эскорт он мёртвый вес — стираем:
+          // «самоочищающееся состояние» из плана здесь и означает поле, а не документ.
+          escortLastAt: exhausted ? FieldValue.delete() : now,
+        }
+      : {};
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
       const current = snap.exists && typeof snap.data().updated === 'number' ? snap.data().updated : null;
       if (current !== seenUpdated) {
         dirtyKept += 1; // человек успел оценить во время цикла — dirty остаётся
+        /*
+         * 🔑 Но трату эскорта записать ВСЁ РАВНО надо, и это не мелочь: пересчёт для него
+         * состоялся, топ записан. Промолчи мы здесь — человек, оценивающий безостановочно,
+         * попадал бы в эту ветку раз за разом и получал четвёртый, пятый, десятый пересчёт,
+         * то есть ровно ту бесконечную привилегию, ради отмены которой заведена фаза.
+         * Цена честности названа прямо: в этой РЕДКОЙ ветке появляется запись, которой
+         * раньше не было. `dirty` не трогаем — точка обязана пересчитаться следующим циклом.
+         */
+        if (escorting) tx.set(ref, escortPatch, { merge: true });
         return;
       }
-      tx.set(ref, { dirty: false, lastSync: now, firstSeen }, { merge: true });
+      tx.set(ref, { dirty: false, lastSync: now, firstSeen, ...escortPatch }, { merge: true });
     });
+    if (escorting) {
+      escortSpent += 1;
+      if (exhausted) escortFinished += 1;
+      // Кэш процесса обязан догнать базу в ТОМ ЖЕ цикле: иначе следующий цикл прочитает из
+      // него старый счётчик и выдаст лишний пересчёт, не сходив в базу вовсе.
+      if (point) {
+        point.escortRuns = runs;
+        point.escortLastAt = exhausted ? null : now;
+      }
+    }
   }
   if (dirtyKept > 0) {
     log(`оценка во время цикла: dirty оставлен у ${dirtyKept} — пересчёт следующим циклом`);
+  }
+  if (escortSpent > 0) {
+    log(
+      `эскорт новичка: пересчётов истрачено ${escortSpent}` +
+        (escortFinished > 0 ? `, эскорт окончен у ${escortFinished} — дальше общая очередь` : ''),
+    );
   }
 
   // Полная и частичная синхронизации отчитываются РАЗДЕЛЬНЫМИ блоками — как в 1.x
