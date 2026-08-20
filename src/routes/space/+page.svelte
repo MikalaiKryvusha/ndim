@@ -38,6 +38,7 @@
     dateOnly,
     dateTime,
     dimsUnit,
+    localizedText,
     newDimsUnit,
     num,
     peopleUnit,
@@ -303,7 +304,7 @@
 
         const named: Seg[] = [...appeared, ': '];
         event.names.forEach((dim, index) => {
-          named.push({ b: `«${dim.title[lang] ?? dim.title.ru ?? dim.id}»` });
+          named.push({ b: `«${localizedText(dim.title, lang) ?? dim.id}»` });
           named.push(index < event.names.length - 1 ? ', ' : '.');
         });
         return named;

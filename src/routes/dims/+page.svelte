@@ -702,7 +702,7 @@
    * а незнакомое оставляем нейтральным: выдумывать цвет для неизвестного вида нельзя.
    */
   function typeKind(card: DimCard): string {
-    const raw = (card.type?.ru ?? card.type?.en ?? '').toLowerCase();
+    const raw = loc(card.type).toLowerCase();
     if (/фильм|сериал|мультф|film|movie|series/.test(raw)) return 'film';
     if (/роман|книг|повест|novel|book|поэ/.test(raw)) return 'book';
     if (/игр|game/.test(raw)) return 'game';
