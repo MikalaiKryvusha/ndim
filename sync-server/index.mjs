@@ -62,6 +62,7 @@ import { pathToFileURL } from 'node:url';
 
 import { cert, initializeApp } from 'firebase-admin/app';
 import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { createEscortWatch } from './escort_watch.mjs';
 import { computeRelation } from '../src/lib/similarity/similarity.ts';
 import { computeSpaceStats, dayKey, snapshotOf } from '../src/lib/model/stats.ts';
 // Потолок топа объявлен в схеме, а не здесь: его же показывает профиль человека
@@ -128,6 +129,17 @@ const NEWCOMER_MS = Number(process.env.SYNC_NEWCOMER_MINUTES ?? 30) * 60 * 1000;
  * (`bugs/153`).
  */
 const ESCORT_MAX_RUNS = 3;
+
+/**
+ * ОЧЕРЕДЬ МИНУТНОЙ ПУЛЬСАЦИИ (`plans/62` шаг 2): uid → событие подписки. Наполняет её
+ * подписка эскорта (`escort_watch.mjs`), опустошает цикл, посчитавший человека.
+ *
+ * В фазе 2 очередь ТЕНЕВАЯ: пересчёт по-прежнему ведёт минутный опрос (фаза ничего не
+ * убирает — быстрый путь строится при живом старом), очередь лишь копит правду подписки и
+ * видна в логе. Потребителем она становится в шаге 3 (пульсация считает ПО НЕЙ и не ходит
+ * в базу, когда очередь пуста), опрос снимает фаза 3.
+ */
+export const escortQueue = new Map();
 /**
  * ЧАС СУТОК ночного полного прохода — **по UTC**, ровно как в 1.x.
  *
@@ -1035,6 +1047,9 @@ export function _testRestartProcess() {
   seededDimsCount = null;
   lastPublishedPeople = null;
   lastFullPassAt = null;
+  // Очередь пульсации живёт в памяти НАМЕРЕННО (`plans/62` шаг 2): рестарт её теряет, а
+  // снимок переподъёма подписки наполняет заново из всё ещё dirty точек — терять нечего.
+  escortQueue.clear();
 }
 
 /** Пишет операции пачками по BATCH_LIMIT: полный проход большого Пространства не влезает в один батч. */
@@ -1458,6 +1473,8 @@ export async function runCycle() {
         point.escortRuns = runs;
         point.escortLastAt = exhausted ? null : now;
       }
+      // Человек посчитан — его событие из очереди пульсации потреблено (`plans/62` шаг 2).
+      escortQueue.delete(uid);
     }
   }
   if (dirtyKept > 0) {
@@ -1541,6 +1558,24 @@ if (runDirectly) {
         `ночной полный проход в ${String(FULL_SYNC_AT_HOUR).padStart(2, '0')}:00 UTC` +
         `${FULL_SYNC_EVERY_CYCLE ? ' (ТЕСТОВЫЙ РЕЖИМ: каждый цикл полный)' : ''}`,
     );
+    /*
+     * ПОДПИСКА ЭСКОРТА — только в режиме службы (`plans/62` шаг 2): разовый прогон и тесты
+     * слушать нечего, у них нет «между циклами». В фазе 2 она теневая: наполняет очередь
+     * пульсации и лог, пересчёт остаётся за минутным опросом ниже. Событие логируется один
+     * раз на вход в очередь — повтор догона переподъёма шума не плодит.
+     */
+    const escortWatch = createEscortWatch({
+      db,
+      log,
+      isEscorting: (data) => escortActive(data),
+      onEscortEvent: (event) => {
+        if (escortQueue.has(event.uid)) return;
+        escortQueue.set(event.uid, event);
+        log(`подписка эскорта: NDim ID ${event.uid} — в очереди пульсации (${escortQueue.size})`);
+      },
+    });
+    escortWatch.start();
+
     // Тики не накладываются друг на друга: пересечение циклов рвало бы кэш процесса.
     let cycleInFlight = false;
     const tick = async () => {
