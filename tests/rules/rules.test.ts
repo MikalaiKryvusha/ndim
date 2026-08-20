@@ -1441,3 +1441,43 @@ describe('Пара теста — testPairs (plans/42, такт В; №002 В4 +
     await assertSucceeds(deleteDoc(doc(guest(ALICE).firestore(), PAIR)));
   });
 });
+
+/*
+ * Админ-чтение четырёх коллекций — ЗАМЫСЕЛ владельца, закреплённый тестом (№041 В1).
+ *
+ * Слово владельца 2026-08-21 дословно: «Админ может всё». Право стояло в правилах без
+ * описания и без теста (bugs/155: конфигурация шире собственного комментария) — теперь оно
+ * названо в комментариях правил и закреплено здесь, чтобы не быть незадокументированным.
+ * Потребитель — будущая Панель администратора (ideas/13: модерация, поддержка людей).
+ *
+ * ⚠️ Граница замысла НЕ тронута: оценок (points) админ по-прежнему не читает — «админ не
+ * исключение» (bugs/100, тест выше). Закреплены обе стороны границы: что можно и что нельзя.
+ */
+describe('Админ-чтение — замысел владельца, закреплён тестом (№041 В1)', () => {
+  beforeEach(async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'users/alice'), { visibility: {} });
+      await setDoc(doc(db, 'users/alice/profile/private'), { gender: 'm' });
+      await setDoc(doc(db, 'friendships/alice_bob'), {
+        a: ALICE, b: BOB, requestedBy: BOB, status: 'pending', created: 1, acceptedAt: null,
+      });
+      await setDoc(doc(db, 'relations/alice'), { computedAt: 1, version: 1, top: [] });
+    });
+  });
+
+  test('админ читает корень пользователя, бакеты профиля, дружбу и связи', async () => {
+    const db = admin('root').firestore();
+    await assertSucceeds(getDoc(doc(db, 'users/alice')));
+    await assertSucceeds(getDoc(doc(db, 'users/alice/profile/private')));
+    await assertSucceeds(getDoc(doc(db, 'friendships/alice_bob')));
+    await assertSucceeds(getDoc(doc(db, 'relations/alice')));
+  });
+
+  test('🔒 контроль прибора: обычному подтверждённому те же четыре чтения отказаны', async () => {
+    const db = verified(EVE).firestore();
+    await assertFails(getDoc(doc(db, 'users/alice')));
+    await assertFails(getDoc(doc(db, 'users/alice/profile/private')));
+    await assertFails(getDoc(doc(db, 'friendships/alice_bob')));
+    await assertFails(getDoc(doc(db, 'relations/alice')));
+  });
+});
