@@ -1,0 +1,7 @@
+{
+	"kind": "interview",
+	"document": "homeworks/13_create_recaptcha_key_for_app_check.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-21T15:42:11.069Z",
+	"comment": "вроде сделал, но в Firebase ещё не добавил, там нужно мне подсказать, как настраивать"
+}
