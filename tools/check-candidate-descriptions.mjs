@@ -83,6 +83,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 
 import { words, longestCommonRun, RUN_THRESHOLD, looksLikeList } from './measure-wikipedia-overlap.mjs';
 import { missingMandatoryTags, looksLikeProperName } from './lib/tag-conventions.mjs';
@@ -171,8 +172,29 @@ const DELAY_MS = 300;
 const UA = 'NDimSpace-catalog-audit/1.0 (https://ndimspace.app; candidate text originality check)';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/*
+ * ── ПРЕДОХРАНИТЕЛЬ: ЗАПУСТИЛИ ИЛИ ПОДКЛЮЧИЛИ ───────────────────────────────────────────────
+ *
+ * 🔴 ЧЕТВЁРТЫЙ файл проекта, пойманный на одном и том же. Класс закреплён у соседа
+ * (`tools/rewrite-catalog-descriptions.mjs:167-174`) дословно: **файл, у которого есть и
+ * экспорт, и работа на верхнем уровне, обязан спрашивать, запустили его или подключили.**
+ *
+ * Почему это не косметика ИМЕННО ЗДЕСЬ. Файл экспортирует `punctuationArtifacts`,
+ * `ARTIFACT_PATTERNS`, `sentenceCount`, `opensWithTitle`, `externalAuthority` — то есть он
+ * задуман для подключения. А ниже, на верхнем уровне, стояло `const FILE = process.argv[2]`
+ * с `process.exit(2)`: любой импорт из чужого прибора убивал ЧУЖОЙ процесс кодом 2, разобрав
+ * чужой аргумент как имя файла партии. Импортирующий при этом видел не ошибку импорта, а
+ * молчаливую смерть своего прогона.
+ *
+ * Проверка накрывает ОБА режима, а не только рабочий. У соседа самотест остался снаружи —
+ * тогда подключение из прибора, запущенного с `--selftest`, прогонит ЧУЖОЙ самотест и выйдет
+ * из процесса. Здесь эта дыра закрыта заодно; у соседа она названа отчётом, а не правкой:
+ * тот файл — территория другой роли.
+ */
+const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
 // ── САМОТЕСТ: арифметика приёмки, без сети ──────────────────────────────────────────────────
-if (process.argv.includes('--selftest')) {
+if (ЗАПУЩЕН_НАПРЯМУЮ && process.argv.includes('--selftest')) {
   let bad = 0;
   const t = (ok, what) => {
     if (!ok) bad += 1;
@@ -207,6 +229,11 @@ if (process.argv.includes('--selftest')) {
   console.log(bad ? `\n❌ самотест провален: ${bad}` : '\n✅ самотест пройден: 19 случаев');
   process.exit(bad ? 1 : 0);
 }
+
+// ── РАБОЧИЙ РЕЖИМ — только при прямом запуске (предохранитель объявлен выше) ────────────────
+// Тело блока намеренно НЕ переотступлено: так правка остаётся диффом в две строки, и её видно
+// целиком. Тот же приём у соседа (`rewrite-catalog-descriptions.mjs:175`).
+if (ЗАПУЩЕН_НАПРЯМУЮ) {
 
 // ── Разбор аргументов ───────────────────────────────────────────────────────────────────────
 const FILE = process.argv[2];
@@ -370,3 +397,5 @@ if (problems.length === 0) {
 console.log(`❌ ЗАМЕЧАНИЙ ${problems.length}:`);
 for (const p of problems) console.log(`   · ${p}`);
 process.exit(1);
+
+}
