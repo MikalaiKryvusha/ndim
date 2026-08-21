@@ -258,12 +258,14 @@ async function attempt(browser, n) {
         if (!confirmed) await sleep(300);
       }
       if (!confirmed) throw new Error(`оценка ${i + 1} (${dimId}) не долетела до базы за 8 с`);
-      // Дожидаемся, пока оценённая карточка покинет DOM (улёт), — лента стоит для следующего клика.
+      // Дожидаемся, пока оценённая карточка покинет DOM (улёт), — и даём соседям ДОЕХАТЬ:
+      // подтяжка animate:flip длится MOTION.gesture (900 мс) ПОСЛЕ улёта, клик в движущуюся
+      // ленту промахивается мимо звезды (судейский повтор 2026-08-21 поймал ровно это).
       await page
         .locator(`article.dim[data-dim="${dimId}"]`)
         .waitFor({ state: 'detached', timeout: 4000 })
         .catch(() => {}); // не уехала (bugs/158?) — идём дальше, наблюдение уже снято
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(1200);
       ratedDims.push(dimId);
     }
     const t0 = Date.now();
