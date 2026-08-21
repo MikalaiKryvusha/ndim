@@ -13,7 +13,7 @@ import { signInAnonymously, signInWithEmailAndPassword, signOut } from 'firebase
 import { addDoc, collection, doc, getDoc, getDocs, setDoc, writeBatch } from 'firebase/firestore';
 import { DEV_USER, db, devAuth, isStand } from '../firebase.ts';
 import { waitForSession } from './account.ts';
-import { FRESH, KEYS, cached, forgetAll, invalidate, own, peek } from './cache.ts';
+import { FRESH, KEYS, cached, forgetAll, invalidate, own, peek, remember } from './cache.ts';
 import { forgetAvatars } from './avatar.ts';
 import {
   bucketsForAudience,
@@ -306,6 +306,10 @@ function afterMyRatingChanged(): void {
   invalidate(KEYS.profile);
   invalidate(KEYS.ratings);
   invalidate(KEYS.relations);
+  // Окно ожидания пересчёта (`plans/64`): пока сервер синхронизации не подтвердил мою оценку
+  // (`dirty === false`), топ связей не имеет права замерзать на сессию — иначе экран
+  // до конца сессии держит недосчитанный снимок (Ф2 метаплана `plans/23`, доказано прибором).
+  remember(KEYS.syncWait, Date.now());
 }
 
 /**

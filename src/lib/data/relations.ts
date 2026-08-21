@@ -11,7 +11,7 @@
 
 import { doc, getDoc } from 'firebase/firestore';
 
-import { FRESH, KEYS, cached, own, peek } from './cache.ts';
+import { FRESH, KEYS, cached, invalidate, own, peek } from './cache.ts';
 import { db } from '../firebase.ts';
 import type {
   BirthDate,
@@ -65,10 +65,35 @@ export interface RelationsScreenData {
  *
  * Гасят кэш ровно два события: моя собственная оценка (`profile.ts` → `afterMyRatingChanged`)
  * и принудительное обновление по жесту человека (pull-to-refresh — назван владельцем там же).
+ *
+ * ⚠️ Исключение — ОКНО ОЖИДАНИЯ ПЕРЕСЧЁТА (`plans/64`, фаза 3 эпика `plans/23`): после своей
+ * оценки перечитанный топ мог быть снят ДО того, как сервер синхронизации досчитал, и вечная
+ * свежесть заморозила бы этот снимок на всю сессию (доказано живым браузером,
+ * `tools/probe-guest-screen.mjs`: база 3 → 4, экран держит 3). Пока пересчёт не подтверждён,
+ * запись живёт с нулевой свежестью — каждый заход на экран честно перечитывает базу; окно
+ * закрывает `points/{uid}.dirty === false`, и свежесть снова вечная.
  */
 export async function loadRelations(uid: Uid): Promise<RelationsScreenData | null> {
   own(uid);
-  return cached(KEYS.relations, FRESH.server, () => fetchRelations(uid));
+  const freshMs = awaitingSyncSince() === null ? FRESH.server : 0;
+  return cached(KEYS.relations, freshMs, () => fetchRelations(uid));
+}
+
+/**
+ * Момент моей последней оценки, ещё не подтверждённой сервером синхронизации; `null` — окна нет.
+ * Экран «Связей» по нему отличает «связей нет — оцените» от «Вы оценили — считаем» (`plans/64`).
+ */
+export function awaitingSyncSince(): number | null {
+  return peek<number>(KEYS.syncWait) ?? null;
+}
+
+/**
+ * Подтверждение пересчёта: сервер синхронизации, обработав точку, снимает флаг `dirty`.
+ * Значит `dirty === false` = моя оценка учтена, окно закрывается, и уже ПОЛОЖЕННАЯ в кэш
+ * запись честна — при следующем заходе она снова живёт вечной свежестью.
+ */
+function settleSyncWait(point: PointDoc | null): void {
+  if (point !== null && point.dirty === false) invalidate(KEYS.syncWait);
 }
 
 /** Что лежит в памяти прямо сейчас — для первого кадра экрана «Связи», без лоадера. */
@@ -78,7 +103,21 @@ export function peekRelations(): RelationsScreenData | null | undefined {
 
 async function fetchRelations(uid: Uid): Promise<RelationsScreenData | null> {
   const store = db();
-  const snapshot = await getDoc(doc(store, 'relations', uid));
+
+  /*
+   * В окне ожидания пересчёта (`plans/64`) дополнительно читается СВОЯ точка — одно маленькое
+   * чтение, и только пока окно открыто: `dirty === false` означает, что сервер синхронизации
+   * мою оценку уже учёл, и топ, снятый этим же заходом, можно снова считать вечно свежим.
+   * Вне окна лишних чтений нет — канон экономии запросов не тронут.
+   */
+  const waiting = awaitingSyncSince() !== null;
+  const [snapshot, point] = await Promise.all([
+    getDoc(doc(store, 'relations', uid)),
+    // Отказ этого чтения не имеет права гасить экран (тот же принцип, что у карточек ниже):
+    // не прочиталась точка — окно просто остаётся открытым до следующего захода.
+    waiting ? getDoc(doc(store, 'points', uid)).catch(() => null) : Promise.resolve(null),
+  ]);
+  if (point !== null) settleSyncWait(point.exists() ? (point.data() as PointDoc) : null);
   if (!snapshot.exists()) return null;
 
   const relations = snapshot.data() as RelationsDoc;
@@ -176,7 +215,10 @@ export interface RelationsSummary {
  */
 export async function loadRelationsSummary(uid: Uid): Promise<RelationsSummary | null> {
   own(uid);
-  return cached(KEYS.relationsSummary, FRESH.server, () => fetchRelationsSummary(uid));
+  // То же окно ожидания, что у полного топа (`plans/64`): сводка «Дома» не имеет права
+  // заморозить недосчитанные числа. Точку она читает и так — подтверждение бесплатно.
+  const freshMs = awaitingSyncSince() === null ? FRESH.server : 0;
+  return cached(KEYS.relationsSummary, freshMs, () => fetchRelationsSummary(uid));
 }
 
 /** Сводка из памяти — синхронно, для первого кадра профиля. */
@@ -190,13 +232,16 @@ async function fetchRelationsSummary(uid: Uid): Promise<RelationsSummary | null>
     getDoc(doc(store, 'relations', uid)),
     getDoc(doc(store, 'points', uid)),
   ]);
+  // Подтверждение окна снимается ДО раннего выхода: у новичка топа может не быть вовсе,
+  // а пересчёт при этом уже честно выполнен — «связей нет» тогда результат, а не ожидание.
+  const pointData = point.exists() ? (point.data() as PointDoc) : null;
+  settleSyncWait(pointData);
   if (!top.exists()) return null;
 
   const relations = top.data() as RelationsDoc;
-  const lastSync = point.exists() ? ((point.data() as PointDoc).lastSync ?? null) : null;
   return {
     similarities: relations.top.map((entry) => entry.similarity),
-    lastSync,
+    lastSync: pointData?.lastSync ?? null,
   };
 }
 

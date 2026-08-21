@@ -10,7 +10,7 @@
   // Данные пишет сервер синхронизации (sync-server/), клиенту запись запрещена правилами.
   // «Был онлайн» гостя намеренно НЕ показывается: в модели 2.0 зрителю доступен
   // только публичный бакет профиля гостя (researches/04).
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { fly, slide } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
@@ -26,6 +26,7 @@
   import { noteFirstLoad } from '$lib/data/refresh.svelte';
   import { currentSession } from '$lib/data/profile';
   import {
+    awaitingSyncSince,
     loadRelations,
     peekRelations,
     strengthLevel,
@@ -131,6 +132,37 @@
   });
 
   /**
+   * ОЖИДАНИЕ ПЕРВОГО РАСЧЁТА (`plans/64`, фаза 3 эпика `plans/23`, направление 2 метаплана).
+   *
+   * Человек оценил, а топа ещё нет: пустое состояние «Оцените несколько измерений» ему бы
+   * ВРАЛО — он уже оценил. Пока окно ожидания пересчёта открыто (`awaitingSyncSince`), экран
+   * показывает честное «Пространство NDim выполняет поиск» и сам перечитывает с разумной
+   * паузой; потолок ожидания есть, чтобы медленный такт не дал вечного лоадера, — после него
+   * прежнее пустое состояние, а выходом остаются жест обновления и явная кнопка.
+   */
+  const WAIT_RETRY_MS = 5_000;
+  /** Потолок с запасом над боевым тактом новичка (цикл 60 с, окно новичка `ideas/05`). */
+  const WAIT_CEILING_MS = 90_000;
+  let waitingFirst = $state(false);
+  let waitTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function scheduleCulminationRetry(uid: string): void {
+    if (waitTimer !== null) {
+      clearTimeout(waitTimer);
+      waitTimer = null;
+    }
+    const empty = data === null || data.cards.length === 0;
+    if (!waitingFirst || !empty) return;
+    waitTimer = setTimeout(() => {
+      void loadScreen(uid);
+    }, WAIT_RETRY_MS);
+  }
+
+  onDestroy(() => {
+    if (waitTimer !== null) clearTimeout(waitTimer);
+  });
+
+  /**
    * Перечитать топ. Отдельной функцией, потому что её зовут двое: `onMount` при заходе и
    * жест «потянуть вниз» по требованию человека (интервью №006).
    */
@@ -142,6 +174,10 @@
     if (loaded !== null) await preloadAvatars(portionFaces(loaded.cards, 0, REVEAL_PORTION));
     data = loaded;
     noteFirstLoad();
+    // Окно ожидания пересчёта: признак снимается ПОСЛЕ чтения — само чтение могло его закрыть.
+    const since = awaitingSyncSince();
+    waitingFirst = since !== null && Date.now() - since <= WAIT_CEILING_MS;
+    scheduleCulminationRetry(uid);
   }
 
   /** Обновление по жесту: кэш гасит `refreshNow`, здесь — только перечитывание экрана. */
@@ -195,6 +231,14 @@
       ru: 'Связей пока нет. Оцените несколько измерений — и здесь появятся люди, похожие на Вас.',
       en: 'No relations yet. Rate a few dimensions — and people similar to you will appear here.',
     },
+    // Ожидание ПЕРВОГО расчёта (`plans/64`): человек уже оценил, и текст `empty` ему бы врал.
+    // ⚠️ Текст ВРЕМЕННЫЙ до вычитки владельцем — уходит ему вместе с макетами моста
+    // (фаза 4 эпика `plans/23`); словарь продукта соблюдён, жаргона нет.
+    waiting: {
+      ru: 'Ваши оценки сохранены. Пространство NDim выполняет поиск похожих на Вас людей. Найденные люди появятся здесь.',
+      en: 'Your ratings are saved. NDim Space is searching for people similar to you. The people found will appear here.',
+    },
+    refresh: { ru: 'Обновить', en: 'Refresh' },
     metrics: {
       similarity: { ru: 'Похожесть', en: 'Similarity' },
       proximity: { ru: 'Близость', en: 'Proximity' },
@@ -323,7 +367,17 @@
       </div>
     {:else if data === null || data.cards.length === 0}
       <p class="intro">{t.intro[lang]}</p>
-      <div class="card"><p class="state">{t.empty[lang]}</p></div>
+      {#if waitingFirst}
+        <!-- Честное ожидание вместо ложного «оцените» (`plans/64`): оценки уже поставлены,
+             сервер синхронизации ещё не подтвердил пересчёт. Экран перечитывает сам;
+             кнопка — явный выход по канону направления 2 (`plans/23` фаза 3). -->
+        <div class="card">
+          <p class="state">{t.waiting[lang]}</p>
+          <button type="button" class="btn" onclick={() => void refreshScreen()}>{t.refresh[lang]}</button>
+        </div>
+      {:else}
+        <div class="card"><p class="state">{t.empty[lang]}</p></div>
+      {/if}
     {:else}
       <!-- Вводная подсказка экрана — канон 1.x (bugs/27) -->
       <p class="intro">{t.intro[lang]}</p>
