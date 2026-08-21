@@ -96,6 +96,53 @@ function settleSyncWait(point: PointDoc | null): void {
   if (point !== null && point.dirty === false) invalidate(KEYS.syncWait);
 }
 
+/**
+ * ПОРЯДОК ДВУХ ЧТЕНИЙ В ОКНЕ ОЖИДАНИЯ — здесь живёт весь смысл `bugs/161`.
+ *
+ * 🔴 ПОЧЕМУ ПАРАЛЛЕЛЬНОЕ ЧТЕНИЕ БЫЛО НЕВЕРНЫМ. Сервер синхронизации пишет в ДВА шага, и
+ * порядок у него сознательный (`bugs/93`): сначала батчем коммитятся топы
+ * (`sync-server/index.mjs:1475`, `relations/{uid}` с `computedAt`), и только ПОСЛЕ этого
+ * транзакцией снимается флаг (`:1647`, `{ dirty: false, lastSync }`). Клиент же читал оба
+ * документа одним `Promise.all`, а порядок прилёта параллельных чтений не определён. Плохая
+ * раскладка: чтение топа застаёт СТАРЫЙ документ → сервер коммитит топ → сервер снимает флаг →
+ * чтение точки видит `dirty === false` и ЗАКРЫВАЕТ окно. В кэш легла устаревшая запись, а окно
+ * закрыто — дальше свежесть снова вечная (`FRESH.server`), и человек до конца сессии видит топ,
+ * посчитанный ДО его оценки. Ровно та заморозка, ради которой фаза 3 и делалась.
+ *
+ * **Лечение — порядок, а не новая механика:** пока окно открыто, точка читается ПЕРВОЙ. Тогда
+ * `dirty === false` доказывает, что снятие флага уже случилось, а значит коммит топа случился
+ * ещё раньше, — и топ, прочитанный ПОСЛЕ этого, устареть уже не может.
+ *
+ * Число чтений НЕ меняется ни в одном случае (контракт экономии №005 В4 не тронут): вне окна
+ * пара по-прежнему уходит параллельно, в окне те же два чтения просто идут по очереди.
+ *
+ * 🔴 ПОЧЕМУ ЭТО ОТДЕЛЬНАЯ ФУНКЦИЯ, А НЕ ДВЕ СТРОКИ НА МЕСТЕ. Критерий приёмки бага требует
+ * проверку, доказанную мутацией, а порядок двух сетевых чтений внутри `fetchRelations` в этом
+ * проекте проверить нечем: модуль тянет Firebase, а модульных моков здесь нет и заводить их
+ * ради одного теста — та самая лишняя сущность, которую запрещает Оккам. Вынесенное решение
+ * читается обычными функциями-заглушками и потому проверяется юнитом (`relations.test.ts`).
+ *
+ * ⚠️ Рассмотрена и ОТВЕРГНУТА альтернатива из `bugs/161` — закрывать окно по сверке
+ * `relations.computedAt >= points.lastSync`. Она работает (сервер кладёт в оба поля ОДИН и тот
+ * же `now` цикла — проверено по коду), но заводит инвариант на согласованность двух меток
+ * времени из разных документов и разных транзакций. Порядок чтений не зависит ни от одной метки.
+ */
+export async function readTopAndPoint<T, P>(
+  waiting: boolean,
+  readTop: () => Promise<T>,
+  readPoint: () => Promise<P>,
+): Promise<[T, P]> {
+  if (!waiting) {
+    const [top, point] = await Promise.all([readTop(), readPoint()]);
+    return [top, point];
+  }
+  // 🔴 Точка ПЕРВОЙ и с ожиданием: `readTop()` не имеет права стартовать раньше, чем
+  // подтверждение прочитано. Именно это и стережёт юнит.
+  const point = await readPoint();
+  const top = await readTop();
+  return [top, point];
+}
+
 /** Что лежит в памяти прямо сейчас — для первого кадра экрана «Связи», без лоадера. */
 export function peekRelations(): RelationsScreenData | null | undefined {
   return peek<RelationsScreenData | null>(KEYS.relations);
@@ -111,12 +158,13 @@ async function fetchRelations(uid: Uid): Promise<RelationsScreenData | null> {
    * Вне окна лишних чтений нет — канон экономии запросов не тронут.
    */
   const waiting = awaitingSyncSince() !== null;
-  const [snapshot, point] = await Promise.all([
-    getDoc(doc(store, 'relations', uid)),
+  const [snapshot, point] = await readTopAndPoint(
+    waiting,
+    () => getDoc(doc(store, 'relations', uid)),
     // Отказ этого чтения не имеет права гасить экран (тот же принцип, что у карточек ниже):
     // не прочиталась точка — окно просто остаётся открытым до следующего захода.
-    waiting ? getDoc(doc(store, 'points', uid)).catch(() => null) : Promise.resolve(null),
-  ]);
+    () => (waiting ? getDoc(doc(store, 'points', uid)).catch(() => null) : Promise.resolve(null)),
+  );
   if (point !== null) settleSyncWait(point.exists() ? (point.data() as PointDoc) : null);
   if (!snapshot.exists()) return null;
 
@@ -228,10 +276,17 @@ export function peekRelationsSummary(): RelationsSummary | null | undefined {
 
 async function fetchRelationsSummary(uid: Uid): Promise<RelationsSummary | null> {
   const store = db();
-  const [top, point] = await Promise.all([
-    getDoc(doc(store, 'relations', uid)),
-    getDoc(doc(store, 'points', uid)),
-  ]);
+  /*
+   * Сводка чинится ТЕМ ЖЕ порядком, и это не перестраховка: ключ окна (`KEYS.syncWait`) ОДИН
+   * на оба загрузчика. Закрой сводка окно на устаревшем чтении — заморозится и полный топ,
+   * который эту сводку даже не открывал. Точку сводка читает всегда (ей нужен `lastSync`),
+   * поэтому вне окна пара по-прежнему уходит параллельно — задержка не выросла.
+   */
+  const [top, point] = await readTopAndPoint(
+    awaitingSyncSince() !== null,
+    () => getDoc(doc(store, 'relations', uid)),
+    () => getDoc(doc(store, 'points', uid)),
+  );
   // Подтверждение окна снимается ДО раннего выхода: у новичка топа может не быть вовсе,
   // а пересчёт при этом уже честно выполнен — «связей нет» тогда результат, а не ожидание.
   const pointData = point.exists() ? (point.data() as PointDoc) : null;
