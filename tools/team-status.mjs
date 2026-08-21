@@ -16,7 +16,20 @@
  *
  * Команды:
  *   node tools/team-status.mjs set [--busy|--free] [--doing "…"] [--waiting "…"] [--role <р>]
- *   node tools/team-status.mjs lock-stand | unlock-stand [--role <р>]
+ *   node tools/team-status.mjs lock-stand | unlock-stand [--slot N] [--role <р>]
+ *
+ * 🆕 ТРИ СТРОКИ ЗАМКА — ПО СТРОКЕ НА СЛОТ (слово владельца 2026-08-22, дословно: «*а тут
+ * осталось про один стенд. Если их три уже у нас, то на каждый по строчке заведите*»).
+ * Замер `plans/69` шага 1 доказал, что машина держит три стенда разом, — доска обязана
+ * показывать три ресурса, а не один.
+ *
+ * 🔴 И ОДНА ЧЕСТНОСТЬ, БЕЗ КОТОРОЙ ДОСКА СОВРЁТ. Три стенда сегодня — доказанная
+ * ВОЗМОЖНОСТЬ, а не построенная работа: шаги 2–6 фазы 1 не сделаны, роль пока не может
+ * поднять стенд на слоте ≠ 0 без правки конфигов руками. Поэтому слоты 1 и 2 несут в
+ * подписи ресурса пометку «НЕ ПОСТРОЕН» — её снимает тот коммит, который слот действительно
+ * построит. Строка, обещающая несуществующее, хуже одной честной.
+ *
+ * Умолчание команд без `--slot` — слот 0: сегодняшнее поведение не меняется ни для кого.
  *   node tools/team-status.mjs show
  *   node tools/team-status.mjs --selftest   # доказательства на чистых функциях, git не нужен
  *
@@ -28,9 +41,41 @@ import { readFileSync, writeFileSync, renameSync, openSync, closeSync, unlinkSyn
 import { execSync } from 'node:child_process';
 import { dirname, basename, join, resolve } from 'node:path';
 
+import { STAND_PORTS } from './lib/stand-cleanup.mjs';
+
 const BOARD_NAME = 'NDIM_WORKTREE_DEV_TEAM_STATUS.md';
 const ROLES = ['manager', 'designer', 'qa', 'dev-1', 'dev-2', 'dev-3'];
 const TEAM_DIR_NAME = 'ndim-team'; // сиблинг главной копии: D:\work\ai_sandbox\ndim-team\<роль>
+
+/* ── Слоты стенда ──────────────────────────────────────────────────────────────────────── */
+
+/** Слоты, на которые машина разведена сегодня. Замер `plans/69` шага 1 доказал, что три живут разом. */
+const SLOTS = [0, 1, 2];
+
+/** Шаг сетки. Обходит занятые машиной 8080 (`llama-swap`), 9100 (`lghub_updater`), 9247 (`nordvpn-service`). */
+const SLOT_STEP = 10;
+
+/**
+ * Слоты, которые ещё НЕ ПОСТРОЕНЫ кодом. Пометка снимается тем коммитом, который слот построит.
+ * ⚠️ Это не украшение: доска, показавшая свободный слот 1, отправит роль на пустое место.
+ */
+const NOT_BUILT = new Set([1, 2]);
+
+/**
+ * Порты слота в порядке подписи владельца: firestore·auth·storage·preview·dev.
+ * 🔴 Базы берутся из `lib/stand-cleanup.mjs` — ЕДИНСТВЕННОГО места, где они названы числом.
+ * Второй список здесь был бы парой «истина ↔ зеркало», рождённой в день своего появления.
+ */
+export const slotPorts = (slot) =>
+  [STAND_PORTS.firestore, STAND_PORTS.auth, STAND_PORTS.storage, STAND_PORTS.preview, STAND_PORTS.dev]
+    .map((base) => base + slot * SLOT_STEP);
+
+/** Подпись ресурса на доске: чем слот является и построен ли он. */
+export const slotLabel = (slot) =>
+  `слот ${slot} · ${slotPorts(slot).join('·')}` + (NOT_BUILT.has(slot) ? ' — НЕ ПОСТРОЕН (plans/69 шаги 2–6)' : '');
+
+/** Готовая строка таблицы замка. */
+const slotRow = (slot, holder, stamp) => `| ${slotLabel(slot)} | ${holder} | ${stamp} |`;
 
 /* ── Чистые функции (их доказывает --selftest) ─────────────────────────────────────────── */
 
@@ -65,23 +110,70 @@ export function replaceRoleRow(text, role, { state, doing, waiting, stamp }) {
   return { text: lines.join(eol) };
 }
 
-/** Перезаписать строку замка стенда. lock=true берёт, lock=false отдаёт. */
-export function replaceStandLock(text, role, lock, stamp) {
+/** Держатель, прочитанный из строки таблицы замка. `null` = свободен. */
+const holderOf = (line) => {
+  const m = line.match(/^\|[^|]+\|\s*([^|]+?)\s*\|/);
+  return m && !/^—/.test(m[1]) ? m[1].trim() : null;
+};
+
+/**
+ * Привести секцию замка к трём строкам слотов — ПРЯМО В ЖИВОЙ ДОСКЕ.
+ *
+ * 🔑 ПОЧЕМУ МИГРАЦИЯ В КОДЕ, А НЕ ПРАВКОЙ ФАЙЛА ДОСКИ. Доска живёт только в главной копии и
+ * прямо сейчас правится пятью ролями. Правка её из worktree уехала бы в мерж и столкнулась с
+ * живым состоянием — то есть с чужими строками, записанными за это время. Миграция в коде
+ * случается при первой же операции замка, никого не будит и конфликтовать ей не с чем.
+ *
+ * Держатель старой одиночной строки НАСЛЕДУЕТСЯ слотом 0: он и есть тот стенд, который эта
+ * строка описывала. Потерять его при миграции значило бы тихо освободить занятый ресурс.
+ */
+function ensureSlotRows(lines) {
+  const legacy = lines.findIndex((l) => /^\|\s*стенд\/e2e\/порты/.test(l));
+  if (legacy !== -1) {
+    const inherited = holderOf(lines[legacy]);
+    const stamp = inherited ? (lines[legacy].match(/\|\s*([^|]*?)\s*\|\s*$/)?.[1] ?? '—') : '—';
+    lines.splice(legacy, 1, ...SLOTS.map((s) =>
+      s === 0 ? slotRow(0, inherited ?? '— свободен —', inherited ? stamp : '—') : slotRow(s, '— свободен —', '—')));
+    return { migrated: true };
+  }
+  // Строки слотов уже есть — но могла появиться не вся тройка (ручная правка, старый мерж).
+  const missing = SLOTS.filter((s) => !lines.some((l) => new RegExp(`^\\|\\s*слот ${s}\\b`).test(l)));
+  if (missing.length === SLOTS.length) return { error: 'секция замка стенда на доске не найдена' };
+  for (const s of missing) {
+    const after = lines.findIndex((l) => new RegExp(`^\\|\\s*слот ${s - 1}\\b`).test(l));
+    lines.splice(after === -1 ? lines.length : after + 1, 0, slotRow(s, '— свободен —', '—'));
+  }
+  return { migrated: missing.length > 0 };
+}
+
+/**
+ * Перезаписать строку замка КОНКРЕТНОГО СЛОТА. lock=true берёт, lock=false отдаёт.
+ *
+ * Слоты независимы по построению: занятый слот 1 не мешает взять слот 0 — это и есть та
+ * польза парка, ради которой он строится, и она обязана быть видна на доске.
+ */
+export function replaceStandLock(text, role, lock, stamp, slot = 0) {
+  if (!SLOTS.includes(slot)) return { error: `слота ${slot} нет: сегодня разведены ${SLOTS.join(', ')}` };
   const lines = text.split(/\r?\n/);
   const eol = text.includes('\r\n') ? '\r\n' : '\n';
-  const i = lines.findIndex((l) => /^\|\s*стенд\/e2e\/порты/.test(l));
-  if (i === -1) return { error: 'строка замка стенда на доске не найдена' };
-  const m = lines[i].match(/^\|[^|]+\|\s*([^|]+?)\s*\|/);
-  const holder = m && !/^—/.test(m[1]) ? m[1].trim() : null;
+
+  const prep = ensureSlotRows(lines);
+  if (prep.error) return { error: prep.error };
+
+  const i = lines.findIndex((l) => new RegExp(`^\\|\\s*слот ${slot}\\b`).test(l));
+  if (i === -1) return { error: `строка слота ${slot} на доске не найдена` };
+
+  const holder = holderOf(lines[i]);
   if (lock) {
-    if (holder && holder !== role) return { error: `замок стенда занят: держатель «${holder}» — договорись с ним сообщением` };
-    lines[i] = `| стенд/e2e/порты (8181·9099·9199·4173) | ${role} | ${stamp} |`;
+    if (holder && holder !== role)
+      return { error: `слот ${slot} занят: держатель «${holder}» — договорись с ним сообщением или возьми свободный слот` };
+    lines[i] = slotRow(slot, role, stamp);
   } else {
     if (holder && holder !== role && role !== 'manager')
-      return { error: `замок стенда держит «${holder}» — отдать его может он или Менеджер` };
-    lines[i] = `| стенд/e2e/порты (8181·9099·9199·4173) | — свободен — | — |`;
+      return { error: `слот ${slot} держит «${holder}» — отдать его может он или Менеджер` };
+    lines[i] = slotRow(slot, '— свободен —', '—');
   }
-  return { text: lines.join(eol) };
+  return { text: lines.join(eol), migrated: prep.migrated };
 }
 
 /* ── Обвязка: git, замок файла, команды ────────────────────────────────────────────────── */
@@ -196,6 +288,48 @@ function selftest() {
       const taken = replaceStandLock(board, 'qa', true, 'T').text;
       return !!replaceStandLock(taken, 'dev-1', false, 'T2').error && !replaceStandLock(taken, 'manager', false, 'T2').error;
     }],
+
+    /* ── Три слота (слово владельца 2026-08-22) ────────────────────────────────────────── */
+
+    ['старая одиночная строка мигрирует в ТРИ, держатель наследуется слотом 0', () => {
+      const held = replaceStandLock(board, 'qa', true, 'T').text; // на входе ещё старая форма
+      return SLOTS.every((s) => new RegExp(`^\\|\\s*слот ${s}\\b`, 'm').test(held))
+        && /^\|\s*слот 0\b.*\|\s*qa\s*\|/m.test(held);
+    }],
+    ['🔑 ЗАНЯТЫЙ СЛОТ 1 НЕ МЕШАЕТ ВЗЯТЬ СЛОТ 0 — это и есть польза парка', () => {
+      const s1 = replaceStandLock(board, 'qa', true, 'T', 1);
+      if (s1.error) return false;
+      const s0 = replaceStandLock(s1.text, 'dev-2', true, 'T2', 0);
+      return !s0.error
+        && /^\|\s*слот 1\b.*\|\s*qa\s*\|/m.test(s0.text)
+        && /^\|\s*слот 0\b.*\|\s*dev-2\s*\|/m.test(s0.text);
+    }],
+    ['тот же слот дважды — отказ с именем держателя и советом взять свободный', () => {
+      const s1 = replaceStandLock(board, 'qa', true, 'T', 1).text;
+      const again = replaceStandLock(s1, 'dev-2', true, 'T2', 1);
+      return !!again.error && again.error.includes('qa') && again.error.includes('свободный слот');
+    }],
+    ['слоты 1 и 2 честно помечены непостроенными, слот 0 — нет', () => {
+      const t = replaceStandLock(board, 'qa', true, 'T', 0).text;
+      return /слот 1[^|]*НЕ ПОСТРОЕН/.test(t) && /слот 2[^|]*НЕ ПОСТРОЕН/.test(t)
+        && !/слот 0[^|]*НЕ ПОСТРОЕН/.test(t);
+    }],
+    ['порты слотов взяты из ЕДИНСТВЕННОГО списка и не пересекаются', () => {
+      const all = SLOTS.flatMap(slotPorts);
+      return all.length === new Set(all).size
+        && slotPorts(0).join('·') === '8181·9099·9199·4173·5173'
+        && slotPorts(1).join('·') === '8191·9109·9209·4183·5183'
+        && slotPorts(2).join('·') === '8201·9119·9219·4193·5193';
+    }],
+    ['несуществующий слот — отказ, а не тихая правка слота 0', () => {
+      const r = replaceStandLock(board, 'qa', true, 'T', 7);
+      return !!r.error && r.error.includes('7');
+    }],
+    ['отдать чужой слот нельзя, свой — можно', () => {
+      const s2 = replaceStandLock(board, 'qa', true, 'T', 2).text;
+      return !!replaceStandLock(s2, 'dev-1', false, 'T2', 2).error
+        && !replaceStandLock(s2, 'qa', false, 'T2', 2).error;
+    }],
   ];
   let fail = 0;
   for (const [name, fn] of cases) {
@@ -226,8 +360,12 @@ else if (cmd === 'show') {
     editBoard((t) => replaceRoleRow(t, target, { state, doing: arg('--doing') ?? '—', waiting: arg('--waiting') ?? '—', stamp }));
     console.log(`✅ строка «${target}»: ${state} · ${stamp}`);
   } else {
-    editBoard((t) => replaceStandLock(t, target, cmd === 'lock-stand', stamp));
-    console.log(cmd === 'lock-stand' ? `✅ замок стенда у «${target}» · ${stamp}` : `✅ замок стенда свободен`);
+    const slot = Number(arg('--slot') ?? 0);
+    if (!SLOTS.includes(slot)) { console.error(`⛔ слота ${slot} нет: сегодня разведены ${SLOTS.join(', ')}`); process.exit(1); }
+    editBoard((t) => replaceStandLock(t, target, cmd === 'lock-stand', stamp, slot));
+    console.log(cmd === 'lock-stand' ? `✅ слот ${slot} у «${target}» · ${stamp}` : `✅ слот ${slot} свободен`);
+    if (NOT_BUILT.has(slot))
+      console.log(`⚠️  слот ${slot} ещё НЕ ПОСТРОЕН (plans/69 шаги 2–6): стенд там руками не поднимется`);
   }
 } else {
   console.log('команды: set [--busy|--free|--offline] [--doing "…"] [--waiting "…"] [--role <р>] · lock-stand · unlock-stand · show · --selftest');
