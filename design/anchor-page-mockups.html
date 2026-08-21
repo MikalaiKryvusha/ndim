@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NDim Space — опорная страница: 4 композиции под интент «тест на совместимость»</title>
+<title>NDim Space — опорная страница: 4 композиции и синтез под интент «тест на совместимость»</title>
 <style>
   /* ─────────────────────────────────────────────────────────────────────────
      ФАЗА 4 ЭПИКА plans/40 («Опорные страницы») — ЧЕТЫРЕ КОМПОЗИЦИИ ОДНОЙ
@@ -21,6 +21,19 @@
             считаем»; текст уходит под данные.
        V4 «Путь» — каркасом страницы служат три шага теста, слои данных
             живут ВНУТРИ шагов.
+
+     ★ V5 «Синтез» ДОБАВЛЕН 2026-08-22 по ответу владельца (интервью №044, В1).
+     Его слова: «*v1 — плохо, что дверь так сильно внизу. Можно было бы её
+     повыше. или вообще плавающим окошком закрепить. Все макеты красивые,
+     возьми из них лучшее, и сделай эффективно, красиво, просто, понятно.*»
+     Каркас — V1, дверь поднята И закреплена, по одному механизму на ширину:
+     десктопу — липкая карточка в боковой колонке (у V1 она ниже оглавления
+     ПУСТОВАЛА, и это видно на его же кадрах), телефону — поднятая дверь плюс
+     узкая полоса внизу с резервом места под неё. Двух дверей сразу человек не
+     видит нигде. Взято: карточка вопроса из V2, плитки чисел из V3, три шага
+     из V4. Не взято: таблица «считаем / не считаем» и длинные шаги-развороты —
+     они утяжеляли страницу. Четыре прежних варианта ОСТАВЛЕНЫ как история
+     выбора, а не как живые кандидаты.
 
      ЧЕТЫРЕ ЯКОРЯ ФАЗЫ несёт КАЖДЫЙ вариант (plans/40, фаза 4):
        1. первый экран отвечает на запрос приёмом «вопрос → прямой ответ»;
@@ -236,6 +249,72 @@
   .toc b { display: block; color: var(--heading); margin-bottom: 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .1em; }
   .toc i { display: block; padding: 5px 0; color: var(--accent); font-size: 13.5px; font-style: normal; }
 
+  /* ── V5: СИНТЕЗ. Каркас V1, дверь поднята и закреплена ───────────────── */
+  .stage[data-w="1440"] .v5 .cols { display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start; }
+
+  /* Дверь-компаньон на десктопе живёт в боковой колонке, которая у V1 пустовала
+     ниже оглавления. Липкая — значит всегда на виду; в своей колонке — значит
+     не перекрывает НИ ОДНОЙ строки текста (прошлое решение владельца о
+     плавающих элементах). */
+  .doorcard {
+    margin-top: 12px; padding: 14px; border-radius: 16px;
+    background: var(--accent-soft); border: 1px solid var(--accent);
+  }
+  /* 🔴 ОДНА ДВЕРЬ-КОМПАНЬОН НА ШИРИНУ, А НЕ ДВЕ. На телефоне боковая колонка
+     схлопывается в поток и её карточка встала бы вплотную к поднятой двери —
+     два одинаковых зова подряд. Поэтому узкой ширине достаётся поднятая дверь
+     плюс полоса внизу, широкой — липкая карточка в колонке. */
+  .stage[data-w="390"] .doorcard, .stage[data-w="1024"] .doorcard { display: none; }
+  .stage[data-w="1440"] .v5 .doorcard { position: sticky; top: 190px; }
+  .doorcard b { display: block; color: var(--heading); font-size: 15px; margin-bottom: 6px; }
+  .doorcard p { font-size: 12.5px; line-height: 1.45; }
+  .doorcard .btn { display: block; width: 100%; margin-top: 10px; text-align: center; padding: 11px 12px; font-size: 13.5px; }
+  .doorcard .fine { margin-top: 8px; font-size: 11.5px; }
+
+  /* Поднятая дверь: сразу под ответом, вместе с живой карточкой вопроса. */
+  .stage[data-w="1440"] .v5 .doortop { display: grid; grid-template-columns: 1.15fr .85fr; gap: 26px; align-items: center; }
+  .v5 .doortop {
+    margin-top: 16px; padding: 16px; border-radius: 18px;
+    background: var(--panel); border: 1px solid var(--accent);
+  }
+  .v5 .doortop .qcard { margin-top: 0; border: 1px solid var(--edge); box-shadow: none; }
+  .v5 .doortop h2 { margin-bottom: 6px; }
+
+  /* Компактные шаги — из V4, но в одну ленту: три строки вместо двух абзацев. */
+  .steprow { display: grid; gap: 10px; margin-top: 12px; }
+  .stage[data-w="1440"] .steprow { grid-template-columns: repeat(3, 1fr); }
+  .steprow .s {
+    display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; font-size: 13.5px; line-height: 1.45;
+  }
+  .steprow .s .n {
+    flex: none; width: 24px; height: 24px; border-radius: 8px; background: var(--accent);
+    color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 12.5px;
+  }
+  .steprow .s b { color: var(--heading); }
+
+  /* Липкая полоса телефона. Контент она НЕ перекрывает: страница резервирует
+     под неё место (.v5 .page — нижний отступ), полоса стоит в потоке под ним. */
+  .statelabel {
+    margin: 14px 16px 0; padding: 5px 9px; border-radius: 8px; background: var(--edge-soft);
+    color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; text-align: center;
+  }
+  .fixbar {
+    display: flex; gap: 10px; align-items: center; padding: 10px 14px;
+    background: var(--panel); border-top: 1px solid var(--accent);
+    box-shadow: 0 -6px 20px rgba(16,32,64,.10);
+  }
+  :root[data-theme="dark"] .fixbar { box-shadow: 0 -6px 20px rgba(0,0,0,.45); }
+  .fixbar .txt { flex: 1; font-size: 12px; color: var(--heading); line-height: 1.35; }
+  .fixbar .btn { flex: none; padding: 10px 16px; font-size: 13.5px; animation: breathe 3s ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { box-shadow: 0 0 0 0 rgba(22,103,214,.35); } 50% { box-shadow: 0 0 0 7px rgba(22,103,214,0); } }
+  /* Человеку, попросившему систему не анимировать, дыхание кнопки не показываем —
+     тот же уговор, что держит продукт (`src/lib/ui/motion.ts`). */
+  @media (prefers-reduced-motion: reduce) { .fixbar .btn { animation: none; } }
+  /* На десктопе полосы нет — дверь там живёт в боковой колонке; вместе с полосой
+     уходит и её подпись, иначе на кадре 1440 висела бы надпись без предмета. */
+  .stage[data-w="1440"] .fixbar, .stage[data-w="1440"] .statelabel { display: none; }
+
   /* ── V2: герой в две колонки, карточка вопроса живого инструмента ────── */
   .stage[data-w="1440"] .v2 .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 34px; align-items: start; }
   .qcard {
@@ -295,11 +374,12 @@
 <body>
 
 <div class="picker">
-  <b>Опорная страница — 4 композиции:</b>
+  <b>Опорная страница — 4 композиции + синтез:</b>
   <button data-v="1" class="active">V1 прямой ответ</button>
   <button data-v="2">V2 ответ показан</button>
   <button data-v="3">V3 досье</button>
   <button data-v="4">V4 путь</button>
+  <button data-v="5">V5 синтез ★</button>
   <span class="sp"></span>
   <button id="width-mid">1024</button>
   <button id="width">390 ↔ 1440</button>
@@ -327,6 +407,21 @@
   остаётся строчным («вы оба», «вы двое», «где вы сошлись»), как в боевых текстах продукта
   (<b>test-copy.ts</b>): большая буква — знак уважения к одному собеседнику, множественное «вы»
   её не несёт.
+  <br><br>
+  <b>★ V5 «Синтез» — что откуда взято и почему.</b>
+  <b>Каркас — V1:</b> Ваше единственное конкретное замечание было о нём, значит основа выбрана Вами.
+  <b>Дверь — Ваши слова «повыше или вообще плавающим окошком», и сделано и то, и другое, но по одному
+  на ширину:</b> на десктопе она липкой карточкой стоит в боковой колонке, которая у V1 ниже
+  оглавления ПУСТОВАЛА, — всегда на виду и не перекрывает ни строки текста; на телефоне поднята
+  сразу под ответ, а внизу идёт узкая полоса с одной кнопкой, под которую страница резервирует
+  место. Двух дверей одновременно человек не видит нигде.
+  <b>Живая карточка вопроса — из V2:</b> она показывает продукт делом и поставлена ВНУТРЬ двери,
+  то есть работает на решение, а не на украшение.
+  <b>Плитки чисел — из V3:</b> четыре факта читаются без чтения текста.
+  <b>Три шага — из V4:</b> они заменили два абзаца прозы, которыми V1 объяснял механику.
+  <b>Что НЕ взято:</b> таблица «считаем / не считаем» из V3 и длинные шаги-развороты V4 — они
+  утяжеляли страницу, а Вы просили просто и понятно. Дыхание кнопки внизу гаснет у тех, кто
+  попросил систему не анимировать.
   <br><br>
   <b>⚠️ Вопрос, который решает не макет:</b> у интента «тест на совместимость» уже есть живая
   страница-инструмент <b>/ru/test/compatibility</b> (фаза 5 эпика). Опорная страница обязана
@@ -563,6 +658,66 @@ const V = {
       </div>
       ${DOOR}${FAQ}
     </div></div></div>`,
+  },
+  5: {
+    note: `<b>V5 «Синтез» — по Вашему ответу.</b> Каркас — V1. <b>Дверь поднята</b> и стоит сразу
+      под ответом, вместе с живой карточкой вопроса из V2. <b>И закреплена:</b> на десктопе она
+      липкой карточкой живёт в боковой колонке, которая у V1 ниже оглавления пустовала, — всегда
+      на виду и не перекрывает ни строки; на телефоне внизу стоит узкая полоса с одной кнопкой,
+      под которую страница резервирует место. Плитки чисел — из V3, три шага — из V4 вместо двух
+      абзацев прозы. <b>Судить:</b> стало ли проще и понятнее, и та ли это дверь.`,
+    html: `<div class="screen v5">${BAR}<div class="page"><div class="wrap">
+      ${H1}${QUESTION}${ANSWER}
+      <div class="cols">
+        <div>
+          <div class="toc"><b>На этой странице</b>
+            <i>Как это работает</i><i>Что об этом знает наука</i><i>На чём Вы проверяете себя</i>
+            <i>Частые вопросы</i></div>
+          <div class="doorcard">
+            <b>Проверьте вдвоём</b>
+            <p>12 вещей, около трёх минут. Второй проходит те же 12 по Вашей ссылке.</p>
+            <span class="btn">Пройти тест</span>
+            <p class="fine">Без регистрации и бесплатно. Гостевая анкета живёт 7 дней.</p>
+          </div>
+        </div>
+        <div class="body">
+          <div class="doortop">
+            <div>
+              <h2>Проверьте вдвоём</h2>
+              <p class="p">Оцените 12 вещей звёздами, отправьте ссылку второму — он проходит те же
+                12. Результат увидите только вы двое: ссылка личная, в поиске её нет.</p>
+              <div class="cta">
+                <span class="btn">Пройти тест на совместимость</span>
+                <span class="btn ghost">Открыть каталог</span>
+              </div>
+              <p class="fine">Без регистрации и бесплатно. Гостевая анкета живёт 7 дней — создайте
+                аккаунт, и Ваши оценки останутся с Вами.</p>
+            </div>
+            <div>${QCARD}</div>
+          </div>
+          <div class="tiles">
+            <div class="tile"><div class="big">5 111</div><div class="cap2">объектов культуры, по которым Вы себя описываете</div></div>
+            <div class="tile"><div class="big">12 вещей</div><div class="cap2">в наборе теста, около трёх минут</div></div>
+            <div class="tile"><div class="big">313</div><div class="cap2">исследований в мета-анализе сходства и симпатии</div></div>
+            <div class="tile"><div class="big">7 дней</div><div class="cap2">живёт гостевая анкета без аккаунта</div></div>
+          </div>
+          <section class="blk">
+            <h2>Как это работает</h2>
+            <div class="steprow">
+              <div class="s"><span class="n">1</span><span><b>Оцените 12 вещей.</b> Звёздами, от нуля до десяти. «Правильных ответов» нет.</span></div>
+              <div class="s"><span class="n">2</span><span><b>Отправьте ссылку второму.</b> Он проходит те же 12 вещей.</span></div>
+              <div class="s"><span class="n">3</span><span><b>Смотрите совпадения.</b> Каждое названо по имени: вот вещь, вот Ваша оценка, вот его.</span></div>
+            </div>
+          </section>
+          ${SOURCES}${CATALOG}${FAQ}
+        </div>
+      </div>
+    </div></div>
+    <div class="statelabel">на телефоне — когда поднятая дверь ушла вверх</div>
+    <div class="fixbar">
+      <span class="txt">12 вещей, около трёх минут. Без регистрации.</span>
+      <span class="btn">Пройти тест</span>
+    </div></div>`,
   },
 };
 
