@@ -61,6 +61,9 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import { cert, initializeApp } from 'firebase-admin/app';
+// Auth нужен уборке гостей (plans/63 шаг 2): дата рождения аккаунта правдива только в
+// metadata.creationTime, и кандидатов на смерть даёт listUsers, а не поля Firestore.
+import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { createEscortWatch } from './escort_watch.mjs';
 import { computeRelation } from '../src/lib/similarity/similarity.ts';
@@ -95,11 +98,22 @@ const { version: SERVER_VERSION } = JSON.parse(
 const SERVER_BUILD = Number(process.env.SYNC_BUILD) || null;
 const SERVER_BUILT_AT = process.env.SYNC_BUILT_AT ?? null;
 /**
- * Через сколько дней бездействия данные анонимного гостя считаются осиротевшими.
- * Совпадает со сроком автоудаления брошенных анонимных аккаунтов в Firebase
- * (researches/10 §2.4): сам аккаунт умирает без нас, а его Firestore-данные — наша работа.
+ * СРОК ЖИЗНИ ГОСТЯ — 7 дней ОТ РОЖДЕНИЯ АККАУНТА (`plans/63` шаг 2).
+ *
+ * 🔵 Семантику назначил владелец, интервью №010 Р3, дословно: «*От даты создания анонимного
+ * аккаунта. Создал — отсчёт пошёл*». Это обещание человеку с лендинга («аноним живёт 7 дней»),
+ * а не настройка: агент число не пересматривает, ручки окружения нет.
+ *
+ * Возраст меряется ПО AUTH (`metadata.creationTime`) — дата рождения правдива только там.
+ * Бездействие (`lastSync`) и `dirty` в отборе не участвуют вовсе: прежний отбор по ним нёс две
+ * дыры — вечно-`dirty` гость был бессмертен, гость без `lastSync` невидим (`plans/22` §3).
+ *
+ * ⚠️ Прежняя редакция (30 дней) совпадала со сроком автоудаления брошенных анонимных аккаунтов
+ * Identity Platform (researches/10 §2.4). Совпадение РАЗОРВАНО СОЗНАТЕЛЬНО: теперь учётку
+ * гостя убиваем мы САМИ на 7-м дне, а внешняя 30-дневная чистка остаётся лишь страховкой для
+ * учёток, переживших нашу уборку (например, пока она спала до октября).
  */
-const GUEST_TTL_DAYS = 30;
+const GUEST_TTL_DAYS = 7;
 
 /**
  * КАЛЕНДАРНЫЙ ПРЕДОХРАНИТЕЛЬ УБОРКИ ГОСТЕЙ — раньше этой даты не удаляется НИКТО (`plans/63`
@@ -794,15 +808,35 @@ function topFor(ownerUid, points) {
 }
 
 /**
- * Удаляет данные осиротевших гостей: guest-точки, которых сервер синхронизации не трогал
- * GUEST_TTL_DAYS (lastSync — поле сервера синхронизации, любое действие гостя обновляет его
- * через dirty-цикл). Уважительная асимметрия: труд ПОЛНОЦЕННЫХ людей не удаляется
- * никогда, гость же сам выбрал не сохраняться. Возвращает число вычищенных гостей.
+ * Уборка ИСТЁКШИХ гостей: анонимный аккаунт живёт GUEST_TTL_DAYS от рождения (№010 Р3) и
+ * затем умирает вместе со всем накопленным. Уважительная асимметрия: труд ПОЛНОЦЕННЫХ людей
+ * не удаляется никогда — неанонимная учётка не кандидат ни при каком возрасте, а апгрейд
+ * гостя меняет провайдер, то есть выводит из кандидатов ПО ПОСТРОЕНИЮ. Возвращает число
+ * гостей, чьи следы вычищены.
  *
- * Вызывается в полном проходе (раз в сутки): при TTL в 30 дней минутная точность —
- * расточительство, ровно против которого идея 14. Запрос нарочно один и простой
- * (guest == true, гостей мало) — dirty и срок проверяются в коде, чтобы не требовать
- * составного индекса на боевом Firestore.
+ * ═══ ОТБОР КАНДИДАТОВ — ЧЕРЕЗ AUTH, НЕ ЧЕРЕЗ ПОЛЯ FIRESTORE (`plans/63` шаг 2) ═══
+ *
+ * Дата рождения аккаунта правдива только в Auth (`metadata.creationTime`), поэтому кандидатов
+ * даёт `listUsers`: анонимный провайдер (providerData пуст) И возраст больше TTL. `dirty` и
+ * `lastSync` в отборе не участвуют — прежний отбор по ним нёс две дыры (`plans/22` §3):
+ * вечно-`dirty` гость был бессмертен, гость без единой оценки — невидим. `listUsers` чтений
+ * Firestore не тратит (канон «экономить запросы»), страницы по 1000.
+ *
+ * ═══ СТРАХОВКА: ДАННЫЕ, ПЕРЕЖИВШИЕ СВОЮ УЧЁТКУ ═══
+ *
+ * Пока наша уборка спала (предохранитель ниже), 30-дневная авточистка Identity Platform
+ * продолжала убивать анонимные учётки — их guest-точки остались без хозяина и через
+ * `listUsers` не видны никогда. Поэтому вторым проходом вычищаются guest-точки, чьего uid
+ * нет среди живых учёток ВООБЩЕ. Список живых уже в руках после листания — страховка стоит
+ * ноль дополнительных обращений к Auth и один прежний запрос points по guest == true.
+ * ⚠️ При ПУСТОМ списке учёток страховка молчит: пустой Auth — признак нездорового источника
+ * (в бою есть владелец), судить сиротство по нему нельзя.
+ *
+ * Перечень следов пока прежний (точка + топ + users-дерево); полный перечень таблицы §4
+ * метаплана — включая Storage и саму учётную запись Auth — шаг 3 плана.
+ *
+ * Вызывается в полном проходе (раз в сутки): при TTL в днях минутная точность —
+ * расточительство, ровно против которого идея 14.
  *
  * До GUEST_CLEANUP_START_MS уборка СПИТ и честно говорит об этом в лог (№042 В3,
  * «начнём удалять с октября») — прогон до даты не удаляет никого ни при каком возрасте гостя.
@@ -813,26 +847,54 @@ export async function cleanupStaleGuests(now = Date.now()) {
     return 0;
   }
   const cutoff = now - GUEST_TTL_DAYS * 24 * 60 * 60 * 1000;
-  const guests = await db.collection('points').where('guest', '==', true).get();
+
+  // Один проход по всем учёткам: живые uid — для страховки, истёкшие анонимы — кандидаты.
+  const liveUids = new Set();
+  const expired = [];
+  let page = await getAuth().listUsers(1000);
+  for (;;) {
+    for (const user of page.users) {
+      liveUids.add(user.uid);
+      const anonymous = user.providerData.length === 0;
+      const bornAt = Date.parse(user.metadata.creationTime);
+      if (anonymous && Number.isFinite(bornAt) && bornAt < cutoff) expired.push(user.uid);
+    }
+    if (!page.pageToken) break;
+    page = await getAuth().listUsers(1000, page.pageToken);
+  }
 
   let removed = 0;
-  for (const point of guests.docs) {
-    const { dirty, lastSync } = point.data();
-    if (dirty === true) continue; // ждёт пересчёта — точно не сирота
-    if (typeof lastSync !== 'number' || lastSync >= cutoff) continue;
-
-    // Всё, что гость успел накопить: точка с оценками, его топ, его users-дерево
-    // (приватные бакеты, настройки). recursiveDelete добирает подколлекции.
-    await db.recursiveDelete(point.ref);
-    await db.doc(`relations/${point.id}`).delete();
-    await db.recursiveDelete(db.doc(`users/${point.id}`));
-    pointsCache?.delete(point.id);
-    writtenTops?.delete(point.id);
+  for (const uid of expired) {
+    await eraseGuestTraces(uid);
     removed += 1;
-    log(`гость ${point.id} осиротел (> ${GUEST_TTL_DAYS} дн.) — данные вычищены`);
+    log(`гость ${uid} истёк (> ${GUEST_TTL_DAYS} дн. от рождения, №010 Р3) — следы вычищены`);
+  }
+
+  // Страховка: guest-точка без живой учётки — данные пережили хозяина. Точки полноценных
+  // людей (без флага guest) здесь не рассматриваются вовсе.
+  if (liveUids.size === 0) return removed;
+  const guests = await db.collection('points').where('guest', '==', true).get();
+  for (const point of guests.docs) {
+    if (liveUids.has(point.id)) continue;
+    await eraseGuestTraces(point.id);
+    removed += 1;
+    log(`гость ${point.id}: учётной записи больше нет — осиротевшие данные вычищены`);
   }
 
   return removed;
+}
+
+/**
+ * Стирает следы одного гостя: точку с оценками, его топ, его users-дерево (приватные бакеты,
+ * настройки). recursiveDelete добирает подколлекции. Идемпотентно: удаление несуществующего
+ * безвредно, поэтому повторный проход по тому же uid ничего не ломает.
+ */
+async function eraseGuestTraces(uid) {
+  await db.recursiveDelete(db.doc(`points/${uid}`));
+  await db.doc(`relations/${uid}`).delete();
+  await db.recursiveDelete(db.doc(`users/${uid}`));
+  pointsCache?.delete(uid);
+  writtenTops?.delete(uid);
 }
 
 /**

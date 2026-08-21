@@ -16,7 +16,7 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
 
 // Импорт после проверки окружения: index.mjs при импорте инициализирует firebase-admin,
 // а его точка входа при импорте (не прямом запуске) не срабатывает.
-const { runCycle, cleanupStaleGuests } = await import('./index.mjs');
+const { runCycle } = await import('./index.mjs');
 const { getFirestore } = await import('firebase-admin/firestore');
 
 const db = getFirestore();
@@ -76,59 +76,7 @@ describe('Сервер синхронизации: анонимный гость
   });
 });
 
-describe('Сервер синхронизации: осиротевшие гости вычищаются, живые и полноценные — нет', () => {
-  const DAY = 24 * 60 * 60 * 1000;
-  // Уборка гостей включается только с 2026-10-01 (№042 В3 — календарный предохранитель,
-  // его собственные тесты в guest_death.test.mjs). Механика СРОКОВ проверяется здесь на
-  // ПОДСТАВНОМ «сейчас» после включения; возраст посеянных точек отсчитывается от него же,
-  // а не от настоящих часов — иначе до октября тесты красили бы исправный продукт.
-  const AWAKE = Date.parse('2026-10-02T00:00:00+03:00');
-
-  before(async () => {
-    // Гость, не тронутый 31 день: точка чистая, lastSync старый, есть и топ, и users-дерево.
-    const staleSync = AWAKE - 31 * DAY;
-    await db.doc('points/oldghost').set({ dirty: false, guest: true, updated: staleSync, lastSync: staleSync });
-    await db.doc('points/oldghost/dims/calm').set({ value: 5 });
-    await db.doc('relations/oldghost').set({ computedAt: staleSync, version: 2, top: [] });
-    await db.doc('users/oldghost').set({ settings: { language: 'ru' } });
-    await db.doc('users/oldghost/profile/private').set({ gender: 'm' });
-
-    // Гость из первого describe должен остаться «свежим» и в терминах подставного времени:
-    // его lastSync поставил runCycle настоящими часами, и к октябрю он был бы честно стар.
-    await db.doc('points/ghost').set({ lastSync: AWAKE - 1 * DAY }, { merge: true });
-
-    await cleanupStaleGuests(AWAKE);
-  });
-
-  test('данные осиротевшего гостя удалены целиком: точка, оценки, топ, users-дерево', async () => {
-    for (const path of [
-      'points/oldghost',
-      'points/oldghost/dims/calm',
-      'relations/oldghost',
-      'users/oldghost',
-      'users/oldghost/profile/private',
-    ]) {
-      assert.equal((await db.doc(path).get()).exists, false, `${path} должен быть удалён`);
-    }
-  });
-
-  test('🔒 свежий гость из прошлого цикла НЕ тронут — его lastSync моложе порога', async () => {
-    assert.equal((await db.doc('points/ghost').get()).exists, true);
-    assert.equal((await db.doc('relations/ghost').get()).exists, true);
-  });
-
-  test('🔒 полноценные люди не вычищаются никогда, каким бы старым ни был lastSync', async () => {
-    // Уважительная асимметрия: у alice нет флага guest — её труд неприкосновенен.
-    await db.doc('points/alice').set({ lastSync: AWAKE - 400 * DAY }, { merge: true });
-    await cleanupStaleGuests(AWAKE);
-    assert.equal((await db.doc('points/alice').get()).exists, true);
-    assert.equal((await db.doc('points/alice/dims/calm').get()).exists, true);
-  });
-
-  test('🔒 гость, ждущий пересчёта (dirty), не сирота — не тронут', async () => {
-    const staleSync = AWAKE - 31 * DAY;
-    await db.doc('points/dirtyghost').set({ dirty: true, guest: true, updated: staleSync, lastSync: staleSync });
-    await cleanupStaleGuests(AWAKE);
-    assert.equal((await db.doc('points/dirtyghost').get()).exists, true);
-  });
-});
+// Уборка истёкших гостей проверяется в guest_death.test.mjs (plans/63): с шага 2 фазы 4
+// кандидатов на смерть даёт Auth (7 дней от рождения, №010 Р3), а не поля Firestore, —
+// прежний describe уборки «по 30 дням бездействия» проверял семантику, которой больше нет.
+// Здесь остаётся невидимость гостя в чужих топах: она от уборки не зависит.
