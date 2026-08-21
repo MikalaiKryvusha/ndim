@@ -22,6 +22,7 @@
   import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
+  import GuestCard from '$lib/ui/GuestCard.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import Loading from '$lib/ui/Loading.svelte';
@@ -353,6 +354,7 @@
   <AppBar />
 
   <main class="body">
+  <GuestCard />
     <!-- Дверь назад — в «Профиль», откуда сюда и попадают. Иконка набора, а не типографский
          глиф: у глифа нет ни сетки, ни веса (bugs/17). -->
     <a class="back" href="/profile"><Icon name="back" size={13} />{t.back[lang]}</a>

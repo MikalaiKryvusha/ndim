@@ -19,6 +19,7 @@
   import { cubicOut } from 'svelte/easing';
   import { fly } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
+  import GuestCard from '$lib/ui/GuestCard.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import type { IconName } from '$lib/ui/icons';
@@ -375,6 +376,7 @@
   <PullToRefresh onRefresh={refreshScreen} />
 
   <main class="body">
+  <GuestCard />
     <div class="head">
       <h1 class="screen-title">{t.title[lang]}</h1>
       <p class="lede">{t.lede[lang]}</p>

@@ -14,6 +14,7 @@
   import { cubicOut } from 'svelte/easing';
   import { fly, slide } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
+  import GuestCard from '$lib/ui/GuestCard.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   // Иконки строк (bugs/17). Здесь стоял зоопарк из 15 знаков ТРЁХ разных природ —
@@ -144,6 +145,7 @@
   <AppBar />
 
   <main class="body">
+  <GuestCard />
     <h1 class="screen-title">{t.title[lang]}</h1>
 
     <!--

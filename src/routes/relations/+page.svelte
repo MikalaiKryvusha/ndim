@@ -14,6 +14,7 @@
   import { cubicOut } from 'svelte/easing';
   import { fly, slide } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
+  import GuestCard from '$lib/ui/GuestCard.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import Icon from '$lib/ui/Icon.svelte';
@@ -304,6 +305,7 @@
   <PullToRefresh onRefresh={refreshScreen} />
 
   <main class="body">
+  <GuestCard />
     <h1 class="screen-title">{t.title[lang]}</h1>
 
     {#if stand === 'connecting'}
