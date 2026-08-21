@@ -22,7 +22,7 @@
  *
  * Ветка при remove НЕ удаляется: коммиты роли — ценность, к ним вернётся новая сессия.
  */
-import { existsSync, lstatSync, readdirSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { dirname, basename, join, resolve } from 'node:path';
 
@@ -114,6 +114,16 @@ function createOne(main, role) {
     console.error(`⛔ ${role}: в worktree нет .claude/settings.json — хуки не приехали, разберись прежде чем работать`);
     process.exitCode = 1;
     return;
+  }
+  // Модель роли предзадана конфигом места (слово владельца 2026-08-21: роли — на Opus 5).
+  // Файл локальный (.gitignore), поэтому его пишет create, а не git.
+  const localSettings = join(wt, '.claude', 'settings.local.json');
+  if (!existsSync(localSettings)) {
+    writeFileSync(localSettings, JSON.stringify({
+      _team: 'Рабочее место команды NDIM_WORKTREE_DEV_TEAM: модель роли предзадана Менеджером (слово владельца 2026-08-21). Файл локальный, в git не едет.',
+      model: 'opus',
+    }, null, 2) + '\n', 'utf8');
+    console.log(`   ✅ модель роли предзадана: .claude/settings.local.json → opus`);
   }
   if (!existsSync(join(wt, 'node_modules'))) npmCi(wt, `${role}: корень`);
   else console.log(`   ✅ node_modules корня уже есть`);
