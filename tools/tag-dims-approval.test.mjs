@@ -316,7 +316,52 @@ test('owner-approved входит в сумму разбора и НЕ лома�
   assert.equal(check.svodOk, true, 'сверка судит только классы, выведенные из свода');
 });
 
-test('смена класса на owner-approved заменяет прежний тег цикла', () => {
-  assert.deepEqual(techTagsFor(['unchecked'], TECH_TAG.OWNER_APPROVED), ['owner-approved']);
+/*
+ * 🔄 ЭТОТ СЛУЧАЙ ИСПРАВЛЕН 2026-08-22 — он кодировал сам дефект (обоснование правки теста).
+ *
+ * Гласил: «смена класса на owner-approved ЗАМЕНЯЕТ прежний тег цикла», и ждал `['unchecked']` →
+ * `['owner-approved']`. Это и была ошибка в моём понимании, которую QA нашёл с другой стороны:
+ * «не проверено» и «прошло через руки владельца» — утверждения РАЗНЫХ осей, оба могут быть
+ * истинны, и назначение одного не отменяет другого. Замена внутри своей оси проверяется
+ * отдельным случаем ниже и осталась прежней.
+ */
+test('назначение owner-approved НЕ отменяет вывод машины, а встаёт рядом', () => {
+  assert.deepEqual(techTagsFor(['unchecked'], TECH_TAG.OWNER_APPROVED), ['owner-approved', 'unchecked']);
   assert.equal(techTagsFor(['owner-approved'], TECH_TAG.OWNER_APPROVED), null, 'повтор не пишет');
+});
+
+// ── ДВЕ ОСИ ТЕГОВ, И НИ ОДНА НЕ СТИРАЕТ ДРУГУЮ (дефект найден QA 2026-08-22) ────────────────
+
+/*
+ * `owner-approved` отвечает на вопрос «ЧЕРЕЗ ЧЬИ РУКИ прошла запись», три остальных — на вопрос
+ * «ЧТО МАШИНА СКАЗАЛА О ТЕКСТЕ по своду». Это разные оси, и обе могут быть истинны разом:
+ * измерение, заведённое владельцем руками, вполне может нести дословный ряд из Википедии.
+ *
+ * Пока обе оси лежали в одном списке замены, разметка присваивала себе право стирать чужое
+ * суждение — молча, без ошибки и следа. Сегодня не выстреливало только потому, что свод снят
+ * 2026-08-17 и всё новое идёт веткой «вне свода»; первый же новый свод накрыл бы эти записи.
+ */
+test('🔴 вывод машины НЕ стирает метку владельца', () => {
+  assert.deepEqual(techTagsFor(['owner-approved'], TECH_TAG.MIGRATED), ['migrated', 'owner-approved']);
+  assert.deepEqual(techTagsFor(['owner-approved', 'чужой'], TECH_TAG.NEEDS_REWRITE), [
+    'needs-rewrite',
+    'owner-approved',
+    'чужой',
+  ]);
+});
+
+test('🔴 метка владельца НЕ стирает вывод машины — стирание было двусторонним', () => {
+  assert.deepEqual(techTagsFor(['needs-rewrite'], TECH_TAG.OWNER_APPROVED), [
+    'needs-rewrite',
+    'owner-approved',
+  ]);
+  assert.deepEqual(techTagsFor(['unchecked'], TECH_TAG.OWNER_APPROVED), ['owner-approved', 'unchecked']);
+});
+
+test('внутри своей оси тег по-прежнему ЗАМЕНЯЕТСЯ, а не копится', () => {
+  assert.deepEqual(techTagsFor(['unchecked'], TECH_TAG.MIGRATED), ['migrated']);
+  assert.deepEqual(techTagsFor(['migrated', 'owner-approved'], TECH_TAG.NEEDS_REWRITE), [
+    'needs-rewrite',
+    'owner-approved',
+  ]);
 });

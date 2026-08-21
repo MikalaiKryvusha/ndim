@@ -22,6 +22,8 @@ import {
 } from '@firebase/rules-unit-testing';
 import { doc, getDoc, increment, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
+import { TECH_TAG } from '../../src/lib/model/schema.ts';
+
 const PROJECT_ID = 'ndim-rules-test';
 
 /**
@@ -916,18 +918,36 @@ describe('Каталог измерений — границы записи (pla
   test('🔄 НОВОЕ измерение рождается с owner-approved — обе двери комнаты суть руки владельца', async () => {
     const db = admin('root').firestore();
     await assertSucceeds(
-      setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: ['owner-approved'] }),
+      setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: [TECH_TAG.OWNER_APPROVED] }),
     );
   });
 
   test('🔒 прочие технические теги в НОВОЕ измерение не идут — их выводит разметка, а не форма', async () => {
     const db = admin('root').firestore();
-    for (const tag of ['migrated', 'needs-rewrite', 'unchecked']) {
+    for (const tag of [TECH_TAG.MIGRATED, TECH_TAG.NEEDS_REWRITE, TECH_TAG.UNCHECKED]) {
       await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: [tag] }));
     }
     // И смесь, в которой законный тег прикрывает незаконный, — тоже отказ.
     await assertFails(
-      setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: ['owner-approved', 'migrated'] }),
+      setDoc(doc(db, 'dims/odyssey'), {
+        ...validDim(),
+        techTags: [TECH_TAG.OWNER_APPROVED, TECH_TAG.MIGRATED],
+      }),
+    );
+  });
+
+  /*
+   * 🔴 ТРЕТЬЯ КОПИЯ ЛИТЕРАЛА — В САМИХ ПРАВИЛАХ, и привязать её импортом невозможно: язык правил
+   * не умеет импортировать. Значит переименование тега в словаре разошлось бы с правилами МОЛЧА,
+   * оставив всё зелёным: тесты выше берут значение из словаря, правила — из своего текста, и
+   * разойтись они могут только в бою. Этот случай и есть привязка: он читает файл правил и
+   * требует, чтобы литерал в нём совпадал со словарём.
+   */
+  test('🔗 литерал в firestore.rules совпадает со словарём TECH_TAG', () => {
+    const rules = readFileSync('firestore.rules', 'utf8');
+    assert.ok(
+      rules.includes(`hasOnly(['${TECH_TAG.OWNER_APPROVED}'])`),
+      `правила обязаны пускать при создании ровно «${TECH_TAG.OWNER_APPROVED}» — переименовали тег в schema.ts? перенесите и сюда`,
     );
   });
 
