@@ -55,7 +55,7 @@ if (point !== null) settleSyncWait(point.exists() ? (point.data() as PointDoc) :
 ## Почему это НЕ ловится существующими проверками
 
 - Юниты `cache.test.ts` проверяют жизнь ключа окна, а не порядок двух сетевых чтений.
-- Зонд `tools/probe-guest-screen.mjs` заморозку значений не видит вовсе (`bugs/160`).
+- Зонд `tools/probe-guest-screen.mjs` заморозку значений не видит вовсе (`bugs/162`).
 - В `fetchRelationsSummary` — та же пара в одном `Promise.all` и та же гонка.
 
 ## Предлагаемая починка (одна строка порядка, без новой механики)
