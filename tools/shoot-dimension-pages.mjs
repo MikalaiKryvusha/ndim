@@ -15,8 +15,13 @@ import { chromium } from '@playwright/test';
 import { mkdir, rm } from 'node:fs/promises';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+// Рецепт гашения стенда — ОДИН на все приборы (`tools/lib/stand-cleanup.mjs`). Здесь он жил
+// копией и советовал маску `'vite'`, которая в командном режиме гасит preview соседней роли.
+import { killPortRecipe, STAND_PORTS, whoHoldsPortRecipe } from './lib/stand-cleanup.mjs';
 
 const BASE = process.env.NDIM_BASE ?? 'http://localhost:4173';
+/** Порт стенда — из общего места: по нему же ищется держатель, если сервер оказался чужим. */
+const PORT = Number(new URL(BASE).port) || STAND_PORTS.preview;
 const OUT = resolve('test-results', 'dimension-pages');
 
 const src = existsSync('src/lib/content/dims-build.json')
@@ -46,10 +51,13 @@ const CASES = [
 /**
  * 🔴 ПРЕДПОЛЁТНАЯ ПРОВЕРКА: сервер отдаёт ИМЕННО ЭТУ сборку, а не пережившую гашение старую.
  *
- * Полевой случай 2026-08-03: `pkill -f "vite preview"` на Windows не убил процесс, новый
- * `--strictPort` не поднялся, и кадры снялись со СТАРОГО сервера — страницы вышли БЕЗ СТИЛЕЙ
- * (таблица стилей отдавала 404). Кадр выглядел как сломанная вёрстка, и я полез искать дефект
- * в коде, которого там не было. Тот же класс уже стоил проекту 21 ложного падения e2e.
+ * Полевой случай 2026-08-03: гашение по МАСКЕ командной строки на Windows не убило процесс,
+ * новый `--strictPort` не поднялся, и кадры снялись со СТАРОГО сервера — страницы вышли БЕЗ
+ * СТИЛЕЙ (таблица стилей отдавала 404). Кадр выглядел как сломанная вёрстка, и я полез искать
+ * дефект в коде, которого там не было. Тот же класс уже стоил проекту 21 ложного падения e2e.
+ * ⛔ Сама команда из этой строки УБРАНА сознательно: копируемая неверная команда в шапке — это
+ * и есть ловушка, спешащая сессия вставляет её не читая. Верный рецепт — `lib/stand-cleanup.mjs`,
+ * и его же печатает проверка ниже. Стережёт `src/lib/ops/stand-cleanup.test.ts`.
  *
  * Проверка ловит ЛЮБОЙ рассинхрон сервера и сборки: берём таблицу стилей, на которую ссылается
  * свежесобранная страница, и требуем от сервера 200. Не 200 — значит снимать нечего.
@@ -66,8 +74,10 @@ const CASES = [
     const res = await fetch(`${BASE}/${css}`).catch(() => null);
     if (!res || !res.ok) {
       console.error(`❌ сервер на ${BASE} НЕ отдаёт таблицу стилей этой сборки (${res?.status ?? 'нет ответа'}).`);
-      console.error('   Это переживший гашение preview со СТАРОЙ сборкой. Гаси процессом, а не pkill:');
-      console.error("   Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | ? { $_.CommandLine -match 'vite' } | % { Stop-Process -Id $_.ProcessId -Force }");
+      console.error('   Это переживший гашение preview со СТАРОЙ сборкой. Гаси ДЕРЖАТЕЛЯ ПОРТА');
+      console.error('   по PID — не процессы по маске командной строки (маска бьёт по соседям):');
+      console.error(`   ${whoHoldsPortRecipe(PORT)}`);
+      console.error(`   ${killPortRecipe(PORT)}`);
       process.exit(1);
     }
   }

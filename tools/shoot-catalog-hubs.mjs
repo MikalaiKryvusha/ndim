@@ -24,10 +24,15 @@ import { chromium } from '@playwright/test';
 import { mkdir, rm } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+// Рецепт гашения стенда — ОДИН на все приборы (`tools/lib/stand-cleanup.mjs`). Здесь он жил
+// копией и советовал маску `'vite'`, которая в командном режиме гасит preview соседней роли.
+import { killPortRecipe, STAND_PORTS, whoHoldsPortRecipe } from './lib/stand-cleanup.mjs';
 
 import { groupByKind, pageCount, PER_PAGE } from '../src/lib/content/catalog-hub.ts';
 
 const BASE = process.env.NDIM_BASE ?? 'http://localhost:4173';
+/** Порт стенда — из общего места: по нему же ищется держатель, если сервер оказался чужим. */
+const PORT = Number(new URL(BASE).port) || STAND_PORTS.preview;
 const OUT = resolve('test-results', 'catalog-hubs');
 
 const src = existsSync('src/lib/content/dims-build.json')
@@ -96,8 +101,10 @@ for (const c of RAW_CASES) {
     const res = await fetch(`${BASE}/${css}`).catch(() => null);
     if (!res || !res.ok) {
       console.error(`❌ сервер на ${BASE} НЕ отдаёт таблицу стилей этой сборки (${res?.status ?? 'нет ответа'}).`);
-      console.error('   Это переживший гашение preview со СТАРОЙ сборкой. Гаси процессом, а не pkill:');
-      console.error("   Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | ? { $_.CommandLine -match 'vite' } | % { Stop-Process -Id $_.ProcessId -Force }");
+      console.error('   Это переживший гашение preview со СТАРОЙ сборкой. Гаси ДЕРЖАТЕЛЯ ПОРТА');
+      console.error('   по PID — не процессы по маске командной строки (маска бьёт по соседям):');
+      console.error(`   ${whoHoldsPortRecipe(PORT)}`);
+      console.error(`   ${killPortRecipe(PORT)}`);
       process.exit(1);
     }
   }
