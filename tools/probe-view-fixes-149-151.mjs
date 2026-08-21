@@ -145,13 +145,13 @@ async function waitForTop(ownerUid, wantSlugs, timeoutMs = 70_000) {
   while (Date.now() < until) {
     const snap = await get(`relations/${ownerUid}`);
     const top = snap?.fields?.top?.arrayValue?.values ?? [];
-    const uids = top.map((v) => v.mapValue?.fields?.uid?.stringValue);
+    const uids = top.map((v) => v.mapValue?.fields?.guestUid?.stringValue);
     if (wantSlugs.every((u) => uids.includes(u))) return { ok: true, people: uids.length };
     await sleep(2000);
   }
   const snap = await get(`relations/${ownerUid}`);
   const top = snap?.fields?.top?.arrayValue?.values ?? [];
-  return { ok: false, people: top.length, uids: top.map((v) => v.mapValue?.fields?.uid?.stringValue) };
+  return { ok: false, people: top.length, uids: top.map((v) => v.mapValue?.fields?.guestUid?.stringValue) };
 }
 
 /* ── Проверки ── */
@@ -230,6 +230,14 @@ try {
       else check('149', `свечение «яркости связи» ЖИВО (${tag})`, glow !== 'none', `box-shadow: ${glow}`);
 
       // ── bugs/151: курсор на лице ──
+      // 🔑 Кнопка-лицо (`.peek`) существует только в РАСКРЫТОЙ карточке: в свёрнутой аватар
+      //    отдан родителю (`peek={false}`, bugs/104). Раскрываем карточку человека С ФОТО —
+      //    без этого проверка молча пропускалась бы, а пропуск читается как «нечего проверять».
+      const withPhoto = page.locator('.card').filter({ has: page.locator('img.ava') }).first();
+      if ((await withPhoto.count()) > 0) {
+        await withPhoto.locator('.who').first().click().catch(() => {});
+        await page.waitForTimeout(800);
+      }
       const peek = await page.evaluate(() => {
         const el = document.querySelector('.peek');
         return el ? getComputedStyle(el).cursor : null;
@@ -272,15 +280,39 @@ try {
       }
 
       // ── bugs/151: портрет на лендинге ──
-      await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(1500);
-      const overlay = await page.evaluate(() => {
+      /*
+       * 🔑 ЛЕНДИНГ СМОТРИМ СВЕЖИМ ОКНОМ, а не той же вкладкой. Витрина похожести — поверхность
+       * ДЛЯ НЕЗНАКОМЦА: у вкладки, уже побывавшей в приложении под сессией, лиц в ней нет
+       * вовсе (снято этим же прибором: «лиц в витрине 0» во всех четырёх видах). Проверка
+       * молча пропускалась — то есть прибор врал видом «нечего проверять».
+       * Голый `/` уводит редиректом на языковой адрес — идём сразу на него.
+       */
+      const guest = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, locale: 'ru-RU' });
+      await guest.addInitScript((t) => localStorage.setItem('ndim-theme', t), theme);
+      const landing = await guest.newPage();
+      await landing.goto(`${BASE}/ru`, { waitUntil: 'domcontentloaded' });
+      await landing.waitForTimeout(4000);
+      // Оверлей портрета рождается только по тапу на лицо в витрине похожести — тапаем.
+      const face = landing.locator('.personas button.ava').first();
+      const faces = await face.count();
+      if (faces > 0) {
+        await face.evaluate((el) => el.scrollIntoView({ block: 'center' })).catch(() => {});
+        await landing.waitForTimeout(600);
+        // force: лицо живёт под анимацией витрины, обычный клик ждёт её вечно.
+        // 🔑 Ошибку тапа ПЕЧАТАЕМ: молчаливый промах прибора читается как «нечего проверять».
+        await face.click({ force: true, timeout: 10000 }).catch((e) => console.log('  ⚠️ тап по лицу витрины не прошёл: ' + String(e).slice(0, 120)));
+        await landing.waitForTimeout(1200);
+      } else {
+        console.log('  ⚠️ витрина похожести не отрисовалась — лиц на лендинге нет');
+      }
+      const overlay = await landing.evaluate(() => {
         const el = document.querySelector('.overlay');
         return el ? getComputedStyle(el).cursor : null;
       });
-      if (overlay === null) console.log(`  ⚪ [151] портрета-оверлея на лендинге не видно (${tag}) — проверка пропущена`);
+      if (overlay === null) console.log(`  ⚪ [151] портрета-оверлея на лендинге не видно (${tag}, лиц в витрине ${faces}) — проверка пропущена`);
       else check('151', `курсор на портрете лендинга — палец (${tag})`, overlay === 'pointer', `cursor: ${overlay}`);
-      await page.screenshot({ path: `${OUT}/landing-${tag}.png` });
+      await landing.screenshot({ path: `${OUT}/landing-${tag}.png` });
+      await guest.close();
 
       await context.close();
     }
