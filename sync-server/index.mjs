@@ -64,6 +64,9 @@ import { cert, initializeApp } from 'firebase-admin/app';
 // Auth нужен уборке гостей (plans/63 шаг 2): дата рождения аккаунта правдива только в
 // metadata.creationTime, и кандидатов на смерть даёт listUsers, а не поля Firestore.
 import { getAuth } from 'firebase-admin/auth';
+// Storage нужен той же уборке (plans/63 шаг 3): фотография гостя — тоже след (№042 В2:
+// лицо анонима показывается), и файл в бакете не должен пережить хозяина.
+import { getStorage } from 'firebase-admin/storage';
 import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { createEscortWatch } from './escort_watch.mjs';
 import { computeRelation } from '../src/lib/similarity/similarity.ts';
@@ -337,11 +340,26 @@ function credentialFromEnv() {
   return key;
 }
 
+/**
+ * БАКЕТ STORAGE каждого контура — зеркало `storageBucket` из `src/lib/firebase.ts` (истина у
+ * клиента: он этим бакетом ПИШЕТ фотографии, мы — только убираем за умершим гостем).
+ * Имена исторически разные: бой — `appspot.com` (наследие 1.x), стейдж — `firebasestorage.app`
+ * (новая схема имён Firebase). Пара «истина ↔ зеркало» сверяется тестом
+ * `guest_death.test.mjs` — разъехавшиеся литералы уронят его, а не промолчат.
+ * Для demo-* проектов эмулятора бакет выводится из имени проекта (как делает сам клиент
+ * на стенде, `src/lib/firebase.ts`).
+ */
+export const CONTOUR_BUCKETS = {
+  'ndim-space': 'ndim-space.appspot.com',
+  'ndim-stage': 'ndim-stage.firebasestorage.app',
+};
+const storageBucket = CONTOUR_BUCKETS[projectId] ?? `${projectId}.appspot.com`;
+
 // Под эмулятором учётные данные не нужны и не запрашиваются — так было и раньше.
 if (process.env.FIRESTORE_EMULATOR_HOST) {
-  initializeApp({ projectId });
+  initializeApp({ projectId, storageBucket });
 } else {
-  initializeApp({ credential: cert(credentialFromEnv()), projectId });
+  initializeApp({ credential: cert(credentialFromEnv()), projectId, storageBucket });
 }
 const db = getFirestore(databaseId);
 
@@ -832,8 +850,24 @@ function topFor(ownerUid, points) {
  * ⚠️ При ПУСТОМ списке учёток страховка молчит: пустой Auth — признак нездорового источника
  * (в бою есть владелец), судить сиротство по нему нельзя.
  *
- * Перечень следов пока прежний (точка + топ + users-дерево); полный перечень таблицы §4
- * метаплана — включая Storage и саму учётную запись Auth — шаг 3 плана.
+ * ═══ ПЕРЕЧЕНЬ СЛЕДОВ — ПОЛНЫЙ, ПО ТАБЛИЦЕ §4 МЕТАПЛАНА (`plans/63` шаг 3) ═══
+ *
+ * Гостю «можно всё» (№042), поэтому следов у него столько же, сколько у полноценного:
+ *   · своё — точка с оценками, топ, users-дерево (бакеты, настройки, группы);
+ *   · в ЧУЖИХ деревьях — членства в группах и подсказки аудитории (обход
+ *     `collectionGroup` ОДИН на весь проход и только когда кто-то умер — он дорог);
+ *   · дружбы `friendships/{pair}` обеих сторон (у живого друга иначе висел бы
+ *     несуществующий человек, которого не снять ничем);
+ *   · заявки на измерения — ОБЕЗЛИЧИВАЮТСЯ, не удаляются (решение владельца В11 = А:
+ *     предложенное полезно Пространству и после ухода автора);
+ *   · фотография в Storage (`users/{uid}/avatar/**`);
+ *   · и ПОСЛЕДНИМ — учётная запись Auth (`deleteUser`). Последним намеренно: упади процесс
+ *     посреди уборки, живая учётка сделает гостя кандидатом снова, и повторный проход
+ *     доберёт остальное (стирание идемпотентно). Мёртвая учётка при живых данных — дыра,
+ *     которую закрывала бы только страховка.
+ *
+ * Чужие топы здесь НЕ правятся руками: уборка живёт в полном проходе, который тут же
+ * пересчитает топы по живым точкам — умершего в них уже не будет (как у cleanupDeletedPeople).
  *
  * Вызывается в полном проходе (раз в сутки): при TTL в днях минутная точность —
  * расточительство, ровно против которого идея 14.
@@ -863,38 +897,100 @@ export async function cleanupStaleGuests(now = Date.now()) {
     page = await getAuth().listUsers(1000, page.pageToken);
   }
 
-  let removed = 0;
+  const erased = [];
   for (const uid of expired) {
-    await eraseGuestTraces(uid);
-    removed += 1;
+    await eraseGuestTraces(uid, now);
+    erased.push(uid);
     log(`гость ${uid} истёк (> ${GUEST_TTL_DAYS} дн. от рождения, №010 Р3) — следы вычищены`);
   }
 
   // Страховка: guest-точка без живой учётки — данные пережили хозяина. Точки полноценных
   // людей (без флага guest) здесь не рассматриваются вовсе.
-  if (liveUids.size === 0) return removed;
-  const guests = await db.collection('points').where('guest', '==', true).get();
-  for (const point of guests.docs) {
-    if (liveUids.has(point.id)) continue;
-    await eraseGuestTraces(point.id);
-    removed += 1;
-    log(`гость ${point.id}: учётной записи больше нет — осиротевшие данные вычищены`);
+  if (liveUids.size > 0) {
+    const guests = await db.collection('points').where('guest', '==', true).get();
+    for (const point of guests.docs) {
+      if (liveUids.has(point.id)) continue;
+      await eraseGuestTraces(point.id, now);
+      erased.push(point.id);
+      log(`гость ${point.id}: учётной записи больше нет — осиротевшие данные вычищены`);
+    }
   }
 
-  return removed;
+  // Следы в ЧУЖИХ деревьях (членства, подсказки аудитории) — одним обходом на весь проход:
+  // collectionGroup дорог, и платить его цену за каждого умершего отдельно незачем.
+  if (erased.length > 0) await removeGroupEntriesOf(new Set(erased));
+
+  // Учётная запись Auth — ПОСЛЕДНИЙ след, и только у кандидатов Auth: у сирот страховки её
+  // уже нет. Порядок неслучаен — см. перечень следов в шапке.
+  for (const uid of expired) {
+    await getAuth().deleteUser(uid);
+    log(`гость ${uid}: учётная запись Auth удалена — последний след`);
+  }
+
+  return erased.length;
 }
 
 /**
- * Стирает следы одного гостя: точку с оценками, его топ, его users-дерево (приватные бакеты,
- * настройки). recursiveDelete добирает подколлекции. Идемпотентно: удаление несуществующего
- * безвредно, поэтому повторный проход по тому же uid ничего не ломает.
+ * Стирает следы одного гостя, КРОМЕ следов в чужих деревьях и учётной записи: точку с
+ * оценками, топ, users-дерево (приватные бакеты, настройки), дружбы обеих сторон,
+ * фотографию в Storage; заявки обезличивает. Членства/подсказки убирает
+ * `removeGroupEntriesOf` одним обходом на весь проход, учётку — `cleanupStaleGuests`
+ * последним следом. Идемпотентно: удаление несуществующего безвредно, поэтому повторный
+ * проход по тому же uid ничего не ломает.
  */
-async function eraseGuestTraces(uid) {
+async function eraseGuestTraces(uid, now) {
   await db.recursiveDelete(db.doc(`points/${uid}`));
   await db.doc(`relations/${uid}`).delete();
   await db.recursiveDelete(db.doc(`users/${uid}`));
+  await deleteFriendshipsOf(uid);
+  await anonymizeSuggestionsOf(uid, now);
+  // Путь — тот же, которым фото пишет и читает клиент (`src/lib/data/avatar.ts`,
+  // наследие 1.x). deleteFiles по префиксу идемпотентен: нет файлов — нет и работы.
+  await getStorage().bucket().deleteFiles({ prefix: `users/${uid}/avatar/` });
   pointsCache?.delete(uid);
   writtenTops?.delete(uid);
+}
+
+/**
+ * Удаляет дружбы человека С ОБЕИХ СТОРОН пары. Документ `friendships/{pair}` один на пару
+ * (`a < b` лексикографически, см. `schema.ts` → `friendshipId`), поэтому два запроса по
+ * одиночным полям — исчерпывающий поиск. Выполняется только для умершего — в обычном цикле
+ * не стоит ничего.
+ */
+async function deleteFriendshipsOf(uid) {
+  for (const side of ['a', 'b']) {
+    const found = await db.collection('friendships').where(side, '==', uid).get();
+    for (const doc of found.docs) await doc.ref.delete();
+  }
+}
+
+/**
+ * Обезличивает заявки на измерения (решение владельца В11 = А): предложенное измерение
+ * полезно Пространству и после ухода автора, а связка с человеком уходит вместе с
+ * `authorUid`. Это и есть разница между «удалить данные человека» и «стереть его вклад».
+ * Общий кусок обоих уборщиков — гостя и удалившегося человека.
+ */
+async function anonymizeSuggestionsOf(uid, now) {
+  const mine = await db.collection('suggestions').where('authorUid', '==', uid).get();
+  for (const suggestion of mine.docs) {
+    await suggestion.ref.update({ authorUid: null, anonymizedAt: now });
+  }
+}
+
+/**
+ * Убирает следы НАБОРА умерших в чужих деревьях: членства в группах и подсказки аудитории.
+ * Их документы не хранят uid полем — он только в имени документа (`GroupMemberDoc` содержит
+ * лишь `added`), значит запросом по полю их не найти, и остаётся обход группы коллекций.
+ * Он дорог — поэтому зовётся ОДИН раз на проход и только когда кто-то действительно умер.
+ * Общий кусок обоих уборщиков — гостя и удалившегося человека.
+ */
+async function removeGroupEntriesOf(uidSet) {
+  for (const groupName of ['members', 'audience']) {
+    const found = await db.collectionGroup(groupName).get();
+    for (const entry of found.docs) {
+      if (uidSet.has(entry.id)) await entry.ref.delete();
+    }
+  }
 }
 
 /**
@@ -947,36 +1043,17 @@ export async function cleanupDeletedPeople(now = Date.now()) {
     await db.recursiveDelete(db.doc(`users/${uid}`));
     await db.recursiveDelete(db.doc(`points/${uid}`));
 
-    /*
-     * Предложения измерений ОБЕЗЛИЧИВАЮТСЯ, а не удаляются (решение владельца В11 = А):
-     * предложенное измерение полезно Пространству и после ухода автора, а связка с человеком
-     * уходит вместе с `authorUid`. Это и есть разница между «удалить данные человека» и
-     * «стереть его вклад».
-     */
-    const mine = await db.collection('suggestions').where('authorUid', '==', uid).get();
-    for (const suggestion of mine.docs) {
-      await suggestion.ref.update({ authorUid: null, anonymizedAt: now });
-    }
+    // Заявки — обезличить, не удалить (В11 = А); кусок общий с уборкой гостей.
+    await anonymizeSuggestionsOf(uid, now);
 
     pointsCache?.delete(uid);
     writtenTops?.delete(uid);
     log(`человек ${uid} удалил аккаунт — следы вычищены`);
   }
 
-  /*
-   * Членства и подсказки живут в ЧУЖИХ деревьях, а их документы не хранят uid полем — он
-   * только в имени документа (`GroupMemberDoc` содержит лишь `added`). Значит запросом по
-   * полю их не найти, и остаётся обход группы коллекций.
-   *
-   * Он дорог — и потому выполняется ТОЛЬКО здесь, внутри ветки «сирота нашёлся», а не в
-   * каждом проходе.
-   */
-  for (const groupName of ['members', 'audience']) {
-    const found = await db.collectionGroup(groupName).get();
-    for (const entry of found.docs) {
-      if (goneSet.has(entry.id)) await entry.ref.delete();
-    }
-  }
+  // Членства и подсказки в чужих деревьях — общий с уборкой гостей обход collectionGroup.
+  // Он дорог, поэтому выполняется ТОЛЬКО здесь, внутри ветки «сирота нашёлся».
+  await removeGroupEntriesOf(goneSet);
 
   return gone.length;
 }

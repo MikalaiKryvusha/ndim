@@ -4,12 +4,17 @@
 // «Начнём удалять с октября» — до 2026-10-01 уборка гостей по сроку жизни не удаляет НИКОГО,
 // какой бы старой ни была точка, и пишет в лог причину сна.
 //
-// Файл растёт вместе с фазой: шаг 6 добавит критерии 1–3 (полный перечень следов,
-// неприкосновенность живых, отбор кандидатов через Auth).
+// Шаг 2: ОТБОР КАНДИДАТОВ ЧЕРЕЗ AUTH — 7 дней от рождения аккаунта (№010 Р3), dirty/lastSync
+// в отборе не участвуют; страховка вычищает guest-точки, пережившие свою учётку.
 //
-// Запуск: npm run test:sync  (поднимает эмулятор Firestore, Java обязательна)
+// Шаг 3: ПОЛНЫЙ ПЕРЕЧЕНЬ СЛЕДОВ (критерии 1–3): членства в чужих группах, подсказки
+// аудитории, дружбы обеих сторон, обезличивание заявок, фотография в Storage — и последним
+// учётная запись Auth (deleteUser).
+//
+// Запуск: npm run test:sync  (поднимает эмуляторы Firestore + Auth + Storage, Java обязательна)
 
-import { after, before, describe, test } from 'node:test';
+import { readFile } from 'node:fs/promises';
+import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
@@ -20,12 +25,17 @@ if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
   throw new Error('FIREBASE_AUTH_EMULATOR_HOST не задан: отбор кандидатов идёт через Auth (plans/63 шаг 2).');
 }
 
+if (!process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
+  throw new Error('FIREBASE_STORAGE_EMULATOR_HOST не задан: в перечне следов фотография Storage (plans/63 шаг 3).');
+}
+
 // СВОЙ проект = своя база: `node --test` гоняет файлы параллельно, а мы удаляем гостей.
 process.env.FIREBASE_PROJECT_ID = 'demo-ndim-guest-death';
 
-const { cleanupStaleGuests } = await import('./index.mjs');
+const { cleanupStaleGuests, CONTOUR_BUCKETS } = await import('./index.mjs');
 const { getFirestore } = await import('firebase-admin/firestore');
 const { getAuth } = await import('firebase-admin/auth');
+const { getStorage } = await import('firebase-admin/storage');
 
 const db = getFirestore();
 
@@ -74,15 +84,10 @@ describe('Фаза 4: календарный предохранитель — у
   before(async () => {
     // Гость, истёкший к ОБЕИМ датам прогонов: возраст на предохранитель не влияет.
     // Учётка нужна и здесь: с шага 2 кандидатов даёт Auth, и тест «после включения»
-    // проверяет уборку по-настоящему, а не через пустой список.
+    // проверяет уборку по-настоящему, а не через пустой список. Убирать её за собой не
+    // нужно: с шага 3 учётку последним следом удаляет сама уборка.
     await seedAccount('doomed', CLEANUP_START - 200 * DAY);
     await seedGuest('doomed', CLEANUP_START - 200 * DAY);
-  });
-
-  after(async () => {
-    // Учётка doomed — след этого describe (его Firestore-следы унесла сама уборка, а
-    // deleteUser принадлежит шагу 3): убираем, чтобы не искажать счёт кандидатов соседям.
-    await getAuth().deleteUser('doomed');
   });
 
   test('до даты включения не удаляется никто, и в лог уходит причина сна', async () => {
@@ -187,10 +192,126 @@ describe('Фаза 4, шаг 2: кандидатов на смерть даёт 
     assert.equal(removed, 4);
   });
 
-  test('учётная запись истёкшего пока ЖИВА — её удаление принадлежит шагу 3 (перечень следов)', async () => {
-    // Фиксирует границу шага: deleteUser стоит в шаге 3 ПОСЛЕДНИМ из следов. Когда шаг 3
-    // будет сделан, это ожидание перевернётся на user-not-found.
-    const user = await getAuth().getUser('expired-guest');
-    assert.equal(user.uid, 'expired-guest');
+  test('учётная запись истёкшего удалена ПОСЛЕДНИМ следом (шаг 3, критерий 3)', async () => {
+    // До шага 3 тест фиксировал обратное («учётка пока жива — deleteUser принадлежит
+    // шагу 3»); шаг сделан — ожидание перевернулось, как и обещала граница.
+    await assert.rejects(
+      getAuth().getUser('expired-guest'),
+      (error) => error.code === 'auth/user-not-found',
+      'учётной записи истёкшего гостя не должно остаться в Auth',
+    );
+  });
+
+  test('🔒 учётки молодого гостя и ветерана переживают уборку', async () => {
+    assert.equal((await getAuth().getUser('young-guest')).uid, 'young-guest');
+    assert.equal((await getAuth().getUser('veteran')).uid, 'veteran');
+  });
+});
+
+describe('Фаза 4, шаг 3: полный перечень следов — таблица §4 метаплана (критерии 1–3)', () => {
+  // Тот же условный день, что в шаге 2: остаточные young-guest/veteran обязаны пережить
+  // и этот прогон (молодость и провайдер — не функция дня прогона здесь).
+  const NOW = CLEANUP_START + 30 * DAY;
+  const bucket = getStorage().bucket();
+  let removed;
+
+  before(async () => {
+    // Умирающий гость со ВСЕМИ следами таблицы §4.
+    await seedAccount('full-guest', NOW - 10 * DAY);
+    await seedGuest('full-guest', NOW - 10 * DAY);
+    // Хозяин следов — полноценный живой человек: его дерево трогать нельзя.
+    await seedAccount('host', NOW - 400 * DAY, { anonymous: false });
+    await db.doc('points/host').set({ dirty: false, updated: NOW - 400 * DAY, lastSync: NOW - 400 * DAY });
+    // Членство гостя в ЧУЖОЙ группе и подсказка аудитории у другого; рядом — те же следы
+    // ЖИВОГО гостя (young-guest из шага 2): обход обязан удалять по списку умерших, а не всё.
+    await db.doc('users/host/groups/circle/members/full-guest').set({ added: NOW - 9 * DAY });
+    await db.doc('users/host/groups/circle/members/young-guest').set({ added: NOW - 1 * DAY });
+    await db.doc('users/host/audience/full-guest').set({ buckets: ['friends'] });
+    await db.doc('users/host/audience/young-guest').set({ buckets: ['friends'] });
+    // Дружбы обеих сторон пары (id = min_max, schema.ts → friendshipId).
+    await db.doc('friendships/full-guest_host').set({
+      a: 'full-guest', b: 'host', requestedBy: 'full-guest', status: 'accepted',
+      created: NOW - 9 * DAY, acceptedAt: NOW - 9 * DAY,
+    });
+    await db.doc('friendships/host_young-guest').set({
+      a: 'host', b: 'young-guest', requestedBy: 'young-guest', status: 'accepted',
+      created: NOW - 1 * DAY, acceptedAt: NOW - 1 * DAY,
+    });
+    // Заявка на измерение — обезличивается, не удаляется (В11 = А).
+    await db.doc('suggestions/from-full-guest').set({
+      authorUid: 'full-guest', title: 'Одиссея', created: NOW - 9 * DAY,
+    });
+    // Фотографии: путь клиента (src/lib/data/avatar.ts, наследие 1.x).
+    await bucket.file('users/full-guest/avatar/avatar.webp').save(Buffer.from('dead-guest-photo'));
+    await bucket.file('users/young-guest/avatar/avatar.webp').save(Buffer.from('alive-guest-photo'));
+
+    removed = await cleanupStaleGuests(NOW);
+  });
+
+  test('свои документы гостя удалены: точка, оценки, топ, users-дерево', async () => {
+    for (const path of [
+      'points/full-guest',
+      'points/full-guest/dims/calm',
+      'relations/full-guest',
+      'users/full-guest',
+    ]) {
+      assert.equal((await db.doc(path).get()).exists, false, `${path} должен быть удалён`);
+    }
+  });
+
+  test('членство в чужой группе и подсказка аудитории удалены', async () => {
+    assert.equal((await db.doc('users/host/groups/circle/members/full-guest').get()).exists, false);
+    assert.equal((await db.doc('users/host/audience/full-guest').get()).exists, false);
+  });
+
+  test('дружба удалена — у живого друга не висит несуществующий человек', async () => {
+    assert.equal((await db.doc('friendships/full-guest_host').get()).exists, false);
+  });
+
+  test('заявка обезличена, а не удалена (В11 = А): вклад остаётся, связка с человеком — нет', async () => {
+    const suggestion = await db.doc('suggestions/from-full-guest').get();
+    assert.equal(suggestion.exists, true, 'заявка обязана пережить автора');
+    assert.equal(suggestion.data().authorUid, null);
+    assert.equal(suggestion.data().anonymizedAt, NOW);
+  });
+
+  test('фотография в Storage удалена', async () => {
+    const [exists] = await bucket.file('users/full-guest/avatar/avatar.webp').exists();
+    assert.equal(exists, false, 'файл фотографии не должен пережить хозяина');
+  });
+
+  test('учётная запись Auth удалена последним следом', async () => {
+    await assert.rejects(
+      getAuth().getUser('full-guest'),
+      (error) => error.code === 'auth/user-not-found',
+    );
+  });
+
+  test('🔒 следы ЖИВОГО гостя не задеты: членство, подсказка, дружба, фото, учётка', async () => {
+    assert.equal((await db.doc('users/host/groups/circle/members/young-guest').get()).exists, true);
+    assert.equal((await db.doc('users/host/audience/young-guest').get()).exists, true);
+    assert.equal((await db.doc('friendships/host_young-guest').get()).exists, true);
+    const [exists] = await bucket.file('users/young-guest/avatar/avatar.webp').exists();
+    assert.equal(exists, true);
+    assert.equal((await getAuth().getUser('young-guest')).uid, 'young-guest');
+  });
+
+  test('🔒 хозяин следов невредим', async () => {
+    assert.equal((await db.doc('points/host').get()).exists, true);
+    assert.equal((await getAuth().getUser('host')).uid, 'host');
+  });
+
+  test('счёт честный: умер ровно один', async () => {
+    assert.equal(removed, 1);
+  });
+
+  test('бакеты контуров — зеркало storageBucket из src/lib/firebase.ts (истина у клиента)', async () => {
+    const source = await readFile(new URL('../src/lib/firebase.ts', import.meta.url), 'utf8');
+    for (const [project, bucketName] of Object.entries(CONTOUR_BUCKETS)) {
+      assert.ok(
+        source.includes(`'${bucketName}'`),
+        `бакет ${bucketName} (проект ${project}) не найден в src/lib/firebase.ts — зеркала разъехались`,
+      );
+    }
   });
 });
