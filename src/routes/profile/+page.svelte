@@ -68,6 +68,9 @@
   import { GUEST_TTL_DAYS, isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
 
   import { replaceUrl } from '$lib/ui/history';
+  // Знак NDim на экране «сессия истекла» (plans/22 фаза 5, выбор C): знак ОДИН на продукт,
+  // плашка снимается пропом — приём кружка безымянного (bugs/150), вторую правду не заводим.
+  import Brand from '$lib/ui/Brand.svelte';
   // Вкладки «Личное/Видимость» упразднены (слово владельца 2026-07-27): предпросмотр
   // аудиторий — не таба, а ОКНО за кнопкой «Как меня видят»; «Назад» возвращает в профиль.
 
@@ -656,17 +659,25 @@
     },
     // Экран входа: человек не вошёл. Паролей в 2.0 нет — ни у новых людей, ни у тех,
     // кто пришёл из 1.x: вход по ссылке из письма подтверждает их почту сам.
-    // Гостевая сессия истекла (plans/63 шаг 5). Формулировка ВРЕМЕННАЯ и прямая, по
-    // словарю продукта; финальные текст и форма приедут из макетов фазы 5 эпика.
+    // Гостевая сессия истекла — ФИНАЛЬНАЯ форма по выбору владельца (plans/22 фаза 5,
+    // 2026-08-21): C = V1 «Спокойная карточка» + двери из V4, у каждой двери пояснение.
     // Число дней — из схемы (GUEST_TTL_DAYS), копия разъехалась бы молча.
     expired: {
       title: { ru: 'Гостевая сессия истекла', en: 'Your guest session has expired' },
       lede: {
-        ru: `Гость живёт в Пространстве ${GUEST_TTL_DAYS} дней с момента создания. Срок этой гостевой сессии вышел, и её данные удалены. Вы можете осмотреться заново новым гостем — или войти в свой аккаунт.`,
-        en: `A guest lives in the Space for ${GUEST_TTL_DAYS} days from creation. This guest session has run out, and its data has been erased. You can look around again as a new guest — or sign in to your account.`,
+        ru: `Гостевой профиль живёт ${GUEST_TTL_DAYS} дней с момента создания. Срок этой сессии вышел, и её данные удалены. Вы можете осмотреться заново новым гостем — или войти в свой аккаунт.`,
+        en: `A guest profile lives for ${GUEST_TTL_DAYS} days from creation. This session's time is up, and its data has been erased. You can look around again as a new guest — or sign in to your account.`,
       },
       restart: { ru: 'Начать заново', en: 'Start over' },
+      restartSub: {
+        ru: 'Осмотреться новым гостем — с чистого листа',
+        en: 'Look around as a new guest — from a clean slate',
+      },
       signin: { ru: 'Войти в аккаунт', en: 'Sign in' },
+      signinSub: {
+        ru: 'Если Вы уже создавали аккаунт в Пространстве NDim',
+        en: 'If you have already created an account in NDim Space',
+      },
     },
     signedOut: {
       title: { ru: 'Войдите в Пространство', en: 'Sign in to the Space' },
@@ -1317,13 +1328,21 @@
         {#if signupError}<p class="err">{signupError}</p>{/if}
       </div>
     {:else if stand === 'expired'}
-      <!-- Гостевая сессия истекла (plans/63 шаг 5): данные унесла уборка, и продукт обязан
-           объяснить пустоту, а не молчать. Форма ВРЕМЕННАЯ — до макетов фазы 5 эпика. -->
-      <div class="card signin">
+      <!-- Гостевая сессия истекла — финальная форма по выбору владельца (plans/22 фаза 5,
+           2026-08-21): C = V1 «Спокойная карточка» + двери из V4. Данные унесла уборка
+           (7 дней, №010 Р3) — продукт объясняет пустоту и даёт две двери с пояснением. -->
+      <div class="card signin expired">
+        <Brand size={36} plate={false} />
         <h2>{t.expired.title[lang]}</h2>
         <p class="state">{t.expired.lede[lang]}</p>
-        <button type="button" class="btn" onclick={restartAsGuest}>{t.expired.restart[lang]}</button>
-        <button type="button" class="btn ghost" onclick={signInFromExpired}>{t.expired.signin[lang]}</button>
+        <button type="button" class="door main" onclick={restartAsGuest}>
+          <b>{t.expired.restart[lang]}</b>
+          <small>{t.expired.restartSub[lang]}</small>
+        </button>
+        <button type="button" class="door" onclick={signInFromExpired}>
+          <b>{t.expired.signin[lang]}</b>
+          <small>{t.expired.signinSub[lang]}</small>
+        </button>
       </div>
     {:else if stand === 'down'}
       <div class="card">
@@ -1840,6 +1859,26 @@
     .btn.ghost:hover:not(:disabled) { filter: none; border-color: var(--primary); color: var(--primary); }
   }
   .btn:disabled { opacity: 0.55; cursor: default; }
+
+  /* Экран «сессия истекла» — финальная форма (plans/22 фаза 5, выбор владельца C:
+     V1 «Спокойная карточка» + двери V4). Дверь — кнопка-блок с пояснительной строкой:
+     человек выбирает осознанно, а не между двумя одинаковыми кнопками. */
+  .expired { text-align: center; }
+  .expired > :global(svg) { display: block; margin: 2px auto 10px; }
+  .door {
+    display: block; width: 100%; padding: 12px 14px; margin-top: 10px;
+    border-radius: 12px; border: 1px solid var(--ghost-brd); background: transparent;
+    color: var(--text); font: inherit; cursor: pointer; text-align: center;
+    transition: filter 0.15s ease, border-color 0.15s ease;
+  }
+  .door b { display: block; font-size: 14px; }
+  .door small { display: block; margin-top: 3px; font-size: 12px; color: var(--dim); }
+  .door.main { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+  .door.main small { color: var(--primary-ink); opacity: 0.85; }
+  @media (hover: hover) {
+    .door:hover { border-color: var(--primary); }
+    .door.main:hover { filter: brightness(1.08); }
+  }
 
   .search {
     font: inherit; font-size: 13.5px; color: var(--text);
