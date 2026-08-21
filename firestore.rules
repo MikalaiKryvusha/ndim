@@ -347,6 +347,33 @@ service cloud.firestore {
       return dimFieldsWithLegacy().concat(['techTags']);
     }
 
+    /**
+     * Поля НОВОГО измерения: канон + `techTags`, но с узкой дверью (см. `newDimTechTagsOk`).
+     * Легаси `name` сюда не входит и не войдёт — в новую запись оно не идёт по решению
+     * владельца (интервью №015, В4 = В).
+     */
+    function dimFieldsOnCreate() {
+      return dimFields().concat(['techTags']);
+    }
+
+    /**
+     * 🔴 ПРИ РОЖДЕНИИ ЗАКОНЕН РОВНО ОДИН ТЕХНИЧЕСКИЙ ТЕГ — «одобрено владельцем».
+     *
+     * Дверь открыта ровно на смысл, а не шире: комната ставит этот тег обеим своим дверям
+     * (одобрение кандидата и ручная форма) — и обе суть руки владельца. Прочие три тега —
+     * вывод разметки по своду сверки, их ставит разовый прибор через Admin SDK, правил не
+     * касаясь; в форме создания им взяться неоткуда, и пускать их сюда значило бы позволить
+     * панели объявить новую запись «принятой миграцией» или «требующей правки».
+     *
+     * ⚠️ Литерал — НЕИЗБЕЖНАЯ КОПИЯ: правила не умеют импортировать. Оригинал словаря —
+     * `src/lib/model/schema.ts` → `TECH_TAG`; правка там обязана приехать и сюда.
+     * `hasOnly` по одноэлементному списку разрешает заодно отсутствие поля и пустой список —
+     * это законно: тег не является обязательным полем документа.
+     */
+    function newDimTechTagsOk(data) {
+      return data.get('techTags', []).hasOnly(['owner-approved']);
+    }
+
     /** Название обязано быть на ОБА языка: без него измерение не попадёт в индекс каталога. */
     function titlePresent(data) {
       return data.title is map
@@ -394,7 +421,8 @@ service cloud.firestore {
       allow read: if isGuest() || verified();
 
       allow create: if isAdmin()
-                    && request.resource.data.keys().hasOnly(dimFields())
+                    && request.resource.data.keys().hasOnly(dimFieldsOnCreate())
+                    && newDimTechTagsOk(request.resource.data)
                     && titlePresent(request.resource.data)
                     && ratingsInRange(request.resource.data)
                     && optionalShapeOk(request.resource.data);
