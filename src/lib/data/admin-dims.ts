@@ -35,7 +35,13 @@ import {
 import { db } from '../firebase.ts';
 import { parseDimsIndex } from '../model/feed.ts';
 import { DIMS_INDEX_ID, type DimDoc } from '../model/schema.ts';
-import { draftToDoc, preservedFrom, type DimDraft, type PreservedFields } from '../model/dim-editor.ts';
+import {
+  draftToDoc,
+  newDimDoc,
+  preservedFrom,
+  type DimDraft,
+  type PreservedFields,
+} from '../model/dim-editor.ts';
 
 /** Строка списка комнаты. Ровно то, что есть в индексе, — большего для списка не нужно. */
 export interface AdminDimRow {
@@ -182,7 +188,9 @@ export async function loadDimForEdit(id: string): Promise<AdminDim | null> {
 export async function createDim(draft: DimDraft): Promise<string> {
   const store = db();
   const ref = doc(collection(store, 'dims'));
-  const payload = draftToDoc(draft);
+  // Новорождённое измерение несёт тег «одобрено владельцем»: обе двери комнаты — его руки.
+  // Разбор и оговорки — `dim-editor.ts` → `newDimDoc`.
+  const payload = newDimDoc(draft);
   await setDoc(ref, { ...payload, time: { created: serverTimestamp() } });
 
   /*
