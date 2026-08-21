@@ -25,12 +25,17 @@ test('пререндер: демо и числа ядра лежат в сыро
 test('живой пересчёт: «Спорт: 10» меняет похожесть с 80% на 54%', async ({ page }) => {
 	await page.goto('/');
 	const demo = page.getByRole('region', { name: 'Попробуйте прямо здесь' });
+	// ОБОСНОВАНИЕ ПРАВКИ (`plans/67` Ш3): с появлением итог-панели то же число живёт в демо
+	// ДВАЖДЫ — в карточке персонажа и в строке панели. Прежний `.first()` по всему блоку
+	// сегодня попадает в карточку и завтра попадёт куда угодно: он стал зависеть от порядка
+	// разметки, а не от того, что проверяет. Сужено до карточек — тест стережёт заявленное.
+	const cards = demo.locator('.personas');
 	// Дефолт: Алиса ближе всех с 80%
 	await expect(demo.getByText('Алиса · ближе всех')).toBeVisible();
-	await expect(demo.getByText('80%').first()).toBeVisible();
+	await expect(cards.getByText('80%').first()).toBeVisible();
 	// Двигаем звезду: Спорт → 10. Ядро даёт Алисе 54% (см. эталон в шапке файла)
 	await page.getByRole('button', { name: 'Спорт: 10' }).click();
-	await expect(demo.getByText('54%').first()).toBeVisible();
+	await expect(cards.getByText('54%').first()).toBeVisible();
 	// Алиса остаётся ближе всех (54 > 47 > 46), порядок не рвётся
 	await expect(demo.getByText('Алиса · ближе всех')).toBeVisible();
 });
@@ -61,10 +66,35 @@ test('язык: EN переименовывает персонажей и тек
 	await expect(demo.getByText('The characters are fictional', { exact: false })).toBeVisible();
 });
 
-test('мост в гостя: на localhost CTA демо ведёт в /profile?guest=1', async ({ page }) => {
-	// Пререндер хранит ссылку на живое 1.x (прод-поведение до публикации 2.0),
-	// а после гидрации на localhost мост переключается в гостевой режим (plans/03 этап 2).
+test('мост в гостя: кнопка приходит после звёзд, ведёт в гостя и не оставляет записи истории', async ({ page }) => {
+	// ОБОСНОВАНИЕ ПРАВКИ ЭТОГО ТЕСТА (`plans/67`, фаза 5 эпика 23). Прежняя редакция стерегла
+	// прямо противоположное поведение: «на localhost мост переключается в гостевой режим» —
+	// то есть ДОЛГ, из-за которого публичный посетитель упирался в стену входа (Ш1). Долг снят,
+	// и тест теперь стережёт три обещания моста вместо одного.
 	await page.goto('/');
-	const cta = page.getByRole('region', { name: 'Попробуйте прямо здесь' }).getByRole('link', { name: /Создать своё пространство/ });
-	await expect(cta).toHaveAttribute('href', '/profile?guest=1');
+	const demo = page.getByRole('region', { name: 'Попробуйте прямо здесь' });
+	const bridge = demo.getByRole('link', { name: 'Смотреть больше' });
+
+	// Ш4: двери нет, пока человек не потрогал демо. Композиция владельца (А2/А4: «кнопка
+	// появляется после звёзд») и решение №009 В3: человека вносит внутрь его же действие.
+	await expect(bridge).toHaveCount(0);
+
+	await page.getByRole('button', { name: 'Спорт: 10' }).click();
+	await expect(bridge).toBeVisible();
+
+	// Ш1: адрес один для всех хостов — гостевая дверь, а не стена входа.
+	// Н4: разметка обязана остаться ССЫЛКОЙ, иначе умрут средний клик и «открыть в новой вкладке».
+	await expect(bridge).toHaveAttribute('href', '/profile?guest=1');
+
+	// Ш5 и ворота фазы: «Назад» с первого экрана продукта НЕ возвращает на лендинг. Иначе
+	// лендинг молча вытолкнул бы гостя обратно внутрь (bugs/08.1 — и это его работа), то есть
+	// человек получил бы отскок. Дверь выбрана та, что не оставляет записи истории.
+	await bridge.click();
+	await page.waitForURL('**/profile*');
+	await page.goBack().catch(() => null);
+	// Сравниваем ПУТЬ, а не строку адреса: регулярка по адресу здесь читалась бы хуже, чем
+	// то, что она проверяет, — а проверять надо ровно одно: это не лендинг.
+	const landed = new URL(page.url()).pathname;
+	expect(landed).not.toBe('/ru');
+	expect(landed).not.toBe('/en');
 });

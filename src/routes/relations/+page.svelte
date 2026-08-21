@@ -14,6 +14,8 @@
   import { cubicOut } from 'svelte/easing';
   import { fly, slide } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
+  // Пояснение тому, кого внёс внутрь интерактив лендинга (Ш6 `plans/67`).
+  import BridgeNote from '$lib/ui/BridgeNote.svelte';
   import GuestCard from '$lib/ui/GuestCard.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
@@ -348,7 +350,10 @@
   <PullToRefresh onRefresh={refreshScreen} />
 
   <main class="body">
-  <GuestCard />
+    <GuestCard />
+    <!-- Карточка-мостик: только для пришедшего из демо, и только когда экран знает правду о
+         списке. Сама решает, показываться ли, — экран о мосте ничего не знает. -->
+    <BridgeNote ready={stand === 'ready'} hasCards={(data?.cards.length ?? 0) > 0} />
     <h1 class="screen-title">{t.title[lang]}</h1>
 
     {#if stand === 'connecting'}
