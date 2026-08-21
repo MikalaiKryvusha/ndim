@@ -369,7 +369,7 @@
   <!-- Итог-панель с барами похожести — НАД блоком с кнопкой (композиция владельца, половина
        А3; на «Связях» она НЕ повторяется). Звёзды — для ввода, бары — для просмотра: те же
        `sorted`, свёрнутые в одну строку на человека прямо перед дверью. -->
-  <div class="panel summary" aria-label={t.similarity[lang]}>
+  <div class="panel summary">
     {#each ranked as row (row.id)}
       <div class="row">
         <span class="name">{row.name}</span>

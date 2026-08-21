@@ -25,12 +25,17 @@ test('пререндер: демо и числа ядра лежат в сыро
 test('живой пересчёт: «Спорт: 10» меняет похожесть с 80% на 54%', async ({ page }) => {
 	await page.goto('/');
 	const demo = page.getByRole('region', { name: 'Попробуйте прямо здесь' });
+	// ОБОСНОВАНИЕ ПРАВКИ (`plans/67` Ш3): с появлением итог-панели то же число живёт в демо
+	// ДВАЖДЫ — в карточке персонажа и в строке панели. Прежний `.first()` по всему блоку
+	// сегодня попадает в карточку и завтра попадёт куда угодно: он стал зависеть от порядка
+	// разметки, а не от того, что проверяет. Сужено до карточек — тест стережёт заявленное.
+	const cards = demo.locator('.personas');
 	// Дефолт: Алиса ближе всех с 80%
 	await expect(demo.getByText('Алиса · ближе всех')).toBeVisible();
-	await expect(demo.getByText('80%').first()).toBeVisible();
+	await expect(cards.getByText('80%').first()).toBeVisible();
 	// Двигаем звезду: Спорт → 10. Ядро даёт Алисе 54% (см. эталон в шапке файла)
 	await page.getByRole('button', { name: 'Спорт: 10' }).click();
-	await expect(demo.getByText('54%').first()).toBeVisible();
+	await expect(cards.getByText('54%').first()).toBeVisible();
 	// Алиса остаётся ближе всех (54 > 47 > 46), порядок не рвётся
 	await expect(demo.getByText('Алиса · ближе всех')).toBeVisible();
 });
