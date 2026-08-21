@@ -21,11 +21,14 @@
  * Контур стенда работает БЕЗ ключа: Admin SDK слушает `FIRESTORE_EMULATOR_HOST`, и путь к базе
  * один на все контуры — второй путь записи разъехался бы с первым (класс `bugs/132`).
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 import { missingMandatoryTags, looksLikeProperName } from './lib/tag-conventions.mjs';
+// Тот же нормализатор, что у поиска в продукте и у разведки: третья копия правил
+// разъехалась бы с первыми двумя на первом же дефисе.
+import { normalizeForSearch } from '../src/lib/model/feed.ts';
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
@@ -92,6 +95,62 @@ if (tagFaults.length > 0) {
   for (const f of tagFaults) console.error(`   · ${f}`);
   console.error('\n⛔ В очередь владельца не положено НИ ОДНОГО кандидата.');
   process.exit(1);
+}
+
+/*
+ * ── 🔴 ВОРОТА ДУБЛЯ КАТАЛОГА (`bugs/159`) ────────────────────────────────────────────────────
+ *
+ * Повод, оплаченный выброшенной работой. Разведка объявила «новыми» Elden Ring и Hollow Knight,
+ * которые в каталоге ЕСТЬ; две карточки-кандидата были написаны целиком и выброшены. Причину
+ * (слепота именования) чинит сама разведка, но ЭТИ ворота нужны отдельно и по другой причине:
+ *
+ * 🔑 разведка — прибор ПОДСКАЗКИ, а выгрузка — последняя дверь перед глазами владельца. Подсказку
+ * можно не запускать, можно взять объект руками, можно принести партию из другого источника. Мимо
+ * этой двери кандидат в очередь не попадает никак — поэтому дубль ловится здесь, а не только там.
+ * Без них владелец вычитывал бы то, что у него уже есть, и узнал бы об этом сам — то есть ценой
+ * своего времени, а это ровно то, ради экономии чего мастерская и заведена.
+ *
+ * ⚠️ Ворота МЯГКИЕ, если снимка каталога нет: отсутствие снимка — это «не проверяли», а не
+ * «дублей нет» (класс `EXP-0165`). Прибор говорит об этом вслух и продолжает, а не молчит и не
+ * падает: снимок в 17 МБ не лежит в git, и требовать его от каждого прогона значило бы сделать
+ * выгрузку невозможной на чистом клоне.
+ */
+const SNAPSHOT = 'src/lib/content/dims-build.json';
+if (!existsSync(SNAPSHOT)) {
+  console.warn(`\n  ⚠️ снимка каталога ${SNAPSHOT} нет — НА ДУБЛИ НЕ ПРОВЕРЕНО.`);
+  console.warn('     Это «не проверяли», а не «дублей нет». Снять: node tools/fetch-dims-slice.mjs --all');
+} else {
+  const снимок = JSON.parse(readFileSync(SNAPSHOT, 'utf8'));
+  const наши = Array.isArray(снимок) ? снимок : Object.entries(снимок).map(([id, v]) => ({ id, ...v }));
+  const имена = new Map();
+  for (const dim of наши) {
+    for (const half of [dim.title?.ru, dim.title?.en]) {
+      const key = normalizeForSearch(String(half ?? ''));
+      if (key !== '') имена.set(key, dim);
+    }
+  }
+  const дубли = [];
+  for (const item of items) {
+    for (const half of [item.title?.ru, item.title?.en]) {
+      const key = normalizeForSearch(String(half ?? ''));
+      if (key === '') continue;
+      const dim = имена.get(key);
+      if (dim !== undefined) {
+        дубли.push(`${item.title?.ru ?? item.wikidata} (${item.wikidata}) — в каталоге как «${dim.title?.ru ?? dim.id}»`
+          + `${dim.year ? `, ${dim.year}` : ''}${dim.id ? `, id ${dim.id}` : ''}`);
+        break;
+      }
+    }
+  }
+  if (дубли.length > 0) {
+    console.error('\n🔴 ВЫГРУЗКА ОСТАНОВЛЕНА: эти объекты в каталоге УЖЕ ЕСТЬ.');
+    console.error(`   Сверено с полным снимком (${наши.length} измерений) тем же нормализатором, что у поиска.\n`);
+    for (const d of дубли) console.error(`   · ${d}`);
+    console.error('\n⛔ В очередь владельца не положено НИ ОДНОГО кандидата.');
+    console.error('   Убери дубли из партии или, если совпало ложно (тёзка, другой объект), переименуй запись.');
+    process.exit(1);
+  }
+  console.log(`  сверка с каталогом: ${наши.length} измерений, дублей 0`);
 }
 
 /* Имена собственные — ПРЕДУПРЕЖДЕНИЕ, а не отказ: машина не умеет отличить имя от жанра без
