@@ -1,0 +1,410 @@
+{
+  "_": [
+    "ДЕСЯТЬ КАНДИДАТОВ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 3, 2026-08-21.",
+    "Заказ владельца в тот же день: «и делай дальше, ещё партию».",
+    "Взяты СЛЕДУЮЩИЕ по известности объекты разведки `candidates/scouts/2026_wikidata_new_releases.md`,",
+    "которых нет ни в каталоге, ни в партиях 1 и 2.",
+    "",
+    "🔑 ЭТА ПАРТИЯ СОБРАНА УЖЕ ПО ИСПРАВЛЕННОМУ ПРИЁМУ ИМЕНОВАНИЯ (`bugs/159`). У девяти строк",
+    "разведки название было пустым («—»), потому что Wikidata не держит для них меток `ru`/`en`:",
+    "имя лежит в мультиязычной метке `mul` и в заголовках разделов. Здесь имя добывается по",
+    "цепочке `labels.<lang>` → `labels.mul` → `sitelinks.<lang>wiki.title`, и только после этого",
+    "строка сверяется с каталогом. Так разрешились Resident Evil Requiem, Stray, Hytale,",
+    "Wuthering Waves, 007 First Light, Crimson Desert, Pragmata, Octopath Traveler, Confessions II —",
+    "девять объектов, которые прежний приём не мог ни назвать, ни проверить на дубль.",
+    "",
+    "🔴 КАЖДАЯ ЗАПИСЬ СВЕРЕНА С ПОЛНЫМ СНИМКОМ КАТАЛОГА (5121 запись, `fetch-dims-slice --all`",
+    "2026-08-21) тем же нормализатором, что у поиска продукта: дублей ноль.",
+    "",
+    "СТИЛОМЕТРИЯ — по коридору, перевыведенному 2026-08-21 по слову владельца («900…1400 знаков,",
+    "8…14 предложений — это МАЛО!!!! Нужно подробнее!!»): 1200…2000 знаков, 8…18 предложений,",
+    "цель 1400…1700. Разбор и замер — `candidates/README.md`.",
+    "",
+    "ОТКУДА ЧТО ВЗЯТО, чтобы вычитка знала цену каждой строки:",
+    "· названия, вид, год, режиссёр/разработчик, сценарист, композитор, студия, состав, платформы —",
+    "  ИЗ WIKIDATA по QID (запрос wbgetentities, ссылки разрешены в имена). Ни одно поле не взято",
+    "  из памяти модели.",
+    "· ОПИСАНИЯ НАПИСАНЫ АГЕНТОМ по этим фактам, каждое — отдельным субагентом по общему брифу.",
+    "  Текст Википедии не копировался: статьи не открывались вовсе. Проверено машиной —",
+    "  `node tools/check-candidate-descriptions.mjs candidates/batches/03_2026_films_and_games.json`.",
+    "· sitelinks — число языковых разделов Википедии об объекте, принятая мера известности.",
+    "",
+    "🔴 ДВЕ ЗАПИСИ ПАРТИИ — ПОЛИТИЧЕСКИ ОСТРЫЕ, И ЭТО НАЗВАНО ЗАРАНЕЕ, А НЕ ОБНАРУЖЕНО ПРИ ЧТЕНИИ.",
+    "«Господин Никто против Путина» — документальная картина о российской школе, снятая её",
+    "сотрудником изнутри. «Голос Хинд Раджаб» — докудрама, построенная на подлинной аудиозаписи,",
+    "связанной с гибелью ребёнка в секторе Газа. Оба описания намеренно держатся справочного",
+    "регистра: устройство фильма, авторство, метод, производство — и НЕ дают оценок сторонам.",
+    "Брать ли эти объекты в каталог — решение владельца, и оно вынесено ему в `agentNote` каждой.",
+    "",
+    "⚠️ ДВА ОБЪЕКТА СТАРШЕ 2026 ГОДА, И ЭТО НАЗВАНО ЧЕСТНО. «Кобра» — фильм 1986 года, Stray —",
+    "игра 2022 года; в разведку новинок обе попали по ВТОРОЙ дате реестра в 2026-м (переиздание,",
+    "издание для новой платформы). Год у обеих взят по ПЕРВОЙ дате реестра — правило владельца",
+    "2026-08-21: «год сериала всегда по году первого сезона или первой серии», распространённое",
+    "на любой объект, выходящий по частям или переиздаваемый.",
+    "",
+    "⏭️ ЧТО СОЗНАТЕЛЬНО ПРОПУЩЕНО: Hytale (`Q60187866`, 29 разделов). Реестр даёт выход",
+    "13 января 2026, но публичная история проекта противоречива, и агент не смог подтвердить",
+    "фактами, вышла ли игра. Правило владельца — «сомневаешься, пропусти и возьми следующий»:",
+    "на её место взят «Метод исключения» Пак Чхан Ука. Объект остаётся в разведке для будущих партий.",
+    "",
+    "⚠️ ГРАНИЦА, КОТОРУЮ ДЕРЖАЛИ ПИШУЩИЕ АГЕНТЫ: у части картин и у обеих игр сюжет реестром не",
+    "раскрыт. Такие описания разворачивают ИЗВЕСТНОЕ — постановку, первоисточник, устройство мира",
+    "и серии, производственную обвязку, — и не пересказывают событий, которых никто не видел."
+  ],
+  "candidates": [
+    {
+      "wikidata": "Q637290",
+      "sitelinks": 34,
+      "title": {
+        "ru": "Кобра",
+        "en": "Cobra"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джордж Пан Косматос",
+        "en": "George P. Cosmatos"
+      },
+      "year": "1986",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "боевик",
+        "action",
+        "триллер",
+        "thriller",
+        "криминал",
+        "crime",
+        "классика",
+        "classic"
+      ],
+      "description": {
+        "ru": "Американский боевик 1986 года, поставленный Джорджем Паном Косматосом по сценарию Сильвестра Сталлоне, который исполнил в картине и главную роль. По разметке реестра фильм совмещает признаки боевика, триллера и криминальной ленты. Производство осуществили студии Warner Bros. и The Cannon Group, продюсерами выступили Менахем Голан и Йорам Глобус, поставившие тогда выпуск жанрового кино на поток. Музыку написал Сильвестр Левай, первая зафиксированная в реестре дата выхода — 2 октября 1986 года. Вместе со Сталлоне основные роли исполнили Бригитта Нильсен, Рени Сантони, Эндрю Робинсон, Брайан Томпсон и Ли Гарлингтон. К ним присоединились Арт Лафлёр, Маришка Харгитей, Дэвид Раш и Вэл Эйвери. Центральный персонаж — Мэрион Кобретти, сотрудник особого полицейского подразделения, которого привлекают к делам, где обычные процедуры расследования и задержания неприменимы. Действие строится вокруг охраны свидетельницы, случайно увидевшей убийцу и ставшей целью организованной группы, действующей систематически и располагающей значительными силами. Герой узнаваем по устойчивому набору внешних признаков — тёмные очки, спичка в зубах, переделанный пистолет и старый автомобиль, — сохраняющимся на протяжении всего фильма. Центральный выбор героя — вести дело до конца собственными методами, вопреки давлению коллег и предписанной процедуре. Картина принадлежит к ряду работ, закрепивших экранный образ Сталлоне 1980-х годов наряду с сериями о Рокки и Рэмбо, а Косматос ранее поставил с тем же исполнителем «Рэмбо: Первая кровь 2». Бригитта Нильсен была партнёршей Сталлоне и на экране, и в жизни в этот период. При коммерческом успехе фильм получил резкие отзывы критиков за жёсткость и прямолинейность.",
+        "en": "An American action film of 1986, directed by George P. Cosmatos from a screenplay by Sylvester Stallone, who also took the leading part. The registry classifies the picture at once as an action film, a thriller and a crime film. Production was handled by Warner Bros. and The Cannon Group, with Menahem Golan and Yoram Globus credited as producers; their company was then issuing genre features on an industrial schedule. The score was composed by Sylvester Levay; the earliest release date in the registry is 2 October 1986. Alongside Stallone the principal roles were taken by Brigitte Nielsen, Reni Santoni, Andrew Robinson, Brian Thompson and Lee Garlington. They were joined by Art LaFleur, Mariska Hargitay, David Rasche and Val Avery. The central figure is Marion Cobretti, an officer of a special police division who is called in on cases where ordinary procedures of investigation and arrest do not apply. The narrative is built around his assignment to guard a witness who has accidentally seen a killer and thereby become the target of an organised group acting systematically and in numbers. The protagonist is identified throughout by a fixed set of external attributes: dark glasses, a match between the teeth, a modified pistol and an ageing automobile. His central decision is to carry the case through by his own methods, against the pressure of colleagues and prescribed procedure. The film belongs among the works that fixed Stallone's screen persona of the 1980s next to the Rocky and Rambo series; Cosmatos had previously directed him in Rambo: First Blood Part II. Brigitte Nielsen was Stallone's partner on screen and in private life during that period. Commercially successful, the picture nevertheless drew sharp critical responses for its harshness and directness."
+      },
+      "agentNote": "🔴 ЭТО НЕ НОВИНКА. Фильм 1986 года. В разведку новинок 2026 попал потому, что у реестра есть третья дата выхода — 13 августа 2026 (переиздание или повторный показ). Год взят по ПЕРВОЙ дате реестра. В каталоге объекта нет — сверено с полным снимком 5121 записи. Брать ли объект вне темы «новинки» — решение владельца."
+    },
+    {
+      "wikidata": "Q131976228",
+      "sitelinks": 30,
+      "title": {
+        "ru": "Господин Никто против Путина",
+        "en": "Mr. Nobody Against Putin"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Дэвид Боренштейн",
+        "en": "David Borenstein"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "документальный",
+        "documentary",
+        "драма",
+        "drama",
+        "история",
+        "history"
+      ],
+      "description": {
+        "ru": "Документальный фильм 2025 года, поставленный Дэвидом Боренштейном и Павлом Таланкиным; сценарий написан Боренштейном. Картина выпущена в копродукции Дании, Чехии и ряда других стран силами компаний Made in Copenhagen и Pink Productions при участии вещателей BBC и ZDF/Arte. Продюсерами выступили Хелле Фабер, Радован Сибрт, Альжбета Караскова и Петра Добешова, музыку написали Михал Ратай и Йонас Штрук. Основу изобразительного материала составляет школьная видеохроника, которую на протяжении нескольких лет вёл Павел Таланкин, сотрудник школы уральского города Карабаш, в чьи служебные обязанности входила съёмка школьных мероприятий. Тем самым фильм собран не из наблюдений приезжей съёмочной группы, а из внутреннего архива учреждения, снятого его собственным работником изнутри повседневного распорядка. Соавторство устроено необычно: один из двух режиссёров одновременно является держателем камеры и участником снимаемых им событий, что помещает его фигуру внутрь изображения, а не только за его пределы. Накопленный массив съёмок был вывезен за границу, после чего монтаж, драматургическая сборка и режиссёрское оформление выполнены совместно с датским документалистом Дэвидом Боренштейном. Такая схема производства — съёмка изнутри и постановочная работа за пределами места съёмок — определяет и строение картины, соединяющей длительное хроникальное наблюдение с закадровым комментарием одного из снимавших. Первый, фестивальный показ состоялся 25 января 2025 года; в реестре зафиксированы также 6 ноября 2025 года, 26 марта 2026 года и 24 сентября 2026 года как даты последующих премьер и выпусков.",
+        "en": "A documentary film of 2025, directed by David Borenstein and Pavel Talankin and written by Borenstein. It was produced as an international co-production of Denmark, the Czech Republic and other countries by Made in Copenhagen and Pink Productions, with BBC and ZDF/Arte attached as broadcasters. Helle Faber, Radovan Síbrt, Alžběta Karásková and Petra Dobešová are credited as producers, while the score was written by Michal Rataj and Jonas Struck. The visual material consists largely of school video chronicles recorded over several years by Pavel Talankin, a school employee in the Ural town of Karabash whose duties included filming school events. The footage thus originates not with a visiting crew but with the internal archive of an institution, shot from within its daily routine by one of its own employees. The authorship arrangement is unusual: one of the two directors is simultaneously the camera holder and a participant in the events recorded, placing him inside the image rather than solely behind it. The accumulated material was taken out of the country, after which the editing, dramatic construction and directorial shaping were completed together with the Danish documentary filmmaker David Borenstein. This production model — filming from the inside, assembly completed abroad — also determines the structure of the picture, which combines extended observational chronicle with the voice-over commentary of one of those who filmed it. The first, festival screening took place on 25 January 2025; the registry also records 6 November 2025, 26 March 2026 and 24 September 2026 as dates of later premieres and releases."
+      },
+      "agentNote": "🔴 Тема политически острая: документальная картина о российской школе, снятая её сотрудником изнутри. Описание намеренно держится справочного регистра — устройство фильма, авторство и производство, — и не даёт оценок сторонам. Брать ли объект в каталог — решение владельца. Год 2025 по ПЕРВОЙ дате реестра (25 января 2025), далее по реестру идут даты ноября 2025, марта и сентября 2026."
+    },
+    {
+      "wikidata": "Q132200341",
+      "sitelinks": 29,
+      "title": {
+        "ru": "На помощь!",
+        "en": "Send Help"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Сэм Рэйми",
+        "en": "Sam Raimi"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "выживание",
+        "survival",
+        "триллер",
+        "thriller"
+      ],
+      "description": {
+        "ru": "Американский фильм ужасов 2026 года, отнесённый реестром одновременно к хоррору и к фильмам о выживании; постановщиком выступил Сэм Рэйми, сценарий написан Марком Свифтом и Дэмиэном Шэнноном. Производство осуществлено компанией Raimi Productions, музыку сочинил Дэнни Эльфман, писавший её и для фильмов режиссёра о Человеке-пауке. Для Рэйми, чья кинематографическая родословная восходит к «Зловещим мертвецам» 1981 года, положившим начало одноимённой серии, и включает первую кинотрилогию о Человеке-пауке (2002—2007), а также «Доктора Стрэнджа: В мультивселенной безумия», работа означает возвращение к жанру, с которого начался его путь в кино. Манеру постановщика принято описывать через соединение ужасного и комического, подвижную камеру и подчёркнутую изобретательность технических приёмов. Основные роли исполнили Рэйчел Макадамс и Дилан О’Брайен; к ним присоединились Крис Пэнг, Деннис Хэйсберт, Завьер Сэмюел и Танет Варакулнукро. Известная предпосылка сюжета такова: двое сотрудников одной компании оказываются единственными выжившими после авиакатастрофы на необитаемом острове, где подчинённая получает над своим начальником власть, которой у неё никогда не было в прежней служебной иерархии. Конструкция картины тем самым совмещает замкнутое пространство острова, обязательное для повествования о выживании, с перевёрнутой рабочей субординацией как источником напряжения. Сочетание производственного триллера и хоррора продолжает линию режиссёра, где угроза раскрывается через тесноту места действия и малое число участников. Даты выхода, зафиксированные в реестре, — 29 и 30 января 2026 года.",
+        "en": "An American horror film of 2026, classified in the registry as both horror and survival cinema, directed by Sam Raimi from a screenplay written by Mark Swift and Damian Shannon. The production was undertaken by Raimi Productions, and the score was composed by Danny Elfman, who had earlier written music for the director's Spider-Man films. For Raimi, whose lineage as a filmmaker goes back to The Evil Dead of 1981, which initiated the series of the same name, and takes in the first Spider-Man trilogy (2002-2007) as well as Doctor Strange in the Multiverse of Madness, the work constitutes a return to the genre in which his career began. His manner is customarily described in terms of the fusion of the horrific with the comic, a mobile camera and a pronounced inventiveness of technical device. The principal roles are taken by Rachel McAdams and Dylan O'Brien; they are joined by Chris Pang, Dennis Haysbert, Xavier Samuel and Thaneth Warakulnukroh. The premise established for the film is that two employees of a single company become the sole survivors of an air crash on an uninhabited island, where the subordinate acquires over her superior an authority she had never held in the corporate hierarchy. The construction accordingly combines the enclosed space of the island, obligatory for a survival narrative, with inverted working subordination as its source of tension. The coupling of workplace thriller with horror continues a line in the director's work in which menace is disclosed through confinement of setting and a small cast. The release dates recorded in the registry are 29 and 30 January 2026."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 29 января 2026. Сюжет реестром не раскрыт: описание держится известной предпосылки, авторства и производства, событий и развязки не пересказывает."
+    },
+    {
+      "wikidata": "Q124393313",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Нюрнберг",
+        "en": "Nuremberg"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джеймс Вандербилт",
+        "en": "James Vanderbilt"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "исторический",
+        "historical",
+        "война",
+        "war",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "«Нюрнберг» — драматический фильм 2025 года, поставленный Джеймсом Вандербилтом, который выступил одновременно режиссёром, автором сценария и одним из продюсеров картины. Литературной основой послужила документальная книга американского журналиста Джека Эль-Хая «Нацист и психиатр», посвящённая службе Дугласа Келли — военного психиатра армии США, отвечавшего за состояние высокопоставленных заключённых, которые ожидали начала Нюрнбергского процесса. Основные роли исполнили Рами Малек и Рассел Кроу, сыгравшие соответственно психиатра и его собеседника из числа подсудимых. В картине также заняты Майкл Шеннон, Ричард Э. Грант, Лео Вудалл, Джон Слэттери, Ренн Шмидт, Лотте Вербек, Андреас Пичман, Колин Хэнкс и Марк О’Брайен; музыку написал композитор Брайан Тайлер. Вандербилт известен прежде всего как сценарист — в частности, им написан «Зодиак» Дэвида Финчера; «Нюрнберг» относится к немногим его режиссёрским работам. Первый показ состоялся 7 сентября 2025 года в рамках кинофестиваля; далее по реестру следуют 7 ноября и 5 декабря 2025 года и 1 января 2026 года. Исторической основой сюжета является Нюрнбергский процесс — суд над руководителями нацистской Германии, проходивший в 1945–1946 годах и организованный державами-победительницами. Процесс закрепил в международном праве индивидуальную ответственность за преступления против человечности и послужил образцом для последующих трибуналов. В основу книги и фильма положен документально засвидетельствованный эпизод: Келли месяцами наблюдал подсудимых, проводил обследования и вёл с ними продолжительные беседы, стремясь установить, обладают ли эти люди общими психическими особенностями. Наибольшую известность получили его встречи с Германом Герингом.",
+        "en": "Nuremberg is a 2025 drama film directed by James Vanderbilt, who also wrote the screenplay and served as one of the producers. Its literary source is The Nazi and the Psychiatrist, a work of non-fiction by the American journalist Jack El-Hai, which reconstructs the assignment of Douglas Kelley, a United States Army psychiatrist charged with the condition of the senior German prisoners awaiting the Nuremberg trial. Rami Malek and Russell Crowe take the leading roles as the psychiatrist and the defendant he interviews. The supporting cast includes Michael Shannon, Richard E. Grant, Leo Woodall, John Slattery, Wrenn Schmidt, Lotte Verbeek, Andreas Pietschmann, Colin Hanks and Mark O’Brien, while the score was composed by Brian Tyler. Vanderbilt is known chiefly as a screenwriter, having written David Fincher’s Zodiac, and Nuremberg is one of the few features he has directed himself. The film was first screened on 7 September 2025 at a film festival; the registry records further release dates on 7 November and 5 December 2025 and on 1 January 2026. The historical subject of the picture is the Nuremberg trial, the proceeding held in 1945 and 1946 by the victorious Allied powers against the leadership of Nazi Germany. That trial established individual responsibility for crimes against humanity as a principle of international law and became the model for later international tribunals. Both the book and the film rest on a documented episode: Kelley observed the defendants over many months, carried out examinations and held extended conversations with them, seeking to determine whether the men shared any common psychiatric traits. His sessions with Hermann Göring became the best known part of that work."
+      },
+      "agentNote": "Год 2025 по ПЕРВОЙ дате реестра — фестивальная премьера 7 сентября 2025. Далее по реестру: ноябрь и декабрь 2025, январь 2026. Первоисточник — документальная книга «Нацист и психиатр» Джека Эль-Хая. Тема историческая и тяжёлая; описание держится справочного регистра."
+    },
+    {
+      "wikidata": "Q124983920",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Resident Evil Requiem",
+        "en": "Resident Evil Requiem"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Capcom",
+        "en": "Capcom"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "ужасы",
+        "horror",
+        "выживание",
+        "survival",
+        "экшен",
+        "action",
+        "шутер",
+        "shooter",
+        "приключения",
+        "adventure"
+      ],
+      "description": {
+        "ru": "Компьютерная игра в жанре survival horror, разработанная и изданная японской компанией Capcom; по реестру выход назначен на 27 февраля 2026 года для Microsoft Windows, PlayStation 5, Xbox Series X/S и Nintendo Switch 2. Числится девятой основной частью серии Resident Evil, идущей с 1996 года и во многом определившей сам жанр: игрок исследует замкнутые пространства, где противников больше, чем средств с ними справиться, а патроны, лечение и место в инвентаре приходится считать. Постоянные опоры мира серии — корпорация Umbrella с её биологическими разработками, вирусные заражения, превращающие людей в существ, и город Раккун-Сити, уничтоженный в ходе одной из вспышек. Действие настоящей части, по подтверждённым реестром сведениям, связано с Раккун-Сити, а одно из играбельных лиц — сотрудница ФБР Грейс Эшкрофт; прочие сюжетные подробности не раскрыты. Современные части серии выполнены на собственном движке Capcom RE Engine и допускают как вид от первого, так и вид от третьего лица. Основу игрового процесса составляет исследование связанных между собой помещений, открывающихся постепенно, по мере нахождения ключей и решения задач с механизмами. Боеприпасы и лечебные средства расходуются быстрее, чем восполняются, отчего значительная часть игры отведена экономии, распределению места в инвентаре и изготовлению предметов из собираемых компонентов. Отдельный элемент устройства — преследующие игрока противники, устранить которых обычно невозможно или невыгодно, отчего столкновения разрешаются бегством и обходным путём, а не боем. Приёмы серии — ограниченный ресурс, замкнутая планировка и неустранимый преследователь — воспроизводятся у других разработчиков.",
+        "en": "A survival horror video game developed and published by the Japanese company Capcom; the registry gives 27 February 2026 as its release date, for Microsoft Windows, PlayStation 5, Xbox Series X/S and Nintendo Switch 2. It is recorded as the ninth main installment of the Resident Evil series, which has run since 1996 and did much to define the genre itself, placing the player in enclosed spaces where creatures outnumber the means of dealing with them and where ammunition, healing items and inventory space must be counted. The recurring foundations of the setting are the Umbrella corporation with its biological research, viral outbreaks that turn people into creatures, and Raccoon City, destroyed in one such outbreak. According to the registry, the action of this installment is connected with Raccoon City and one of the playable characters is an FBI agent named Grace Ashcroft; further plot detail remains undisclosed. Recent entries in the series are built on Capcom's proprietary RE Engine and admit both a first-person and a third-person view. Play consists chiefly of exploring interconnected rooms that open up by degrees as keys are found and mechanisms and puzzles are worked out. Ammunition and healing items are consumed faster than they are replenished, so much of the game is given over to conserving supplies, allotting inventory space and crafting items from gathered components. A further structural element is the pursuing enemy, which as a rule cannot be removed for good, so that encounters with it are settled by flight rather than by combat. The devices of the series — scarce resources, enclosed layouts and an unkillable pursuer — recur in the work of other developers."
+      },
+      "agentNote": "Игра на момент письма не вышла: реестр даёт дату 27 февраля 2026. Описание разворачивает устройство серии и подтверждённые реестром сведения о части; сюжет намеренно не пересказывается. Названия ru и en совпадают: русского перевода у названия нет, ruwiki зовёт объект латиницей."
+    },
+    {
+      "wikidata": "Q126405648",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Следствие ведут овечки",
+        "en": "The Sheep Detectives"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Кайл Балда",
+        "en": "Kyle Balda"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "анимация",
+        "animation",
+        "комедия",
+        "comedy",
+        "детектив",
+        "detective",
+        "семейный",
+        "family"
+      ],
+      "description": {
+        "ru": "«Следствие ведут овечки» — полнометражный анимационный фильм 2026 года, поставленный Кайлом Балдой и совмещающий, по разметке реестра, признаки фильма-тайны, комедийной, семейной и приключенческой картины. Литературной основой послужил вышедший в 2005 году роман немецкой писательницы Леони Свонн «Три мешка полны», в котором схема классического детектива перенесена в среду овечьего стада: пастуха находят мёртвым на выгоне, и овцы, приученные к тому, что он читал им вслух, берутся сами установить обстоятельства его гибели. Повествовательный приём первоисточника состоит в том, что происходящее показано исключительно с точки зрения животных — с присущим им способом рассуждения и с неполным пониманием человеческих установлений, отношений собственности и права, — и из этого несовпадения оптики вырастают одновременно комический эффект и сама загадка. Сценарий написан Крэйгом Мэйзином, известным как автор сериалов «Чернобыль» и «Одни из нас»; соединение его имени с постановщиком анимации, работавшим над фильмами о миньонах, само по себе примечательно для семейного детектива. Музыку к фильму написал Эйтор Перейра. Производство осуществлено студиями Working Title Films, Lord Miller Productions и Amazon MGM Studios; продюсерами выступили Тим Беван и Эрик Феллнер, стоящие за Working Title Films. В озвучании заняты Хью Джекман, Эмма Томпсон, Брайан Крэнстон и Джулия Луи-Дрейфус. К ним присоединились Николас Голицын, Николас Браун, Молли Гордон, Хонг Чау, Тосин Коул и Конлет Хилл. Первые зафиксированные в реестре даты выхода — 7 и 8 мая 2026 года.",
+        "en": "The Sheep Detectives is an animated feature film dated 2026, directed by Kyle Balda and combining, according to the registry classification, the traits of a mystery film, a comedy, a family picture and an adventure film. Its literary source is Three Bags Full, the 2005 novel by the German writer Leonie Swann, which transplants the machinery of classical detective fiction into a grazing flock: a shepherd is found dead in his own pasture, and the sheep, accustomed to being read aloud to by him, undertake to establish the circumstances of his death themselves. The narrative device of the source is that events are rendered exclusively from the vantage point of the animals, with their particular manner of reasoning and their incomplete grasp of human institutions, property and law, so that both the comic effect and the puzzle itself proceed from that mismatch of perspective. The screenplay was written by Craig Mazin, known as the author of the television series Chernobyl and The Last of Us; the conjunction of that name with an animation director whose earlier work includes the Minions films is in itself notable for a family mystery. The score was composed by Heitor Pereira. The production was mounted by Working Title Films, Lord Miller Productions and Amazon MGM Studios, with Tim Bevan and Eric Fellner, the principals behind Working Title Films, serving as producers. The voice cast is headed by Hugh Jackman, Emma Thompson, Bryan Cranston and Julia Louis-Dreyfus. They are joined by Nicholas Galitzine, Nicholas Braun, Molly Gordon, Hong Chau, Tosin Cole and Conleth Hill. The earliest release dates recorded in the registry are 7 and 8 May 2026."
+      },
+      "agentNote": "Картина на момент письма не вышла: реестр даёт первые даты 7 и 8 мая 2026. Первоисточник — роман Леони Свонн «Три мешка полны» (2005). Описание разворачивает первоисточник и производство, событий фильма не пересказывает. Названные исполнители по реестру заняты в озвучании."
+    },
+    {
+      "wikidata": "Q135038882",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Голос Хинд Раджаб",
+        "en": "The Voice of Hind Rajab"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Каутер Бен Хания",
+        "en": "Kaouther Ben Hania"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "документальный",
+        "documentary",
+        "война",
+        "war"
+      ],
+      "description": {
+        "ru": "«Голос Хинд Раджаб» — драматический фильм 2025 года, поставленный тунисской режиссёром Каутер Бен Хания, выступившей также автором сценария. Реестр относит картину одновременно к драме и к документальной драме: её материалом послужили подлинные аудиозаписи телефонного разговора, сохранённые гуманитарной службой, принимавшей экстренные звонки. Записи связаны с обращением шестилетней девочки из сектора Газа, оказавшейся в обстрелянном автомобиле; принявшие звонок диспетчеры удерживали связь и одновременно пытались согласовать выезд помощи. Постановочное решение фильма состоит в разделении двух планов: подлинная фонограмма звучит с экрана как есть, без переозвучивания и без актёрской имитации, тогда как работа диспетчерской воссоздана игровым способом — в павильонной декорации, с актёрами в ролях операторов и координаторов. Основные роли исполнили Амер Хлехель, Клара Хури, Мотаз Малхис и Саджа Килани. Производство осуществили компании Film4 Productions и Sunnyland Film; продюсерами выступили Надим Шейхруха, Одесса Рэй и Джеймс Уилсон. Такое устройство помещает картину в промежуточную область между документальным и игровым кино, где документальным остаётся звук, а изображение целиком принадлежит постановке. Метод продолжает линию прежних работ режиссёра — «Человек, который продал свою кожу» и «Четыре дочери», — в которых документальный материал и реконструкция также сводились в пределах одного произведения. Фестивальная премьера состоялась 3 сентября 2025 года; далее реестр фиксирует даты 10 сентября 2025 года, 26 ноября 2025 года и 22 января 2026 года, соответствующие последующим показам и прокатным выпускам.",
+        "en": "The Voice of Hind Rajab is a 2025 drama film written and directed by the Tunisian filmmaker Kaouther Ben Hania. The registry classifies it at once as a drama and as a documentary drama, since its source material consists of authentic recordings of a telephone call preserved by a humanitarian emergency dispatch service. The recordings relate to a call placed by a six-year-old girl in the Gaza Strip who was trapped in a car that had come under fire, and to the efforts of the dispatchers who took the call to hold the connection while arranging for assistance to reach her. The formal decision that organises the picture is a separation of two registers: the recorded voice is heard as preserved, without re-recording and without actorly imitation, whereas the work of the dispatch room is reconstructed dramatically, staged on a set with performers in the roles of operators and coordinators. The principal parts are taken by Amer Hlehel, Clara Khoury, Motaz Malhees and Saja Kilani. The production companies are Film4 Productions and Sunnyland Film, with Nadim Cheikhrouha, Odessa Rae and James Wilson credited as producers. The construction situates the film between documentary and fiction, the sound remaining documentary while the image belongs entirely to staging. The approach continues a method already visible in the director's earlier features, The Man Who Sold His Skin and Four Daughters, where recorded material and reconstruction were likewise combined within a single work. The festival premiere took place on 3 September 2025, and the registry further records the dates 10 September 2025, 26 November 2025 and 22 January 2026, corresponding to subsequent screenings and theatrical releases."
+      },
+      "agentNote": "🔴 Тема крайне тяжёлая: в основе — подлинная аудиозапись, связанная с гибелью ребёнка в секторе Газа. Описание намеренно держится справочного регистра — устройство картины, метод режиссёра и производство, — и не даёт оценок сторонам конфликта. Брать ли объект в каталог — решение владельца. Год 2025 по ПЕРВОЙ дате реестра (фестивальная премьера 3 сентября 2025)."
+    },
+    {
+      "wikidata": "Q96247255",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Stray",
+        "en": "Stray"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "BlueTwelve Studio",
+        "en": "BlueTwelve Studio"
+      },
+      "year": "2022",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "приключения",
+        "adventure",
+        "научная фантастика",
+        "science fiction",
+        "головоломка",
+        "puzzle",
+        "постапокалипсис",
+        "post-apocalyptic",
+        "инди",
+        "indie"
+      ],
+      "description": {
+        "ru": "Приключенческая видеоигра с элементами головоломки в научно-фантастическом киберпанковом антураже, разработанная небольшой французской студией BlueTwelve Studio и изданная компанией Annapurna Interactive; первый выпуск состоялся 19 июля 2022 года для Microsoft Windows, PlayStation 4 и PlayStation 5, позднее игра вышла на Xbox One, Xbox Series X/S, macOS и Nintendo Switch. Действие развёрнуто в закрытом подземном городе, откуда люди исчезли задолго до начала событий, а обиход поддерживают человекоподобные роботы, перенявшие у прежних обитателей одежду, речь и привычку собираться в барах. Игрок управляет бездомным рыжим котом, который, отбившись от сородичей, падает в этот город и ищет дорогу наверх, к свету. Спутником кота становится небольшой летающий дрон по имени B-12, переводящий речь роботов и хранящий обрывки памяти о прошлом города. Игра построена как приключение от третьего лица, в котором передвижение подчинено кошачьим возможностям: прыжок выполняется только по строго заданным уступам и карнизам, а продвижение требует протискивания в узкие проходы и лазания. Отдельная кнопка отведена мяуканью и царапанью поверхностей, и обе они служат не украшением, а инструментом решения задач. Повествование ведётся почти без слов и опирается на устройство пространства, а не на диалоги. Структура прохождения чередует разделы преследования, где от враждебных существ приходится убегать, с разделами исследования неоновых улиц вертикального города. Облик города собран по образцу плотной городской застройки с висящими проводами и вывесками, музыка электронная. Последняя зафиксированная реестром дата выпуска — 28 мая 2026 года.",
+        "en": "An adventure and puzzle video game set in a science-fiction cyberpunk milieu, developed by the small French studio BlueTwelve Studio and published by Annapurna Interactive; first released on 19 July 2022 for Microsoft Windows, PlayStation 4 and PlayStation 5, and later issued for Xbox One, Xbox Series X/S, macOS and Nintendo Switch. The setting is a sealed underground city abandoned by humans long ago, where daily life is sustained by humanoid robots that have adopted the clothing, speech and gathering habits of the vanished inhabitants. The player controls a stray orange cat which, separated from its companions, falls into this city and searches for a route back up to the light. The cat is accompanied by a small flying drone designated B-12, which translates robot speech and stores fragments of memory of the city's past. Play proceeds from a third-person perspective, with movement organised around feline capabilities: jumps only along strictly predetermined ledges and cornices, while progress requires squeezing through narrow gaps and climbing. A dedicated button is assigned to meowing and to scratching surfaces, and both serve as instruments for solving problems rather than decoration. Narration is conducted almost without words, resting on the arrangement of space rather than on dialogue. The structure alternates pursuit sequences, in which hostile creatures must be escaped, with exploration of the neon-lit streets of the vertical city. The city is modelled on dense urban construction, with hanging cables and tiers of signboards, and the score is electronic. The latest release date recorded in the registry is 28 May 2026."
+      },
+      "agentNote": "Объект 2022 года. В разведку новинок 2026 попал по последней дате реестра — 28 мая 2026 (издание для новой платформы). Год взят по ПЕРВОЙ дате реестра, по правилу владельца 2026-08-21 о годе первого выпуска. Названия ru и en совпадают: русского перевода у названия нет, ruwiki зовёт объект латиницей."
+    },
+    {
+      "wikidata": "Q124566659",
+      "sitelinks": 26,
+      "title": {
+        "ru": "Казнить нельзя помиловать",
+        "en": "Mercy"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Тимур Бекмамбетов",
+        "en": "Timur Bekmambetov"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "научная фантастика",
+        "science fiction",
+        "триллер",
+        "thriller",
+        "детектив",
+        "detective",
+        "драма",
+        "drama"
+      ],
+      "description": {
+        "ru": "Научно-фантастический фильм-триллер 2026 года, поставленный Тимуром Бекмамбетовым по сценарию Марко Ван Белле. Производство осуществлено студиями Atlas Entertainment и Bazelevs, продюсером выступил Чарльз Ровен, музыку к картине написал Рамин Джавади. Для Бекмамбетова, ранее снявшего «Ночной дозор», «Особо опасен» и «Бен-Гура», лента продолжает работу с замкнутым, технологически заданным пространством: постановщик известен как автор приёма, который он сам называет screenlife, — способа изложения, при котором действие целиком разворачивается на экранах компьютеров и телефонов и который применён в спродюсированных им «Убрать из друзей» и «Профиле». Настоящая картина решена в близком ключе: её пространство ограничено и подчинено ходу технологической процедуры. Известная предпосылка такова: в недалёком будущем судебное разбирательство ведёт система искусственного интеллекта, а обвиняемому — полицейскому, которому вменяют убийство собственной жены, — отведён строго ограниченный срок на то, чтобы доказать свою невиновность. Главные роли исполнили Крис Прэтт и Ребекка Фергюсон. В фильме также заняты Аннабелль Уоллис, Кали Рейс, Рафи Гаврон, Крис Салливан, Кеннет Чои, Кайли Роджерс и Джефф Пьер. Жанровая природа работы определена реестром как соединение научной фантастики и триллера: фантастическое допущение об автоматизированном правосудии служит рамкой для судебного сюжета с жёстко отсчитываемым временем. Даты выхода, зафиксированные в реестре, — 22 и 23 января 2026 года.",
+        "en": "A science-fiction thriller film of 2026, directed by Timur Bekmambetov from a screenplay by Marco van Belle. The production was mounted by Atlas Entertainment and Bazelevs, with Charles Roven serving as producer and the score written by Ramin Djawadi. Bekmambetov, previously the director of Night Watch, Wanted and Ben-Hur, is also the originator of the narrative device he himself calls screenlife, a manner of exposition in which the action unfolds entirely upon the screens of computers and telephones, applied in Unfriended and Profile, both of which he produced. The present picture is constructed along comparable lines, its space enclosed and subordinated to the running of a technological procedure. The premise established for the film places it in the near future, where judicial proceedings are conducted by an artificial-intelligence system and the accused, a police officer charged with the murder of his own wife, is allotted a strictly limited span of time in which to demonstrate his innocence. The leading roles are taken by Chris Pratt and Rebecca Ferguson. The cast further comprises Annabelle Wallis, Kali Reis, Rafi Gavron, Chris Sullivan, Kenneth Choi, Kylie Rogers and Jeff Pierre. The registry assigns the work jointly to science fiction and to the thriller, the speculative premise of automated justice supplying the frame for a courtroom narrative measured against a countdown. The release dates recorded in the registry are 22 and 23 January 2026."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 22 января 2026. Сюжет реестром не раскрыт: описание держится известной предпосылки, авторского метода и производства. Русское название реестра — «Казнить нельзя помиловать», английское — «Mercy»."
+    },
+    {
+      "wikidata": "Q129906152",
+      "sitelinks": 26,
+      "title": {
+        "ru": "Метод исключения",
+        "en": "No Other Choice"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Пак Чхан Ук",
+        "en": "Park Chan-wook"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "триллер",
+        "thriller",
+        "комедия",
+        "comedy",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "«Метод исключения» — южнокорейский полнометражный фильм 2025 года, поставленный Пак Чхан Уком, выступившим одновременно режиссёром, продюсером и одним из авторов сценария. Сценарий написан Пак Чхан Уком совместно с Ли Гён Ми и Доном МакКелларом, музыку сочинил Чо Ёнук, постоянный композитор постановщика, а производство осуществлено студиями CJ ENM Studios и Moho Film. Литературной основой картины послужил роман американского писателя Дональда Уэстлейка «Топор», опубликованный в 1997 году и ранее уже переносившийся на экран в европейском кинематографе. Жанровые определения реестра относят фильм одновременно к чёрной комедии, драме и триллеру, что соответствует природе первоисточника, выстроенного как сатирическое высказывание об устройстве рынка труда. Роман излагает историю специалиста бумажного производства, потерявшего место после многолетней службы и, не сумев найти нового трудоустройства, пришедшего к решению последовательно устранять тех, кто способен составить ему конкуренцию при найме на аналогичную должность. Главные роли исполнили Ли Бёнхон и Сон Йеджин; в актёрский состав вошли также Пак Хисун, Ли Сонмин, Ём Херан, Ча Сынвон и Ю Ёнсок. Пак Чхан Ук, ранее поставивший «Олдбоя», «Служанку» и «Решение уйти», работает на соединении жёстко выстроенной фабулы, выверенной композиции кадра и холодной иронии, и настоящая картина продолжает эту творческую линию. Первый показ состоялся 29 августа 2025 года в рамках фестивальной премьеры, за которой по данным реестра последовали даты сентября и декабря 2025 года, а также февраля 2026 года.",
+        "en": "No Other Choice is a South Korean feature film of 2025, directed and produced by Park Chan-wook, who also co-wrote its screenplay. The script was prepared by Park Chan-wook together with Lee Kyoung-mi and Don McKellar, the score was composed by Jo Yeong-wook, a long-standing collaborator of the director, and the production was carried out by CJ ENM Studios and Moho Film. The picture is based on The Ax, a novel by the American writer Donald Westlake published in 1997, which had already been adapted for the screen in European cinema. Registry classifications assign the film simultaneously to black comedy, drama and thriller, a combination consistent with the source novel, which is constructed as a satirical statement about the workings of the labour market. Westlake's book follows a paper-industry specialist who is made redundant after many years of service and who, having failed to secure new employment, resolves to eliminate one by one those capable of competing with him for a comparable position. The leading roles are taken by Lee Byung-hun and Son Ye-jin, while the cast also includes Park Hee-soon, Lee Sung-min, Yeom Hye-ran, Cha Seung-won and Yoo Yeon-seok. Park Chan-wook, previously responsible for Oldboy, The Handmaiden and Decision to Leave, works through a combination of rigorously constructed plotting, deliberate framing and cold irony, and the present film continues that line of work. The first screening took place on 29 August 2025 as a festival premiere, followed by dates in September and December 2025 and in February 2026."
+      },
+      "agentNote": "Год 2025 по ПЕРВОЙ дате реестра — фестивальная премьера 29 августа 2025. Далее по реестру: сентябрь и декабрь 2025, февраль 2026. Первоисточник — роман Дональда Уэстлейка «Топор» (1997), уже экранизировавшийся ранее."
+    }
+  ]
+}
