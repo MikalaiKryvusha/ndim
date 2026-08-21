@@ -268,8 +268,29 @@ const BUILD = new URL('./dims-build.json', import.meta.url);
 const full = existsSync(BUILD) ? (JSON.parse(readFileSync(BUILD, 'utf8')) as CatalogItem[]) : null;
 const catalog = (full ?? (slice as unknown as CatalogItem[])) as CatalogItem[];
 
-test('боевой каталог: опора взвешивания — числа замера 2026-08-14', () => {
-  if (!full) return; // на запасном срезе эти числа бессмысленны
+/**
+ * ПРИЧИНА ПРОПУСКА ОБЪЯВЛЯЕТСЯ, А НЕ УМАЛЧИВАЕТСЯ (`bugs/163`).
+ *
+ * 🔴 Полный каталог (`dims-build.json`, 17 МБ) лежит ВНЕ git, и это правильно. Неправильно было
+ * другое: тесты, которым он нужен, объявлялись внутри `if (full)` — то есть на чистой рабочей
+ * копии не объявлялись ВООБЩЕ, а `node --test` не может сообщить о том, чего ему не дали.
+ * Прогон, короче полного на четыре теста, выглядел ровно так же зелено: `skipped 0` в обоих
+ * случаях. Хуже того, один тест был объявлен, но выходил по `if (!full) return` — и печатался
+ * как ПРОЙДЕННЫЙ, ничего не проверив.
+ *
+ * Цена уплачена в командном режиме: у ролей команды пять рабочих копий, артефакт есть не у
+ * всех, и числа прогонов расходились МОЛЧА — 325 против 329 за один вечер. Расхождение каждый
+ * раз приходилось объяснять человеку вместо того, чтобы его объявлял прибор.
+ *
+ * Форма пропуска — родная для `node --test`: `{ skip: <причина> }`. Тест объявлен ВСЕГДА,
+ * поэтому общее число не зависит от артефакта, а разница видна строкой `skipped` и причиной.
+ * Образец честного вырождения был в проекте и раньше — `dim-kind.test.ts`: он печатает вслух,
+ * что проверил запасной срез. Здесь тот же принцип, только средствами самого прогона.
+ */
+const NO_BUILD = full ? false : 'нет src/lib/content/dims-build.json — сначала npm run build';
+
+
+test('боевой каталог: опора взвешивания — числа замера 2026-08-14', { skip: NO_BUILD }, () => {
   const prior = catalogPrior(catalog);
   assert.equal(prior.m, 4, 'm — 90-й процентиль числа голосов среди оценённых');
   assert.equal(prior.c.toFixed(4), '8.2405', 'C — средняя по оценённым объектам');
@@ -382,46 +403,42 @@ test('🔑 ПАРА «истина ↔ зеркало»: место карточ
   }
 });
 
-if (full) {
-  test('боевой каталог: знаменатель места совпадает со сводкой «с оценками»', () => {
-    const { hubs } = groupByKind(catalog);
-    const byKey = Object.fromEntries(summarize(hubs).map((h) => [h.key, h]));
-    for (const key of KIND_KEYS) {
-      const list = hubs.get(key) ?? [];
-      const places = placesIn(list);
-      if (!places.size) continue;
-      const of = [...places.values()][0].of;
-      assert.equal(of, byKey[key].rated, `${key}: знаменатель места разошёлся со сводкой хаба`);
-    }
-    // Замер 2026-08-14, который держит вся арифметика фазы: фильмов оценено 981 из 2774.
-    assert.equal([...placesIn(hubs.get('movie') ?? []).values()][0].of, 981);
-  });
-}
+test('боевой каталог: знаменатель места совпадает со сводкой «с оценками»', { skip: NO_BUILD }, () => {
+  const { hubs } = groupByKind(catalog);
+  const byKey = Object.fromEntries(summarize(hubs).map((h) => [h.key, h]));
+  for (const key of KIND_KEYS) {
+    const list = hubs.get(key) ?? [];
+    const places = placesIn(list);
+    if (!places.size) continue;
+    const of = [...places.values()][0].of;
+    assert.equal(of, byKey[key].rated, `${key}: знаменатель места разошёлся со сводкой хаба`);
+  }
+  // Замер 2026-08-14, который держит вся арифметика фазы: фильмов оценено 981 из 2774.
+  assert.equal([...placesIn(hubs.get('movie') ?? []).values()][0].of, 981);
+});
 
-if (full) {
-  test('боевой каталог: числа замера 2026-08-14 держатся', () => {
-    const { hubs, tail } = groupByKind(catalog);
-    const sums = summarize(hubs);
-    const byKey = Object.fromEntries(sums.map((h) => [h.key, h]));
-    /*
-     * 🔄 Перемерено 2026-08-18 после первого пополнения каталога с переноса: владелец одобрил
-     * десять кандидатов-фильмов. Сдвинулись РОВНО ДВЕ величины — размер каталога и число
-     * фильмов, обе на десять. Оценённых фильмов по-прежнему 981 (новые записи без оценок),
-     * страниц по-прежнему 47 и 89 (десять карточек в разбивку не влезли новой страницей),
-     * хвост 25 — тот же. Сойдись числа иначе, правкой констант это не закрывалось бы.
-     */
-    assert.equal(catalog.length, 5121);
-    assert.equal(tail.length, 25);
-    assert.equal(byKey.movie.count, 2784);
-    assert.equal(byKey.movie.rated, 981);
-    assert.equal(byKey.movie.pages, 47);
-    assert.equal(byKey['video-game'].count, 1221);
-    assert.equal(byKey['tv-series'].count, 370);
-    assert.equal(byKey.novel.count, 231);
-    assert.equal(byKey.practice.count, 228);
-    assert.equal(byKey['music-artist'].count, 198);
-    assert.equal(byKey.book.count, 64);
-    // 89 страниц на язык — число, на котором стоит вся арифметика фазы.
-    assert.equal(sums.reduce((s, h) => s + h.pages, 0), 89);
-  });
-}
+test('боевой каталог: числа замера 2026-08-14 держатся', { skip: NO_BUILD }, () => {
+  const { hubs, tail } = groupByKind(catalog);
+  const sums = summarize(hubs);
+  const byKey = Object.fromEntries(sums.map((h) => [h.key, h]));
+  /*
+   * 🔄 Перемерено 2026-08-18 после первого пополнения каталога с переноса: владелец одобрил
+   * десять кандидатов-фильмов. Сдвинулись РОВНО ДВЕ величины — размер каталога и число
+   * фильмов, обе на десять. Оценённых фильмов по-прежнему 981 (новые записи без оценок),
+   * страниц по-прежнему 47 и 89 (десять карточек в разбивку не влезли новой страницей),
+   * хвост 25 — тот же. Сойдись числа иначе, правкой констант это не закрывалось бы.
+   */
+  assert.equal(catalog.length, 5121);
+  assert.equal(tail.length, 25);
+  assert.equal(byKey.movie.count, 2784);
+  assert.equal(byKey.movie.rated, 981);
+  assert.equal(byKey.movie.pages, 47);
+  assert.equal(byKey['video-game'].count, 1221);
+  assert.equal(byKey['tv-series'].count, 370);
+  assert.equal(byKey.novel.count, 231);
+  assert.equal(byKey.practice.count, 228);
+  assert.equal(byKey['music-artist'].count, 198);
+  assert.equal(byKey.book.count, 64);
+  // 89 страниц на язык — число, на котором стоит вся арифметика фазы.
+  assert.equal(sums.reduce((s, h) => s + h.pages, 0), 89);
+});
