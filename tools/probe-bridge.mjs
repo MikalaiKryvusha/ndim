@@ -188,7 +188,10 @@ const run = async () => {
     check(firstRowPct === topPct, 'Ш8-06б верхняя строка панели = верхняя карточка', `${firstRowPct} / ${topPct}`);
 
     const waves = await door.evaluate((el) => getComputedStyle(el, '::before').animationName);
-    check(waves === 'bridge-wave', 'Ш8-05а волны идут', `animation-name: ${waves}`);
+    // 🔴 Имя keyframes СКОУПИТСЯ Svelte: в живом браузере это «svelte-<хеш>-bridge-wave», а не
+    // «bridge-wave». Первая редакция сверяла имя целиком и покрасила красным ИСПРАВНЫЙ продукт.
+    // Сверяем хвост — но проверка не ослаблена: «none» хвосту не удовлетворяет.
+    check(waves.endsWith('bridge-wave'), 'Ш8-05а волны идут', `animation-name: ${waves}`);
     await context.close();
   }
 
@@ -219,10 +222,19 @@ const run = async () => {
     await page.waitForTimeout(800);
     await touchDemo(page);
 
+    // Прямая улика Н4: длина истории ДО и ПОСЛЕ. `replace` записи не добавляет, значит число
+    // обязано остаться тем же. Это сильнее, чем «goBack увёл не на лендинг».
+    const histBefore = await page.evaluate(() => history.length);
     await page.locator('.demo a.gobtn').click();
     await page.waitForURL(/\/profile/, { timeout: 20000 }).catch(() => {});
     await page.waitForTimeout(3000); // сессия и ensureSpaceExists асинхронны
+    const histAfter = await page.evaluate(() => history.length);
     check(new URL(page.url()).pathname === '/profile', 'Ш8-07а одно нажатие — и человек внутри', page.url());
+    check(
+      histAfter === histBefore,
+      'Ш8-08а мост НЕ оставил записи в истории вкладки',
+      `history.length ${histBefore} → ${histAfter}`,
+    );
 
     const fields = await page.locator('input[type="email"], input[type="password"]').count();
     check(fields === 0, 'Ш8-07б ни одной формы на пути', `полей ввода ${fields}`);
@@ -241,7 +253,7 @@ const run = async () => {
     const backPath = new URL(page.url()).pathname;
     check(
       backPath !== '/ru' && backPath !== '/en',
-      'Ш8-08 «Назад» с первого экрана продукта НЕ возвращает на лендинг',
+      'Ш8-08б «Назад» с первого экрана продукта НЕ возвращает на лендинг',
       `оказались на ${backPath}`,
     );
 
@@ -293,6 +305,11 @@ const run = async () => {
     const bridge = page.locator('.bridge');
     const seen = await bridge.count();
     check(seen === 1, 'Ш8-10а карточка-мостик показана пришедшему мостом', `карточек ${seen}`);
+    // 🔴 Пропуск объявляется ВСЛУХ (капкан от QA, оплачен его прогонами): молчаливо
+    // пропущенная проверка читается как «нечего проверять» — то есть как зелёная.
+    if (seen !== 1) {
+      note('Ш8-10б…д ПРОПУЩЕНЫ: карточки на экране нет, проверять её содержимое не на чем');
+    }
     if (seen === 1) {
       const text = (await bridge.innerText()).trim();
       const draft = await bridge.getAttribute('data-draft');
