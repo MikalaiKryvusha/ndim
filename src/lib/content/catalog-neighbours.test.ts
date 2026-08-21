@@ -127,36 +127,53 @@ test('возврат потерянных идемпотентен: второй
 const BUILD = new URL('./dims-build.json', import.meta.url);
 const full = existsSync(BUILD) ? (JSON.parse(readFileSync(BUILD, 'utf8')) as NeighbourItem[]) : null;
 
-if (full) {
-  test('боевой каталог: соседи есть у КАЖДОГО объекта, и их ровно восемь', () => {
-    const { hubs, tail } = groupByKind(full);
-    const weights = tagWeights(full);
-    let checked = 0;
-    for (const pool of [...hubs.values(), tail] as NeighbourItem[][]) {
-      for (const d of pool) {
-        const got = neighboursOf(d, pool, weights);
-        // Пул меньше девяти объектов физически не даст восьми соседей — там проверяем «сколько есть».
-        const want = Math.min(NEIGHBOURS, pool.length - 1);
-        assert.equal(got.length, want, `${d.slug}: соседей ${got.length}, ожидалось ${want}`);
-        assert.ok(!got.some((n) => n.slug === d.slug), `${d.slug}: сам себе сосед`);
-        checked += 1;
-      }
-    }
-    assert.equal(checked, full.length);
-  });
+/**
+ * ПРИЧИНА ПРОПУСКА ОБЪЯВЛЯЕТСЯ, А НЕ УМАЛЧИВАЕТСЯ (`bugs/163`).
+ *
+ * Тесты живого каталога объявляются ВСЕГДА и уходят в пропуск С ПРИЧИНОЙ, когда артефакта нет.
+ * Прежде они сидели внутри `if (full)` и на чистой рабочей копии не объявлялись вовсе — прогон
+ * оказывался короче, а выглядел так же зелено.
+ *
+ * 🔑 Разбор класса целиком — в `catalog-hub.test.ts` у такой же константы (там дефект был
+ * ОБОИМИ лицами сразу). Здесь он не повторяется намеренно: два описания одного правила — пара,
+ * которая молча разъедется (`AGENT_GUIDE.md` → реестр пар «истина ↔ зеркало»).
+ */
+const NO_BUILD = full ? false : 'нет src/lib/content/dims-build.json — сначала npm run build';
 
-  test('боевой каталог: сосед НИКОГДА не из чужого вида — слияние видов запрещено', () => {
-    const { hubs } = groupByKind(full);
-    const weights = tagWeights(full);
-    const movies = (hubs.get('movie') ?? []) as NeighbourItem[];
-    const slugs = new Set(movies.map((d) => d.slug));
-    for (const d of movies.slice(0, 200)) {
-      for (const n of neighboursOf(d, movies, weights)) {
-        assert.ok(slugs.has(n.slug), `${d.slug}: сосед ${n.slug} не из хаба «Фильмы»`);
-      }
+test('боевой каталог: соседи есть у КАЖДОГО объекта, и их ровно восемь', { skip: NO_BUILD }, () => {
+  // Тело исполняется только когда артефакт есть — так устроен skip выше. Утверждение
+  // делает инвариант видимым И сужает тип: без обёртки `if (full)` компилятор его не выводит.
+  assert.ok(full, 'тест обязан быть пропущен без артефакта, а не исполняться на null');
+  const { hubs, tail } = groupByKind(full);
+  const weights = tagWeights(full);
+  let checked = 0;
+  for (const pool of [...hubs.values(), tail] as NeighbourItem[][]) {
+    for (const d of pool) {
+      const got = neighboursOf(d, pool, weights);
+      // Пул меньше девяти объектов физически не даст восьми соседей — там проверяем «сколько есть».
+      const want = Math.min(NEIGHBOURS, pool.length - 1);
+      assert.equal(got.length, want, `${d.slug}: соседей ${got.length}, ожидалось ${want}`);
+      assert.ok(!got.some((n) => n.slug === d.slug), `${d.slug}: сам себе сосед`);
+      checked += 1;
     }
-  });
-}
+  }
+  assert.equal(checked, full.length);
+});
+
+test('боевой каталог: сосед НИКОГДА не из чужого вида — слияние видов запрещено', { skip: NO_BUILD }, () => {
+  // Тело исполняется только когда артефакт есть — так устроен skip выше. Утверждение
+  // делает инвариант видимым И сужает тип: без обёртки `if (full)` компилятор его не выводит.
+  assert.ok(full, 'тест обязан быть пропущен без артефакта, а не исполняться на null');
+  const { hubs } = groupByKind(full);
+  const weights = tagWeights(full);
+  const movies = (hubs.get('movie') ?? []) as NeighbourItem[];
+  const slugs = new Set(movies.map((d) => d.slug));
+  for (const d of movies.slice(0, 200)) {
+    for (const n of neighboursOf(d, movies, weights)) {
+      assert.ok(slugs.has(n.slug), `${d.slug}: сосед ${n.slug} не из хаба «Фильмы»`);
+    }
+  }
+});
 
 test('запасной срез в git тоже обрабатывается без падений', () => {
   const pool = slice as unknown as NeighbourItem[];
