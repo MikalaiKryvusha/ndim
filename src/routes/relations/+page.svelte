@@ -232,8 +232,7 @@
       en: 'No relations yet. Rate a few dimensions — and people similar to you will appear here.',
     },
     // Ожидание ПЕРВОГО расчёта (`plans/64`): человек уже оценил, и текст `empty` ему бы врал.
-    // ⚠️ Текст ВРЕМЕННЫЙ до вычитки владельцем — уходит ему вместе с макетами моста
-    // (фаза 4 эпика `plans/23`); словарь продукта соблюдён, жаргона нет.
+    // ✅ Текст ПРИНЯТ владельцем как есть (интервью №043, В4, 2026-08-21) — канон.
     waiting: {
       ru: 'Ваши оценки сохранены. Пространство NDim выполняет поиск похожих на Вас людей. Найденные люди появятся здесь.',
       en: 'Your ratings are saved. NDim Space is searching for people similar to you. The people found will appear here.',

@@ -28,10 +28,12 @@
   onMount(() => onAuthStateChanged(devAuth(), (user) => (guest = user?.isAnonymous === true)));
 
   // Текст — панели V1 (правила текста: «Вы», без «навсегда»); срок — из схемы, одна истина.
+  // Хвост фразы — правка владельца (интервью №043, В4): «останутся в Вашем личном NDim ID
+  // профиле Пространства NDim» вместо «останутся с Вами». EN — рабочий перевод до его вычитки.
   const t = {
     text: {
-      ru: `Сейчас Вы гость. Гостевой профиль живёт ${GUEST_TTL_DAYS} дней с момента создания — создайте аккаунт, и Ваши оценки и связи останутся с Вами.`,
-      en: `You are a guest right now. A guest profile lives for ${GUEST_TTL_DAYS} days from creation — create an account, and your ratings and relations will stay with you.`,
+      ru: `Сейчас Вы гость. Гостевой профиль живёт ${GUEST_TTL_DAYS} дней с момента создания — создайте аккаунт, и Ваши оценки и связи останутся в Вашем личном NDim ID профиле Пространства NDim.`,
+      en: `You are a guest right now. A guest profile lives for ${GUEST_TTL_DAYS} days from creation — create an account, and your ratings and relations will stay in your personal NDim ID profile of NDim Space.`,
     },
     save: { ru: 'Сохранить', en: 'Save' },
   } as const;
