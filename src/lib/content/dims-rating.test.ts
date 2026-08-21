@@ -14,7 +14,7 @@ import { test } from 'node:test';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { ratingView, STARS_FROM, RATER_COUNT_FROM } from './dims-rating.ts';
+import { ratingView, ratingState, STARS_FROM, RATER_COUNT_FROM } from './dims-rating.ts';
 import slice from './dims-slice.json' with { type: 'json' };
 
 /**
@@ -118,4 +118,79 @@ test('на РЕАЛЬНОМ срезе каталога правило не да
     if (v.showRaterCount) assert.ok(d.rates >= 1);
   }
   assert.ok(zero > 0, 'в срезе обязаны быть измерения без голосов — иначе тест ничего не проверил');
+});
+
+/*
+ * ── ТРИ СОСТОЯНИЯ ВЕЛИЧИНЫ (`plans/56` шаг 1) ────────────────────────────────────────────────
+ *
+ * Мутации, которые эти тесты обязаны ронять:
+ *   · «состояний два» — вернуть `rated` при средней ноль (то есть удалить ветку `all-zero`);
+ *   · «ноль голосов — тоже all-zero» — снять опору на `ratingView` и судить по одной средней.
+ */
+
+test('нет голосов — состояние «none», и средняя тут ни при чём', () => {
+  assert.equal(ratingState(0, 0), 'none');
+  // Средняя у неоценённого обязана быть нулём, но даже мусор в этом поле состояния не меняет:
+  // решает число голосов, и решает оно ОДНИМ правилом на проект.
+  assert.equal(ratingState(0, 7.5), 'none', 'голосов нет — величины нет, что бы ни лежало в средней');
+});
+
+test('голоса есть и средняя выше нуля — состояние «rated»', () => {
+  assert.equal(ratingState(1, 10), 'rated');
+  assert.equal(ratingState(14, 8.4), 'rated');
+  assert.equal(ratingState(1, 0.1), 'rated', 'десятая доля балла — это уже не «все поставили ноль»');
+});
+
+test('🔴 голоса есть, средняя РОВНО ноль — законное состояние «all-zero», а не поломка', () => {
+  assert.equal(ratingState(1, 0), 'all-zero');
+  assert.equal(ratingState(5, 0), 'all-zero');
+});
+
+test('битая средняя ведёт себя как ноль и не роняет состояние', () => {
+  for (const bad of [NaN, undefined, null, 'нет']) {
+    assert.equal(ratingState(1, bad as number), 'all-zero', `сломалось на ${String(bad)}`);
+  }
+});
+
+test('состояние НИКОГДА не расходится с правилом показа звёзд', () => {
+  for (const rates of [0, 1, 2, 3, 14]) {
+    for (const rating of [0, 0.1, 5, 10]) {
+      const state = ratingState(rates, rating);
+      assert.equal(
+        state === 'none',
+        !ratingView(rates).showStars,
+        `состояние ${state} разошлось со звёздами на rates=${rates}, rating=${rating}`,
+      );
+    }
+  }
+});
+
+test('на РЕАЛЬНОМ срезе каталога состояние совпадает с данными записи', () => {
+  const dims = slice as readonly { rates: number; rating: number; title: { ru: string } }[];
+  let none = 0;
+  let rated = 0;
+  let allZero = 0;
+  for (const d of dims) {
+    const state = ratingState(d.rates, d.rating);
+    if (state === 'none') {
+      none += 1;
+      assert.equal(d.rates, 0, `«${d.title.ru}»: состояние «нет голосов» при ненулевом счётчике`);
+    } else if (state === 'all-zero') {
+      allZero += 1;
+      assert.ok(d.rates >= 1 && d.rating === 0, `«${d.title.ru}»: «все поставили ноль» не по данным`);
+    } else {
+      rated += 1;
+      assert.ok(d.rating > 0, `«${d.title.ru}»: состояние «есть оценка» при нулевой средней`);
+    }
+  }
+  assert.ok(none > 0, 'в срезе обязаны быть неоценённые — иначе тест ничего не проверил');
+  assert.ok(rated > 0, 'в срезе обязаны быть оценённые — иначе тест ничего не проверил');
+  /*
+   * ⚠️ ЗДЕСЬ НЕТ ТРЕБОВАНИЯ `allZero > 0`, и это названо вслух. В запасном срезе (50 записей)
+   * таких объектов НОЛЬ; в полном каталоге их два. Требовать их наличия значило бы ронять
+   * исправный тест на исправных данных — а молчать о нуле наблюдений нельзя (`EXP-0092`:
+   * «ноль нарушений» и «ноль наблюдений» печатаются одинаково). Поэтому число печатается,
+   * а состояние `all-zero` проверено выше синтетикой, где оно есть всегда.
+   */
+  console.log(`  ℹ срез: без голосов ${none} · с оценкой ${rated} · «все поставили ноль» ${allZero}`);
 });

@@ -23,7 +23,7 @@
  * клиентский переход СЮДА с любого экрана приложения — клиентский маршрутизатор о `csr = false`
  * целевой страницы не знает и всё равно пойдёт за данными. Поэтому лечим ВЕС, а не факт.
  */
-import type { RatingView } from './dims-rating.ts';
+import type { RatingState, RatingView } from './dims-rating.ts';
 import type { Lang } from './langs.ts';
 
 export interface DimView extends RatingView {
@@ -53,6 +53,15 @@ export interface DimView extends RatingView {
   readonly rating: number;
   /** Сколько человек оценили. Показывать это число или нет — решает `showRaterCount`. */
   readonly rates: number;
+  /**
+   * ТРИ СОСТОЯНИЯ ВЕЛИЧИНЫ NDSR (`plans/56` шаг 1) — на них ветвится текст блока-двери.
+   *
+   * Считается ОДНОЙ функцией на проект (`ratingState`), а не сравнением полей в разметке: правило
+   * показа оценок одно внутри приложения и снаружи (интервью №022), и его вторую копию грепает
+   * `dims-rating.test.ts`. Поле, а не вычисление на месте, ещё и потому, что страница объявлена
+   * `csr = false`: считать в разметке нечем, всё решается на пререндере.
+   */
+  readonly ratingState: RatingState;
   /** Строка для выдачи: обрезана по слову, без хвоста-огрызка. */
   readonly meta: string;
   readonly canonical: string;
