@@ -1,0 +1,1252 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — гость в Пространстве, фаза 5: четыре поверхности × четыре макета</title>
+<!--
+  ⚠️ ЧЕРНОВИК, не показан владельцу; фаза 5 plans/22 («Гость = человек»).
+  Собран агентом в изолированном worktree 2026-08-21. До показа владельцу обязателен
+  прогон съёмщиком (урок plans/11: снять кадры и посмотреть их рядом ДО показа).
+
+  СОСТАВ — четыре поверхности (три по эстафете STATUS + п. 2 фазы 5), в каждой ровно
+  4 варианта:
+    1. КУЛЬМИНАЦИЯ ГОСТЯ — первый экран «Связей» после первых оценок; в каждом варианте
+       обязано быть видно предупреждение о сроке (plans/22 фаза 5, макет №4: «удалять
+       данные человека, не предупредив, нечестно»).
+    2. МЕТКА ГОСТЯ — исполнение пилюли «аноним» в чужом топе.
+    3. «СЕССИЯ ИСТЕКЛА» — финальная форма взамен временного экрана
+       (src/routes/profile/+page.svelte, stand === 'expired', помечен в коде ВРЕМЕННЫМ).
+    4. «ЭТОТ ЧЕЛОВЕК БОЛЬШЕ НЕ В ПРОСТРАНСТВЕ» — место исчезнувшей связи у живого
+       человека (plans/22 фаза 5, п. 2; риск «Второй эффект №1»).
+
+  РЕШЕНИЯ ВЛАДЕЛЬЦА, на которые опираются макеты (не пересматриваются здесь):
+    · №010 Р2 — гость «в карточках связи мелко в шапке синей пилюлей помечен как аноним»;
+    · №010 Р3 — срок гостя 7 дней ОТ РОЖДЕНИЯ аккаунта (GUEST_TTL_DAYS в schema.ts);
+    · №010 Р6 — Алиса/Макс/Настя живут в БД, в их карточках «честные пилюли, что это
+      системный персонаж»;
+    · правила текста 2026-07-12 — «Вы», без слова «навсегда», без внутреннего жаргона
+      (шапка design/login-mockups.html);
+    · восстановление удалённых данных НЕ обещаем нигде.
+
+  Секция D опирается на закрытую фазу 4: следы ушедшего (дружбы, членства, подсказки
+  аудитории, учётная запись, фото) вычищает сервер — живому человеку остаётся только
+  честное объяснение на месте карточки. Причин исчезновения две (гостевой профиль истёк
+  по сроку или человек удалил аккаунт), возврат человека не обещаем ни в одном варианте.
+
+  ЧЕСТНОСТЬ МАКЕТА: числа в карточках иллюстративные (Похожесть = Близость × Общность
+  соблюдена, уровни яркости — пороги strengthLevel: <30 гаснет, 30–59 синяя, ≥60 циан);
+  вводная подсказка экрана «Связей» — канон 1.x дословно; навигация схематична — точки
+  вместо канонических иконок владельца (их форму не перерисовываем).
+
+  Страница САМОДОСТАТОЧНА: без внешних запросов, инлайн CSS/JS, знак N-сети инлайн
+  (геометрия static/favicon.svg). Темы — атрибут data-theme на <html>, токены 1:1 с
+  src/routes/+layout.svelte («Бумага» дефолт, тёмный киберпанк). Ширины: 390 и 1024
+  (рельс навигации слева — канон десктопа V2 «Рабочий стол»).
+-->
+<style>
+  /* ── Токены продукта, 1:1 с src/routes/+layout.svelte ─────────────────────── */
+  :root {
+    --bg: #f6f8fb;
+    --panel: #ffffff;
+    --panel-solid: #ffffff;
+    --edge: #e6eef7;
+    --edge-soft: #eef4fa;
+    --primary: #1467d6;
+    --primary-ink: #ffffff;
+    --accent: #1f7fc9;
+    --star: #e8a516;
+    --glow-strong: transparent;
+    --heading: #12263c;
+    --text: #33506e;
+    --dim: #6a819a;
+    --faint: #90a4bb;
+    --ghost-brd: rgba(20, 103, 214, 0.35);
+    --ghost-ink: #1a63c4;
+    --ghost-bg-hover: rgba(20, 103, 214, 0.06);
+    --card-shadow: 0 16px 40px rgba(29, 50, 71, 0.08);
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --motion-fast: 140ms;
+    --motion-base: 240ms;
+    --motion-slow: 320ms;
+    --motion-ease: cubic-bezier(0.33, 1, 0.68, 1);
+    /* заливка пилюли и панелей гостя — от --primary, как ghost-токены продукта */
+    --pill-bg: rgba(20, 103, 214, 0.08);
+  }
+  :root[data-theme='dark'] {
+    --bg: #060b14;
+    --panel: rgba(10, 21, 38, 0.78);
+    --panel-solid: #091322;
+    --edge: rgba(77, 159, 255, 0.22);
+    --edge-soft: rgba(77, 159, 255, 0.14);
+    --primary: #1467d6;
+    --primary-ink: #ffffff;
+    --accent: #3fd9ff;
+    --star: #ffc93d;
+    --glow-strong: #1fa8c9;
+    --heading: #eef6ff;
+    --text: #dce9f7;
+    --dim: #8299b1;
+    --faint: #6d84a0;
+    --ghost-brd: rgba(63, 217, 255, 0.45);
+    --ghost-ink: #a8e2ff;
+    --ghost-bg-hover: rgba(63, 217, 255, 0.08);
+    --card-shadow: 0 0 0 1px rgba(63, 217, 255, 0.06), 0 24px 60px rgba(2, 8, 20, 0.6);
+    --pill-bg: rgba(63, 217, 255, 0.1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root { --motion-fast: 0ms; --motion-base: 0ms; --motion-slow: 0ms; }
+    * { animation: none !important; transition: none !important; }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55;
+    transition: background var(--motion-base), color var(--motion-base);
+  }
+
+  /* ── Панель просмотра (инструмент, не продукт — всегда тёмная, как в каноне) ── */
+  .picker {
+    position: sticky; top: 0; z-index: 1000;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+  }
+  .picker b { margin-right: 4px; font-weight: 600; }
+  .picker .grp { display: flex; gap: 6px; align-items: center; margin-right: 14px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
+    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef;
+    transition: all var(--motion-fast);
+  }
+  .picker button:hover { border-color: #3fd9ff; color: #fff; }
+  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker .hint { color: #8fa9c0; margin-left: auto; font-size: 11px; }
+
+  /* ── Каркас страницы ──────────────────────────────────────────────────────── */
+  main { max-width: 74rem; margin: 0 auto; padding: 1.6rem 1rem 5rem; }
+  body[data-width='1024'] main { max-width: 90rem; }
+  h1 { font-size: clamp(1.3rem, 3.4vw, 1.85rem); color: var(--heading); margin: 0 0 .35rem; }
+  .lede { color: var(--dim); max-width: 52rem; margin: 0 0 .3rem; }
+  .stamp { color: var(--faint); font-size: .85rem; margin: 0 0 1.6rem; }
+  .stamp b { color: var(--dim); }
+  h2 {
+    font-size: 1.18rem; color: var(--heading);
+    margin: 2.6rem 0 .35rem; padding-top: 1.5rem; border-top: 1px solid var(--edge);
+  }
+  section:first-of-type h2 { border-top: 0; padding-top: 0; margin-top: 1rem; }
+  .sub { color: var(--dim); font-size: .92rem; max-width: 52rem; margin: 0 0 1.2rem; }
+  .sub b { color: var(--text); }
+  .anchor-q { border-left: 3px solid var(--ghost-brd); padding: .15rem 0 .15rem .8rem;
+              color: var(--dim); font-style: italic; max-width: 48rem; margin: .5rem 0 .9rem; }
+
+  .variants { display: grid; gap: 1.2rem; grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr)); }
+  body[data-width='1024'] .variants { grid-template-columns: 1fr; max-width: 68rem; }
+  @media (max-width: 430px) { .variants { grid-template-columns: 1fr; } }
+
+  .variant { min-width: 0; animation: rise var(--motion-slow) var(--motion-ease) both; }
+  .variant:nth-child(2) { animation-delay: 60ms; }
+  .variant:nth-child(3) { animation-delay: 120ms; }
+  .variant:nth-child(4) { animation-delay: 180ms; }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+  .tag {
+    display: inline-block; font-size: .74rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: .1rem;
+  }
+  .char { font-size: .88rem; color: var(--dim); margin: 0 0 .7rem; max-width: 40rem; }
+
+  /* ── Рамка экрана продукта ────────────────────────────────────────────────── */
+  .frame { width: 390px; max-width: 100%; margin: 0; }
+  body[data-width='1024'] .frame { width: 100%; max-width: 1024px; }
+  .device {
+    display: flex; flex-direction: column; overflow: hidden; position: relative;
+    min-height: 660px; border: 1px solid var(--edge); border-radius: 20px;
+    background: var(--bg); box-shadow: var(--card-shadow);
+    transition: background var(--motion-base), border-color var(--motion-base);
+  }
+  body[data-width='1024'] .device { flex-direction: row; min-height: 580px; }
+
+  /* Рельс навигации (десктоп ≥1024 — канон V2 «Рабочий стол»); точки — схема */
+  .rail { display: none; }
+  body[data-width='1024'] .rail {
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    width: 78px; padding: 18px 0; border-right: 1px solid var(--edge);
+    background: var(--panel-solid); flex: none;
+  }
+  .rail .nlogo { color: var(--primary); width: 30px; height: 30px; margin-bottom: 6px; }
+  :root[data-theme='dark'] .rail .nlogo { color: var(--accent); }
+  .rail .it { display: flex; flex-direction: column; align-items: center; gap: 4px;
+              font-size: 9px; color: var(--faint); }
+  .rail .it i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); opacity: .5; }
+  .rail .it.on { color: var(--primary); font-weight: 600; }
+  .rail .it.on i { background: var(--primary); opacity: 1; }
+  :root[data-theme='dark'] .rail .it.on { color: var(--accent); }
+  :root[data-theme='dark'] .rail .it.on i { background: var(--accent); }
+
+  .scr { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .scr-pad { flex: 1; display: flex; flex-direction: column; padding: 18px 14px 16px; min-height: 0; }
+  body[data-width='1024'] .scr-pad { padding: 26px 24px; }
+  .scr-inner { width: 100%; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  body[data-width='1024'] .scr-inner { max-width: 560px; margin: 0 auto; }
+
+  .scr-h { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .scr-h b { font-size: 21px; font-weight: 800; color: var(--heading); letter-spacing: -.01em; }
+
+  /* Вводная подсказка экрана «Связей» — канон 1.x, показана как в продукте */
+  .intro1x { font-size: 12px; color: var(--dim); line-height: 1.5; margin-bottom: 12px; }
+
+  /* Нижняя навигация (мобильный, 390) — подписи настоящие, значки — схема-точки */
+  .bnav {
+    margin-top: auto; display: flex; border-top: 1px solid var(--edge);
+    background: var(--panel-solid); padding: 8px 4px 10px; flex: none;
+  }
+  body[data-width='1024'] .bnav { display: none; }
+  .bnav span { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+               font-size: 10px; color: var(--faint); }
+  .bnav span i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); opacity: .5; }
+  .bnav span.on { color: var(--primary); font-weight: 600; }
+  .bnav span.on i { background: var(--primary); opacity: 1; }
+  :root[data-theme='dark'] .bnav span.on { color: var(--accent); }
+  :root[data-theme='dark'] .bnav span.on i { background: var(--accent); }
+
+  /* ── Карточка связи — копия боевой вёрстки экрана «Связи» ─────────────────── */
+  .rcard {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    padding: 14px; margin-bottom: 10px;
+    transition: border-color var(--motion-fast) ease, transform var(--motion-fast) ease;
+  }
+  @media (hover: hover) {
+    .rcard:hover { border-color: color-mix(in srgb, var(--primary) 30%, var(--edge)); transform: translateY(-1px); }
+  }
+  .rhead { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .ava {
+    flex: none; width: 46px; height: 46px; border-radius: 50%;
+    display: grid; place-items: center; font-weight: 700; font-size: 17px;
+    background: var(--edge-soft); color: var(--heading);
+  }
+  .ava svg { width: 24px; height: 24px; color: var(--dim); }
+  .rname { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .rname b { font-size: 16px; color: var(--heading); }
+  .rname b.noname { color: var(--dim); font-weight: 600; }
+
+  .trio { display: flex; gap: 8px; margin-top: 10px; }
+  .cell { flex: 1; text-align: center; }
+  .cell small { display: block; font-size: 10.5px; color: var(--dim); margin-bottom: 2px; }
+  .cell b { display: block; font-size: 16px; color: var(--heading); }
+  .mini { display: block; height: 4px; border-radius: 2px; background: var(--edge-soft);
+          position: relative; margin-top: 4px; overflow: hidden; }
+  .mini i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
+  .lv1 b { color: var(--faint); }
+  .lv1 .mini i { background: color-mix(in srgb, var(--faint) 55%, transparent); }
+  .lv2 b { color: var(--primary); }
+  .lv2 .mini i { background: linear-gradient(90deg, var(--primary), #3f8fe0); }
+  .lv3 b { color: #1298bd; text-shadow: 0 0 14px color-mix(in srgb, var(--glow-strong) 45%, transparent); }
+  .lv3 .mini i { background: linear-gradient(90deg, var(--primary), #1fa8c9);
+                 box-shadow: 0 0 8px color-mix(in srgb, var(--glow-strong) 55%, transparent); }
+
+  /* ── Пилюли ───────────────────────────────────────────────────────────────── */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10.5px; font-weight: 600; letter-spacing: .02em; line-height: 1;
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+  }
+  /* исполнение 1 «заливка» */
+  .pill.fill { background: var(--pill-bg); color: var(--ghost-ink); }
+  /* исполнение 2 «пунктирный контур» — метафора несохранённого профиля живёт в вёрстке */
+  .pill.dash { border: 1px dashed var(--ghost-brd); color: var(--ghost-ink); background: transparent; }
+  /* исполнение 3 «точка» */
+  .pill.dot { color: var(--dim); background: transparent; padding-left: 0; }
+  .pill.dot::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--primary); }
+  :root[data-theme='dark'] .pill.dot::before { background: var(--accent); }
+  /* исполнение 4 «с подсказкой» */
+  .pill.ask { background: var(--pill-bg); color: var(--ghost-ink); cursor: pointer; }
+  .pill .ih { display: inline-flex; }
+  .pill .ih svg { width: 11px; height: 11px; }
+  /* пилюля системного персонажа (№010 Р6) — честная, тонкий сплошной контур */
+  .pill.sys { border: 1px solid var(--ghost-brd); color: var(--ghost-ink); background: transparent; font-weight: 500; }
+  /* пилюля гостя в шапке экрана (кульминация V3) */
+  .pill.self { border: 1px solid var(--ghost-brd); background: var(--pill-bg); color: var(--ghost-ink);
+               font-size: 11.5px; padding: 4px 10px; }
+
+  .hintbox {
+    margin-top: 9px; padding: 9px 12px; border-radius: 10px;
+    background: var(--edge-soft); color: var(--text); font-size: 12.5px; line-height: 1.5;
+  }
+
+  /* ── Кнопки продукта ──────────────────────────────────────────────────────── */
+  .btn {
+    display: block; width: 100%; text-align: center; border: 0; cursor: pointer;
+    font: inherit; font-weight: 600; font-size: 15px;
+    padding: 12px 16px; border-radius: 12px;
+    background: var(--primary); color: var(--primary-ink);
+    box-shadow: 0 8px 22px rgba(20, 103, 214, .22);
+    transition: filter var(--motion-fast), transform var(--motion-fast);
+  }
+  @media (hover: hover) { .btn:hover { filter: brightness(1.07); transform: translateY(-1px); } }
+  .btn.ghost {
+    background: transparent; color: var(--ghost-ink);
+    border: 1px solid var(--ghost-brd); box-shadow: none;
+  }
+  @media (hover: hover) { .btn.ghost:hover { background: var(--ghost-bg-hover); filter: none; } }
+  .btn.slim { width: auto; padding: 8px 14px; font-size: 13px; box-shadow: none; }
+  .linkish { background: none; border: 0; cursor: pointer; font: inherit; font-size: 13.5px;
+             color: var(--dim); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* ── Секция A: кульминация ────────────────────────────────────────────────── */
+  .gpanel { /* V1 — панель под шапкой */
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--ghost-brd); background: var(--pill-bg);
+    border-radius: 12px; padding: 10px 12px; margin-bottom: 12px;
+  }
+  .gpanel p { flex: 1; font-size: 12px; line-height: 1.45; color: var(--text); }
+  .gpanel .btn { flex: none; }
+
+  .gfirst { border: 1px solid var(--ghost-brd); } /* V2 — карточка-первенец */
+  .gfirst h3 { font-size: 15.5px; color: var(--heading); margin-bottom: 6px; }
+  .gfirst p { font-size: 13px; line-height: 1.55; margin-bottom: 12px; }
+  .gfirst .later { text-align: center; margin-top: 8px; }
+
+  .thresh { /* V4 — порог */
+    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; padding: 8px 10px 24px;
+  }
+  .thresh .nbig { width: 58px; height: 58px; color: var(--primary); margin-bottom: 18px;
+                  animation: floaty 5s ease-in-out infinite; }
+  :root[data-theme='dark'] .thresh .nbig { color: var(--accent);
+    filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 45%, transparent)); }
+  @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .thresh h3 { font-size: 20px; line-height: 1.25; color: var(--heading); margin-bottom: 10px; max-width: 30rem; }
+  .thresh p { font-size: 13.5px; line-height: 1.6; max-width: 30rem; margin-bottom: 18px; }
+  .thresh .btn { max-width: 300px; }
+  .thresh .linkish { margin-top: 12px; }
+
+  /* ── Секция C: «сессия истекла» ───────────────────────────────────────────── */
+  .exwrap { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .excard {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    box-shadow: var(--card-shadow); padding: 22px 18px; text-align: center;
+  }
+  .excard .nmk { width: 40px; height: 40px; color: var(--faint); margin: 0 auto 14px; display: block; }
+  .excard h3 { font-size: 19px; color: var(--heading); margin-bottom: 10px; }
+  .excard p { font-size: 13.5px; line-height: 1.6; margin-bottom: 16px; }
+  .excard .btn + .btn { margin-top: 10px; }
+
+  .fadeart { display: block; width: 100%; max-width: 300px; margin: 0 auto 6px; }
+  .fadeart .ghostnode { animation: breathe 4.5s ease-in-out infinite; transform-origin: center; }
+  @keyframes breathe { 0%, 100% { opacity: .55; } 50% { opacity: .12; } }
+
+  .steps { text-align: left; margin: 0 auto 16px; max-width: 24rem; }
+  .step { display: flex; gap: 12px; align-items: flex-start; position: relative; padding-bottom: 14px; }
+  .step:last-child { padding-bottom: 0; }
+  .step::before {
+    content: ''; position: absolute; left: 5px; top: 16px; bottom: 0; width: 2px;
+    background: var(--edge); border-radius: 1px;
+  }
+  .step:last-child::before { display: none; }
+  .step i {
+    flex: none; width: 12px; height: 12px; border-radius: 50%; margin-top: 4px;
+    background: var(--edge); border: 2px solid var(--faint); position: relative; z-index: 1;
+  }
+  .step.now i { background: var(--primary); border-color: var(--primary); }
+  :root[data-theme='dark'] .step.now i { background: var(--accent); border-color: var(--accent); }
+  .step small { display: block; font-size: 11px; color: var(--faint); letter-spacing: .04em; text-transform: uppercase; }
+  .step span { font-size: 13px; color: var(--text); line-height: 1.45; }
+  .step b { color: var(--heading); }
+
+  .doors { display: grid; gap: 10px; grid-template-columns: 1fr; margin-top: 14px; }
+  body[data-width='1024'] .doors { grid-template-columns: 1fr 1fr; }
+  .door {
+    display: block; text-align: center; cursor: pointer; font: inherit;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    padding: 20px 14px; transition: border-color var(--motion-fast), transform var(--motion-fast);
+  }
+  @media (hover: hover) {
+    .door:hover { border-color: color-mix(in srgb, var(--primary) 40%, var(--edge)); transform: translateY(-2px); }
+  }
+  .door b { display: block; font-size: 16px; color: var(--heading); margin-bottom: 5px; }
+  .door.main b { color: var(--primary); }
+  :root[data-theme='dark'] .door.main b { color: var(--accent); }
+  .door span { font-size: 12px; color: var(--dim); line-height: 1.45; }
+  .exfact { text-align: center; font-size: 13px; color: var(--text); max-width: 26rem; margin: 0 auto; }
+
+  /* ── Секция D: «Этот человек больше не в Пространстве» ────────────────────── */
+  .pill.gone { background: var(--edge-soft); color: var(--dim); }
+  .gonecard .ava, .gonecard .rname b { opacity: .55; }
+  .hideline { text-align: right; margin-top: 8px; }
+  .tracerow {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 12px;
+    padding: 10px 12px; margin-bottom: 10px;
+    font-size: 12.5px; color: var(--dim); line-height: 1.45;
+  }
+  .tracerow .nsm { flex: none; width: 18px; height: 18px; color: var(--faint); }
+  .tracerow p { flex: 1; }
+  .tracerow .x {
+    flex: none; background: none; border: 0; cursor: pointer; font: inherit;
+    color: var(--faint); font-size: 17px; line-height: 1; padding: 2px 4px;
+    transition: color var(--motion-fast);
+  }
+  @media (hover: hover) { .tracerow .x:hover { color: var(--dim); } }
+  .ghostcard {
+    border: 1px dashed var(--ghost-brd); border-radius: 14px; background: transparent;
+    padding: 18px 14px; margin-bottom: 10px; text-align: center;
+  }
+  .ghostcard .ava { margin: 0 auto 10px; background: transparent; border: 1px dashed var(--edge); }
+  .ghostcard b { display: block; font-size: 14.5px; font-weight: 600; color: var(--dim); margin-bottom: 4px; }
+  .ghostcard p { font-size: 12.5px; color: var(--faint); line-height: 1.5; max-width: 22rem; margin: 0 auto; }
+  .topnote {
+    display: flex; align-items: baseline; gap: 10px;
+    font-size: 12.5px; color: var(--dim); line-height: 1.5;
+    padding: 0 2px; margin-bottom: 12px;
+  }
+  .topnote p { flex: 1; }
+  .topnote .linkish { flex: none; font-size: 12.5px; }
+
+  footer { border-top: 1px solid var(--edge); margin-top: 3rem; padding-top: 1.2rem;
+           color: var(--faint); font-size: .85rem; max-width: 74rem; }
+</style>
+</head>
+<body data-width="390">
+
+<!-- Знак N-сети: геометрия static/favicon.svg (канон 1.x, V3 «Диагональ»); одноцветная
+     заливка = Ч/Б-инвариант знака. Плашка снята — как у Brand.svelte (канон bugs/150). -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="nmark" viewBox="0 0 96 96">
+    <g stroke="currentColor" stroke-width="6.7" fill="none">
+      <line x1="36.5" y1="29" x2="30" y2="66"/>
+      <line x1="36.5" y1="29" x2="59.5" y2="66"/>
+      <line x1="59.5" y1="66" x2="66" y2="29"/>
+    </g>
+    <g fill="currentColor">
+      <circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/>
+      <circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/>
+    </g>
+  </symbol>
+  <symbol id="iinfo" viewBox="0 0 16 16">
+    <circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="8" cy="5.2" r="1" fill="currentColor"/>
+    <rect x="7.2" y="7.2" width="1.6" height="4.4" rx="0.8" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<div class="picker">
+  <div class="grp"><b>Тема:</b>
+    <button type="button" class="active" data-theme-btn="">Бумага ☀</button>
+    <button type="button" data-theme-btn="dark">Тёмная ☾</button>
+  </div>
+  <div class="grp"><b>Ширина:</b>
+    <button type="button" class="active" data-width-btn="390">390</button>
+    <button type="button" data-width-btn="1024">1024</button>
+  </div>
+  <span class="hint">ЧЕРНОВИК · фаза 5 plans/22 · выбирает владелец</span>
+</div>
+
+<main>
+  <h1>Гость в Пространстве — четыре поверхности, по четыре макета</h1>
+  <p class="lede">Фаза 5 эпика «Гость = человек» (plans/22). Каждый вариант — законченная
+    форма поверхности; варианты стоят рядом, чтобы выбирать глазами. Рекомендаций на странице
+    нет — выбор и правки за владельцем.</p>
+  <p class="stamp"><b>ЧЕРНОВИК</b> · не показан владельцу · 2026-08-21 · числа в карточках
+    иллюстративные (Похожесть = Близость × Общность соблюдена) · навигация схематична —
+    канонические иконки не перерисовываем</p>
+
+  <!-- ═══════════ СЕКЦИЯ A · КУЛЬМИНАЦИЯ ГОСТЯ ═══════════ -->
+  <section id="s1">
+    <h2>A · Кульминация гостя — первый экран «Связей»</h2>
+    <p class="anchor-q">«пользователь … мягко оказывается внутри пространства на Связях, видит
+      там Алису, Макса, Настю» — якорь В3</p>
+    <p class="sub">Гость поставил первые оценки и оказался на «Связях». Алиса, Макс и Настя —
+      системные персонажи из БД с честной пилюлей (№010 Р6). В каждом варианте обязано быть
+      видно предупреждение о сроке: <b>гостевой профиль живёт 7 дней с момента создания</b>
+      (№010 Р3) — сказать это до потери данных, а не после. Варианты отличаются тем,
+      <b>где живёт эта честность</b>.</p>
+
+    <div class="variants">
+
+      <!-- A·V1 «Панель под шапкой» -->
+      <article class="variant">
+        <span class="tag">V1 · Панель под шапкой</span>
+        <p class="char">Срок виден всегда: тонкая панель между шапкой и топом. Экран ничем
+          не перекрыт, топ начинается сразу под ней.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="gpanel">
+              <p>Сейчас Вы гость. Гостевой профиль живёт 7 дней с момента создания —
+                создайте аккаунт, и Ваши оценки и связи останутся с Вами.</p>
+              <button type="button" class="btn slim">Сохранить</button>
+            </div>
+            <p class="intro1x">Пространство NDim периодически выполняет поиски среди всех
+              пользователей системы и находит до 250 наиболее похожих на Вас людей.
+              Найденные люди отображаются здесь.</p>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">А</span>
+                <span class="rname"><b>Алиса</b> <span class="pill sys">системный персонаж</span></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>39%</b><span class="mini"><i style="width:39%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>61%</b><span class="mini"><i style="width:61%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>24%</b><span class="mini"><i style="width:24%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span>
+                <span class="rname"><b>Макс</b> <span class="pill sys">системный персонаж</span></span></div>
+              <div class="trio">
+                <div class="cell lv1"><small>Общность</small><b>29%</b><span class="mini"><i style="width:29%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>52%</b><span class="mini"><i style="width:52%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>15%</b><span class="mini"><i style="width:15%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">Н</span>
+                <span class="rname"><b>Настя</b> <span class="pill sys">системный персонаж</span></span></div>
+              <div class="trio">
+                <div class="cell lv1"><small>Общность</small><b>19%</b><span class="mini"><i style="width:19%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>47%</b><span class="mini"><i style="width:47%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>9%</b><span class="mini"><i style="width:9%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- A·V2 «Карточка-первенец» -->
+      <article class="variant">
+        <span class="tag">V2 · Карточка-первенец</span>
+        <p class="char">Говорит один раз — первой карточкой в ленте, до людей. После
+          создания аккаунта карточка уходит, лента остаётся чистой.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="rcard gfirst">
+              <h3>Сейчас Вы гость</h3>
+              <p>Пространство NDim уже нашло Вам первых людей — они ниже. Всё, что Вы
+                заполнили, живёт 7 дней с момента создания гостевого профиля. Создайте
+                аккаунт — и результаты останутся с Вами.</p>
+              <button type="button" class="btn">Сохранить мои результаты</button>
+              <div class="later"><button type="button" class="linkish">позже</button></div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">А</span>
+                <span class="rname"><b>Алиса</b> <span class="pill sys">системный персонаж</span></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>39%</b><span class="mini"><i style="width:39%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>61%</b><span class="mini"><i style="width:61%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>24%</b><span class="mini"><i style="width:24%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span>
+                <span class="rname"><b>Макс</b> <span class="pill sys">системный персонаж</span></span></div>
+              <div class="trio">
+                <div class="cell lv1"><small>Общность</small><b>29%</b><span class="mini"><i style="width:29%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>52%</b><span class="mini"><i style="width:52%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>15%</b><span class="mini"><i style="width:15%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- A·V3 «Тихая метка» -->
+      <article class="variant">
+        <span class="tag">V3 · Тихая метка</span>
+        <p class="char">Самый тихий: топ живёт сразу, срок — постоянной меткой в шапке
+          экрана, умеющей считать дни. Подсказка раскрывается тапом (показана раскрытой).</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b> <span class="pill self">гость · 7 дней</span></div>
+            <div class="hintbox" style="margin:0 0 12px">Вы гость. Гостевой профиль живёт
+              7 дней с момента создания — счёт дней показан в этой метке. Создать аккаунт
+              можно в любой момент на вкладке «Профиль»: оценки и связи останутся с Вами.</div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">А</span>
+                <span class="rname"><b>Алиса</b> <span class="pill sys">системный персонаж</span></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>39%</b><span class="mini"><i style="width:39%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>61%</b><span class="mini"><i style="width:61%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>24%</b><span class="mini"><i style="width:24%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span>
+                <span class="rname"><b>Макс</b> <span class="pill sys">системный персонаж</span></span></div>
+              <div class="trio">
+                <div class="cell lv1"><small>Общность</small><b>29%</b><span class="mini"><i style="width:29%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>52%</b><span class="mini"><i style="width:52%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>15%</b><span class="mini"><i style="width:15%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">Н</span>
+                <span class="rname"><b>Настя</b> <span class="pill sys">системный персонаж</span></span></div>
+              <div class="trio">
+                <div class="cell lv1"><small>Общность</small><b>19%</b><span class="mini"><i style="width:19%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>47%</b><span class="mini"><i style="width:47%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>9%</b><span class="mini"><i style="width:9%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- A·V4 «Порог» -->
+      <article class="variant">
+        <span class="tag">V4 · Порог</span>
+        <p class="char">Одна торжественная встреча до топа: знак, обещание и срок на одном
+          экране. Дальше продукт чистый — без панелей и врезок.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="thresh">
+              <svg class="nbig"><use href="#nmark"/></svg>
+              <h3>Пространство NDim нашло Вам первых людей</h3>
+              <p>Выше в списке — те, кто похож на Вас больше. Сейчас Вы гость: всё, что Вы
+                заполнили, живёт 7 дней с момента создания гостевого профиля. Создайте
+                аккаунт — и результаты останутся с Вами.</p>
+              <button type="button" class="btn">Показать мои Связи</button>
+              <button type="button" class="linkish">Создать аккаунт</button>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ═══════════ СЕКЦИЯ B · МЕТКА ГОСТЯ ═══════════ -->
+  <section id="s2">
+    <h2>B · Метка гостя в чужом топе</h2>
+    <p class="sub">Решение уже принято владельцем (№010 Р2): гость «в карточках связи
+      <b>мелко в шапке синей пилюлей</b> помечен как <b>аноним</b>» — место, размер и цвет
+      решены. Макеты выбирают только <b>исполнение пилюли</b>. Экран — топ полноценного
+      человека: обычная связь, гость с заполненным именем и гость без имени (кружок — фирменное N,
+      канон bugs/150).</p>
+
+    <div class="variants">
+
+      <!-- B·V1 «Заливка» -->
+      <article class="variant">
+        <span class="tag">V1 · Заливка</span>
+        <p class="char">Самая заметная: залитая светло-синим пилюля, читается с первого
+          взгляда.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span><span class="rname"><b>Мария</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>55%</b><span class="mini"><i style="width:55%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>74%</b><span class="mini"><i style="width:74%"></i></span></div>
+                <div class="cell lv2"><small>Похожесть</small><b>41%</b><span class="mini"><i style="width:41%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">Д</span>
+                <span class="rname"><b>Дмитрий</b> <span class="pill fill">аноним</span></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>45%</b><span class="mini"><i style="width:45%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>60%</b><span class="mini"><i style="width:60%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>27%</b><span class="mini"><i style="width:27%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava"><svg><use href="#nmark"/></svg></span>
+                <span class="rname"><b class="noname">Без имени</b> <span class="pill fill">аноним</span></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>30%</b><span class="mini"><i style="width:30%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>40%</b><span class="mini"><i style="width:40%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>12%</b><span class="mini"><i style="width:12%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- B·V2 «Пунктирный контур» -->
+      <article class="variant">
+        <span class="tag">V2 · Пунктирный контур</span>
+        <p class="char">Тише заливки; пунктирная рамка продолжает утверждённую метафору
+          несохранённого профиля (метафора живёт в вёрстке — в текстах продукта её нет).</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span><span class="rname"><b>Мария</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>55%</b><span class="mini"><i style="width:55%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>74%</b><span class="mini"><i style="width:74%"></i></span></div>
+                <div class="cell lv2"><small>Похожесть</small><b>41%</b><span class="mini"><i style="width:41%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">Д</span>
+                <span class="rname"><b>Дмитрий</b> <span class="pill dash">аноним</span></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>45%</b><span class="mini"><i style="width:45%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>60%</b><span class="mini"><i style="width:60%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>27%</b><span class="mini"><i style="width:27%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava"><svg><use href="#nmark"/></svg></span>
+                <span class="rname"><b class="noname">Без имени</b> <span class="pill dash">аноним</span></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>30%</b><span class="mini"><i style="width:30%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>40%</b><span class="mini"><i style="width:40%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>12%</b><span class="mini"><i style="width:12%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- B·V3 «Точка» -->
+      <article class="variant">
+        <span class="tag">V3 · Точка</span>
+        <p class="char">Самая тихая: синяя точка-индикатор и приглушённое слово — топ
+          почти не меняется, метка видна только тому, кто вгляделся.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span><span class="rname"><b>Мария</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>55%</b><span class="mini"><i style="width:55%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>74%</b><span class="mini"><i style="width:74%"></i></span></div>
+                <div class="cell lv2"><small>Похожесть</small><b>41%</b><span class="mini"><i style="width:41%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">Д</span>
+                <span class="rname"><b>Дмитрий</b> <span class="pill dot">аноним</span></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>45%</b><span class="mini"><i style="width:45%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>60%</b><span class="mini"><i style="width:60%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>27%</b><span class="mini"><i style="width:27%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava"><svg><use href="#nmark"/></svg></span>
+                <span class="rname"><b class="noname">Без имени</b> <span class="pill dot">аноним</span></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>30%</b><span class="mini"><i style="width:30%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>40%</b><span class="mini"><i style="width:40%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>12%</b><span class="mini"><i style="width:12%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- B·V4 «С подсказкой» -->
+      <article class="variant">
+        <span class="tag">V4 · С подсказкой</span>
+        <p class="char">Пилюля отвечает на тап (показана раскрытой): почему «аноним» и что
+          это значит для связи — честность до того, как карточка исчезнет.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span><span class="rname"><b>Мария</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>55%</b><span class="mini"><i style="width:55%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>74%</b><span class="mini"><i style="width:74%"></i></span></div>
+                <div class="cell lv2"><small>Похожесть</small><b>41%</b><span class="mini"><i style="width:41%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">Д</span>
+                <span class="rname"><b>Дмитрий</b>
+                  <span class="pill ask">аноним <span class="ih"><svg><use href="#iinfo"/></svg></span></span>
+                </span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>45%</b><span class="mini"><i style="width:45%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>60%</b><span class="mini"><i style="width:60%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>27%</b><span class="mini"><i style="width:27%"></i></span></div>
+              </div>
+              <p class="hintbox">Этот человек пока гость: аккаунт ещё не создан. Гостевой
+                профиль живёт 7 дней — если аккаунт не появится, связь исчезнет из Вашего
+                списка.</p>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava"><svg><use href="#nmark"/></svg></span>
+                <span class="rname"><b class="noname">Без имени</b>
+                  <span class="pill ask">аноним <span class="ih"><svg><use href="#iinfo"/></svg></span></span>
+                </span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>30%</b><span class="mini"><i style="width:30%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>40%</b><span class="mini"><i style="width:40%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>12%</b><span class="mini"><i style="width:12%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ═══════════ СЕКЦИЯ C · «СЕССИЯ ИСТЕКЛА» ═══════════ -->
+  <section id="s3">
+    <h2>C · Экран «Гостевая сессия истекла»</h2>
+    <p class="sub">Финальная форма взамен временного экрана (профиль, состояние «истекла» —
+      помечено в коде временным). Факты во всех вариантах одни и те же: <b>срок 7 дней с
+      момента создания вышел, данные удалены</b>, восстановление не обещаем; дальше — две
+      двери: «Начать заново» (новым гостем) и «Войти в аккаунт». Варианты отличаются тем,
+      <b>как сказана эта правда</b>.</p>
+
+    <div class="variants">
+
+      <!-- C·V1 «Спокойная карточка» -->
+      <article class="variant">
+        <span class="tag">V1 · Спокойная карточка</span>
+        <p class="char">Прямой разговор одной карточкой: текст несёт всё, форма не
+          отвлекает. Ближе всех к временному экрану — но собранная и со знаком.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it on"><i></i>Профиль</span><span class="it"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="exwrap">
+              <div class="excard">
+                <svg class="nmk"><use href="#nmark"/></svg>
+                <h3>Гостевая сессия истекла</h3>
+                <p>Гостевой профиль живёт 7 дней с момента создания. Срок этой сессии вышел,
+                  и её данные удалены. Вы можете осмотреться заново новым гостем — или войти
+                  в свой аккаунт.</p>
+                <button type="button" class="btn">Начать заново</button>
+                <button type="button" class="btn ghost">Войти в аккаунт</button>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span class="on"><i></i>Профиль</span><span><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- C·V2 «Растворение» -->
+      <article class="variant">
+        <span class="tag">V2 · Растворение</span>
+        <p class="char">Образ вместо длинного текста: Пространство продолжает жить,
+          гостевая точка мягко погасла. Короткая строка правды и две двери.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it on"><i></i>Профиль</span><span class="it"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="exwrap">
+              <div class="excard">
+                <!-- Живое поле узлов; гостевой узел (пунктирный) дышит и гаснет -->
+                <svg class="fadeart" viewBox="0 0 300 130" aria-hidden="true">
+                  <g stroke="var(--faint)" stroke-opacity=".35" fill="none" stroke-width="1.2">
+                    <line x1="40" y1="95" x2="105" y2="38"/><line x1="105" y1="38" x2="185" y2="72"/>
+                    <line x1="185" y1="72" x2="258" y2="30"/><line x1="105" y1="38" x2="258" y2="30"/>
+                    <line x1="40" y1="95" x2="185" y2="72"/>
+                  </g>
+                  <g fill="var(--primary)">
+                    <circle cx="40" cy="95" r="7"/><circle cx="105" cy="38" r="7"/>
+                    <circle cx="185" cy="72" r="7"/><circle cx="258" cy="30" r="7"/>
+                  </g>
+                  <g class="ghostnode">
+                    <line x1="185" y1="72" x2="150" y2="112" stroke="var(--faint)" stroke-width="1.2" stroke-dasharray="4 4"/>
+                    <circle cx="150" cy="112" r="7" fill="none" stroke="var(--faint)" stroke-width="2" stroke-dasharray="4 4"/>
+                  </g>
+                </svg>
+                <h3>Срок гостевого профиля вышел</h3>
+                <p>Гость живёт в Пространстве 7 дней с момента создания. Данные этой сессии
+                  удалены. Начните заново — или войдите в свой аккаунт, если он у Вас есть.</p>
+                <button type="button" class="btn">Начать заново</button>
+                <button type="button" class="btn ghost">Войти в аккаунт</button>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span class="on"><i></i>Профиль</span><span><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- C·V3 «Хронология» -->
+      <article class="variant">
+        <span class="tag">V3 · Хронология</span>
+        <p class="char">Механика по шагам: видно, что произошло и когда, — ноль
+          неожиданности. Плюс честная строка о том, что у аккаунта такого срока нет.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it on"><i></i>Профиль</span><span class="it"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="exwrap">
+              <div class="excard">
+                <h3>Гостевая сессия истекла</h3>
+                <div class="steps">
+                  <div class="step"><i></i><div><small>1-й день</small>
+                    <span>Вы вошли в Пространство NDim гостем.</span></div></div>
+                  <div class="step"><i></i><div><small>7-й день</small>
+                    <span>Срок гостевого профиля: <b>7 дней с момента создания</b>.</span></div></div>
+                  <div class="step now"><i></i><div><small>Сегодня</small>
+                    <span>Срок вышел — данные этой сессии <b>удалены</b>.</span></div></div>
+                </div>
+                <p>У аккаунта такого срока нет: всё, что Вы заполните, остаётся с Вами.</p>
+                <button type="button" class="btn">Начать заново</button>
+                <button type="button" class="btn ghost">Войти в аккаунт</button>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span class="on"><i></i>Профиль</span><span><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- C·V4 «Две двери» -->
+      <article class="variant">
+        <span class="tag">V4 · Две двери</span>
+        <p class="char">Минимум чтения: одна строка правды и выбор из двух равных дверей —
+          действие главнее объяснения.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it on"><i></i>Профиль</span><span class="it"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="exwrap">
+              <svg class="nmk" style="width:36px;height:36px;color:var(--faint);margin:0 auto 14px;display:block"><use href="#nmark"/></svg>
+              <p class="exfact">Гостевая сессия истекла: 7 дней с момента создания прошли,
+                и данные удалены.</p>
+              <div class="doors">
+                <button type="button" class="door main"><b>Начать заново</b>
+                  <span>Осмотреться новым гостем — с чистого листа</span></button>
+                <button type="button" class="door"><b>Войти в аккаунт</b>
+                  <span>Если Вы уже создавали аккаунт в Пространстве NDim</span></button>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span class="on"><i></i>Профиль</span><span><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ═══════════ СЕКЦИЯ D · «ЭТОТ ЧЕЛОВЕК БОЛЬШЕ НЕ В ПРОСТРАНСТВЕ» ═══════════ -->
+  <section id="s4">
+    <h2>D · «Этот человек больше не в Пространстве»</h2>
+    <p class="sub">Связь исчезла: гостевой профиль истёк по сроку или человек удалил аккаунт.
+      Все следы ушедшего вычищает сервер (фаза 4 закрыта) — живому человеку остаётся только
+      <b>честное объяснение на месте карточки</b>; возврат человека не обещаем ни в одном
+      варианте. Общий счёт «Всего людей» дышит вместе с гостями (№042 В1) — уход не прячем.
+      Имя в V1 — из последнего снимка списка на устройстве человека; варианты отличаются тем,
+      <b>сколько места и памяти отдано ушедшему</b>.</p>
+
+    <div class="variants">
+
+      <!-- D·V1 «Прощание по имени» -->
+      <article class="variant">
+        <span class="tag">V1 · Прощание по имени</span>
+        <p class="char">Карточка остаётся на своём месте один визит: имя ещё названо,
+          метрик уже нет. После «Скрыть» уходит из списка.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span><span class="rname"><b>Мария</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>55%</b><span class="mini"><i style="width:55%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>74%</b><span class="mini"><i style="width:74%"></i></span></div>
+                <div class="cell lv2"><small>Похожесть</small><b>41%</b><span class="mini"><i style="width:41%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard gonecard">
+              <div class="rhead"><span class="ava">Д</span>
+                <span class="rname"><b>Дмитрий</b> <span class="pill gone">больше не в Пространстве</span></span></div>
+              <p class="hintbox">Данные этого человека удалены, и связь ушла из Вашего
+                списка. Пространство продолжает искать похожих на Вас людей.</p>
+              <div class="hideline"><button type="button" class="linkish">Скрыть</button></div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">И</span><span class="rname"><b>Игорь</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>35%</b><span class="mini"><i style="width:35%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>52%</b><span class="mini"><i style="width:52%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>18%</b><span class="mini"><i style="width:18%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- D·V2 «Строка-след» -->
+      <article class="variant">
+        <span class="tag">V2 · Строка-след</span>
+        <p class="char">Без имени и без высоты карточки: тонкая строка на месте связи,
+          закрывается крестиком.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span><span class="rname"><b>Мария</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>55%</b><span class="mini"><i style="width:55%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>74%</b><span class="mini"><i style="width:74%"></i></span></div>
+                <div class="cell lv2"><small>Похожесть</small><b>41%</b><span class="mini"><i style="width:41%"></i></span></div>
+              </div>
+            </div>
+            <div class="tracerow">
+              <svg class="nsm"><use href="#nmark"/></svg>
+              <p>Один человек покинул Пространство — связь удалена из Вашего списка.</p>
+              <button type="button" class="x" aria-label="Скрыть">×</button>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">И</span><span class="rname"><b>Игорь</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>35%</b><span class="mini"><i style="width:35%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>52%</b><span class="mini"><i style="width:52%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>18%</b><span class="mini"><i style="width:18%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- D·V3 «Пустой контур» -->
+      <article class="variant">
+        <span class="tag">V3 · Пустой контур</span>
+        <p class="char">Потеря видна буквально: пунктирный контур на месте карточки, имя
+          не называется. Уйдёт сам при следующем поиске.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span><span class="rname"><b>Мария</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>55%</b><span class="mini"><i style="width:55%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>74%</b><span class="mini"><i style="width:74%"></i></span></div>
+                <div class="cell lv2"><small>Похожесть</small><b>41%</b><span class="mini"><i style="width:41%"></i></span></div>
+              </div>
+            </div>
+            <div class="ghostcard">
+              <span class="ava"><svg><use href="#nmark"/></svg></span>
+              <b>Этот человек больше не в Пространстве</b>
+              <p>Его данные удалены. Список обновится при следующем поиске.</p>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">И</span><span class="rname"><b>Игорь</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>35%</b><span class="mini"><i style="width:35%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>52%</b><span class="mini"><i style="width:52%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>18%</b><span class="mini"><i style="width:18%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+      <!-- D·V4 «Сноска над списком» -->
+      <article class="variant">
+        <span class="tag">V4 · Сноска над списком</span>
+        <p class="char">Самый тихий: место связи не занимает — карточки уже нет, а над
+          топом один раз сказана строка правды.</p>
+        <div class="frame"><div class="device">
+          <div class="rail" aria-hidden="true">
+            <svg class="nlogo"><use href="#nmark"/></svg>
+            <span class="it"><i></i>Профиль</span><span class="it on"><i></i>Связи</span>
+            <span class="it"><i></i>Пространство</span><span class="it"><i></i>Измерения</span>
+            <span class="it"><i></i>Меню</span>
+          </div>
+          <div class="scr"><div class="scr-pad"><div class="scr-inner">
+            <div class="scr-h"><b>Связи</b></div>
+            <div class="topnote">
+              <p>С Вашего прошлого визита один человек покинул Пространство — список
+                Связей обновился.</p>
+              <button type="button" class="linkish">Понятно</button>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">М</span><span class="rname"><b>Мария</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>55%</b><span class="mini"><i style="width:55%"></i></span></div>
+                <div class="cell lv3"><small>Близость</small><b>74%</b><span class="mini"><i style="width:74%"></i></span></div>
+                <div class="cell lv2"><small>Похожесть</small><b>41%</b><span class="mini"><i style="width:41%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">И</span><span class="rname"><b>Игорь</b></span></div>
+              <div class="trio">
+                <div class="cell lv2"><small>Общность</small><b>35%</b><span class="mini"><i style="width:35%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>52%</b><span class="mini"><i style="width:52%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>18%</b><span class="mini"><i style="width:18%"></i></span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rhead"><span class="ava">А</span><span class="rname"><b>Анна</b></span></div>
+              <div class="trio">
+                <div class="cell lv1"><small>Общность</small><b>26%</b><span class="mini"><i style="width:26%"></i></span></div>
+                <div class="cell lv2"><small>Близость</small><b>43%</b><span class="mini"><i style="width:43%"></i></span></div>
+                <div class="cell lv1"><small>Похожесть</small><b>11%</b><span class="mini"><i style="width:11%"></i></span></div>
+              </div>
+            </div>
+            <div class="bnav" aria-hidden="true">
+              <span><i></i>Профиль</span><span class="on"><i></i>Связи</span>
+              <span><i></i>Пространство</span><span><i></i>Измерения</span><span><i></i>Меню</span>
+            </div>
+          </div></div></div>
+        </div></div>
+      </article>
+
+    </div>
+  </section>
+
+  <footer>
+    ЧЕРНОВИК · не показан владельцу · фаза 5 plans/22 · все четыре поверхности фазы
+    покрыты (A–D) · перед показом: снять кадры съёмщиком и посмотреть их рядом (урок plans/11).
+  </footer>
+</main>
+
+<script>
+  // Тема — как в продукте: атрибут data-theme на <html> («Бумага» = атрибута нет).
+  const themeBtns = document.querySelectorAll('[data-theme-btn]');
+  themeBtns.forEach((btn) => btn.addEventListener('click', () => {
+    const v = btn.getAttribute('data-theme-btn');
+    if (v) document.documentElement.setAttribute('data-theme', v);
+    else document.documentElement.removeAttribute('data-theme');
+    themeBtns.forEach((b) => b.classList.toggle('active', b === btn));
+  }));
+  // Ширина кадров: 390 (мобильный, нижняя навигация) / 1024 (рельс слева — канон десктопа).
+  const widthBtns = document.querySelectorAll('[data-width-btn]');
+  widthBtns.forEach((btn) => btn.addEventListener('click', () => {
+    document.body.setAttribute('data-width', btn.getAttribute('data-width-btn'));
+    widthBtns.forEach((b) => b.classList.toggle('active', b === btn));
+  }));
+</script>
+</body>
+</html>
