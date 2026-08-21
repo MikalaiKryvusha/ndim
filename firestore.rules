@@ -330,6 +330,23 @@ service cloud.firestore {
       return dimFields().concat(['name']);
     }
 
+    /**
+     * Поля, законные ПРИ ПРАВКЕ существующего измерения: канон + легаси `name` + `techTags`.
+     *
+     * 🔴 Асимметрия с созданием намеренна и означает «ТЕГ СТАВИТ РАЗМЕТКА, А НЕ ФОРМА»
+     * (`plans/58` шаг 1). Технический тег одобрения приходит в документ разметкой каталога
+     * (Admin SDK, правил не касается), поэтому НОВАЯ запись нести его не может и не должна:
+     * измерение, заведённое в комнате, ещё никем не судимо. А правка обязана его ПРОНЕСТИ —
+     * комната пишет документ полной заменой, и без этой строки правила отвергли бы всякую
+     * правку размеченного измерения, то есть весь каталог после разметки.
+     *
+     * Почему не расширили `dimFields()` для обоих: граница, открытая шире нужного, потом никем
+     * не сужается. Ровно тем же приёмом здесь терпится легаси `name`.
+     */
+    function dimFieldsOnUpdate() {
+      return dimFieldsWithLegacy().concat(['techTags']);
+    }
+
     /** Название обязано быть на ОБА языка: без него измерение не попадёт в индекс каталога. */
     function titlePresent(data) {
       return data.title is map
@@ -364,6 +381,7 @@ service cloud.firestore {
     function optionalShapeOk(data) {
       return data.get('year', '') is string
              && data.get('tags', []) is list
+             && data.get('techTags', []) is list
              && data.get('description', {}) is map
              && data.get('type', {}) is map
              && data.get('author', {}) is map;
@@ -382,7 +400,7 @@ service cloud.firestore {
                     && optionalShapeOk(request.resource.data);
 
       allow update: if isAdmin()
-                    && request.resource.data.keys().hasOnly(dimFieldsWithLegacy())
+                    && request.resource.data.keys().hasOnly(dimFieldsOnUpdate())
                     && titlePresent(request.resource.data)
                     && ratingsInRange(request.resource.data)
                     && optionalShapeOk(request.resource.data);
