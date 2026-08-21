@@ -124,6 +124,28 @@ export interface PreservedFields {
   readonly stars: number;
   readonly rates: number;
   readonly rating: number;
+  /**
+   * 🔴 Технические теги (`plans/58`). Их ставит РАЗМЕТКА, а не форма правки: человек в комнате
+   * их не видит и не вводит. Значит документ, собранный из черновика, о них не знает — и полная
+   * запись стёрла бы тег одобрения молча, без ошибки и следа.
+   */
+  readonly techTags?: readonly string[];
+}
+
+/**
+ * ЧТО ПЕРЕЖИВАЕТ ПРАВКУ — собрано из существующего документа В ОДНОМ МЕСТЕ.
+ *
+ * Раньше этот набор жил россыпью в комнате измерений, и цена такого расположения уже известна:
+ * поле, о котором забыли, исчезает при первой же правке молча. Здесь оно рядом со своим
+ * объяснением и, главное, достаётся юнитом без базы и браузера.
+ */
+export function preservedFrom(dim: Partial<DimDoc>): PreservedFields {
+  return {
+    stars: dim.stars ?? 0,
+    rates: dim.rates ?? 0,
+    rating: dim.rating ?? 0,
+    ...(dim.techTags === undefined ? {} : { techTags: dim.techTags }),
+  };
 }
 
 /**
@@ -170,6 +192,9 @@ export function draftToDoc(
     stars: previous?.stars ?? 0,
     rates: previous?.rates ?? 0,
     rating: previous?.rating ?? 0,
+    // Технический тег переносится ТОЛЬКО если он есть: у новой записи его нет и быть не должно —
+    // тег одобрения ставит разметка каталога, а не форма (`plans/58` шаг 1).
+    ...(previous?.techTags === undefined ? {} : { techTags: previous.techTags }),
   };
 }
 

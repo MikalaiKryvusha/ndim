@@ -14,6 +14,7 @@ import {
   draftToDoc,
   joinTags,
   parseTags,
+  preservedFrom,
   validateDraft,
   type DimDraft,
 } from './dim-editor.ts';
@@ -166,5 +167,42 @@ describe('Круговой ход документ → черновик → до
     assert.equal(draft.year, '');
     assert.equal(draft.tags, '');
     assert.equal(draft.authorRu, '');
+  });
+});
+
+/*
+ * ТЕХНИЧЕСКИЕ ТЕГИ ПЕРЕЖИВАЮТ ПРАВКУ (`plans/58` шаг 1).
+ *
+ * Комната пишет измерение ПОЛНОЙ заменой документа, а тег одобрения ставит разметка каталога —
+ * человек в форме его не видит и не вводит. Значит без явного переноса первая же правка стёрла бы
+ * тег МОЛЧА: ни ошибки, ни следа, и правила такую потерю не увидят — поля просто не стало.
+ * Это тот же класс, что и обнуление сводки оценок выше, и ловится он ровно так же — здесь.
+ */
+describe('Технические теги переживают правку', () => {
+  test('правка сохраняет технические теги', () => {
+    const doc = draftToDoc(filled, preservedFrom({ stars: 84, rates: 12, rating: 7, techTags: ['migrated'] }));
+    assert.deepEqual(doc.techTags, ['migrated']);
+  });
+
+  test('у записи без тега поле не появляется — пустого облака в документе не заводим', () => {
+    const doc = draftToDoc(filled, preservedFrom({ stars: 0, rates: 0, rating: 0 }));
+    assert.equal('techTags' in doc, false);
+  });
+
+  test('набор «что переживает правку» собирается из документа целиком', () => {
+    assert.deepEqual(preservedFrom({ stars: 84, rates: 12, rating: 7, techTags: ['needs-rewrite'] }), {
+      stars: 84,
+      rates: 12,
+      rating: 7,
+      techTags: ['needs-rewrite'],
+    });
+  });
+
+  test('круговой ход правки тег не теряет', () => {
+    const preserved = preservedFrom({ stars: 84, rates: 12, rating: 7, techTags: ['unchecked'] });
+    const doc = draftToDoc(filled, preserved);
+    const again = draftToDoc(docToDraft(doc), preservedFrom(doc));
+    assert.deepEqual(again, doc);
+    assert.deepEqual(again.techTags, ['unchecked']);
   });
 });

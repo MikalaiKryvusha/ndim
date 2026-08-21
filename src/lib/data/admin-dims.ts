@@ -35,7 +35,7 @@ import {
 import { db } from '../firebase.ts';
 import { parseDimsIndex } from '../model/feed.ts';
 import { DIMS_INDEX_ID, type DimDoc } from '../model/schema.ts';
-import { draftToDoc, type DimDraft, type PreservedFields } from '../model/dim-editor.ts';
+import { draftToDoc, preservedFrom, type DimDraft, type PreservedFields } from '../model/dim-editor.ts';
 
 /** Строка списка комнаты. Ровно то, что есть в индексе, — большего для списка не нужно. */
 export interface AdminDimRow {
@@ -202,7 +202,7 @@ export async function createDim(draft: DimDraft): Promise<string> {
 /**
  * Правит измерение.
  *
- * 🔴 ТРИ ВЕЩИ ПЕРЕЖИВАЮТ ПРАВКУ, и каждая по своей причине:
+ * 🔴 ЧЕТЫРЕ ВЕЩИ ПЕРЕЖИВАЮТ ПРАВКУ, и каждая по своей причине:
  *   · **сводка оценок** (`stars`/`rates`/`rating`) — это труд людей, ставивших звёзды, и её
  *     считает сервер синхронизации. Правила её обнуления НЕ поймают: ноль лежит внутри границ
  *     шкалы (`dim-editor.test.ts` стережёт этот класс);
@@ -210,17 +210,20 @@ export async function createDim(draft: DimDraft): Promise<string> {
  *     столкнуть дельту индекса;
  *   · **`name`** — легаси 1.x, лежащее у всех 5111 записей. Правила терпят его на правке
  *     намеренно: снести его молча здесь значило бы сделать прополку (шаг 7 `plans/44`) побочным
- *     эффектом правки названия, тогда как она ждёт отдельного слова владельца и бэкапа.
+ *     эффектом правки названия, тогда как она ждёт отдельного слова владельца и бэкапа;
+ *   · **`techTags`** — технический тег одобрения (`plans/58` шаг 1). Его ставит разметка
+ *     каталога, а человек в форме его не видит: документ, собранный из черновика, о теге не
+ *     знает, и полная запись стёрла бы его МОЛЧА — ни ошибки, ни следа. Это ровно тот класс
+ *     «флаг разошёлся с правдой», от которого план и защищается; ловится он здесь и юнитом
+ *     `dim-editor.test.ts`, потому что правила такую потерю не видят (поля просто не стало).
  *
  * Запись ПОЛНАЯ, а не слиянием: слияние не умеет убирать поле, и снятый человеком год остался бы
  * в документе. Поэтому переносим явно то, что обязано пережить, и пишем документ целиком.
  */
 export async function updateDim(current: AdminDim, draft: DimDraft): Promise<void> {
-  const preserved: PreservedFields = {
-    stars: current.stars,
-    rates: current.rates,
-    rating: current.rating,
-  };
+  // Набор «что переживает правку» собирает МОДЕЛЬ (`dim-editor.ts`), а не эта функция: там он
+  // рядом со своим объяснением и достаётся юнитом без базы и браузера.
+  const preserved: PreservedFields = preservedFrom(current);
   const legacyName = (current as { name?: unknown }).name;
 
   await setDoc(doc(db(), 'dims', current.id), {

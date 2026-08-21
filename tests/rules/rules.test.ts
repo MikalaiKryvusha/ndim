@@ -880,6 +880,53 @@ describe('Каталог измерений — границы записи (pla
     await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), titel: { ru: 'x', en: 'y' } }));
   });
 
+  /*
+   * ── ТЕХНИЧЕСКИЕ ТЕГИ (`plans/58` шаг 1) ────────────────────────────────────────────────
+   *
+   * Асимметрия «правка ДА, создание НЕТ» — не оплошность, а смысл: тег одобрения ставит РАЗМЕТКА
+   * каталога (Admin SDK, правил не касается), а не форма комнаты. Новая запись ещё никем не
+   * судима, и нести тег ей неоткуда; правка же обязана его ПРОНЕСТИ — комната пишет документ
+   * полной заменой, и без этого правила отвергали бы правку любого размеченного измерения,
+   * то есть всего каталога после разметки.
+   */
+  test('🔴 правка проносит технический тег — иначе после разметки каталог станет неправимым', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: ['migrated'] });
+    });
+
+    const db = admin('root').firestore();
+    await assertSucceeds(
+      setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: ['migrated'], year: '2027' }),
+    );
+  });
+
+  test('🔒 в НОВОЕ измерение технический тег не идёт — его ставит разметка, а не форма', async () => {
+    const db = admin('root').firestore();
+    await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: ['migrated'] }));
+  });
+
+  test('🔒 технический тег обязан быть списком — строкой он отвергается', async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: ['migrated'] });
+    });
+
+    const db = admin('root').firestore();
+    await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: 'migrated' }));
+  });
+
+  test('🔒 послабление для тега НЕ открыло дверь прочим полям — прежние отказы живы на правке', async () => {
+    // Проверяется именно ПРАВКА: расширение белого списка коснулось только её, и оно обязано
+    // быть точечным. Тот же набор на создании стережёт тест выше.
+    await seed(async (db) => {
+      await setDoc(doc(db, 'dims/odyssey'), { ...validDim(), techTags: ['migrated'] });
+    });
+
+    const db = admin('root').firestore();
+    await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), status: 'pending' }));
+    await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), wikidata: 'Q20909133' }));
+    await assertFails(setDoc(doc(db, 'dims/odyssey'), { ...validDim(), titel: { ru: 'x', en: 'y' } }));
+  });
+
   test('год — СТРОКА, включая диапазон; числом он отвергается', async () => {
     const db = admin('root').firestore();
     // Замер: у восьми боевых записей год длиннее четырёх знаков — это диапазоны.
