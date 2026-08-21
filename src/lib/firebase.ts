@@ -127,7 +127,8 @@ function databaseId(): string {
  * (решение отдано агенту №009 — оно обратимо переключателем), и у него свой хвост: debug-токены
  * боевым смоукам двери, иначе они умрут первыми.
  */
-const APP_CHECK_SITE_KEY = '';
+// Ключ создан владельцем 2026-08-21 (homeworks/13, прислан в чат тем же часом).
+const APP_CHECK_SITE_KEY = '6LftspEtAAAAAF7FP29ls_2OaGOglMT3F9wjrjlj';
 
 let app: FirebaseApp | null = null;
 let firestore: Firestore | null = null;
