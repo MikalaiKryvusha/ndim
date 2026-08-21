@@ -78,17 +78,26 @@ describe('Сервер синхронизации: анонимный гость
 
 describe('Сервер синхронизации: осиротевшие гости вычищаются, живые и полноценные — нет', () => {
   const DAY = 24 * 60 * 60 * 1000;
+  // Уборка гостей включается только с 2026-10-01 (№042 В3 — календарный предохранитель,
+  // его собственные тесты в guest_death.test.mjs). Механика СРОКОВ проверяется здесь на
+  // ПОДСТАВНОМ «сейчас» после включения; возраст посеянных точек отсчитывается от него же,
+  // а не от настоящих часов — иначе до октября тесты красили бы исправный продукт.
+  const AWAKE = Date.parse('2026-10-02T00:00:00+03:00');
 
   before(async () => {
     // Гость, не тронутый 31 день: точка чистая, lastSync старый, есть и топ, и users-дерево.
-    const staleSync = Date.now() - 31 * DAY;
+    const staleSync = AWAKE - 31 * DAY;
     await db.doc('points/oldghost').set({ dirty: false, guest: true, updated: staleSync, lastSync: staleSync });
     await db.doc('points/oldghost/dims/calm').set({ value: 5 });
     await db.doc('relations/oldghost').set({ computedAt: staleSync, version: 2, top: [] });
     await db.doc('users/oldghost').set({ settings: { language: 'ru' } });
     await db.doc('users/oldghost/profile/private').set({ gender: 'm' });
 
-    await cleanupStaleGuests();
+    // Гость из первого describe должен остаться «свежим» и в терминах подставного времени:
+    // его lastSync поставил runCycle настоящими часами, и к октябрю он был бы честно стар.
+    await db.doc('points/ghost').set({ lastSync: AWAKE - 1 * DAY }, { merge: true });
+
+    await cleanupStaleGuests(AWAKE);
   });
 
   test('данные осиротевшего гостя удалены целиком: точка, оценки, топ, users-дерево', async () => {
@@ -110,16 +119,16 @@ describe('Сервер синхронизации: осиротевшие гос
 
   test('🔒 полноценные люди не вычищаются никогда, каким бы старым ни был lastSync', async () => {
     // Уважительная асимметрия: у alice нет флага guest — её труд неприкосновенен.
-    await db.doc('points/alice').set({ lastSync: Date.now() - 400 * DAY }, { merge: true });
-    await cleanupStaleGuests();
+    await db.doc('points/alice').set({ lastSync: AWAKE - 400 * DAY }, { merge: true });
+    await cleanupStaleGuests(AWAKE);
     assert.equal((await db.doc('points/alice').get()).exists, true);
     assert.equal((await db.doc('points/alice/dims/calm').get()).exists, true);
   });
 
   test('🔒 гость, ждущий пересчёта (dirty), не сирота — не тронут', async () => {
-    const staleSync = Date.now() - 31 * DAY;
+    const staleSync = AWAKE - 31 * DAY;
     await db.doc('points/dirtyghost').set({ dirty: true, guest: true, updated: staleSync, lastSync: staleSync });
-    await cleanupStaleGuests();
+    await cleanupStaleGuests(AWAKE);
     assert.equal((await db.doc('points/dirtyghost').get()).exists, true);
   });
 });
