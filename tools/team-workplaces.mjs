@@ -30,8 +30,8 @@ const TEAM_DIR_NAME = 'ndim-team';
 
 /* ── Чистые функции (--selftest) ───────────────────────────────────────────────────────── */
 
-/** Ветка роли: понятное имя согласно роли (слово владельца). */
-export function branchFor(role) { return `team/${role}`; }
+/** Ветка роли: понятное имя согласно роли, с припиской ndim_ (слово владельца, 2026-08-21). */
+export function branchFor(role) { return `ndim_${role.replace(/-/g, '')}`; }
 
 /** Каталог рабочего места роли от корня главной копии. */
 export function workplaceFor(mainRoot, role) { return join(dirname(mainRoot), TEAM_DIR_NAME, role); }
@@ -114,7 +114,7 @@ function createOne(main, role) {
 
 function selftest() {
   const cases = [
-    ['ветка роли — по роли', () => branchFor('qa') === 'team/qa'],
+    ['ветка роли — по роли с припиской ndim_', () => branchFor('qa') === 'ndim_qa' && branchFor('dev-1') === 'ndim_dev1'],
     ['каталог — сиблинг ndim-team', () => workplaceFor('D:\\work\\ai_sandbox\\ndim', 'dev-1').toLowerCase() === 'd:\\work\\ai_sandbox\\ndim-team\\dev-1'],
     ['менеджеру место не создаётся', () => !validateRole('manager').ok],
     ['неизвестная роль — отказ', () => !validateRole('ghost').ok],
