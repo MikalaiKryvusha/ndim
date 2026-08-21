@@ -8,9 +8,14 @@
   // (интервью №002, В4). Реальные точки появятся в гостевом режиме (plans/03, этап 2).
   // Ничего не сохраняется и не отправляется: состояние живёт в памяти страницы.
   import { onMount } from 'svelte';
+  import { fade, slide } from 'svelte/transition';
 
   import { computeRelation, MAX_RATING } from '$lib/similarity/similarity';
   import { track } from '$lib/data/funnel';
+  // Мост внутрь продукта — вычисляемая часть и отметка перехода (`plans/67`, Ш2–Ш5).
+  import { barWidth, markBridgeCrossed, popupCorner, strongestPeer } from '$lib/ui/handhold';
+  // Хронометраж появлений — общий канон движения продукта (bugs/05), не свой на этом экране.
+  import { MOTION } from '$lib/ui/motion';
   // Правило владельца «графика не появляется на горячую» (bugs/69): лица персонажей
   // проявляются готовыми — и в кружках карточек, и на карте, и в оверлее.
   import { ready } from '$lib/ui/ready';
@@ -76,7 +81,21 @@
     similarity: { ru: 'похожесть', en: 'similarity' },
     proximity: { ru: 'близость', en: 'proximity' },
     commonality: { ru: 'общность', en: 'commonality' },
-    cta: { ru: 'Создать своё пространство', en: 'Create your space' },
+    /*
+     * 🔴 КНОПКА МОСТА — «Смотреть больше», слова владельца из утверждённого V4 (шапка макета
+     * `design/handhold-mockups.html`: «кнопка «Смотреть больше» … — Ваши слова и утверждённый
+     * V4»), закреплены синтезом №043 В1. Она заняла место прежней «Создать своё пространство»,
+     * а не встала рядом: обе ведут в одну дверь, и две кнопки в двадцати пикселях друг от друга
+     * были бы дефектом, а не композицией. Прежняя формулировка вдобавок перестала быть правдой —
+     * человек ничего не создаёт, его вносит внутрь сам интерактив (решение владельца №009 В3).
+     */
+    go: { ru: 'Смотреть больше', en: 'See more' },
+    goMsg: {
+      ru: 'Пространство пересчитало Ваши связи.',
+      en: 'NDim Space has recalculated your relations.',
+    },
+    // Поп-ап над самым похожим. Имя и процент подставляет РАСЧЁТ, здесь только связка слов.
+    popLead: { ru: ' — Ваша самая сильная связь: ', en: ' — your strongest connection: ' },
     trust: {
       ru: 'Персонажи вымышленные. Ничего не сохраняется и не отправляется — всё считается прямо в Вашем браузере.',
       en: 'The characters are fictional. Nothing is saved or sent — everything is computed right in your browser.',
@@ -130,9 +149,23 @@
   // Стартовые оценки — осмысленный «я», от которого интересно двигать звёзды
   let mine = $state<Record<string, number>>({ quiet: 7, travel: 5, sport: 4, books: 8, humor: 6 });
 
+  /*
+   * ПОТРОГАЛ ЛИ ЧЕЛОВЕК ДЕМО — от этого зависит, показаны ли поп-ап и кнопка моста.
+   *
+   * Композиция владельца (А1/А2/А4: «кнопка появляется после звёзд») и решение №009 В3: большой
+   * кнопки входа гостем нет вовсе, человека вносит внутрь ЕГО СОБСТВЕННОЕ действие. Поэтому
+   * дверь появляется как результат движения звёзд, а не стоит на странице заранее.
+   *
+   * ⚠️ Цена названа честно: до первого касания в демо-блоке двери внутрь нет. Она не потеряна —
+   * витрина выше несёт [Создать аккаунт] и [Войти в пространство], и это ровно те кнопки, для
+   * которых решение №009 В3 их и оставило.
+   */
+  let touched = $state(false);
+
   function rate(dimId: string, value: number) {
     // Повторный клик по текущей оценке сбрасывает измерение в 0 (как в макете)
     mine[dimId] = mine[dimId] === value ? 0 : value;
+    touched = true;
     // Второй шаг воронки: человек ПОТРОГАЛ демо. Считается один раз за визит.
     void track('demo_touch');
   }
@@ -176,6 +209,52 @@
       return { p, r, x, y, glow, labelY };
     }),
   );
+
+  /*
+   * ── МОСТ ВНУТРЬ ПРОДУКТА: всё, что он показывает, ВЫЧИСЛЯЕТСЯ ──────────────────────────
+   *
+   * Правило `plans/21`, повторённое в `plans/26` §1: поп-ап выводится из расчёта, а не из
+   * сценария. Ни имени, ни процента, ни угла здесь нет литералом — они едут из `sorted`,
+   * который посчитан НАСТОЯЩИМ ядром (`computeRelation` выше). Решения вынесены в
+   * `$lib/ui/handhold`, потому что там их достаёт `node --test`, а компонент он не поднимает.
+   */
+  const ranked = $derived(
+    sorted.map(({ p, r }) => ({ id: p.id, name: p.name[lang], similarity: r?.similarity ?? null })),
+  );
+  const strongest = $derived(strongestPeer(ranked));
+  // Угол поп-апа — по фактическим точкам лиц: узлы ходят по всему радиусу вслед за оценками,
+  // и назначенный угол однажды накрыл бы лицо (урок Ш3 `plans/65`).
+  const popCorner = $derived(popupCorner(mapPoints, VIEW_W));
+
+  /*
+   * ПЕРЕХОД ПО МОСТУ — без записи в истории (решение Н4 `plans/67`, одобрено Менеджером).
+   *
+   * Лендинг выталкивает вошедшего человека обратно внутрь продукта (`bugs/08.1`, и это его
+   * работа). Гость, нажавший «Назад» с первого экрана продукта, попал бы на лендинг и был бы
+   * молча вытолкнут — отскок. Дверей было две: не оставлять записи истории ИЛИ перестать
+   * выталкивать гостя. Вторая есть регрессия `bugs/08.1` и принадлежит эпику 21 — здесь она
+   * нарушила бы собственные ворота фазы. Поэтому первая.
+   *
+   * 🔴 Разметка остаётся ССЫЛКОЙ `<a href>`: средний клик, «открыть в новой вкладке», доступность
+   * и робот обязаны работать как у всякой ссылки. Перехватывается ровно обычный левый клик.
+   *
+   * Почему `location.replace`, а не `goto(…, { replaceState: true })`: дверь `?guest=1` заводит
+   * СЕССИЮ и документ человека, и ей полагается чистый старт страницы, а не переиспользованное
+   * состояние приложения. Тем же способом лендинг уводит вошедшего (см. `[lang=lang]/+page.svelte`) —
+   * один приём на оба перехода, а не два похожих.
+   *
+   * Честная цена, названная в Н4: пришедшему на лендинг прямой ссылкой в новой вкладке «Назад»
+   * после моста возвращаться некуда — история пуста. Это конец истории вкладки, а не отскок.
+   */
+  function crossBridge(event: MouseEvent) {
+    if (event.defaultPrevented) return;
+    if (event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    // Отметка для карточки-мостика на «Связях»: экран обязан знать, что человек пришёл ОТСЮДА.
+    markBridgeCrossed();
+    location.replace(appUrl);
+  }
 </script>
 
 <section class="demo" aria-label={t.title[lang]}>
@@ -204,6 +283,18 @@
   <!-- Карта пространства: я в центре, персонажи на настоящих расстояниях.
        Узлы — лица (кроп), по тапу открывается полный портрет. -->
   <div class="panel map-panel">
+    <!-- Поп-ап над самым похожим (Ш2 `plans/67`). Появляется ПОСЛЕ действия человека, а не по
+         таймеру: он подводит итог тому, что человек сделал сам. Имя, процент и угол — из
+         расчёта; `aria-live` объявляет итог тем, кто карту не видит. -->
+    {#if touched && strongest !== null}
+      <p
+        class="pop"
+        class:right={popCorner === 'right'}
+        aria-live="polite"
+        transition:fade={{ duration: MOTION.base }}>
+        <b>{strongest.name}</b>{t.popLead[lang]}<b>{strongest.similarity}%</b>
+      </p>
+    {/if}
     <svg viewBox="0 0 {VIEW_W} {VIEW_H}" role="img" aria-label={t.mapNote[lang]}>
       <defs>
         <clipPath id="demo-face-clip"><circle cx="0" cy="0" r={NODE_R - 2.5} /></clipPath>
@@ -275,7 +366,25 @@
   {/each}
   </div>
 
-  <div class="cta"><a href={appUrl}>{t.cta[lang]} →</a></div>
+  <!-- Итог-панель с барами похожести — НАД блоком с кнопкой (композиция владельца, половина
+       А3; на «Связях» она НЕ повторяется). Звёзды — для ввода, бары — для просмотра: те же
+       `sorted`, свёрнутые в одну строку на человека прямо перед дверью. -->
+  <div class="panel summary" aria-label={t.similarity[lang]}>
+    {#each ranked as row (row.id)}
+      <div class="row">
+        <span class="name">{row.name}</span>
+        <span class="track"><i style="width:{barWidth(row.similarity)}%"></i></span>
+        <span class="val">{row.similarity === null ? '—' : row.similarity + '%'}</span>
+      </div>
+    {/each}
+  </div>
+
+  {#if touched}
+    <div class="go" transition:slide={{ duration: MOTION.base }}>
+      <p class="msg">{t.goMsg[lang]}</p>
+      <a class="gobtn" href={appUrl} onclick={crossBridge}>{t.go[lang]}</a>
+    </div>
+  {/if}
   <p class="trust">{t.trust[lang]}</p>
 
   <!-- Оверлей: полный портрет по тапу на аватар (закрывается кликом и Esc) -->
@@ -378,6 +487,55 @@
   /* ── Карта: минимум отступов, максимум пространства (правка владельца) ── */
   .map-panel {
     padding: 8px 8px 10px;
+    /* Система координат для поп-апа: он висит НАД картой, а не занимает своё место в потоке —
+       иначе его появление сдвигало бы карту под пальцем человека. */
+    position: relative;
+  }
+
+  /* ── Поп-ап над самым похожим (Ш2 `plans/67`, макет а4) ────────────────────────────────
+     🔴 Угол выбирает расчёт (`popupCorner`), а не эта таблица стилей: лицо, накрытое
+     подсказкой, — дефект вида, оплаченный на макетах (урок Ш3 `plans/65`).
+     `pointer-events: none` обязателен — иначе подсказка отбирала бы нажатия у лиц под ней. */
+  .pop {
+    position: absolute;
+    z-index: 2;
+    top: 10px;
+    left: 10px;
+    max-width: 190px;
+    margin: 0;
+    padding: 7px 11px;
+    border-radius: 11px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--heading);
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    box-shadow: var(--card-shadow);
+    pointer-events: none;
+  }
+  .pop.right {
+    left: auto;
+    right: 10px;
+  }
+  .pop b {
+    color: var(--accent);
+  }
+  /* Хвостик смотрит внутрь карты — к тому, о чём говорит подсказка. */
+  .pop::after {
+    content: '';
+    position: absolute;
+    right: 22px;
+    bottom: -6px;
+    width: 10px;
+    height: 10px;
+    background: var(--panel);
+    border-right: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent);
+    transform: rotate(45deg);
+  }
+  .pop.right::after {
+    right: auto;
+    left: 22px;
   }
   svg {
     display: block;
@@ -568,26 +726,124 @@
     text-align: right;
   }
 
-  /* ── CTA и честность ── */
-  .cta {
-    text-align: center;
-    margin-top: 16px;
+  /* ── Итог-панель: те же `sorted`, свёрнутые в строку на человека (Ш3 `plans/67`) ── */
+  .summary {
+    padding: 4px 14px;
   }
-  .cta a {
-    display: inline-block;
-    padding: 13px 24px;
-    border-radius: 10px;
+  .summary .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--edge-soft);
+    font-size: 13px;
+  }
+  .summary .row:last-child {
+    border-bottom: 0;
+  }
+  /* Имя человека НЕ обрезается (закон владельца 2026-08-14): колонка растёт, строка переносится. */
+  .summary .name {
+    flex: 0 0 84px;
+    font-weight: 600;
+    color: var(--heading);
+  }
+  .summary .track {
+    flex: 1;
+    height: 8px;
+    border-radius: 99px;
+    background: var(--edge-soft);
+    overflow: hidden;
+  }
+  .summary .track i {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: width 0.25s;
+  }
+  .summary .val {
+    flex: 0 0 44px;
+    text-align: right;
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* ── Блок с кнопкой моста: итог словами + дверь внутрь (Ш4 `plans/67`, макет А2) ────────
+     Форма — карточка мягкого зова, та же, что у постоянной карточки гостя внутри продукта:
+     один язык на обеих сторонах моста. */
+  .go {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding: 13px 15px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--primary) 8%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--primary) 45%, var(--edge));
+  }
+  .go .msg {
+    flex: 1 1 200px;
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--heading);
+  }
+  /*
+   * ВОЛНЫ — дословное исполнение В3 владельца: кнопка «мягко пульсирует, светится и испускает
+   * волны» (макет А2, закреплён синтезом №043 В1). Два кольца с разбегом в половину такта дают
+   * непрерывный ход, а не мигание.
+   */
+  .gobtn {
+    position: relative;
+    flex: none;
+    padding: 13px 22px;
+    border-radius: 12px;
     text-decoration: none;
     background: var(--primary);
     color: var(--primary-ink);
-    font-weight: 600;
-    font-size: 15px;
-    box-shadow: 0 0 22px color-mix(in srgb, var(--primary) 35%, transparent);
+    font-weight: 700;
+    font-size: 14.5px;
+    box-shadow:
+      0 0 0 8px color-mix(in srgb, var(--primary) 16%, transparent),
+      0 0 0 16px color-mix(in srgb, var(--primary) 8%, transparent);
     transition: filter 0.15s;
   }
+  .gobtn::before,
+  .gobtn::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 16px;
+    border: 2px solid var(--primary);
+    opacity: 0;
+    animation: bridge-wave 2.4s ease-out infinite;
+  }
+  .gobtn::after {
+    animation-delay: 1.2s;
+  }
+  @keyframes bridge-wave {
+    0% {
+      transform: scale(0.92);
+      opacity: 0.55;
+    }
+    100% {
+      transform: scale(1.25);
+      opacity: 0;
+    }
+  }
   @media (hover: hover) {
-    .cta a:hover {
+    .gobtn:hover {
       filter: brightness(1.1);
+    }
+  }
+  /* Человек, попросивший систему не анимировать, волн не видит — кольца остаются, ход гаснет.
+     Тот же уговор, что у пульса аватарок выше и у всего движения продукта (bugs/05). */
+  @media (prefers-reduced-motion: reduce) {
+    .gobtn::before,
+    .gobtn::after {
+      animation: none;
     }
   }
   .trust {
@@ -683,9 +939,12 @@
       align-items: start;
       gap: 14px;
     }
+    /* Итог-панель и блок с кнопкой идут во всю ширину и ПОСЛЕ обеих колонок: композиция
+       владельца ставит панель НАД кнопкой, а кнопку — последним шагом демо. */
     h2,
     .sub,
-    .cta,
+    .summary,
+    .go,
     .trust {
       grid-column: 1 / -1;
     }
