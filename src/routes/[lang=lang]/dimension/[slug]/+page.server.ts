@@ -33,7 +33,7 @@
 
 import { error } from '@sveltejs/kit';
 import { DIMS, DIMS_SOURCE } from '$lib/content/dims-source';
-import { ratingState, ratingView } from '$lib/content/dims-rating';
+import { ratingView } from '$lib/content/dims-rating';
 import { kindKeyOf, kindTitle } from '$lib/content/dim-kind';
 import { catalogPath, hubPath } from '$lib/content/catalog-hub';
 import { neighboursFor, placeOf } from '$lib/content/catalog-source';
@@ -152,9 +152,6 @@ export function load({ params }: { params: { lang: string; slug: string } }): Di
     tags: dim.tags,
     rating: dim.rating,
     rates: dim.rates,
-    // Три состояния величины (`plans/56` шаг 1): «голосов нет» · «есть оценка» · «все поставили
-    // ноль». Считаются здесь, на пререндере, тем же модулем, что и правило показа звёзд.
-    ratingState: ratingState(dim.rates, dim.rating),
     meta,
     canonical: href(lang),
     // Самоссылка ОБЯЗАТЕЛЬНА («Each language version must list itself as well as all other
