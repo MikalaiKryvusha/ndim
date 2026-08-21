@@ -25,6 +25,7 @@ import {
   classify,
   recordedClass,
   indexSvod,
+  indexApprovedCandidates,
   matchSvod,
   leakedTechTag,
   techTagsFor,
@@ -217,7 +218,9 @@ test('сумма разбора равна числу записей катал�
     { id: 'dddddddd', title: { en: 'd' }, tags: [], techTags: [] },
   ];
   const plan = planCatalog(dims, свод);
-  assert.deepEqual(plan.counts, { migrated: 1, 'needs-rewrite': 1, unchecked: 1 });
+  // Четвёртый счётчик нулевой намеренно: `owner-approved` приходит из очереди кандидатов,
+  // а её здесь нет вовсе — значит и записи вне свода класса не получают.
+  assert.deepEqual(plan.counts, { migrated: 1, 'needs-rewrite': 1, unchecked: 1, 'owner-approved': 0 });
   assert.equal(plan.unknown.length, 1, 'четвёртой записи в своде нет');
 
   const check = crossCheck(plan, dims.length);
@@ -227,4 +230,93 @@ test('сумма разбора равна числу записей катал�
   // Потеря записи разбором — то, ради чего проверка ① существует.
   const порченый = { ...plan, counts: { ...plan.counts, migrated: 0 } };
   assert.equal(crossCheck(порченый, dims.length).sumOk, false);
+});
+
+// ── ОДОБРЕНО ВЛАДЕЛЬЦЕМ: второй источник суждения (интервью №044, В4 = A) ───────────────────
+
+/** Кандидат в том виде, в каком его пишет конвейер одобрения (`admin-dims.ts`). */
+const кандидат = (id, status, approvedDimId) => ({ id, status, ...(approvedDimId ? { approvedDimId } : {}) });
+
+test('одобренным считается ТОЛЬКО статус approved — прочие три не дают тега', () => {
+  const index = indexApprovedCandidates([
+    кандидат('wikidata-Q1', 'approved', 'dimAAA'),
+    кандидат('wikidata-Q2', 'pending', 'dimBBB'),
+    кандидат('wikidata-Q3', 'returned', 'dimCCC'),
+    кандидат('wikidata-Q4', 'rejected', 'dimDDD'),
+  ]);
+  assert.equal(index.get('dimAAA'), 'wikidata-Q1');
+  assert.equal(index.size, 1, 'возвращённый на доработку несёт адрес измерения, но одобрением не является');
+});
+
+test('кандидат без адреса рождённого измерения в указатель не идёт', () => {
+  const index = indexApprovedCandidates([кандидат('wikidata-Q5', 'approved'), кандидат('wikidata-Q6', 'approved', '')]);
+  assert.equal(index.size, 0);
+});
+
+test('🔴 запись вне свода с одобренным кандидатом получает owner-approved', () => {
+  const свод = indexSvod({ ru: [запись('film-aaaaaaaa', 'clean', 1)], en: [] });
+  const dims = [
+    { id: 'aaaaaaaa', title: { en: 'film' }, tags: [], techTags: [] },
+    { id: 'новаяЗапись01', title: { ru: 'Новинка' }, tags: [], techTags: [] },
+  ];
+  const approved = indexApprovedCandidates([кандидат('wikidata-Q7', 'approved', 'новаяЗапись01')]);
+
+  const plan = planCatalog(dims, свод, RUN_THRESHOLD, approved);
+  assert.equal(plan.counts[TECH_TAG.OWNER_APPROVED], 1);
+  assert.equal(plan.unknown.length, 0, 'источник суждения нашёлся — в безымянные она не падает');
+  const row = plan.rows.find((r) => r.id === 'новаяЗапись01');
+  assert.equal(row.cls, TECH_TAG.OWNER_APPROVED);
+  assert.equal(row.via, 'кандидат wikidata-Q7', 'основание названо: по какому кандидату судили');
+});
+
+test('запись вне свода с НЕодобренным кандидатом класса не получает', () => {
+  const свод = indexSvod({ ru: [], en: [] });
+  const dims = [{ id: 'новаяЗапись02', title: { ru: 'Ждёт вычитки' }, tags: [], techTags: [] }];
+  const approved = indexApprovedCandidates([кандидат('wikidata-Q8', 'pending', 'новаяЗапись02')]);
+
+  const plan = planCatalog(dims, свод, RUN_THRESHOLD, approved);
+  assert.equal(plan.counts[TECH_TAG.OWNER_APPROVED], 0);
+  assert.equal(plan.unknown.length, 1);
+});
+
+test('🔑 запись вне свода и без кандидата — это ручная форма комнаты, а не аномалия: класса нет', () => {
+  /*
+   * Измерение можно завести и минуя очередь кандидатов (`admin/dims/+page.svelte` зовёт
+   * `createDim` напрямую). Отсутствие кандидата поэтому — утверждение о нашем ПОИСКЕ, а не о
+   * том, что владелец записи не видел (`EXP-0165`). Машине судить нечем — решает человек.
+   */
+  const plan = planCatalog(
+    [{ id: 'рукамиЗаведено', title: { ru: 'Заведено руками' }, tags: [], techTags: [] }],
+    indexSvod({ ru: [], en: [] }),
+    RUN_THRESHOLD,
+    new Map(),
+  );
+  assert.equal(plan.rows.length, 0);
+  assert.deepEqual(plan.unknown, [{ id: 'рукамиЗаведено', title: 'Заведено руками' }]);
+});
+
+test('owner-approved входит в сумму разбора и НЕ ломает сверку со сводом', () => {
+  const свод = indexSvod({
+    ru: [запись('film-aaaaaaaa', 'copied', 20)],
+    en: [запись('film-aaaaaaaa', 'clean', 2)],
+  });
+  const dims = [
+    { id: 'aaaaaaaa', title: { en: 'film' }, tags: [], techTags: [] },
+    { id: 'новинка01', title: { ru: 'Новинка' }, tags: [], techTags: [] },
+    { id: 'рукамиЗаведено', title: { ru: 'Руками' }, tags: [], techTags: [] },
+  ];
+  const approved = indexApprovedCandidates([кандидат('wikidata-Q9', 'approved', 'новинка01')]);
+
+  const plan = planCatalog(dims, свод, RUN_THRESHOLD, approved);
+  const check = crossCheck(plan, dims.length);
+  assert.equal(plan.counts[TECH_TAG.NEEDS_REWRITE], 1);
+  assert.equal(plan.counts[TECH_TAG.OWNER_APPROVED], 1);
+  assert.equal(plan.unknown.length, 1);
+  assert.equal(check.sumOk, true, '1 + 1 + 1 = 3 записи каталога');
+  assert.equal(check.svodOk, true, 'сверка судит только классы, выведенные из свода');
+});
+
+test('смена класса на owner-approved заменяет прежний тег цикла', () => {
+  assert.deepEqual(techTagsFor(['unchecked'], TECH_TAG.OWNER_APPROVED), ['owner-approved']);
+  assert.equal(techTagsFor(['owner-approved'], TECH_TAG.OWNER_APPROVED), null, 'повтор не пишет');
 });

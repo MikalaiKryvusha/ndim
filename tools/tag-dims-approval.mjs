@@ -13,6 +13,12 @@
  * Прибор не просто пишет в другое поле — он ОТКАЗЫВАЕТСЯ работать, увидев служебное значение в
  * публичном `tags`: раз оно там, утечка уже случилась, и дописывать поверх неё нельзя.
  *
+ * 🔴 ДВА ИСТОЧНИКА СУЖДЕНИЯ, И ОНИ НЕ ВЗАИМОЗАМЕНЯЕМЫ. Записи, снятые сводом, судит свод (три
+ * класса ниже). Записи, рождённые ПОСЛЕ снятия свода, сводом судить нечем — о них знает очередь
+ * кандидатов: одобренный кандидат с адресом измерения означает `owner-approved` (слово владельца,
+ * интервью №044 В4 = A). Ни того, ни другого нет — класс НЕ присваивается, запись печатается
+ * поимённо. Это не аномалия: измерение заводится и ручной формой комнаты, минуя очередь.
+ *
  * 🔴 ИМЯ `migrated`, А НЕ `approved`. «Принято миграцией» и «вычитано агентом» — разные вещи:
  * агент прочитал 307 записей из 5111. Одно имя на двоих через месяц не позволило бы отличить
  * общий штамп владельца от настоящей вычитки.
@@ -51,7 +57,25 @@ export const TECH_TAG = Object.freeze({
   NEEDS_REWRITE: 'needs-rewrite',
   /** Не проверено: статья Википедии не нашлась, машина судить не смогла. */
   UNCHECKED: 'unchecked',
+  /**
+   * Одобрено владельцем — запись прошла через его руки в комнате измерений.
+   *
+   * Четвёртый тег заведён по слову владельца (интервью №044, В4 = A) для записей, рождённых
+   * ПОСЛЕ снятия свода: судить их сводом нечем, а «не проверено» было бы неправдой — их видел
+   * человек, и никакая машина этого не отменяет.
+   */
+  OWNER_APPROVED: 'owner-approved',
 });
+
+/**
+ * Классы, ВЫВОДИМЫЕ ИЗ СВОДА. Только они участвуют в сверке с ярлыками свода: `owner-approved`
+ * приходит из другого источника (очередь кандидатов), и требовать его от свода бессмысленно.
+ */
+export const SVOD_CLASSES = Object.freeze([
+  TECH_TAG.MIGRATED,
+  TECH_TAG.NEEDS_REWRITE,
+  TECH_TAG.UNCHECKED,
+]);
 
 /** Все технические теги жизненного цикла одним списком — для предохранителя и слияния. */
 export const LIFECYCLE_TECH_TAGS = Object.freeze(Object.values(TECH_TAG));
@@ -214,17 +238,30 @@ export function chunk(items, size = BATCH_SIZE) {
 }
 
 /**
- * РАЗБОР ВСЕГО КАТАЛОГА — чистая функция: на входе записи и свод, на выходе числа и решения.
+ * РАЗБОР ВСЕГО КАТАЛОГА — чистая функция: на входе записи, свод и очередь кандидатов.
  *
- * 🔴 Записям, которых в своде НЕТ, класс НЕ ПРИДУМЫВАЕТСЯ. Каталог вырос (5111 → 5121) уже после
- * того, как свод сняли, и «нет записи в своде» — утверждение о нашем ПОИСКЕ, а не о качестве
- * текста (`EXP-0165`). Такие записи уезжают отдельным списком к тому, кто решает их судьбу.
+ * 🔴 ЗАПИСЬ ВНЕ СВОДА СУДИТСЯ ДРУГИМ ИСТОЧНИКОМ, А НЕ ДОГАДКОЙ. Каталог вырос (5111 → 5121)
+ * уже после того, как свод сняли, и «нет записи в своде» — утверждение о нашем ПОИСКЕ, а не о
+ * качестве текста (`EXP-0165`). Судить такую запись сводом нечем — зато о ней может знать очередь
+ * кандидатов: одобренный кандидат с адресом этого измерения означает, что запись прошла через
+ * руки владельца. Это `owner-approved` (слово владельца, интервью №044 В4 = A).
+ *
+ * 🔴 А ЕСЛИ КАНДИДАТА НЕТ — КЛАСС НЕ ПРИСВАИВАЕТСЯ, и это НЕ «такого не бывает». В панели есть
+ * ВТОРАЯ законная дверь: ручная форма создания измерения (`src/routes/admin/dims/+page.svelte`
+ * зовёт `createDim` напрямую, минуя кандидатов). Запись, заведённая ею, кандидата не имеет
+ * никогда. Отсутствие кандидата поэтому не улика: оно значит «мы не нашли», а не «владелец не
+ * видел» (`EXP-0165` ровно про это). Такие записи печатаются поимённо и ждут решения человека.
  */
-export function planCatalog(dims, index, threshold = RUN_THRESHOLD) {
+export function planCatalog(dims, index, threshold = RUN_THRESHOLD, approved = new Map()) {
   const rows = [];
   const unknown = [];
   const ambiguous = [];
-  const counts = { [TECH_TAG.MIGRATED]: 0, [TECH_TAG.NEEDS_REWRITE]: 0, [TECH_TAG.UNCHECKED]: 0 };
+  const counts = {
+    [TECH_TAG.MIGRATED]: 0,
+    [TECH_TAG.NEEDS_REWRITE]: 0,
+    [TECH_TAG.UNCHECKED]: 0,
+    [TECH_TAG.OWNER_APPROVED]: 0,
+  };
   const recorded = { [TECH_TAG.MIGRATED]: 0, [TECH_TAG.NEEDS_REWRITE]: 0, [TECH_TAG.UNCHECKED]: 0 };
   let matchedByTail = 0;
 
@@ -232,7 +269,20 @@ export function planCatalog(dims, index, threshold = RUN_THRESHOLD) {
     if (dim.id === SERVICE_DOC_ID) continue;
     const hit = matchSvod(dim, index);
     if (!hit) {
-      unknown.push({ id: dim.id, title: dim.title?.ru || dim.title?.en || '' });
+      const кандидат = approved.get(dim.id);
+      if (кандидат === undefined) {
+        unknown.push({ id: dim.id, title: dim.title?.ru || dim.title?.en || '' });
+        continue;
+      }
+      counts[TECH_TAG.OWNER_APPROVED] += 1;
+      rows.push({
+        id: dim.id,
+        slug: null,
+        cls: TECH_TAG.OWNER_APPROVED,
+        via: `кандидат ${кандидат}`,
+        tags: dim.tags ?? [],
+        techTags: dim.techTags ?? [],
+      });
       continue;
     }
     if (hit.ambiguous) {
@@ -267,7 +317,9 @@ export function crossCheck(plan, catalogSize) {
   const classified = Object.values(plan.counts).reduce((a, b) => a + b, 0);
   const total = classified + plan.unknown.length + plan.ambiguous.length;
   const sumOk = total === catalogSize;
-  const svodOk = LIFECYCLE_TECH_TAGS.every((t) => plan.counts[t] === plan.recorded[t]);
+  // Сверяются только классы, ВЫВЕДЕННЫЕ ИЗ СВОДА: `owner-approved` приходит из очереди
+  // кандидатов, и спрашивать о нём ярлыки свода не у кого.
+  const svodOk = SVOD_CLASSES.every((t) => plan.counts[t] === plan.recorded[t]);
   return { sumOk, svodOk, classified, total, catalogSize };
 }
 
@@ -307,6 +359,28 @@ export const CONTROL_CASES = Object.freeze([
     почему: 'копия вычищена до снятия свода — обратного хода быть не должно',
   },
 ]);
+
+/**
+ * ОДОБРЕННЫЕ КАНДИДАТЫ: `идентификатор рождённого измерения → идентификатор кандидата`.
+ *
+ * Форма связи снята С КОДА КОНВЕЙЕРА, а не придумана: одобрение пишет кандидату
+ * `status: 'approved'` и `approvedDimId` с адресом только что рождённого измерения
+ * (`src/lib/data/admin-dims.ts` → `approveCandidate`; тем же полем ходит `fix-catalog-tags.mjs`).
+ *
+ * 🔑 Статус проверяется ТОЧНЫМ равенством. У кандидата их четыре — `pending` · `approved` ·
+ * `rejected` · `returned`, — и три из них означают, что владелец записи НЕ одобрял: возвращённый
+ * на доработку кандидат тоже несёт `approvedDimId`, если его когда-то одобряли, и «есть поле»
+ * не равно «одобрено».
+ */
+export function indexApprovedCandidates(candidates) {
+  const index = new Map();
+  for (const c of candidates ?? []) {
+    if (c?.status !== 'approved') continue;
+    const dimId = c.approvedDimId;
+    if (typeof dimId === 'string' && dimId !== '') index.set(dimId, c.id);
+  }
+  return index;
+}
 
 /** Чтение свода с диска. Тонкая обёртка над ядром: всё, что можно проверить, проверяется без неё. */
 export function loadSvod(dir) {
@@ -372,10 +446,10 @@ if (runAsScript) {
       свои[classify(entry, THRESHOLD)] += 1;
       ярлыки[recordedClass(entry)] += 1;
     }
-    const согласны = LIFECYCLE_TECH_TAGS.every((t) => свои[t] === ярлыки[t]);
+    const согласны = SVOD_CLASSES.every((t) => свои[t] === ярлыки[t]);
     if (!согласны) плохо += 1;
     console.log(`\nРазбор свода при пороге ${THRESHOLD} слов:`);
-    for (const t of LIFECYCLE_TECH_TAGS) {
+    for (const t of SVOD_CLASSES) {
       console.log(
         `  ${t.padEnd(14)} вывод ${String(свои[t]).padStart(5)} · ярлык свода ${String(ярлыки[t]).padStart(5)}`,
       );
@@ -432,7 +506,16 @@ if (runAsScript) {
     const d = doc.data() ?? {};
     dims.push({ id: doc.id, title: d.title ?? {}, tags: d.tags ?? [], techTags: d.techTags ?? [] });
   }
+  /*
+   * Очередь кандидатов — ВТОРОЙ источник правды, и нужен он только записям вне свода. Читается
+   * целиком: очередь на порядки меньше каталога (сотни против пяти тысяч), а выборка по статусу
+   * потребовала бы индекса ради экономии, которой не видно.
+   */
+  const candSnap = await db.collection('dim_candidates').get();
+  const approved = indexApprovedCandidates(candSnap.docs.map((d) => ({ id: d.id, ...(d.data() ?? {}) })));
+
   console.log(`\nКаталог: ${dims.length} записей (служебный ${SERVICE_DOC_ID} не в счёт) · свод: ${index.size}`);
+  console.log(`Очередь кандидатов: ${candSnap.size} · из них одобренных с адресом измерения: ${approved.size}`);
 
   // ── ПРЕДОХРАНИТЕЛЬ УТЕЧКИ — ДО всего остального ──────────────────────────────────────────
   const утечки = dims.map((d) => ({ id: d.id, tag: leakedTechTag(d.tags) })).filter((x) => x.tag);
@@ -445,15 +528,18 @@ if (runAsScript) {
     process.exit(3);
   }
 
-  const plan = planCatalog(dims, index, THRESHOLD);
+  const plan = planCatalog(dims, index, THRESHOLD, approved);
   const check = crossCheck(plan, dims.length);
 
   console.log('\n── РАЗБОР ──');
-  for (const t of LIFECYCLE_TECH_TAGS) {
+  for (const t of SVOD_CLASSES) {
     console.log(`  ${t.padEnd(14)} ${String(plan.counts[t]).padStart(5)}   (по ярлыкам свода ${plan.recorded[t]})`);
   }
+  console.log(
+    `  ${TECH_TAG.OWNER_APPROVED.padEnd(14)} ${String(plan.counts[TECH_TAG.OWNER_APPROVED]).padStart(5)}   (по одобренным кандидатам, не по своду)`,
+  );
   console.log(`  размечено     ${String(check.classified).padStart(5)}`);
-  console.log(`  не в своде    ${String(plan.unknown.length).padStart(5)}   ← класс НЕ присваивается`);
+  console.log(`  без источника ${String(plan.unknown.length).padStart(5)}   ← ни в своде, ни в одобренных кандидатах: класс НЕ присваивается`);
   console.log(`  неоднозначно  ${String(plan.ambiguous.length).padStart(5)}   ← класс НЕ присваивается`);
   console.log(`  ИТОГО         ${String(check.total).padStart(5)}   при ${check.catalogSize} записях каталога`);
   if (plan.matchedByTail) {
@@ -464,7 +550,10 @@ if (runAsScript) {
   console.log(`  ${check.svodOk ? '✅' : '❌'} ② вывод и ярлыки свода ${check.svodOk ? 'согласны' : 'РАЗОШЛИСЬ — порог уехал'}`);
 
   if (plan.unknown.length) {
-    console.log(`\n🔴 ЗАПИСЕЙ НЕТ В СВОДЕ: ${plan.unknown.length}. Их судьбу решает человек, а не прибор.`);
+    console.log(`\n🔴 БЕЗ ИСТОЧНИКА СУЖДЕНИЯ: ${plan.unknown.length}. Их судьбу решает человек, а не прибор.`);
+    console.log('   Записи нет ни в своде, ни среди одобренных кандидатов. Это НЕ обязательно');
+    console.log('   аномалия: измерение можно завести и ручной формой комнаты, минуя очередь');
+    console.log('   кандидатов, — тогда кандидата у него нет никогда.');
     for (const u of plan.unknown) console.log(`   ${u.id}  ${u.title}`);
   }
   if (plan.ambiguous.length) {
