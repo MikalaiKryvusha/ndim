@@ -18,6 +18,7 @@
  */
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { connectAuthEmulator, getAuth, onAuthStateChanged, type Auth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore';
 import { connectStorageEmulator, getStorage, type FirebaseStorage } from 'firebase/storage';
@@ -109,10 +110,46 @@ function databaseId(): string {
   return requested && /^[a-z0-9-]+$/.test(requested) ? requested : contour;
 }
 
+/**
+ * Сайт-ключ reCAPTCHA v3 для App Check (`plans/22` фаза 3; обязательство владельца, интервью
+ * №009: «App Check — включу сам… без него широкая гостевая дверь становится приглашением
+ * накрутить воронку»).
+ *
+ * ПУСТАЯ строка = App Check выключен: код стоит на месте и ждёт ключа. Создать ключ может
+ * только владелец — у админки reCAPTCHA нет API (`homeworks/13`). Сюда вписывается САЙТ-ключ,
+ * публичная половина: как и весь веб-конфиг выше, он по устройству лежит в бандле у каждого
+ * посетителя. Секретная половина машины не касается вовсе — владелец вносит её в консоль
+ * Firebase при регистрации провайдера.
+ *
+ * 🔴 Принуждение этим НЕ включается. Ключ + выключенный переключатель принуждения в консоли =
+ * РЕЖИМ НАБЛЮДЕНИЯ: токены прикладываются к запросам, консоль копит доли «с токеном / без»,
+ * ни один запрос не блокируется. Принуждение — отдельный шаг фазы 3 после стабилизации метрик
+ * (решение отдано агенту №009 — оно обратимо переключателем), и у него свой хвост: debug-токены
+ * боевым смоукам двери, иначе они умрут первыми.
+ */
+const APP_CHECK_SITE_KEY = '';
+
 let app: FirebaseApp | null = null;
 let firestore: Firestore | null = null;
 let auth: Auth | null = null;
 let bucket: FirebaseStorage | null = null;
+
+/**
+ * App Check — только БОЕВОЙ контур: эмуляторы стенда токены не проверяют вовсе, а стейдж
+ * закрыт от людей и роботов — защищать его не от кого, и плодить вторую регистрацию незачем
+ * (Оккам). Врезка стоит сразу за рождением app, ДО первых запросов данных: в наблюдении
+ * порядок безразличен, под будущим принуждением станет обязательным — пусть будет верным с
+ * первого дня. Воронка лендинга (`data/funnel.ts`) импортирует этот же модуль — её запросы
+ * получают токены той же врезкой («покрыть воронку тоже», `plans/22` фаза 3).
+ */
+function maybeInitAppCheck(current: FirebaseApp): void {
+  if (!APP_CHECK_SITE_KEY) return;
+  if (typeof document === 'undefined' || isStand() || isStage()) return;
+  initializeAppCheck(current, {
+    provider: new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
 
 function ensureApp(): FirebaseApp {
   if (app) return app;
@@ -132,6 +169,7 @@ function ensureApp(): FirebaseApp {
           ? STAGE_CONFIG
           : PROD_CONFIG,
     );
+  maybeInitAppCheck(app);
   return app;
 }
 
