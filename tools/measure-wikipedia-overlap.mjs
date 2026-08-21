@@ -31,8 +31,20 @@
  * Прогон возобновляемый: ответы Википедии кладутся в `test-results/wiki-cache/` (вне git), и
  * повторный запуск по тем же записям сети не касается. Поэтому большой каталог берётся частями:
  * упал прогон — продолжаешь с `--from`, уже скачанное не перекачивается.
+ *
+ * ⛔ ЧИНИШЬ ПОСЛЕДНЮЮ КОПИЮ ЯЗЫКА — ПЕРЕВЕСЬ ЕГО КОНТРОЛЬ, А НЕ СНИМАЙ.
+ * Правило записано ЗДЕСЬ намеренно: тот, кто вылечит запись из `LIVE_CONTROLS`, придёт чинить
+ * упавший прогон и прочитает шапку — а документ бага он читать не будет.
+ * **Контроль, привязанный к дефекту, умирает вместе с дефектом.** Свод не начинается без живого
+ * контроля дороги (поиск статьи → кэш → разбор ответа), и это не формальность: однажды обрезанный
+ * ключ кэша свалил все статьи в один файл, и прогон честно напечатал «97 чистых». Поэтому, когда
+ * контрольная запись перестаёт быть копией, её МЕСТО занимает другая доказанная копия того же
+ * языка — красный контроль это сигнал перевесить, а не повод отключить. Когда копий не останется
+ * вовсе, держать контроль будет не на чем, и это будет хорошая новость, а не поломка прибора.
+ * История перевесов: ru — «Деньги на двоих» → `the-terminator-isl2hxdu` (2026-08-17, первая
+ * запись вылечилась); en — заведён `corrective-measures-akp4cezf` (2026-08-22, ряд 50 слов).
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync, renameSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
@@ -347,12 +359,35 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function api(params) {
   const url = `https://${LANG}.wikipedia.org/w/api.php?${new URLSearchParams({ ...params, format: 'json' })}`;
   const key = join(CACHE, `${LANG}-${createHash('sha256').update(url).digest('hex')}.json`);
-  if (existsSync(key)) return JSON.parse(readFileSync(key, 'utf8'));
+  /*
+   * 🔴 СУЩЕСТВОВАНИЕ ФАЙЛА КЭША — НЕ ДОКАЗАТЕЛЬСТВО ЕГО ГОДНОСТИ. Оплачено `bugs/NEW` (2026-08-22):
+   * двенадцать записей кэша оказались ЦЕЛИКОМ из нулевых байтов при ненулевом размере (500–587 Б,
+   * подпись оборванной записи на NTFS: размер выделен, данные не долетели). `JSON.parse` на таком
+   * файле бросал, исключение ловилось выше по записи, запись получала `unverified` — и так при
+   * КАЖДОМ прогоне, потому что файл на месте и `existsSync` доволен. Кэш, который должен ускорять,
+   * стал вечной блокировкой: он прятал ДВА настоящих заимствования, и прятал бы их всегда.
+   * Поэтому битая запись не роняет прогон и не переживает его — она удаляется и перекачивается.
+   */
+  if (existsSync(key)) {
+    try {
+      return JSON.parse(readFileSync(key, 'utf8'));
+    } catch {
+      console.warn(`  ⚠️ запись кэша испорчена, перекачиваю: ${key}`);
+      unlinkSync(key);
+    }
+  }
   await sleep(DELAY_MS);
   const res = await fetch(url, { headers: { 'User-Agent': UA } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
-  writeFileSync(key, JSON.stringify(data), 'utf8');
+  /*
+   * ЗАПИСЬ АТОМАРНА — во временный файл рядом, затем `rename`. Прямая запись оставляет после
+   * обрыва процесса файл нужного размера с недолетевшими данными, и он неотличим от годного:
+   * ровно так и родились те двенадцать. `rename` в пределах одного тома либо случился, либо нет.
+   */
+  const tmp = `${key}.tmp-${process.pid}`;
+  writeFileSync(tmp, JSON.stringify(data), 'utf8');
+  renameSync(tmp, key);
   return data;
 }
 
@@ -402,21 +437,44 @@ const dims = JSON.parse(readFileSync(SNAPSHOT, 'utf8'));
  * Пока в каталоге остаются копии, живой контроль есть на чём держать; когда не останется —
  * держать его будет не на чем, и это будет хорошая новость, а не поломка прибора.
  */
-const LIVE_CONTROL = { slug: 'the-terminator-isl2hxdu', lang: 'ru', minRun: 20 };
+/*
+ * 🔴 КОНТРОЛЬ НУЖЕН КАЖДОМУ ЯЗЫКУ, И ЭТО ОПЛАЧЕНО. Здесь стояла ОДНА запись с полем `lang: 'ru'`,
+ * а условие входа звучало `LANG === LIVE_CONTROL.lang` — то есть для английского контроль
+ * ВЫКЛЮЧАЛСЯ ЦЕЛИКОМ и молча. Все английские своды шли без той защиты, ради которой она написана,
+ * — включая тот, на котором стоит работа по 512 записям. Дефект-близнец отравленного кэша:
+ * кэш прячет работу, а отсутствующий контроль делает сокрытие НЕНАБЛЮДАЕМЫМ (`bugs/NEW`, 2026-08-22).
+ *
+ * Поэтому контроль теперь СЛОВАРЬ по языкам, а язык без контроля — ОСТАНОВКА прогона, а не пропуск:
+ * молчаливый пропуск и был дефектом.
+ */
+const LIVE_CONTROLS = {
+  ru: { slug: 'the-terminator-isl2hxdu', minRun: 20 },
+  // Английский кандидат снят замером 2026-08-22: ряд 50 слов, вердикт `copied`. Порог взят ниже
+  // измеренного с запасом — контроль судит ДОРОГУ, а не длину конкретного ряда.
+  en: { slug: 'corrective-measures-akp4cezf', minRun: 40 },
+};
 
-if (LANG === LIVE_CONTROL.lang && !ONLY) {
-  const c = dims.find((d) => d.slug === LIVE_CONTROL.slug);
+if (!ONLY) {
+  const CONTROL = LIVE_CONTROLS[LANG];
+  if (!CONTROL) {
+    console.error(
+      `\n❌ ДЛЯ ЯЗЫКА «${LANG}» НЕ ОБЪЯВЛЕН ЖИВОЙ КОНТРОЛЬ. Свод без контроля дороги ничего не` +
+        ' доказывает — заведи запись с известным заимствованием в LIVE_CONTROLS и только потом гони.',
+    );
+    process.exit(1);
+  }
+  const c = dims.find((d) => d.slug === CONTROL.slug);
   const art = c ? await articleText(c).catch(() => null) : null;
   const run = art ? longestCommonRun(words(c.description[LANG]), words(art.text)).length : 0;
-  if (run < LIVE_CONTROL.minRun) {
+  if (run < CONTROL.minRun) {
     console.error(
-      `\n❌ ЖИВОЙ КОНТРОЛЬ НЕ ПРОШЁЛ: на «${LIVE_CONTROL.slug}» ожидался ряд ≥ ${LIVE_CONTROL.minRun} слов, ` +
+      `\n❌ ЖИВОЙ КОНТРОЛЬ НЕ ПРОШЁЛ: на «${CONTROL.slug}» ожидался ряд ≥ ${CONTROL.minRun} слов, ` +
         `получено ${run}. Дорога сломана (поиск статьи, кэш или разбор ответа) — числа прогона ` +
         'ничего не значат, свод не начат.',
     );
     process.exit(1);
   }
-  console.log(`✅ живой контроль: «${LIVE_CONTROL.slug}» опознан копией (ряд ${run} слов)\n`);
+  console.log(`✅ живой контроль (${LANG}): «${CONTROL.slug}» опознан копией (ряд ${run} слов)\n`);
 }
 
 const targets = (ONLY ? dims.filter((d) => d.slug === ONLY) : dims.slice(FROM, FROM + LIMIT)).filter(

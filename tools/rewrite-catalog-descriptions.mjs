@@ -141,8 +141,19 @@ export function journalText(edits, { applied, skipped }) {
   return lines.join('\n');
 }
 
+/*
+ * 🔴 ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН — СПРАШИВАЕТСЯ ОДИН РАЗ И ДЛЯ ОБОИХ РЕЖИМОВ.
+ *
+ * Предохранитель ниже (рабочий режим) стоял, а самотест — нет, и он идёт РАНЬШЕ. Цена наблюдалась
+ * прямо (`bugs/NEW`, 2026-08-22): `node tools/gate-rewrites.mjs --selftest` печатал зелёный
+ * самотест ЭТОГО файла и выходил кодом 0, потому что ворота импортируют отсюда `checkEdit`.
+ * Ворота не отрабатывали ни разу — а спросивший «здоровы ли ворота?» получал зелёный от ДРУГОГО
+ * прибора. Это ложный зелёный на посту, и он опаснее молчания.
+ */
+const runAsScript = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
 // ── Самотест: прибор проверяет СЕБЯ, а не каталог ───────────────────────────────────────────
-if (process.argv.includes('--selftest')) {
+if (runAsScript && process.argv.includes('--selftest')) {
   const cases = [
     [{ slug: 'a', before: 'Released in 1998 with 103 episodes.', after: 'The 1998 series ran for 103 episodes.' }, 0],
     // Потерянные числа сходятся в ОДНУ жалобу со списком — это одна проблема «текст похудел»,
@@ -172,7 +183,7 @@ if (process.argv.includes('--selftest')) {
  * Класс закреплён: **файл, у которого есть и экспорт, и работа на верхнем уровне, обязан
  * спрашивать, запустили его или подключили.** Ловилось трижды за сутки — значит это правило.
  */
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (runAsScript) {
 const file = process.argv[2];
 const apply = process.argv.includes('--apply');
 
