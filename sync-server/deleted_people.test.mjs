@@ -55,6 +55,15 @@ describe('Сервер синхронизации: следы за удалив�
     await db.doc('suggestions/s-gone').set({ authorUid: GONE, description: 'Умение слушать', created: 1 });
     await db.doc('suggestions/s-alive').set({ authorUid: ALIVE, description: 'Любовь к морю', created: 1 });
 
+    // Дружбы (plans/63 шаг 4): пара с ушедшим осиротеет, пара двух живых неприкосновенна.
+    // id = min_max (schema.ts → friendshipId); удаление ищет по полям a/b, не по id.
+    await db.doc(`friendships/${ALIVE}_${GONE}`).set({
+      a: ALIVE, b: GONE, requestedBy: GONE, status: 'accepted', created: 1, acceptedAt: 1,
+    });
+    await db.doc(`friendships/${ALIVE}_third-person`).set({
+      a: ALIVE, b: 'third-person', requestedBy: ALIVE, status: 'pending', created: 1, acceptedAt: null,
+    });
+
     removed = await cleanupDeletedPeople(1000);
   });
 
@@ -74,6 +83,11 @@ describe('Сервер синхронизации: следы за удалив�
 
   test('подсказка аудитории у другого убрана', async () => {
     const snap = await db.doc(`users/${ALIVE}/audience/${GONE}`).get();
+    assert.equal(snap.exists, false);
+  });
+
+  test('его дружба удалена — у живого друга не висит несуществующий человек (plans/63 шаг 4)', async () => {
+    const snap = await db.doc(`friendships/${ALIVE}_${GONE}`).get();
     assert.equal(snap.exists, false);
   });
 
@@ -101,6 +115,10 @@ describe('Сервер синхронизации: следы за удалив�
   test('чужое предложение не обезличено', async () => {
     const snap = await db.doc('suggestions/s-alive').get();
     assert.equal(snap.data().authorUid, ALIVE);
+  });
+
+  test('дружба двух живых не тронута', async () => {
+    assert.ok((await db.doc(`friendships/${ALIVE}_third-person`).get()).exists);
   });
 
   test('повторный проход без сирот бесплатен и ничего не трогает', async () => {
