@@ -61,6 +61,9 @@ const DOCS = [
   'KAIF_FRAMEWORK.md',
   'AUTHOR_STYLOMETRY.md',
   'README.md',
+  // Локальные канон-документы команды worktree (ideas/40, plans/66 шаг 1.4).
+  'NDIM_WORKTREE_DEV_TEAM_MANIFEST.md',
+  'NDIM_WORKTREE_DEV_TEAM_STATUS.md',
 ];
 
 const CHECK = process.argv.includes('--check');

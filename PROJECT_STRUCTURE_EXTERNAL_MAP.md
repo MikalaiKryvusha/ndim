@@ -40,6 +40,8 @@ D:\work\ai_sandbox\ndim\
 ├── PROJECT_STRUCTURE_EXTERNAL_MAP.md    # этот файл
 ├── PROJECT_ARCHITECTURE_INTERNAL_MAP.md # внутренняя карта: абстракции и их взаимодействие
 ├── KAIF_FRAMEWORK.md                    # «KAIF, развёрнутый здесь» — сводка для человека
+├── NDIM_WORKTREE_DEV_TEAM_MANIFEST.md   # ★ команда ИИ-агентов по ролям (ideas/40): роли, общение, git-режим
+├── NDIM_WORKTREE_DEV_TEAM_STATUS.md     # статус-доска ролей «в моменте» (инструмент tools/team-status.mjs)
 │
 │  ── ДИРЕКТОРИИ ЗНАНИЙ (у каждой свой README.md) ──
 ├── plans/         # детальные пошаговые планы (реализация шагов MASTER_PLAN)

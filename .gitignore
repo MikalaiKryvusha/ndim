@@ -73,3 +73,7 @@ KAIF_ADAPTATION_TASK.superseded.md
 .kaif/stage-receipt.json
 # Журнал обходов замка стейджа: тоже состояние машины. Дверь его НЕ читает — он для человека.
 .kaif/stage-bypass.log
+
+# Служебные файлы статус-доски команды (tools/team-status.mjs): замок и атомарная запись
+NDIM_WORKTREE_DEV_TEAM_STATUS.md.lock
+NDIM_WORKTREE_DEV_TEAM_STATUS.md.tmp
