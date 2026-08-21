@@ -42,6 +42,7 @@
     currentEmail,
     currentSession,
     ensureSpaceExists,
+    isExpiredGuestSession,
     isGuestSession,
     loadProfileScreen,
     previewAs,
@@ -64,7 +65,7 @@
   import { track } from '$lib/data/funnel';
   import { EVERYONE, FRIENDS } from '$lib/model/visibility';
   import type { Audience, ProfileProperty } from '$lib/model/visibility';
-  import { isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
+  import { GUEST_TTL_DAYS, isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
 
   import { replaceUrl } from '$lib/ui/history';
   // Вкладки «Личное/Видимость» упразднены (слово владельца 2026-07-27): предпросмотр
@@ -169,7 +170,7 @@
    * `researches/17`). Пусто — значит заход первый, и лоадер честен.
    */
   const warm = peekProfileScreen();
-  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout'>(warm ? 'ready' : 'connecting');
+  let stand = $state<'connecting' | 'ready' | 'down' | 'signedout' | 'expired'>(warm ? 'ready' : 'connecting');
   let standError = $state('');
   let data = $state<ProfileScreenData | null>(warm ?? null);
 
@@ -382,6 +383,16 @@
        * быть доступен гостю и здесь, иначе реплей замка bugs/84.
        */
       if (isGuestSession() && error instanceof ProfileMissingError) {
+        /*
+         * За одним симптомом — ДВА состояния, и путать их нельзя (plans/63 шаг 5):
+         * свежий гость без документа — норма; ИСТЁКШИЙ гость — его документы унесла
+         * уборка (7 дней от рождения, №010 Р3), и пустой продукт без объяснения — это
+         * дефект класса bugs/84, только злее: человек вошёл в пустоту.
+         */
+        if (isExpiredGuestSession()) {
+          stand = 'expired';
+          return;
+        }
         guest = true;
         acctEmail = currentEmail();
         stand = 'ready';
@@ -414,6 +425,22 @@
   /** Продолжить гостем — тот же путь, что с лендинга. */
   async function continueAsGuest() {
     location.href = '/profile?guest=1';
+  }
+
+  /**
+   * «Начать заново» после истёкшей гостевой сессии (plans/63 шаг 5): мёртвую сессию
+   * отпускаем (signOutUser чистит и кэш экранов — дыра приватности иначе), затем — тот же
+   * путь, что с лендинга. Труд не переносится: его больше нет, об этом честно сказал экран.
+   */
+  async function restartAsGuest() {
+    await signOutUser();
+    location.href = '/profile?guest=1';
+  }
+
+  /** «Войти в аккаунт» после истёкшей сессии: отпустить мёртвого анонима и показать двери входа. */
+  async function signInFromExpired() {
+    await signOutUser();
+    location.href = '/profile';
   }
 
   /**
@@ -629,6 +656,18 @@
     },
     // Экран входа: человек не вошёл. Паролей в 2.0 нет — ни у новых людей, ни у тех,
     // кто пришёл из 1.x: вход по ссылке из письма подтверждает их почту сам.
+    // Гостевая сессия истекла (plans/63 шаг 5). Формулировка ВРЕМЕННАЯ и прямая, по
+    // словарю продукта; финальные текст и форма приедут из макетов фазы 5 эпика.
+    // Число дней — из схемы (GUEST_TTL_DAYS), копия разъехалась бы молча.
+    expired: {
+      title: { ru: 'Гостевая сессия истекла', en: 'Your guest session has expired' },
+      lede: {
+        ru: `Гость живёт в Пространстве ${GUEST_TTL_DAYS} дней с момента создания. Срок этой гостевой сессии вышел, и её данные удалены. Вы можете осмотреться заново новым гостем — или войти в свой аккаунт.`,
+        en: `A guest lives in the Space for ${GUEST_TTL_DAYS} days from creation. This guest session has run out, and its data has been erased. You can look around again as a new guest — or sign in to your account.`,
+      },
+      restart: { ru: 'Начать заново', en: 'Start over' },
+      signin: { ru: 'Войти в аккаунт', en: 'Sign in' },
+    },
     signedOut: {
       title: { ru: 'Войдите в Пространство', en: 'Sign in to the Space' },
       lede: {
@@ -1276,6 +1315,15 @@
         {/if}
 
         {#if signupError}<p class="err">{signupError}</p>{/if}
+      </div>
+    {:else if stand === 'expired'}
+      <!-- Гостевая сессия истекла (plans/63 шаг 5): данные унесла уборка, и продукт обязан
+           объяснить пустоту, а не молчать. Форма ВРЕМЕННАЯ — до макетов фазы 5 эпика. -->
+      <div class="card signin">
+        <h2>{t.expired.title[lang]}</h2>
+        <p class="state">{t.expired.lede[lang]}</p>
+        <button type="button" class="btn" onclick={restartAsGuest}>{t.expired.restart[lang]}</button>
+        <button type="button" class="btn ghost" onclick={signInFromExpired}>{t.expired.signin[lang]}</button>
       </div>
     {:else if stand === 'down'}
       <div class="card">

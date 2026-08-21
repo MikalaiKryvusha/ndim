@@ -17,6 +17,8 @@ import {
   BIRTH_YEAR_MIN,
   EVERYONE,
   GROUP_NAME_MAX,
+  GUEST_TTL_DAYS,
+  isGuestExpired,
   MAX_CUSTOM_GROUPS,
   NAME_PART_MAX,
   NICK_MAX,
@@ -260,5 +262,26 @@ describe('Умолчания видимости', () => {
     const properties = ['name', 'born', 'about', 'avatar', 'gender'];
     assert.deepEqual(Object.keys(newUserVisibility()).sort(), [...properties].sort());
     assert.deepEqual(Object.keys(migratedUserVisibility()).sort(), [...properties].sort());
+  });
+});
+
+describe('Срок жизни гостя — 7 дней от рождения (№010 Р3, plans/63)', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+
+  test('🔒 сама константа — 7, гвоздями: это обещание человеку, а не настройка', () => {
+    // Слово владельца (№010 Р3): «От даты создания анонимного аккаунта. Создал — отсчёт
+    // пошёл». Менять число можно только его новым словом.
+    assert.equal(GUEST_TTL_DAYS, 7);
+  });
+
+  test('граница точная: ровно 7 дней — ещё жив, 7 дней и миг — истёк', () => {
+    const born = NOW - 7 * DAY;
+    assert.equal(isGuestExpired(born, NOW), false, 'ровно 7 дней — не истёк');
+    assert.equal(isGuestExpired(born, NOW + 1), true, '7 дней и миллисекунда — истёк');
+  });
+
+  test('молодой гость не истёк, древний — истёк', () => {
+    assert.equal(isGuestExpired(NOW - 2 * DAY, NOW), false);
+    assert.equal(isGuestExpired(NOW - 40 * DAY, NOW), true);
   });
 });

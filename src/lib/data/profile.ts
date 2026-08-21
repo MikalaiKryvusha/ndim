@@ -29,6 +29,7 @@ import {
   assertValidRating,
   assertValidSuggestion,
   assertValidVisibilityMap,
+  isGuestExpired,
   type DimDoc,
   type GroupDoc,
   type ProfileData,
@@ -143,6 +144,22 @@ export async function signInGuest(): Promise<Uid> {
 /** Гость ли текущая сессия (анонимный вход). */
 export function isGuestSession(): boolean {
   return devAuth().currentUser?.isAnonymous === true;
+}
+
+/**
+ * Гостевая сессия ИСТЕКЛА (`plans/63` шаг 5): аноним старше срока жизни гостя. Правило
+ * возраста — общее с уборкой сервера синхронизации (`isGuestExpired` из схемы): экран и
+ * уборщик обязаны судить одним законом, иначе экран объявлял бы живого гостя умершим.
+ *
+ * Одного возраста мало: истёкшего отличает от свежего гостя отсутствие ДОКУМЕНТОВ (их
+ * унесла уборка). Поэтому финальное решение принимает экран профиля — возраст берёт
+ * отсюда, отсутствие документов — из `ProfileMissingError`.
+ */
+export function isExpiredGuestSession(now = Date.now()): boolean {
+  const user = devAuth().currentUser;
+  if (user?.isAnonymous !== true) return false;
+  const bornAt = Date.parse(user.metadata.creationTime ?? '');
+  return Number.isFinite(bornAt) && isGuestExpired(bornAt, now);
 }
 
 /** Почта текущего человека. У гостя её нет — и это не ошибка, а его состояние. */

@@ -77,7 +77,12 @@ import { computeSpaceStats, dayKey, snapshotOf } from '../src/lib/model/stats.ts
 // (`src/lib/data/dims.ts` читает индекс по этой же константе). Две копии строки «dims_list»
 // разъехались бы молча — а это ровно та пара «истина ↔ зеркало», на которой уже обжёгся
 // `bugs/106`: число измерений считалось по документам коллекции, а показывалось по индексу.
-import { RELATIONS_TOP_LIMIT as TOP_LIMIT, DIMS_INDEX_ID } from '../src/lib/model/schema.ts';
+import {
+  RELATIONS_TOP_LIMIT as TOP_LIMIT,
+  DIMS_INDEX_ID,
+  GUEST_TTL_DAYS,
+  isGuestExpired,
+} from '../src/lib/model/schema.ts';
 /** Версия формата relations-документа. */
 const RELATIONS_VERSION = 2;
 /** Измерение считается новым для виджета «Сегодня» первые сутки после появления. */
@@ -100,12 +105,11 @@ const { version: SERVER_VERSION } = JSON.parse(
 );
 const SERVER_BUILD = Number(process.env.SYNC_BUILD) || null;
 const SERVER_BUILT_AT = process.env.SYNC_BUILT_AT ?? null;
-/**
- * СРОК ЖИЗНИ ГОСТЯ — 7 дней ОТ РОЖДЕНИЯ АККАУНТА (`plans/63` шаг 2).
- *
- * 🔵 Семантику назначил владелец, интервью №010 Р3, дословно: «*От даты создания анонимного
- * аккаунта. Создал — отсчёт пошёл*». Это обещание человеку с лендинга («аноним живёт 7 дней»),
- * а не настройка: агент число не пересматривает, ручки окружения нет.
+/*
+ * СРОК ЖИЗНИ ГОСТЯ (`GUEST_TTL_DAYS`) объявлен в схеме, а не здесь (`plans/63` шаг 5):
+ * срок видят двое — сервер по нему убирает, клиент распознаёт «сессия истекла», и судить
+ * они обязаны одним правилом (`isGuestExpired`). Провенанс числа — у константы в схеме
+ * (№010 Р3: «От даты создания анонимного аккаунта. Создал — отсчёт пошёл»).
  *
  * Возраст меряется ПО AUTH (`metadata.creationTime`) — дата рождения правдива только там.
  * Бездействие (`lastSync`) и `dirty` в отборе не участвуют вовсе: прежний отбор по ним нёс две
@@ -116,7 +120,6 @@ const SERVER_BUILT_AT = process.env.SYNC_BUILT_AT ?? null;
  * гостя убиваем мы САМИ на 7-м дне, а внешняя 30-дневная чистка остаётся лишь страховкой для
  * учёток, переживших нашу уборку (например, пока она спала до октября).
  */
-const GUEST_TTL_DAYS = 7;
 
 /**
  * КАЛЕНДАРНЫЙ ПРЕДОХРАНИТЕЛЬ УБОРКИ ГОСТЕЙ — раньше этой даты не удаляется НИКТО (`plans/63`
@@ -880,9 +883,8 @@ export async function cleanupStaleGuests(now = Date.now()) {
     log('уборка гостей спит до 2026-10-01 (№042 В3: «начнём удалять с октября»)');
     return 0;
   }
-  const cutoff = now - GUEST_TTL_DAYS * 24 * 60 * 60 * 1000;
-
   // Один проход по всем учёткам: живые uid — для страховки, истёкшие анонимы — кандидаты.
+  // Правило возраста — общее с клиентом (isGuestExpired из схемы): судим одним законом.
   const liveUids = new Set();
   const expired = [];
   let page = await getAuth().listUsers(1000);
@@ -891,7 +893,7 @@ export async function cleanupStaleGuests(now = Date.now()) {
       liveUids.add(user.uid);
       const anonymous = user.providerData.length === 0;
       const bornAt = Date.parse(user.metadata.creationTime);
-      if (anonymous && Number.isFinite(bornAt) && bornAt < cutoff) expired.push(user.uid);
+      if (anonymous && Number.isFinite(bornAt) && isGuestExpired(bornAt, now)) expired.push(user.uid);
     }
     if (!page.pageToken) break;
     page = await getAuth().listUsers(1000, page.pageToken);
