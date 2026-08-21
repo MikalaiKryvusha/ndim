@@ -199,7 +199,7 @@ console.log('\n— правило показа оценок (интервью �
 }
 
 // ── РЯД ЗВЁЗД — ПРАВИЛО ВЛАДЕЛЬЦА (интервью №044, В3) ───────────────────────
-console.log('\n— ряд звёзд: золотые по заслугам, ноль — одна серая —');
+console.log('\n— ряд звёзд: золотые от единицы, ниже — одна тяжёлая серая —');
 {
   /*
    * 🔴 ЧТО СТЕРЕЖЁТСЯ. Слово владельца дословно: «*должна рисоваться одна серая звезда, как в
@@ -224,7 +224,7 @@ console.log('\n— ряд звёзд: золотые по заслугам, но
   const want = (d) => starRow(num(d.rating));
 
   // Поимённое дополнение выборки: редкое состояние добирается из данных целиком.
-  const rare = dimsAll.filter((d) => num(d.rates) >= 1 && num(d.rating) === 0).map((d) => d.slug);
+  const rare = dimsAll.filter((d) => num(d.rates) >= 1 && num(d.rating) < 1).map((d) => d.slug);
 
   let seenGold = 0;
   let seenGrey = 0;
@@ -250,7 +250,7 @@ console.log('\n— ряд звёзд: золотые по заслугам, но
        * (`class="on svelte-d710dx"`), поэтому ищем слово среди классов, а не точное совпадение.
        */
       const gold = (row.match(/<i class="[^"]*\bon\b[^"]*">★<\/i>/g) ?? []).length;
-      const grey = (row.match(/<i class="[^"]*\bzero\b[^"]*">★<\/i>/g) ?? []).length;
+      const grey = (row.match(/<i class="[^"]*\blow\b[^"]*">★<\/i>/g) ?? []).length;
       const total = (row.match(/★/g) ?? []).length;
       const expect = want(d);
 
@@ -268,13 +268,13 @@ console.log('\n— ряд звёзд: золотые по заслугам, но
         emptyLeft += 1;
         if (!firstBad) firstBad = `${lang}/${slug}: звёзд ${total}, а размеченных ${gold + grey}`;
       }
-      if (num(d.rating) > 0 && grey > 0) {
+      if (num(d.rating) >= 1 && grey > 0) {
         greyAtRated += 1;
         if (!firstBad) firstBad = `${lang}/${slug}: серая звезда при оценке ${d.rating}`;
       }
-      if (num(d.rating) === 0 && gold > 0) {
+      if (num(d.rating) < 1 && gold > 0) {
         goldAtZero += 1;
-        if (!firstBad) firstBad = `${lang}/${slug}: золотая звезда при нулевой оценке`;
+        if (!firstBad) firstBad = `${lang}/${slug}: золотая звезда при оценке ${d.rating} (ниже единицы)`;
       }
     }
   }
@@ -282,8 +282,8 @@ console.log('\n— ряд звёзд: золотые по заслугам, но
   check('число золотых звёзд равно округлённой оценке', wrongCount === 0,
     `нарушений: ${wrongCount}${firstBad && wrongCount ? ` (${firstBad})` : ''}`);
   check('пустых позиций в ряду НЕТ вовсе', emptyLeft === 0, `нарушений: ${emptyLeft}`);
-  check('серой звезды НЕТ там, где оценка выше нуля', greyAtRated === 0, `нарушений: ${greyAtRated}`);
-  check('золотой звезды НЕТ там, где оценка ровно ноль', goldAtZero === 0, `нарушений: ${goldAtZero}`);
+  check('серой звезды НЕТ там, где оценка от единицы', greyAtRated === 0, `нарушений: ${greyAtRated}`);
+  check('золотого НЕТ там, где оценка ниже единицы', goldAtZero === 0, `нарушений: ${goldAtZero}`);
   check('ряды с золотыми звёздами реально наблюдались', seenGold > 0, `страниц: ${seenGold}`);
   /*
    * Редкое состояние проверяется ровно тогда, когда оно есть в каталоге: сегодня таких объектов
@@ -291,10 +291,10 @@ console.log('\n— ряд звёзд: золотые по заслугам, но
    * при этом нельзя, поэтому число печатается всегда.
    */
   if (rare.length) {
-    check('🔴 ОДНА СЕРАЯ звезда реально наблюдалась (добор выборки поимённо)', seenGrey > 0,
+    check('🔴 ОДНА ТЯЖЁЛАЯ СЕРАЯ звезда реально наблюдалась (добор выборки поимённо)', seenGrey > 0,
       `в каталоге ${rare.length}, наблюдений ${seenGrey}: ${rare.join(' · ')}`);
   } else {
-    console.log('  ℹ в каталоге нет объектов с нулевой средней при живых голосах — серая звезда не наблюдалась');
+    console.log('  ℹ в каталоге нет объектов со средней ниже единицы при живых голосах — серая звезда не наблюдалась');
   }
 }
 

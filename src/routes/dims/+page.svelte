@@ -70,7 +70,8 @@
   import { GRADE_FACES } from '$lib/ui/emojiscale';
   import { localizedText, votesUnit, type Lang } from '$lib/ui/format';
   // Правило показа оценок — ОДНО на приложение и на публичные страницы (интервью №022).
-  import { ratingView } from '$lib/content/dims-rating';
+  // Ряд звёзд — та же функция, что на публичной карточке и на хабе каталога.
+  import { ratingView, starRow } from '$lib/content/dims-rating';
   import { lang as currentLang } from '$lib/ui/lang.svelte';
   import GradeFace from '$lib/ui/GradeFace.svelte';
   import { MOTION } from '$lib/ui/motion';
@@ -1412,9 +1413,18 @@
             -->
             <div class="rating">
               {#if ratingView(card.rates).showStars}
+                {@const row = starRow(card.rating)}
                 <span class="rval">{card.rating}</span>
+                <!--
+                  Ряд звёзд считает `starRow` — ОДНА функция на весь проект (правило владельца
+                  №044 В3). Ниже единицы — одна тяжёлая серая звезда, от единицы и выше — золотые
+                  числом округлённой оценки, пустых позиций нет вовсе. Экран продукта и публичная
+                  карточка обязаны показывать один и тот же объект ОДИНАКОВО.
+                  ⛔ Это строка ПОКАЗА оценки, а не шкала ВВОДА (`.stars` ниже) — её не трогать.
+                -->
                 <span class="rstars" aria-hidden="true">
-                  {#each Array(10) as _, i (i)}<i class:lit={i < Math.round(card.rating)}>★</i>{/each}
+                  {#each Array(row.gold) as _, i (i)}<i class="lit">★</i>{/each}
+                  {#if row.grey}<i class="low">★</i>{/if}
                 </span>
                 {#if ratingView(card.rates).showRaterCount}
                   <span class="rvotes">({card.rates} {votesUnit(card.rates, lang)})</span>
@@ -1825,8 +1835,11 @@
   /* line-height: 1 — иначе строка крупной цифры выше строки «ещё без голосов» (bugs/15). */
   .rval { font-size: 21px; font-weight: 800; color: var(--up, #22c55e); letter-spacing: -.5px; line-height: 1; }
   /* Пустые звёзды: --edge в светлой «Бумаге» почти белый — берём приглушённый общий тон. */
-  .rstars i { font-style: normal; font-size: 12px; color: color-mix(in srgb, var(--faint) 45%, transparent); }
-  .rstars i.lit { color: #f5a524; }
+  .rstars i { font-style: normal; font-size: 12px; color: #f5a524; }
+  /* Ниже единицы — тяжёлый серый (правило владельца №044 В3), тот же токен `--dim`, что на
+     публичной карточке и на хабе. Прежнее `color-mix(--faint 45%)` было цветом ПУСТОЙ позиции,
+     а пустых позиций больше нет вовсе. */
+  .rstars i.low { color: var(--dim); }
   .rvotes { color: var(--faint); font-size: 12px; }
 
   /* Крупные звёзды (правка владельца: «звёзды большие как в v2»). */

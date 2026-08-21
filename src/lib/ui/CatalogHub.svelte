@@ -22,7 +22,9 @@
 -->
 <script lang="ts">
   import PublicBar from '$lib/ui/PublicBar.svelte';
-  import { ratingView } from '$lib/content/dims-rating';
+  // Ряд звёзд — ТА ЖЕ функция, что на карточке объекта: две поверхности показывают одно и то
+  // же число, и расходиться им запрещено (класс «истина ↔ зеркало»).
+  import { ratingView, starRow } from '$lib/content/dims-rating';
   import { CATALOG_COPY } from '$lib/content/catalog-copy';
   import { num } from '$lib/ui/format';
   import type { HubPageView } from '$lib/content/catalog-view';
@@ -31,8 +33,7 @@
 
   const t = $derived(CATALOG_COPY[data.lang]);
 
-  /** Звёзды рисуются от округлённой средней; шкала 0…10 — жест оценки из 1.x. */
-  const filled = (rating: number) => Math.round(rating);
+  /** Число рядом со звёздами; ряд звёзд считает `starRow` — правило одно на весь проект. */
   const average = (rating: number) => rating.toFixed(1).replace('.', data.lang === 'ru' ? ',' : '.');
   /** Год и автор в одной строке; неизвестное поле пусто и разделитель за собой не тянет. */
   const meta = (year: string, author: string) => [year, author].filter(Boolean).join(' · ');
@@ -75,8 +76,10 @@
             <b>{card.title}</b>
             {#if meta(card.year, card.author)}<span class="mt">{meta(card.year, card.author)}</span>{/if}
             {#if rv.showStars}
+              {@const row = starRow(card.rating)}
               <span class="stars" aria-hidden="true">
-                {#each Array(10) as _, s (s)}<i class:on={s < filled(card.rating)}>★</i>{/each}
+                {#each Array(row.gold) as _, s (s)}<i class="on">★</i>{/each}
+                {#if row.grey}<i class="low">★</i>{/if}
               </span>
             {/if}
           </span>
@@ -250,10 +253,13 @@
   }
   .stars i {
     font-style: normal;
-    color: var(--edge);
-  }
-  .stars i.on {
     color: var(--star);
+  }
+  /* Ниже единицы — одна тяжёлая серая звезда (правило владельца №044 В3). Токен `--dim` — тот же,
+     что на карточке объекта: две поверхности обязаны выглядеть одинаково, иначе человек видит
+     разное про один и тот же объект. */
+  .stars i.low {
+    color: var(--dim);
   }
   .sc {
     flex: 0 0 auto;

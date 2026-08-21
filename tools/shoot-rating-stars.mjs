@@ -25,7 +25,7 @@
  */
 import { chromium } from '@playwright/test';
 import { mkdir, rm } from 'node:fs/promises';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 // Рецепт гашения стенда — ОДИН на все приборы (`EXP-0181`): маска по командной строке в
@@ -55,10 +55,34 @@ const pick = (test, label) => {
   return d ? { slug: d.slug, label: `${label} · ${d.title.ru} · оценка ${d.rating}, голосов ${d.rates}` } : null;
 };
 const CASES = [
-  pick((d) => num(d.rates) >= 1 && num(d.rating) === 0, 'ноль при живых голосах'),
+  pick((d) => num(d.rates) >= 1 && num(d.rating) < 1, 'ниже единицы — тяжёлая серая'),
   pick((d) => num(d.rates) >= 1 && Math.round(num(d.rating)) === 1, 'оценка 1'),
   pick((d) => num(d.rates) >= 1 && Math.round(num(d.rating)) === 8, 'оценка 8'),
 ].filter(Boolean);
+
+/*
+ * ЧЕТВЁРТЫЙ КАДР — ХАБ, И ОН ПРО ПАРИТЕТ. Правило звёзд накрывает три поверхности; владелец
+ * судит его глазами, а «на хабе так же» словами не доказывается. Берём ту страницу хаба, где
+ * реально стоит объект с тяжёлой серой звездой, — тогда одна картинка показывает и хаб, и
+ * согласие хаба с карточкой.
+ *
+ * Адрес НЕ вычисляется формулой пагинации: он ИЩЕТСЯ в собранном сайте по слагу. Формула —
+ * второй источник истины, и она разъедется с продуктом при первой правке порядка.
+ */
+const hubPageFor = (slug) => {
+  const root = resolve('build', 'ru', 'catalog');
+  if (!existsSync(root)) return null;
+  const walk = (dir) =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? walk(resolve(dir, e.name)) : e.name.endsWith('.html') ? [resolve(dir, e.name)] : [],
+    );
+  for (const file of walk(root)) {
+    if (!readFileSync(file, 'utf8').includes(`/ru/dimension/${slug}"`)) continue;
+    const rel = file.slice(resolve('build').length + 1).replace(/\\/g, '/').replace(/\.html$/, '');
+    return `/${rel}`;
+  }
+  return null;
+};
 
 if (CASES.length < 3) {
   console.error(`❌ в каталоге нашлось только ${CASES.length} случая из трёх — снимать пару неполной нельзя`);
@@ -105,15 +129,30 @@ for (const width of [390, 1440]) {
     const page = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 2 });
     await page.addInitScript((t) => localStorage.setItem('ndim-theme', t), theme);
 
-    for (const c of CASES) {
-      const url = `${BASE}/ru/dimension/${c.slug}`;
+    /** Что снимаем: три карточки правила + страница хаба для паритета. */
+    const targets = CASES.map((c) => ({ ...c, path: `/ru/dimension/${c.slug}`, row: null }));
+    // Кадр паритета: страница хаба, где стоит объект с тяжёлой серой звездой.
+    const hubPath = hubPageFor(CASES[0].slug);
+    if (hubPath) {
+      targets.push({
+        slug: 'hub-' + hubPath.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, ''),
+        label: `ПАРИТЕТ: хаб ${hubPath} со строкой «${CASES[0].slug}»`,
+        path: hubPath,
+        // На хабе десятки строк; мерить цвета «по всей странице» бессмысленно — меряем РОВНО ту
+        // строку, ради которой кадр и снят.
+        row: `a.row[href="/ru/dimension/${CASES[0].slug}"] .stars i`,
+      });
+    }
+
+    for (const c of targets) {
+      const url = `${BASE}${c.path}`;
       const res = await page.goto(url, { waitUntil: 'networkidle' });
       if (!res || res.status() !== 200) problems.push(`${url} → HTTP ${res?.status()}`);
       // Кадр — весь блок оценки целиком, а не только звёзды: владелец судит СТРОКУ.
       await page.screenshot({ path: resolve(OUT, `${width}-${theme}-${c.slug}.png`), fullPage: true });
       shots += 1;
       if (width === 390 && theme === 'light') {
-        const stars = await page.locator('.stars i').all();
+        const stars = await page.locator(c.row ?? '.stars i').all();
         const colors = [];
         for (const s of stars) colors.push(await s.evaluate((el) => getComputedStyle(el).color));
         seen.push(`${c.label} → звёзд ${stars.length}, цвета: ${[...new Set(colors)].join(' | ') || '—'}`);
