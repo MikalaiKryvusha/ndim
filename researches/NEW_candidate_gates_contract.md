@@ -86,6 +86,26 @@
 Источник пар: `candidates/batches/02…03` — карточки `Q126683577`, `Q126405648`, `Q130118681`
 (состояние `dadd669` против головы).
 
+### 🇬🇧 Английские пары — дописаны 2026-08-22 по замечанию dev-3
+
+Он прав: всё оставшееся по этому классу живёт в АНГЛИЙСКИХ текстах, а образцов у контракта не
+было. Вот они, из тех же карточек:
+
+| | Текст |
+|---|---|
+| ⛔ | «*Production **was carried out** by Mattel Films, Escape Artists and Metro-Goldwyn-Mayer, with Todd Black … **credited as** producers*» |
+| ✅ | «*Mattel Films, Escape Artists and Metro-Goldwyn-Mayer **produced**, with Todd Black … **as** producers*» |
+| ⛔ | «*Production **was handled** by Warner Bros. and The Cannon Group*» |
+| ✅ | «*Warner Bros. and The Cannon Group **produced it***» |
+| ⛔ | «*The production **was undertaken** by Raimi Productions, and the score **was composed by** Danny Elfman*» |
+| ✅ | «*Raimi Productions **made** the film, and the score **is by** Danny Elfman*» |
+| ⛔ | «*the script **was prepared by** Park Chan-wook … and the production **was carried out by** CJ ENM Studios*» |
+| ✅ | «*CJ ENM Studios and Moho Film **produced** the film*» |
+
+🔑 **Английский разделяющий признак тот же, что русский, и звучит короче:** `be + причастие + by
++ НАЗВАННЫЙ деятель` — нарушение; то же без `by` и без деятеля — законный пассив. Лечение — личный
+глагол: `produced`, `made`, `is by`.
+
 ### 🚧 Граница — где правило НЕ действует
 
 **1. Безличный оборот без деятеля остаётся нормой.** Так пишет сам владелец, и вот его строки
@@ -151,6 +171,22 @@
 **Ремонт у класса свой, и он назван в README:** предложение-отнесение не упрощают и не переносят —
 его УДАЛЯЮТ.
 
+### 🇬🇧 Английские пары — дописаны 2026-08-22
+
+| | Текст |
+|---|---|
+| ⛔ | «*By genre the film **belongs to** supernatural horror, a strain in which…*» |
+| ✅ | «*A 2025 supernatural horror: Curry Barker wrote the screenplay, directed and cut it himself.*» |
+| ⛔ | «*The picture **is at once** an action film, a thriller and a crime film.*» |
+| ✅ | жанр назван первым предложением, отдельного предложения о нём нет вовсе |
+| ⛔ | «*An animated feature film dated 2026 … **combining the traits of** a mystery film, a comedy, a family picture and an adventure film.*» |
+| ✅ | «*An animated detective story for family viewing, 2026, directed by Kyle Balda.*» |
+| ⛔ | «***It is at once** a drama and a documentary drama, since its source material consists of…*» |
+| ✅ | сказано о материале прямо, без объявления жанровой принадлежности |
+
+⚠️ Английский несёт СВОЮ форму того же класса, которой в русском нет: **`is at once` X, Y and Z**.
+Русского аналога у неё не было, и по русским образцам она бы не нашлась никогда.
+
 ### 🚧 Граница — где правило НЕ действует
 
 **1. ПЕРВОЕ называние жанра — это не отнесение, а называние.** «*Представляет собой*» открывает
@@ -198,6 +234,19 @@ childhood friend*» (`Q126488898`) — сюжетная линия принад�
 >
 > «*там они текст очень чопорный пишут, и много пишут про создание объекта культуры и мало про
 > его само содержание, **сюжет — это важнее***» (2026-08-22, повтор той же претензии)
+
+### 🔴 ЧЕМ МЕРИТЬ — сказано прежде числа, иначе число не значит ничего
+
+**Мера — ДОЛЯ ПРЕДЛОЖЕНИЙ, а не доля знаков.** Предложение признаётся производственным при двух и
+более словах производственного лексикона либо при одном в коротком (< 140 знаков) предложении.
+
+⚠️ **И отдельно про «47 % объёма описаний», стоящие в `candidates/README.md`: это число НЕ отсюда
+и калибровать на нём порог нельзя.** Оно приехало коммитом `f9618e2` прежней сессии, метод в
+документе не назван, и воспроизвести его не смог ни я, ни dev-3 независимо (у него по знакам
+вышло 10–12 %, у меня 14–18 % на тех же партиях). Наши две меры сходятся между собой и обе
+расходятся с унаследованным числом — значит доверять надо мере, а не строке. Оставляю число в
+README как есть (переписывать чужой замер задним числом нельзя), но порог ворот на него не
+опирается.
 
 ### Правило, названное числом
 
