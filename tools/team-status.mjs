@@ -92,14 +92,27 @@ function mainRepoRoot() {
   return dirname(common);
 }
 
+/**
+ * Роль по имени каталога рабочего места. Канон — `ndim_<роль>` (приписка владельца
+ * 2026-08-21: отличает окна команды NDim в VS Code); старые имена без приписки принимаются
+ * на время переезда (`team-workplaces.mjs relocate`).
+ */
+export function roleFromDirName(dir) {
+  if (ROLES.includes(dir)) return dir; // старое имя каталога, до приписки
+  const m = dir.match(/^ndim_(.+)$/);
+  if (!m) return null;
+  const role = m[1].replace(/^dev(\d)$/, 'dev-$1'); // ndim_dev1 → dev-1
+  return ROLES.includes(role) ? role : null;
+}
+
 /** Роль вызывающего — по каталогу текущего worktree. */
 function callerRole() {
   const top = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
   const main = mainRepoRoot();
   if (resolve(top) === resolve(main)) return 'manager';
-  const dir = basename(top);
-  if (ROLES.includes(dir) && resolve(dirname(top)) === resolve(join(dirname(main), TEAM_DIR_NAME))) return dir;
-  throw new Error(`каталог «${top}» не является рабочим местом роли команды (ожидаю главную копию или ${TEAM_DIR_NAME}\\<роль>)`);
+  const role = roleFromDirName(basename(top));
+  if (role && resolve(dirname(top)) === resolve(join(dirname(main), TEAM_DIR_NAME))) return role;
+  throw new Error(`каталог «${top}» не является рабочим местом роли команды (ожидаю главную копию или ${TEAM_DIR_NAME}\\ndim_<роль>)`);
 }
 
 /** Правка доски под файловым замком, атомарной заменой. */
@@ -150,6 +163,9 @@ function selftest() {
     '| стенд/e2e/порты (8181·9099·9199·4173) | — свободен — | — |',
   ].join('\n');
   const cases = [
+    ['роль из нового имени каталога', () => roleFromDirName('ndim_dev1') === 'dev-1' && roleFromDirName('ndim_qa') === 'qa' && roleFromDirName('ndim_designer') === 'designer'],
+    ['роль из старого имени каталога', () => roleFromDirName('dev-1') === 'dev-1' && roleFromDirName('qa') === 'qa'],
+    ['чужой каталог — не роль', () => roleFromDirName('ndim_ghost') === null && roleFromDirName('kumm-d2') === null],
     ['чужая строка отказана', () => !authorize('qa', 'dev-1').ok],
     ['своя строка разрешена', () => authorize('qa', 'qa').ok],
     ['менеджер чинит чужую', () => authorize('manager', 'qa').ok],

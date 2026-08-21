@@ -8,6 +8,7 @@
  * Команды:
  *   node tools/team-workplaces.mjs create <роль>|--all   # идемпотентно: worktree + ветка + npm ci
  *   node tools/team-workplaces.mjs list                  # что развёрнуто, отставание веток от main
+ *   node tools/team-workplaces.mjs relocate              # переезд каталогов на имена ndim_<роль>
  *   node tools/team-workplaces.mjs reset <роль>          # перезапуск ветки от свежего main (после мержа)
  *   node tools/team-workplaces.mjs remove <роль>         # уборка ПО EXP-0175 (junction-скан ДО удаления)
  *   node tools/team-workplaces.mjs --selftest            # чистые функции, без git и диска
@@ -33,8 +34,19 @@ const TEAM_DIR_NAME = 'ndim-team';
 /** Ветка роли: понятное имя согласно роли, с припиской ndim_ (слово владельца, 2026-08-21). */
 export function branchFor(role) { return `ndim_${role.replace(/-/g, '')}`; }
 
+/**
+ * Имя каталога рабочего места = имя ветки = имя сессии: `ndim_<роль>`.
+ * Приписка нужна владельцу в заголовке окна VS Code — окна ролей должны отличаться от окон
+ * чужих проектов на этой машине (слово владельца, 2026-08-21 вечером). Побочная выгода: имя
+ * сессии по умолчанию начинается с имени каталога, поэтому адрес роли верен и без /rename.
+ */
+export function dirNameFor(role) { return branchFor(role); }
+
 /** Каталог рабочего места роли от корня главной копии. */
-export function workplaceFor(mainRoot, role) { return join(dirname(mainRoot), TEAM_DIR_NAME, role); }
+export function workplaceFor(mainRoot, role) { return join(dirname(mainRoot), TEAM_DIR_NAME, dirNameFor(role)); }
+
+/** Прежнее имя каталога (до приписки ndim_) — нужно только команде relocate. */
+export function legacyWorkplaceFor(mainRoot, role) { return join(dirname(mainRoot), TEAM_DIR_NAME, role); }
 
 /** Допустима ли роль для операции с рабочим местом. */
 export function validateRole(role) {
@@ -115,7 +127,9 @@ function createOne(main, role) {
 function selftest() {
   const cases = [
     ['ветка роли — по роли с припиской ndim_', () => branchFor('qa') === 'ndim_qa' && branchFor('dev-1') === 'ndim_dev1'],
-    ['каталог — сиблинг ndim-team', () => workplaceFor('D:\\work\\ai_sandbox\\ndim', 'dev-1').toLowerCase() === 'd:\\work\\ai_sandbox\\ndim-team\\dev-1'],
+    ['каталог = ветка = адрес (ndim_<роль>)', () => dirNameFor('dev-1') === 'ndim_dev1' && dirNameFor('designer') === 'ndim_designer'],
+    ['каталог — сиблинг ndim-team с припиской', () => workplaceFor('D:\\work\\ai_sandbox\\ndim', 'dev-1').toLowerCase() === 'd:\\work\\ai_sandbox\\ndim-team\\ndim_dev1'],
+    ['старый каталог — без приписки', () => legacyWorkplaceFor('D:\\work\\ai_sandbox\\ndim', 'dev-1').toLowerCase() === 'd:\\work\\ai_sandbox\\ndim-team\\dev-1'],
     ['менеджеру место не создаётся', () => !validateRole('manager').ok],
     ['неизвестная роль — отказ', () => !validateRole('ghost').ok],
     ['известная роль — допуск', () => validateRole('designer').ok],
@@ -150,6 +164,30 @@ else if (cmd === 'create') {
     const nm = existsSync(join(wt, 'node_modules')) ? 'node_modules ✅' : 'node_modules ❌';
     console.log(`✅ ${r}: ${wt} [${branchFor(r)}] · отстаёт от main на ${behind} · ${nm}`);
   }
+} else if (cmd === 'relocate') {
+  // Переезд каталогов на имена ndim_<роль> (правка владельца 2026-08-21: приписка нужна
+  // и в заголовках окон VS Code). Требует ЗАКРЫТЫХ окон ролей: Windows держит открытый
+  // рабочий каталог, и git worktree move падает Permission denied.
+  const main = mainRepoRoot();
+  let moved = 0, skipped = 0, failed = 0;
+  for (const r of ROLES) {
+    const from = legacyWorkplaceFor(main, r);
+    const to = workplaceFor(main, r);
+    if (existsSync(to)) { console.log(`✅ ${r}: уже на новом месте — ${to}`); skipped++; continue; }
+    if (!existsSync(from)) { console.log(`🔲 ${r}: не развёрнут — нечего переносить`); skipped++; continue; }
+    try {
+      sh(`git worktree move "${from}" "${to}"`, { cwd: main });
+      console.log(`✅ ${r}: ${from} → ${to}`);
+      moved++;
+    } catch (e) {
+      console.error(`⛔ ${r}: переезд не удался — ${String(e.message).split('\n')[0]}`);
+      console.error(`   Каталог заперт открытым окном VS Code? Закрой окно роли и повтори.`);
+      failed++;
+    }
+  }
+  console.log(`\nИтог: переехало ${moved} · пропущено ${skipped} · отказов ${failed}`);
+  if (!failed) console.log('Проверка: node tools/team-workplaces.mjs list');
+  process.exitCode = failed ? 1 : 0;
 } else if (cmd === 'reset') {
   const main = mainRepoRoot();
   const v = validateRole(roleArg);
@@ -178,6 +216,6 @@ else if (cmd === 'create') {
   sh(`git worktree remove --force "${wt}"`, { cwd: main });
   console.log(`✅ ${roleArg}: рабочее место убрано; ветка ${branchFor(roleArg)} сохранена (коммиты — ценность)`);
 } else {
-  console.log('команды: create <роль>|--all · list · reset <роль> · remove <роль> [--force] · --selftest');
+  console.log('команды: create <роль>|--all · list · relocate · reset <роль> · remove <роль> [--force] · --selftest');
   process.exit(cmd ? 1 : 0);
 }
