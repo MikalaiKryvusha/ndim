@@ -1,0 +1,122 @@
+[
+ {
+  "slug": "cats-cats",
+  "title": "Cats",
+  "article": "Cats",
+  "verdict": "clean",
+  "run": 4,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "travel-travel",
+  "title": "Travel",
+  "article": "Travel",
+  "verdict": "copied",
+  "run": 50,
+  "улика": "смоделированный дословный ряд для стенда",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "star-wars-1977-star-war",
+  "title": "Star Wars (1977)",
+  "article": null,
+  "verdict": "unverified",
+  "run": 0,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "silence-silence",
+  "title": "Silence",
+  "article": "Silence",
+  "verdict": "clean",
+  "run": 2,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "mathematics-math",
+  "title": "Mathematics",
+  "article": null,
+  "verdict": "unverified",
+  "run": 0,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "taxi-driver-1976-taxi-dri",
+  "title": "Taxi Driver (1976)",
+  "article": "Taxi Driver (1976)",
+  "verdict": "clean",
+  "run": 6,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "rocky-iv-1985-rocky-4-",
+  "title": "Rocky IV (1985)",
+  "article": "Rocky IV (1985)",
+  "verdict": "clean",
+  "run": 9,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "the-alchemist-1988-alchemis",
+  "title": "The Alchemist (1988)",
+  "article": "The Alchemist (1988)",
+  "verdict": "clean",
+  "run": 3,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "theatre-theatre",
+  "title": "Theatre",
+  "article": "Theatre",
+  "verdict": "clean",
+  "run": 2,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "running-running",
+  "title": "Running",
+  "article": "Running",
+  "verdict": "clean",
+  "run": 1,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "spider-man-2002-spider-m",
+  "title": "Spider-Man (2002)",
+  "article": "Spider-Man (2002)",
+  "verdict": "clean",
+  "run": 4,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "yoga-yoga",
+  "title": "Yoga",
+  "article": "Yoga",
+  "verdict": "clean",
+  "run": 0,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ }
+]

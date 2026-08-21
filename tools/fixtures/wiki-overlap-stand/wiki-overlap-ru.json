@@ -1,0 +1,122 @@
+[
+ {
+  "slug": "cats-cats",
+  "title": "Кошки",
+  "article": "Кошки",
+  "verdict": "copied",
+  "run": 28,
+  "улика": "смоделированный дословный ряд для стенда",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "travel-travel",
+  "title": "Путешествия",
+  "article": "Путешествия",
+  "verdict": "clean",
+  "run": 3,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "star-wars-1977-star-war",
+  "title": "«Звёздные войны» (1977)",
+  "article": "«Звёздные войны» (1977)",
+  "verdict": "copied",
+  "run": 12,
+  "улика": "смоделированный дословный ряд для стенда",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "silence-silence",
+  "title": "Тишина",
+  "article": null,
+  "verdict": "unverified",
+  "run": 0,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "mathematics-math",
+  "title": "Математика",
+  "article": "Математика",
+  "verdict": "clean",
+  "run": 5,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "taxi-driver-1976-taxi-dri",
+  "title": "«Таксист» (1976)",
+  "article": "«Таксист» (1976)",
+  "verdict": "names",
+  "run": 58,
+  "улика": "смоделированный дословный ряд для стенда",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "rocky-iv-1985-rocky-4-",
+  "title": "Рокки IV (1985)",
+  "article": "Рокки IV (1985)",
+  "verdict": "clean",
+  "run": 9,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "the-alchemist-1988-alchemis",
+  "title": "«Алхимик» (1988)",
+  "article": "«Алхимик» (1988)",
+  "verdict": "clean",
+  "run": 3,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "theatre-theatre",
+  "title": "Театр",
+  "article": "Театр",
+  "verdict": "clean",
+  "run": 2,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "running-running",
+  "title": "Бег",
+  "article": "Бег",
+  "verdict": "clean",
+  "run": 1,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "spider-man-2002-spider-m",
+  "title": "«Человек-паук» (2002)",
+  "article": "«Человек-паук» (2002)",
+  "verdict": "clean",
+  "run": 4,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ },
+ {
+  "slug": "yoga-yoga",
+  "title": "Йога",
+  "article": "Йога",
+  "verdict": "clean",
+  "run": 0,
+  "улика": "",
+  "shingles": 0,
+  "error": null
+ }
+]
