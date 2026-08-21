@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — опорная страница: 4 композиции под интент «тест на совместимость»</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     ФАЗА 4 ЭПИКА plans/40 («Опорные страницы») — ЧЕТЫРЕ КОМПОЗИЦИИ ОДНОЙ
+     СТРАНИЦЫ под крупнейший измеренный интент: «тест на совместимость»,
+     46 093 показа в месяц (замер 2026-08-02, `researches/30_demand_ru.json`;
+     поздний замер T0 даёт 62 467 — `researches/34_demand_t0_ru.json`).
+
+     ОСЬ РАСХОЖДЕНИЯ ВАРИАНТОВ — ЧЕМ СТРАНИЦА ОТВЕЧАЕТ НА ЗАПРОС И В КАКОМ
+     ПОРЯДКЕ ЛОЖАТСЯ СЛОИ. Это не перекраска: у вариантов разный каркас.
+       V1 «Прямой ответ» — ответ словами, дальше разделы; на десктопе слева
+            липкое оглавление. Классическая опора.
+       V2 «Ответ показан» — ответ доказывается ДЕЙСТВИЕМ: рядом с ответом
+            стоит карточка вопроса, ниже — пример результата.
+       V3 «Досье» — ответ, затем плитки чисел и инвентарь «считаем / не
+            считаем»; текст уходит под данные.
+       V4 «Путь» — каркасом страницы служат три шага теста, слои данных
+            живут ВНУТРИ шагов.
+
+     ЧЕТЫРЕ ЯКОРЯ ФАЗЫ несёт КАЖДЫЙ вариант (plans/40, фаза 4):
+       1. первый экран отвечает на запрос приёмом «вопрос → прямой ответ»;
+       2. статистика и источники — GEO-приём (блок «Что об этом знает наука»);
+       3. hub-linking — ссылки в хабы каталога и карточки объектов;
+       4. дверь в продукт БЕЗ обещаний несуществующего.
+
+     🔴 ОБОЛОЧКА ВЗЯТА ПО КОДУ, А НЕ ПО ПАМЯТИ (EXP-0135). Опорная страница —
+     поверхность ПУБЛИЧНАЯ, её шапка — `src/lib/ui/PublicBar.svelte`: знак,
+     переключатель языка ссылкой, квадратная кнопка темы 34px/радиус 10, одна
+     дверь «Войти» → /profile. Рельса навигации на публичных страницах нет
+     СОЗНАТЕЛЬНО («незнакомец из поиска» упёрся бы в пять тупиков) — поэтому
+     её отсутствие на 1440 здесь не небрежность, а продукт.
+
+     ⛔ ЧЕГО В НАБОРЕ НЕТ ПО КАНОНУ: имён конкурентов (принцип 9 мастер-плана) ·
+     чисел похожести и порядка близости (№018 В4, №023) · обещаний чатов и
+     любых несуществующих механик (ревизия мастер-плана 2026-08-01, п. 3) ·
+     слова «навсегда» · слова «ось» · обрезки названий многоточием (закон
+     владельца 2026-08-14 — карточки объектов сознательно взяты с длинными
+     именами и выровнены по верху).
+
+     ✍️ ТЕКСТЫ — ЧЕРНОВИК. Они показывают МЕСТО и ОБЪЁМ, а не финальную
+     редакцию: финальные тексты пишутся отдельной работой по
+     `AUTHOR_STYLOMETRY.md` и идут владельцу вычиткой. Словарь продукта
+     соблюдён уже в черновике. Дословно из продукта взяты: ответ про проценты
+     и ответ про второго человека (`src/lib/content/test-copy.ts`), подписи
+     шкалы «0 — совсем не моё» / «10 — это про меня», формула «5 111 объектов
+     человеческой культуры, по которым Вы описываете себя» (правка владельца
+     2026-08-02). Числа науки — из `researches/27` §8.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f7fb; --panel: #ffffff; --edge: #e3e9f3; --edge-soft: #eef2f9;
+    --heading: #0f1b2d; --text: #4a5a70; --muted: #8a97ab;
+    --accent: #1667d6; --accent-soft: #e8f0fd;
+    --card-shadow: 0 1px 2px rgba(16,32,64,.05), 0 8px 24px rgba(16,32,64,.06);
+    --star: #f0a500; --star-off: #dbe3ee;
+  }
+  :root[data-theme="dark"] {
+    --bg: #070c16; --panel: #0e1626; --edge: #1c2942; --edge-soft: #131e33;
+    --heading: #eaf1ff; --text: #9fb1cb; --muted: #6c7f9c;
+    --accent: #2f86ff; --accent-soft: #10233f;
+    --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    --star: #ffc44d; --star-off: #26344c;
+  }
+
+  body {
+    font: 15px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); padding: 96px 16px 60px;
+  }
+
+  /* ── дом стиля макетов: панель выбора, сцена, подпись ────────────────── */
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel);
+    border-bottom: 1px solid var(--edge); box-shadow: var(--card-shadow);
+    font-size: 13px;
+  }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--edge); background: var(--bg); color: var(--text);
+  }
+  .picker button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: var(--muted); font-size: 12px; }
+
+  .note {
+    max-width: 1180px; margin: 0 auto 16px; padding: 11px 15px;
+    background: var(--accent-soft); border: 1px solid var(--edge);
+    border-radius: 12px; font-size: 13px; line-height: 1.5; color: var(--heading);
+  }
+  .note b { color: var(--accent); }
+
+  .stage { margin: 0 auto; transition: max-width .2s; }
+  .stage[data-w="390"] { max-width: 390px; }
+  .stage[data-w="1024"] { max-width: 900px; }
+  .stage[data-w="1440"] { max-width: 1180px; }
+
+  .screen {
+    background: var(--bg); border: 1px solid var(--edge); border-radius: 20px;
+    box-shadow: var(--card-shadow); overflow: hidden; margin-bottom: 18px;
+  }
+
+  .legend {
+    max-width: 1180px; margin: 18px auto 0; padding: 14px 16px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    font-size: 12.5px; line-height: 1.6;
+  }
+  .legend b { color: var(--heading); }
+
+  .draft {
+    display: inline-block; padding: 2px 7px; border-radius: 7px;
+    background: var(--star); color: #3a2600; font-size: 11px; font-weight: 700;
+  }
+
+  /* ── ОБОЛОЧКА ПУБЛИЧНОЙ СТРАНИЦЫ — по коду `PublicBar.svelte` ────────── */
+  .bar {
+    display: flex; align-items: center; gap: 8px;
+    min-height: 52px; padding: 0 14px;
+    background: var(--panel); border-bottom: 1px solid var(--edge);
+  }
+  .bar .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--heading); font-size: 15px; }
+  .bar .n {
+    width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg,#1667d6,#19b8d8);
+    color: #fff; display: grid; place-items: center; font-size: 14px; font-weight: 800;
+  }
+  .bar .langsw {
+    margin-left: auto; padding: 5px 10px; border-radius: 999px;
+    border: 1px solid var(--edge); color: var(--muted); font-weight: 600; font-size: 12.5px;
+  }
+  .bar .th {
+    width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--edge);
+    display: grid; place-items: center; color: var(--muted); font-size: 14px;
+  }
+  .bar .enter {
+    padding: 6px 14px; border-radius: 999px; background: var(--accent);
+    color: #fff; font-weight: 600; font-size: 12.5px;
+  }
+
+  /* полоса «это черновик» — видна на каждом кадре, чтобы кадр не выдавал себя за готовый текст */
+  .draftbar {
+    padding: 7px 14px; background: var(--star); color: #3a2600;
+    font-size: 12px; font-weight: 700; text-align: center;
+  }
+
+  /* ── общая типографика страницы ──────────────────────────────────────── */
+  .page { padding: 20px 16px 28px; }
+  .stage[data-w="1440"] .page { padding: 34px 40px 44px; }
+  .wrap { margin: 0 auto; }
+  .stage[data-w="1440"] .wrap { max-width: 1040px; }
+
+  h1 { font-size: 26px; line-height: 1.2; color: var(--heading); letter-spacing: -.01em; }
+  .stage[data-w="1440"] h1 { font-size: 40px; }
+  .q { margin-top: 10px; font-size: 16px; color: var(--heading); font-weight: 650; line-height: 1.4; }
+  .stage[data-w="1440"] .q { font-size: 19px; }
+
+  /* ЯКОРЬ 1 — прямой ответ. Врезка одинакова во всех четырёх: варьируется её
+     МЕСТО в композиции, а не сам ответ. */
+  .answer {
+    margin-top: 12px; padding: 14px 16px; border-left: 3px solid var(--accent);
+    background: var(--accent-soft); border-radius: 0 14px 14px 0;
+    color: var(--heading); font-size: 14.5px; line-height: 1.6;
+  }
+
+  .blk { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--edge); }
+  h2 { font-size: 18px; color: var(--heading); margin-bottom: 10px; line-height: 1.3; }
+  .stage[data-w="1440"] h2 { font-size: 21px; }
+  .p + .p { margin-top: 9px; }
+
+  /* ЯКОРЬ 2 — статистика и источники (GEO) */
+  .src { display: grid; gap: 10px; margin-top: 10px; }
+  .stage[data-w="1440"] .src { grid-template-columns: repeat(3, 1fr); }
+  .stage[data-w="1440"] .v4 .src { grid-template-columns: 1fr; }
+  .src .it {
+    padding: 12px 14px; background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 14px; font-size: 13.5px; line-height: 1.5;
+  }
+  .src .it b { color: var(--heading); }
+  .src .ref { display: block; margin-top: 6px; font-size: 11.5px; color: var(--muted); }
+
+  /* ЯКОРЬ 3 — hub-linking: хабы каталога + карточки объектов */
+  .hubs { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 12px; }
+  .hubs span {
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--edge);
+    background: var(--panel); color: var(--accent); font-weight: 600; font-size: 13px;
+  }
+  .hubs span.all { background: var(--accent-soft); border-color: var(--accent); }
+  .objs { display: grid; gap: 10px; }
+  .stage[data-w="1440"] .objs { grid-template-columns: 1fr 1fr; }
+  .stage[data-w="1440"] .v4 .objs { grid-template-columns: 1fr; }
+  /* 🔴 ЗАКОН ВЛАДЕЛЬЦА: название не обрезается НИКОГДА — карточка растёт по
+     высоте, соседи выровнены ПО ВЕРХУ, иначе оценка уплывёт на середину
+     многострочного имени. Ни nowrap, ни ellipsis, ни line-clamp здесь нет. */
+  .obj {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 14px; background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+  }
+  .obj .tt { flex: 1; min-width: 0; }
+  .obj .nm { color: var(--heading); font-weight: 650; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+  .obj .mt { margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+  .obj .rate { flex: none; text-align: right; color: var(--heading); font-weight: 700; font-size: 14px; }
+  .obj .rate small { display: block; font-weight: 600; font-size: 11px; color: var(--muted); }
+
+  /* ЯКОРЬ 4 — дверь в продукт */
+  .door {
+    margin-top: 22px; padding: 18px; border-radius: 18px;
+    background: var(--accent-soft); border: 1px solid var(--accent);
+  }
+  .cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  /* Кнопки естественной ширины (EXP-0110: блок тянем — содержимое ограничиваем). */
+  .btn {
+    flex: 0 0 auto; padding: 12px 20px; border-radius: 12px; border: 0;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 14.5px;
+  }
+  .btn.ghost { background: transparent; border: 1px solid var(--edge); color: var(--accent); }
+  .fine { margin-top: 10px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+  .faq .qa { padding: 12px 0; border-bottom: 1px solid var(--edge-soft); }
+  .faq .qq { color: var(--heading); font-weight: 650; font-size: 14.5px; }
+  .faq .aa { margin-top: 5px; font-size: 13.5px; }
+
+  /* ── V1: две колонки с липким оглавлением ────────────────────────────── */
+  .stage[data-w="1440"] .v1 .cols { display: grid; grid-template-columns: 236px 1fr; gap: 34px; align-items: start; }
+  .toc {
+    margin-top: 18px; padding: 14px 16px; background: var(--panel);
+    border: 1px solid var(--edge); border-radius: 14px;
+  }
+  .stage[data-w="1440"] .toc { position: sticky; top: 14px; margin-top: 22px; }
+  .toc b { display: block; color: var(--heading); margin-bottom: 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .1em; }
+  .toc i { display: block; padding: 5px 0; color: var(--accent); font-size: 13.5px; font-style: normal; }
+
+  /* ── V2: герой в две колонки, карточка вопроса живого инструмента ────── */
+  .stage[data-w="1440"] .v2 .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 34px; align-items: start; }
+  .qcard {
+    margin-top: 16px; padding: 16px; background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 18px; box-shadow: var(--card-shadow); text-align: center;
+  }
+  .qcard .kind { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
+  .qcard .name { margin-top: 6px; font-size: 19px; font-weight: 700; color: var(--heading); line-height: 1.3; }
+  .qcard .meta { margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+  .starsrow { display: flex; gap: 5px; justify-content: center; margin: 14px 0 6px; font-size: 22px; color: var(--star); }
+  .starsrow .off { color: var(--star-off); }
+  .scale { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); }
+  .cap { margin-top: 8px; text-align: center; font-size: 12px; color: var(--muted); }
+  .res { display: grid; gap: 8px; margin-top: 10px; }
+  .stage[data-w="1440"] .v2 .res { grid-template-columns: repeat(3, 1fr); }
+  .res .r {
+    display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; font-size: 13.5px; line-height: 1.45;
+  }
+
+  /* ── V3: плитки чисел и инвентарь «считаем / не считаем» ─────────────── */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .stage[data-w="1440"] .tiles { grid-template-columns: repeat(4, 1fr); }
+  .tile { padding: 14px; background: var(--panel); border: 1px solid var(--edge); border-radius: 16px; }
+  .tile .big { font-size: 25px; font-weight: 800; color: var(--heading); line-height: 1.1; }
+  .tile .cap2 { margin-top: 5px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+  .tbl { margin-top: 12px; border: 1px solid var(--edge); border-radius: 16px; overflow: hidden; background: var(--panel); }
+  .tbl .hd, .tbl .rw { display: grid; grid-template-columns: 1fr 1fr; }
+  .tbl .hd > div { padding: 10px 14px; font-weight: 700; color: var(--heading); font-size: 13px; background: var(--edge-soft); }
+  .tbl .rw > div { padding: 11px 14px; border-top: 1px solid var(--edge-soft); font-size: 13.5px; line-height: 1.45; }
+  .tbl .hd > div:first-child, .tbl .rw > div:first-child { border-right: 1px solid var(--edge-soft); }
+
+  /* ── V4: три шага как каркас страницы ────────────────────────────────── */
+  .step { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--edge); }
+  .stage[data-w="1440"] .v4 .step { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; }
+  .step .n {
+    width: 30px; height: 30px; border-radius: 10px; background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-weight: 800; margin-bottom: 8px;
+  }
+  /* Внутри шага блок науки не заводит своей линии-разделителя (её роль играет
+     граница шага), но на 390 он идёт ПОД содержимым шага и требует воздуха. */
+  .step .blk { margin-top: 16px; padding-top: 0; border-top: 0; }
+  .stage[data-w="1440"] .v4 .step .blk { margin-top: 0; }
+  .invitebox {
+    margin-top: 12px; padding: 14px; background: var(--panel); border: 1px dashed var(--accent);
+    border-radius: 14px; font-size: 13.5px; color: var(--heading);
+  }
+  /* Обрезка адреса-приглашения разрешена границей закона о названиях: это ссылка,
+     а не имя объекта (трактовка агента, AGENT_GUIDE → «Названия не обрезаются»). */
+  .invitebox .link {
+    display: block; margin-top: 8px; padding: 9px 11px; background: var(--edge-soft);
+    border-radius: 10px; font-family: Consolas, monospace; font-size: 12px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Опорная страница — 4 композиции:</b>
+  <button data-v="1" class="active">V1 прямой ответ</button>
+  <button data-v="2">V2 ответ показан</button>
+  <button data-v="3">V3 досье</button>
+  <button data-v="4">V4 путь</button>
+  <span class="sp"></span>
+  <button id="width-mid">1024</button>
+  <button id="width">390 ↔ 1440</button>
+  <button id="theme">тема</button>
+  <span class="hint">фаза 4 эпика plans/40</span>
+</div>
+
+<div class="note" id="note"></div>
+
+<div class="stage" id="stage" data-w="390"></div>
+
+<div class="legend">
+  <b>Что здесь канон, а что черновик.</b> Оболочка — по коду <b>PublicBar.svelte</b> (знак,
+  переключатель языка ссылкой, квадратная кнопка темы, одна дверь «Войти»); рельса навигации на
+  публичных страницах отсутствует сознательно. Дословно из продукта: ответ про проценты и ответ
+  про второго человека (<b>test-copy.ts</b>), подписи шкалы, формула «5 111 объектов человеческой
+  культуры, по которым Вы описываете себя» (правка владельца 2026-08-02). Числа науки — из
+  <b>researches/27</b> §8. Всё остальное — <span class="draft">черновик — тексты пойдут на вычитку отдельно</span>:
+  показаны место и объём, а не редакция.
+  <br><br>
+  <b>Проверено по канону:</b> имён конкурентов нет · чисел похожести и порядка близости нет ·
+  чатов и других несуществующих механик страница не обещает · слова «навсегда» нет · слова «ось»
+  нет, только «Измерение» · названия объектов не обрезаются (карточки взяты с длинными именами и
+  выровнены по верху) · обращение на «Вы» с большой буквы.
+  <br><br>
+  <b>⚠️ Вопрос, который решает не макет:</b> у интента «тест на совместимость» уже есть живая
+  страница-инструмент <b>/ru/test/compatibility</b> (фаза 5 эпика). Опорная страница обязана
+  отличаться от неё по назначению — объяснять и вести к инструменту, а не быть вторым
+  инструментом. Ворота фазы 4 требуют проверки «не перепев соседней»; в наборе V2 подходит к этой
+  границе ближе всех, и это названо в его подписи.
+</div>
+
+<script>
+/* Четыре композиции собираются из ОБЩИХ кусков: так различия остаются
+   вариантными (каркас и порядок слоёв), а не случайными (разные слова). */
+
+const BAR = `<header class="bar">
+  <span class="brand"><span class="n">N</span> NDim Space</span>
+  <span class="langsw">English</span>
+  <span class="th">☀</span>
+  <span class="enter">Войти</span>
+</header>
+<div class="draftbar">черновик — тексты пойдут на вычитку отдельно</div>`;
+
+const H1 = `<h1>Тест на совместимость</h1>`;
+const QUESTION = `<p class="q">Что тест на совместимость может показать двоим?</p>`;
+const ANSWER = `<div class="answer">Он показывает Ваши настоящие совпадения. Вы оба оцениваете
+  звёздами один и тот же набор вещей — фильмы, книги, игры, привычки, — и после этого видно, где
+  Ваши оценки сошлись, а где разошлись. Каждое совпадение названо по имени: вот вещь, вот Ваша
+  оценка, вот его.</div>`;
+
+/* ЯКОРЬ 2 — статистика и источники. Числа настоящие, из `researches/27` §8;
+   в бою вместо подписи-курсива встанут ссылки на публикации. */
+const SOURCES = `<section class="blk">
+  <h2>Что об этом знает наука</h2>
+  <p class="p">Сходство вкусов изучали десятилетиями. Пространство NDim опирается на три работы.</p>
+  <div class="src">
+    <div class="it"><b>Сходство предсказывает симпатию до знакомства.</b> Мета-анализ 313
+      исследований и 460 размеров эффекта: связь реального сходства и притяжения большая и
+      устойчивая (r = .47).<span class="ref">Montoya, Horton, Kirchner · Journal of Social and Personal Relationships, 2008</span></div>
+    <div class="it"><b>Предсказать по анкете, понравятся ли двое при встрече, не удалось никому.</b>
+      Более ста шкал, машинное обучение, четыре минуты живого разговора — предсказания не
+      вышло.<span class="ref">Joel, Eastwick, Finkel · Psychological Science, 2017</span></div>
+    <div class="it"><b>Короткий список приносит больше радости от выбора.</b> Выбиравшие из шести
+      кандидатов остались довольны своим выбором больше тех, кто выбирал из двадцати
+      четырёх.<span class="ref">D’Angelo, Toma · Media Psychology, 2017</span></div>
+  </div>
+</section>`;
+
+/* ЯКОРЬ 3 — hub-linking. Хабы каталога живут по адресам /ru/catalog/<вид>
+   (`catalog-hub.ts`), подписи видов — из `dim-kind.ts`. */
+const HUBS = `<div class="hubs">
+  <span>Фильмы</span><span>Телесериалы</span><span>Романы</span><span>Книги</span>
+  <span>Видеоигры</span><span>Музыкальные исполнители</span><span>Практики</span>
+  <span class="all">Весь каталог →</span>
+</div>`;
+
+/* Первая карточка взята С ДЛИННЫМ ИМЕНЕМ НАРОЧНО: на 390 оно переносится на
+   три строки, карточка растёт по высоте, а оценка остаётся вверху. Так закон
+   владельца («названия не обрезаются НИКОГДА») виден прямо на кадре, а не
+   только заявлен в подписи. */
+const OBJS = `<div class="objs">
+  <div class="obj">
+    <div class="tt">
+      <div class="nm">Пираты Карибского моря: Проклятие «Чёрной жемчужины»</div>
+      <div class="mt">Фильм · 2003</div>
+    </div>
+    <div class="rate">9,0<small>NDSR</small></div>
+  </div>
+  <div class="obj">
+    <div class="tt">
+      <div class="nm">Гарри Поттер и узник Азкабана</div>
+      <div class="mt">Роман · 1999</div>
+    </div>
+    <div class="rate">8,7<small>NDSR</small></div>
+  </div>
+</div>`;
+
+const CATALOG = `<section class="blk">
+  <h2>На чём Вы проверяете себя</h2>
+  <p class="p">В Пространстве 5 111 объектов человеческой культуры, по которым Вы описываете себя.
+    У каждого своя страница с оценками людей и рейтингом NDim Space Rating.</p>
+  ${HUBS}
+  ${OBJS}
+</section>`;
+
+/* ЯКОРЬ 4 — дверь. Обещает ровно то, что есть сегодня: инструмент, каталог,
+   аккаунт. Ни чатов, ни «навсегда», ни сроков, которых мы не держим. */
+const DOOR = `<section class="door">
+  <h2>Проверьте вдвоём</h2>
+  <p class="p">Оцените 12 вещей звёздами, отправьте ссылку второму — он проходит те же 12.
+    Результат увидите только вы двое: ссылка личная, в поиске её нет.</p>
+  <div class="cta">
+    <span class="btn">Пройти тест на совместимость</span>
+    <span class="btn ghost">Открыть каталог</span>
+  </div>
+  <p class="fine">Без регистрации и бесплатно. Гостевая анкета живёт 7 дней — создайте аккаунт,
+    и Ваши оценки останутся с Вами.</p>
+</section>`;
+
+const FAQ = `<section class="blk faq">
+  <h2>Частые вопросы</h2>
+  <div class="qa"><div class="qq">Почему нет процента совместимости?</div>
+    <div class="aa">Проценты интернет-калькуляторов случайны. Мы показываем то, что можно
+      проверить: Ваши настоящие совпадения — по вещам, которые вы оба оценили.</div></div>
+  <div class="qa"><div class="qq">Сколько времени это занимает?</div>
+    <div class="aa">Двенадцать вещей, около трёх минут.</div></div>
+  <div class="qa"><div class="qq">Что увидит второй?</div>
+    <div class="aa">Только вещи этого теста, которые оценили вы оба, — и только после того, как
+      каждый нажмёт кнопку сам. Остальная Ваша анкета видна так, как решите Вы.</div></div>
+</section>`;
+
+const QCARD = `<div class="qcard">
+  <div class="kind">Видеоигра</div>
+  <div class="name">Warcraft III: Reign of Chaos</div>
+  <div class="meta">2002 · оценили 1 248 человек</div>
+  <div class="starsrow"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span class="off">★</span><span class="off">★</span></div>
+  <div class="scale"><span>0 — совсем не моё</span><span>10 — это про меня</span></div>
+</div>
+<p class="cap">Так выглядит один вопрос теста</p>`;
+
+const RESULT = `<div class="res">
+  <div class="r"><span>⭐</span><span>Вы оба поставили 10 — Warcraft III</span></div>
+  <div class="r"><span>🤝</span><span>Вы рядом в «Пацанах» и «Особом мнении»</span></div>
+  <div class="r"><span>💬</span><span>«Катание на лыжах» вы видите по-разному — будет о чём поговорить</span></div>
+</div>`;
+
+const V = {
+  1: {
+    note: `<b>V1 «Прямой ответ».</b> Ответ словами сразу под заголовком, дальше разделы в
+      логическом порядке: как устроено → наука → каталог → дверь → вопросы. На 1440 слева
+      липкое оглавление, справа колонка текста. Самая понятная роботу и человеку опора; дверь
+      стоит после того, как страница уже отработала. <b>Судить:</b> хватает ли двери одного
+      места ближе к концу.`,
+    html: `<div class="screen v1">${BAR}<div class="page"><div class="wrap">
+      ${H1}${QUESTION}${ANSWER}
+      <div class="cols">
+        <div class="toc"><b>На этой странице</b>
+          <i>Что показывает тест</i><i>Что об этом знает наука</i><i>На чём Вы проверяете себя</i>
+          <i>Проверьте вдвоём</i><i>Частые вопросы</i></div>
+        <div class="body">
+          <section class="blk">
+            <h2>Что показывает тест</h2>
+            <p class="p">Вы проходите набор из двенадцати вещей: у каждой есть название, вид и год,
+              и Вы ставите ей от нуля до десяти звёзд. Второй человек проходит тот же набор.</p>
+            <p class="p">Дальше Пространство сравнивает две колонки оценок и называет совпадения:
+              вещи, где вы сошлись, и вещи, где разошлись. Это можно перечитать в любой момент —
+              каждая строка результата держится на конкретной вещи и конкретной оценке.</p>
+          </section>
+          ${SOURCES}${CATALOG}${DOOR}${FAQ}
+        </div>
+      </div>
+    </div></div></div>`,
+  },
+  2: {
+    note: `<b>V2 «Ответ показан».</b> Ответ доказывается действием: рядом с врезкой стоит карточка
+      вопроса живого инструмента, ниже — пример результата тремя строками. Дверь поднята в первый
+      экран. <b>Судить:</b> это самый близкий к странице-инструменту вариант — решите, помогает
+      такое сходство узнаванию или создаёт вторую дверь в то же самое.`,
+    html: `<div class="screen v2">${BAR}<div class="page"><div class="wrap">
+      <div class="hero">
+        <div>
+          ${H1}${QUESTION}${ANSWER}
+          <div class="cta">
+            <span class="btn">Пройти тест на совместимость</span>
+            <span class="btn ghost">Открыть каталог</span>
+          </div>
+          <p class="fine">Без регистрации и бесплатно. Гостевая анкета живёт 7 дней — создайте
+            аккаунт, и Ваши оценки останутся с Вами.</p>
+        </div>
+        <div>${QCARD}</div>
+      </div>
+      <section class="blk">
+        <h2>Каким будет результат</h2>
+        <p class="p">Когда оба пройдут набор, страница результата называет совпадения по именам.</p>
+        ${RESULT}
+      </section>
+      ${SOURCES}${CATALOG}${FAQ}
+    </div></div></div>`,
+  },
+  3: {
+    note: `<b>V3 «Досье».</b> После ответа сразу идут данные: четыре плитки чисел и инвентарь
+      «считаем / не считаем», текст уходит под них. Форма родственна утверждённому Вами макету
+      «Досье». <b>Судить:</b> инвентарь двумя колонками — приём контрастный по построению, и
+      правило голоса «не противопоставляю» его оспаривает. Показан честно, чтобы выбор был не
+      предрешён.`,
+    html: `<div class="screen v3">${BAR}<div class="page"><div class="wrap">
+      ${H1}${QUESTION}${ANSWER}
+      <div class="tiles">
+        <div class="tile"><div class="big">5 111</div><div class="cap2">объектов культуры, по которым Вы себя описываете</div></div>
+        <div class="tile"><div class="big">12 вещей</div><div class="cap2">в наборе теста, около трёх минут</div></div>
+        <div class="tile"><div class="big">313</div><div class="cap2">исследований в мета-анализе сходства и симпатии</div></div>
+        <div class="tile"><div class="big">7 дней</div><div class="cap2">живёт гостевая анкета без аккаунта</div></div>
+      </div>
+      <section class="blk">
+        <h2>Что мы считаем и чего не считаем</h2>
+        <div class="tbl">
+          <div class="hd"><div>Считаем</div><div>Не считаем</div></div>
+          <div class="rw"><div>Совпадения — вещи, где Ваши оценки сошлись</div><div>Процент совместимости</div></div>
+          <div class="rw"><div>Расхождения — где вы видите вещь по-разному</div><div>Что у вас получится при встрече</div></div>
+          <div class="rw"><div>Ваш NDim ID — анкету, которая растёт вместе с Вами</div><div>Оценку человека как личности</div></div>
+        </div>
+      </section>
+      ${SOURCES}${CATALOG}${DOOR}${FAQ}
+    </div></div></div>`,
+  },
+  4: {
+    note: `<b>V4 «Путь».</b> Каркас страницы — три шага теста; слои данных живут внутри шагов:
+      каталог в первом, приглашение во втором, результат и наука в третьем. На 1440 каждый шаг —
+      две колонки. <b>Судить:</b> человек читает страницу как дорогу; цена — наука спрятана в
+      третий шаг и не видна тому, кто пришёл именно за доказательством.`,
+    html: `<div class="screen v4">${BAR}<div class="page"><div class="wrap">
+      ${H1}${QUESTION}${ANSWER}
+      <div class="step">
+        <div class="txt"><div class="n">1</div>
+          <h2>Оцените 12 вещей</h2>
+          <p class="p">Звёздами, от нуля до десяти. «Правильных ответов» нет: Вы говорите только
+            то, что Вам нравится. Вещи берутся из каталога Пространства.</p>
+        </div>
+        <div>${HUBS}${OBJS}</div>
+      </div>
+      <div class="step">
+        <div class="txt"><div class="n">2</div>
+          <h2>Отправьте ссылку второму</h2>
+          <p class="p">Он проходит те же двенадцать вещей. Ссылка личная, в поиске её нет, и
+            результат увидите только вы двое.</p>
+        </div>
+        <div><div class="invitebox">Позовите второго
+          <span class="link">ndimspace.app/ru/test/compatibility?pair=…</span></div></div>
+      </div>
+      <div class="step">
+        <div class="txt"><div class="n">3</div>
+          <h2>Смотрите совпадения</h2>
+          <p class="p">Каждое совпадение названо по имени: вот вещь, вот Ваша оценка, вот его.</p>
+          ${RESULT}
+        </div>
+        <div>${SOURCES}</div>
+      </div>
+      ${DOOR}${FAQ}
+    </div></div></div>`,
+  },
+};
+
+const stage = document.getElementById('stage');
+const note = document.getElementById('note');
+let current = '1';
+
+function render() {
+  stage.innerHTML = V[current].html;
+  note.innerHTML = V[current].note;
+  for (const b of document.querySelectorAll('.picker button[data-v]')) {
+    b.classList.toggle('active', b.dataset.v === current);
+  }
+}
+for (const b of document.querySelectorAll('.picker button[data-v]')) {
+  b.addEventListener('click', () => { current = b.dataset.v; render(); });
+}
+document.getElementById('theme').addEventListener('click', () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+});
+/* Дом стиля: #width — тумблер 390 ↔ 1440 (его жмёт съёмщик); 1024 — отдельная кнопка для глаз. */
+document.getElementById('width').addEventListener('click', () => {
+  stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390';
+});
+document.getElementById('width-mid').addEventListener('click', () => { stage.dataset.w = '1024'; });
+render();
+</script>
+</body>
+</html>
