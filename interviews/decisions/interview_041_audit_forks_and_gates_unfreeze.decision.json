@@ -1,0 +1,29 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_041_audit_forks_and_gates_unfreeze.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-20T21:55:49.471Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "",
+			"text": "не понимаю вопрос.\n\nАдмин может всё. О чём вопрос?",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "A",
+			"text": "",
+			"comment": "часть клиент удаляет сам, всё помечается для сервера синхронизации - остатки вычищает сервер синхронизации."
+		},
+		"В3": {
+			"choice": "A",
+			"text": "",
+			"comment": ""
+		},
+		"В4": {
+			"choice": "C",
+			"text": "",
+			"comment": ""
+		}
+	}
+}
