@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — мягкое ведение: переход с интерактива и просьба сохраниться</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     ФАЗА 4 ЭПИКА plans/23 — ДВА НАБОРА МАКЕТОВ, ОДНО СИДЕНИЕ ВЛАДЕЛЬЦА.
+
+     Набор А — переход с интерактива (якорь В3: «поп-апы над Алисой… кнопка
+       [Смотреть больше] появляется и мягко пульсирует… человек мягко
+       оказывается внутри пространства на Связях»).
+       Ось расхождения: КАК ЗОВЁТ переход и ЧТО человек видит в ПЕРВУЮ СЕКУНДУ
+       после нажатия.
+     Набор Б — просьба сохранить труд (якорь В4: «панелька ниже хедера, мягко
+       пульсирует, призывает авторизоваться»; Р13: «оба» — почта И Google).
+       Ось расхождения: ГДЕ ЖИВЁТ просьба — с учётом того, что ПОСТОЯННАЯ
+       КАРТОЧКА ГОСТЯ (фаза 5 эпика 22, выбор владельца) уже стоит на всех
+       экранах и несёт тот же смысл. Сшивка plans/26 §4: доза напоминаний
+       считается СУММОЙ.
+
+     🔴 Тексты НЕ выдуманы: поп-ап и панель перехода — из утверждённого V4
+     (plans/52), карточка гостя — дословно GuestCard.svelte (7 дней — из
+     schema.ts), «Смотреть больше» и «Войти в пространство» — слова владельца
+     (№009 В3). Единственный НОВЫЙ текст — короткая форма просьбы в Б2/Б3 —
+     помечен плашкой «текст на вычитку».
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f5f7fb; --panel: #ffffff; --edge: #e3e9f3; --edge-soft: #eef2f9;
+    --heading: #0f1b2d; --text: #4a5a70; --muted: #8a97ab;
+    --accent: #1667d6; --accent-soft: #e8f0fd;
+    --ok: #128a5a; --ok-soft: #e6f6ee;
+    --card-shadow: 0 1px 2px rgba(16,32,64,.05), 0 8px 24px rgba(16,32,64,.06);
+    --star: #f0a500; --star-off: #dbe3ee;
+  }
+  :root[data-theme="dark"] {
+    --bg: #070c16; --panel: #0e1626; --edge: #1c2942; --edge-soft: #131e33;
+    --heading: #eaf1ff; --text: #9fb1cb; --muted: #6c7f9c;
+    --accent: #2f86ff; --accent-soft: #10233f;
+    --ok: #38d39a; --ok-soft: #0d2a20;
+    --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    --star: #ffc44d; --star-off: #26344c;
+  }
+
+  body {
+    font: 15px/1.55 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); padding: 96px 16px 60px;
+  }
+
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel);
+    border-bottom: 1px solid var(--edge); box-shadow: var(--card-shadow);
+    font-size: 13px;
+  }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--edge); background: var(--bg); color: var(--text);
+  }
+  .picker button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: var(--muted); font-size: 12px; }
+
+  .note {
+    max-width: 980px; margin: 0 auto 16px; padding: 11px 15px;
+    background: var(--accent-soft); border: 1px solid var(--edge);
+    border-radius: 12px; font-size: 13px; line-height: 1.5; color: var(--heading);
+  }
+  .note b { color: var(--accent); }
+
+  .stage { margin: 0 auto; transition: max-width .2s; }
+  .stage[data-w="390"] { max-width: 390px; }
+  .stage[data-w="1024"] { max-width: 900px; }
+  .stage[data-w="1440"] { max-width: 1180px; }
+
+  .screen {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 20px;
+    box-shadow: var(--card-shadow); overflow: hidden; margin-bottom: 18px;
+  }
+  .pad { padding: 20px 18px; }
+  .stage[data-w="1440"] .pad { padding: 30px 36px; }
+
+  .caption {
+    max-width: 980px; margin: 0 auto 8px; font-size: 12px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+  }
+
+  /* ── сцена лендинга (набор А): карта, персонажи, звёзды ─────────────── */
+  .topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .brand { display: flex; gap: 8px; align-items: center; color: var(--heading); font-weight: 700; font-size: 15px; }
+  .brand .n {
+    width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg,#1667d6,#19b8d8);
+    color: #fff; display: grid; place-items: center; font-size: 14px; font-weight: 800;
+  }
+  .door { font-size: 13px; color: var(--accent); font-weight: 600; text-decoration: none; }
+
+  .map { position: relative; height: 190px; border-radius: 14px; background: var(--edge-soft); border: 1px solid var(--edge); }
+  .dot { position: absolute; display: grid; place-items: center; text-align: center; }
+  .dot .face {
+    width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--panel); border: 2px solid var(--accent); color: var(--heading); font-weight: 700;
+  }
+  .dot small { margin-top: 3px; font-size: 11px; color: var(--muted); }
+  .dot.me .face { border-color: var(--star); }
+  .link-line { position: absolute; height: 2px; background: var(--accent); opacity: .45; transform-origin: 0 50%; }
+
+  .pop {
+    position: absolute; padding: 7px 11px; border-radius: 11px; font-size: 12px; line-height: 1.4;
+    background: var(--panel); border: 1px solid var(--accent); color: var(--heading);
+    box-shadow: var(--card-shadow); max-width: 200px;
+  }
+  .pop b { color: var(--accent); }
+  .pop::after {
+    content: ''; position: absolute; right: 24px; bottom: -6px; width: 10px; height: 10px;
+    background: var(--panel); border-right: 1px solid var(--accent); border-bottom: 1px solid var(--accent);
+    transform: rotate(45deg);
+  }
+
+  .stars { display: flex; gap: 5px; justify-content: center; margin: 14px 0 4px; }
+  .stars span { font-size: 22px; color: var(--star); }
+  .stars span.off { color: var(--star-off); }
+  .stars-hint { text-align: center; font-size: 12px; color: var(--muted); }
+
+  /* панель перехода */
+  .go {
+    margin-top: 14px; padding: 13px 15px; border-radius: 14px;
+    background: var(--accent-soft); border: 1px solid var(--accent);
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .go .msg { flex: 1 1 200px; font-size: 13.5px; color: var(--heading); line-height: 1.45; }
+  .go .msg b { color: var(--accent); }
+  .gobtn {
+    flex: none; padding: 12px 20px; border-radius: 12px; border: 0; cursor: pointer;
+    background: var(--accent); color: #fff; font: inherit; font-size: 14.5px; font-weight: 700;
+    position: relative;
+  }
+  /* Свет и волны обязаны различаться И НА СТАТИЧНОМ КАДРЕ (урок plans/11): у света —
+     сплошное цветное свечение, у волн — концентрические кольца; анимация поверх. */
+  .gobtn.glow { box-shadow: 0 0 26px 6px rgba(22,103,214,.5); animation: glow 2.2s ease-in-out infinite; }
+  @keyframes glow { 0%, 100% { box-shadow: 0 0 26px 6px rgba(22,103,214,.5); } 50% { box-shadow: 0 0 34px 10px rgba(22,103,214,.65); } }
+  .gobtn.waves { box-shadow: 0 0 0 8px rgba(22,103,214,.18), 0 0 0 16px rgba(22,103,214,.09), 0 0 0 24px rgba(22,103,214,.04); }
+  .gobtn.waves::before, .gobtn.waves::after {
+    content: ''; position: absolute; inset: -6px; border-radius: 16px;
+    border: 2px solid var(--accent); opacity: 0; animation: wave 2.4s ease-out infinite;
+  }
+  .gobtn.waves::after { animation-delay: 1.2s; }
+  @keyframes wave { 0% { transform: scale(.92); opacity: .55; } 100% { transform: scale(1.25); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .gobtn.glow, .gobtn.waves::before, .gobtn.waves::after { animation: none; }
+  }
+
+  /* итоговая панель с метриками (А3) */
+  .summary { margin-top: 14px; border: 1px solid var(--edge); border-radius: 14px; overflow: hidden; }
+  .summary .row { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-bottom: 1px solid var(--edge-soft); font-size: 13px; }
+  .summary .row:last-child { border-bottom: 0; }
+  .summary .who { flex: 0 0 64px; color: var(--heading); font-weight: 600; }
+  .summary .bar { flex: 1; height: 8px; border-radius: 4px; background: var(--star-off); position: relative; overflow: hidden; }
+  .summary .bar i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--accent); }
+  .summary .val { flex: 0 0 44px; text-align: right; color: var(--accent); font-weight: 700; }
+
+  /* «первая секунда после нажатия» — мини-экран Связей */
+  .after { border-top: 2px dashed var(--accent); position: relative; margin-top: 4px; }
+  .after::before {
+    content: 'первая секунда после нажатия'; position: absolute; left: 12px; top: -9px;
+    font-size: 10px; color: var(--accent); background: var(--panel); padding: 0 6px;
+    text-transform: uppercase; letter-spacing: .1em; font-weight: 700;
+  }
+  .appbar { display: flex; align-items: center; gap: 9px; padding: 11px 15px; border-bottom: 1px solid var(--edge); }
+  .appbar .n {
+    width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(135deg,#1667d6,#19b8d8);
+    color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 800;
+  }
+  .appbar b { color: var(--heading); font-size: 14px; }
+
+  .gcard {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin: 12px 14px; padding: 11px 13px; border-radius: 12px;
+    background: var(--accent-soft); border: 1px solid var(--accent);
+    font-size: 12.5px; line-height: 1.45;
+  }
+  .gcard p { flex: 1 1 200px; }
+  .gcard .b { flex: none; padding: 8px 16px; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 600; font-size: 12.5px; }
+  .gcard.pulse { animation: cardpulse 2.6s ease-in-out infinite; }
+  @keyframes cardpulse {
+    0%, 100% { border-color: var(--accent); box-shadow: 0 0 0 0 rgba(22,103,214,0); }
+    50% { border-color: var(--accent); box-shadow: 0 0 0 6px rgba(22,103,214,.12); }
+  }
+  @media (prefers-reduced-motion: reduce) { .gcard.pulse { animation: none; } }
+
+  .rel { margin: 0 14px 14px; }
+  .rel .rc {
+    display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+    border: 1px solid var(--edge); border-radius: 13px; margin-bottom: 8px;
+  }
+  .rel .face {
+    width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--edge-soft); color: var(--heading); font-weight: 700; font-size: 15px;
+  }
+  .rel .meta { flex: 1; }
+  .rel .meta b { display: block; color: var(--heading); font-size: 13.5px; }
+  .rel .meta small { color: var(--muted); font-size: 11.5px; }
+  .rel .pct { color: var(--accent); font-weight: 800; font-size: 15px; }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700;
+    background: var(--edge-soft); color: var(--muted); border: 1px solid var(--edge);
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .bridge {
+    margin: 12px 14px; padding: 12px 14px; border-radius: 13px; border: 1px dashed var(--accent);
+    background: var(--accent-soft); font-size: 12.5px; color: var(--heading); line-height: 1.5;
+  }
+  .bridge b { color: var(--accent); }
+  .shade {
+    margin: 12px 14px; padding: 22px 14px; border-radius: 13px; text-align: center;
+    background: var(--edge-soft); color: var(--muted); font-size: 13px;
+  }
+  .shade .ring {
+    width: 26px; height: 26px; margin: 0 auto 8px; border-radius: 50%;
+    border: 3px solid var(--star-off); border-top-color: var(--accent);
+  }
+
+  /* ── сцена приложения (набор Б) ─────────────────────────────────────── */
+  .underbar {
+    display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+    background: var(--accent-soft); border-bottom: 1px solid var(--accent);
+    font-size: 12.5px; color: var(--heading);
+  }
+  .underbar.thin { padding: 6px 14px; font-size: 12px; }
+  .underbar .x { margin-left: auto; border: 0; background: none; color: var(--muted); font-size: 15px; cursor: pointer; }
+  .underbar .b { flex: none; padding: 6px 12px; border-radius: 9px; background: var(--accent); color: #fff; font-weight: 600; font-size: 12px; border: 0; cursor: pointer; }
+  .underbar .b.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .underbar.pulse { animation: cardpulse 2.6s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .underbar.pulse { animation: none; } }
+
+  .beaconbar { display: flex; justify-content: flex-end; padding: 8px 12px 0; }
+  .beacon {
+    display: inline-flex; gap: 7px; align-items: center;
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+    background: var(--accent); color: #fff; box-shadow: var(--card-shadow); cursor: pointer;
+  }
+  .beacon .dotp { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: blink 1.8s ease-in-out infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .beacon .dotp { animation: none; } }
+  .beacon-open {
+    margin: 8px 12px 0 auto; max-width: 300px;
+    padding: 12px 14px; border-radius: 13px; background: var(--panel);
+    border: 1px solid var(--accent); box-shadow: var(--card-shadow); font-size: 12.5px; line-height: 1.5;
+  }
+  .statehead {
+    margin: 14px 14px 0; padding-top: 10px; border-top: 2px dashed var(--accent);
+    font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: .1em; font-weight: 700;
+  }
+  .beacon-open .row { display: flex; gap: 8px; margin-top: 10px; }
+  .beacon-open .b { flex: 1; text-align: center; padding: 8px 0; border-radius: 9px; background: var(--accent); color: #fff; font-weight: 600; font-size: 12px; }
+  .beacon-open .b.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+
+  .content-stub { padding: 14px; }
+  .stub-card { border: 1px solid var(--edge); border-radius: 13px; height: 64px; margin-bottom: 10px; background: var(--edge-soft); }
+
+  .draft {
+    display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 6px;
+    background: var(--star); color: #402a00; font-size: 10px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+
+  .legend {
+    max-width: 980px; margin: 0 auto 18px; padding: 11px 15px; border-radius: 12px;
+    border: 1px solid var(--edge); background: var(--panel); font-size: 12.5px; line-height: 1.55;
+  }
+  .legend b { color: var(--heading); }
+
+  .v { display: none; }
+  .v.on { display: block; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Набор А — переход:</b>
+  <button data-v="a1">А1 тихий свет</button>
+  <button data-v="a2" class="active">А2 волны</button>
+  <button data-v="a3">А3 итог-панель</button>
+  <button data-v="a4">А4 мостик</button>
+  <b style="margin-left:10px">Набор Б — просьба:</b>
+  <button data-v="b1">Б1 карточка гостя</button>
+  <button data-v="b2">Б2 тонкая строка</button>
+  <button data-v="b3">Б3 маячок</button>
+  <button data-v="b4">Б4 панель-карточка</button>
+  <span class="sp"></span>
+  <button id="width-mid">1024</button>
+  <button id="width">390 ↔ 1440</button>
+  <button id="theme">тема</button>
+  <span class="hint">фаза 4 эпика plans/23</span>
+</div>
+
+<div class="note" id="note"></div>
+
+<div class="stage" id="stage" data-w="390"></div>
+
+<div class="legend">
+  <b>Что здесь канон, а что рабочее.</b> Поп-ап «Алиса — Ваша самая сильная связь: 61 %», кнопка
+  «Смотреть больше», дверь «Войти в пространство» — Ваши слова и утверждённый V4. Текст карточки
+  гостя — дословно из продукта (7 дней — из схемы). Короткая форма просьбы в Б2/Б3 помечена
+  плашкой <span class="draft">текст на вычитку</span> — это единственная новая строка.
+  Пульсация всюду гаснет при prefers-reduced-motion.
+</div>
+
+<script>
+/* Восемь вариантов собираются из общих кусков, чтобы различия были ВАРИАНТНЫМИ, а не случайными. */
+
+const MAP = (pop) => `
+  <div class="map">
+    <div class="link-line" style="left:52%;top:52%;width:26%;transform:rotate(-28deg)"></div>
+    <div class="link-line" style="left:50%;top:56%;width:30%;transform:rotate(24deg)"></div>
+    <div class="link-line" style="left:48%;top:54%;width:22%;transform:rotate(160deg)"></div>
+    <div class="dot me" style="left:44%;top:40%"><div class="face">Вы</div><small>Вы</small></div>
+    <div class="dot" style="left:70%;top:16%"><div class="face">А</div><small>Алиса</small></div>
+    <div class="dot" style="left:74%;top:62%"><div class="face">М</div><small>Макс</small></div>
+    <div class="dot" style="left:18%;top:58%"><div class="face">Н</div><small>Настя</small></div>
+    ${pop ? `<div class="pop" style="left:6%;top:4%"><b>Алиса</b> — Ваша самая сильная связь: <b>61 %</b></div>` : ''}
+  </div>
+  <div class="stars">
+    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+    <span class="off">★</span><span class="off">★</span><span class="off">★</span>
+  </div>
+  <div class="stars-hint">Вы подвигали звёзды — карта пересчиталась настоящим ядром</div>`;
+
+const TOPLINE = `
+  <div class="topline">
+    <div class="brand"><span class="n">N</span> NDim Space</div>
+    <a class="door" href="#">Войти в пространство →</a>
+  </div>`;
+
+const GO = (cls, msg) => `
+  <div class="go">
+    <div class="msg">${msg}</div>
+    <button class="gobtn ${cls}">Смотреть больше</button>
+  </div>`;
+
+const SUMMARY = `
+  <div class="summary">
+    <div class="row"><span class="who">Алиса</span><span class="bar"><i style="width:61%"></i></span><span class="val">61 %</span></div>
+    <div class="row"><span class="who">Макс</span><span class="bar"><i style="width:44%"></i></span><span class="val">44 %</span></div>
+    <div class="row"><span class="who">Настя</span><span class="bar"><i style="width:27%"></i></span><span class="val">27 %</span></div>
+  </div>`;
+
+const GCARD = (pulse, google) => `
+  <div class="gcard ${pulse ? 'pulse' : ''}">
+    <p>Сейчас Вы гость. Гостевой профиль живёт 7 дней с момента создания — создайте аккаунт,
+    и Ваши оценки и связи останутся с Вами.</p>
+    <span class="b">Сохранить</span>${google ? '<span class="b" style="background:transparent;color:var(--accent);border:1px solid var(--accent)">Google</span>' : ''}
+  </div>`;
+
+const RELS = (bridge) => `
+  ${bridge ? `<div class="bridge"><b>Это была демонстрация</b> — вот Ваши настоящие связи.
+     Алиса, Макс и Настя останутся рядом, пока не появится первая настоящая; убрать их можно крестиком.</div>` : ''}
+  <div class="rel">
+    <div class="rc"><div class="face">А</div><div class="meta"><b>Алиса <span class="pill">системный персонаж</span></b><small>похожесть · близость · общность</small></div><div class="pct">61 %</div></div>
+    <div class="rc"><div class="face">М</div><div class="meta"><b>Макс <span class="pill">системный персонаж</span></b><small>похожесть · близость · общность</small></div><div class="pct">44 %</div></div>
+    <div class="rc"><div class="face">Н</div><div class="meta"><b>Настя <span class="pill">системный персонаж</span></b><small>похожесть · близость · общность</small></div><div class="pct">27 %</div></div>
+  </div>`;
+
+const AFTER = (inner) => `
+  <div class="after">
+    <div class="appbar"><span class="n">N</span> <b>Связи</b></div>
+    ${inner}
+  </div>`;
+
+const APPSHELL = (below, extra) => `
+  <div class="appbar"><span class="n">N</span> <b>Связи</b></div>
+  ${below ?? ''}
+  ${extra ?? ''}
+  <div class="content-stub">
+    ${GCARD(false, false)}
+    <div class="stub-card"></div><div class="stub-card"></div><div class="stub-card"></div>
+  </div>`;
+
+const APPSHELL_B1 = `
+  <div class="appbar"><span class="n">N</span> <b>Связи</b></div>
+  <div class="content-stub">
+    ${GCARD(true, true)}
+    <div class="stub-card"></div><div class="stub-card"></div><div class="stub-card"></div>
+  </div>`;
+
+const V = {
+  a1: {
+    note: `<b>А1 «Тихий свет».</b> Поп-ап-облачко над Алисой; кнопка появляется после звёзд и
+      СВЕТИТСЯ мягко, без волн. Первая секунда после нажатия: сразу «Связи» — сверху карточка
+      гостя, ниже три системных персонажа с честными пилюлями (Р6).`,
+    html: `<div class="screen"><div class="pad">${TOPLINE}${MAP(true)}${GO('glow', 'Пространство пересчитало Ваши связи.')}</div>
+      ${AFTER(`${GCARD(false, false)}${RELS(false)}`)}</div>`,
+  },
+  a2: {
+    note: `<b>А2 «Волны, как заказано».</b> Дословное исполнение В3: кнопка «мягко пульсирует,
+      светится и испускает волны». Первая секунда: полсекунды мягкой шторки «Пространство
+      открывается…», затем «Связи». Шторка гасит резкость перехода, но добавляет ожидание.`,
+    html: `<div class="screen"><div class="pad">${TOPLINE}${MAP(true)}${GO('waves', 'Пространство пересчитало Ваши связи.')}</div>
+      ${AFTER(`<div class="shade"><div class="ring"></div>Пространство открывается…</div>${GCARD(false, false)}${RELS(false)}`)}</div>`,
+  },
+  a3: {
+    note: `<b>А3 «Итог-панель».</b> Кроме поп-апа — панель-итог с барами похожести всех троих
+      (звёзды для ввода, бары для просмотра). Первая секунда: «Связи» открываются ТОЙ ЖЕ
+      панелью сверху — человек узнаёт то, что уже видел, непрерывность максимальная.`,
+    html: `<div class="screen"><div class="pad">${TOPLINE}${MAP(true)}${SUMMARY}${GO('glow', 'Это Ваши первые связи — настоящих людей Пространство ищет так же.')}</div>
+      ${AFTER(`<div class="pad" style="padding-bottom:0">${SUMMARY}</div>${GCARD(false, false)}${RELS(false)}`)}</div>`,
+  },
+  a4: {
+    note: `<b>А4 «Мостик демонстрации».</b> Переход как в А1, но первая секунда честно называет
+      игру игрой: карточка-мостик «Это была демонстрация — вот Ваши настоящие связи», персонажи
+      с пилюлями, крестик убирает (Р10). Рекомендация метаплана (вопрос 1, путь Б).`,
+    html: `<div class="screen"><div class="pad">${TOPLINE}${MAP(true)}${GO('glow', 'Пространство пересчитало Ваши связи.')}</div>
+      ${AFTER(`${GCARD(false, false)}${RELS(true)}`)}</div>`,
+  },
+  b1: {
+    note: `<b>Б1 «Карточка гостя и есть просьба» (рекомендация агента).</b> НОВОЙ панели нет:
+      постоянная карточка гостя (Ваш выбор в фазе 5 эпика 22, уже в коде) получает мягкий пульс
+      рамки и вторую кнопку — Google (Р13 «оба»). Доза напоминаний НЕ растёт; геометрия шапки,
+      рельса и жеста обновления не тронута вовсе.`,
+    html: `<div class="screen">${APPSHELL_B1}</div>`,
+  },
+  b2: {
+    note: `<b>Б2 «Тонкая строка под шапкой».</b> Классика В4: строка ниже хедера, пролистываемая,
+      закрывается ✕ и не возвращается до следующего входа. Текст короткий — новый
+      (на вычитку). ⚠️ Вместе с карточкой гостя напоминаний становится ДВА на каждом экране.`,
+    html: `<div class="screen">${APPSHELL(`<div class="underbar thin pulse">
+        <span>Сохраните Ваши оценки и связи<span class="draft">текст на вычитку</span></span>
+        <button class="b">Почта</button><button class="b ghost">Google</button>
+        <button class="x">✕</button></div>`)}</div>`,
+  },
+  b3: {
+    note: `<b>Б3 «Маячок».</b> Просьба постоянно ДОСТУПНА, но не постоянно ПОКАЗАНА (разрешение
+      противоречия 4 сшивки): пилюля-маячок у шапки, тап раскрывает панель с двумя кнопками.
+      Показаны оба состояния — до тапа и после. Текст пилюли —
+      <span class="draft">текст на вычитку</span>. ⚠️ Плюс карточка гостя — двойная точка
+      одного смысла.`,
+    html: `<div class="screen">
+      <div class="appbar"><span class="n">N</span> <b>Связи</b></div>
+      <div class="beaconbar"><span class="beacon"><span class="dotp"></span> Сохранить труд</span></div>
+      <div class="content-stub">${GCARD(false, false)}<div class="stub-card"></div><div class="stub-card"></div></div>
+      <div class="statehead">после тапа по маячку</div>
+      <div class="beaconbar"><span class="beacon"><span class="dotp"></span> Сохранить труд</span></div>
+      <div class="beacon-open">Создайте аккаунт — Ваши оценки и связи останутся с Вами.
+        <div class="row"><span class="b">Почта</span><span class="b ghost">Google</span></div></div>
+      <div class="content-stub">${GCARD(false, false)}<div class="stub-card"></div></div></div>`,
+  },
+  b4: {
+    note: `<b>Б4 «Панель-карточка под шапкой».</b> Заметная панель с ПОЛНЫМ текстом карточки
+      гостя и двумя кнопками (Р13), мягкий пульс, закрывается ✕ на сессию.
+      ⚠️ Это ровно текст карточки гостя вторым экземпляром — двойник по построению; показан,
+      чтобы выбор был честным, а не предрешённым.`,
+    html: `<div class="screen">${APPSHELL(`<div class="underbar pulse">
+        <span>Сейчас Вы гость. Гостевой профиль живёт 7 дней — создайте аккаунт, и Ваши оценки
+        и связи останутся с Вами.</span>
+        <button class="b">Почта</button><button class="b ghost">Google</button>
+        <button class="x">✕</button></div>`)}</div>`,
+  },
+};
+
+const stage = document.getElementById('stage');
+const note = document.getElementById('note');
+let current = 'a2';
+
+function render() {
+  stage.innerHTML = V[current].html;
+  note.innerHTML = V[current].note;
+  for (const b of document.querySelectorAll('.picker button[data-v]')) {
+    b.classList.toggle('active', b.dataset.v === current);
+  }
+}
+for (const b of document.querySelectorAll('.picker button[data-v]')) {
+  b.addEventListener('click', () => { current = b.dataset.v; render(); });
+}
+document.getElementById('theme').addEventListener('click', () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+});
+/* Дом стиля: #width — тумблер 390 ↔ 1440 (его жмёт съёмщик); 1024 — отдельная кнопка для глаз. */
+document.getElementById('width').addEventListener('click', () => {
+  stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390';
+});
+document.getElementById('width-mid').addEventListener('click', () => { stage.dataset.w = '1024'; });
+render();
+</script>
+</body>
+</html>
