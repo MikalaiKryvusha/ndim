@@ -18,6 +18,8 @@
  */
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+// Ряд звёзд берётся у ПРОДУКТА: страж, повторивший правило своими словами, ошибается вместе с ним.
+import { starRow } from '../src/lib/content/dims-rating.ts';
 
 const BUILD = 'build';
 const LANGS = ['ru', 'en'];
@@ -137,6 +139,94 @@ console.log('\n— каталог НЕ уехал в браузер —');
   const appDir = join(BUILD, '_app');
   const mb = existsSync(appDir) ? walk(appDir).reduce((s, f) => s + statSync(f).size, 0) / 1048576 : 0;
   check('клиентский бандл меньше 3 МБ', mb < 3, `${mb.toFixed(1)} МБ`);
+}
+
+// ── ПАРИТЕТ ЗВЁЗД: ХАБ ПОКАЗЫВАЕТ ТО ЖЕ, ЧТО КАРТОЧКА ──────────────────────
+console.log('\n— ряд звёзд на хабе — тот же, что на карточке объекта —');
+{
+  /*
+   * 🔴 ЗАЧЕМ ЭТА ПРОВЕРКА ПОЯВИЛАСЬ. Правило владельца (№044 В3) сначала легло только на карточку
+   * объекта, и один и тот же фильм показывал на карточке восемь золотых звёзд, а на хабе —
+   * восемь золотых и две пустых. Две публичные поверхности говорили разное про один объект;
+   * это класс «истина ↔ зеркало», которым проект уже платил. Владелец распространил правило на
+   * обе поверхности, а страж делает молчаливое расхождение невозможным.
+   *
+   * Ряд считает `starRow` — тот же код, что рисует продукт: своя формула в страже дала бы второй
+   * источник истины, и он разъехался бы с первым при следующей правке.
+   */
+  const dims = JSON.parse(
+    readFileSync(
+      existsSync('src/lib/content/dims-build.json')
+        ? 'src/lib/content/dims-build.json'
+        : 'src/lib/content/dims-slice.json',
+      'utf8',
+    ),
+  );
+  const num = (v) => (Number.isFinite(+v) ? +v : 0);
+  const bySlug = new Map(dims.map((d) => [d.slug, d]));
+
+  const walkPages = (dir) =>
+    existsSync(dir)
+      ? readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+          e.isDirectory() ? walkPages(join(dir, e.name)) : e.name.endsWith('.html') ? [join(dir, e.name)] : [],
+        )
+      : [];
+
+  let rows = 0;
+  let mismatch = 0;
+  let empty = 0;
+  let greyRows = 0;
+  let firstBad = '';
+
+  /*
+   * 🔑 ВЫБОРКА ДОБИРАЕТСЯ ПОИМЁННО — тот же приём, что в страже карточек, и по той же причине.
+   * Объектов со средней ниже единицы в каталоге ДВА из 5121; в первые 40 страниц хабов они не
+   * попадают, и проверка «серая звезда на хабе» печатала бы «0 нарушений» ни разу её не увидев.
+   * «Ноль нарушений» и «ноль наблюдений» выглядят одинаково (`EXP-0092`), поэтому страницы,
+   * где эти объекты реально стоят, добавляются в выборку ЯВНО, а число наблюдений печатается.
+   */
+  const allPages = walkPages(join(BUILD, 'ru', 'catalog'));
+  const rareSlugs = dims.filter((d) => num(d.rates) >= 1 && num(d.rating) < 1).map((d) => d.slug);
+  const picked = new Set(allPages.slice(0, 40));
+  for (const page of allPages) {
+    const html = readFileSync(page, 'utf8');
+    if (rareSlugs.some((slug) => html.includes(`/ru/dimension/${slug}"`))) picked.add(page);
+  }
+
+  for (const file of picked) {
+    const html = readFileSync(file, 'utf8');
+    for (const m of html.matchAll(/<a class="row[^>]*href="\/ru\/dimension\/([a-z0-9-]+)"[\s\S]*?<\/a>/g)) {
+      const d = bySlug.get(m[1]);
+      if (!d) continue;
+      const row = m[0].match(/<span class="stars[\s\S]*?<\/span>/)?.[0] ?? '';
+      if (!row) continue; // неоценённый — звёзд нет вовсе, это стережёт правило показа оценок
+      rows += 1;
+      const gold = (row.match(/<i class="[^"]*\bon\b[^"]*">★<\/i>/g) ?? []).length;
+      const grey = (row.match(/<i class="[^"]*\blow\b[^"]*">★<\/i>/g) ?? []).length;
+      const total = (row.match(/★/g) ?? []).length;
+      const want = starRow(num(d.rating));
+      if (grey) greyRows += 1;
+      if (gold !== want.gold || grey !== want.grey) {
+        mismatch += 1;
+        if (!firstBad) firstBad = `${d.slug}: оценка ${d.rating} → хаб ${gold}🟡+${grey}⚪, карточка ${want.gold}🟡+${want.grey}⚪`;
+      }
+      if (total !== gold + grey) {
+        empty += 1;
+        if (!firstBad) firstBad = `${d.slug}: на хабе ${total} звёзд, размеченных ${gold + grey}`;
+      }
+    }
+  }
+
+  check('ряд звёзд на хабе совпадает с рядом на карточке', mismatch === 0,
+    `сверено рядов ${rows}${mismatch ? `, расхождений ${mismatch}: ${firstBad}` : ''}`);
+  check('пустых позиций на хабе НЕТ вовсе', empty === 0, `нарушений: ${empty}`);
+  check('сверка паритета вообще состоялась', rows > 0, `рядов: ${rows}`);
+  if (rareSlugs.length) {
+    check('🔴 тяжёлая серая звезда наблюдалась и НА ХАБЕ (добор поимённо)', greyRows > 0,
+      `в каталоге ${rareSlugs.length}, наблюдений ${greyRows}: ${rareSlugs.join(' · ')}`);
+  } else {
+    console.log('  ℹ в каталоге нет объектов со средней ниже единицы — серая звезда не наблюдалась');
+  }
 }
 
 console.log(`\n${failed ? '🔴' : '✅'} ИТОГ: ${passed} прошло, ${failed} провалов\n`);
