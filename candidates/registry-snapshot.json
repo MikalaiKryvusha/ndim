@@ -1,0 +1,6812 @@
+{
+ "ЧТО ЭТО": "Снимок реестра Wikidata по карточкам мастерской: состояние именных свойств.",
+ "КЕМ СНЯТ": "node tools/measure-name-registry.mjs --refresh",
+ "СНЯТ": "2026-08-22",
+ "УСТАРЕВАНИЕ": "снимок старше 30 дней — ГИПОТЕЗА, а не факт: реестр правят люди каждый день. Перед опорой пересними. Живой случай движения — researches/NEW_registry_as_name_source.md §5.",
+ "ЧЕГО ЗДЕСЬ НЕТ": "сырого ответа API и текстов Википедии — только имена по ролям и вид молчания.",
+ "записи": {
+  "Q107105860": {
+   "имя": "Проект «Конец света»",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Фил Лорд",
+      "Phil Lord",
+      "Крис Миллер",
+      "Christopher Miller"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Дрю Годдард",
+      "Drew Goddard",
+      "Годдард, Дрю"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Райан Гослинг",
+      "Ryan Gosling",
+      "Гослинг, Райан",
+      "Сандра Хюллер",
+      "Sandra Hüller",
+      "Хюллер, Сандра",
+      "Милана Вайнтруб",
+      "Milana Vayntrub",
+      "Вайнтруб, Милана",
+      "Лайонел Бойс",
+      "Lionel Boyce",
+      "Кен Люн",
+      "Ken Leung",
+      "Люн, Кен",
+      "Лиз Кингсмен",
+      "Орион Ли",
+      "Миа Сотерье",
+      "Сотериу, Мия",
+      "Мия Сотериу",
+      "Мишель Гринидж",
+      "Малачи Кирби",
+      "Malachi Kirby",
+      "Priya Kansara"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Фил Лорд",
+      "Phil Lord",
+      "Райан Гослинг",
+      "Ryan Gosling",
+      "Гослинг, Райан",
+      "Эми Паскаль",
+      "Amy Pascal",
+      "Паскаль, Эми",
+      "Энди Вейер",
+      "Andy Weir",
+      "Вейер, Энди",
+      "Крис Миллер",
+      "Christopher Miller"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Дэниэл Пембертон",
+      "Daniel Pemberton",
+      "Пембертон, Дэниел",
+      "Дэниел Пембертон"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Amazon MGM Studios"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Phil Lord",
+      "Christopher Miller"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Drew Goddard"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Ryan Gosling",
+      "Sandra Hüller",
+      "Milana Vayntrub",
+      "Lionel Boyce",
+      "Ken Leung",
+      "Liz Kingsman",
+      "Orion Lee",
+      "James Ortiz",
+      "Mia Soteriou",
+      "Michelle Greenidge",
+      "Malachi Kirby",
+      "Priya Kansara"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Phil Lord",
+      "Ryan Gosling",
+      "Amy Pascal",
+      "Andy Weir",
+      "Christopher Miller",
+      "Rachel O'Connor"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Daniel Pemberton"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Amazon MGM Studios"
+     ]
+    }
+   }
+  },
+  "Q112040381": {
+   "имя": "Властелины Вселенной",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Трэвис Найт"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Крис Батлер",
+      "Аарон Ни",
+      "Адам Ни",
+      "Дэйв Каллахэм"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Николас Голицын",
+      "Nicholas Galitzine",
+      "Галицин, Николас",
+      "Николас Галицин",
+      "Камила Мендес",
+      "Мендес, Камила",
+      "Идрис Эльба",
+      "Idris Elba",
+      "Эльба, Идрис",
+      "Джаред Лето",
+      "Jared Leto",
+      "Лето, Джаред",
+      "Элисон Бри",
+      "Alison Brie",
+      "Бри, Элисон",
+      "Сэм С. Уилсон",
+      "Sam C. Wilson",
+      "Хафтор Бьёрнсон",
+      "Hafþór Júlíus Björnsson",
+      "Хафтор Бьёрнссон",
+      "Койо Атта",
+      "Kojo Attah",
+      "Морена Баккарин",
+      "Morena Baccarin",
+      "Баккарин, Морена",
+      "Йоуханнес Хёйкьюр Йоуханнессон",
+      "Йоуханнес Хёйкюр Йоуханнессон",
+      "Джеймс Пьюрфой",
+      "Пьюрфой, Джеймс",
+      "Шарлотта Райли",
+      "Charlotte Riley",
+      "Райли, Шарлотта",
+      "Сюэ Чжан",
+      "Сашир Замата",
+      "Sasheer Zamata",
+      "Кристен Уиг",
+      "Kristen Wiig",
+      "Уиг, Кристен",
+      "Дольф Лундгрен",
+      "Dolph Lundgren",
+      "Лундгрен, Дольф",
+      "Гари Мартин",
+      "Piotr Michael",
+      "Кристофер Рэглэнд"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Тодд Блэк",
+      "Стив Тиш",
+      "Steve Tisch",
+      "Джейсон Блюменталь",
+      "Робби Бреннер",
+      "Девон Франклин",
+      "DeVon Franklin"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Дэниэл Пембертон",
+      "Daniel Pemberton",
+      "Пембертон, Дэниел",
+      "Дэниел Пембертон"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Escape Artists",
+      "Mattel Films",
+      "Metro-Goldwyn-Mayer"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Travis Knight"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Chris Butler",
+      "Aaron Nee",
+      "Adam Nee",
+      "David Callaham"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Nicholas Galitzine",
+      "Camila Mendes",
+      "Idris Elba",
+      "Jared Leto",
+      "Alison Brie",
+      "Sam C. Wilson",
+      "Hafþór Júlíus Björnsson",
+      "Kojo Attah",
+      "Morena Baccarin",
+      "Jóhannes Haukur Jóhannesson",
+      "James Purefoy",
+      "Charlotte Riley",
+      "Jon Xue Zhang",
+      "Sasheer Zamata",
+      "Kristen Wiig",
+      "Dolph Lundgren",
+      "Gary Martin",
+      "Piotr Michael",
+      "Christopher Ragland",
+      "James Wilkinson"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Todd Black",
+      "Steve Tisch",
+      "Jason Blumenthal",
+      "Robbie Brenner",
+      "DeVon Franklin"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Daniel Pemberton"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Escape Artists",
+      "Mattel Films",
+      "Metro-Goldwyn-Mayer"
+     ]
+    }
+   }
+  },
+  "Q113244935": {
+   "имя": "Человек-паук: Новый день",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Дестин Дэниел Креттон",
+      "Destin Cretton",
+      "Креттон, Дестин Дэниел"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Крис МакКенна",
+      "Chris McKenna",
+      "Маккенна, Крис",
+      "Крис Маккенна",
+      "Эрик Соммерс",
+      "Erik Sommers",
+      "Соммерс, Эрик"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Том Холланд",
+      "Tom Holland",
+      "Холланд, Том",
+      "Зендея",
+      "Zendaya",
+      "Джейкоб Баталон",
+      "Jacob Batalon",
+      "Баталон, Джейкоб",
+      "Сэди Синк",
+      "Sadie Sink",
+      "Синк, Сэди",
+      "Лиза Колон-Зайас",
+      "Liza Colón-Zayas",
+      "Колон-Зайас, Лиза",
+      "Джон Бернтал",
+      "Jon Bernthal",
+      "Бернтал, Джон",
+      "Марк Руффало",
+      "Mark Ruffalo",
+      "Руффало, Марк",
+      "Майкл Мэндо",
+      "Мэндо, Майкл",
+      "Трамелл Тилман",
+      "Tramell Tillman",
+      "Тиллман, Трэмелл",
+      "Трэмелл Тиллман",
+      "Джонс, Марвин",
+      "Марвин Джонс",
+      "Eman Esfandi",
+      "Забрина Гевара",
+      "Zabryna Guevara",
+      "Гевара, Забрина",
+      "Olivia Booth-Ford",
+      "Мариса Томей",
+      "Marisa Tomei",
+      "Томей, Мариса",
+      "Флоренс Пью",
+      "Florence Pugh",
+      "Пью, Флоренс"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Кевин Файги",
+      "Kevin Feige",
+      "Файги, Кевин",
+      "Эми Паскаль",
+      "Amy Pascal",
+      "Паскаль, Эми",
+      "Ави Арад",
+      "Avi Arad",
+      "Арад, Ави"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Майкл Джаккино",
+      "Michael Giacchino",
+      "Джаккино, Майкл"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Columbia Pictures",
+      "Marvel Studios",
+      "Pascal Pictures"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Питер Паркер",
+      "Peter Parker"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Destin Daniel Cretton",
+      "Destin Cretton"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Chris McKenna",
+      "Erik Sommers"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Tom Holland",
+      "Zendaya",
+      "Jacob Batalon",
+      "Sadie Sink",
+      "Liza Colón-Zayas",
+      "Jon Bernthal",
+      "Mark Ruffalo",
+      "Michael Mando",
+      "Tramell Tillman",
+      "Krondon",
+      "Eman Esfandi",
+      "Zabryna Guevara",
+      "Olivia Booth-Ford",
+      "Marisa Tomei",
+      "Florence Pugh",
+      "Taryn Marie Butler",
+      "Fan Xiaoshuang"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Kevin Feige",
+      "Amy Pascal",
+      "Avi Arad",
+      "Rachel O'Connor"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Michael Giacchino"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Columbia Pictures",
+      "Marvel Studios",
+      "Pascal Pictures"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Peter Parker"
+     ]
+    }
+   }
+  },
+  "Q116677364": {
+   "имя": "Майкл",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Антуан Фукуа",
+      "Antoine Fuqua",
+      "Фукуа, Антуан"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джон Логан",
+      "Логан, Джон"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Джаафар Джексон",
+      "Jaafar Jackson",
+      "Джексон, Джаафар",
+      "Колман Доминго",
+      "Colman Domingo",
+      "Доминго, Колман",
+      "Ниа Лонг",
+      "Лонг, Ниа",
+      "Майлз Теллер",
+      "Теллер, Майлз",
+      "Джозеф Дэвид-Джонс",
+      "Лора Харриер",
+      "Харриер, Лора",
+      "Кэт Грэм",
+      "Грэм, Катерина",
+      "Катерина Грэм",
+      "Лоренц Тейт",
+      "Larenz Tate",
+      "Тейт, Лоренц",
+      "Джессика Сула",
+      "Сула, Джессика",
+      "Кевин Шиник",
+      "Kevin Shinick",
+      "Кендрик Сэмпсон",
+      "Сэмпсон, Кендрик",
+      "Дерек Люк",
+      "Люк, Дерек"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Грэм Кинг",
+      "Graham King",
+      "Кинг, Грэм"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "GK Films"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Майкл Джексон",
+      "Michael Jackson",
+      "Джексон, Майкл",
+      "Джо Джексон",
+      "Джексон, Джо",
+      "Кэтрин Джексон",
+      "Джексон, Кэтрин",
+      "Джон Бранка",
+      "John Branca",
+      "Джеки Джексон",
+      "Джексон, Джеки",
+      "Дайана Росс",
+      "Diana Ross",
+      "Росс, Дайана",
+      "Берри Горди",
+      "Berry Gordy",
+      "Горди, Берри",
+      "Дик Кларк",
+      "Кларк, Дик",
+      "Куинси Джонс",
+      "Quincy Jones",
+      "Джонс, Куинси",
+      "Джонни Кокрэн"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Antoine Fuqua"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "John Logan"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Jaafar Jackson",
+      "Colman Domingo",
+      "Nia Long",
+      "Miles Teller",
+      "Joseph David-Jones",
+      "Laura Harrier",
+      "Kat Graham",
+      "Larenz Tate",
+      "Jessica Sula",
+      "Kevin Shinick",
+      "Kendrick Sampson",
+      "Derek Luke"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Graham King"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "GK Films"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Michael Jackson",
+      "Joe Jackson",
+      "Katherine Jackson",
+      "John Branca",
+      "Jackie Jackson",
+      "Suzanne de Passe",
+      "Diana Ross",
+      "Berry Gordy",
+      "Dick Clark",
+      "Quincy Jones",
+      "Johnnie Cochran"
+     ]
+    }
+   }
+  },
+  "Q117745793": {
+   "имя": "Умри, моя любовь",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Линн Рэмси",
+      "Lynne Ramsay",
+      "Рэмси, Линн"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Линн Рэмси",
+      "Lynne Ramsay",
+      "Рэмси, Линн",
+      "Энда Уолш",
+      "Enda Walsh"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Дженнифер Лоуренс",
+      "Jennifer Lawrence",
+      "Лоуренс, Дженнифер",
+      "Роберт Паттинсон",
+      "Robert Pattinson",
+      "Паттинсон, Роберт",
+      "Сисси Спейсек",
+      "Sissy Spacek",
+      "Спейсек, Сисси",
+      "Ник Нолти",
+      "Nick Nolte",
+      "Нолти, Ник",
+      "Лакит Стэнфилд",
+      "Стэнфилд, Лакит"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Мартин Скорсезе",
+      "Martin Scorsese",
+      "Скорсезе, Мартин",
+      "Андреа Колдервуд",
+      "Дженнифер Лоуренс",
+      "Jennifer Lawrence",
+      "Лоуренс, Дженнифер"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Excellent Cadaver"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Lynne Ramsay"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Lynne Ramsay",
+      "Enda Walsh"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Jennifer Lawrence",
+      "Robert Pattinson",
+      "Sissy Spacek",
+      "Nick Nolte",
+      "LaKeith Stanfield"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Martin Scorsese",
+      "Andrea Calderwood",
+      "Jennifer Lawrence"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Excellent Cadaver"
+     ]
+    }
+   }
+  },
+  "Q122741016": {
+   "имя": "Хамнет",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Хлоя Чжао",
+      "Chloé Zhao",
+      "Чжао, Хлоя"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Хлоя Чжао",
+      "Chloé Zhao",
+      "Чжао, Хлоя",
+      "Мэгги О’Фаррелл",
+      "Maggie OʼFarrell",
+      "О’Фаррелл, Мэгги"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Джесси Бакли",
+      "Jessie Buckley",
+      "Бакли, Джесси",
+      "Пол Мескал",
+      "Paul Mescal",
+      "Мескал, Пол",
+      "Zac Wishart",
+      "James Lintern",
+      "Джо Элвин",
+      "Joe Alwyn",
+      "Элвин, Джо",
+      "Justine Mitchell",
+      "Eva Wishart",
+      "Effie Linnen",
+      "Эмили Уотсон",
+      "Emily Watson",
+      "Уотсон, Эмили",
+      "Дэвид Уилмот",
+      "David Wilmot",
+      "Уилмот, Дэвид",
+      "Freya Hannan-Mills",
+      "Dainton Anderson",
+      "James Skinner",
+      "Луиза Харланд",
+      "Louisa Harland",
+      "Elliot Baxter",
+      "Faith Delaney",
+      "Smylie Bradwell",
+      "Laura Guest",
+      "Джон Маккей",
+      "John MacKay",
+      "Джекоби Джуп",
+      "Jacobi Jupe",
+      "Джуп, Джекоби",
+      "Olivia Lynes",
+      "Bodhi Rae Breathnach",
+      "Albert McCormick",
+      "Eliah Arnstjerna",
+      "Edward Anderson",
+      "Ноа Джуп",
+      "Noah Jupe",
+      "Джуп, Ноа",
+      "El Simons",
+      "Sam Woolf",
+      "Hera Gibson",
+      "Джек Шаллу",
+      "Jack Shalloo",
+      "Raphael Goold",
+      "Шон Мэйсон",
+      "Shaun Mason",
+      "Мэттью Теннисон",
+      "Matthew Tennyson",
+      "Clay Milner Russell",
+      "Javier Marzan"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Пиппа Харрис",
+      "Сэм Мендес",
+      "Sam Mendes",
+      "Мендес, Сэм",
+      "Стивен Спилберг",
+      "Steven Spielberg",
+      "Спилберг, Стивен"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Макс Рихтер",
+      "Max Richter",
+      "Рихтер, Макс"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Neal Street Productions",
+      "Amblin Partners"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Chloé Zhao"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Chloé Zhao",
+      "Maggie O'Farrell",
+      "Maggie OʼFarrell"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Jessie Buckley",
+      "Paul Mescal",
+      "Zac Wishart",
+      "James Lintern",
+      "Joe Alwyn",
+      "Justine Mitchell",
+      "Eva Wishart",
+      "Effie Linnen",
+      "Emily Watson",
+      "David Wilmot",
+      "Freya Hannan-Mills",
+      "Dainton Anderson",
+      "James Skinner",
+      "Louisa Harland",
+      "Elliot Baxter",
+      "Faith Delaney",
+      "Smylie Bradwell",
+      "Laura Guest",
+      "John MacKay",
+      "Jacobi Jupe",
+      "Olivia Lynes",
+      "Bodhi Rae Breathnach",
+      "Albert McCormick",
+      "Eliah Arnstjerna",
+      "Edward Anderson",
+      "Noah Jupe",
+      "El Simons",
+      "Sam Woolf",
+      "Hera Gibson",
+      "Jack Shalloo",
+      "Raphael Goold",
+      "Shaun Mason",
+      "Matthew Tennyson",
+      "Clay Milner Russell",
+      "Javier Marzan"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Pippa Harris",
+      "Sam Mendes",
+      "Steven Spielberg"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Max Richter"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Neal Street Productions",
+      "Amblin Partners"
+     ]
+    }
+   }
+  },
+  "Q124246549": {
+   "имя": "Мандалорец и Грогу",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джон Фавро",
+      "Jon Favreau",
+      "Фавро, Джон"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джон Фавро",
+      "Jon Favreau",
+      "Фавро, Джон",
+      "Дейв Филони",
+      "Dave Filoni",
+      "Филони, Дейв"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Педро Паскаль",
+      "Pedro Pascal",
+      "Паскаль, Педро",
+      "Сигурни Уивер",
+      "Sigourney Weaver",
+      "Уивер, Сигурни",
+      "Джонни Койн",
+      "Jonny Coyne",
+      "Мэттью Уиллиг",
+      "Хемки Мадера"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Кэтлин Кеннеди",
+      "Kathleen Kennedy",
+      "Кеннеди, Кэтлин",
+      "Йен Брайс",
+      "Брайс, Йен"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Людвиг Йёранссон",
+      "Ludwig Göransson",
+      "Йёранссон, Людвиг"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Lucasfilm"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Jon Favreau"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Jon Favreau",
+      "Dave Filoni"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Pedro Pascal",
+      "Sigourney Weaver",
+      "Jonny Coyne",
+      "Matt Willig",
+      "Hemky Madera"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Kathleen Kennedy",
+      "Ian Bryce"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Ludwig Göransson"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Lucasfilm"
+     ]
+    }
+   }
+  },
+  "Q124364048": {
+   "имя": "Отец, мать, сестра, брат",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джим Джармуш",
+      "Jim Jarmusch",
+      "Джармуш, Джим"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джим Джармуш",
+      "Jim Jarmusch",
+      "Джармуш, Джим"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Кейт Бланшетт",
+      "Cate Blanchett",
+      "Бланшетт, Кейт",
+      "Вики Крипс",
+      "Крипс, Вики",
+      "Адам Драйвер",
+      "Adam Driver",
+      "Драйвер, Адам",
+      "Маим Бялик",
+      "Mayim Bialik",
+      "Бялик, Маим",
+      "Том Уэйтс",
+      "Tom Waits",
+      "Уэйтс, Том",
+      "Шарлотта Рэмплинг",
+      "Charlotte Rampling",
+      "Рэмплинг, Шарлотта",
+      "Индия Мур",
+      "Indya Moore",
+      "Мур, Индия",
+      "Лука Шабаш",
+      "Luka Sabbat"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Jim Jarmusch"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Jim Jarmusch"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Cate Blanchett",
+      "Vicky Krieps",
+      "Adam Driver",
+      "Mayim Bialik",
+      "Tom Waits",
+      "Charlotte Rampling",
+      "Indya Moore",
+      "Luka Sabbat"
+     ]
+    }
+   }
+  },
+  "Q124393313": {
+   "имя": "Нюрнберг",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джеймс Вандербилт",
+      "James Vanderbilt",
+      "Вандербильт, Джеймс",
+      "Джеймс Вандербильт"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джеймс Вандербилт",
+      "James Vanderbilt",
+      "Вандербильт, Джеймс",
+      "Джеймс Вандербильт"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Рами Малек",
+      "Rami Malek",
+      "Малек, Рами",
+      "Рассел Кроу",
+      "Russell Crowe",
+      "Кроу, Рассел",
+      "Майкл Шеннон",
+      "Michael Shannon",
+      "Шеннон, Майкл",
+      "Ричард Э. Грант",
+      "Richard E. Grant",
+      "Грант, Ричард",
+      "Ричард Грант",
+      "Лео Вудалл",
+      "Вудалл, Лео",
+      "Джон Слэттери",
+      "John Slattery",
+      "Слэттери, Джон",
+      "Ренн Шмидт",
+      "Wrenn Schmidt",
+      "Лотте Вербек",
+      "Lotte Verbeek",
+      "Вербек, Лотта",
+      "Лотта Вербек",
+      "Андреас Пичман",
+      "Andreas Pietschmann",
+      "Пичман, Андреас",
+      "Колин Хэнкс",
+      "Colin Hanks",
+      "Хэнкс, Колин",
+      "Марк О’Брайен",
+      "Стивен Пэйси",
+      "Пол Энтони-Барбер",
+      "Дональд Сейдж Маккей",
+      "Donald Sage Mackay",
+      "Вольфганг Черни",
+      "Wolfgang Cerny",
+      "Черни, Вольфганг",
+      "Питер Джордан",
+      "Peter Jordan",
+      "Джереми Уилер",
+      "Дитер Рисл",
+      "Dan Cade",
+      "Гюла Местерхази",
+      "Том Койн",
+      "Tom Keune",
+      "Blake Kubena",
+      "Fleur Bremmer",
+      "Лидия Пекхэм",
+      "Lydia Peckham"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Джеймс Вандербилт",
+      "James Vanderbilt",
+      "Вандербильт, Джеймс",
+      "Джеймс Вандербильт"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Брайан Тайлер",
+      "Brian Tyler",
+      "Тайлер, Брайан"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "James Vanderbilt"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "James Vanderbilt"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Rami Malek",
+      "Russell Crowe",
+      "Michael Shannon",
+      "Richard E. Grant",
+      "Leo Woodall",
+      "John Slattery",
+      "Wrenn Schmidt",
+      "Lotte Verbeek",
+      "Andreas Pietschmann",
+      "Colin Hanks",
+      "Mark O'Brien",
+      "Steven Pacey",
+      "Paul Antony-Barber",
+      "Donald Sage Mackay",
+      "Wolfgang Cerny",
+      "Peter Jordan",
+      "Jeremy Wheeler",
+      "Dieter Riesle",
+      "Dan Cade",
+      "Gyula Mesterházy",
+      "Tom Keune",
+      "Blake Kubena",
+      "Fleur Bremmer",
+      "Lydia Peckham"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "James Vanderbilt"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Brian Tyler"
+     ]
+    }
+   }
+  },
+  "Q124450734": {
+   "имя": "Я бы тебя пнула, если бы могла",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Mary Bronstein"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Роуз Бирн",
+      "Rose Byrne",
+      "Бирн, Роуз",
+      "A$AP Rocky",
+      "ASAP Rocky",
+      "Хелен Хонг",
+      "Хонг, Хелен",
+      "О’Брайен, Конан",
+      "Конан О’Брайен",
+      "Conan O'Brien",
+      "Даниэль Макдональд",
+      "Макдональд, Даниэль",
+      "Ivy Wolk",
+      "Даниэль Золгадри",
+      "Daniel Zolghadri",
+      "Джош Пэйс",
+      "Josh Pais",
+      "Mark Stolzenberg",
+      "Рональд Бронштейн",
+      "Бронштейн, Рональд",
+      "Ману Нарайан",
+      "Кристиан Слейтер",
+      "Слейтер, Кристиан",
+      "Элла Битти",
+      "Ella Beatty",
+      "Битти, Элла"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Братья Сафди",
+      "Сара Мерфи",
+      "Рональд Бронштейн",
+      "Бронштейн, Рональд",
+      "Илай Буш",
+      "Бенни Сафди",
+      "Benny Safdie",
+      "Сафди, Бенни",
+      "Джош Сафди",
+      "Сафди, Джош"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Mary Bronstein"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Rose Byrne",
+      "ASAP Rocky",
+      "Helen Hong",
+      "Conan O'Brien",
+      "Danielle Macdonald",
+      "Ivy Wolk",
+      "Daniel Zolghadri",
+      "Josh Pais",
+      "Mark Stolzenberg",
+      "Ronald Bronstein",
+      "Manu Narayan",
+      "Christian Slater",
+      "Ella Beatty"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Safdie brothers",
+      "Sara Murphy",
+      "Ronald Bronstein",
+      "Eli Bush",
+      "Benny Safdie",
+      "Josh Safdie"
+     ]
+    }
+   }
+  },
+  "Q124566659": {
+   "имя": "Казнить нельзя помиловать",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Тимур Бекмамбетов",
+      "Бекмамбетов, Тимур Нуруахитович",
+      "Тимур Нуруахитович Бекмамбетов"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Марко Ван Белле"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Крис Прэтт",
+      "Chris Pratt",
+      "Прэтт, Крис",
+      "Ребекка Фергюсон",
+      "Rebecca Ferguson",
+      "Фергюсон, Ребекка",
+      "Аннабелль Уоллис",
+      "Annabelle Wallis",
+      "Уоллис, Аннабелль",
+      "Кали Рейс",
+      "Рейс, Кали",
+      "Рафи Гаврон",
+      "Rafi Gavron",
+      "Гаврон, Рафи",
+      "Крис Салливан",
+      "Салливан, Крис",
+      "Кеннет Чои",
+      "Чои, Кеннет",
+      "Кайли Роджерс",
+      "Джефф Пьер",
+      "Jeff Pierre"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Чарльз Ровен",
+      "Charles Roven",
+      "Ровен, Чарльз"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Рамин Джавади",
+      "Ramin Djawadi",
+      "Джавади, Рамин"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Atlas Entertainment",
+      "Базелевс"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Timur Bekmambetov"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Marco van Belle"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Chris Pratt",
+      "Rebecca Ferguson",
+      "Annabelle Wallis",
+      "Kali Reis",
+      "Rafi Gavron",
+      "Chris Sullivan",
+      "Kenneth Choi",
+      "Kylie Rogers",
+      "Jeff Pierre"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Charles Roven"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Ramin Djawadi"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Atlas Entertainment",
+      "Bazelevs Company"
+     ]
+    }
+   }
+  },
+  "Q124735657": {
+   "имя": "Невеста",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Мэгги Джилленхол",
+      "Maggie Gyllenhaal",
+      "Джилленхол, Мэгги"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Мэгги Джилленхол",
+      "Maggie Gyllenhaal",
+      "Джилленхол, Мэгги"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Пенелопа Крус",
+      "Penélope Cruz",
+      "Крус, Пенелопа",
+      "Кристиан Бейл",
+      "Christian Bale",
+      "Бейл, Кристиан",
+      "Джесси Бакли",
+      "Jessie Buckley",
+      "Бакли, Джесси",
+      "Аннетт Бенинг",
+      "Annette Bening",
+      "Бенинг, Аннетт",
+      "Джулианна Хаф",
+      "Julianne Hough",
+      "Хаф, Джулианна",
+      "Питер Сарсгаард",
+      "Сарсгаард, Питер",
+      "Джон Магаро",
+      "John Magaro",
+      "Магаро, Джон",
+      "Джинни Берлин",
+      "Jeannie Berlin",
+      "Берлин, Джинни",
+      "Джейк Джилленхол",
+      "Jake Gyllenhaal",
+      "Джилленхол, Джейк",
+      "Линда Эмонд",
+      "Linda Emond",
+      "Эмонд, Линда",
+      "Мэттью Мехер"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Мэгги Джилленхол",
+      "Maggie Gyllenhaal",
+      "Джилленхол, Мэгги",
+      "Оснат Хандельсман-Керен",
+      "Талиа Клейнхендлер",
+      "Talia Kleinhendler",
+      "Эмма Тиллинджер Коскофф"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Хильдюр Гвюднадоуттир",
+      "Хильдур Гуднадоуттир"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Warner Bros."
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Maggie Gyllenhaal"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Maggie Gyllenhaal"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Penélope Cruz",
+      "Christian Bale",
+      "Jessie Buckley",
+      "Annette Bening",
+      "Julianne Hough",
+      "Peter Sarsgaard",
+      "John Magaro",
+      "Jeannie Berlin",
+      "Jake Gyllenhaal",
+      "Linda Emond",
+      "Louis Cancelmi",
+      "Matthew Maher"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Maggie Gyllenhaal",
+      "Osnat Handelsman-Keren",
+      "Talia Kleinhendler",
+      "Emma Tillinger Koskoff"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Hildur Guðnadóttir"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Warner Bros. Entertainment",
+      "Warner Bros."
+     ]
+    }
+   }
+  },
+  "Q124737605": {
+   "имя": "Гренландия 2: Миграция",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Рик Роман Во",
+      "Во, Рик Роман"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Крис Спарлинг",
+      "Chris Sparling",
+      "Mitchell LaFortune"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Джерард Батлер",
+      "Gerard Butler",
+      "Батлер, Джерард",
+      "Морена Баккарин",
+      "Morena Baccarin",
+      "Баккарин, Морена",
+      "Томми Дженкинс",
+      "Tommie Earl Jenkins",
+      "Дженкинс, Томми",
+      "Тронн Фёуса Эурвог",
+      "Trond Fausa Aurvåg",
+      "Эурвог, Тронн Фёуса",
+      "Эмбер Роуз Рева",
+      "Amber Rose Revah",
+      "Gina Gangar",
+      "Antonio De Lima",
+      "Питер Поликарпу",
+      "Peter Polycarpou",
+      "Beruce Khan",
+      "Роман Гриффин Дэвис",
+      "Roman Griffin Davis",
+      "Гриффин Дэвис, Роман",
+      "Megan Jacobs Shrivastava",
+      "Mitu Panicucci",
+      "Гисли Орн Гардарссон",
+      "Gísli Örn Garðarsson",
+      "Гисли Эдн Гардарссон",
+      "Сидсель Сим Кох",
+      "Sidsel Siem Koch",
+      "Faraz M. Khan",
+      "Nathan Wiley",
+      "Gordon Alexander",
+      "Алекс Ланипекун",
+      "Alex Lanipekun",
+      "Shayn Herndon",
+      "Rachael Evelyn",
+      "Нил Белл",
+      "Neil Bell",
+      "Andre Squire",
+      "Lee Lomas",
+      "Кен Нвосу",
+      "Ken Nwosu",
+      "Софи Томпсон",
+      "Sophie Thompson",
+      "Томпсон, Софи",
+      "Xavier Lake",
+      "Anthony Knight",
+      "Уильям Абади",
+      "William Abadie",
+      "Абади, Уильям",
+      "Nelia Da Costa",
+      "Susan Eljack",
+      "Raoul Denez",
+      "Bradley Connor",
+      "Жюль Дуссе",
+      "Jules Dousset",
+      "Jakob van Oosterhout",
+      "Sigurður Traustason",
+      "Pétur Eggerz",
+      "Sofian Francis",
+      "Davíð Katrínarson",
+      "Andre Vonport",
+      "Роджер Дейл Флойд",
+      "Roger Dale Floyd",
+      "Скотт Гленн",
+      "Scott Glenn",
+      "Гленн, Скотт"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Бэзил Иваник",
+      "Иваник, Бэзил",
+      "Джерард Батлер",
+      "Gerard Butler",
+      "Батлер, Джерард"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Дэвид Бакли"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Ric Roman Waugh"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Chris Sparling",
+      "Mitchell LaFortune"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Gerard Butler",
+      "Morena Baccarin",
+      "Tommie Earl Jenkins",
+      "Trond Fausa Aurvåg",
+      "Amber Rose Revah",
+      "Gina Gangar",
+      "Antonio De Lima",
+      "Peter Polycarpou",
+      "Beruce Khan",
+      "Roman Griffin Davis",
+      "Megan Jacobs Shrivastava",
+      "Mitu Panicucci",
+      "Gísli Örn Garðarsson",
+      "Sidsel Siem Koch",
+      "Faraz M. Khan",
+      "Nathan Wiley",
+      "Gordon Alexander",
+      "Alex Lanipekun",
+      "Shayn Herndon",
+      "Rachael Evelyn",
+      "Neil Bell",
+      "Andre Squire",
+      "Lee Lomas",
+      "Ken Nwosu",
+      "Sophie Thompson",
+      "Xavier Lake",
+      "Anthony Knight",
+      "William Abadie",
+      "Nelia Da Costa",
+      "Susan Eljack",
+      "Raoul Denez",
+      "Bradley Connor",
+      "Jules Dousset",
+      "Jakob van Oosterhout",
+      "Sigurður Traustason",
+      "Pétur Eggerz",
+      "Sofian Francis",
+      "Davíð Katrínarson",
+      "Andre Vonport",
+      "Roger Dale Floyd",
+      "Scott Glenn"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Basil Iwanyk",
+      "Gerard Butler"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "David Buckley"
+     ]
+    }
+   }
+  },
+  "Q124758309": {
+   "имя": "Крик 7",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Кевин Уильямсон",
+      "Kevin Williamson",
+      "Уильямсон, Кевин"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Кевин Уильямсон",
+      "Kevin Williamson",
+      "Уильямсон, Кевин",
+      "Гай Бусик",
+      "Бусик, Гай"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Нив Кэмпбелл",
+      "Neve Campbell",
+      "Кэмпбелл, Нив",
+      "Изабель Мэй",
+      "Isabel May",
+      "Мэй, Изабель",
+      "Джоэль Макхейл",
+      "Joel McHale",
+      "Макхейл, Джоэл",
+      "Джоэл Макхейл",
+      "Кортни Кокс",
+      "Courteney Cox",
+      "Кокс, Кортни",
+      "Джасмин Савой Браун",
+      "Браун, Джасмин Савой",
+      "Мейсон Гудинг",
+      "Mason Gooding",
+      "Гудинг, Мейсон",
+      "Анна Кэмп",
+      "Anna Camp",
+      "Кэмп, Анна",
+      "Мэттью Лиллард",
+      "Matthew Lillard",
+      "Лиллард, Мэттью",
+      "Марк Консуэлос",
+      "Консуэлос, Марк",
+      "Итан Эмбри",
+      "Ethan Embry",
+      "Эмбри, Итан",
+      "Эйса Германн",
+      "Германн, Эйса",
+      "Маккенна Грейс",
+      "Mckenna Grace",
+      "Грейс, Маккенна",
+      "Селест О’Коннор",
+      "О’Коннор, Селеста",
+      "Селеста О’Коннор",
+      "Мишель Рэндольф",
+      "Michelle Randolph",
+      "Рэндольф, Мишель",
+      "Джимми Татро",
+      "Роджер Джексон",
+      "Джексон, Роджер",
+      "Дэвид Аркетт",
+      "David Arquette",
+      "Аркетт, Дэвид",
+      "Скотт Фоли",
+      "Scott Foley",
+      "Фоли, Скотт",
+      "Лори Меткалф",
+      "Laurie Metcalf",
+      "Меткалф, Лори"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Джеймс Вандербилт",
+      "James Vanderbilt",
+      "Вандербильт, Джеймс",
+      "Джеймс Вандербильт"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Марко Белтрами",
+      "Marco Beltrami",
+      "Белтрами, Марко"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Kevin Williamson"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Kevin Williamson",
+      "Guy Busick"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Neve Campbell",
+      "Isabel May",
+      "Joel McHale",
+      "Courteney Cox",
+      "Jasmin Savoy Brown",
+      "Mason Gooding",
+      "Anna Camp",
+      "Sam Rechner",
+      "Matthew Lillard",
+      "Mark Consuelos",
+      "Ethan Embry",
+      "Asa Germann",
+      "Mckenna Grace",
+      "Celeste O'Connor",
+      "Michelle Randolph",
+      "Jimmy Tatro",
+      "Tim Simmons",
+      "Roger L. Jackson",
+      "David Arquette",
+      "Scott Foley",
+      "Laurie Metcalf"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "James Vanderbilt"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Marco Beltrami"
+     ]
+    }
+   }
+  },
+  "Q124804916": {
+   "имя": "На краю Оук-стрит",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Дэвид Роберт Митчелл",
+      "Митчелл, Дэвид Роберт"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Дэвид Роберт Митчелл",
+      "Митчелл, Дэвид Роберт"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Энн Хэтэуэй",
+      "Anne Hathaway",
+      "Хэтэуэй, Энн",
+      "Юэн Макгрегор",
+      "Ewan McGregor",
+      "Макгрегор, Юэн",
+      "Мэйси Стелла",
+      "Кристиан Конвери",
+      "Christian Convery",
+      "Конвери, Кристиан",
+      "Пи Джей Бирн",
+      "P.J. Byrne",
+      "Бирн, Пи Джей",
+      "Hudson Meek",
+      "Энн Ги Бёрд",
+      "Эмили Курода",
+      "Курода, Эмили",
+      "Симмс Мэй",
+      "Грэйсон Килпатрик",
+      "Pilot Bunch",
+      "Денитра Ислер",
+      "Callie McClincy",
+      "Andrea Frankle",
+      "Крис Кой"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Джей Джей Абрамс",
+      "J. J. Abrams",
+      "Абрамс, Джей Джей",
+      "Дэвид Роберт Митчелл",
+      "Митчелл, Дэвид Роберт",
+      "Мэтт Джексон"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Майкл Джаккино",
+      "Michael Giacchino",
+      "Джаккино, Майкл"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Bad Robot Productions"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "David Robert Mitchell"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "David Robert Mitchell"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Anne Hathaway",
+      "Ewan McGregor",
+      "Maisy Stella",
+      "Christian Convery",
+      "Jordan Alexa Davis",
+      "P.J. Byrne",
+      "P. J. Byrne",
+      "Hudson Meek",
+      "Anne Gee Byrd",
+      "Emily Kuroda",
+      "Simms May",
+      "Grayson Thorne Kilpatrick",
+      "Pilot Bunch",
+      "Walker Russell",
+      "Hugo Silver",
+      "Michael-Christian Moore",
+      "David Alexander Kaplan",
+      "Christopher A. Martin",
+      "Denitra Isler",
+      "Isabella Aparicio",
+      "Marian Green",
+      "Scott Deal",
+      "Callie McClincy",
+      "Andrea Frankle",
+      "Chris Coy"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "J. J. Abrams",
+      "David Robert Mitchell",
+      "Matt Jackson",
+      "Tommy Harper"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Michael Giacchino"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Bad Robot Productions",
+      "Bad Robot"
+     ]
+    }
+   }
+  },
+  "Q124983920": {
+   "имя": "Resident Evil Requiem",
+   "ru": {
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Capcom"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Capcom"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Грейс Эшкрофт",
+      "Grace Ashcroft",
+      "Леон Скотт Кеннеди",
+      "Leon S. Kennedy"
+     ]
+    }
+   },
+   "en": {
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Capcom"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Capcom"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Grace Ashcroft",
+      "Leon S. Kennedy"
+     ]
+    }
+   }
+  },
+  "Q125131076": {
+   "имя": "Закулисье реальности",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Кейн Парсонс",
+      "Kane Parsons",
+      "Парсонс, Кейн"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Роберто Патино",
+      "Патино, Роберто",
+      "Кейн Парсонс",
+      "Kane Parsons",
+      "Парсонс, Кейн"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Ренате Реинсве",
+      "Renate Reinsve",
+      "Реинсве, Ренате",
+      "Марк Дюпласс",
+      "Дюпласс, Марк",
+      "Эван Джогиа",
+      "Avan Jogia",
+      "Джогиа, Эван",
+      "Финн Беннетт",
+      "Finn Bennett",
+      "Беннетт, Финн",
+      "Лукита Максуэлл",
+      "Максвелл, Лукита",
+      "Лукита Максвелл",
+      "Чиветел Эджиофор",
+      "Chiwetel Ejiofor",
+      "Эджиофор, Чиветел",
+      "Robert Bobroczkyi",
+      "Криста Косонен",
+      "Косонен, Криста"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Шон Леви",
+      "Shawn Levy",
+      "Леви, Шон",
+      "Дэн Ливайн",
+      "Левин, Дэн",
+      "Дэн Левин",
+      "Джеймс Ван",
+      "Ван, Джеймс"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "21 Laps Entertainment",
+      "Atomic Monster Productions",
+      "Atomic Monster",
+      "Chernin Entertainment"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Kane Parsons"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Roberto Patino",
+      "Kane Parsons"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Renate Reinsve",
+      "Mark Duplass",
+      "Avan Jogia",
+      "Finn Bennett",
+      "Lukita Maxwell",
+      "Chiwetel Ejiofor",
+      "Robert Bobroczkyi",
+      "Krista Kosonen"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Shawn Levy",
+      "Dan Levine",
+      "James Wan"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "21 Laps Entertainment",
+      "Atomic Monster",
+      "Chernin Entertainment"
+     ]
+    }
+   }
+  },
+  "Q125867250": {
+   "имя": "Новая волна",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Ричард Линклейтер",
+      "Richard Linklater",
+      "Линклейтер, Ричард"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Летиция Массон",
+      "Laetitia Masson"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Зои Дойч",
+      "Zoey Deutch",
+      "Дойч, Зои",
+      "Aubry Dullin",
+      "Guillaume Marbeck",
+      "Adrien Rouyard",
+      "Jodie Ruth-Forest",
+      "Antoine Besson",
+      "Benjamin Cléry",
+      "Ком Тьелен",
+      "Paolo Luka-Noé",
+      "Аликс Бенезеш",
+      "Том Новамбр",
+      "Козима Бевернаэдж",
+      "Батист Руссильон",
+      "Pauline Belle",
+      "Jade Phan-Gia",
+      "Niko Ravel",
+      "Бенуа Боуторс"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Лоран Петен",
+      "Мишель Петен",
+      "Эммануэль Монтамат",
+      "Джон Слосс"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Richard Linklater"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Laetitia Masson"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Zoey Deutch",
+      "Aubry Dullin",
+      "Bruno Dreyfürst",
+      "Guillaume Marbeck",
+      "Adrien Rouyard",
+      "Matthieu Penchinat",
+      "Jodie Ruth-Forest",
+      "Antoine Besson",
+      "Benjamin Cléry",
+      "Côme Thieulin",
+      "Paolo Luka-Noé",
+      "Alix Bénézech",
+      "Tom Novembre",
+      "Jeanne Arènes",
+      "Cosima Bevernaege",
+      "Iliana Zabeth",
+      "Baptiste Roussillon",
+      "Pauline Belle",
+      "Jade Phan-Gia",
+      "Niko Ravel",
+      "Franck Cicurel",
+      "Roxane Rivière",
+      "Jean-Jacques Le Vessier",
+      "Laurent Mothe",
+      "Jonas Marmy",
+      "Léa Luce Busato",
+      "Aurélien Lorgnier",
+      "Lou Chrétien-Février",
+      "Pierre-François Garel",
+      "Grégory Dupont",
+      "Blaise Pettebone",
+      "Benoît Bouthors"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Laurent Pétin",
+      "Michèle Pétin",
+      "Emmanuel Montamat",
+      "John Sloss"
+     ]
+    }
+   }
+  },
+  "Q125878994": {
+   "имя": "Мятеж",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Жан-Франсуа Рише",
+      "Jean-François Richet",
+      "Рише, Жан-Франсуа"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Джейсон Стейтем",
+      "Jason Statham",
+      "Стейтем, Джейсон",
+      "Аннабелль Уоллис",
+      "Annabelle Wallis",
+      "Уоллис, Аннабелль",
+      "Джейсон Вонг",
+      "Роланд Мюллер",
+      "Roland Møller",
+      "Арнас Федаравичюс",
+      "Федаравичюс, Арнас",
+      "Эдриан Лестер",
+      "Лестер, Эдриан",
+      "Рамон Тикарам",
+      "Тикарам, Рамон"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Джейсон Стейтем",
+      "Jason Statham",
+      "Стейтем, Джейсон",
+      "Марк Бутан",
+      "Marc Butan"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Jean-François Richet"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Jason Statham",
+      "Annabelle Wallis",
+      "Jason Wong",
+      "Roland Møller",
+      "Arnas Fedaravičius",
+      "Arnas Fedaravicius",
+      "Adrian Lester",
+      "Ramon Tikaram"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Jason Statham",
+      "Marc Butan"
+     ]
+    }
+   }
+  },
+  "Q125960231": {
+   "имя": "Смерть Робин Гуда",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Майкл Сарноски"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Майкл Сарноски"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Хью Джекман",
+      "Hugh Jackman",
+      "Джекман, Хью",
+      "Джоди Комер",
+      "Jodie Comer",
+      "Комер, Джоди",
+      "Билл Скарсгард",
+      "Bill Skarsgård",
+      "Скарсгард, Билл",
+      "Мюррей Бартлетт",
+      "Бартлетт, Мюррей",
+      "Ноа Джуп",
+      "Noah Jupe",
+      "Джуп, Ноа",
+      "Jade Croot"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Аарон Райдер",
+      "Хью Джекман",
+      "Hugh Jackman",
+      "Джекман, Хью",
+      "Alexander Black"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Lyrical Media"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Michael Sarnoski"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Michael Sarnoski"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Hugh Jackman",
+      "Jodie Comer",
+      "Bill Skarsgård",
+      "Murray Bartlett",
+      "Noah Jupe",
+      "Jade Croot"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Aaron Ryder",
+      "Hugh Jackman",
+      "Alexander Black"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Lyrical Media"
+     ]
+    }
+   }
+  },
+  "Q125975336": {
+   "имя": "Седло",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Гарри Лайтон",
+      "Лайтон, Гарри"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Александр Скарсгард",
+      "Alexander Skarsgård",
+      "Скарсгард, Александр",
+      "Гарри Меллинг",
+      "Harry Melling",
+      "Меллинг, Гарри"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Эд Гини",
+      "Эндрю Лоу"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Оливер Коутс"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Harry Lighton"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Alexander Skarsgård",
+      "Harry Melling"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Ed Guiney",
+      "Andrew Lowe"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Oliver Coates"
+     ]
+    }
+   }
+  },
+  "Q126394034": {
+   "имя": "Ограбление в Лос-Анджелесе",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Барт Лэйтон"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Барт Лэйтон",
+      "Питер Строхан"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Крис Хемсворт",
+      "Chris Hemsworth",
+      "Хемсворт, Крис",
+      "Марк Руффало",
+      "Mark Ruffalo",
+      "Руффало, Марк",
+      "Барри Кеоган",
+      "Barry Keoghan",
+      "Кеоган, Барри",
+      "Хэлли Берри",
+      "Halle Berry",
+      "Берри, Хэлли",
+      "Моника Барбаро",
+      "Monica Barbaro",
+      "Барбаро, Моника",
+      "Кори Хоукинс",
+      "Хокинс, Кори",
+      "Кори Хокинс",
+      "Дженнифер Джейсон Ли",
+      "Jennifer Jason Leigh",
+      "Ли, Дженнифер Джейсон",
+      "Ник Нолти",
+      "Nick Nolte",
+      "Нолти, Ник",
+      "Тейт Донован",
+      "Tate Donovan",
+      "Донован, Тейт",
+      "Пейман Моади",
+      "Маади, Пейман",
+      "Пейман Маади",
+      "Babak Tafti",
+      "Девон Бостик",
+      "Devon Bostick",
+      "Бостик, Девон",
+      "Пол Адельштейн",
+      "Paul Adelstein",
+      "Адельштейн, Пол",
+      "Дрю Пауэлл",
+      "Drew Powell",
+      "Пауэлл, Дрю",
+      "Мэттью Дель Негро",
+      "Дель Негро, Мэттью"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Крис Хемсворт",
+      "Chris Hemsworth",
+      "Хемсворт, Крис",
+      "Эрик Феллнер",
+      "Тим Беван",
+      "Деррин Шлезингер",
+      "Шейн Салерно"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Working Title Films"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Bart Layton"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Bart Layton",
+      "Peter Straughan"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Chris Hemsworth",
+      "Mark Ruffalo",
+      "Barry Keoghan",
+      "Halle Berry",
+      "Monica Barbaro",
+      "Corey Hawkins",
+      "Jennifer Jason Leigh",
+      "Nick Nolte",
+      "Tate Donovan",
+      "Payman Maadi",
+      "Babak Tafti",
+      "Devon Bostick",
+      "Paul Adelstein",
+      "Drew Powell",
+      "Matthew Del Negro"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Chris Hemsworth",
+      "Eric Fellner",
+      "Tim Bevan",
+      "Derrin Schlesinger",
+      "Shane Salerno"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Working Title Films"
+     ]
+    }
+   }
+  },
+  "Q126405648": {
+   "имя": "Следствие ведут овечки",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Кайл Балда",
+      "Kyle Balda"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Крэйг Мэйзин",
+      "Craig Mazin",
+      "Мейзин, Крейг",
+      "Крейг Мейзин"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Хью Джекман",
+      "Hugh Jackman",
+      "Джекман, Хью",
+      "Эмма Томпсон",
+      "Emma Thompson",
+      "Томпсон, Эмма",
+      "Николас Браун",
+      "Nicholas Braun",
+      "Браун, Николас",
+      "Николас Голицын",
+      "Nicholas Galitzine",
+      "Галицин, Николас",
+      "Николас Галицин",
+      "Молли Гордон",
+      "Molly Gordon",
+      "Гордон, Молли",
+      "Хонг Чау",
+      "Hong Chau",
+      "Чау, Хонг",
+      "Тосин Коул",
+      "Кобна Холдбрук-Смит",
+      "Конлет Хилл",
+      "Conleth Hill",
+      "Хилл, Конлет",
+      "Мандип Диллон",
+      "Брайан Крэнстон",
+      "Bryan Cranston",
+      "Крэнстон, Брайан",
+      "Джулия Луи-Дрейфус",
+      "Julia Louis-Dreyfus",
+      "Луи-Дрейфус, Джулия",
+      "Крис О’Дауд",
+      "Chris O'Dowd",
+      "О’Дауд, Крис",
+      "Реджина Холл",
+      "Холл, Реджина",
+      "Патрик Стюарт",
+      "Patrick Stewart",
+      "Стюарт, Патрик"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Тим Беван",
+      "Эрик Феллнер"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Эйтор Перейра"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Working Title Films",
+      "Lord Miller Productions",
+      "Amazon MGM Studios"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Kyle Balda"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Craig Mazin"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Hugh Jackman",
+      "Emma Thompson",
+      "Nicholas Braun",
+      "Nicholas Galitzine",
+      "Molly Gordon",
+      "Hong Chau",
+      "Tosin Cole",
+      "Kobna Holdbrook-Smith",
+      "Conleth Hill",
+      "Mandeep Dhillon",
+      "Bryan Cranston",
+      "Julia Louis-Dreyfus",
+      "Chris O'Dowd",
+      "Regina Hall",
+      "Patrick Stewart"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Tim Bevan",
+      "Eric Fellner"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Heitor Pereira"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Working Title Films",
+      "Lord Miller Productions",
+      "Amazon MGM Studios"
+     ]
+    }
+   }
+  },
+  "Q126488898": {
+   "имя": "Наследник",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джон Пэттон Форд",
+      "John Patton Ford"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джон Пэттон Форд",
+      "John Patton Ford"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Глен Пауэлл",
+      "Glen Powell",
+      "Пауэлл, Глен",
+      "Маргарет Куолли",
+      "Margaret Qualley",
+      "Куолли, Маргарет",
+      "Эд Харрис",
+      "Ed Harris",
+      "Харрис, Эд",
+      "Джессика Хенвик",
+      "Jessica Henwick",
+      "Хенвик, Джессика",
+      "Зак Вудс",
+      "Вудс, Зак",
+      "Тофер Грейс",
+      "Грейс, Тофер",
+      "Билл Кэмп",
+      "Bill Camp",
+      "Кэмп, Билл",
+      "Бьянка Амато",
+      "Шон Майкл",
+      "Майкл, Шон Кэмерон",
+      "Шон Кэмерон Майкл"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Грэм Бродбент",
+      "Питер Чернин",
+      "Peter Czernin"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Эмиль Моссери",
+      "Моссери, Эмиль"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "StudioCanal"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "John Patton Ford"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "John Patton Ford"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Glen Powell",
+      "Margaret Qualley",
+      "Ed Harris",
+      "Jessica Henwick",
+      "Zach Woods",
+      "Topher Grace",
+      "Raff Law",
+      "Bill Camp",
+      "Bianca Amato",
+      "Sean Michael",
+      "Sean Cameron Michael"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Graham Broadbent",
+      "Peter Czernin"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Emile Mosseri"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "StudioCanal"
+     ]
+    }
+   }
+  },
+  "Q126683577": {
+   "имя": "День разоблачения",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Стивен Спилберг",
+      "Steven Spielberg",
+      "Спилберг, Стивен"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Дэвид Кепп",
+      "David Koepp",
+      "Кепп, Дэвид"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Эмили Блант",
+      "Emily Blunt",
+      "Блант, Эмили",
+      "Джош О’Коннор",
+      "О’Коннор, Джош",
+      "Колин Ферт",
+      "Colin Firth",
+      "Ферт, Колин",
+      "Ив Хьюсон",
+      "Eve Hewson",
+      "Хьюсон, Ив",
+      "Колман Доминго",
+      "Colman Domingo",
+      "Доминго, Колман",
+      "Уайатт Рассел",
+      "Wyatt Russell",
+      "Рассел, Уайатт",
+      "Ноа Роббинс",
+      "Noah Robbins",
+      "Чаво Герреро",
+      "Герреро, Чаво",
+      "Лэнс Арчер",
+      "Арчер, Лэнс",
+      "Брайан Кейдж",
+      "Кейдж, Брайан",
+      "Gabby Beans",
+      "Элизабет Марвел",
+      "Elizabeth Marvel",
+      "Марвел, Элизабет",
+      "Генри Ллойд-Хьюз",
+      "Henry Lloyd-Hughes",
+      "Ллойд-Хьюз, Генри",
+      "Майкл Гэстон",
+      "Michael Gaston",
+      "Гэстон, Майкл",
+      "Эллиотт Виллар",
+      "Пэт Коннолли",
+      "Mckenna Bridger"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Кристи Макоско Кригер",
+      "Стивен Спилберг",
+      "Steven Spielberg",
+      "Спилберг, Стивен"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Джон Уильямс",
+      "John Williams",
+      "Уильямс, Джон"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Amblin Entertainment"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Steven Spielberg"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "David Koepp"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Emily Blunt",
+      "Josh O'Connor",
+      "Colin Firth",
+      "Eve Hewson",
+      "Colman Domingo",
+      "Wyatt Russell",
+      "Noah Robbins",
+      "Chavo Guerrero Jr.",
+      "Lance Hoyt",
+      "Lance Archer",
+      "Brian Cage",
+      "Gabby Beans",
+      "Elizabeth Marvel",
+      "Henry Lloyd-Hughes",
+      "Michael Gaston",
+      "Elliot Villar",
+      "Patricia Conolly",
+      "Mckenna Bridger"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Kristie Macosko Krieger",
+      "Steven Spielberg"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "John Williams"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Amblin Entertainment"
+     ]
+    }
+   }
+  },
+  "Q129165193": {
+   "имя": "Последний дом",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Луи Летерье",
+      "Louis Leterrier",
+      "Летерье, Луи"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Мэттью Робинсон"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Кингсли Бен-Адир",
+      "Бен-Адир, Кингсли",
+      "Грета Ли",
+      "Ли, Грета",
+      "Вагнер Моура",
+      "Wagner Moura",
+      "Моура, Вагнер",
+      "Сэм Лернер",
+      "Лернер, Сэм",
+      "Арден Чо",
+      "Arden Cho",
+      "Чо, Арден"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Питер Чернин",
+      "Чернин, Питер",
+      "Дженно Топпинг"
+     ]
+    },
+    "P86": {
+     "вид": "без-метки",
+     "имена": []
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Louis Leterrier"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Matthew Robinson"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Kingsley Ben-Adir",
+      "Greta Lee",
+      "Wagner Moura",
+      "Sam Lerner",
+      "Arden Cho"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Peter Chernin",
+      "Jenno Topping"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Yair Elazar Glotman"
+     ]
+    }
+   }
+  },
+  "Q129423731": {
+   "имя": "28 лет спустя: Храм костей",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Ниа Дакоста",
+      "Дакоста, Ниа"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Алекс Гарленд",
+      "Alex Garland",
+      "Гарленд, Алекс"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Алфи Уильямс",
+      "Alfie Williams",
+      "Уильямс, Алфи",
+      "Аарон Тейлор-Джонсон",
+      "Aaron Taylor-Johnson",
+      "Тейлор-Джонсон, Аарон",
+      "Джек О’Коннелл",
+      "Jack O'Connell",
+      "О’Коннелл, Джек",
+      "Эмма Лэйрд",
+      "Лэрд, Эмма",
+      "Эмма Лэрд",
+      "Эрин Келлиман",
+      "Erin Kellyman",
+      "Келлиман, Эрин",
+      "Рэйф Файнс",
+      "Ralph Fiennes",
+      "Файнс, Рэйф",
+      "Киллиан Мерфи",
+      "Cillian Murphy",
+      "Мерфи, Киллиан"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Дэнни Бойл",
+      "Danny Boyle",
+      "Бойл, Дэнни",
+      "Алекс Гарленд",
+      "Alex Garland",
+      "Гарленд, Алекс",
+      "Эндрю Макдональд"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Хильдюр Гвюднадоуттир",
+      "Хильдур Гуднадоуттир"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Columbia Pictures"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Nia DaCosta"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Alex Garland"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Alfie Williams",
+      "Aaron Taylor-Johnson",
+      "Jack O'Connell",
+      "Emma Laird",
+      "Erin Kellyman",
+      "Ralph Fiennes",
+      "Cillian Murphy"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Danny Boyle",
+      "Alex Garland",
+      "Andrew Macdonald",
+      "Peter Rice"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Hildur Guðnadóttir"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Columbia Pictures"
+     ]
+    }
+   }
+  },
+  "Q129906152": {
+   "имя": "Метод исключения",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Пак Чхан Ук"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Ли Гён Ми",
+      "Дон МакКеллар",
+      "Маккеллар, Дон",
+      "Дон Маккеллар",
+      "Пак Чхан Ук"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Ли Бёнхон",
+      "Сон Е Чжин",
+      "Son Ye-jin",
+      "Сон Йеджин",
+      "Пак Хи-сун",
+      "Пак Хисун",
+      "Ли Сонми",
+      "Ём Херан",
+      "Yeom Hye-ran",
+      "Ю Ён Сок"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Пак Чхан Ук"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Чо Ёнук",
+      "Чо Ён-ук"
+     ]
+    },
+    "P272": {
+     "вид": "без-метки",
+     "имена": []
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Park Chan-wook"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Lee Kyoung-mi",
+      "Don McKellar",
+      "Park Chan-wook"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Lee Byung-hun",
+      "Son Ye-jin",
+      "Park Hee-soon",
+      "Lee Sung-min",
+      "Yeom Hye-ran",
+      "Cha Seung-won",
+      "Yoo Yeon-seok"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Park Chan-wook"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Jo Yeong-wook"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "CJ ENM Studios",
+      "Moho Film"
+     ]
+    }
+   }
+  },
+  "Q130118681": {
+   "имя": "Марти Великолепный",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джош Сафди",
+      "Сафди, Джош"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джош Сафди",
+      "Сафди, Джош",
+      "Рональд Бронштейн",
+      "Бронштейн, Рональд"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Тимоти Шаламе",
+      "Timothée Chalamet",
+      "Шаламе, Тимоти",
+      "Гвинет Пэлтроу",
+      "Gwyneth Paltrow",
+      "Пэлтроу, Гвинет",
+      "Tyler, The Creator",
+      "The Creator Tyler",
+      "Tyler, the Creator",
+      "the Creator Tyler",
+      "Одесса Адлон",
+      "Эзайон, Одесса",
+      "Одесса Эзайон",
+      "Пенн Джиллет",
+      "Penn Jillette",
+      "Джиллетт, Пенн",
+      "Пенн Джиллетт",
+      "Kevin O'Leary",
+      "Абель Феррара",
+      "Abel Ferrara",
+      "Феррара, Абель",
+      "Фрэн Дрешер",
+      "Fran Drescher",
+      "Дрешер, Фрэн",
+      "Сандра Бернхард",
+      "Sandra Bernhard",
+      "Бернхард, Сандра",
+      "Spenser Granese",
+      "Филипп Пети",
+      "Philippe Petit",
+      "Пети, Филипп",
+      "Джон Кациматидис",
+      "Кациматидис, Джон",
+      "Трэйси Макгрэди",
+      "Макгрэди, Трэйси",
+      "Кемба Уокер",
+      "Уокер, Кемба",
+      "Айзек Мизрахи",
+      "Isaac Mizrahi",
+      "Мизрахи, Айзек",
+      "Джордж Гервин",
+      "Гервин, Джордж",
+      "Тед Уильямс",
+      "Ted Williams",
+      "Уильямс, Тед",
+      "Эмори Коэн",
+      "Emory Cohen",
+      "Коэн, Эмори",
+      "Дэвид Мэмет",
+      "David Mamet",
+      "Мэмет, Дэвид",
+      "Фред Хехингер",
+      "Хехингер, Фред",
+      "Левон Хоук",
+      "Levon Hawke",
+      "Хоук, Левон",
+      "Хэйли Гейтс",
+      "Геза Рёриг",
+      "Рёриг, Геза"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Илай Буш",
+      "Энтони Катагас",
+      "Катагас, Энтони",
+      "Тимоти Шаламе",
+      "Timothée Chalamet",
+      "Шаламе, Тимоти"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Oneohtrix Point Never"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Марти Рейсман",
+      "Martin Reisman",
+      "Рейсман, Марти"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Josh Safdie"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Josh Safdie",
+      "Ronald Bronstein"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Timothée Chalamet",
+      "Gwyneth Paltrow",
+      "Tyler, the Creator",
+      "the Creator Tyler",
+      "Odessa A'zion",
+      "Penn Jillette",
+      "Kevin O'Leary",
+      "Abel Ferrara",
+      "Fran Drescher",
+      "Sandra Bernhard",
+      "Spenser Granese",
+      "Philippe Petit",
+      "John Catsimatidis",
+      "Tracy McGrady",
+      "Kemba Walker",
+      "Isaac Mizrahi",
+      "George Gervin",
+      "Ted Williams",
+      "Emory Cohen",
+      "David Mamet",
+      "Fred Hechinger",
+      "Levon Hawke",
+      "Hailey Gates",
+      "Géza Röhrig",
+      "Koto Kawaguchi"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Eli Bush",
+      "Anthony Katagas",
+      "Timothée Chalamet"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Oneohtrix Point Never"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Marty Reisman",
+      "Martin Reisman"
+     ]
+    }
+   }
+  },
+  "Q130284179": {
+   "имя": "Сентиментальная ценность",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Хоаким Триер",
+      "Joachim Trier",
+      "Триер, Йоаким",
+      "Йоаким Триер"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Эскил Фогт"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Ренате Реинсве",
+      "Renate Reinsve",
+      "Реинсве, Ренате",
+      "Стеллан Скарсгард",
+      "Stellan Skarsgård",
+      "Скарсгард, Стеллан",
+      "Эль Фэннинг",
+      "Elle Fanning",
+      "Фаннинг, Эль",
+      "Эль Фаннинг",
+      "Инга Ибсдоттер Лиллеос",
+      "Inga Ibsdotter Lilleaas",
+      "Ибсдоттер-Лиллеос, Инга",
+      "Инга Ибсдоттер-Лиллеос",
+      "Кори Майкл Смит",
+      "Смит, Кори Майкл",
+      "Кэтрин Коэн",
+      "Catherine Cohen",
+      "Андерс Даниэльсен Ли",
+      "Даниэльсен Ли, Андерс",
+      "Еспер Кристенсен",
+      "Jesper Christensen",
+      "Кристенсен, Йеспер",
+      "Йеспер Кристенсен",
+      "Лена Эндре",
+      "Lena Endre",
+      "Эндре, Лена"
+     ]
+    },
+    "P162": {
+     "вид": "без-метки",
+     "имена": []
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Ханя Рани",
+      "Hania Rani"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "BBC Films",
+      "Zentropa",
+      "Film i Väst"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Joachim Trier"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Eskil Vogt"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Renate Reinsve",
+      "Stellan Skarsgård",
+      "Elle Fanning",
+      "Inga Ibsdotter Lilleaas",
+      "Cory Michael Smith",
+      "Catherine Cohen",
+      "Anders Danielsen Lie",
+      "Jesper Christensen",
+      "Lena Endre"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Maria Ekerhovd"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Hania Rani"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "BBC Film",
+      "Zentropa",
+      "Film i Väst"
+     ]
+    }
+   }
+  },
+  "Q130375767": {
+   "имя": "Военная машина",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Патрик Хьюз",
+      "Хьюз, Патрик"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Патрик Хьюз",
+      "Хьюз, Патрик"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Алан Ритчсон",
+      "Alan Ritchson",
+      "Ритчсон, Алан",
+      "Деннис Куэйд",
+      "Dennis Quaid",
+      "Куэйд, Деннис",
+      "Стефан Джеймс",
+      "Джеймс, Стефан",
+      "Джай Кортни",
+      "Jai Courtney",
+      "Кортни, Джай",
+      "Эсай Моралес",
+      "Esai Morales",
+      "Моралес, Эсай",
+      "Кинан Лонсдейл",
+      "Лонсдейл, Кинан",
+      "Дэниел Уэббер",
+      "Джейк Райан",
+      "Джек Паттен"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Тодд Либерман",
+      "Грег Маклин",
+      "Маклин, Грег"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Дмитрий Головко",
+      "Dmitri Golovko"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Starz Entertainment"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Patrick Hughes"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Patrick Hughes"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Alan Ritchson",
+      "Dennis Quaid",
+      "Stephan James",
+      "Jai Courtney",
+      "Esai Morales",
+      "Keiynan Lonsdale",
+      "Daniel Webber",
+      "Jake Ryan",
+      "Jack Patten"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Todd Lieberman",
+      "Greg McLean"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Dmitri Golovko"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Starz Entertainment"
+     ]
+    }
+   }
+  },
+  "Q130532687": {
+   "имя": "Мелодия их мечты",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Крэйг Брюэр"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Крэйг Брюэр"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Хью Джекман",
+      "Hugh Jackman",
+      "Джекман, Хью",
+      "Кейт Хадсон",
+      "Kate Hudson",
+      "Хадсон, Кейт",
+      "Майкл Империоли",
+      "Империоли, Майкл",
+      "Фишер Стивенс",
+      "Стивенс, Фишер",
+      "Джеймс Белуши",
+      "Белуши, Джеймс",
+      "Элла Андерсон",
+      "Андерсон, Элла",
+      "King Princess",
+      "Мустафа Жакир",
+      "Эрика Слезак",
+      "Erika Slezak",
+      "Слезак, Эрика"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Крэйг Брюэр",
+      "Джон Дэвис",
+      "Дэвис, Джон"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Скотт Бомар"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Davis Entertainment"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Craig Brewer"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Craig Brewer"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Hugh Jackman",
+      "Kate Hudson",
+      "Michael Imperioli",
+      "Fisher Stevens",
+      "Jim Belushi",
+      "Ella Anderson",
+      "King Princess",
+      "Mustafa Shakir",
+      "Erika Slezak",
+      "Sean Allan Krill"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Craig Brewer",
+      "John Davis"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Scott Bomar"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Davis Entertainment"
+     ]
+    }
+   }
+  },
+  "Q130590402": {
+   "имя": "Вот это драма!",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Кристоффер Боргли",
+      "Kristoffer Borgli",
+      "Боргли, Кристоффер"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Кристоффер Боргли",
+      "Kristoffer Borgli",
+      "Боргли, Кристоффер"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Роберт Паттинсон",
+      "Robert Pattinson",
+      "Паттинсон, Роберт",
+      "Зендея",
+      "Zendaya",
+      "Мамуду Ати",
+      "Ати, Мамуду",
+      "Алана Хаим",
+      "Alana Haim",
+      "Хаим, Алана",
+      "Хэйли Гейтс"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Ари Астер",
+      "Ari Aster",
+      "Астер, Ари",
+      "Ларс Кнудсен",
+      "Lars Knudsen"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Kristoffer Borgli"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Kristoffer Borgli"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Robert Pattinson",
+      "Zendaya",
+      "Mamoudou Athie",
+      "Alana Haim",
+      "Hailey Gates"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Ari Aster",
+      "Lars Knudsen"
+     ]
+    }
+   }
+  },
+  "Q131189949": {
+   "имя": "Лакомый кусок",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джо Карнахан",
+      "Карнахан, Джо"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джо Карнахан",
+      "Карнахан, Джо"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Мэтт Деймон",
+      "Matt Damon",
+      "Деймон, Мэтт",
+      "Бен Аффлек",
+      "Ben Affleck",
+      "Аффлек, Бен",
+      "Стивен Ён",
+      "Steven Yeun",
+      "Ён, Стивен",
+      "Тейяна Тейлор",
+      "Тейлор, Тейяна",
+      "Саша Калле",
+      "Sasha Calle",
+      "Калле, Саша",
+      "Нестор Карбонелл",
+      "Nestor Carbonell",
+      "Карбонель, Нестор",
+      "Нестор Карбонель",
+      "Каталина Сандино Морено",
+      "Catalina Sandino Moreno",
+      "Сандино Морено, Каталина",
+      "Кайл Чендлер",
+      "Kyle Chandler",
+      "Чендлер, Кайл",
+      "Скотт Эдкинс",
+      "Scott Adkins",
+      "Эдкинс, Скотт",
+      "Лина Эско",
+      "Lina Esco",
+      "Эско, Лина"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Бен Аффлек",
+      "Ben Affleck",
+      "Аффлек, Бен",
+      "Мэтт Деймон",
+      "Matt Damon",
+      "Деймон, Мэтт"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Клинтон Шортер"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Artists Equity"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Joe Carnahan"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Joe Carnahan"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Matt Damon",
+      "Ben Affleck",
+      "Steven Yeun",
+      "Teyana Taylor",
+      "Sasha Calle",
+      "Nestor Carbonell",
+      "Néstor Carbonell",
+      "Catalina Sandino Moreno",
+      "Kyle Chandler",
+      "Scott Adkins",
+      "Lina Esco"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Ben Affleck",
+      "Matt Damon"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Clinton Shorter"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Artists Equity"
+     ]
+    }
+   }
+  },
+  "Q131441164": {
+   "имя": "Завет Анны Ли",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Мона Фастволд"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Брэди Корбет",
+      "Brady Corbet",
+      "Корбет, Брэди",
+      "Мона Фастволд"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Аманда Сейфрид",
+      "Amanda Seyfried",
+      "Сейфрид, Аманда",
+      "Томасин Маккензи",
+      "Thomasin McKenzie",
+      "Маккензи, Томасин",
+      "Льюис Пуллман",
+      "Lewis Pullman",
+      "Пуллман, Льюис",
+      "Кристофер Эбботт",
+      "Christopher Abbott",
+      "Эбботт, Кристофер",
+      "Тим Блейк Нельсон",
+      "Tim Blake Nelson",
+      "Нельсон, Тим Блейк",
+      "Стэйси Мартин",
+      "Мартен, Стейси",
+      "Стейси Мартен",
+      "Мэттью Бирд",
+      "Скотт Хэнди",
+      "Дэвид Кэйл"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Дэниел Блумберг",
+      "Daniel Blumberg",
+      "Блумберг, Дэниел"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Mona Fastvold"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Brady Corbet",
+      "Mona Fastvold"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Amanda Seyfried",
+      "Thomasin McKenzie",
+      "Lewis Pullman",
+      "Christopher Abbott",
+      "Tim Blake Nelson",
+      "Stacy Martin",
+      "Matthew Beard",
+      "Scott Handy",
+      "Viola Prettejohn",
+      "David Cale"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Daniel Blumberg"
+     ]
+    }
+   }
+  },
+  "Q131547207": {
+   "имя": "Одиссея",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Кристофер Нолан",
+      "Christopher Nolan",
+      "Нолан, Кристофер"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Кристофер Нолан",
+      "Christopher Nolan",
+      "Нолан, Кристофер"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Мэтт Деймон",
+      "Matt Damon",
+      "Деймон, Мэтт",
+      "Энн Хэтэуэй",
+      "Anne Hathaway",
+      "Хэтэуэй, Энн",
+      "Том Холланд",
+      "Tom Holland",
+      "Холланд, Том",
+      "Лупита Нионго",
+      "Нионго, Лупита",
+      "Роберт Паттинсон",
+      "Robert Pattinson",
+      "Паттинсон, Роберт",
+      "Шарлиз Терон",
+      "Charlize Theron",
+      "Терон, Шарлиз",
+      "Зендея",
+      "Zendaya",
+      "Джон Бернтал",
+      "Jon Bernthal",
+      "Бернтал, Джон",
+      "Бенни Сафди",
+      "Benny Safdie",
+      "Сафди, Бенни",
+      "Миа Гот",
+      "Mia Goth",
+      "Гот, Миа",
+      "Джон Легуизамо",
+      "John Leguizamo",
+      "Легуизамо, Джон",
+      "Эллиот Пейдж",
+      "Elliot Page",
+      "Пейдж, Эллиот",
+      "Химеш Патель",
+      "Himesh Patel",
+      "Патель, Химеш",
+      "Билл Ирвин",
+      "Bill Irwin",
+      "Ирвин, Билл",
+      "Саманта Мортон",
+      "Samantha Morton",
+      "Мортон, Саманта",
+      "Джесси Гарсиа",
+      "Гарсия, Джесси",
+      "Джесси Гарсия",
+      "Уилл Юн Ли",
+      "Ли, Уилл Юн",
+      "Рафи Гаврон",
+      "Rafi Gavron",
+      "Гаврон, Рафи",
+      "Шайло Фернандес",
+      "Фернандес, Шайло",
+      "Кори Хоукинс",
+      "Хокинс, Кори",
+      "Кори Хокинс",
+      "Ник Тарабей",
+      "Тарабей, Ник",
+      "Морис Комт",
+      "Майкл Влэмис",
+      "Идо Голдберг",
+      "Iddo Goldberg",
+      "Голдберг, Идо",
+      "Джош Стюарт",
+      "Josh Stewart",
+      "Стюарт, Джош",
+      "Райан Херст",
+      "Ryan Hurst",
+      "Херст, Райан",
+      "Логан Маршалл-Грин",
+      "Logan Marshall-Green",
+      "Маршалл-Грин, Логан",
+      "Джован Адепо",
+      "Адепо, Джован",
+      "Джеймс Ремар",
+      "James Remar",
+      "Ремар, Джеймс",
+      "Трэвис Скотт",
+      "Travis Scott",
+      "Эндрю Ховард",
+      "Andrew Howard",
+      "Ховард, Эндрю",
+      "Элиес Габел",
+      "Габел, Элиес",
+      "Шон Эйвери",
+      "Sean Avery",
+      "Эйвери, Шон",
+      "Нико Никотера",
+      "Niko Nicotera",
+      "Джэми Харрис",
+      "Харрис, Джейми",
+      "Джейми Харрис",
+      "Брайан Вернел"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Эмма Томас",
+      "Emma Thomas",
+      "Томас, Эмма",
+      "Кристофер Нолан",
+      "Christopher Nolan",
+      "Нолан, Кристофер"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Людвиг Йёранссон",
+      "Ludwig Göransson",
+      "Йёранссон, Людвиг"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Syncopy Films",
+      "Syncopy Inc.",
+      "Universal Pictures",
+      "Universal Studios"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Christopher Nolan"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Christopher Nolan"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Matt Damon",
+      "Anne Hathaway",
+      "Tom Holland",
+      "Lupita Nyong'o",
+      "Robert Pattinson",
+      "Charlize Theron",
+      "Zendaya",
+      "Jon Bernthal",
+      "Benny Safdie",
+      "Mia Goth",
+      "John Leguizamo",
+      "Elliot Page",
+      "Himesh Patel",
+      "Bill Irwin",
+      "Samantha Morton",
+      "Jesse Garcia",
+      "Will Yun Lee",
+      "Rafi Gavron",
+      "Shiloh Fernandez",
+      "Corey Hawkins",
+      "Nick E. Tarabay",
+      "Maurice Compte",
+      "Michael Vlamis",
+      "Iddo Goldberg",
+      "Josh Stewart",
+      "Ryan Hurst",
+      "Logan Marshall-Green",
+      "Jovan Adepo",
+      "James Remar",
+      "Travis Scott",
+      "Andrew Howard",
+      "Elyes Gabel",
+      "Sean Avery",
+      "Niko Nicotera",
+      "Jamie Harris",
+      "Brian Vernel"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Emma Thomas",
+      "Christopher Nolan"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Ludwig Göransson"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Syncopy Inc.",
+      "Universal Pictures",
+      "Universal Studios"
+     ]
+    }
+   }
+  },
+  "Q131630491": {
+   "имя": "Горничная",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Пол Фиг",
+      "Paul Feig",
+      "Фиг, Пол"
+     ]
+    },
+    "P58": {
+     "вид": "без-метки",
+     "имена": []
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Сидни Суини",
+      "Sydney Sweeney",
+      "Суини, Сидни",
+      "Аманда Сейфрид",
+      "Amanda Seyfried",
+      "Сейфрид, Аманда",
+      "Брэндон Скленар",
+      "Brandon Sklenar",
+      "Скленар, Брэндон",
+      "Микеле Морроне",
+      "Морроне, Микеле",
+      "Элизабет Перкинс",
+      "Elizabeth Perkins",
+      "Перкинс, Элизабет",
+      "Меган Фергюсон",
+      "Эллен Тамаки",
+      "Ellen Tamaki"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Тодд Либерман"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Теодор Шапиро",
+      "Theodore Shapiro",
+      "Шапиро, Теодор"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Paul Feig"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Rebecca Sonnenshine"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Sydney Sweeney",
+      "Amanda Seyfried",
+      "Brandon Sklenar",
+      "Michele Morrone Algoes",
+      "Michele Morrone",
+      "Elizabeth Perkins",
+      "Megan Ferguson",
+      "Ellen Tamaki"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Todd Lieberman"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Theodore Shapiro"
+     ]
+    }
+   }
+  },
+  "Q131976228": {
+   "имя": "Господин Никто против Путина",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Дэвид Боренштейн",
+      "David Borenstein",
+      "Боренштейн, Дэвид",
+      "Павел Ильич Таланкин",
+      "Таланкин, Павел Ильич"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Дэвид Боренштейн",
+      "David Borenstein",
+      "Боренштейн, Дэвид"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Владимир Владимирович Путин",
+      "Vladimir Putin",
+      "Путин, Владимир Владимирович",
+      "Дмитрий Анатольевич Медведев",
+      "Медведев, Дмитрий Анатольевич"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Хелле Фабер",
+      "Helle Faber",
+      "Radovan Síbrt",
+      "Alžběta Karásková"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Michal Rataj",
+      "Йонас Штрук"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Британская вещательная корпорация",
+      "BBC",
+      "Би-би-си",
+      "Pink Productions",
+      "Made in Copenhagen"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "David Borenstein",
+      "Pavel Talankin"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "David Borenstein"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Vladimir Putin",
+      "Dmitry Medvedev"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Helle Faber",
+      "Radovan Síbrt",
+      "Alžběta Karásková",
+      "Petra Dobešová"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Michal Rataj",
+      "Jonas Struck"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "British Broadcasting Corporation",
+      "BBC",
+      "ZDF Arte",
+      "Pink Productions",
+      "Made in Copenhagen"
+     ]
+    }
+   }
+  },
+  "Q132200341": {
+   "имя": "На помощь!",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Сэм Рэйми",
+      "Sam Raimi",
+      "Рэйми, Сэм"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Марк Свифт",
+      "Дэмиэн Шэннон"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Рэйчел Макадамс",
+      "Rachel McAdams",
+      "Макадамс, Рейчел",
+      "Рейчел Макадамс",
+      "Крис Пэнг",
+      "Пэнг, Крис",
+      "Дилан О’Брайен",
+      "Dylan O'Brien",
+      "О’Брайен, Дилан",
+      "Деннис Хэйсберт",
+      "Хэйсберт, Деннис",
+      "Завьер Сэмюел",
+      "Xavier Samuel",
+      "Сэмюел, Завьер"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Дэнни Эльфман",
+      "Danny Elfman",
+      "Эльфман, Дэнни"
+     ]
+    },
+    "P272": {
+     "вид": "без-метки",
+     "имена": []
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Sam Raimi"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Mark Swift",
+      "Damian Shannon"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Rachel McAdams",
+      "Chris Pang",
+      "Dylan O'Brien",
+      "Dennis Haysbert",
+      "Xavier Samuel",
+      "Thaneth Warakulnukroh"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Danny Elfman"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Raimi Productions"
+     ]
+    }
+   }
+  },
+  "Q132322742": {
+   "имя": "Гражданин-мститель",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Уве Болл",
+      "Uwe Boll",
+      "Болл, Уве"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Уве Болл",
+      "Uwe Boll",
+      "Болл, Уве"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Арми Хаммер",
+      "Armie Hammer",
+      "Хаммер, Арми",
+      "Костас Мэндилор",
+      "Мэндилор, Костас",
+      "Benjamin Scheuer"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Uwe Boll"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Uwe Boll"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Armie Hammer",
+      "Costas Mandylor",
+      "Benjamin Scheuer"
+     ]
+    }
+   }
+  },
+  "Q132731331": {
+   "имя": "Зловещие мертвецы: Пекло",
+   "ru": {
+    "P57": {
+     "вид": "без-метки",
+     "имена": []
+    },
+    "P58": {
+     "вид": "без-метки",
+     "имена": []
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Сухейла Якуб",
+      "Якуб, Сухейла",
+      "Хантер Дуэн",
+      "Hunter Doohan",
+      "Духан, Хантер",
+      "Хантер Духан",
+      "Лючиане Бьюкэнэн",
+      "Luciane Buchanan",
+      "Тэнди Райт",
+      "Tandi Wright",
+      "Райт, Тэнди",
+      "Джордж Пуллар"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Сэм Рэйми",
+      "Sam Raimi",
+      "Рэйми, Сэм",
+      "Роберт Таперт",
+      "Таперт, Роберт"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Ghost House Pictures"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Sébastien Vaniček"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Sébastien Vaniček",
+      "Florent Bernard"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Souheila Yacoub",
+      "Hunter Doohan",
+      "Luciane Buchanan",
+      "Tandi Wright",
+      "George Pullar"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Sam Raimi",
+      "Rob Tapert"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Ghost House Pictures"
+     ]
+    }
+   }
+  },
+  "Q133848181": {
+   "имя": "Звук падения",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Маша Шилински"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Hanna Heckt",
+      "Lea Drinda",
+      "Лена Урцендовски",
+      "Lena Urzendowsky",
+      "Сузанна Вюст",
+      "Луиза Хайер",
+      "Helena Lüer",
+      "Zoë Baier"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "ZDF"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Mascha Schilinski"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Hanna Heckt",
+      "Lea Drinda",
+      "Lena Urzendowsky",
+      "Susanne Wuest",
+      "Luise Heyer",
+      "Helena Lüer",
+      "Zoë Baier"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "ZDF"
+     ]
+    }
+   }
+  },
+  "Q133866932": {
+   "имя": "Простая случайность",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джафар Панахи",
+      "جعفر پناهی",
+      "Панахи, Джафар"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джафар Панахи",
+      "جعفر پناهی",
+      "Панахи, Джафар"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Хадис Пакбатен"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Филипп Мартен",
+      "Philippe Martin",
+      "Джафар Панахи",
+      "جعفر پناهی",
+      "Панахи, Джафар",
+      "Давид Тион",
+      "David Thion"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Pelleas Films",
+      "Les Films Pelléas",
+      "Arte France Cinéma",
+      "Pio & Co",
+      "Bidibul Productions"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Jafar Panahi",
+      "جعفر پناهی"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Jafar Panahi",
+      "جعفر پناهی"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Ebrahim Azizi",
+      "Afssaneh Najmabadi",
+      "Delmaz Najafi",
+      "Vahid Mobasseri",
+      "George Hashemzadeh",
+      "Mariam Afshari",
+      "Hadis Pakbaten",
+      "Majid Panahi"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Philippe Martin",
+      "Jafar Panahi",
+      "جعفر پناهی",
+      "David Thion"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Les Films Pelléas",
+      "Arte France Cinéma",
+      "Pio & Co",
+      "Bidibul Productions"
+     ]
+    }
+   }
+  },
+  "Q133876041": {
+   "имя": "Энола Холмс 3",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Фил Барантини"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джек Торн",
+      "Jack Thorne",
+      "Торн, Джек"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Милли Бобби Браун",
+      "Millie Bobby Brown",
+      "Браун, Милли Бобби",
+      "Луис Партридж",
+      "Louis Partridge",
+      "Партридж, Луи",
+      "Луи Партридж",
+      "Химеш Патель",
+      "Himesh Patel",
+      "Патель, Химеш",
+      "Генри Кавилл",
+      "Henry Cavill",
+      "Кавилл, Генри",
+      "Хелена Бонэм Картер",
+      "Helena Bonham Carter",
+      "Бонем Картер, Хелена",
+      "Хелена Бонем Картер",
+      "Шэрон Дункан-Брюстер",
+      "Дункан-Брюстер, Шэрон"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Philip Barantini"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Jack Thorne"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Millie Bobby Brown",
+      "Louis Partridge",
+      "Himesh Patel",
+      "Henry Cavill",
+      "Helena Bonham Carter",
+      "Sharon Duncan-Brewster"
+     ]
+    }
+   }
+  },
+  "Q134054683": {
+   "имя": "Я иду искать 2",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Мэттью Беттинелли",
+      "Беттинелли-Олпин, Мэтт",
+      "Мэтт Беттинелли-Олпин",
+      "Тайлер Джиллетт",
+      "Джиллетт, Тайлер"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Гай Бусик",
+      "Бусик, Гай"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Самара Уивинг",
+      "Samara Weaving",
+      "Уивинг, Самара",
+      "Кэтрин Ньютон",
+      "Ньютон, Кэтрин",
+      "Сара Мишель Геллар",
+      "Sarah Michelle Gellar",
+      "Геллар, Сара Мишель",
+      "Кевин Дюранд",
+      "Kevin Durand",
+      "Дюранд, Кевин",
+      "Дэвид Кроненберг",
+      "David Cronenberg",
+      "Кроненберг, Дэвид",
+      "Элайджа Вуд",
+      "Elijah Wood",
+      "Вуд, Элайджа",
+      "Шон Хэтоси",
+      "Хэтоси, Шон",
+      "Нестор Карбонелл",
+      "Nestor Carbonell",
+      "Карбонель, Нестор",
+      "Нестор Карбонель",
+      "Оливия Чэн",
+      "Варун Саранга"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Трип Винсон",
+      "Брэд Фишер",
+      "Джеймс Вандербилт",
+      "James Vanderbilt",
+      "Вандербильт, Джеймс",
+      "Джеймс Вандербильт"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Radio Silence Productions"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Matt Bettinelli-Olpin",
+      "Tyler Gillett"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Guy Busick"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Samara Weaving",
+      "Kathryn Newton",
+      "Sarah Michelle Gellar",
+      "Kevin Durand",
+      "David Cronenberg",
+      "Elijah Wood",
+      "Shawn Hatosy",
+      "Nestor Carbonell",
+      "Néstor Carbonell",
+      "Olivia Cheng",
+      "Varun Saranga"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Tripp Vinson",
+      "Bradley J. Fischer",
+      "James Vanderbilt"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Radio Silence Productions"
+     ]
+    }
+   }
+  },
+  "Q134083296": {
+   "имя": "Приглашение",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Оливия Уайлд",
+      "Olivia Wilde",
+      "Уайлд, Оливия"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Уилл МакКормак",
+      "Рашида Джонс",
+      "Джонс, Рашида"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Сет Роген",
+      "Seth Rogen",
+      "Роген, Сет",
+      "Пенелопа Крус",
+      "Penélope Cruz",
+      "Крус, Пенелопа",
+      "Эдвард Нортон",
+      "Нортон, Эдвард",
+      "Оливия Уайлд",
+      "Olivia Wilde",
+      "Уайлд, Оливия"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Девид Пермут",
+      "Бен Браунинг",
+      "Меган Эллисон",
+      "Megan Ellison",
+      "Эллисон, Меган"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Девонте Хайнс",
+      "Dev Hynes"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Annapurna Pictures",
+      "FilmNation Entertainment"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Olivia Wilde"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Will McCormack",
+      "Rashida Jones"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Seth Rogen",
+      "Penélope Cruz",
+      "Edward Norton",
+      "Olivia Wilde"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "David Permut",
+      "Ben Browning",
+      "Megan Ellison"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Dev Hynes"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Annapurna Pictures",
+      "FilmNation Entertainment"
+     ]
+    }
+   }
+  },
+  "Q134480207": {
+   "имя": "Выход 8",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Гэнки Кавамура"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Гэнки Кавамура"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Кадзунари Ниномия",
+      "Kazunari Ninomiya",
+      "Кавачи Ямато",
+      "Нана Комацу",
+      "Nana Komatsu",
+      "Комацу, Нана"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Ясутака Наката",
+      "Наката, Ясутака"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Genki Kawamura"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Kentarō Hirase",
+      "Genki Kawamura"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Kazunari Ninomiya",
+      "Yamato Kouchi",
+      "Yamato Kochi",
+      "Nana Komatsu",
+      "Kotone Hanase"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Yasutaka Nakata"
+     ]
+    }
+   }
+  },
+  "Q134611972": {
+   "имя": "Дьявол носит Prada 2",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Дэвид Френкель",
+      "Френкель, Дэвид"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Алин Брош Маккенна",
+      "Брош Маккенна, Алин"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Мерил Стрип",
+      "Meryl Streep",
+      "Стрип, Мерил",
+      "Энн Хэтэуэй",
+      "Anne Hathaway",
+      "Хэтэуэй, Энн",
+      "Эмили Блант",
+      "Emily Blunt",
+      "Блант, Эмили",
+      "Стэнли Туччи",
+      "Stanley Tucci",
+      "Туччи, Стэнли",
+      "Трэйси Томс",
+      "Tracie Thoms",
+      "Томс, Трейси",
+      "Трейси Томс",
+      "Тибор Фельдман",
+      "Кеннет Брана",
+      "Kenneth Branagh",
+      "Брана, Кеннет",
+      "Симон Эшли",
+      "Эшли, Симон",
+      "Люси Лью",
+      "Lucy Liu",
+      "Лью, Люси",
+      "Джастин Теру",
+      "Justin Theroux",
+      "Теру, Джастин",
+      "Б. Дж. Новак",
+      "B. J. Novak",
+      "Новак, Бенджамин Джозеф",
+      "Бенджамин Джозеф Новак",
+      "Полин Шаламе",
+      "Шаламе, Полин",
+      "Helen J. Shen",
+      "Конрад Рикамора",
+      "Рикамора, Конрад",
+      "Калеб Хирон",
+      "Рэйчел Блум",
+      "Rachel Bloom",
+      "Блум, Рейчел",
+      "Рейчел Блум",
+      "Патрик Браммелл",
+      "Браммелл, Патрик",
+      "Сидни Суини",
+      "Sydney Sweeney",
+      "Суини, Сидни"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Венди Файнерман",
+      "Wendy Finerman"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Теодор Шапиро",
+      "Theodore Shapiro",
+      "Шапиро, Теодор"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "David Frankel"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Aline Brosh McKenna"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Meryl Streep",
+      "Anne Hathaway",
+      "Emily Blunt",
+      "Stanley Tucci",
+      "Tracie Thoms",
+      "Tibor Feldman",
+      "Kenneth Branagh",
+      "Simone Ashley",
+      "Lucy Liu",
+      "Justin Theroux",
+      "B. J. Novak",
+      "Pauline Chalamet",
+      "Helen J. Shen",
+      "Conrad Ricamora",
+      "Caleb Hearon",
+      "Rachel Bloom",
+      "Patrick Brammall",
+      "Sydney Sweeney"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Wendy Finerman"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Theodore Shapiro"
+     ]
+    }
+   }
+  },
+  "Q134739750": {
+   "имя": "Beast of Reincarnation",
+   "ru": {
+    "P57": {
+     "вид": "без-метки",
+     "имена": []
+    },
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Game Freak"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Fictions"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Kota Furushima"
+     ]
+    },
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Game Freak"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Fictions"
+     ]
+    }
+   }
+  },
+  "Q134822854": {
+   "имя": "Splatoon Raiders",
+   "ru": {
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Nintendo"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Инклинги",
+      "DEEP CUT"
+     ]
+    }
+   },
+   "en": {
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Nintendo"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Inkling",
+      "Deep Cut",
+      "Shiver, Frye and Big Man",
+      "Frye and Big Man Shiver"
+     ]
+    }
+   }
+  },
+  "Q135038882": {
+   "имя": "Голос Хинд Раджаб",
+   "ru": {
+    "P57": {
+     "вид": "без-метки",
+     "имена": []
+    },
+    "P58": {
+     "вид": "без-метки",
+     "имена": []
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Амер Хлехель",
+      "Amer Hlehel",
+      "Клара Хури",
+      "Мотаз Малхис"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Одесса Рэй"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Film4 Productions"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Kaouther Ben Hania"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Kaouther Ben Hania"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Amer Hlehel",
+      "Clara Khoury",
+      "Motaz Malhees",
+      "Saja Kilani"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Nadim Cheikhrouha",
+      "Odessa Rae",
+      "James Wilson"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Film4 Productions",
+      "Sunnyland Film"
+     ]
+    }
+   }
+  },
+  "Q135411818": {
+   "имя": "Каратель: Последнее убийство",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Рейнальдо Маркус Грин"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Рейнальдо Маркус Грин",
+      "Джон Бернтал",
+      "Jon Bernthal",
+      "Бернтал, Джон"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Джон Бернтал",
+      "Jon Bernthal",
+      "Бернтал, Джон"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Marvel Studios"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Reinaldo Marcus Green"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Reinaldo Marcus Green",
+      "Jon Bernthal"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Jon Bernthal"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Marvel Studios"
+     ]
+    }
+   }
+  },
+  "Q135906833": {
+   "имя": "Только на одну ночь",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Уилл Глак",
+      "Will Gluck",
+      "Глак, Уилл"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Моника Барбаро",
+      "Monica Barbaro",
+      "Барбаро, Моника",
+      "Каллум Тёрнер",
+      "Callum Turner",
+      "Тёрнер, Каллум",
+      "Молли Рингуолд",
+      "Рингуолд, Молли",
+      "Левар Бертон",
+      "LeVar Burton",
+      "Бертон, Левар",
+      "Майя Хоук",
+      "Maya Hawke",
+      "Хоук, Майя",
+      "Джулия Фокс",
+      "Julia Fox",
+      "Фокс, Джулия",
+      "Эсте Хаим",
+      "Зиве Фумудо",
+      "King Princess"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Will Gluck"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Monica Barbaro",
+      "Callum Turner",
+      "Molly Ringwald",
+      "LeVar Burton",
+      "Maya Hawke",
+      "Julia Fox",
+      "Este Haim",
+      "Ziwe Fumudoh",
+      "King Princess"
+     ]
+    }
+   }
+  },
+  "Q136002124": {
+   "имя": "Молодой Вашингтон",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джон Эрвин"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Джон Эрвин",
+      "Том Провост"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Уильям Франклин Миллер",
+      "William Franklyn-Miller",
+      "Бен Кингсли",
+      "Ben Kingsley",
+      "Энди Сёркис",
+      "Andy Serkis",
+      "Серкис, Энди",
+      "Энди Серкис",
+      "Джоэл Смолбон",
+      "Joel Smallbone",
+      "Келси Грэммер",
+      "Kelsey Grammer",
+      "Грэммер, Келси",
+      "Мэри-Луиз Паркер",
+      "Паркер, Мэри-Луиз",
+      "Миа Роджерс",
+      "Mia Rodgers",
+      "Джонно Дэвис",
+      "Энгус Касл-Даути",
+      "Angus Castle-Doughty",
+      "Райан Бегей",
+      "Майкл Бенц",
+      "Мартин Лэйкмейер",
+      "Martijn Lakemeier"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Джон Эрвин"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Кевин Кайнер",
+      "Kevin Kiner",
+      "Шон Кайнер",
+      "Дин Кайнер"
+     ]
+    },
+    "P272": {
+     "вид": "без-метки",
+     "имена": []
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Jon Erwin"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Jon Erwin",
+      "Tom Provost",
+      "Diederik Hoogstraten"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "William Franklyn-Miller",
+      "Ben Kingsley",
+      "Andy Serkis",
+      "Joel Smallbone",
+      "Kelsey Grammer",
+      "Mary-Louise Parker",
+      "Mia Rodgers",
+      "Jonno Davies",
+      "Angus Castle-Doughty",
+      "Ryan Begay",
+      "Michael Benz",
+      "Martijn Lakemeier"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Jon Erwin"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Kevin Kiner",
+      "Sean Kiner",
+      "Deana Kiner"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Wonder Project"
+     ]
+    }
+   }
+  },
+  "Q136163067": {
+   "имя": "Обсессия",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Карри Баркер",
+      "Баркер, Карри"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Карри Баркер",
+      "Баркер, Карри"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Майкл Джонстон",
+      "Джонстон, Майкл",
+      "Инди Наварретти",
+      "Inde Navarrette",
+      "Наварретти, Инди",
+      "Энди Рихтер",
+      "Andy Richter",
+      "Рихтер, Энди",
+      "Меган Лоулесс",
+      "Лоулесс, Меган"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Curry Barker"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Curry Barker"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Michael Johnston",
+      "Inde Navarrette",
+      "Andy Richter",
+      "Jeff Barker",
+      "Megan Lawless"
+     ]
+    }
+   }
+  },
+  "Q136311776": {
+   "имя": "Тони",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Мэтт Джонсон"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Доминик Сесса",
+      "Сесса, Доминик",
+      "Лео Вудалл",
+      "Вудалл, Лео",
+      "Антонио Бандерас",
+      "Antonio Banderas",
+      "Бандерас, Антонио",
+      "Эмилия Джонс",
+      "Джонс, Эмилия",
+      "Ставрос Халкиас",
+      "Stavros Halkias",
+      "Халкиас, Ставрос",
+      "Моника Рэймунд",
+      "Рэймунд, Моника",
+      "Рич Соммер",
+      "Соммер, Рич"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Тревор Уайт"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Matt Johnson"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Dominic Sessa",
+      "Leo Woodall",
+      "Antonio Banderas",
+      "Emilia Jones",
+      "Stavros Halkias",
+      "Monica Raymund",
+      "Rich Sommer"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Trevor White"
+     ]
+    }
+   }
+  },
+  "Q136311783": {
+   "имя": "Астрал 6: Они уже здесь",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джейкоб Чэйз"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Дэвид Лесли Джонсон"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Брэндон Переа",
+      "Переа, Брэндон",
+      "Лин Шэй",
+      "Lin Shaye",
+      "Шэй, Лин",
+      "Амелия Ева",
+      "Мэйси Ричардсон-Селлерс",
+      "Ричардсон-Селлерс, Мэйси",
+      "Сэм Спруэлл",
+      "Спруэлл, Сэм",
+      "Лора Гордон",
+      "Гордон, Лора"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Джейсон Блум",
+      "Jason Blum",
+      "Блам, Джейсон",
+      "Джейсон Блам",
+      "Орен Пели",
+      "Пели, Орен",
+      "Джеймс Ван",
+      "Ван, Джеймс",
+      "Ли Уоннелл",
+      "Leigh Whannell",
+      "Уоннелл, Ли"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Screen Gems",
+      "Stage 6 Films",
+      "Blumhouse Productions"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Jacob Chase"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "David Leslie Johnson-McGoldrick"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Brandon Perea",
+      "Lin Shaye",
+      "Amelia Eve",
+      "Maisie Richardson-Sellers",
+      "Sam Spruell",
+      "Laura Gordon"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Jason Blum",
+      "Oren Peli",
+      "James Wan",
+      "Leigh Whannell"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Screen Gems",
+      "Stage 6 Films",
+      "Blumhouse Productions"
+     ]
+    }
+   }
+  },
+  "Q136773033": {
+   "имя": "Мороженщик",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Элай Рот",
+      "Eli Roth",
+      "Рот, Элай"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Элай Рот",
+      "Eli Roth",
+      "Рот, Элай"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Эри Миллен",
+      "Миллен, Эри",
+      "Бенджамин Байрон Дэвис",
+      "Карен Клише",
+      "Клиш, Карен",
+      "Карен Клиш"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Eli Roth"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Eli Roth"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Ari Millen",
+      "Benjamin Byron Davis",
+      "Karen Cliche"
+     ]
+    }
+   }
+  },
+  "Q137652478": {
+   "имя": "Фьорд",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Кристиан Мунджиу",
+      "Cristian Mungiu",
+      "Мунджиу, Кристиан"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Кристиан Мунджиу",
+      "Cristian Mungiu",
+      "Мунджиу, Кристиан"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Себастиан Стэн",
+      "Sebastian Stan",
+      "Стэн, Себастиан",
+      "Ренате Реинсве",
+      "Renate Reinsve",
+      "Реинсве, Ренате",
+      "Эллен Доррит Петерсен",
+      "Петерсен, Эллен Доррит",
+      "Лиза Ловен Конгсли",
+      "Lisa Loven Kongsli",
+      "Конгсли, Лиза Ловен"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Андреа Берентсен Оттмар",
+      "Andrea Berentsen Ottmar"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Cristian Mungiu"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Cristian Mungiu"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Sebastian Stan",
+      "Renate Reinsve",
+      "Ellen Dorrit Petersen",
+      "Lisa Loven Kongsli"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Andrea Berentsen Ottmar"
+     ]
+    }
+   }
+  },
+  "Q137843012": {
+   "имя": "Husbands in Action",
+   "ru": {
+    "P57": {
+     "вид": "без-метки",
+     "имена": []
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Чин Сонгю",
+      "Кон Мён",
+      "Ким Джи-сок",
+      "Юн Гёнхо",
+      "Kang Han-na",
+      "Ли Да-хи",
+      "Lee Da-hee",
+      "Чон Со Мин",
+      "Jeon So-min"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Park Gyu-tae"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Jin Seon-kyu",
+      "Gong Myoung",
+      "Gong Myung",
+      "Kim Ji-seok",
+      "Yoon Kyung-ho",
+      "Kang Han-na",
+      "Lee Da-hee",
+      "Jeon So-min"
+     ]
+    }
+   }
+  },
+  "Q137926888": {
+   "имя": "Пасть дьявола",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джефф Уодлоу",
+      "Jeff Wadlow",
+      "Уодлоу, Джефф"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Кэтрин Ньютон",
+      "Ньютон, Кэтрин",
+      "Лана Кондор",
+      "Кондор, Лана",
+      "Гэвин Касаленьо",
+      "Gavin Casalegno",
+      "Нико Хирага",
+      "Тайме Таптимтонг"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Бэзил Иваник",
+      "Иваник, Бэзил"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Беар Маккрири",
+      "Bear McCreary",
+      "Маккрири, Беар"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Thunder Road Pictures"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Jeff Wadlow"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Kathryn Newton",
+      "Lana Condor",
+      "Gavin Casalegno",
+      "Nico Hiraga",
+      "Tayme Thapthimthong"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Basil Iwanyk"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Bear McCreary"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Thunder Road Pictures",
+      "Thunder Road Films"
+     ]
+    }
+   }
+  },
+  "Q138589086": {
+   "имя": "Assassin’s Creed Black Flag Resynced",
+   "ru": {
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Ubisoft Singapore"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Ubisoft"
+     ]
+    }
+   },
+   "en": {
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Ubisoft Singapore"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Ubisoft"
+     ]
+    }
+   }
+  },
+  "Q139665886": {
+   "имя": "Voicemails for Isabelle",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Leah McKendrick"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Leah McKendrick"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Зои Дойч",
+      "Zoey Deutch",
+      "Дойч, Зои",
+      "Ник Робинсон",
+      "Nick Robinson",
+      "Робинсон, Ник",
+      "Ник Офферман",
+      "Nick Offerman",
+      "Офферман, Ник",
+      "Лукас Гейдж",
+      "Гейдж, Лукас",
+      "Гарри Шам",
+      "Шам, Гарри",
+      "Сиера Браво",
+      "Браво, Сиэра",
+      "Сиэра Браво",
+      "Джил Беллоуз",
+      "Беллоуз, Гил",
+      "Гил Беллоуз",
+      "Leah McKendrick"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Тодд Блэк",
+      "Стив Тиш",
+      "Steve Tisch"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Leah McKendrick"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Leah McKendrick"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Zoey Deutch",
+      "Nick Robinson",
+      "Nick Offerman",
+      "Lukas Gage",
+      "Harry Shum",
+      "Harry Shum Jr.",
+      "Ciara Bravo",
+      "Spencer Lord",
+      "Gil Bellows",
+      "Leah McKendrick"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Todd Black",
+      "Steve Tisch"
+     ]
+    }
+   }
+  },
+  "Q139683849": {
+   "имя": "Star Fox",
+   "ru": {
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Velan Studios"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Nintendo"
+     ]
+    }
+   },
+   "en": {
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Velan Studios"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Nintendo"
+     ]
+    }
+   }
+  },
+  "Q140221884": {
+   "имя": "Meccha Chameleon",
+   "ru": {},
+   "en": {}
+  },
+  "Q58045522": {
+   "имя": "Deltarune",
+   "ru": {
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Тоби Фокс",
+      "Toby Fox",
+      "Фокс, Тоби"
+     ]
+    },
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Тоби Фокс",
+      "Toby Fox",
+      "Фокс, Тоби",
+      "8-4"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Тоби Фокс",
+      "Toby Fox",
+      "Фокс, Тоби",
+      "8-4"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Крис",
+      "Сьюзи",
+      "Susie",
+      "Ральзей",
+      "Ralsei",
+      "Ноэлль Холидей",
+      "Noelle Holiday",
+      "Лансер",
+      "Ториэль",
+      "Азгор",
+      "Азриэль Дримурр",
+      "Санс",
+      "Sans",
+      "Альфис",
+      "Андайн",
+      "Спамтон",
+      "Таск Менеджер",
+      "Tenna",
+      "Напстаблук"
+     ]
+    },
+    "P175": {
+     "вид": "есть",
+     "имена": [
+      "Тоби Фокс",
+      "Toby Fox",
+      "Фокс, Тоби"
+     ]
+    }
+   },
+   "en": {
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Toby Fox"
+     ]
+    },
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "Toby Fox",
+      "8-4"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Toby Fox",
+      "8-4"
+     ]
+    },
+    "P674": {
+     "вид": "есть",
+     "имена": [
+      "Kris Dreemurr",
+      "Kris",
+      "Susie",
+      "Ralsei",
+      "Noelle Holiday",
+      "Lancer",
+      "Toriel",
+      "Asgore Dreemurr",
+      "Asgore",
+      "Asriel Dreemurr",
+      "Sans",
+      "Alphys",
+      "Undyne",
+      "Spamton",
+      "Spamton G. Spamton",
+      "Tasque Manager",
+      "Berdly",
+      "December Holiday",
+      "The Roaring Knight",
+      "Player",
+      "Rudolph Holiday",
+      "Carol Holiday",
+      "Queen",
+      "Tenna",
+      "Napstablook"
+     ]
+    },
+    "P175": {
+     "вид": "есть",
+     "имена": [
+      "Toby Fox"
+     ]
+    }
+   }
+  },
+  "Q637290": {
+   "имя": "Кобра",
+   "ru": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "Джордж Пан Косматос",
+      "Косматос, Джордж",
+      "Джордж Косматос"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Сильвестр Сталлоне",
+      "Sylvester Stallone",
+      "Сталлоне, Сильвестр"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Сильвестр Сталлоне",
+      "Sylvester Stallone",
+      "Сталлоне, Сильвестр",
+      "Бригитта Нильсен",
+      "Brigitte Nielsen",
+      "Нильсен, Бригитта",
+      "Рени Сантони",
+      "Reni Santoni",
+      "Эндрю Робинсон",
+      "Andrew Robinson",
+      "Робинсон, Эндрю",
+      "Брайан Томпсон",
+      "Brian Thompson",
+      "Томпсон, Брайан",
+      "Арт Лафлёр",
+      "Art LaFleur",
+      "Лафлёр, Арт",
+      "Ли Гарлингтон",
+      "Гарлингтон, Ли",
+      "Джон Херцфелд",
+      "Рон Джереми",
+      "Ron Jeremy",
+      "Джереми, Рон",
+      "Вэл Эйвери",
+      "Val Avery",
+      "Дэвид Раш",
+      "Раш, Дэвид",
+      "Маришка Харгитей",
+      "Mariska Hargitay",
+      "Харгитей, Маришка"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Йорам Глобус",
+      "Глобус, Йорам",
+      "Менахем Голан",
+      "Голан, Менахем"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Сильвестр Левай",
+      "Левей, Сильвестр",
+      "Сильвестр Левей"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Warner Bros.",
+      "The Cannon Group"
+     ]
+    }
+   },
+   "en": {
+    "P57": {
+     "вид": "есть",
+     "имена": [
+      "George P. Cosmatos"
+     ]
+    },
+    "P58": {
+     "вид": "есть",
+     "имена": [
+      "Sylvester Stallone"
+     ]
+    },
+    "P161": {
+     "вид": "есть",
+     "имена": [
+      "Sylvester Stallone",
+      "Brigitte Nielsen",
+      "Reni Santoni",
+      "Andrew Robinson",
+      "Brian Thompson",
+      "Art LaFleur",
+      "Lee Garlington",
+      "John Herzfeld",
+      "Ron Jeremy",
+      "Val Avery",
+      "David Rasche",
+      "Mariska Hargitay"
+     ]
+    },
+    "P162": {
+     "вид": "есть",
+     "имена": [
+      "Yoram Globus",
+      "Menahem Golan"
+     ]
+    },
+    "P86": {
+     "вид": "есть",
+     "имена": [
+      "Sylvester Levay"
+     ]
+    },
+    "P272": {
+     "вид": "есть",
+     "имена": [
+      "Warner Bros. Entertainment",
+      "Warner Bros.",
+      "The Cannon Group",
+      "The Cannon Group, Inc.",
+      "Inc. The Cannon Group"
+     ]
+    }
+   }
+  },
+  "Q96247255": {
+   "имя": "Stray",
+   "ru": {
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "BlueTwelve Studio",
+      "BlueTwelve Studios"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Annapurna Interactive"
+     ]
+    }
+   },
+   "en": {
+    "P178": {
+     "вид": "есть",
+     "имена": [
+      "BlueTwelve Studio"
+     ]
+    },
+    "P123": {
+     "вид": "есть",
+     "имена": [
+      "Annapurna Interactive"
+     ]
+    }
+   }
+  }
+ }
+}
