@@ -87,8 +87,36 @@ export function isStage(): boolean {
   );
 }
 
-const FIRESTORE_EMULATOR = { host: '127.0.0.1', port: 8181 } as const;
-const AUTH_EMULATOR_URL = 'http://127.0.0.1:9099';
+/**
+ * ПОРТЫ ЭМУЛЯТОРОВ СТЕНДА — ТЕПЕРЬ СЛОТОВЫЕ (`plans/69` шаг 6, тестовый парк).
+ *
+ * Зачем. До парка стенд был один на машину, и эти три числа были литералами. В командном режиме
+ * ролей несколько, у каждой свои эмуляторы — и приложение, вшившее 8181, стучалось бы в эмулятор
+ * СОСЕДА независимо от того, чей сайт открыт. Роль видела бы чужие данные и чужие правки, не
+ * понимая почему; ровно этот класс делал прогоны е2е в командном режиме недостоверными.
+ *
+ * Значения подставляет обёртка запуска (`tools/stand-launch.mjs`) переменными `VITE_STAND_*`.
+ * ⚠️ Vite подставляет их НА СБОРКЕ, поэтому окружение слота обязано стоять и у `vite dev`, и у
+ * `vite build` — иначе артефакт будет смотреть на слот 0 при любом порте сайта.
+ *
+ * 🔴 БОЕВОЙ КОНТУР НЕ ЗАДЕТ ПО ПОСТРОЕНИЮ: единственный вход сюда — ветка `isStand()` (хост
+ * `localhost`/`127.0.0.1`). Вне стенда эти константы не читаются вовсе, а умолчания равны
+ * прежним литералам — то есть одиночная сессия и главная копия работают ровно как раньше.
+ */
+const standPort = (value: string | undefined, fallback: number): number => {
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+};
+
+const FIRESTORE_EMULATOR = {
+  host: '127.0.0.1',
+  port: standPort(import.meta.env?.VITE_STAND_FIRESTORE_PORT, 8181),
+} as const;
+const AUTH_EMULATOR_URL = `http://127.0.0.1:${standPort(import.meta.env?.VITE_STAND_AUTH_PORT, 9099)}`;
+const STORAGE_EMULATOR = {
+  host: '127.0.0.1',
+  port: standPort(import.meta.env?.VITE_STAND_STORAGE_PORT, 9199),
+} as const;
 
 /** Стенд — это localhost. Всё остальное — бой. */
 export function isStand(): boolean {
@@ -222,7 +250,7 @@ export function db(): Firestore {
 export function storage(): FirebaseStorage {
   if (bucket) return bucket;
   bucket = getStorage(ensureApp());
-  if (isStand()) connectStorageEmulator(bucket, '127.0.0.1', 9199);
+  if (isStand()) connectStorageEmulator(bucket, STORAGE_EMULATOR.host, STORAGE_EMULATOR.port);
   return bucket;
 }
 

@@ -276,15 +276,24 @@ export interface DimCandidate {
   readonly status: 'pending' | 'approved' | 'rejected' | 'returned';
   readonly source?: { readonly registry: string; readonly id: string; readonly sitelinks: number };
   /**
-   * 🔴 ДВА ПОЛЯ КОММЕНТАРИЯ, И ПУТАТЬ ИХ НЕЛЬЗЯ (`bugs/142`, решение владельца 2026-08-02:
-   * «*помимо поля комментария автора — заполняемое, делаем ещё статичное текстовое поле
-   * комментария ИИ агента владельцу*»):
+   * 🔴 ТРИ ПОЛЯ КОММЕНТАРИЯ, И ПУТАТЬ ИХ НЕЛЬЗЯ. Два первых — решение владельца 2026-08-02
+   * (`bugs/142`: «*помимо поля комментария автора — заполняемое, делаем ещё статичное текстовое
+   * поле комментария ИИ агента владельцу*»), третье — `bugs/173`:
    *   · `agentNote` — что агент написал ВЛАДЕЛЬЦУ (только для чтения на экране);
-   *   · `ownerNote` — что владелец написал АГЕНТУ, возвращая карточку на доработку.
-   * Одно поле на двоих затёрло бы одну из сторон и сделало бы диалог невозможным.
+   *   · `ownerNote` — что владелец написал АГЕНТУ, ВОЗВРАЩАЯ карточку на доработку;
+   *   · `ownerApprovalNote` — что он написал, ОДОБРЯЯ её.
+   *
+   * 🔑 ПОЧЕМУ ТРЕТЬЕ ПОЛЕ, А НЕ ПОВТОРНОЕ ИСПОЛЬЗОВАНИЕ `ownerNote`. Возврат и одобрение — РАЗНЫЕ
+   * события с разным смыслом: первое говорит «поправь вот это», второе — «так и надо, делай
+   * дальше так же». Владелец назвал это прямо, разбирая потерю: «*"реестр" — это старый
+   * комментарий, с которым она возвращалась в работу. А сейчас я написал похвалу*». Одно поле
+   * затёрло бы историю правок похвалой, и агент перестал бы понимать, почему карточка менялась.
+   *
+   * Совместимость назад: поля может не быть вовсе — старые документы читаются ровно как раньше.
    */
   readonly agentNote?: string;
   readonly ownerNote?: string;
+  readonly ownerApprovalNote?: string;
 }
 
 /**
@@ -333,13 +342,40 @@ export function candidateToDraft(candidate: DimCandidate): DimDraft {
  * прошла, кандидат остаётся в очереди — владелец нажмёт снова. Обратный порядок оставил бы
  * кандидата «одобренным» без измерения, то есть потерял бы его решение молча.
  */
-export async function approveCandidate(candidate: DimCandidate, draft: DimDraft): Promise<string> {
+export async function approveCandidate(
+  candidate: DimCandidate,
+  draft: DimDraft,
+  note = '',
+): Promise<string> {
   const dimId = await createDim(draft);
-  await setDoc(
-    doc(db(), 'dim_candidates', candidate.id),
-    { ...candidateRecord(candidate), status: 'approved', approvedDimId: dimId },
-  );
+  await setDoc(doc(db(), 'dim_candidates', candidate.id), approvedRecord(candidate, dimId, note));
   return dimId;
+}
+
+/**
+ * Что именно ложится в документ при одобрении. Вынесено отдельной ЧИСТОЙ функцией, потому что
+ * это и есть место дефекта `bugs/173`: комментарий владельца сюда просто не доезжал, и увидеть
+ * это можно было только живым прогоном в браузере. Чистая функция судится юнитом, который
+ * гоняет каждая роль перед сдачей.
+ *
+ * Правила записи:
+ *   · пустой комментарий — ЗАКОННЫЙ случай (одобрение без слов), поле тогда не пишется вовсе;
+ *   · `ownerNote` прошлого возврата приезжает из тела кандидата и НЕ затирается: два разных
+ *     события — две разные строки истории (слово владельца, `bugs/173`);
+ *   · документ пишется целиком, а не слиянием, — правила требуют статус в каждой записи.
+ */
+export function approvedRecord(
+  candidate: DimCandidate,
+  dimId: string,
+  note: string,
+): Record<string, unknown> {
+  const comment = note.trim();
+  return {
+    ...candidateRecord(candidate),
+    status: 'approved',
+    approvedDimId: dimId,
+    ...(comment === '' ? {} : { ownerApprovalNote: comment }),
+  };
 }
 
 /** ОТКЛОНЕНИЕ: кандидат уходит из очереди, в каталог не пишется ничего. */

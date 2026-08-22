@@ -77,3 +77,9 @@ KAIF_ADAPTATION_TASK.superseded.md
 # Служебные файлы статус-доски команды (tools/team-status.mjs): замок и атомарная запись
 NDIM_WORKTREE_DEV_TEAM_STATUS.md.lock
 NDIM_WORKTREE_DEV_TEAM_STATUS.md.tmp
+
+# Конфиги эмуляторов слотов тестового парка (`plans/69` шаги 3–4). Машинерия РАБОЧЕГО МЕСТА, как
+# `dims-build.json`: файл выводится из `firebase.json` и портов слота, поэтому в git ему делать
+# нечего — закоммиченный, он разъехался бы с исходником при первой же правке `firebase.json`.
+# Слот 0 генерации не требует вовсе: он работает штатным `firebase.json`.
+firebase.slot*.json
