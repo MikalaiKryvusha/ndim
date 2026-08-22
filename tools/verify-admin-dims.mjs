@@ -38,8 +38,19 @@ import { chromium } from 'playwright';
 import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 
 const BASE = process.env.PROBE_BASE ?? 'http://localhost:5173';
-const AUTH = 'http://127.0.0.1:9099';
-const FS = 'http://127.0.0.1:8181';
+/*
+ * Адреса эмуляторов берутся у окружения, литералы остаются умолчанием.
+ *
+ * 🔴 ПОЧЕМУ ЭТО СДЕЛАНО ЗДЕСЬ И СЕЙЧАС, а не в общем хвосте приборов (`plans/69` фаза 3, где
+ * этой правке и место). Живой прогон в браузере — ворота сдачи по канону, а прибор с литеральным
+ * 8181 умеет прогоняться ТОЛЬКО на общем стенде слота 0. Слот 0 в этот час держала другая роль
+ * по критикал-пас дефекту, и выбор был из трёх: отнять у неё стенд, сдать починку без живого
+ * прогона — или научить прибор читать переменную, как уже умеет `PROBE_BASE` строкой выше.
+ * Третье честнее двух первых и стоит двух строк. Умолчания прежние: на слоте 0 поведение
+ * прибора не изменилось ничем.
+ */
+const AUTH = `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST ?? '127.0.0.1:9099'}`;
+const FS = `http://${process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8181'}`;
 const PROJECT = 'demo-ndim-dev';
 const DEV_USER = { email: 'dev@ndim.space', password: 'ndim-dev-stand' };
 const OUT = 'test-results/admin-dims';
@@ -116,6 +127,8 @@ const CAND_ID = 'guard-probe-candidate';
 const MARK_CAND = 'Проба очереди стража';
 const MARK_CAND_EN = 'Guard queue probe';
 let approvedDimId = null;
+/** Измерение, рождённое одобрением карточки-похвалы (`bugs/173`). Тоже след прогона. */
+let praiseDimId = null;
 
 /** Кладёт кандидата REST'ом эмулятора — так же, как это делает прибор агента через Admin SDK. */
 async function putCandidate(id, fields) {
@@ -216,7 +229,9 @@ console.log('Статика (build/):');
 const authAlive = await fetch(`${AUTH}/`).then((r) => r.ok).catch(() => false);
 const siteAlive = await fetch(BASE).then((r) => r.ok).catch(() => false);
 if (!authAlive || !siteAlive) {
-  console.error('\n❌ Стенд не отвечает (Auth 9099 / сайт 5173). Подними: npm run stand');
+  // Адреса печатаются НАСТОЯЩИЕ, а не литералы: сообщение с чужим портом отправляет читателя
+  // искать не там, и на слотовом стенде это стоило бы целого захода.
+  console.error(`\n❌ Стенд не отвечает (Auth ${AUTH} — ${authAlive ? 'жив' : 'молчит'} · сайт ${BASE} — ${siteAlive ? 'жив' : 'молчит'}). Подними: npm run stand`);
   process.exit(1);
 }
 await grantAdmin();
@@ -729,6 +744,51 @@ try {
       'п.9т: 🔑 возврат НЕ завёл измерение (вердикт снят с базы)', `${beforeBack}`);
     check(await waitGone(page, `${MARK_CAND} возврат`),
       'п.9у: возвращённый ушёл из очереди — владельцу он больше не показывается');
+
+    /*
+     * ── СЛОВО ВЛАДЕЛЬЦА ПРИ ОДОБРЕНИИ (`bugs/173`) ─────────────────────────────────────────
+     *
+     * Дефект: кнопка [Одобрить] читала форму мимо поля комментария и молча его выбрасывала.
+     * Владелец написал похвалу, нажал одобрить — и текст не записался никуда; нашёл он это сам,
+     * проверяя, дошли ли его слова до агента.
+     *
+     * 🔑 ПОЧЕМУ КАРТОЧКА ЗАВОДИТСЯ С УЖЕ ЛЕЖАЩИМ `ownerNote`. Главный риск этой правки —
+     * затереть похвалой историю прошлого возврата: события разные, и владелец сказал это прямо
+     * («*"реестр" — это старый комментарий… а сейчас я написал похвалу*»). Проверить затирание
+     * можно ТОЛЬКО на карточке, где лежит и то и другое.
+     */
+    await putCandidate(`${CAND_ID}-praise`, {
+      title: { mapValue: { fields: { ru: { stringValue: `${MARK_CAND} похвала` }, en: { stringValue: 'Queue probe praise' } } } },
+      description: { mapValue: { fields: { ru: { stringValue: 'Проба похвалы.' }, en: { stringValue: 'Praise probe.' } } } },
+      status: { stringValue: 'pending' },
+      agentNote: { stringValue: 'Мой прежний комментарий владельцу.' },
+      ownerNote: { stringValue: 'Реестр.' },
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('.cand', { timeout: 15000 });
+
+    const praiseCard = page.locator('.cand', { hasText: `${MARK_CAND} похвала` }).first();
+    const okBtn = praiseCard.locator('.acts button.ok');
+    const PRAISE = 'Принятие и реакция сообщества — я сам такое писал, и такое одобряю.';
+    await praiseCard.locator('.cand-say textarea').fill(PRAISE);
+    await page.waitForTimeout(200);
+    check(!(await okBtn.isDisabled()),
+      'п.9ф: 🔑 кнопка одобрения при НЕПУСТОМ комментарии активна — молчание не обязательно');
+    await okBtn.click();
+    await page.waitForSelector('.result', { timeout: 15000 });
+
+    const praised = await getCandidate(`${CAND_ID}-praise`);
+    praiseDimId = praised?.fields?.approvedDimId?.stringValue ?? null;
+    check(praised?.fields?.status?.stringValue === 'approved',
+      'п.9х: кандидат помечен «approved»', String(praised?.fields?.status?.stringValue));
+    check(praised?.fields?.ownerApprovalNote?.stringValue === PRAISE,
+      'п.9ц: 🔴 СЛОВО ВЛАДЕЛЬЦА ПРИ ОДОБРЕНИИ СОХРАНЕНО (bugs/173) — раньше оно терялось молча',
+      String(praised?.fields?.ownerApprovalNote?.stringValue).slice(0, 50));
+    check(praised?.fields?.ownerNote?.stringValue === 'Реестр.',
+      'п.9ч: 🔴 след прошлого возврата НЕ ЗАТЁРТ похвалой — события разные, история цела',
+      String(praised?.fields?.ownerNote?.stringValue).slice(0, 50));
+    check(praised?.fields?.agentNote?.stringValue === 'Мой прежний комментарий владельцу.',
+      'п.9ш: комментарий агента тоже цел — три поля, три голоса');
   }
 
   console.log('\nКонсоль (п.7):');
@@ -758,6 +818,11 @@ try {
   await deleteCandidate(CAND_ID);
   await deleteCandidate(`${CAND_ID}-rej`);
   await deleteCandidate(`${CAND_ID}-back`);
+  // Проба слова при одобрении (`bugs/173`): рождённое ею измерение и сама карточка.
+  if (praiseDimId !== null) await deleteDim(praiseDimId);
+  const praiseBorn = await findDimByTitle(`${MARK_CAND} похвала`);
+  if (praiseBorn !== null) await deleteDim(praiseBorn.id);
+  await deleteCandidate(`${CAND_ID}-praise`);
 
   /*
    * 🧹 СЛЕД В ИНДЕКСЕ — тоже след (правило класса `bugs/103`: база стенда общая, и страж,
