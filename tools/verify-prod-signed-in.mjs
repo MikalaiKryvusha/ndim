@@ -133,7 +133,16 @@ for (const cfg of CONFIGS) {
 
   // ── 1 · старт приложения ────────────────────────────────────────────────────────────────
   await page.goto(`${BASE}/profile`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(6000);
+  /*
+   * Ждём СОСТОЯНИЯ, потом даём консоли отстояться. Голый секундомер здесь делал бы то же, что в
+   * шагах 2 и 3 (см. врезку ниже), а голое ожидание состояния возвращалось бы на быстром бою
+   * СЛИШКОМ рано и сужало окно наблюдения за консолью — а её тут и проверяют. Поэтому оба:
+   * условие снимает лотерею, короткая выдержка сохраняет окно.
+   */
+  await page
+    .waitForFunction(() => (document.body.innerText || '').length > 100, null, { timeout: 25000 })
+    .catch(() => { /* не наполнилась — ниже это станет честным провалом с числом */ });
+  await page.waitForTimeout(1500);
   const bootText = await page.evaluate(() => document.body.innerText || '');
   check(bootText.length > 100, `[${tag}] приложение стартовало (страница не пуста)`, `символов ${bootText.length}`);
   check(
@@ -142,28 +151,66 @@ for (const cfg of CONFIGS) {
     errors.filter((e) => /TypeError/i.test(e)).slice(0, 2).join(' | '),
   );
 
+  /*
+   * 🔴 ЖДЁМ СОСТОЯНИЯ, А НЕ СЕКУНДОМЕРА — и в шаге 2, и в шаге 3.
+   *
+   * Прежняя редакция ждала фиксированные 7000 и 1500 мс. Бой на 390 в них иногда не
+   * укладывается: экран ещё показывает «Загрузка», прибор снимает вердикт и краснеет на
+   * ИСПРАВНОМ продукте — примерно раз из четырёх прогонов. Разбор — `bugs/NEW` («смоук под
+   * сессией ждёт секундомером»).
+   *
+   * 🔑 Цена ложного красного здесь выше обычной: прибор стоит ПОСЛЕДНИМИ воротами двери выката,
+   * и лотерея приучает списывать её красное на «флак» — а завтра так же спишут настоящий 403,
+   * ради адреса которого чинился `bugs/169`.
+   *
+   * Класс был опознан в этом же файле и вылечен ТОЛЬКО в шаге 4 (пять экранов): правку довели
+   * до экземпляра, а не до класса. Здесь она доведена.
+   *
+   * ⚠️ Ожидание НЕ делает проверку тавтологией: истечение потолка гасится `.catch()`, и вердикт
+   * ниже снимается с настоящего состояния страницы — на сломанном продукте он краснеет, просто
+   * теперь по делу, а не по секундомеру.
+   */
+  const PROFILE_MARK = /Личная информация|Мой NDim ID|Personal information/i;
+
   // ── 2 · вход НАСТОЯЩИМ путём человека ───────────────────────────────────────────────────
   const guestBtn = page.getByRole('button', { name: /Осмотреться гостем|Look around as a guest/i });
   const needsLogin = await guestBtn.count() > 0;
   if (needsLogin) {
     await guestBtn.first().click();
-    await page.waitForTimeout(7000);
+    await page
+      .waitForFunction(
+        (src) => new RegExp(src, 'i').test(document.body.innerText || ''),
+        PROFILE_MARK.source,
+        { timeout: 25000 },
+      )
+      .catch(() => { /* не дождались — вердикт ниже снимется с того, что есть, и покраснеет */ });
   }
   const afterLogin = await page.evaluate(() => document.body.innerText || '');
+  // Один образец и на ожидание, и на вердикт: две копии — пара «истина ↔ зеркало», которая
+  // однажды разъедется, и тогда прибор ЖДЁТ одного, а СУДИТ другое.
   check(
-    /Личная информация|Мой NDim ID|Personal information/i.test(afterLogin),
+    PROFILE_MARK.test(afterLogin),
     `[${tag}] 🔑 вошли: «Профиль» показывает содержимое человека`,
     afterLogin.slice(0, 160),
   );
   await page.screenshot({ path: `${OUT}/${tag}-profile.png` });
 
   // ── 3 · переход, который чинился трижды и в бою не проверялся (`bugs/117`) ──────────────
+  const SEEME_MARK = /Так Вас видит|audience|аудитория/i;
   const seeMe = page.getByRole('button', { name: /Как меня видят|How others see me/i });
+  // Кнопки может ещё не быть в разметке — ждём ЕЁ, а не секунд (`bugs/174`).
+  await seeMe.first().waitFor({ state: 'visible', timeout: 20000 }).catch(() => { /* ниже честный провал */ });
   if (await seeMe.count() > 0) {
     await seeMe.first().click();
-    await page.waitForTimeout(1500);
+    await page
+      .waitForFunction(
+        (src) => new RegExp(src, 'i').test(document.body.innerText || ''),
+        SEEME_MARK.source,
+        { timeout: 20000 },
+      )
+      .catch(() => { /* не дождались — вердикт ниже покраснеет по делу */ });
     check(
-      /Так Вас видит|audience|аудитория/i.test(await page.evaluate(() => document.body.innerText || '')),
+      SEEME_MARK.test(await page.evaluate(() => document.body.innerText || '')),
       `[${tag}] «Как меня видят» открывается`,
     );
     await page.screenshot({ path: `${OUT}/${tag}-seeme.png` });
@@ -183,6 +230,11 @@ for (const cfg of CONFIGS) {
       requestAnimationFrame(step);
     });
     await page.goBack();
+    /*
+     * ⚠️ Эта выдержка ОСТАЁТСЯ секундомером намеренно, и это не недосмотр (`bugs/174`): она не
+     * ждёт готовности, а даёт трассе досчитать свои 40 кадров (~0,7 с при 60 к/с). Ожидание
+     * состояния здесь оборвало бы ИЗМЕРЕНИЕ на середине.
+     */
     await page.waitForTimeout(1200);
     const trace = (await page.evaluate(() => window.__prodBack)).filter((v) => v !== null);
     const rest = trace.length === 0 ? null : trace[trace.length - 1];
@@ -209,7 +261,18 @@ for (const cfg of CONFIGS) {
     }
     await page.screenshot({ path: `${OUT}/${tag}-back.png` });
   } else {
-    check(false, `[${tag}] кнопка «Как меня видят» найдена`, 'её нет — экран не тот, что ожидался');
+    /*
+     * 🔑 ЗНАМЕНАТЕЛЬ ПРОГОНА НЕ УЕЗЖАЕТ МОЛЧА (`bugs/174`, третья часть).
+     *
+     * Прежняя редакция ставила здесь ОДНУ проверку вместо трёх, которые ставит удачная ветка, —
+     * и итог печатал «Проверок пройдено: 20» вместо 22 при двух провалах. Число проверок,
+     * меняющееся от исхода, отнимает у читателя единственную дешёвую сверку: «24 ли их сегодня».
+     * Поэтому непройденный шаг называет ВСЕ свои проверки провалившимися, а не исчезает.
+     */
+    const why = 'кнопки «Как меня видят» не нашлось за 20 с — шаг не исполнялся';
+    check(false, `[${tag}] «Как меня видят» открывается`, why);
+    check(false, `[${tag}] 🔑 возврат закрыл предпросмотр и отрисовал «Профиль» (есть что мерить)`, why);
+    check(false, `[${tag}] 🔑 контент «Профиля» при возврате НЕ прыгает (bugs/117)`, why);
   }
 
   // ── 4 · все экраны приложения отвечают ──────────────────────────────────────────────────
