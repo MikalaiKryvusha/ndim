@@ -15,6 +15,8 @@
 
 *Ряд 50 слов накрывал три предложения подряд. Заимствование в этой записи лежит в ТРЁХ местах, и каждое вскрывалось только после снятия предыдущего: 50 → 31 → 17 → 6, три фрагмента. Сохранены San Tiburon, статус самой опасной тюрьмы строгого режима, суперзлодеи и усиленные люди, подавители способностей, Payback (Dan Payne), Julius «The Lobe» Loeb (Bruce Willis), его интеллект и телекинез, спрятанное состояние и намерение Девлина его добыть.*
 
+*Доля производства: **7% → 7%** = ровно (предложений о создании 1 → 1, всего 14 → 14).*
+
 **Было:**
 
 > A 2022 American superhero film directed by Sean O'Reilly, based on the graphic novel by Grant Chastain. The story is set in San Tiburon, the world's most dangerous maximum-security prison designed to incarcerate supervillains and enhanced individuals. The facility is equipped with power inhibitors to neutralize the abilities of its inmates, ensuring control over the diverse and often dangerous population. The narrative begins with the arrival of Payback (Dan Payne), a zealous vigilante whose mission to hunt down enhanced humans leads to his incarceration at San Tiburon. His entry into the prison disrupts the existing balance of power among inmates and staff. Warden Devlin (Michael Rooker), known as "The Overseer," is the corrupt and ambitious head of San Tiburon. He is particularly interested in Julius "The Lobe" Loeb (Bruce Willis), a notorious inmate with immense intellect and telekinetic abilities. The Lobe is rumored to have a hidden fortune, and Devlin is determined to extract its location to fund his luxurious retirement. Brennan Mejia plays Diego Diaz, an inmate who has just arrived and whose only gift is heightened empathy. Every ally he picks in San Tiburon either keeps him alive or turns him into a pawn in the deadly games the warden and the prisoners play against one another. Loyalties shift, betrayals surface, and the rivalry between The Lobe and The Overseer boils over into a violent uprising inside the walls. In that chaos his empathy turns into the one useful skill: he mediates between the men around him and looks for a way to stay alive. Everything converges on a single confrontation that drags the corruption running the place into the open and forces each character to face his own moral compass. The ending settles nothing about San Tiburon or the people locked in it, and leaves the meaning of justice and redemption an open question.
@@ -26,6 +28,8 @@
 ## `edge-of-tomorrow-gopt6dsd`
 
 *Ряд 26 слов накрывал хвост последнего предложения; его начало давало ещё 10 слов подряд — снято вторым фрагментом. Сохранены Major William Cage, Tom Cruise, работа с прессой, отсутствие боевого опыта, десант против пришельцев, петля времени и поиск способа победить.*
+
+*Доля производства: **0% → 0%** = ровно (предложений о создании 0 → 0, всего 4 → 4).*
 
 **Было:**
 
@@ -39,6 +43,8 @@
 
 *Ряд 26 слов накрывал ДВА предложения подряд; в первом предложении оставался ряд в 10 слов — снят вторым фрагментом. Сохранены новые знакомства, дружба, испытания, обретённая уверенность, любовь, название книги «Why Stay at Home?» и её автор — велосипедистка Анна Смолина.*
 
+*Доля производства: **14% → 17%** ⚠️ знаменатель сжался (предложений о создании 1 → 1, всего 7 → 6).*
+
 **Было:**
 
 > A 2023 Russian comedy-drama road movie directed by Anton Maslov, based on the book "Why Stay at Home?" by cyclist Anna Smolina. Olga Lerman plays Anna Smolina, an ordinary woman who walks out of her daily routine and rides across Russia on a bicycle, her beloved dachshund Kapa along for the trip. The road leads to the town of Magadan and to her mother (Elena Yakovleva), after 13 years of estrangement that Anna wants to end. Along the way, she encounters new people, makes friends, and faces various challenges. By the end of her journey, Anna gains self-confidence and discovers love. The film also stars Viktor Khorinyak (Valera), Dmitry Chebotaryov (Roma), and Askar Ilyasov (Alisher). Released on March 8, 2023, the film topped the Russian box office in its first week, grossing 135.6 million rubles over the opening weekend.
@@ -50,6 +56,8 @@
 ## `the-rum-diary-9ekgkaaw`
 
 *Ряд 20 слов шёл через перечень актёров в следующее предложение; в описании героя оставался ряд в 11 слов — снят вторым фрагментом. Перечень актёров РАЗБИТ надвое, а не переписан: имена — факты, и порядок их сохранён. Сохранены все пять имён, Пол Кемп (Джонни Депп), непроданная книга, газета в Сан-Хуане, Пуэрто-Рико, конец 1950-х, март 2009 и 28 октября 2011.*
+
+*Доля производства: **20% → 20%** = ровно (предложений о создании 1 → 1, всего 5 → 5).*
 
 **Было:**
 
