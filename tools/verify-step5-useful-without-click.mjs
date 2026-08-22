@@ -37,23 +37,32 @@
  * оценённости). Случайность здесь запрещена: приёмка обязана повторяться.
  *
  * Требует поднятый preview по СОБРАННОМУ артефакту. Порт — адрес роли, а не «первый свободный»:
- *   npx vite preview --port 4203 --strictPort
+ *   npx vite preview --port <порт своего слота> --strictPort
  * ⚠️ `--strictPort` обязателен: голый `vite preview` при занятом порте молча переезжает на
  * соседний, и кадры снимаются с ЧУЖОГО сервера (`EXP-0091` — осиротевший preview отдаёт СТАРУЮ
  * сборку, и это не видно ни по одному признаку, кроме порта).
  *
- * Запуск: node tools/verify-step5-useful-without-click.mjs [--base http://localhost:4203]
+ * Запуск: node tools/verify-step5-useful-without-click.mjs [--base http://localhost:<порт>]
+ *         адрес берётся из `--base`, иначе из окружения (`PROBE_PREVIEW_BASE`), иначе слот 0
  * Выход:  test-results/step5/ (кадры + report.txt) · код 0 — чисто, 1 — есть провалы.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { readFileSync, existsSync } from 'node:fs';
 import { chromium } from '@playwright/test';
+import { standAddresses, addressesLine } from './lib/stand-addresses.mjs';
 
 const arg = (n, d = null) => {
   const i = process.argv.indexOf(n);
   return i > 0 && process.argv[i + 1] ? process.argv[i + 1] : d;
 };
-const BASE = arg('--base', 'http://localhost:4203');
+/*
+ * Адрес preview: флаг сильнее окружения, окружение сильнее умолчания слота 0.
+ * Литерал `4203` отсюда убран — он привязывал прибор к МОЕМУ слоту так же, как раньше `4173`
+ * привязывал соседей к нулевому. Порт своего слота приходит из окружения (`PROBE_PREVIEW_BASE`),
+ * таблица слотов живёт у хозяина парка и здесь не дублируется.
+ */
+const АДРЕСА = standAddresses();
+const BASE = arg('--base', АДРЕСА.preview);
 const OUT = 'test-results/step5';
 const SAMPLE = 'test-results/step5-sample.json';
 
@@ -94,7 +103,8 @@ await mkdir(OUT, { recursive: true });
 
 try {
   say('═══ ПРИЁМКА ШАГА 5: «полезна без клика» ═══');
-  say(`стенд: ${BASE} · страниц в выборке: ${sample.length}`);
+  say(addressesLine(АДРЕСА));
+  say(`адрес прогона: ${BASE} · страниц в выборке: ${sample.length}`);
   say('');
 
   /*
@@ -108,7 +118,9 @@ try {
     const ok = r !== null && r.ok();
     say(`контроль прибора: страница ${sample[0].slug} отвечает — ${ok ? '✅' : '❌'}`);
     if (!ok) {
-      say('❌ preview не отвечает. Поднят ли `npx vite preview --port 4203 --strictPort`?');
+      say(`❌ preview не отвечает по адресу ${BASE}.`);
+      say('   Поднят ли он? `--strictPort` обязателен: без него занятый порт не роняет запуск,');
+      say('   vite молча переезжает на соседний, и кадры снимаются с ЧУЖОГО сервера.');
       await p.close();
       process.exit(1);
     }
