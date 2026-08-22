@@ -16,6 +16,7 @@
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { contourFromArgv } from './lib/contours.mjs';
+import { watchHttpFailures } from './lib/http-failures.mjs';
 
 const CONTOUR = contourFromArgv();
 const BASE = CONTOUR.site;
@@ -57,6 +58,14 @@ for (const theme of THEMES) {
     // Тему продукта задаёт ключ ndim-theme ДО загрузки — системный colorScheme её не меняет.
     await ctx.addInitScript((t) => localStorage.setItem('ndim-theme', t), theme);
     const page = await ctx.newPage();
+    /*
+     * 🔑 УШИ ПРИБОРА (`bugs/169`, второй дефект) — те же, что у смоука под сессией. Гостевой
+     * смоук страдает тем же классом: «консоль чиста» краснеет текстом «status 403», в котором
+     * браузер адреса не даёт. Слушатель называет адрес, код и тип ресурса; он НИЧЕГО НЕ СУДИТ —
+     * число проверок и код выхода прибора прежние. Подписан НА СТРАНИЦУ, а не на экран: ниже
+     * `removeAllListeners('console')` снимает только консольных слушателей.
+     */
+    const net = watchHttpFailures(page, { label: `${theme}-${size.tag} ` });
 
     for (const screen of SCREENS) {
       const noise = [];
@@ -100,10 +109,17 @@ for (const theme of THEMES) {
         `${tag}: тема ${theme} применена непрозрачным фоном (${bg})`,
       );
 
-      ok(noise.length === 0, `${tag}: консоль чиста${noise.length ? ' — ' + noise.join(' | ') : ''}`);
+      // Красная строка обязана называть АДРЕС, а не голый код (`bugs/169`, второй дефект).
+      ok(
+        noise.length === 0,
+        `${tag}: консоль чиста${noise.length ? ' — ' + noise.join(' | ') : ''}` +
+          (noise.length && net.count() ? ' · ' + net.oneLine() : ''),
+      );
 
       await page.screenshot({ path: `${OUT}/${tag}.png`, fullPage: false });
     }
+    // Печатается и на зелёном проходе: молчание прибора неотличимо от отвалившихся ушей.
+    net.report();
     await ctx.close();
   }
 }
