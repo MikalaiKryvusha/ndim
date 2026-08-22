@@ -55,6 +55,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { proseProblems } from './lib/prose-gates.mjs';
+
 const JOURNAL_DIR = 'homeworks';
 const SNAPSHOT = 'src/lib/content/dims-build.json';
 
@@ -110,6 +112,26 @@ export function checkEdit(edit) {
       : edit.after;
     const left = MARKERS_BY_LANG[lang].filter((re) => re.test(где));
     if (left.length) problems.push(`маркер остался в самой правке: ${left.length}`);
+
+    /*
+     * 🆕 ВОРОТА ПРОЗЫ — АНГЛИЙСКАЯ СТОРОНА (П5 `plans/70`, `tools/lib/prose-gates.mjs`).
+     *
+     * Два класс-запрета владельца, у которых до 2026-08-22 не было ни строки кода:
+     * расщеплённое сказуемое («Production was carried out by …») и конструкция отнесения
+     * («By genre the film belongs to …»). Разделяющие признаки назначены ЗАМЕРОМ по корпусам
+     * из git — 0 ложных срабатываний на 389 живых текстах владельца против 11 находок на
+     * карточках, которые он вернул. Разбор и таблица — в шапке модуля.
+     *
+     * 🔑 СУДИТСЯ ФРАГМЕНТ ПРАВКИ, А НЕ ВЕСЬ ТЕКСТ — по тому же доводу, что у маркеров выше:
+     * оборот в соседнем предложении правка не трогала, и заворачивать честную работу за чужой
+     * грех нельзя. Цена этого решения названа прямо: условная половина ворот отнесения
+     * (голое `belongs to` при тавтологии) во фрагменте не видит текста РАНЬШЕ себя и потому
+     * не срабатывает. Безусловные обороты ловятся и здесь. Недобор проверки дешевле ложного
+     * отказа: ложный отказ запрещает писать так, как пишет владелец.
+     *
+     * ⛔ Русскую правку английский список не судит — модуль сам возвращает пустое на `lang ≠ en`.
+     */
+    problems.push(...proseProblems(где, lang));
   }
   return problems;
 }
@@ -162,6 +184,41 @@ if (runAsScript && process.argv.includes('--selftest')) {
     [{ slug: 'a', before: 'It premiered on May 1, 2020.', after: 'It premiered on May 1, 2020.' }, 2],
     [{ slug: '', before: 'x 1', after: 'y 1' }, 1],
     [{ slug: 'a', before: 'Beckett (voiced by Mo Gilligan) sleeps.', after: 'Mo Gilligan voices Beckett, who sleeps.' }, 0],
+
+    /*
+     * ── ВОРОТА ПРОЗЫ, АНГЛИЙСКИЕ ОБРАЗЦЫ (П5 `plans/70`) ──────────────────────────────────
+     *
+     * Образцы английские потому, что и проверка английская: канон «самотест русской проверки
+     * идёт на русском образце» (`AGENT_GUIDE.md`) читается в обе стороны. Строки взяты из
+     * настоящих карточек — ⛔ из состояния `dadd669`, ✅ из тех же карточек после правки.
+     * Полный набор случаев и границ живёт в `tools/prose-gates.test.mjs`; здесь стоит по
+     * одному на каждые ворота — ровно чтобы дверь писаря не оказалась незапертой молча.
+     */
+    // Расщеплённое сказуемое в САМОЙ правке — отказ.
+    [{ slug: 'a', lang: 'en', before: 'Amblin produced the film in 2024.',
+      find: 'Amblin produced the film in 2024.',
+      replace: 'Production was carried out by Amblin Entertainment in 2024.',
+      after: 'Production was carried out by Amblin Entertainment in 2024.' }, 1],
+    // Та же мысль личным глаголом — чисто.
+    [{ slug: 'a', lang: 'en', before: 'Production was carried out by Amblin Entertainment in 2024.',
+      find: 'Production was carried out by Amblin Entertainment in 2024.',
+      replace: 'Amblin Entertainment produced the film in 2024.',
+      after: 'Amblin Entertainment produced the film in 2024.' }, 0],
+    // Конструкция отнесения в самой правке — отказ.
+    [{ slug: 'a', lang: 'en', before: 'A 2025 supernatural horror by Curry Barker.',
+      find: 'A 2025 supernatural horror by Curry Barker.',
+      replace: 'By genre the film belongs to supernatural horror; it dates from 2025.',
+      after: 'By genre the film belongs to supernatural horror; it dates from 2025.' }, 1],
+    // Безличный оборот БЕЗ названного деятеля — норма, так пишет сам владелец.
+    [{ slug: 'a', lang: 'en', before: 'Markets existed in 1000 places.',
+      find: 'Markets existed in 1000 places.',
+      replace: 'In antiquity trade was carried on at markets, of which 1000 are known.',
+      after: 'In antiquity trade was carried on at markets, of which 1000 are known.' }, 0],
+    // Русская правка английским списком НЕ судится — иначе ворота красили бы чужой язык.
+    [{ slug: 'a', lang: 'ru', before: 'Amblin произвела картину в 2024 году.',
+      find: 'Amblin произвела картину в 2024 году.',
+      replace: 'Производство осуществлено компанией Amblin в 2024 году.',
+      after: 'Производство осуществлено компанией Amblin в 2024 году.' }, 0],
   ];
   let bad = 0;
   cases.forEach(([edit, want], i) => {
@@ -170,7 +227,9 @@ if (runAsScript && process.argv.includes('--selftest')) {
     if (!ok) bad += 1;
     console.log(`  ${ok ? '✅' : '❌'} случай ${i + 1}: проблем ${got}, ожидалось ${want}`);
   });
-  console.log(bad ? `\n❌ самотест провален: ${bad}` : '\n✅ самотест пройден: 5 случаев');
+  // Число случаев СЧИТАЕТСЯ, а не пишется рядом руками: рукописное число — зеркало, которое
+  // разъезжается с истиной при первом же добавленном случае (правило «истина ↔ зеркало»).
+  console.log(bad ? `\n❌ самотест провален: ${bad}` : `\n✅ самотест пройден: ${cases.length} случаев`);
   process.exit(bad ? 1 : 0);
 }
 
