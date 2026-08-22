@@ -60,6 +60,11 @@ const GUARDS = [
     argv: ['tools/verify-cyrillic-word-boundary.mjs'],
   },
   {
+    name: 'документ объявлен неначатым, а работа есть',
+    why: 'шапка плана или бага врёт о состоянии — обход корпуса, который юниты прибора не заменяют (EXP-0194)',
+    argv: ['tools/verify-status-outlived.mjs'],
+  },
+  {
     name: 'бренд-имя «сервер синхронизации»',
     why: 'строгое имя владельца; иное название компонента — запрет, баг, срочное исправление',
     argv: ['tools/verify-sync-server-name.mjs'],

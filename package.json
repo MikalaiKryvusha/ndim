@@ -28,6 +28,7 @@
     "sync:image": "node tools/build-sync-image.mjs",
     "typecheck": "svelte-kit sync && tsc --noEmit",
     "questions": "node tools/questions-guard.mjs",
+    "verify-status-outlived": "node tools/verify-status-outlived.mjs",
     "review": "node tools/review.mjs",
     "voice": "node tools/lint-owner-voice.mjs",
     "wiki:ru": "node tools/measure-wikipedia-overlap.mjs --lang ru",
