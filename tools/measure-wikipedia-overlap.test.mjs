@@ -30,7 +30,7 @@ import { mkdtempSync, writeFileSync, existsSync, rmSync, readdirSync } from 'nod
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { sweepAbandonedTemps, pidAlive } from './measure-wikipedia-overlap.mjs';
+import { sweepAbandonedTemps, pidAlive, isInsideQuotes, quotedSpans } from './measure-wikipedia-overlap.mjs';
 
 /** Свежий каталог на случай — уборка удаляет файлы, и делить каталог между случаями нельзя. */
 function каталог() {
@@ -117,4 +117,80 @@ test('контроль прибора: боевой pidAlive отвечает, �
   } else {
     assert.equal(ответ, false, 'незанятый pid опознан мёртвым');
   }
+});
+
+/*
+ * ═══ РЯД ВНУТРИ КАВЫЧЕК — ПАРНОСТЬ ПРЯМОЙ КАВЫЧКИ ═══
+ *
+ * 🔴 ПОВОД (замер, а не опасение). Признак «ряд лежит внутри кавычек» извиняет запись: цитату
+ * рецензента и название книги переписывать нельзя. Признак был жадной регуляркой с порогом
+ * длины ВНУТРИ — и на прямой кавычке, где открывающая и закрывающая один знак, порог ломал
+ * разбивку на пары: короткое название («"Alpha Dog"») регулярка пропускала и склеивала пару
+ * из его ЗАКРЫВАЮЩЕЙ кавычки с ОТКРЫВАЮЩЕЙ следующего названия. Проза между ними получала
+ * индульгенцию. По заданию plans/70 (533 записи): извинялось 23, из них 19 ложно.
+ *
+ * 🔴🔴 ГЛАВНЫЙ СЛУЧАЙ ЗДЕСЬ — НЕ «ЦИТАТА ОПОЗНАНА», А «ПРОЗА МЕЖДУ ДВУМЯ НАЗВАНИЯМИ НЕ
+ * ОПОЗНАНА ЦИТАТОЙ». Проверка «цитата опознана» одна была бы ЗЕЛЁНОЙ и на старой жадной
+ * регулярке — она этих двух поведений не различает вовсе. Различает их только пара, поэтому
+ * оба случая стоят рядом и порознь не имеют смысла.
+ *
+ * Тексты здесь — настоящие описания каталога, сокращённые до сути: выдуманный текст доказывал
+ * бы выдуманный класс.
+ */
+
+test('проза МЕЖДУ двумя названиями в кавычках цитатой НЕ считается', () => {
+  const описание =
+    '"Alpha Dog" is a 2006 American crime drama film written and directed by Nick Cassavetes. ' +
+    'The film is based on the true story of the kidnapping and murder of Nicholas Markowitz in 2000. ' +
+    'It centers on Johnny Truelove, a young drug dealer in the "San Gabriel Valley".';
+  const ряд = 'is based on the true story of the kidnapping and murder of nicholas markowitz in 2000';
+
+  assert.equal(
+    isInsideQuotes(ряд, описание),
+    false,
+    'заимствование между двумя названиями в кавычках извинено цитатой — ложная пара кавычек',
+  );
+});
+
+test('настоящая цитата в прямых кавычках опознаётся', () => {
+  const описание =
+    'Critic Paul Bramhall called the film ' +
+    '"A charmless affair devoid of any purpose or entertainment value", and audiences agreed.';
+  const ряд = 'a charmless affair devoid of any purpose or entertainment value';
+
+  assert.equal(isInsideQuotes(ряд, описание), true, 'цитата рецензента не опознана');
+});
+
+test('парные « » разбираются так же, как прямые кавычки', () => {
+  const описание = 'Рецензент назвал ленту «обаятельной и совершенно бессмысленной затеей», и это осталось.';
+
+  assert.equal(isInsideQuotes('обаятельной и совершенно бессмысленной затеей', описание), true);
+  assert.equal(isInsideQuotes('Рецензент назвал ленту', описание), false);
+});
+
+test('непарная кавычка не извиняет весь остаток описания', () => {
+  /*
+   * Кавычка здесь ОДНА, и это нарочно: с парой кавычек случай был бы зелёным по НЕВЕРНОЙ
+   * причине — короткое название отсеялось бы порогом длины, а отсечение хвоста не
+   * проверялось бы вовсе. Поймано мутацией М2, которая на прежней фикстуре не краснела.
+   */
+  const описание =
+    'The film "Wicked was released in 2024 and became the highest grossing Broadway adaptation ever made.';
+  const хвост = 'was released in 2024 and became the highest grossing broadway adaptation ever made';
+
+  assert.equal(
+    isInsideQuotes(хвост, описание),
+    false,
+    'хвост после непарной кавычки объявлен цитатой — одна забытая кавычка извиняла бы всё',
+  );
+});
+
+test('кусок короче порога цитатой не считается — это название, а не цитата', () => {
+  const описание = 'The album "Thriller" changed the industry, and "Bad" followed it four years later.';
+
+  assert.deepEqual(
+    quotedSpans(описание).filter((s) => s.length < 20),
+    [],
+    'короткий кусок в кавычках попал в цитаты — названия перестали отсеиваться',
+  );
 });

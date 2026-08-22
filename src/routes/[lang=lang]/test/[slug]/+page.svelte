@@ -58,6 +58,9 @@
       enter: 'Войти',
       theme: 'Тема',
       saveNow: 'Сохранить сейчас',
+      // Слово владельца (bugs/172): «кнопка [Сохранить] может стать, например, зелёной,
+      // с текстом [Сохранено]». Та же формулировка, что на экране «Измерения».
+      savedShort: 'Сохранено',
       savingIn: 'Сохраню через',
       sec: 'с',
       ratedBy: 'уже оценили:',
@@ -94,6 +97,7 @@
       enter: 'Log in',
       theme: 'Theme',
       saveNow: 'Save now',
+      savedShort: 'Saved',
       savingIn: 'Saving in',
       sec: 's',
       ratedBy: 'already rated by:',
@@ -153,8 +157,29 @@
     });
   });
 
+  /**
+   * СОХРАНЁННАЯ КАРТОЧКА ДЕРЖИТ СВОЙ ВИД ДО СМЕНЫ ОБЪЕКТА (близнец `bugs/172`).
+   *
+   * Тот же дефект, что владелец нашёл на экране «Измерения» и назвал «критикал пас, core
+   * функционал»: вид карточки собран из `pending` целиком — из него `starValue` берёт горящую
+   * звезду, на нём же висят ряд смайликов и строка сохранения. `commit()` гасил `pending`
+   * первым делом, ДО ответа базы, и на всё время записи карточка теряла звёзды, выделение,
+   * смайлики и кнопку разом.
+   *
+   * ⚠️ ОТЛИЧИЕ ТЕРРИТОРИИ ОТ «ИЗМЕРЕНИЙ», и оно единственное: там карточка УЛЕТАЛА, и «сохранено»
+   * гасилось по `outroend` её узла. Здесь карточка не улетает — `current` уходит к следующему
+   * объекту сразу, как только оценка попадает в `ratings` (строка 143), и `{#key current.id}`
+   * подменяет узел. Гасить по событию нечего и не нужно: у нового объекта другой `id`, поэтому
+   * `held` для него пуст сам собой. Явно снимаем только там, где объект ВОЗВРАЩАЕТСЯ в очередь
+   * (`unrate`) — иначе на нём висела бы зелёная кнопка от прошлой жизни.
+   */
+  let saved = $state<{ dimId: string; value: number } | null>(null);
+
   function starValue(dimId: string): number | null {
     if (pending?.dimId === dimId) return pending.value;
+    // Сохранённая карточка светит своими звёздами, пока объект не сменился: между `pending = null`
+    // и ответом Firestore оценки нет НИ ТАМ, НИ ТАМ, — ровно в этом окне звёзды и гасли.
+    if (saved?.dimId === dimId) return saved.value;
     return ratings.get(dimId) ?? null;
   }
 
@@ -194,6 +219,11 @@
   async function commit(): Promise<void> {
     if (pending === null) return;
     const { dimId, value } = pending;
+    /*
+     * Вид передаётся ИЗ РУК В РУКИ, а не гаснет: `saved` встаёт ДО того, как гаснет `pending`,
+     * поэтому нет ни одного кадра, в котором карточка не знала бы своей оценки (`bugs/172`).
+     */
+    saved = { dimId, value };
     stopCountdown();
     pending = null;
     saveFailed = false;
@@ -201,6 +231,9 @@
       myUid = await saveTestRating(data.lang, dimId, value);
     } catch {
       saveFailed = true;
+      // Не сохранилось — «сохранено» снимаем: врать о карточке нельзя, и звёзды честно
+      // возвращаются к тому, что лежит в `ratings`.
+      saved = null;
       return;
     }
     ratings = new Map(ratings).set(dimId, value);
@@ -220,6 +253,9 @@
     const next = new Map(ratings);
     next.delete(dimId);
     ratings = next;
+    // Объект возвращается в очередь — снимаем с него «сохранено», иначе он всплыл бы с зелёной
+    // кнопкой от прошлой жизни (`bugs/172`, ветка отмены).
+    if (saved?.dimId === dimId) saved = null;
   }
 
   function skip(): void {
@@ -412,6 +448,23 @@
   <div class="two">
     <section class="qcard" aria-label={c.h1}>
       {#if current !== null}
+        <!--
+          Состояние жеста этой карточки одним объектом (близнец bugs/172): либо идёт отсчёт
+          (`pending`), либо оценка уже сохранена и объект вот-вот сменится (`saved`). Вид у двух
+          состояний ОДИН И ТОТ ЖЕ — в этом вся суть починки; различается только содержимое
+          строки сохранения.
+          ⚠️ Объявление стоит ЗДЕСЬ, непосредственным ребёнком `{#if}`, а не рядом с местом
+          применения: `{@const}` в Svelte законен только непосредственным ребёнком блока, а
+          внутри `{#key}` → `<div>` он уже вложен в элемент. На экране «Измерения» тот же
+          `held` живёт внутри `{#each}` и потому стоит рядом с разметкой — разница территории,
+          не замысла.
+        -->
+        {@const held =
+          pending?.dimId === current.id
+            ? { value: pending.value, left: pending.left, done: false }
+            : saved?.dimId === current.id
+              ? { value: saved.value, left: 0, done: true }
+              : null}
         {#key current.id}
           <div in:fly={{ x: 32, duration: MOTION.base }}>
             <p class="kind">{current.kind}</p>
@@ -440,18 +493,28 @@
             </div>
             <p class="scale"><span>{data.chrome.scale0}</span><span>{data.chrome.scale10}</span></p>
 
-            {#if pending?.dimId === current.id}
+            {#if held}
               <!-- Ряд смайликов под звёздами + отсчёт — как на экране «Измерения» (bugs/80). -->
               <div class="faces" aria-hidden="true" transition:slide={{ duration: MOTION.base }}>
                 {#each GRADE_FACES as _, grade (grade)}
-                  <span class="fc" class:picked={pending.value === grade}>
+                  <span class="fc" class:picked={held.value === grade}>
                     <GradeFace {grade} size={22} />
                   </span>
                 {/each}
               </div>
+              <!--
+                🔑 Пустой `<span>` в сохранённом состоянии стоит НАМЕРЕННО: строка разложена
+                `space-between`, и без левого узла кнопка прыгнула бы влево — то есть карточка
+                снова «поменяла бы вид», уже нашими руками.
+              -->
               <div class="countdown" transition:slide={{ duration: MOTION.base }}>
-                <span>{ui.savingIn} {pending.left} {ui.sec}…</span>
-                <button type="button" class="now" onclick={() => void commit()}>{ui.saveNow}</button>
+                {#if held.done}
+                  <span></span>
+                  <button type="button" class="now done" disabled>{ui.savedShort}</button>
+                {:else}
+                  <span>{ui.savingIn} {held.left} {ui.sec}…</span>
+                  <button type="button" class="now" onclick={() => void commit()}>{ui.saveNow}</button>
+                {/if}
               </div>
             {/if}
 
@@ -890,6 +953,20 @@
     border-radius: 999px;
     padding: 6px 14px;
     cursor: pointer;
+  }
+  /* Сохранено (близнец `bugs/172`). Геометрия та же — меняются только цвет и текст, иначе
+     карточка «поменяла бы вид» ровно тем движением, которым мы это чиним.
+     Цвет и текст ставим ЯВНО: браузер сам красит `disabled`-кнопку в серое.
+     🔑 Селектор с `:disabled` — тот же, что на экране «Измерения», и не для симметрии: там
+     ниже по файлу живёт `.now:disabled { opacity: .5 }` той же специфичности, и замер поймал,
+     что зелёный владельца приезжал выцветшим вдвое. Здесь такого правила пока нет; селектор
+     стоит на случай, когда оно появится, — чтобы дефект не вернулся молча. */
+  .now.done,
+  .now.done:disabled {
+    background: var(--ok);
+    color: var(--ok-ink);
+    cursor: default;
+    opacity: 1;
   }
 
   .skip {
