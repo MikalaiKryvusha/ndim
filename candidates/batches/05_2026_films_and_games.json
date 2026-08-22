@@ -1,6 +1,6 @@
 {
   "_": [
-    "КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 5, 2026-08-22. ПОРЦИИ 1 И 2 (12 карточек из 24).",
+    "КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 5, 2026-08-22. ПОРЦИИ 1–3 (18 карточек из 24).",
     "Отмашка Менеджера после вердикта QA по партии 4.",
     "",
     "ПРИНЦИП ОТБОРА — не известность, а ХАЙП-ВОЛНА: слово владельца «в момент релиза добавлять",
@@ -38,11 +38,28 @@
     "их приёма ещё идёт. Оценки в описаниях названы словами, а не числами: числа этих недель",
     "меняются, а строка карточки живёт долго.",
     "",
-    "🅿 ПАРКОВКА СМЕНЫ 2026-08-22: в файле 12 карточек из 24, обе порции с зелёными воротами.",
-    "Оставшиеся 12 — по списку researches/48 §3, строки 13…24, в том же порядке хайп-волны:",
-    "Forza Horizon 6 · «Гражданин-мститель» · Voicemails for Isabelle · Husbands in Action ·",
-    "«Смерть Робин Гуда» · «Служебный роман» · Gothic Remake · «Давление» · «Сначала дамы» ·",
-    "Lego Batman: Legacy of the Dark Knight · «Пассажир» · «Чёрный шар»."
+    "🅿 СОСТОЯНИЕ: в файле 18 карточек из 24, все три порции с зелёными воротами.",
+    "Оставшиеся 6 — по списку researches/48 §3, строки 19…24, в том же порядке хайп-волны:",
+    "«Служебный роман» · Gothic Remake · «Давление» · Paralives · «Сначала дамы» ·",
+    "Lego Batman: Legacy of the Dark Knight.",
+    "",
+    "🔴 ИСПРАВЛЕНА ОШИБКА ОЧЕРЕДИ, стоявшая здесь с прошлой смены. Прежняя парковочная записка",
+    "ссылалась на §3 строки 13…24 И ТУТ ЖЕ пересказывала их своими словами — пересказ разошёлся",
+    "с источником: назывались Forza Horizon 6, «Пассажир» и «Чёрный шар», которых в разведке нет",
+    "вовсе (Forza Horizon упомянута там лишь примером жанра в §6.5), и терялись настоящие строки",
+    "13, 18 и 22 — Star Fox, Meccha Chameleon, Paralives. Порция 3 написана ПО ИСТОЧНИКУ, а не по",
+    "пересказу. Урок класса: список рядом со ссылкой на список — вторая правда, и расходится она",
+    "молча.",
+    "",
+    "🔴 ЧЕСТНАЯ ГРАНИЦА ЗЕЛЁНОГО ПРОГОНА У ПОРЦИИ 3 — ворота приёмки ищут статью Википедии",
+    "полнотекстовым поиском и берут ПЕРВОЕ попадание, не сверяя, что оно об этом объекте. На",
+    "порции 3 промахов вышло четыре из двенадцати половин: русские описания сверялись со статьями",
+    "«Робинсон, Ник» (Voicemails for Isabelle), «Ли Да-хи» (Husbands in Action), «Big Walk»",
+    "(Meccha Chameleon) и «Star Fox» — франшизой вместо игры 2026 года. Все четыре получили ✅.",
+    "Пересверено вручную тем же ядром по ПРАВИЛЬНЫМ статьям: Star Fox ru — ряд 5 слов, чисто;",
+    "Meccha Chameleon ru — ряд 4 слова, чисто. У «Voicemails for Isabelle» и «Husbands in Action»",
+    "русской статьи НЕТ вовсе, и русская половина у них честно НЕ ПРОВЕРЕНА — зелёный прибора",
+    "по ним недействителен. Дефект заведён отдельным документом в bugs/."
   ],
   "candidates": [
     {
@@ -462,6 +479,218 @@
         "en": "A detective thriller directed by Philip Barantini from an original screenplay by Jack Thorne — the first entry in the series not taken from the novels. Enola and Tewkesbury travel to Malta to be married, and Sherlock comes too, though he does not approve of his sister's marriage. Everything falls apart on arrival: Sherlock disappears, and a dying soldier leaves Enola a few words that lead her to Professor Adeline Rathe. A sniper kills the professor in the middle of their conversation, and behind the name Rathe stands Moriarty, escaped from prison. The wedding's location was no accident: Moriarty steered Enola to Malta so that Enola's own hands would solve a puzzle about gold carried out of Afghanistan. The investigation runs into British officers who stole that gold after the fighting at Khost, and here the film speaks about something the earlier entries left alone — what the empire did in other people's countries. Enola finds the treasure with help from Watson and a Maltese fighter, Mikiel Mizzi; Moriarty is arrested rather than killed, and the gold goes back to Afghanistan. Tewkesbury gives up his title and marries Enola under her own name, closing a thread the series has carried since the first film. Millie Bobby Brown, Henry Cavill, Helena Bonham Carter, Louis Partridge, Himesh Patel and Sharon Duncan-Brewster star. The film was released on streaming on 1 July 2026. Reception was uneven: reviewers praised the grown-up heroine and the anti-colonial theme while finding the mystery itself sluggish."
       },
       "agentNote": "Мориарти здесь женский персонаж, и это не ошибка согласования: роль исполняет Шэрон Дункан-Брюстер, реестр подтверждает. Первый фильм ряда, снятый другим постановщиком."
+    },
+    {
+      "wikidata": "Q139683849",
+      "sitelinks": 10,
+      "title": {
+        "ru": "Star Fox",
+        "en": "Star Fox"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Velan Studios",
+        "en": "Velan Studios"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "экшен",
+        "action",
+        "научная фантастика",
+        "science fiction",
+        "космос",
+        "space",
+        "кооператив",
+        "co-op"
+      ],
+      "description": {
+        "ru": "Рельсовый шутер от третьего лица — ремейк Star Fox 64 1997 года и перезапуск всей серии. Игрок ведёт истребитель Arwing за Фокса Макклауда, сына погибшего Джеймса Макклауда, который когда-то и основал наёмный отряд Star Fox. Фокс собирает отряд заново и идёт против безумного учёного Андросса: тот объявил себя императором и намерен подмять под себя звёздную систему Лайлат. Корабль движется по уровню сам, игроку остаются стрельба и манёвр — лазеры и бомбы против врагов, кувырок и бочка, чтобы отбить чужой залп. Каждый уровень — своя планета системы, и внутри уровня есть развилки: исход схватки открывает разные дороги дальше, поэтому маршрут через кампанию у каждого складывается свой. Историю рассказывают подробнее, чем в оригинале: между уровнями стоят длинные ролики, договаривающие характеры и устройство мира. Отдельно идёт режим испытаний, где пройденный уровень переигрывается ради других задач. Соревновательная игра делит людей на отряды Star Fox и Star Wolf, а совместное прохождение сажает двоих в один корабль: первый пилотирует, второй целится и стреляет мышиным режимом Joy-Con 2. Сделала игру американская студия Velan Studios, издала Nintendo; вышла она 25 июня 2026 года на Nintendo Switch 2. Приняли тепло: хвалили управление, картинку и верность первоисточнику, а упрекали в том, что один и тот же сюжет пересказан уже в пятый раз и нового содержания почти нет. В первую неделю игра встала первой в чартах Японии, Франции, Швейцарии и Великобритании.",
+        "en": "A third-person rail shooter, remaking Star Fox 64 of 1997 and restarting the whole series. The player flies the Arwing as Fox McCloud, son of the late James McCloud, who founded the Star Fox mercenary squad in the first place. Fox rebuilds the squad and goes after the mad scientist Andross, who has declared himself emperor and means to bring the Lylat system under his heel. The craft moves down the level by itself, leaving the player shooting and manoeuvring — lasers and bombs against enemies, a somersault or a barrel roll to bat away incoming fire. Each level is a planet of the system, and levels fork inside themselves: how a fight ends opens different roads onward, so every run through the campaign takes a route of its own. The story is told at greater length than in the original, with long cut-scenes between levels filling out the characters and the world. A separate challenge mode replays finished levels for different objectives. Competitive play splits people into the Star Fox and Star Wolf squads, while co-op seats two in one craft: the first flies, the second aims and fires with the Joy-Con 2 mouse mode. Velan Studios of the United States built the game and Nintendo published it; it arrived on 25 June 2026 for the Nintendo Switch 2. Reception was warm: reviewers praised the controls, the look and the fidelity to the source, and faulted it for retelling the same story a fifth time with little new content. In its opening week the game stood first on the charts in Japan, France, Switzerland and the United Kingdom."
+      },
+      "agentNote": "Название дано без хвоста-различителя статьи («игра, 2026» · «2026 video game») — это служебная приписка заголовка, а не имя объекта; в реестре имя стоит как Star Fox. Русского названия у игры нет, поэтому имя латиницей в обеих половинах. Автор — разработчик по реестру (Velan Studios); издатель Nintendo назван в описании отдельно. Год по МИНИМУМУ полного набора дат: 25 июня 2026 по миру, 2 июля — Республика Корея. Доля рекомендаций у агрегаторов расходится (87 % в одной статье против 98 % в другой), поэтому приём назван словами, а не числами. ⚠️ Ворота на заимствование по русской половине промахнулись статьёй — взяли «Star Fox» (франшизу) вместо «Star Fox (игра, 2026)». Пересверено вручную по правильной статье: самый длинный дословный ряд 5 слов, чисто."
+    },
+    {
+      "wikidata": "Q132322742",
+      "sitelinks": 18,
+      "title": {
+        "ru": "Гражданин-мститель",
+        "en": "Citizen Vigilante"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Уве Болл",
+        "en": "Uwe Boll"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "боевик",
+        "action",
+        "триллер",
+        "thriller",
+        "криминал",
+        "crime",
+        "месть",
+        "revenge"
+      ],
+      "description": {
+        "ru": "Боевик-триллер о самосуде, снятый Уве Боллом по собственному сценарию. Майкл Сандерс — бывший офицер американской армии, перебравшийся в Европу после того, как унаследовал дело отца, с которым много лет не разговаривал. Тайно он ведёт вторую жизнь: убивает тех, кого суд отпустил, и чиновников, эти приговоры покрывавших. Город на экране живёт в страхе — родители не пускают детей во двор, женщины не выходят затемно, — и часть публики мстителя одобряет, пока его ищет полиция во главе с человеком из Интерпола по фамилии Генри. Сандерс не просто карает: он предлагает жертвам выбор — суд без гарантии исхода или его собственное вмешательство, и обе женщины, которым выбор предложен, выбирают второе. Отсюда и главный вопрос картины: что остаётся человеку, когда правосудие не сработало, и во что превращается тот, кто решил заменить правосудие собой. Фильм не смягчает ответа — расплата настигает не только насильников, но и их родню, — а сам герой уходит непойманным и обещает с записи продолжать, пока люди не научатся защищать себя сами. Играют Арми Хаммер и Костас Мэндилор; картина независимая, снята в Хорватии на два миллиона долларов. Вышла 19 июня 2026 года ограниченным прокатом и в цифре. Критика приняла её резко отрицательно, писала о бессвязности, эксплуатационной жёсткости и антимигрантском посыле, — зато фильм громко хвалили правые публицисты. В Германии комиссия дважды отказала картине в возрастной категории, закрыв ей прокат; после этого её на двое суток выложили в открытый доступ в социальной сети X, и спор о запрете принёс фильму больше внимания, чем сам прокат.",
+        "en": "An action thriller about vigilante justice, written and directed by Uwe Boll. Michael Sanders is a former United States Army officer who moved to Europe after inheriting the business of a father he had not spoken to in years. In secret he leads a second life, killing those the courts have released and the officials who covered for those verdicts. The city on screen lives in fear — parents keep children indoors, women avoid the streets after dark — and much of the public approves of the vigilante while the police, led by an Interpol man named Henry, hunt him. Sanders does more than punish: he offers victims a choice between a trial with no guaranteed outcome and his own intervention, and both women given that choice take the second. From there comes the central question of the picture — what is left to a person when justice has failed, and what becomes of the one who decides to stand in for justice himself. The film does not soften its answer, since the reckoning reaches not only the rapists but their kin, and the hero walks away uncaught, promising from a broadcast to continue until people learn to defend themselves. Armie Hammer and Costas Mandylor star; the picture is independent, shot in Croatia on a budget of two million dollars. It opened on 19 June 2026 in limited cinemas and on digital platforms. Critics received it harshly and wrote of incoherence, exploitation-film cruelty and an anti-migrant message, while right-wing commentators praised it loudly. In Germany the ratings board twice refused the picture an age certificate, closing cinemas to it; it was then posted freely on the social network X for two days, and the argument over the ban brought the film more attention than its release did."
+      },
+      "agentNote": "Место действия в источниках расходится: английская статья говорит о безымянном европейском городе, русская называет Загреб (там шли съёмки), — поэтому город в описании не назван вовсе. Дата окончания съёмок тоже расходится (15 февраля против 3 апреля 2025) и в описание не вошла. Оценок от себя карточка не даёт: и резкая критика, и похвала правых публицистов названы как факт приёма, а не как наше суждение о фильме."
+    },
+    {
+      "wikidata": "Q139665886",
+      "sitelinks": 11,
+      "title": {
+        "ru": "Voicemails for Isabelle",
+        "en": "Voicemails for Isabelle"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Leah McKendrick",
+        "en": "Leah McKendrick"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "драма",
+        "drama",
+        "романтика",
+        "romance",
+        "отношения",
+        "relationships"
+      ],
+      "description": {
+        "ru": "Романтическая комедия с драматической подкладкой — о том, как продолжают говорить с теми, кого уже нет. Джилл, начинающая кондитерша из Сан-Франциско, работает под началом грубого шефа и каждый свой день пересказывает по телефону сестре Изабель: та живёт в Остине и давно болеет муковисцидозом. Изабель умирает, а Джилл продолжает звонить на её номер и наговаривать голосовые сообщения, не зная, что номер уже перевыдан другому человеку. На той стороне их слушает Уэс, риелтор из Остина: он узнаёт о её свиданиях, о ссорах на кухне, о том, что она хочет своё дело, и привязывается к женщине, которая о нём не подозревает. Догадавшись, что Изабель мертва, он не отступает, а выбивает себе командировку в Сан-Франциско, чтобы встретиться с Джилл будто бы случайно. Они сходятся, и всё держится ровно до той минуты, когда на свадьбе друзей Джилл набирает номер сестры и видит, что звонок принимает телефон Уэса. Отсюда и узел фильма: чужое горе, подслушанное без спроса, и вопрос, можно ли вырастить на таком основании что-то честное. Джилл уходит, теряет записи после обновления телефона, бросает чужую кухню и открывает собственный фургон с десертами, названный в честь себя и сестры; Уэс возвращает ей голосовые сообщения и оплачивает старый номер ещё на год — чтобы ей было куда говорить. Играют Зои Дойч, Ник Робинсон, Ник Офферман, Лукас Гейдж, Гарри Шам, Сиера Браво и Джил Беллоуз; сценарий и постановка — Leah McKendrick, она же играет подругу героя. Фильм вышел 19 июня 2026 года сразу на стриминге. Приняли его в основном хорошо: хвалили за то, что романтика держится на живом чувстве и характерах, а не на устройстве сюжета.",
+        "en": "A romantic comedy with a drama underneath it, about the way people keep talking to those who are gone. Jill, a would-be pastry chef in San Francisco, works under an abusive head chef and phones every day of her life through to her sister Isabelle, who lives back in Austin and has long been ill with cystic fibrosis. Isabelle dies, and Jill goes on calling her number and leaving voicemails, unaware that the number has already been reassigned to someone else. On the other end is Wes, an Austin estate agent, who learns about her dates, her rows in the kitchen and her wish to start something of her own, and grows attached to a woman who has no idea he exists. Working out that Isabelle is dead, he does not stop but arranges a work trip to San Francisco so that he can meet Jill as though by chance. They fall for each other, and it holds right up to the minute at a friends' wedding when Jill dials her sister and sees the call landing on Wes's phone. From there comes the knot of the film: grief overheard without permission, and the question of whether anything honest can be grown on such a footing. Jill walks out, loses the recordings to a phone update, quits the kitchen and opens a dessert truck of her own named for herself and her sister; Wes gets the voicemails back to her and pays for the old number for another year, so that she still has somewhere to speak. Zoey Deutch, Nick Robinson, Nick Offerman, Lukas Gage, Harry Shum, Ciara Bravo and Gil Bellows star; Leah McKendrick wrote and directed, and plays a friend of the hero. The film went out on 19 June 2026 straight to streaming. Reception was largely good, with praise for a romance resting on live feeling and character rather than on plot machinery."
+      },
+      "agentNote": "Русского названия у фильма нет — имя латиницей в обеих половинах (иначе запись не встанет в русскую половину каталога). Русского имени постановщицы в реестре тоже НЕТ, и своей транслитерации я не изобретала: урок партии 4 («Паттон» вместо «Пэттон») — имена берутся из реестра, а не по памяти. ❓ ВОПРОС ВЛАДЕЛЬЦУ: как поступать с людьми, у которых в реестре нет русской формы имени, — оставлять латиницей (как здесь) или транслитерировать самим? Случай не единичный, в этой же порции их три. Русской статьи у фильма нет вовсе, поэтому русская половина воротами на заимствование непроверяема — сверена только английская. ⚠️ Зелёный ворот по русской половине НЕДЕЙСТВИТЕЛЕН: прибор сверил текст со статьёй «Робинсон, Ник». Русской статьи у фильма нет, сверять не с чем — половина честно НЕ ПРОВЕРЕНА."
+    },
+    {
+      "wikidata": "Q137843012",
+      "sitelinks": 8,
+      "title": {
+        "ru": "Husbands in Action",
+        "en": "Husbands in Action"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Park Gyu-tae",
+        "en": "Park Gyu-tae"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "боевик",
+        "action",
+        "криминал",
+        "crime",
+        "семья",
+        "family"
+      ],
+      "description": {
+        "ru": "Комедийный боевик о двух мужьях одной женщины, которым пришлось работать вместе. Хван Чхунсик служит в отделе по борьбе с наркотиками и на школьном празднике впервые сталкивается с Ли Минсоком — новым мужем своей бывшей жены Синэ. Сыщик и молодой ветеринар не сходятся ни характерами, ни ролями: один бывший муж и родной отец их дочери Ёнджу, другой нынешний муж и отчим, и каждый считает главным в этой семье себя. Соперничество обрывается, когда Синэ и девочку похищают: вызволять их приходится вдвоём, и по дороге они ссорятся ровно так же, как ссорились до похищения. Похищение устроил наркобарон Ма Доджун, поднявшийся в криминальном мире, но настоящий расчёт ведёт его жена Херан: заложницы нужны ей, чтобы вытащить мужа. Параллельно за Доджуном охотится Ким Ёнган, потерявший в том же деле своё место и желающий вернуть его, а журналистка Чо Ара путает картину ещё сильнее, заинтересовавшись самим Чхунсиком. Комедия здесь растёт не из погони, а из семейной неловкости: двое взрослых мужчин посреди операции, где ошибка стоит жизни, продолжают выяснять, кто из них девочке отец. За этим стоит вопрос, который фильм задаёт всерьёз: чем меряется отцовство — кровью или тем, кто на самом деле рядом. Играют Чин Сонгю, Кон Мён, Ким Джи-сок, Юн Гёнхо, Kang Han-na, Ли Да-хи и Чон Со Мин. Поставил и написал фильм Park Gyu-tae, для которого это вторая работа с Чин Сонгю после «Экстремальной профессии». Вышел он 19 июня 2026 года сразу на стриминге, в корейской линейке платформы.",
+        "en": "An action comedy about two husbands of the same woman forced to work together. Hwang Choong-sik, a narcotics inspector, meets Lee Min-seok at a school event for the first time: Min-seok is the new husband of his ex-wife Si-nae. The veteran investigator and the young vet match neither in temper nor in role — one is the former husband and the natural father of their daughter Yeon-ju, the other the present husband and stepfather, and each takes himself for the head of this family. The rivalry breaks off when Si-nae and the girl are abducted: getting them back falls to the pair of them, and along the way they quarrel exactly as they quarrelled before the kidnapping. The abduction is staged by Ma Do-jun, a drug lord climbing the criminal world, but the real calculation belongs to his wife Hye-ran, who needs the hostages as leverage to get her husband out. Kim Yong-gang, who lost his own place in that same trade and wants it back, hunts Do-jun in parallel, while the journalist Jo A-ra muddles matters further by taking an interest in Choong-sik himself. The comedy here grows out of family awkwardness rather than the chase: two grown men in the middle of an operation where a mistake costs a life keep arguing over which of them is the girl's father. Behind that sits a question the film asks in earnest — whether fatherhood is measured by blood or by who is actually there. Jin Seon-kyu, Gong Myoung, Kim Ji-seok, Yoon Kyung-ho, Kang Han-na, Lee Da-hee and Jeon So-min star. Park Gyu-tae wrote and directed, his second outing with Jin Seon-kyu after Extreme Job. It went out on 19 June 2026 straight to streaming, in the platform's Korean lineup."
+      },
+      "agentNote": "Русского названия у фильма нет — имя латиницей в обеих половинах. Русские формы имён взяты ИЗ РЕЕСТРА поимённо; у постановщика (Park Gyu-tae) и у актрисы (Kang Han-na) русской формы в реестре нет, и они оставлены латиницей — см. вопрос владельцу в карточке Voicemails for Isabelle. Русской статьи у фильма нет, русская половина воротами на заимствование непроверяема. Название фильма-предшественника «Экстремальная профессия» дано в русском прокатном виде. ⚠️ Зелёный ворот по русской половине НЕДЕЙСТВИТЕЛЕН: прибор сверил текст со статьёй «Ли Да-хи». Русской статьи у фильма нет, сверять не с чем — половина честно НЕ ПРОВЕРЕНА."
+    },
+    {
+      "wikidata": "Q125960231",
+      "sitelinks": 15,
+      "title": {
+        "ru": "Смерть Робин Гуда",
+        "en": "The Death of Robin Hood"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Майкл Сарноски",
+        "en": "Michael Sarnoski"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "триллер",
+        "thriller",
+        "приключения",
+        "adventure",
+        "исторический",
+        "historical",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "Мрачная драма о состарившемся разбойнике, выросшая из английской баллады семнадцатого века. Действие идёт в Англии 1247 года: Робин Гуд живёт один в глуши, отмахивается от песен, сделавших его народным героем, и хоронит возле дома тех, кто приходит мстить ему за родню. К нему приезжает Малыш Джон, давно живущий под чужим именем на отнятой ферме, и зовёт вернуть жену и землю; налёт удаётся наполовину — землю берут, жену теряют, а Робин, отбиваясь, получает рану, от которой уже не оправится сам. Джон оставляет его в островном монастыре, и настоятельница Бриджид выхаживает раненого, не зная, кого выхаживает. Там же прячется осиротевшая девочка Маргарет: Робин берёт её под опеку и учит охотиться, скрыв и своё прошлое, и то, кем был её отец. Узел затягивается дважды — умирающий прокажённый оказывается его старым врагом Гаем Гисборном, а сама Бриджид, услышав признание, узнаёт в постояльце человека, сжёгшего её мужа и детей. Отсюда и вопрос, ради которого снята картина: искупается ли хоть чем-нибудь уже сделанное и вправе ли жертва простить убийцу. Бриджид отвечает по-своему — говорит, что его злодейство и привело её к жизни, в которой она лечит других. Робин просит помочь ему умереть и запрещает останавливать кровь; последнее, что он успевает, — рассказать Маргарет героическую версию своей жизни и отдать ей лук. Играют Хью Джекман, Джоди Комер, Билл Скарсгард, Мюррей Бартлетт и Ноа Джуп; сценарий и постановка — Майкл Сарноски, снимали в Северной Ирландии на плёнку. Премьера прошла на Сиднейском кинофестивале 12 июня 2026 года, в американский прокат картина вышла 19 июня. Критика приняла её неровно.",
+        "en": "A grim drama about an outlaw grown old, taken from an English ballad of the seventeenth century. It plays out in the England of 1247: Robin Hood lives alone in the wilds, waves off the songs that made him a folk hero, and buries beside his house those who come to avenge their kin on him. Little John, long living under another man's name on a farm taken from him, arrives and asks help in getting back his wife and his land; the raid half succeeds — the land is theirs, the wife is lost, and Robin, fighting clear, takes a wound he will not recover from on his own. John leaves him at an island priory, where the prioress Brigid nurses the wounded man without knowing whom she is nursing. An orphaned girl, Margaret, is hiding there too: Robin takes her in and teaches her to hunt, keeping from her both his own past and who her father had been. The knot pulls tight twice over — a dying leper turns out to be his old enemy Guy of Gisborne, and Brigid, hearing his confession, recognises in her guest the man who burned her husband and children alive. From there comes the question the picture was made for: whether what is already done can be redeemed by anything at all, and whether the victim has the right to forgive the killer. Brigid answers in her own way, saying that his monstrousness is what led her to a life of healing others. Robin asks her to help him die and forbids her to stop the bleeding; the last thing he manages is to tell Margaret the heroic version of his life and hand her a bow. Hugh Jackman, Jodie Comer, Bill Skarsgård, Murray Bartlett and Noah Jupe star; Michael Sarnoski wrote and directed, and it was shot on film in Northern Ireland. It premiered at the Sydney Film Festival on 12 June 2026 and opened in the United States on 19 June. Critics received it unevenly."
+      },
+      "agentNote": "Год по МИНИМУМУ полного набора дат реестра: 18 июня 2026 (Германия), 19 июня (США), 26 июня (Швеция), 12 августа (Италия). Первоисточник назван реестром прямо — баллада «Смерть Робин Гуда», и это основание для тега «экранизация». Русская статья пересказывает только логлайн, сюжет целиком изложен по английской."
+    },
+    {
+      "wikidata": "Q140221884",
+      "sitelinks": 9,
+      "title": {
+        "ru": "Meccha Chameleon",
+        "en": "Meccha Chameleon"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Lemorion_1224",
+        "en": "Lemorion_1224"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "инди",
+        "indie",
+        "кооператив",
+        "co-op"
+      ],
+      "description": {
+        "ru": "Многопользовательские прятки, выросшие из простой мысли: спрятаться можно, покрасив себя под окружение. Люди делятся на охотников и хамелеонов; хамелеон раскрашивает своё тело пипеткой и цветовым смесителем, выбирает форму и позу — свернуться, лечь, вытянуться, — может наделать собственных двойников и замереть среди мебели, а охотник обязан найти всех до истечения срока. Кроме основного режима есть заражение, где каждый найденный переходит к охотникам; двойной режим, где сначала прячутся все, а потом все ищут; и обратная гонка, в которой раскраску одного показывают остальным, и те наперегонки ищут его на карте. Карт семь — особняк, деревенский дом, канализация, задворки, отель, сладкая страна и Осака, — а новые делают сами игроки и раздают через мастерскую Steam. За стол садятся до двадцати четырёх человек, хотя разработчики советуют от двух до двенадцати. Хамелеон волен свободно водить камерой и подглядывать за охотником, а может свистнуть и выдать себя нарочно; сервер настраивается так, чтобы свист срывался сам через заданное время. Сделали игру два японских независимых разработчика, Lemorion_1224 и Haganeiro, за два месяца — из наработок собственных прошлых проектов. Вышла она 10 июня 2026 года. Дальше случилось то, чего никто не планировал: без всякой рекламы игра разошлась короткими роликами и стримами, в день выпуска собрала двадцать тысяч человек разом, а к концу июня — больше трёхсот сорока тысяч, войдя в полсотни самых людных игр за всю историю Steam. Рецензенты хвалили выдумку и замечали, что на эту игру интересно даже просто смотреть со стороны. Популярность принесла и беду: в мастерской нашлись карты с вредоносной программой, через неё взломали официальный сервер сообщества, и разработчики закрыли дыру обновлением, запретив картам запускать посторонние файлы.",
+        "en": "Multiplayer hide-and-seek grown from one simple thought: you can hide by painting yourself to match your surroundings. People split into hunters and chameleons; a chameleon paints its body with an eyedropper and a colour mixer, picks a shape and a pose — curl up, lie down, stretch out — can run off copies of itself and freeze among the furniture, while the hunter has to find them all before time runs out. Beyond the main mode there is infection, where everyone caught joins the hunters; a double mode where all hide first and all seek after; and a reverse race in which one player's paint job is shown to the rest, who then race to find them on the map. There are seven maps — a mansion, a country house, a sewer, backrooms, a hotel, a land of sweets and Osaka — and new ones are made by players themselves and handed round through the Steam workshop. Up to twenty-four people can join, though the developers recommend between two and twelve. A chameleon may swing the camera about freely and spy on the hunter, or whistle and give itself away on purpose; a server can be set so that the whistle escapes by itself after a set time. Two Japanese independent developers, Lemorion_1224 and Haganeiro, built the game in two months out of the parts of their own earlier projects. It came out on 10 June 2026. What followed was planned by nobody: with no advertising at all the game spread through short clips and streams, drew twenty thousand people at once on release day and more than three hundred and forty thousand by the end of June, putting it among the fifty most crowded games in the history of Steam. Reviewers praised the invention and noted that the game is interesting even to watch from the side. The popularity brought trouble too: maps carrying malware turned up in the workshop, the official community server was broken into through it, and the developers closed the hole with an update that forbids maps to run unrelated files."
+      },
+      "agentNote": "🔴 РЕЕСТР МОЛЧИТ О РАЗРАБОТЧИКЕ: свойства «разработчик» у записи нет вовсе, имя стоит только в тексте описания реестра. В поле автора — ведущий разработчик по статьям (Lemorion_1224: замысел, графика, уровни, модели, музыка), напарник Haganeiro (программирование и эффекты) назван в описании. Отступление названо вслух, как в карточке Splatoon Raiders. ⚠️ Тегов у карточки меньше обычного намеренно: жанру «многопользовательские прятки» пары в словаре каталога нет, а изобретать свой термин канон запрещает. Числа продаж расходятся между статьями (15 против 20 млн копий) и в описание не вошли; названы только одновременные игроки, которые в обеих статьях совпадают. ⚠️ Ворота на заимствование по русской половине промахнулись статьёй — взяли «Big Walk». Пересверено вручную по статье «Meccha Chameleon»: ряд 4 слова, чисто."
     }
   ]
 }
