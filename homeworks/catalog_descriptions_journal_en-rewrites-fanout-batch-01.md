@@ -13,9 +13,9 @@
 
 ## `corrective-measures-akp4cezf`
 
-*Ряд 50 слов накрывал три предложения подряд. Заимствование в этой записи лежит в ТРЁХ местах, и каждое вскрывалось только после снятия предыдущего: 50 → 31 → 17 → 6, три фрагмента. Сохранены San Tiburon, статус самой опасной тюрьмы строгого режима, суперзлодеи и усиленные люди, подавители способностей, Payback (Dan Payne), Julius «The Lobe» Loeb (Bruce Willis), его интеллект и телекинез, спрятанное состояние и намерение Девлина его добыть.*
+*Ряд 50 слов накрывал три предложения подряд. Заимствование в этой записи лежит в ТРЁХ местах, и каждое вскрывалось только после снятия предыдущего: 50 → 31 → 17 → 6, три фрагмента. Сохранены San Tiburon, статус самой опасной тюрьмы строгого режима, суперзлодеи и усиленные люди, подавители способностей, Payback (Dan Payne), Julius «The Lobe» Loeb (Bruce Willis), его интеллект и телекинез, спрятанное состояние и намерение Девлина его добыть. 🔴 Переписано под класс 2 владельца («Проще, короче, понятнее. Ошибка класса») из `candidates/owner-critical-notes-2026-08-22.md`: длинные периоды разбиты на короткие утверждения, книжные обороты сняты. Побочно это РАСШИРЯЕТ знаменатель пропорции — предложений содержания стало больше, а производственных столько же.*
 
-*Доля производства: **7% → 7%** = ровно (предложений о создании 1 → 1, всего 14 → 14).*
+*Доля производства: **7% → 6%** ✅ лучше (предложений о создании 1 → 1, всего 14 → 18).*
 
 **Было:**
 
@@ -23,13 +23,13 @@
 
 **Стало:**
 
-> A 2022 American superhero film directed by Sean O'Reilly, based on the graphic novel by Grant Chastain. The action unfolds inside San Tiburon, billed as the deadliest maximum-security prison on earth and built to hold supervillains and other enhanced individuals. Power inhibitors fitted throughout the block strip inmates of their abilities, which is how the staff keeps so varied and dangerous a population in check. Payback (Dan Payne), a zealous vigilante whose campaign against enhanced humans ends in his own incarceration there, arrives early on. His arrival upsets the settled hierarchy among prisoners and guards alike. Warden Devlin (Michael Rooker), whom everyone calls "The Overseer," runs San Tiburon with equal parts corruption and ambition. He takes a particular interest in Julius "The Lobe" Loeb (Bruce Willis), an infamous prisoner of vast intellect and telekinetic power. Rumor credits The Lobe with a hidden fortune, and Devlin means to prise its whereabouts out of him to pay for a lavish retirement. Brennan Mejia plays Diego Diaz, an inmate who has just arrived and whose only gift is heightened empathy. Every ally he picks in San Tiburon either keeps him alive or turns him into a pawn in the deadly games the warden and the prisoners play against one another. Loyalties shift, betrayals surface, and the rivalry between The Lobe and The Overseer boils over into a violent uprising inside the walls. In that chaos his empathy turns into the one useful skill: he mediates between the men around him and looks for a way to stay alive. Everything converges on a single confrontation that drags the corruption running the place into the open and forces each character to face his own moral compass. The ending settles nothing about San Tiburon or the people locked in it, and leaves the meaning of justice and redemption an open question.
+> A 2022 American superhero film directed by Sean O'Reilly, based on the graphic novel by Grant Chastain. The action unfolds inside San Tiburon, the deadliest maximum-security prison on earth, built to hold supervillains and other enhanced individuals. Power inhibitors throughout the block strip the inmates of their abilities. That is how the staff keeps a varied and dangerous population under control. Payback (Dan Payne) arrives early on. He is a zealous vigilante, and his campaign against enhanced humans ends with his own imprisonment here. His arrival upsets the settled order among prisoners and guards. Warden Devlin (Michael Rooker), whom everyone calls "The Overseer," runs San Tiburon. He is corrupt and ambitious. He takes a particular interest in Julius "The Lobe" Loeb (Bruce Willis), an infamous prisoner with a vast intellect and telekinetic power. Rumor gives The Lobe a hidden fortune. Devlin wants its location to pay for a lavish retirement. Brennan Mejia plays Diego Diaz, an inmate who has just arrived and whose only gift is heightened empathy. Every ally he picks in San Tiburon either keeps him alive or turns him into a pawn in the deadly games the warden and the prisoners play against one another. Loyalties shift, betrayals surface, and the rivalry between The Lobe and The Overseer boils over into a violent uprising inside the walls. In that chaos his empathy turns into the one useful skill: he mediates between the men around him and looks for a way to stay alive. Everything converges on a single confrontation that drags the corruption running the place into the open and forces each character to face his own moral compass. The ending settles nothing about San Tiburon or the people locked in it, and leaves the meaning of justice and redemption an open question.
 
 ## `edge-of-tomorrow-gopt6dsd`
 
-*Ряд 26 слов накрывал хвост последнего предложения; его начало давало ещё 10 слов подряд — снято вторым фрагментом. Сохранены Major William Cage, Tom Cruise, работа с прессой, отсутствие боевого опыта, десант против пришельцев, петля времени и поиск способа победить.*
+*Ряд 26 слов накрывал хвост последнего предложения; его начало давало ещё 10 слов подряд — снято вторым фрагментом. Сохранены Major William Cage, Tom Cruise, работа с прессой, отсутствие боевого опыта, десант против пришельцев, петля времени и поиск способа победить. 🔴 Переписано под класс 2 владельца («Проще, короче, понятнее. Ошибка класса») из `candidates/owner-critical-notes-2026-08-22.md`: длинные периоды разбиты на короткие утверждения, книжные обороты сняты. Побочно это РАСШИРЯЕТ знаменатель пропорции — предложений содержания стало больше, а производственных столько же.*
 
-*Доля производства: **0% → 0%** = ровно (предложений о создании 0 → 0, всего 4 → 4).*
+*Доля производства: **0% → 0%** = ровно (предложений о создании 0 → 0, всего 4 → 5).*
 
 **Было:**
 
@@ -37,13 +37,13 @@
 
 **Стало:**
 
-> All You Need Is Kill, a Japanese light novel by Hiroshi Sakurazaka, loosely underpins this 2014 American science fiction action film. Doug Liman directed it, while Christopher McQuarrie wrote the script alongside the writing team Jez and John-Henry Butterworth. Tom Cruise and Emily Blunt head the cast, and the story unfolds in a future where an alien race holds most of Europe. Major William Cage (Tom Cruise), a press officer who has never seen combat, is ordered into a beach assault on the invaders, and from then on he wakes at the start of that same day each time he is killed, hunting through the repetitions for a way to win the war.
+> All You Need Is Kill, a Japanese light novel by Hiroshi Sakurazaka, loosely underpins this 2014 American science fiction action film. Doug Liman directed it, while Christopher McQuarrie wrote the script alongside the writing team Jez and John-Henry Butterworth. Tom Cruise and Emily Blunt head the cast, and the story unfolds in a future where an alien race holds most of Europe. Major William Cage (Tom Cruise), a press officer who has never seen combat, is ordered into a landing assault on the aliens. Each time he is killed, he wakes again at the start of that same day, and he uses the repetitions to look for a way to beat the invaders.
 
 ## `poyekhavshaya-dzy51gyd`
 
-*Ряд 26 слов накрывал ДВА предложения подряд; в первом предложении оставался ряд в 10 слов — снят вторым фрагментом. Сохранены новые знакомства, дружба, испытания, обретённая уверенность, любовь, название книги «Why Stay at Home?» и её автор — велосипедистка Анна Смолина.*
+*Ряд 26 слов накрывал ДВА предложения подряд; в первом предложении оставался ряд в 10 слов — снят вторым фрагментом. Сохранены новые знакомства, дружба, испытания, обретённая уверенность, любовь, название книги «Why Stay at Home?» и её автор — велосипедистка Анна Смолина. 🔴 Переписано под класс 2 владельца («Проще, короче, понятнее. Ошибка класса») из `candidates/owner-critical-notes-2026-08-22.md`: длинные периоды разбиты на короткие утверждения, книжные обороты сняты. Побочно это РАСШИРЯЕТ знаменатель пропорции — предложений содержания стало больше, а производственных столько же.*
 
-*Доля производства: **14% → 17%** ⚠️ знаменатель сжался (предложений о создании 1 → 1, всего 7 → 6).*
+*Доля производства: **14% → 14%** = ровно (предложений о создании 1 → 1, всего 7 → 7).*
 
 **Было:**
 
@@ -51,13 +51,13 @@
 
 **Стало:**
 
-> A 2023 Russian comedy-drama road movie directed by Anton Maslov, adapted from "Why Stay at Home?", a book by the cyclist Anna Smolina. Olga Lerman plays Anna Smolina, an ordinary woman who walks out of her daily routine and rides across Russia on a bicycle, her beloved dachshund Kapa along for the trip. The road leads to the town of Magadan and to her mother (Elena Yakovleva), after 13 years of estrangement that Anna wants to end. The journey brings her chance acquaintances, new friendships and a fair share of trouble; by its close Anna has grown surer of herself and has found love. The film also stars Viktor Khorinyak (Valera), Dmitry Chebotaryov (Roma), and Askar Ilyasov (Alisher). Released on March 8, 2023, the film topped the Russian box office in its first week, grossing 135.6 million rubles over the opening weekend.
+> A 2023 Russian comedy-drama road movie directed by Anton Maslov, adapted from "Why Stay at Home?", a book by the cyclist Anna Smolina. Olga Lerman plays Anna Smolina, an ordinary woman who walks out of her daily routine and rides across Russia on a bicycle, her beloved dachshund Kapa along for the trip. The road leads to the town of Magadan and to her mother (Elena Yakovleva), after 13 years of estrangement that Anna wants to end. The journey brings her chance acquaintances, new friendships and a fair share of trouble. She ends it surer of herself, and in love. The film also stars Viktor Khorinyak (Valera), Dmitry Chebotaryov (Roma), and Askar Ilyasov (Alisher). Released on March 8, 2023, the film topped the Russian box office in its first week, grossing 135.6 million rubles over the opening weekend.
 
 ## `the-rum-diary-9ekgkaaw`
 
-*Ряд 20 слов шёл через перечень актёров в следующее предложение; в описании героя оставался ряд в 11 слов — снят вторым фрагментом. Перечень актёров РАЗБИТ надвое, а не переписан: имена — факты, и порядок их сохранён. Сохранены все пять имён, Пол Кемп (Джонни Депп), непроданная книга, газета в Сан-Хуане, Пуэрто-Рико, конец 1950-х, март 2009 и 28 октября 2011.*
+*Ряд 20 слов шёл через перечень актёров в следующее предложение; в описании героя оставался ряд в 11 слов — снят вторым фрагментом. Перечень актёров РАЗБИТ надвое, а не переписан: имена — факты, и порядок их сохранён. Сохранены все пять имён, Пол Кемп (Джонни Депп), непроданная книга, газета в Сан-Хуане, Пуэрто-Рико, конец 1950-х, март 2009 и 28 октября 2011. 🔴 Переписано под класс 2 владельца («Проще, короче, понятнее. Ошибка класса») из `candidates/owner-critical-notes-2026-08-22.md`: длинные периоды разбиты на короткие утверждения, книжные обороты сняты. Побочно это РАСШИРЯЕТ знаменатель пропорции — предложений содержания стало больше, а производственных столько же.*
 
-*Доля производства: **20% → 20%** = ровно (предложений о создании 1 → 1, всего 5 → 5).*
+*Доля производства: **20% → 14%** ✅ лучше (предложений о создании 1 → 1, всего 5 → 7).*
 
 **Было:**
 
@@ -65,4 +65,4 @@
 
 **Стало:**
 
-> Bruce Robinson wrote and directed this 2011 American comedy-drama film, adapting the Hunter S. Thompson novel of the same title that reached print in 1998. The story follows Paul Kemp (Johnny Depp), a novelist who has yet to place a book with a publisher and who takes a newspaper job in San Juan, Puerto Rico, in the late 1950s. As he immerses himself in the local culture and interacts with expatriates, he struggles to find a balance between his ambitions and reality. Aaron Eckhart, Michael Rispoli and Amber Heard appear in support, as do Richard Jenkins and Giovanni Ribisi. Shooting started in Puerto Rico in March 2009, and the picture opened on October 28, 2011.
+> Bruce Robinson wrote and directed this 2011 American comedy-drama film, adapting the Hunter S. Thompson novel of the same title that reached print in 1998. The story follows Paul Kemp (Johnny Depp), a novelist who has never managed to sell a book. He takes a newspaper job in San Juan, Puerto Rico, in the late 1950s. As he immerses himself in the local culture and interacts with expatriates, he struggles to find a balance between his ambitions and reality. Aaron Eckhart, Michael Rispoli and Amber Heard also appear. So do Richard Jenkins and Giovanni Ribisi. Shooting started in Puerto Rico in March 2009, and the picture opened on October 28, 2011.
