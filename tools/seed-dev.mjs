@@ -19,8 +19,20 @@ import { distribute } from '../src/lib/model/visibility.ts';
 import { dayKey } from '../src/lib/model/stats.ts';
 
 const PROJECT_ID = 'demo-ndim-dev';
-const AUTH_URL = 'http://127.0.0.1:9099';
-const FIRESTORE = { host: '127.0.0.1', port: 8181 };
+
+/**
+ * Адрес эмуляторов берётся у ОКРУЖЕНИЯ, литерал остаётся умолчанием (`plans/69` шаг 5).
+ *
+ * 🔑 Почему это правильный способ, а не «прокинуть слот параметром». Сид исполняется ВНУТРИ
+ * `firebase emulators:exec`, а тот сам экспортирует потомкам `FIRESTORE_EMULATOR_HOST` и
+ * `FIREBASE_AUTH_EMULATOR_HOST` с настоящими портами поднятых эмуляторов. Значит верный адрес
+ * уже лежит в окружении — прибору незачем знать про слоты вовсе, ему достаточно перестать
+ * настаивать на литерале. Умолчание сохранено ровно прежним: прямой запуск при поднятом штатном
+ * стенде работает как раньше.
+ */
+const [FS_HOST, FS_PORT] = (process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8181').split(':');
+const AUTH_URL = `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST ?? '127.0.0.1:9099'}`;
+const FIRESTORE = { host: FS_HOST, port: Number(FS_PORT) };
 const DEV_USER = { email: 'dev@ndim.space', password: 'ndim-dev-stand' };
 
 // ── 1. Пользователь стенда в Auth-эмуляторе ─────────────────────────────────

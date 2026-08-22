@@ -88,6 +88,9 @@ export function roleFromDirName(dir) {
  * @returns {number|null}
  */
 export function slotOfRole(role) {
+  // Пустую роль отвергаем ДО поиска: `indexOf(null)` дал бы -1 и тот же ответ, но через путь,
+  // который проверка типов законно считает ошибкой вызова.
+  if (role === null || role === undefined) return null;
   const i = ROLES.indexOf(role);
   return i === -1 ? null : i;
 }
@@ -101,11 +104,17 @@ export function slotOfRole(role) {
  */
 export function portsFor(slot) {
   if (!SLOTS.includes(slot)) throw new Error(`слота ${slot} нет: разведены ${SLOTS.join(', ')}`);
-  return Object.freeze(
-    Object.fromEntries(
-      Object.entries(STAND_PORTS).map(([name, base]) => [name, base + slot * SLOT_STEP]),
-    ),
-  );
+  const shift = slot * SLOT_STEP;
+  // Имена перечислены явно, а не выведены обходом: так у результата есть ТИП, и опечатка в имени
+  // порта краснеет проверкой типов, а не всплывает «undefined» в адресе эмулятора. Полнота набора
+  // при этом стережётся юнитом `portsFor(0) === STAND_PORTS` — забытый новый порт там краснеет.
+  return Object.freeze({
+    preview: STAND_PORTS.preview + shift,
+    dev: STAND_PORTS.dev + shift,
+    firestore: STAND_PORTS.firestore + shift,
+    auth: STAND_PORTS.auth + shift,
+    storage: STAND_PORTS.storage + shift,
+  });
 }
 
 /**
@@ -148,14 +157,14 @@ export function slotConfigName(slot) {
  * Секция `emulators` для конфига слота: та же форма, что в `firebase.json`, с портами слота.
  * Хост не трогаем — он одинаков у всех слотов и меняться не должен.
  *
- * @param {object} emulators секция `emulators` исходного `firebase.json`
+ * @param {Record<string, any>} emulators секция `emulators` исходного `firebase.json`
  * @param {number} slot
- * @returns {object} новая секция (исходная не мутируется)
+ * @returns {Record<string, any>} новая секция (исходная не мутируется)
  */
 export function emulatorsForSlot(emulators, slot) {
   const ports = portsFor(slot);
-  const out = structuredClone(emulators);
-  for (const name of ['firestore', 'auth', 'storage']) {
+  const out = /** @type {Record<string, any>} */ (structuredClone(emulators));
+  for (const name of /** @type {const} */ (['firestore', 'auth', 'storage'])) {
     if (out?.[name] && typeof out[name].port === 'number') out[name].port = ports[name];
   }
   return out;
