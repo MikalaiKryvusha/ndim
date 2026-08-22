@@ -233,7 +233,9 @@ if (RELEASED_BY) {
   console.log(`
 🔴 класс 1 владельца: отсеяно НЕ ВЫШЕДШИХ на ${RELEASED_BY} — ${ОТСЕЯНО_НЕВЫШЕДШИХ}`);
   for (const x of НЕВЫШЕДШИЕ.slice(0, 20)) {
-    console.log(`   · ${x.qid} ${x.titleRu || x.titleEn} — выйдет ${x.перваяДата}`);
+    // Причина печатается ДОСЛОВНО, а не «выйдет тогда-то»: у записи с точностью ГОД дата
+    // `2026-01-01` — не день выхода, а способ хранения года, и печатать её датой значит врать.
+    console.log(`   · ${x.qid} ${x.titleRu || x.titleEn || '—'} — ${x.причина} (первая дата набора ${x.перваяДата || 'нет'})`);
   }
   if (НЕВЫШЕДШИЕ.length > 20) console.log(`   … и ещё ${НЕВЫШЕДШИЕ.length - 20}`);
 }
@@ -268,12 +270,25 @@ async function resolveMissingNames(items) {
     const кусок = безымянные.slice(i, i + 40);
     const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${кусок.map((x) => x.qid).join('|')}`
       + '&props=labels|sitelinks&languages=ru|en|mul&sitefilter=ruwiki|enwiki&format=json';
-    const ответ = await fetch(url, { headers: { 'User-Agent': UA } });
-    if (!ответ.ok) {
-      console.error(`  ⚠️ дозапрос имён: HTTP ${ответ.status} — ${кусок.length} строк остались без имени, и это НАЗВАНО`);
+    /*
+     * 🔴 СЕТЬ ЗДЕСЬ ЛОВИТСЯ, А НЕ ПАДАЕТ. Прежняя редакция звала `fetch` голым, и обрыв связи
+     * (`UND_ERR_CONNECT_TIMEOUT`) ронял ВЕСЬ прогон разведки на последнем шаге — после того,
+     * как все дорогие запросы к WDQS уже отработали и отчёт был почти собран. Класс тот же,
+     * что у самого WDQS: ненадёжный источник обязан иметь пойманный отказ. Замечено живьём
+     * при сборке партии 6: два полных прогона потеряны на этой строке.
+     */
+    let тело;
+    try {
+      const ответ = await fetch(url, { headers: { 'User-Agent': UA } });
+      if (!ответ.ok) {
+        console.error(`  ⚠️ дозапрос имён: HTTP ${ответ.status} — ${кусок.length} строк остались без имени, и это НАЗВАНО`);
+        continue;
+      }
+      тело = await ответ.json();
+    } catch (e) {
+      console.error(`  ⚠️ дозапрос имён: ${e?.cause?.code ?? e?.message ?? e} — ${кусок.length} строк остались без имени, и это НАЗВАНО`);
       continue;
     }
-    const тело = await ответ.json();
     for (const строка of кусок) {
       const e = тело.entities?.[строка.qid];
       if (!e) continue;

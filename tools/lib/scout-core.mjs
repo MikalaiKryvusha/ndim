@@ -86,6 +86,38 @@ export function firstReleaseDate(dates) {
   return даты.length ? даты.slice().sort()[0] : null;
 }
 
+/** Точность даты Wikidata: 11 — до дня, 10 — до месяца, 9 — до года. Нам нужен только день. */
+export const ТОЧНОСТЬ_ДО_ДНЯ = 11;
+
+/**
+ * ДАТЫ С ТОЧНОСТЬЮ ДО ДНЯ — единственные, по которым можно утверждать, что объект ВЫШЕЛ.
+ *
+ * 🔴 Ловушка, ради которой это заведено: Wikidata хранит «2026 год» как `2026-01-01T00:00:00Z`.
+ * Без точности такая запись читается как «вышло 1 января 2026-го», и необъявленная игра
+ * проезжает фильтр класса 1 насквозь. В наборе точность едет за датой через `^`; набор без
+ * `^` — старая форма, и там точность неизвестна, поэтому день НЕ утверждается.
+ */
+export function точныеДаты(dates) {
+  return (Array.isArray(dates) ? dates : String(dates ?? '').split('|'))
+    .map((d) => String(d ?? '').trim())
+    .filter(Boolean)
+    .map((d) => {
+      const m = /^(\d{4}-\d{2}-\d{2})[^^]*\^(\d+)$/u.exec(d);
+      return m && Number(m[2]) >= ТОЧНОСТЬ_ДО_ДНЯ ? m[1] : null;
+    })
+    .filter(Boolean);
+}
+
+/**
+ * ДОКАЗАННЫЙ ВЫХОД: самая ранняя дата с точностью до дня, НЕ ПОЗЖЕ `по`. `null` — не доказан.
+ * Направление ошибки выбрано намеренно: недобор охвата безопаснее, чем карточка о том,
+ * чего люди ещё не видели.
+ */
+export function provenReleaseDate(dates, по) {
+  const подходящие = точныеДаты(dates).filter((d) => d <= по).sort();
+  return подходящие.length ? подходящие[0] : null;
+}
+
 /**
  * ЗАПРОС ПО ОДНОМУ ВИДУ. Внутренний `SELECT` СУЖАЕТ (объект должен иметь хоть одну дату в
  * искомом году), внешний — СОБИРАЕТ полный набор дат для минимума. Разделение существенно:
@@ -151,16 +183,25 @@ export function sparqlEnrich(qids, { viaSeasons = false } = {}) {
   const веткаСезонов = viaSeasons
     ? `
   UNION
-  { ?season (${связьСезона}) ?item ; p:P577/ps:P577 ?date . BIND("season" AS ?src) }`
+  { ?season (${связьСезона}) ?item ; p:P577/psv:P577 ?dn .
+    ?dn wikibase:timeValue ?date ; wikibase:timePrecision ?prec . BIND("season" AS ?src) }`
     : '';
+  /*
+   * 🔴 ТОЧНОСТЬ ДАТЫ ЕДЕТ ВМЕСТЕ С ДАТОЙ — `psv:` вместо `ps:` (2026-08-22, под класс 1).
+   * Wikidata хранит «2026 год» как `2026-01-01T00:00:00Z` с точностью 9, и голая дата
+   * неотличима от настоящего первого января. Прибор без точности объявил бы вышедшей
+   * необъявленную игру — ровно тот дефект, за который владелец вернул карточки класса 1.
+   * Формат склейки: `ДАТА^ТОЧНОСТЬ`. Прежние разборы берут дату префиксом и не ломаются.
+   */
   return `
 SELECT ?item ?sitelinks ?labelRu ?labelEn
-       (GROUP_CONCAT(DISTINCT STR(?date); separator="|") AS ?dates)
+       (GROUP_CONCAT(DISTINCT CONCAT(STR(?date), "^", STR(?prec)); separator="|") AS ?dates)
        (GROUP_CONCAT(DISTINCT ?src; separator="|") AS ?srcs)
 WHERE {
   VALUES ?item { ${(qids ?? []).map((q) => `wd:${q}`).join(' ')} }
   ?item wikibase:sitelinks ?sitelinks .
-  { ?item p:P577/ps:P577 ?date . BIND("item" AS ?src) }${веткаСезонов}
+  { ?item p:P577/psv:P577 ?dn .
+    ?dn wikibase:timeValue ?date ; wikibase:timePrecision ?prec . BIND("item" AS ?src) }${веткаСезонов}
   OPTIONAL { ?item rdfs:label ?labelRu . FILTER(LANG(?labelRu) = "ru") }
   OPTIONAL { ?item rdfs:label ?labelEn . FILTER(LANG(?labelEn) = "en") }
 }
@@ -220,7 +261,16 @@ export function rowsToItems(bindings, kind, year, { releasedBy = null } = {}) {
      * ⚠️ Объект без единой даты сюда НЕ попадает: отсутствие даты — не доказательство выхода,
      * и решать такой случай обязан человек, а не умолчание прибора.
      */
-    if (releasedBy && перваяДата && перваяДата > releasedBy) { невышедшие.push(запись); continue; }
+    if (releasedBy) {
+      const доказано = provenReleaseDate(row.dates?.value ?? '', releasedBy);
+      if (!доказано) {
+        запись.причина = точныеДаты(row.dates?.value ?? '').length
+          ? 'все точные даты в будущем'
+          : 'ни одной даты с точностью до дня — выход не доказан';
+        невышедшие.push(запись);
+        continue;
+      }
+    }
     if (добран) черезСезон += 1;
     найденные.push(запись);
   }
