@@ -26,7 +26,14 @@
  *   node tools/measure-wikipedia-overlap.mjs --lang ru --limit 200
  *   node tools/measure-wikipedia-overlap.mjs --lang en --from 200 --limit 200
  *   node tools/measure-wikipedia-overlap.mjs --slug two-for-the-money-1myjyafy --lang ru
+ *   node tools/measure-wikipedia-overlap.mjs --slug a-1,b-2,c-3 --lang en   # адресная сверка партии
  *   node tools/measure-wikipedia-overlap.mjs --selftest        # без сети
+ *
+ * 🔑 ДВА ОХВАТА — ДВА МЕСТА ДЛЯ ОТЧЁТА. Свод по каталогу описывает каталог и ложится в
+ * `researches/34_<язык>_wikipedia_overlap.md`; адресная сверка (`--slug`) описывает СПИСОК и
+ * ложится в `test-results/wiki-overlap-addressed-<язык>.md`, документа знания не касаясь.
+ * Живой контроль дороги гоняется, когда записей в прогоне больше одной, — свод без него не
+ * начинается, а точечная проба в нём не нуждается.
  *
  * Прогон возобновляемый: ответы Википедии кладутся в `test-results/wiki-cache/` (вне git), и
  * повторный запуск по тем же записям сети не касается. Поэтому большой каталог берётся частями:
@@ -53,8 +60,27 @@ import { pathToFileURL } from 'node:url';
 
 const SNAPSHOT = 'src/lib/content/dims-build.json';
 const CACHE = 'test-results/wiki-cache';
-const OUT_MD = (lang) => `researches/34_${lang}_wikipedia_overlap.md`;
-const OUT_JSON = (lang) => `test-results/wiki-overlap-${lang}.json`;
+/*
+ * 🔴 АДРЕСНЫЙ ПРОГОН НЕ ПИШЕТ В ОБЩИЙ СВОД, И ЭТО ОПЛАЧЕНО ПРЯМО ЗДЕСЬ (2026-08-22, `bugs/NEW`).
+ *
+ * Отчёт клался в `researches/34_<язык>_wikipedia_overlap.md` НЕЗАВИСИМО от охвата прогона.
+ * Сверка одной партии из 34 записей молча стёрла свод по всему каталогу: 680 строк и 533
+ * найденные копии превратились в 34 записи и 4 копии. Файл под версией, и он вернулся `git
+ * checkout` за секунду, — но вне git это была бы безвозвратная потеря чужой многочасовой работы,
+ * а числа «копий 4» выглядели бы совершенно правдоподобно.
+ *
+ * Разделяющий признак — ОХВАТ, а не намерение: свод по каталогу описывает каталог и живёт в
+ * `researches/`; адресная сверка описывает СПИСОК и живёт рядом с прогоном, в `test-results/`.
+ * Документ знания перезаписывается только тем прогоном, который его и составляет.
+ */
+const OUT_MD = (lang, addressed) =>
+  addressed
+    ? `test-results/wiki-overlap-addressed-${lang}.md`
+    : `researches/34_${lang}_wikipedia_overlap.md`;
+const OUT_JSON = (lang, addressed) =>
+  addressed
+    ? `test-results/wiki-overlap-addressed-${lang}.json`
+    : `test-results/wiki-overlap-${lang}.json`;
 
 /** Порог, которым судим. Взят из поля: им отделены 8 подтверждённых случаев от чистых текстов. */
 export const RUN_THRESHOLD = 10;
@@ -408,7 +434,19 @@ const arg = (name, def = null) => {
 const LANG = arg('--lang', 'ru');
 const LIMIT = Number(arg('--limit', '100'));
 const FROM = Number(arg('--from', '0'));
-const ONLY = arg('--slug', null);
+/**
+ * `--slug` принимает ОДИН адрес или СПИСОК через запятую.
+ *
+ * Список заведён под адресную сверку партии (`plans/56` шаг 3): гонять прибор по одному адресу
+ * тридцать четыре раза значило бы тридцать четыре раза прогнать живой контроль дороги и
+ * тридцать четыре раза напечатать отдельный отчёт, из которого не собрать вердикт по партии.
+ */
+const ONLY = (() => {
+  const raw = arg('--slug', null);
+  if (raw === null) return null;
+  const list = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return list.length ? list : null;
+})();
 
 if (!['ru', 'en'].includes(LANG)) {
   console.error('--lang принимает только ru или en');
@@ -539,7 +577,24 @@ const LIVE_CONTROLS = {
   en: { slug: 'corrective-measures-akp4cezf', minRun: 40 },
 };
 
-if (!ONLY) {
+/** Прогон АДРЕСНЫЙ (список назван) или СВОДНЫЙ (по каталогу) — от этого зависит, куда лечь отчёту. */
+const ADDRESSED = ONLY !== null;
+
+const targets = (ONLY ? dims.filter((d) => ONLY.includes(d.slug)) : dims.slice(FROM, FROM + LIMIT))
+  .filter((d) => (d.description?.[LANG] ?? '').length > 0);
+
+/*
+ * 🔴 КОНТРОЛЬ ДОРОГИ НУЖЕН СВОДУ, А НЕ ТОЧЕЧНОЙ ПРОБЕ — и правило теперь звучит именно так.
+ *
+ * Прежнее условие было `if (!ONLY)`, то есть контроль выключался всякий раз, когда адреса названы
+ * явно. Для пробы одной записи это законно: человек смотрит на конкретный текст и сам видит,
+ * ответила ли Википедия. Но адресная сверка ПАРТИИ (`plans/56` шаг 3, 34 записи) — это свод,
+ * и он шёл бы без той самой защиты, ради которой контроль написан: однажды обрезанный ключ кэша
+ * свалил все статьи в один файл, и прогон честно напечатал «97 чистых».
+ *
+ * Разделяющий признак — не способ выбора записей, а ИХ ЧИСЛО: больше одной — свод.
+ */
+if (targets.length > 1) {
   const CONTROL = LIVE_CONTROLS[LANG];
   if (!CONTROL) {
     console.error(
@@ -562,9 +617,19 @@ if (!ONLY) {
   console.log(`✅ живой контроль (${LANG}): «${CONTROL.slug}» опознан копией (ряд ${run} слов)\n`);
 }
 
-const targets = (ONLY ? dims.filter((d) => d.slug === ONLY) : dims.slice(FROM, FROM + LIMIT)).filter(
-  (d) => (d.description?.[LANG] ?? '').length > 0,
-);
+/*
+ * Названный, но НЕ НАЙДЕННЫЙ адрес — это не «чисто» и не «нечего мерить», а промах задания
+ * (`EXP-0165`: «нет записи» есть утверждение о поиске). Молча посчитать его отсутствие за
+ * успех значило бы отчитаться по партии, часть которой не проверялась вовсе.
+ */
+if (ONLY) {
+  const найдены = new Set(targets.map((d) => d.slug));
+  const пропали = ONLY.filter((s) => !найдены.has(s));
+  if (пропали.length) {
+    console.log(`⚠️ названо адресов: ${ONLY.length}, найдено в каталоге с описанием: ${targets.length}`);
+    console.log(`   НЕ найдены (в вердикт партии не входят): ${пропали.join(', ')}\n`);
+  }
+}
 
 console.log(`\n═══ СВЕРКА С ВИКИПЕДИЕЙ (${LANG}) ═══`);
 console.log(`Записей в прогоне: ${targets.length}${ONLY ? '' : ` (с ${FROM})`} · порог ряда: ${RUN_THRESHOLD} слов\n`);
@@ -618,12 +683,12 @@ for (const [i, d] of targets.entries()) {
    * ни строки, потому что писал только в конце. Работа, которая идёт час, обязана оставлять
    * след раньше своего конца.
    */
-  if ((i + 1) % 100 === 0) writeFileSync(OUT_JSON(LANG), JSON.stringify(results, null, 1), 'utf8');
+  if ((i + 1) % 100 === 0) writeFileSync(OUT_JSON(LANG, ADDRESSED), JSON.stringify(results, null, 1), 'utf8');
 }
 
 // Сортировка по длине ряда: сверху то, что чинить в первую очередь.
 results.sort((a, b) => b.run - a.run);
-writeFileSync(OUT_JSON(LANG), JSON.stringify(results, null, 1), 'utf8');
+writeFileSync(OUT_JSON(LANG, ADDRESSED), JSON.stringify(results, null, 1), 'utf8');
 
 const md = [
   `# Сверка описаний каталога с Википедией — ${LANG.toUpperCase()}`,
@@ -644,12 +709,12 @@ const md = [
     .map((r) => `| \`${r.slug}\` | ${r.article ?? '—'} | ${r.verdict} | ${r.run} | ${r.улика.slice(0, 120)} |`),
   '',
 ].join('\n');
-writeFileSync(OUT_MD(LANG), md, 'utf8');
+writeFileSync(OUT_MD(LANG, ADDRESSED), md, 'utf8');
 
 console.log(
   `\nкопий: ${copied} · перечней имён: ${names} · подозрительных: ${suspect} · ` +
     `чистых: ${clean} · 🔴 НЕ ПРОВЕРЕНО: ${unverified}`,
 );
-console.log(`отчёт: ${OUT_MD(LANG)}`);
-console.log(`машиночитаемо: ${OUT_JSON(LANG)}`);
+console.log(`отчёт: ${OUT_MD(LANG, ADDRESSED)}`);
+console.log(`машиночитаемо: ${OUT_JSON(LANG, ADDRESSED)}`);
 }

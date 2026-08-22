@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "foyle-s-war-ox93icyl",
+    "lang": "en",
+    "why": "Остаточное заимствование партии 1: ряд 14 слов. Прежняя правка добавила зачин «Two people work at his side:» и оставила ЗА НИМ дословную формулу статьи целиком — вершину сняли, ряд остался. Правится весь накрытый кусок; имена, роли и увечье Милнера — факты, они на месте.",
+    "find": "Two people work at his side: his driver Samantha \"Sam\" Stewart (Honeysuckle Weeks) and Detective Sergeant Paul Milner (Anthony Howell), a former soldier who lost a leg in combat.",
+    "replace": "Two people work at his side. Behind the wheel is Samantha \"Sam\" Stewart (Honeysuckle Weeks); on the police work he is joined by Detective Sergeant Paul Milner (Anthony Howell), a former soldier who lost a leg in combat."
+  },
+  {
+    "slug": "tales-from-the-crypt-7qghn3ft",
+    "lang": "en",
+    "why": "Остаточное заимствование партии 1: ряд 12 слов — вводная формула статьи «American horror anthology television series created by …». Порядок слов перестроен, год, десятилетие и оба имени сохранены; названия комиксов в кавычках не тронуты (правило ночи: цитату не переписываем).",
+    "find": "The 1989 American horror anthology television series, created by William Gaines and Steven Dodd, is based on the 1950s EC Comics, including",
+    "replace": "This 1989 American anthology series of horror stories came from William Gaines and Steven Dodd, who built it on the 1950s EC Comics titles"
+  },
+  {
+    "slug": "the-love-boat-bvkc6kcp",
+    "lang": "en",
+    "why": "Остаточное заимствование партии 1: ряд 12 слов — вводная формула статьи. Фраза перестроена от имени создателя; жанр, канал, срок и обе даты сохранены дословно.",
+    "find": "An American romantic comedy-drama television series created by Wilford Lloyd Baumes, which ABC carried for nine years, from September 24, 1977 until May 24, 1986.",
+    "replace": "Wilford Lloyd Baumes created this American series of romance and comedy, which ABC carried for nine years, from September 24, 1977 until May 24, 1986."
+  },
+  {
+    "slug": "ugly-americans-zgji6eoe",
+    "lang": "en",
+    "why": "Остаточное заимствование партии 1: ряд 12 слов — вводная формула статьи «animated sitcom created by … and developed by …». Разведено на два предложения по деятелям; канал, обе даты, число серий и число сезонов сохранены.",
+    "find": "The American animated sitcom, created by Devin Clark and developed by David M. Stern, ran on Comedy Central between March 17, 2010 and April 25, 2012, reaching 31 episodes over two seasons.",
+    "replace": "Devin Clark created this American animated sitcom and David M. Stern developed it. Comedy Central ran the show between March 17, 2010 and April 25, 2012, reaching 31 episodes over two seasons."
+  }
+]
