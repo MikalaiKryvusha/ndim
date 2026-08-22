@@ -26,7 +26,14 @@
  *   node tools/measure-wikipedia-overlap.mjs --lang ru --limit 200
  *   node tools/measure-wikipedia-overlap.mjs --lang en --from 200 --limit 200
  *   node tools/measure-wikipedia-overlap.mjs --slug two-for-the-money-1myjyafy --lang ru
+ *   node tools/measure-wikipedia-overlap.mjs --slug a-1,b-2,c-3 --lang en   # адресная сверка партии
  *   node tools/measure-wikipedia-overlap.mjs --selftest        # без сети
+ *
+ * 🔑 ДВА ОХВАТА — ДВА МЕСТА ДЛЯ ОТЧЁТА. Свод по каталогу описывает каталог и ложится в
+ * `researches/34_<язык>_wikipedia_overlap.md`; адресная сверка (`--slug`) описывает СПИСОК и
+ * ложится в `test-results/wiki-overlap-addressed-<язык>.md`, документа знания не касаясь.
+ * Живой контроль дороги гоняется, когда записей в прогоне больше одной, — свод без него не
+ * начинается, а точечная проба в нём не нуждается.
  *
  * Прогон возобновляемый: ответы Википедии кладутся в `test-results/wiki-cache/` (вне git), и
  * повторный запуск по тем же записям сети не касается. Поэтому большой каталог берётся частями:
@@ -44,15 +51,36 @@
  * История перевесов: ru — «Деньги на двоих» → `the-terminator-isl2hxdu` (2026-08-17, первая
  * запись вылечилась); en — заведён `corrective-measures-akp4cezf` (2026-08-22, ряд 50 слов).
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync, renameSync } from 'node:fs';
+import {
+  readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync, renameSync, readdirSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 
 const SNAPSHOT = 'src/lib/content/dims-build.json';
 const CACHE = 'test-results/wiki-cache';
-const OUT_MD = (lang) => `researches/34_${lang}_wikipedia_overlap.md`;
-const OUT_JSON = (lang) => `test-results/wiki-overlap-${lang}.json`;
+/*
+ * 🔴 АДРЕСНЫЙ ПРОГОН НЕ ПИШЕТ В ОБЩИЙ СВОД, И ЭТО ОПЛАЧЕНО ПРЯМО ЗДЕСЬ (2026-08-22, `bugs/NEW`).
+ *
+ * Отчёт клался в `researches/34_<язык>_wikipedia_overlap.md` НЕЗАВИСИМО от охвата прогона.
+ * Сверка одной партии из 34 записей молча стёрла свод по всему каталогу: 680 строк и 533
+ * найденные копии превратились в 34 записи и 4 копии. Файл под версией, и он вернулся `git
+ * checkout` за секунду, — но вне git это была бы безвозвратная потеря чужой многочасовой работы,
+ * а числа «копий 4» выглядели бы совершенно правдоподобно.
+ *
+ * Разделяющий признак — ОХВАТ, а не намерение: свод по каталогу описывает каталог и живёт в
+ * `researches/`; адресная сверка описывает СПИСОК и живёт рядом с прогоном, в `test-results/`.
+ * Документ знания перезаписывается только тем прогоном, который его и составляет.
+ */
+const OUT_MD = (lang, addressed) =>
+  addressed
+    ? `test-results/wiki-overlap-addressed-${lang}.md`
+    : `researches/34_${lang}_wikipedia_overlap.md`;
+const OUT_JSON = (lang, addressed) =>
+  addressed
+    ? `test-results/wiki-overlap-addressed-${lang}.json`
+    : `test-results/wiki-overlap-${lang}.json`;
 
 /** Порог, которым судим. Взят из поля: им отделены 8 подтверждённых случаев от чистых текстов. */
 export const RUN_THRESHOLD = 10;
@@ -233,6 +261,79 @@ export function isOwnTitle(runText, dim) {
 }
 
 /**
+ * ЖИВ ЛИ ПРОЦЕСС С ТАКИМ pid. Сигнал `0` ничего не посылает — он только спрашивает.
+ *
+ * `EPERM` означает «процесс ЕСТЬ, но он не наш»: чужой процесс — тем более повод не трогать
+ * его файл, поэтому такой ответ считается «жив».
+ */
+export function pidAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === 'EPERM';
+  }
+}
+
+/**
+ * УБОРКА БРОШЕННЫХ `*.tmp-<pid>` ИЗ КЭША.
+ *
+ * Откуда они берутся. Запись в кэш атомарна: сначала во временный файл рядом, затем `rename`
+ * (см. `api()` ниже — так лечились двенадцать записей из нулевых байтов). Атомарность работает,
+ * но у неё есть осадок: процесс, убитый МЕЖДУ записью и переименованием, оставляет
+ * `<ключ>.json.tmp-<pid>` навсегда. Убирать их было некому, и кэш обрастал мусором, который
+ * никто не читает и никто не удаляет.
+ *
+ * 🔴 УБИРАЕМ ТОЛЬКО СВОЁ И АДРЕСНО — класс `EXP-0131`, и здесь он не абстрактный. Прибор
+ * параллелится: два прогона по разным языкам делят один каталог кэша, и в момент уборки у
+ * соседа посреди записи лежит его собственный живой `tmp-<pid>`. Уборка «по площади» — то
+ * есть по маске `*.tmp-*` — снесла бы его на середине записи, и сосед получил бы `ENOENT`
+ * при `rename` посреди чужого свода. Поэтому pid из ИМЕНИ файла спрашивается у системы, и
+ * файл живого процесса не трогается вовсе.
+ *
+ * ⚠️ ЧЕСТНАЯ ГРАНИЦА: номера процессов ПЕРЕИСПОЛЬЗУЮТСЯ. Осиротевший файл, чей pid успела
+ * занять посторонняя программа, будет опознан как живой и останется лежать. Это осознанный
+ * выбор стороны ошибки: лишний мусорный файл стоит ничего, а удалённый файл живого прогона
+ * стоит чужого свода. Ошибаться безопаснее в сторону «не тронул».
+ *
+ * Зависимости впрыснуты параметрами, чтобы тест мог провести случай «сосед ЖИВ» без порождения
+ * настоящих процессов: живость — это ответ системы, а тест обязан быть детерминированным.
+ *
+ * @returns {{ swept: string[], kept: string[] }} — что убрано и что оставлено (с причиной в имени).
+ */
+export function sweepAbandonedTemps(
+  dir,
+  { alive = pidAlive, list = readdirSync, remove = unlinkSync } = {},
+) {
+  const swept = [];
+  const kept = [];
+  let names;
+  try {
+    names = list(dir);
+  } catch {
+    // Каталога ещё нет — убирать нечего, и это не ошибка.
+    return { swept, kept };
+  }
+  for (const name of names) {
+    const m = /\.tmp-(\d+)$/u.exec(name);
+    if (!m) continue;
+    const pid = Number(m[1]);
+    if (alive(pid)) {
+      kept.push(name);
+      continue;
+    }
+    try {
+      remove(join(dir, name));
+      swept.push(name);
+    } catch {
+      // Файл исчез сам или занят — уборка не обязана быть громкой, она обязана быть безопасной.
+      kept.push(name);
+    }
+  }
+  return { swept, kept };
+}
+
+/**
  * Запустили нас или подключили. Ответ нужен ДВАЖДЫ — и сетевой части, и самотесту.
  *
  * 🔴 Оплачено 2026-08-17. Шапка ниже уже называла класс: «файл, у которого есть и экспорт, и
@@ -333,13 +434,35 @@ const arg = (name, def = null) => {
 const LANG = arg('--lang', 'ru');
 const LIMIT = Number(arg('--limit', '100'));
 const FROM = Number(arg('--from', '0'));
-const ONLY = arg('--slug', null);
+/**
+ * `--slug` принимает ОДИН адрес или СПИСОК через запятую.
+ *
+ * Список заведён под адресную сверку партии (`plans/56` шаг 3): гонять прибор по одному адресу
+ * тридцать четыре раза значило бы тридцать четыре раза прогнать живой контроль дороги и
+ * тридцать четыре раза напечатать отдельный отчёт, из которого не собрать вердикт по партии.
+ */
+const ONLY = (() => {
+  const raw = arg('--slug', null);
+  if (raw === null) return null;
+  const list = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return list.length ? list : null;
+})();
 
 if (!['ru', 'en'].includes(LANG)) {
   console.error('--lang принимает только ru или en');
   process.exit(1);
 }
 mkdirSync(CACHE, { recursive: true });
+
+/*
+ * Уборка брошенных временных файлов — ПЕРВЫМ делом прогона и вслух. Молчаливая уборка не
+ * отличима от отсутствия уборки: следующая сессия не узнает ни что мусор был, ни что его нет.
+ */
+{
+  const { swept, kept } = sweepAbandonedTemps(CACHE);
+  if (swept.length) console.log(`🧹 убрано брошенных временных файлов кэша: ${swept.length}`);
+  if (kept.length) console.log(`   оставлено (процесс жив либо файл занят): ${kept.length}`);
+}
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -454,7 +577,24 @@ const LIVE_CONTROLS = {
   en: { slug: 'corrective-measures-akp4cezf', minRun: 40 },
 };
 
-if (!ONLY) {
+/** Прогон АДРЕСНЫЙ (список назван) или СВОДНЫЙ (по каталогу) — от этого зависит, куда лечь отчёту. */
+const ADDRESSED = ONLY !== null;
+
+const targets = (ONLY ? dims.filter((d) => ONLY.includes(d.slug)) : dims.slice(FROM, FROM + LIMIT))
+  .filter((d) => (d.description?.[LANG] ?? '').length > 0);
+
+/*
+ * 🔴 КОНТРОЛЬ ДОРОГИ НУЖЕН СВОДУ, А НЕ ТОЧЕЧНОЙ ПРОБЕ — и правило теперь звучит именно так.
+ *
+ * Прежнее условие было `if (!ONLY)`, то есть контроль выключался всякий раз, когда адреса названы
+ * явно. Для пробы одной записи это законно: человек смотрит на конкретный текст и сам видит,
+ * ответила ли Википедия. Но адресная сверка ПАРТИИ (`plans/56` шаг 3, 34 записи) — это свод,
+ * и он шёл бы без той самой защиты, ради которой контроль написан: однажды обрезанный ключ кэша
+ * свалил все статьи в один файл, и прогон честно напечатал «97 чистых».
+ *
+ * Разделяющий признак — не способ выбора записей, а ИХ ЧИСЛО: больше одной — свод.
+ */
+if (targets.length > 1) {
   const CONTROL = LIVE_CONTROLS[LANG];
   if (!CONTROL) {
     console.error(
@@ -477,9 +617,19 @@ if (!ONLY) {
   console.log(`✅ живой контроль (${LANG}): «${CONTROL.slug}» опознан копией (ряд ${run} слов)\n`);
 }
 
-const targets = (ONLY ? dims.filter((d) => d.slug === ONLY) : dims.slice(FROM, FROM + LIMIT)).filter(
-  (d) => (d.description?.[LANG] ?? '').length > 0,
-);
+/*
+ * Названный, но НЕ НАЙДЕННЫЙ адрес — это не «чисто» и не «нечего мерить», а промах задания
+ * (`EXP-0165`: «нет записи» есть утверждение о поиске). Молча посчитать его отсутствие за
+ * успех значило бы отчитаться по партии, часть которой не проверялась вовсе.
+ */
+if (ONLY) {
+  const найдены = new Set(targets.map((d) => d.slug));
+  const пропали = ONLY.filter((s) => !найдены.has(s));
+  if (пропали.length) {
+    console.log(`⚠️ названо адресов: ${ONLY.length}, найдено в каталоге с описанием: ${targets.length}`);
+    console.log(`   НЕ найдены (в вердикт партии не входят): ${пропали.join(', ')}\n`);
+  }
+}
 
 console.log(`\n═══ СВЕРКА С ВИКИПЕДИЕЙ (${LANG}) ═══`);
 console.log(`Записей в прогоне: ${targets.length}${ONLY ? '' : ` (с ${FROM})`} · порог ряда: ${RUN_THRESHOLD} слов\n`);
@@ -533,12 +683,12 @@ for (const [i, d] of targets.entries()) {
    * ни строки, потому что писал только в конце. Работа, которая идёт час, обязана оставлять
    * след раньше своего конца.
    */
-  if ((i + 1) % 100 === 0) writeFileSync(OUT_JSON(LANG), JSON.stringify(results, null, 1), 'utf8');
+  if ((i + 1) % 100 === 0) writeFileSync(OUT_JSON(LANG, ADDRESSED), JSON.stringify(results, null, 1), 'utf8');
 }
 
 // Сортировка по длине ряда: сверху то, что чинить в первую очередь.
 results.sort((a, b) => b.run - a.run);
-writeFileSync(OUT_JSON(LANG), JSON.stringify(results, null, 1), 'utf8');
+writeFileSync(OUT_JSON(LANG, ADDRESSED), JSON.stringify(results, null, 1), 'utf8');
 
 const md = [
   `# Сверка описаний каталога с Википедией — ${LANG.toUpperCase()}`,
@@ -559,12 +709,12 @@ const md = [
     .map((r) => `| \`${r.slug}\` | ${r.article ?? '—'} | ${r.verdict} | ${r.run} | ${r.улика.slice(0, 120)} |`),
   '',
 ].join('\n');
-writeFileSync(OUT_MD(LANG), md, 'utf8');
+writeFileSync(OUT_MD(LANG, ADDRESSED), md, 'utf8');
 
 console.log(
   `\nкопий: ${copied} · перечней имён: ${names} · подозрительных: ${suspect} · ` +
     `чистых: ${clean} · 🔴 НЕ ПРОВЕРЕНО: ${unverified}`,
 );
-console.log(`отчёт: ${OUT_MD(LANG)}`);
-console.log(`машиночитаемо: ${OUT_JSON(LANG)}`);
+console.log(`отчёт: ${OUT_MD(LANG, ADDRESSED)}`);
+console.log(`машиночитаемо: ${OUT_JSON(LANG, ADDRESSED)}`);
 }

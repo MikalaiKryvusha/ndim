@@ -22,7 +22,7 @@
     "test:tools": "node --test \"tools/*.test.mjs\"",
     "test:rules": "firebase emulators:exec --only firestore,storage --project ndim-rules-test \"node --test tests/rules/*.test.ts\"",
     "test:sync": "firebase emulators:exec --only firestore,auth,storage --project demo-ndim-dev \"node --test sync-server/*.test.mjs\"",
-    "stand": "firebase emulators:exec --only firestore,auth,storage --project demo-ndim-dev \"node tools/seed-dev.mjs && node tools/stand.mjs\"",
+    "stand": "node tools/stand-launch.mjs",
     "e2e": "playwright test",
     "sync:image": "node tools/build-sync-image.mjs",
     "typecheck": "svelte-kit sync && tsc --noEmit",

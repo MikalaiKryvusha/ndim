@@ -187,6 +187,33 @@
   let ticker: ReturnType<typeof setInterval> | null = null;
 
   /**
+   * СОХРАНЁННАЯ КАРТОЧКА ДЕРЖИТ СВОЙ ВИД ДО КОНЦА ОТЪЕЗДА (bugs/172).
+   *
+   * Слово владельца дословно: «Выставленные звёзды исчезают, снимается выделение, исчезают
+   * смайлики, исчезает кнопка «Сохранить»… карточка резко меняет свой внешний вид перед тем,
+   * как начать анимацией уезжать». Ожидание: «Карточка не меняет свой внешний вид. Только
+   * кнопка [Сохранить] может стать, например, зелёной, с текстом [Сохранено]».
+   *
+   * Почему для этого понадобилось ОТДЕЛЬНОЕ состояние, а не флаг внутри `pending`.
+   * Вид карточки собран из `pending` целиком: `starValue` берёт из него горящую звезду, а ряд
+   * смайликов и строка сохранения висят на условии `pending?.dimId === card.id`. `commit()`
+   * гасил `pending` первым делом — и карточка мгновенно теряла ВСЁ разом. Замер прибором
+   * `tools/measure-bug172-card-strip.mjs` (свет, 1440): звёзды 8 → 0 и выделение 1 → 0
+   * НА ОДНОМ КАДРЕ, ряд смайликов 22px → 0 за 240 мс переходом `slide`, кнопка исчезала на
+   * +100 мс — и только потом, ещё через сотню миллисекунд, карточка трогалась с места.
+   *
+   * Флагом `saved` внутри `pending` это не лечится: пока карточка летит (700 мс), человек
+   * вправе тапнуть звезду на СОСЕДНЕЙ карточке, а `pick()` заменяет `pending` целиком — и
+   * улетающая обстриглась бы на середине пути. Два состояния живут независимо и не мешают
+   * друг другу: `pending` — «идёт отсчёт», `saved` — «уже сохранено и сейчас уедет».
+   *
+   * Гасится по `outroend` самой карточки — то есть ровно тогда, когда отъезд закончился, а не
+   * по таймеру на глазок. Ветки, где карточка ОСТАЁТСЯ (выдача поиска, «Мой NDim ID»), гасят
+   * его сами: там отъезда нет и события не будет.
+   */
+  let saved = $state<{ dimId: string; value: number } | null>(null);
+
+  /**
    * Оценённая карточка уезжает ВПРАВО (жест 1.x). Метка отличает этот уход от обычного
    * исчезновения (фильтр, смена вкладки): out-переход по ней выбирает большой сдвиг вправо.
    */
@@ -575,6 +602,15 @@
       pinned.style.overflow = 'hidden';
     }
 
+    /*
+     * ВИД КАРТОЧКИ ПЕРЕДАЁТСЯ ИЗ РУК В РУКИ, А НЕ ГАСНЕТ (bugs/172).
+     *
+     * Порядок здесь и есть починка: `saved` встаёт ДО того, как гаснет `pending`, поэтому
+     * между двумя присваиваниями нет ни одного кадра, в котором карточка не знала бы своей
+     * оценки. Прежняя редакция гасила `pending` и оставляла карточку пустой на всё время
+     * записи в Firestore и ещё сотню миллисекунд сверх — это и видел владелец.
+     */
+    saved = { dimId, value };
     stopCountdown();
     pending = null;
 
@@ -587,6 +623,9 @@
         pinned.style.height = '';
         pinned.style.overflow = '';
       }
+      // …и «сохранено» снимаем: карточка не сохранена, врать о ней нельзя. Звёзды при этом
+      // честно возвращаются к тому, что лежит в `ratings`, — то есть к прежней оценке.
+      saved = null;
       return;
     }
 
@@ -615,6 +654,9 @@
     if (submitted !== '') {
       // В ВЫДАЧЕ ПОИСКА карточка ОСТАЁТСЯ со своими звёздами. Человек искал именно её —
       // если она исчезнет в момент оценки, он решит, что что-то сломалось.
+      // Отъезда здесь нет, значит `outroend` не придёт — гасим «сохранено» сами, иначе
+      // зелёная кнопка осталась бы на карточке навсегда (bugs/172).
+      saved = null;
       showUndo(dimId, card ? dimCardTitle(loc(card.title), card.year).name : '');
     } else if (tab === 'all') {
       // Карточка уезжает вправо (как в 1.x): её везёт out-переход, а соседей плавно
@@ -626,6 +668,10 @@
       if (flightTimer !== null) clearTimeout(flightTimer);
       flightTimer = setTimeout(() => (flying = false), MOTION.gesture);
       showUndo(dimId, card ? dimCardTitle(loc(card.title), card.year).name : '');
+    } else {
+      // Во вкладке «Мой NDim ID» карточка тоже остаётся — гасим «сохранено» по той же
+      // причине, что и в выдаче поиска: отъезда нет, `outroend` не придёт.
+      saved = null;
     }
     // Во вкладке «Мой NDim ID» карточка ОСТАЁТСЯ и переезжает по сортировке. Раньше смена
     // оценки отсюда ВЫКИДЫВАЛА карточку из вкладки, хотя оценка стояла (bugs/18, п. 4).
@@ -655,6 +701,10 @@
     next.delete(dimId);
     ratings = next;
     leaving = null; // вернувшаяся карточка впредь уходит как обычная, а не «вправо»
+    // …и «сохранено» с неё снимается: оценки больше нет, зелёная кнопка на ней была бы
+    // ложью. Отмена во время полёта воскрешает ТОТ ЖЕ узел (bugs/96), поэтому событие
+    // `outroend` может и не прийти вовсе — гасим здесь явно (bugs/172).
+    if (saved?.dimId === dimId) saved = null;
 
     // Возвращаем измерение в начало очереди и сразу показываем — человек должен УВИДЕТЬ результат.
     queue = feedWithRestored(queue, dimId);
@@ -753,6 +803,10 @@
    */
   function starValue(dimId: string): number | null {
     if (pending?.dimId === dimId) return pending.value;
+    // Сохранённая и уезжающая карточка светит своими звёздами до конца отъезда (bugs/172).
+    // Ветка нужна и после обновления `ratings`: между `pending = null` и ответом Firestore
+    // есть окно, в котором оценки нет НИ ТАМ, НИ ТАМ, — ровно в нём звёзды и гасли.
+    if (saved?.dimId === dimId) return saved.value;
     return ratings.get(dimId) ?? null;
   }
 
@@ -1110,6 +1164,10 @@
     isNew: { ru: 'Новое', en: 'New' },
     noVotes: { ru: 'ещё без голосов', en: 'no votes yet' },
     saveNow: { ru: 'Сохранить сейчас', en: 'Save now' },
+    // Слово владельца дословно (bugs/172): «кнопка [Сохранить] может стать, например,
+    // зелёной, с текстом [Сохранено]». Короткая форма — именно для кнопки; длинная
+    // («Оценка сохранена», `saved` ниже) занята поп-апом отмены и остаётся за ним.
+    savedShort: { ru: 'Сохранено', en: 'Saved' },
     savingIn: { ru: 'Сохраню через', en: 'Saving in' },
     sec: { ru: 'с', en: 's' },
     saved: { ru: 'Оценка сохранена', en: 'Rating saved' },
@@ -1359,6 +1417,18 @@
       <div class="feed">
         {#each visible as card (card.id)}
           {@const mine = starValue(card.id)}
+          <!--
+            Состояние жеста этой карточки, одним объектом на весь шаблон (bugs/172): либо идёт
+            отсчёт (`pending`), либо оценка уже сохранена и карточка сейчас уедет (`saved`).
+            Вид у этих двух состояний ОДИН И ТОТ ЖЕ — в этом вся суть починки; различается
+            только содержимое строки сохранения.
+          -->
+          {@const held =
+            pending?.dimId === card.id
+              ? { value: pending.value, left: pending.left, done: false }
+              : saved?.dimId === card.id
+                ? { value: saved.value, left: 0, done: true }
+                : null}
           {@const kind = typeKind(card)}
           {@const title = dimCardTitle(loc(card.title), card.year)}
           <article
@@ -1367,6 +1437,7 @@
             in:fly={{ y: 14, duration: MOTION.base, easing: cubicOut }}
             out:flyAway={{ away: leaving === card.id }}
             animate:flip={{ duration: MOTION.slow, delay: flying ? MOTION.gesture : 0, easing: cubicOut }}
+            onoutroend={() => { if (saved?.dimId === card.id) saved = null; }}
           >
             <div class="top">
               <div class="titles">
@@ -1451,7 +1522,7 @@
               {/each}
             </div>
 
-            {#if pending?.dimId === card.id}
+            {#if held}
               <!--
                 РЯД СМАЙЛИКОВ (bugs/80, интервью №007 В9). Слово владельца дословно:
                 «не один смайлик, а появляется весь ряд смайликов, если звезда выбрана и ждёт
@@ -1470,15 +1541,27 @@
                    как подёргивание («странно пульсирует», слово владельца 2026-07-30). -->
               <div class="faces" aria-hidden="true" transition:slide={{ duration: MOTION.base }}>
                 {#each GRADE_FACES as _, grade (grade)}
-                  <span class="fc" class:picked={pending.value === grade}>
+                  <span class="fc" class:picked={held.value === grade}>
                     <GradeFace {grade} size={22} />
                   </span>
                 {/each}
               </div>
 
+              <!--
+                СТРОКА СОХРАНЕНИЯ ЖИВЁТ И ПОСЛЕ ЗАПИСИ (bugs/172): раскладка та же, меняется
+                ровно то, что владелец разрешил менять, — кнопка.
+                🔑 Пустой `<span>` в сохранённом состоянии стоит НАМЕРЕННО: строка разложена
+                `justify-content: space-between`, и без левого узла кнопка прыгнула бы влево —
+                то есть карточка снова «поменяла бы вид», уже нашими руками.
+              -->
               <div class="countdown" transition:slide={{ duration: MOTION.base }}>
-                <span>{t.savingIn[lang]} {pending.left} {t.sec[lang]}…</span>
-                <button type="button" class="now" onclick={() => void commit()}>{t.saveNow[lang]}</button>
+                {#if held.done}
+                  <span></span>
+                  <button type="button" class="now done" disabled>{t.savedShort[lang]}</button>
+                {:else}
+                  <span>{t.savingIn[lang]} {held.left} {t.sec[lang]}…</span>
+                  <button type="button" class="now" onclick={() => void commit()}>{t.saveNow[lang]}</button>
+                {/if}
               </div>
             {/if}
 
@@ -1947,6 +2030,18 @@
   .now {
     background: var(--primary); border: 0; color: var(--primary-ink); font: inherit; font-size: 13px;
     border-radius: 999px; padding: 6px 14px; cursor: pointer;
+  }
+  /* Сохранено (bugs/172). Геометрия та же, что у `.now`, — меняются только цвет и текст,
+     иначе карточка «поменяла бы вид» ровно тем движением, которым мы это чиним.
+
+     🔑 Селектор `.now.done:disabled`, а НЕ `.now.done`, и это не украшение специфичности.
+     Ниже в этом же файле давно живёт `.now:disabled { opacity: .5 }` — у него ровно та же
+     специфичность (0,2,0), а стоит он ПОЗЖЕ, поэтому побеждал он. Замер поймал то, чего
+     глаз бы не доказал: кнопка приходила `rgb(10,127,92)` при `opacity: 0.5`, то есть
+     зелёный владельца выцветал вдвое. Третий класс в селекторе снимает спор по правилам,
+     а не `!important`-ом. */
+  .now.done:disabled {
+    background: var(--ok); color: var(--ok-ink); cursor: default; opacity: 1;
   }
 
   .deep {
