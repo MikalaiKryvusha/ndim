@@ -35,9 +35,18 @@
  */
 
 import { mkdir } from 'node:fs/promises';
+import { basename } from 'node:path';
 import { chromium } from '@playwright/test';
 
-const BASE = 'http://localhost:5173';
+import { portsFor, slotOf } from './lib/stand-slot.mjs';
+
+/*
+ * 🅿 Адрес стенда — из слота рабочего места (тестовый парк): литерал 5173 вёл страж роли на
+ * dev-сервер СОСЕДА. Правка попутная и минимальная — прибор понадобился для проверки правки
+ * 08.1 ниже; общий хвост литеральных адресов остаётся работой фазы 3 парка.
+ */
+const BASE =
+  process.env.PROBE_BASE ?? `http://localhost:${portsFor(slotOf(basename(process.cwd())).slot).dev}`;
 const AUTH = 'http://127.0.0.1:9099';
 const PROJECT = 'demo-ndim-dev';
 const SHOTS = 'test-results/bugs08';
@@ -157,9 +166,24 @@ try {
   console.log('08.1 · лендинг: без сессии остаёмся, с сессией уводит внутрь:');
   {
     const { context, page } = await person(browser, { width: 390, height: 740 });
+    /*
+     * 🔴 ПРОВЕРКА УТВЕРЖДАЛА ОБРАТНОЕ ТОМУ, ЧТО ДЕЛАЕТ ПРОДУКТ (правка 2026-08-22, находка QA).
+     *
+     * Было: `pathname === '/'` после `waitForTimeout(2000)` с подписью «окно, в котором редирект
+     * успел бы случиться». Но корень перестал быть лендингом: с `plans/39` он распознаватель
+     * языка и делает `location.replace('/' + lang)` БЕЗУСЛОВНО, у всех. То есть проверка ждала
+     * две секунды, чтобы убедиться в том, чего продукт не делает ни при каких условиях.
+     *
+     * Смысл пункта 08.1 при этом НЕ изменился и не ослаблен: «без сессии человек остаётся
+     * СНАРУЖИ, с сессией его уводит ВНУТРЬ». Просто «снаружи» теперь называется `/ru` или `/en`,
+     * а не `/`. Судим по этому, и ждём АДРЕСА, а не секунд: ожидание по таймеру — лотерея,
+     * которая на медленной машине красит зелёным пустоту.
+     */
     await page.goto(`${BASE}/`);
-    await page.waitForTimeout(2000); // окно, в котором редирект успел бы случиться
-    check('без сессии лендинг остаётся', new URL(page.url()).pathname === '/', page.url());
+    await page.waitForURL(/\/(ru|en)$/, { timeout: 10000 }).catch(() => {});
+    const outside = new URL(page.url()).pathname;
+    check('без сессии человек остаётся СНАРУЖИ — на языковом лендинге', /^\/(ru|en)$/.test(outside), page.url());
+    check('и это НЕ корень: корень стал распознавателем языка (plans/39)', outside !== '/', page.url());
 
     await page.goto(`${BASE}/profile`); // стенд входит сам (dev@ndim.space)
     await page.waitForSelector('.head-card', { timeout: 20000 });

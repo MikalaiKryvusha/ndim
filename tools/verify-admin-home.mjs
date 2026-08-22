@@ -17,16 +17,35 @@
  *
  * Запуск: `npm run build` (свежий build/) + `npm run stand` (эмуляторы) →
  *         `node tools/verify-admin-home.mjs`
- * Страж сам поднимает `vite preview` на :4173 (--strictPort), если порт свободен, — судим
- * СОБРАННЫЙ сайт, как велит план. Клейм админа dev-пользователю выставляется REST'ом
- * эмулятора (Bearer owner) — идемпотентно, сид делает то же самое.
+ * Страж сам поднимает `vite preview` НА ПОРТУ СВОЕГО СЛОТА, если порт свободен (порт и
+ * `--strictPort` даёт `vite.config.ts`), — судим СОБРАННЫЙ сайт, как велит план. Клейм админа
+ * dev-пользователю выставляется REST'ом эмулятора (Bearer owner) — идемпотентно, сид делает
+ * то же самое.
  */
 import { chromium } from 'playwright';
 import { spawn, execSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { basename } from 'node:path';
 
-const BASE = process.env.PROBE_BASE ?? 'http://localhost:4173';
-const AUTH = 'http://127.0.0.1:9099';
+import { portsFor, slotOf } from './lib/stand-slot.mjs';
+
+/*
+ * 🅿 АДРЕСА — ИЗ СЛОТА РАБОЧЕГО МЕСТА (фаза 2 тестового парка), а не литералами.
+ *
+ * Этот страж — один из ДВУХ приборов проекта, которые сами ПОДНИМАЮТ сервер (второй — дверь
+ * выката, она живёт в главной копии на слоте 0 и правки не требует). Пока порт был литеральным,
+ * страж роли занимал бы порт Менеджера и судил бы чужую сборку — это не «литерал в приборе»
+ * (хвост фазы 3), а живое столкновение, и потому чинится здесь.
+ *
+ * Адрес эмулятора Auth берётся из окружения, если прибор запущен ПОД `emulators:exec` (оно
+ * экспортирует настоящие порты), иначе выводится из слота: страж штатно гоняется рядом с уже
+ * поднятым `npm run stand`, где переменной нет.
+ */
+const STAND = portsFor(slotOf(basename(process.cwd())).slot);
+const BASE = process.env.PROBE_BASE ?? `http://localhost:${STAND.preview}`;
+const AUTH = process.env.FIREBASE_AUTH_EMULATOR_HOST
+  ? `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}`
+  : `http://127.0.0.1:${STAND.auth}`;
 const DEV_USER = { email: 'dev@ndim.space', password: 'ndim-dev-stand' };
 const OUT = 'test-results/admin-home';
 /*
@@ -75,7 +94,7 @@ console.log('Статика (build/):');
 // ── Живой сайт: эмуляторы + preview ─────────────────────────────────────────────────────────
 const authAlive = await fetch(`${AUTH}/`).then((r) => r.ok).catch(() => false);
 if (!authAlive) {
-  console.error('\n❌ Auth-эмулятор (9099) не отвечает. Подними стенд: npm run stand');
+  console.error(`\n❌ Auth-эмулятор (${AUTH}) не отвечает. Подними стенд: npm run stand`);
   process.exit(1);
 }
 
@@ -102,7 +121,8 @@ await grantAdmin();
 let preview = null;
 const previewAlive = await fetch(BASE).then((r) => r.ok).catch(() => false);
 if (!previewAlive) {
-  preview = spawn('npx', ['vite', 'preview', '--strictPort', '--port', '4173'], {
+  // Порт и `--strictPort` даёт `vite.config.ts` из слота — второго списка портов в проекте нет.
+  preview = spawn('npx', ['vite', 'preview'], {
     shell: true,
     stdio: 'ignore',
   });
@@ -113,7 +133,7 @@ if (!previewAlive) {
     if (!up) await new Promise((r) => setTimeout(r, 500));
   }
   if (!up) {
-    console.error('❌ preview на :4173 не поднялся за 20 с');
+    console.error(`❌ preview на ${BASE} не поднялся за 20 с`);
     process.exit(1);
   }
 }

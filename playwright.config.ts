@@ -1,4 +1,20 @@
+import { basename, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig } from '@playwright/test';
+
+import { portsFor, slotOf } from './tools/lib/stand-slot.mjs';
+
+/**
+ * 🅿 АДРЕС ПРОГОНА — ПОРТ СВОЕГО СЛОТА, А НЕ ОБЩИЙ 4173 (фаза 2 тестового парка, метаплан
+ * `plans/68`: «*`playwright.config.ts`: адрес из слота*»).
+ *
+ * Слот выводится так же, как в `vite.config.ts`, и из того же модуля: имя рабочего места роли.
+ * Второго списка портов в проекте нет — он был бы первым местом, где парк разъедется сам с собой.
+ */
+const SLOT = basename(dirname(fileURLToPath(import.meta.url)));
+const PREVIEW = portsFor(slotOf(SLOT).slot).preview;
+const BASE_URL = `http://localhost:${PREVIEW}`;
 
 // E2E-стенд NDim Space (Playwright). Философия: тестируем ПРОДАКШЕН-артефакт,
 // а не dev-сервер — webServer сначала собирает сайт (adapter-static + пререндер),
@@ -23,7 +39,7 @@ export default defineConfig({
 	fullyParallel: true,
 	reporter: 'list',
 	use: {
-		baseURL: 'http://localhost:4173',
+		baseURL: BASE_URL,
 		trace: 'retain-on-failure',
 		// 🔴 ЯЗЫК БРАУЗЕРА ФИКСИРУЕТСЯ ЯВНО, а не берётся с машины, где идёт прогон.
 		//
@@ -42,9 +58,35 @@ export default defineConfig({
 	},
 	webServer: {
 		// Пересборка на каждый прогон (~5 с) — e2e никогда не смотрит на протухший build/
+		//
+		// 🅿 ОКРУЖЕНИЯ СЛОТА ЗДЕСЬ НЕТ, И ЭТО НЕ ПРОПУСК. Порты — и сайта, и эмуляторов — выводит
+		// `vite.config.ts` из имени рабочего места, поэтому ОБЕ половины команды получают свой
+		// слот сами. Разведка требовала нести окружение в обе половины; требование исполнено
+		// сильнее — нести стало нечего. Не «чини» эту пустоту переменными: они вернут второе
+		// место правды, которое разойдётся с первым.
 		command: 'npm run build && npm run preview',
-		url: 'http://localhost:4173',
-		reuseExistingServer: true,
+		url: BASE_URL,
+
+		/*
+		 * 🔴 `false`, И ЭТО ГЛАВНАЯ ПРАВКА ФАЗЫ 2 (метаплан `plans/68`: «*мина „чужая сборка
+		 * молча“ обязана умереть механикой, не дисциплиной*»).
+		 *
+		 * Точная форма мины, снятая чтением установленного Playwright 1.61.1
+		 * (`node_modules/playwright/lib/runner/index.js:821–832`): при живом сервере на нужном
+		 * адресе `reuseExistingServer: true` делает `return` — а этот `return` стоит ВЫШЕ
+		 * `launchProcess`. Наш `command` — `npm run build && npm run preview` ОДНОЙ строкой,
+		 * значит не запускается не только сервер, но и СБОРКА. Прогон судит артефакт, к которому
+		 * правка роли никогда не прикасалась.
+		 *
+		 * Опаснее не красное, а ЗЕЛЁНОЕ: роль со сломанной правкой получает зелёный e2e, если на
+		 * порту висит здоровая сборка соседа или своя вчерашняя (`EXP-0091` — осиротевший preview
+		 * отдаёт СТАРУЮ сборку). При `false` Playwright бросает громкую ошибку С ИМЕНЕМ ПОРТА:
+		 * тихий неверный прогон обменян на точный отказ.
+		 *
+		 * ⚠️ Цена названа честно: у того, кто держит свой вчерашний preview, прогон теперь
+		 * КРАСНЕЕТ. Это не регрессия, а обнажившийся отказ — и он называет, что гасить.
+		 */
+		reuseExistingServer: false,
 		timeout: 120_000,
 	},
 	projects: [

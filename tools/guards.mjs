@@ -20,17 +20,29 @@
  * прячет остальные — сессия чинит одно, гоняет снова, находит второе. Здесь стражи идут до
  * конца, вывод зелёных сворачивается в строку, а вывод КАЖДОГО красного печатается целиком.
  *
- * ⚠️ ГОНИ ПОСЛЕ `git add`, А НЕ ДО. Страж бренд-имени перечисляет файлы через `git ls-files` —
- * то есть НЕ ВИДИТ неотслеживаемых. Новый файл до постановки в индекс для него не существует, и
- * ворота на нём зелены бессодержательно. Поймано мутацией при постройке этих же ворот: пробный
- * файл с запрещённым именем прошёл незамеченным, пока не был добавлен в индекс. Это не дефект
- * стража — он судит РЕПОЗИТОРИЙ, — но знать про порядок обязан тот, кто зовёт ворота.
+ * 🔴 ПЕРЕПИСЬ НЕОТСЛЕЖИВАЕМЫХ — ПРЕДУСЛОВИЕ ВОРОТ, А НЕ ПАМЯТКА В ШАПКЕ.
+ *
+ * Страж бренд-имени перечисляет файлы через `git ls-files`, то есть судит РЕПОЗИТОРИЙ, а не
+ * рабочее дерево. Новый файл до постановки в индекс для него не существует — и ворота на нём
+ * зелены бессодержательно. Поймано мутацией при постройке этих же ворот: пробный файл с
+ * запрещённым именем прошёл незамеченным, пока не был добавлен в индекс.
+ *
+ * Здесь стояла проза «гони ПОСЛЕ `git add`, а не ДО». Она не работала по той же причине, по
+ * которой не работает страж вне ворот (`EXP-0194`): её надо ПОМНИТЬ ровно в ту минуту, когда
+ * некогда. Теперь ворота считают неотслеживаемые сами
+ * (`git ls-files --others --exclude-standard`) и ОТКАЗЫВАЮТСЯ выдавать зелёное, пока дерево не
+ * совпало с репозиторием. Лечение — одна команда, и она названа прямо в отказе.
+ *
+ * ⛔ Флага «прогнать всё равно» здесь нет НАМЕРЕННО: он вернул бы ровно то зелёное, ради запрета
+ * которого перепись и заведена. Нужен прогон одного стража по грязному дереву — зови его
+ * напрямую, он от этого не изменится.
  *
  * Запуск:
  *   npm run guards              # обычный прогон перед сдачей (после `git add`)
  *   npm run guards -- --verbose # печатать вывод и зелёных тоже
  */
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Состав ворот. Каждый страж зовётся НАПРЯМУЮ, без вложенного `npm run`: вложенный npm на
@@ -54,39 +66,137 @@ const GUARDS = [
   },
 ];
 
-const verbose = process.argv.includes('--verbose');
-const started = Date.now();
-const failed = [];
+/**
+ * Команда переписи неотслеживаемых.
+ *
+ * 🔴 `--exclude-standard` — НЕ УКРАШЕНИЕ, А УСЛОВИЕ ОСМЫСЛЕННОСТИ. Без него git перечисляет и
+ * игнорируемое: на этом дереве 2026-08-22 перепись дала **63 777** файлов против **0** с флагом
+ * (`node_modules`, `build`, `.svelte-kit`, кадры прогонов). Без флага крик стоял бы всегда и на
+ * всём, то есть перестал бы значить хоть что-нибудь через один прогон.
+ */
+export const UNTRACKED_ARGV = Object.freeze(['ls-files', '--others', '--exclude-standard']);
 
-console.log('\n═══ ВОРОТА СДАЧИ ═══\n');
+/** Сколько имён печатать до «и ещё N»: отказ обязан быть читаемым, а не простынёй. */
+export const UNTRACKED_SHOWN = 12;
 
-for (const guard of GUARDS) {
-  const t = Date.now();
-  // Вывод захватываем, а не наследуем: зелёный страж обязан занимать ОДНУ строку, иначе итог
-  // тонет в трёх сотнях строк успеха и его перестают читать.
-  const run = spawnSync(process.execPath, guard.argv, { encoding: 'utf8' });
-  const seconds = ((Date.now() - t) / 1000).toFixed(1);
-  const ok = run.status === 0;
-  console.log(`${ok ? '✅' : '❌'} ${guard.name} · ${seconds} с`);
-  if (!ok) {
-    failed.push(guard);
-    console.log(`   почему это важно: ${guard.why}`);
-    console.log((run.stdout ?? '').trimEnd());
-    if (run.stderr) console.log((run.stderr ?? '').trimEnd());
-    console.log('');
-  } else if (verbose) {
-    console.log((run.stdout ?? '').trimEnd());
+/**
+ * Разбор вывода переписи в список путей.
+ *
+ * ⚠️ Разбиение учитывает CRLF: у проекта `core.autocrlf=true`, и хвостовой `\r` превратил бы
+ * путь в несуществующий — тот же капкан, что уже оплачен в страже бренд-имени.
+ *
+ * @param {string} stdout вывод `git ls-files --others --exclude-standard`
+ * @returns {string[]} пути, как их видит git (пустых строк нет)
+ */
+export function untrackedFrom(stdout) {
+  return String(stdout ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Строки крика о неотслеживаемых. Отдельной функцией — чтобы текст отказа проверялся юнитом, а
+ * не глазами: отказ, который никто не читал, объясняет хуже, чем не отказывает вовсе.
+ *
+ * @param {string[]} files пути из переписи
+ * @returns {string[]} строки для печати (пустой массив, если кричать не о чем)
+ */
+export function untrackedCry(files) {
+  if (files.length === 0) return [];
+  const shown = files.slice(0, UNTRACKED_SHOWN);
+  const rest = files.length - shown.length;
+  return [
+    `🔴 НЕОТСЛЕЖИВАЕМЫХ ФАЙЛОВ: ${files.length} — СТРАЖИ ИХ НЕ УВИДЯТ`,
+    '   Ворота судят РЕПОЗИТОРИЙ (`git ls-files`), а не рабочее дерево: файла до `git add`',
+    '   для них не существует, и зелёное на нём ничего не значит.',
+    ...shown.map((f) => `   · ${f}`),
+    ...(rest > 0 ? [`   · …и ещё ${rest}`] : []),
+    '   Лечение — назвать пути явно: git add <пути выше>, затем повторить ворота.',
+    '   (сгребающее `git add -A` законно только после осмотра `git status` — канон «Коммиты»)',
+    '',
+  ];
+}
+
+/* ── Ход ────────────────────────────────────────────────────────────────────────────────── */
+
+function main() {
+  const verbose = process.argv.includes('--verbose');
+  const started = Date.now();
+  const failed = [];
+
+  console.log('\n═══ ВОРОТА СДАЧИ ═══\n');
+
+  /*
+   * Перепись идёт ПЕРЕД стражами, а не после: она предусловие, и увидеть её надо раньше зелёных
+   * строк. Стражей при этом всё равно гоняем — красный страж полезен и на грязном дереве, а
+   * второй заход ради него стоил бы сессии лишний круг.
+   */
+  const census = spawnSync('git', [...UNTRACKED_ARGV], { encoding: 'utf8', maxBuffer: 1 << 28 });
+  const censusFailed = Boolean(census.error) || census.status !== 0;
+  const untracked = censusFailed ? [] : untrackedFrom(census.stdout);
+  if (censusFailed) {
+    /*
+     * Перепись не снята → зелёного нет. Это не особый случай, а то же самое правило: ворота не
+     * утверждают того, чего не проверили.
+     */
+    const reason = String(census.error?.message ?? census.stderr ?? '').trim();
+    console.log('🔴 ПЕРЕПИСЬ НЕОТСЛЕЖИВАЕМЫХ НЕ СНЯТА — git не ответил');
+    console.log(`   ${reason || 'причина не названа'}`);
+    console.log('   Пока перепись не снята, ворота не могут сказать «чисто»: они не знают, всё ли судили.\n');
+  } else {
+    for (const line of untrackedCry(untracked)) console.log(line);
   }
+
+  for (const guard of GUARDS) {
+    const t = Date.now();
+    // Вывод захватываем, а не наследуем: зелёный страж обязан занимать ОДНУ строку, иначе итог
+    // тонет в трёх сотнях строк успеха и его перестают читать.
+    const run = spawnSync(process.execPath, guard.argv, { encoding: 'utf8' });
+    const seconds = ((Date.now() - t) / 1000).toFixed(1);
+    const ok = run.status === 0;
+    console.log(`${ok ? '✅' : '❌'} ${guard.name} · ${seconds} с`);
+    if (!ok) {
+      failed.push(guard);
+      console.log(`   почему это важно: ${guard.why}`);
+      console.log((run.stdout ?? '').trimEnd());
+      if (run.stderr) console.log((run.stderr ?? '').trimEnd());
+      console.log('');
+    } else if (verbose) {
+      console.log((run.stdout ?? '').trimEnd());
+    }
+  }
+
+  const total = ((Date.now() - started) / 1000).toFixed(1);
+  const blind = censusFailed || untracked.length > 0;
+  console.log('\n──────────────────────────────────────────────────────────────');
+
+  if (failed.length === 0 && !blind) {
+    console.log(`✅ ВОРОТА ЧИСТЫ: стражей ${GUARDS.length}, все зелёные · ${total} с`);
+    process.exit(0);
+  }
+
+  if (failed.length > 0) {
+    console.log(`❌ ВОРОТА ЗАКРЫТЫ: красных ${failed.length} из ${GUARDS.length} · ${total} с`);
+    for (const f of failed) console.log(`   · ${f.name}`);
+    console.log('\nСдавать работу с красными воротами нельзя: каждый из этих стражей доказан');
+    console.log('мутацией, то есть его красный — это находка, а не шум.');
+  } else {
+    console.log(
+      `⚠️  ЗЕЛЁНОГО НЕТ: стражи чисты (${GUARDS.length}/${GUARDS.length}), но судили не всё дерево · ${total} с`,
+    );
+  }
+
+  if (censusFailed) {
+    console.log('\n🔴 Перепись неотслеживаемых не снята — ворота не знают, всё ли судили.');
+  } else if (untracked.length > 0) {
+    console.log(
+      `\n🔴 Вне индекса файлов: ${untracked.length} — стражи их НЕ судили. Зелёное на них ничего не значит.`,
+    );
+    console.log('   git add <пути выше>, затем повторить ворота.');
+  }
+  process.exit(1);
 }
 
-const total = ((Date.now() - started) / 1000).toFixed(1);
-console.log('\n──────────────────────────────────────────────────────────────');
-if (failed.length === 0) {
-  console.log(`✅ ВОРОТА ЧИСТЫ: стражей ${GUARDS.length}, все зелёные · ${total} с`);
-  process.exit(0);
-}
-console.log(`❌ ВОРОТА ЗАКРЫТЫ: красных ${failed.length} из ${GUARDS.length} · ${total} с`);
-for (const f of failed) console.log(`   · ${f.name}`);
-console.log('\nСдавать работу с красными воротами нельзя: каждый из этих стражей доказан');
-console.log('мутацией, то есть его красный — это находка, а не шум.');
-process.exit(1);
+/* Точка входа только по прямому запуску: иначе юниты не смогли бы импортировать разбор и текст. */
+if (Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href) main();

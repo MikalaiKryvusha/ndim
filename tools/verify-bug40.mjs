@@ -84,7 +84,19 @@ const LOOK = () => {
   };
 };
 
-/** Покадровая трасса со стороны Node: редирект уничтожает контекст исполнения страницы. */
+/**
+ * Покадровая трасса со стороны Node: редирект уничтожает контекст исполнения страницы.
+ *
+ * 🔴 ОСТАНОВ — ПО ПРИБЫТИЮ, А НЕ ПО УХОДУ С КОРНЯ, и это правка дефекта самого стража
+ * (2026-08-22). Прежняя строка была `if (path !== '/') break;` — трасса обрывалась ровно
+ * в тот миг, когда путь переставал быть корнем. А после переезда лендинга на `/ru`
+ * (`plans/39`) это и есть миг ПОЯВЛЕНИЯ ЛЕНДИНГА: страж закрывал глаза за кадр до того, что
+ * обязан был судить, и три недели показывал 71 зелёную проверку на живом дефекте, который
+ * владелец видел своими глазами. Класс — «страж смотрит на мир, которого больше нет».
+ *
+ * Теперь трасса идёт, ПОКА ЧЕЛОВЕК НЕ ПРИШЁЛ ДОМОЙ (`/profile`), либо пока не кончились кадры.
+ * Путь между входом и домом — это ровно то, ради чего страж существует.
+ */
 async function trace(page, frames = 40) {
   const out = [];
   for (let i = 0; i < frames; i++) {
@@ -93,7 +105,7 @@ async function trace(page, frames = 40) {
     } catch {
       continue; // контекст снесён навигацией — это сам переход
     }
-    if (out[out.length - 1].path !== '/') break;
+    if (out[out.length - 1].path.startsWith('/profile')) break;
     await page.waitForTimeout(16);
   }
   return out;
@@ -204,6 +216,26 @@ for (const theme of THEMES) {
         `${tag}: редирект вошедшего внутрь не состоялся`,
       );
 
+      // ── 2б. 🔴 ВХОД С ЯЗЫКОВОГО ЛЕНДИНГА — настоящий вход человека после `plans/39` ────
+      // Корень — лишь распознаватель языка, он уводит отсюда в первом же кадре. Сам лендинг
+      // живёт на `/ru` и `/en`, и туда ведут закладка, поисковая выдача и возврат по истории.
+      // Пока страж судил ОДИН вход, дефект на втором прожил три недели при 71 зелёной
+      // проверке (2026-08-22, третья жалоба владельца). Судим оба.
+      await page.goto(`${BASE}/ru`, { waitUntil: 'commit' });
+      const fromLanding = await trace(page, 40);
+      check(
+        fromLanding.every((f) => !f.landing),
+        `${tag}: вошедший увидел лендинг на /ru в ${fromLanding.filter((f) => f.landing).length} кадрах — щит не поднялся на настоящем входе`,
+      );
+      check(
+        fromLanding.some((f) => f.shield),
+        `${tag}: на /ru щит не продержался ни одного кадра`,
+      );
+      check(
+        fromLanding.some((f) => f.path.startsWith('/profile')),
+        `${tag}: с /ru редирект вошедшего внутрь не состоялся`,
+      );
+
       // ── 3. ВЫХОД. Маркер обязан погаснуть сам, иначе вышедшего встретит щит ────────
       // «Выйти» живёт в виджете «Аккаунт» на «Профиле» (ideas/19, переезд из «Меню»).
       await page.goto(BASE + '/profile', { waitUntil: 'domcontentloaded' });
@@ -247,7 +279,7 @@ for (const theme of THEMES) {
       await page.route('**/*', (route) =>
         route.request().resourceType() === 'document' ? route.continue() : route.abort(),
       );
-      await page.goto(BASE + '/', { waitUntil: 'commit' });
+      await page.goto(BASE + '/ru', { waitUntil: 'commit' });
       await page.waitForTimeout(400);
       await page.screenshot({ path: `${OUT}/boot-${theme}-${size.name}.png` });
       await ctx.close();
@@ -270,7 +302,7 @@ for (const theme of THEMES) {
   await page.route('**/*', (route) =>
     route.request().resourceType() === 'document' ? route.continue() : route.abort(),
   );
-  await page.goto(BASE + '/', { waitUntil: 'commit' });
+  await page.goto(BASE + '/ru', { waitUntil: 'commit' });
 
   // Контроль самого прибора (EXP-0082): если щит тут не поднялся, все проверки ниже
   // были бы зелёными от того, что мерить нечего.

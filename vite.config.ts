@@ -1,9 +1,13 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { basename, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+
+import { portsFor, slotOf } from './tools/lib/stand-slot.mjs';
 
 // Версия приложения, номер сборки и дата вшиваются в бандл (ideas/06: «версии на виду»).
 // Источник версии один — package.json: две записи о версии в проекте неминуемо разойдутся.
@@ -42,6 +46,52 @@ const FULL_CATALOG = existsSync(new URL('./src/lib/content/dims-build.json', imp
 /** Единственный маршрут, которому на запасном срезе законно не достаётся ни одной страницы. */
 const CATALOG_PAGED_ROUTE = '/[lang=lang]/catalog/[kind=kind]/[page=page]';
 
+/**
+ * 🅿 СЛОТ РАБОЧЕГО МЕСТА — ЕДИНСТВЕННОЕ МЕСТО, ГДЕ VITE УЗНАЁТ СВОИ ПОРТЫ (`plans/NEW` фаза 2
+ * тестового парка, якорь метаплана `plans/68`: «*`vite preview`/`dev` на портах слота*»).
+ *
+ * 🔴 ПОЧЕМУ ЗДЕСЬ, А НЕ В ОБЁРТКЕ ЗАПУСКА. Фаза 1 развела эмуляторы по слотам, но САЙТ у всех
+ * ролей остался один: `npm run preview` — это голое `vite preview` без порта и без `--strictPort`.
+ * Разведка (`researches/45` §3, `plans/69` §3 и §6) назвала две мины, и обе лечатся ровно одним
+ * решением — знанием слота в самом конфиге:
+ *   · **чужой preview на общем порту.** Прогон роли шёл бы по сборке соседа. Порт слота разводит
+ *     роли, `strictPort` — своего вчерашнего сироту (`EXP-0091`): занятый порт обязан РОНЯТЬ
+ *     запуск с именем порта, а не переезжать молча на соседний;
+ *   · **свой сайт, чужой эмулятор.** Порты эмуляторов Vite подставляет НА СБОРКЕ. Требование
+ *     разведки было «обёртка обязана нести окружение слота и в `build`, и в `preview`» — верное,
+ *     но ДИСЦИПЛИНАРНОЕ: его исполняет тот, кто помнит. Здесь нести нечего: ЛЮБАЯ сборка из
+ *     этого рабочего места запекает свой слот, включая ту, которую поднимает Playwright, и ту,
+ *     которую кто-то запустит руками. Мина умирает по построению.
+ *
+ * 🔑 Слот выводится из имени каталога ЭТОГО ФАЙЛА, а не из `process.cwd()`: конфиг обязан знать
+ * своё рабочее место независимо от того, откуда его позвали.
+ *
+ * ⚠️ `STAND_SLOT` — единственное исключение, и оно названо: переменную ставит обёртка при явном
+ * `tools/stand-launch.mjs --slot N`. Флаг существует не для удобства, а ради проверяемости парка
+ * из ОДНОГО рабочего места (чужие worktree трогать запрещено манифестом).
+ *
+ * 🔴 СЛОТ 0 — БАЙТ-В-БАЙТ ПРЕЖНЕЕ ПОВЕДЕНИЕ: его порты равны сегодняшним литералам (preview 4173,
+ * dev 5173), а дверь выката (`tools/deploy.mjs`) передаёт порт явным флагом — флаг сильнее
+ * конфига. Главная копия не замечает парка вовсе.
+ */
+const WORKPLACE = basename(dirname(fileURLToPath(import.meta.url)));
+const STAND_SLOT =
+  process.env.STAND_SLOT === undefined ? slotOf(WORKPLACE).slot : Number(process.env.STAND_SLOT);
+const STAND = portsFor(STAND_SLOT);
+
+/*
+ * Порты эмуляторов слота уезжают в браузер переменными сборки: `import.meta.env` — единственный
+ * канал, которым код приложения может узнать про слот (переменных процесса он не видит). Читает
+ * их `src/lib/firebase.ts`, и только внутри ветки `isStand()` — боевой контур не задет
+ * по построению.
+ *
+ * `??=`, а не присвоение: заданное снаружи значение остаётся сильнее. Это ручной рычаг отладки,
+ * а не второй источник правды — по умолчанию их не ставит никто, и слот выводится здесь.
+ */
+process.env.VITE_STAND_FIRESTORE_PORT ??= String(STAND.firestore);
+process.env.VITE_STAND_AUTH_PORT ??= String(STAND.auth);
+process.env.VITE_STAND_STORAGE_PORT ??= String(STAND.storage);
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
@@ -55,7 +105,17 @@ export default defineConfig({
   // дев-серверу они не входные — следить за ними не нужно никогда. Контрольный опыт B (QA,
   // 2026-08-22): с этим ignored две сборки подряд не сдвигают память dev-сервера вовсе.
   server: {
+    // Порт слота и громкий отказ при занятом порту — см. блок «СЛОТ РАБОЧЕГО МЕСТА» выше.
+    port: STAND.dev,
+    strictPort: true,
     watch: { ignored: ['**/build/**', '**/.svelte-kit/output/**'] },
+  },
+
+  // Тот же слот для собранного сайта. Это адрес, на который смотрят e2e роли
+  // (`playwright.config.ts`) и её стражи; литерала 4173 в проекте больше нет.
+  preview: {
+    port: STAND.preview,
+    strictPort: true,
   },
 
   plugins: [
