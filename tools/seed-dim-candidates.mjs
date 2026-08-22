@@ -213,9 +213,17 @@ for (const item of items) {
    * Читать его дальше умеет `tools/read-returned-candidates.mjs`.
    */
   const keptOwnerNote = existing.exists ? existing.data()?.ownerNote : undefined;
+  /*
+   * То же и для слова владельца при ОДОБРЕНИИ (`bugs/173`). Случай редкий, но существует:
+   * одобренная карточка может позже вернуться в работу, и тогда обе его строки — «поправь вот
+   * это» и «так и надо» — обязаны доехать до агента вместе. Правило то же, что строкой выше:
+   * написанное владельцем стирает только владелец.
+   */
+  const keptApprovalNote = existing.exists ? existing.data()?.ownerApprovalNote : undefined;
 
   const payload = {
     ...(keptOwnerNote === undefined ? {} : { ownerNote: keptOwnerNote }),
+    ...(keptApprovalNote === undefined ? {} : { ownerApprovalNote: keptApprovalNote }),
     title: item.title,
     description: item.description,
     type: item.type,
