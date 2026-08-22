@@ -1,0 +1,14 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_046_app_check_debug_token.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-22T10:01:58.818Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "Б",
+			"text": "Разрешаю",
+			"comment": ""
+		}
+	}
+}
