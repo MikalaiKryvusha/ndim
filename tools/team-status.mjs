@@ -16,20 +16,24 @@
  *
  * Команды:
  *   node tools/team-status.mjs set [--busy|--free] [--doing "…"] [--waiting "…"] [--role <р>]
- *   node tools/team-status.mjs lock-stand | unlock-stand [--slot N] [--role <р>]
+ *   node tools/team-status.mjs lock-stand | unlock-stand [--place N] [--role <р>]
  *
- * 🆕 ТРИ СТРОКИ ЗАМКА — ПО СТРОКЕ НА СЛОТ (слово владельца 2026-08-22, дословно: «*а тут
+ * 🆕 ТРИ СТРОКИ ЗАМКА — ПО СТРОКЕ НА СТЕНД (слово владельца 2026-08-22, дословно: «*а тут
  * осталось про один стенд. Если их три уже у нас, то на каждый по строчке заведите*»).
  * Замер `plans/69` шага 1 доказал, что машина держит три стенда разом, — доска обязана
  * показывать три ресурса, а не один.
  *
- * 🔴 И ОДНА ЧЕСТНОСТЬ, БЕЗ КОТОРОЙ ДОСКА СОВРЁТ. Три стенда сегодня — доказанная
- * ВОЗМОЖНОСТЬ, а не построенная работа: шаги 2–6 фазы 1 не сделаны, роль пока не может
- * поднять стенд на слоте ≠ 0 без правки конфигов руками. Поэтому слоты 1 и 2 несут в
- * подписи ресурса пометку «НЕ ПОСТРОЕН» — её снимает тот коммит, который слот действительно
- * построит. Строка, обещающая несуществующее, хуже одной честной.
+ * 🔴 «СТЕНД N ИЗ 3» — ЭТО МЕСТО, А НЕ АДРЕС (переименование 2026-08-22: решение Менеджера по
+ * вопросу владельца тем же утром — «*почему слот, а не стенд?*»). Полдня строки звались
+ * «слот N», и это было неправдой дважды: строк три, а слотов шесть, и порты в подписи
+ * принадлежали не тому, кто строку занимал.
+ *   · **МЕСТО** (1…3) — ёмкость машины: сколько стендов она тянет РАЗОМ. Безымянно, любое
+ *     свободное годится любой роли; берётся без флага.
+ *   · **СЛОТ** (0…5, `tools/lib/stand-slot.mjs`) — адрес портов роли, выведенный из каталога.
+ *     Роль его не выбирает; занятое место показывает адрес прямо в колонке держателя.
  *
- * Умолчание команд без `--slot` — слот 0: сегодняшнее поведение не меняется ни для кого.
+ * Умолчания: `lock-stand` без флага берёт первое СВОБОДНОЕ место, `unlock-stand` — своё
+ * ЗАНЯТОЕ. Флага `--slot` больше нет, и отказ на него громкий.
  *   node tools/team-status.mjs show
  *   node tools/team-status.mjs --selftest   # доказательства на чистых функциях, git не нужен
  *
@@ -41,34 +45,40 @@ import { readFileSync, writeFileSync, renameSync, openSync, closeSync, unlinkSyn
 import { execSync } from 'node:child_process';
 import { dirname, basename, join, resolve } from 'node:path';
 
-import { ROLES, portsFor, roleFromDirName } from './lib/stand-slot.mjs';
+import { ROLES, portsFor, roleFromDirName, slotOfRole } from './lib/stand-slot.mjs';
 
 const BOARD_NAME = 'NDIM_WORKTREE_DEV_TEAM_STATUS.md';
 const TEAM_DIR_NAME = 'ndim-team'; // сиблинг главной копии: D:\work\ai_sandbox\ndim-team\<роль>
 
-/* ── Слоты стенда ──────────────────────────────────────────────────────────────────────── */
+/* ── Места стенда ──────────────────────────────────────────────────────────────────────── */
 
 /**
- * Строки замка на доске. Замер `plans/69` шага 1 доказал, что машина держит ТРИ стенда разом,
- * и владелец велел завести по строке на каждый.
+ * МЕСТА за столом: сколько стендов машина держит ОДНОВРЕМЕННО. Замер `plans/69` шага 1 доказал,
+ * что три живут разом, и владелец велел завести по строке на каждый.
  *
- * 🔴 ЧЕСТНАЯ ГРАНИЦА, ЗАМЕЧЕННАЯ ПРИ ПОСТРОЙКЕ ПАРКА (`plans/69` шаг 2). Строк три, а ролей
- * шесть — значит строка замка это МЕСТО ЗА СТОЛОМ («сколько стендов машина тянет разом»), а не
- * адрес роли. Адрес живёт в `tools/lib/stand-slot.mjs` и у каждой роли свой (0…5): порты двух
- * ролей не пересекаются никогда, поэтому замок больше не защищает порты — он показывает, кто
- * сейчас занимает одно из трёх мест.
- * ⏭ Имя строки («слот N») от этого стало неточным. Переименование — правка доски, которую
- * владелец видел своими глазами, поэтому решение о нём за Менеджером; вопрос ему назван
- * отдельной строкой в отчёте фазы. До ответа имя оставлено как есть, чтобы живая доска и
- * инструмент не разъехались посреди смены.
+ * 🔴 МЕСТО И СЛОТ — РАЗНЫЕ ВЕЩИ, И ЭТО ПЕРЕИМЕНОВАНИЕ ИМЕННО ОБ ЭТОМ (решение Менеджера
+ * 2026-08-22 по вопросу владельца тем же утром: «*почему слот, а не стенд?*»).
+ *   · **МЕСТО** (эта таблица, 1…3) — ЁМКОСТЬ МАШИНЫ. Их три, потому что больше трёх стендов
+ *     машина не тянет. Место безымянное: любое свободное годится любой роли.
+ *   · **СЛОТ** (`tools/lib/stand-slot.mjs`, 0…5) — АДРЕС РОЛИ. Их шесть, по одному на роль, и
+ *     он выводится из каталога. Порты двух ролей не пересекаются никогда.
+ * Раньше строки звались «слот N», и это было неправдой дважды: строк три, а слотов шесть, и
+ * порты в подписи принадлежали не тому, кто строку занимал. Слово «слот» с этого коммита
+ * означает ТОЛЬКО адрес портов роли.
+ *
+ * 🔑 Поэтому занятое место НЕСЁТ АДРЕС: `dev-2 · слот 4`. Роль не выбирает адрес и не может
+ * ошибиться — он выведен из её каталога; место же берётся любое свободное.
  */
-const SLOTS = [0, 1, 2];
+const PLACES = [1, 2, 3];
 
 /**
- * Слоты, которые ещё НЕ ПОСТРОЕНЫ кодом. Пометка снимается тем коммитом, который слот построит.
- * ⚠️ Это не украшение: доска, показавшая свободный слот 1, отправит роль на пустое место.
+ * Держатель места вместе с его адресом: `dev-2 · слот 4`. Роль сюда приходит одна, адрес
+ * добавляется выводом — второго источника у него нет.
  */
-const NOT_BUILT = new Set([1, 2]);
+const holderWithSlot = (role) => {
+  const slot = slotOfRole(role);
+  return slot === null ? role : `${role} · слот ${slot}`;
+};
 
 /**
  * Порты слота в порядке подписи владельца: firestore·auth·storage·preview·dev.
@@ -81,12 +91,15 @@ export const slotPorts = (slot) => {
   return [p.firestore, p.auth, p.storage, p.preview, p.dev];
 };
 
-/** Подпись ресурса на доске: чем слот является и построен ли он. */
-export const slotLabel = (slot) =>
-  `слот ${slot} · ${slotPorts(slot).join('·')}` + (NOT_BUILT.has(slot) ? ' — НЕ ПОСТРОЕН (plans/69 шаги 2–6)' : '');
+/**
+ * Подпись места. Портов в ней НЕТ намеренно: место безымянно, а порты принадлежат слоту того,
+ * кто место занял, и уже названы в колонке держателя. Подпись с чужими портами — это ровно та
+ * неправда, ради устранения которой строки и переименованы.
+ */
+export const placeLabel = (place) => `стенд ${place} из ${PLACES.length}`;
 
 /** Готовая строка таблицы замка. */
-const slotRow = (slot, holder, stamp) => `| ${slotLabel(slot)} | ${holder} | ${stamp} |`;
+const placeRow = (place, holder, stamp) => `| ${placeLabel(place)} | ${holder} | ${stamp} |`;
 
 /* ── Чистые функции (их доказывает --selftest) ─────────────────────────────────────────── */
 
@@ -121,70 +134,126 @@ export function replaceRoleRow(text, role, { state, doing, waiting, stamp }) {
   return { text: lines.join(eol) };
 }
 
-/** Держатель, прочитанный из строки таблицы замка. `null` = свободен. */
+/**
+ * Держатель, прочитанный из строки таблицы замка. `null` = свободен.
+ *
+ * Из ячейки берётся РОЛЬ: с переименования строк держатель пишется как `dev-2 · слот 4`, и
+ * сравнивать с ролью надо первую половину. Старая форма (одна роль без адреса) читается тем же
+ * разбором — хвост просто отсутствует.
+ */
 const holderOf = (line) => {
   const m = line.match(/^\|[^|]+\|\s*([^|]+?)\s*\|/);
-  return m && !/^—/.test(m[1]) ? m[1].trim() : null;
+  if (!m || /^—/.test(m[1])) return null;
+  return m[1].trim().split('·')[0].trim();
 };
 
 /**
- * Привести секцию замка к трём строкам слотов — ПРЯМО В ЖИВОЙ ДОСКЕ.
+ * Привести секцию замка к трём строкам МЕСТ — ПРЯМО В ЖИВОЙ ДОСКЕ.
  *
  * 🔑 ПОЧЕМУ МИГРАЦИЯ В КОДЕ, А НЕ ПРАВКОЙ ФАЙЛА ДОСКИ. Доска живёт только в главной копии и
  * прямо сейчас правится пятью ролями. Правка её из worktree уехала бы в мерж и столкнулась с
  * живым состоянием — то есть с чужими строками, записанными за это время. Миграция в коде
  * случается при первой же операции замка, никого не будит и конфликтовать ей не с чем.
  *
- * Держатель старой одиночной строки НАСЛЕДУЕТСЯ слотом 0: он и есть тот стенд, который эта
- * строка описывала. Потерять его при миграции значило бы тихо освободить занятый ресурс.
+ * 🔴 ФОРМ, ИЗ КОТОРЫХ НАДО ПОДНЯТЬСЯ, ТЕПЕРЬ ДВЕ, И ОБЕ ЖИВЫЕ:
+ *   1. одна строка «стенд/e2e/порты …» — доска до трёх мест;
+ *   2. три строки «слот 0…2» — доска между трёх мест и переименования (жила полдня).
+ * Держатель НАСЛЕДУЕТСЯ вместе со своей отметкой в обоих случаях. Потерять его значило бы тихо
+ * освободить занятый стенд: сосед поднимет свой, и оба увидят чужие данные, не поняв почему.
+ * Порядок мест при миграции из формы 2 сохраняется: слот 0 → место 1, слот 1 → место 2, и так же
+ * дальше — иначе держатели переехали бы по строкам без причины.
  */
-function ensureSlotRows(lines) {
+function ensurePlaceRows(lines) {
   const legacy = lines.findIndex((l) => /^\|\s*стенд\/e2e\/порты/.test(l));
+  const stampOf = (line) => line.match(/\|\s*([^|]*?)\s*\|\s*$/)?.[1] ?? '—';
+
   if (legacy !== -1) {
     const inherited = holderOf(lines[legacy]);
-    const stamp = inherited ? (lines[legacy].match(/\|\s*([^|]*?)\s*\|\s*$/)?.[1] ?? '—') : '—';
-    lines.splice(legacy, 1, ...SLOTS.map((s) =>
-      s === 0 ? slotRow(0, inherited ?? '— свободен —', inherited ? stamp : '—') : slotRow(s, '— свободен —', '—')));
+    const stamp = inherited ? stampOf(lines[legacy]) : '—';
+    lines.splice(legacy, 1, ...PLACES.map((p) => (p === 1
+      ? placeRow(1, inherited ? holderWithSlot(inherited) : '— свободен —', inherited ? stamp : '—')
+      : placeRow(p, '— свободен —', '—'))));
     return { migrated: true };
   }
-  // Строки слотов уже есть — но могла появиться не вся тройка (ручная правка, старый мерж).
-  const missing = SLOTS.filter((s) => !lines.some((l) => new RegExp(`^\\|\\s*слот ${s}\\b`).test(l)));
-  if (missing.length === SLOTS.length) return { error: 'секция замка стенда на доске не найдена' };
-  for (const s of missing) {
-    const after = lines.findIndex((l) => new RegExp(`^\\|\\s*слот ${s - 1}\\b`).test(l));
-    lines.splice(after === -1 ? lines.length : after + 1, 0, slotRow(s, '— свободен —', '—'));
+
+  // Форма 2: строки «слот 0…2». Переписываем их в места, держателей несём с собой.
+  const old = [0, 1, 2].map((s) => lines.findIndex((l) => new RegExp(`^\\|\\s*слот ${s} `).test(l)));
+  if (old.every((i) => i !== -1)) {
+    const carried = old.map((i) => ({ holder: holderOf(lines[i]), stamp: stampOf(lines[i]) }));
+    for (const [k, i] of old.entries()) {
+      const { holder, stamp } = carried[k];
+      lines[i] = placeRow(k + 1, holder ? holderWithSlot(holder) : '— свободен —', holder ? stamp : '—');
+    }
+    return { migrated: true };
+  }
+
+  // Строки мест уже есть — но могла появиться не вся тройка (ручная правка, старый мерж).
+  const missing = PLACES.filter((p) => !lines.some((l) => new RegExp(`^\\|\\s*стенд ${p} из `).test(l)));
+  if (missing.length === PLACES.length) return { error: 'секция замка стенда на доске не найдена' };
+  for (const p of missing) {
+    const after = lines.findIndex((l) => new RegExp(`^\\|\\s*стенд ${p - 1} из `).test(l));
+    lines.splice(after === -1 ? lines.length : after + 1, 0, placeRow(p, '— свободен —', '—'));
   }
   return { migrated: missing.length > 0 };
 }
 
 /**
- * Перезаписать строку замка КОНКРЕТНОГО СЛОТА. lock=true берёт, lock=false отдаёт.
+ * Перезаписать строку замка КОНКРЕТНОГО МЕСТА. lock=true берёт, lock=false отдаёт.
  *
- * Слоты независимы по построению: занятый слот 1 не мешает взять слот 0 — это и есть та
- * польза парка, ради которой он строится, и она обязана быть видна на доске.
+ * Места независимы: занятое место 2 не мешает взять место 1 — и это та самая польза парка,
+ * ради которой он строился. Взяв место, роль поднимает стенд на СВОЁМ слоте; какой это слот,
+ * видно прямо в колонке держателя, и роль его не выбирает.
  */
-export function replaceStandLock(text, role, lock, stamp, slot = 0) {
-  if (!SLOTS.includes(slot)) return { error: `слота ${slot} нет: сегодня разведены ${SLOTS.join(', ')}` };
+export function replaceStandLock(text, role, lock, stamp, place = 1) {
+  if (!PLACES.includes(place))
+    return { error: `места ${place} нет: машина держит ${PLACES.length} стенда разом (${PLACES.join(', ')})` };
   const lines = text.split(/\r?\n/);
   const eol = text.includes('\r\n') ? '\r\n' : '\n';
 
-  const prep = ensureSlotRows(lines);
+  const prep = ensurePlaceRows(lines);
   if (prep.error) return { error: prep.error };
 
-  const i = lines.findIndex((l) => new RegExp(`^\\|\\s*слот ${slot}\\b`).test(l));
-  if (i === -1) return { error: `строка слота ${slot} на доске не найдена` };
+  const i = lines.findIndex((l) => new RegExp(`^\\|\\s*стенд ${place} из `).test(l));
+  if (i === -1) return { error: `строка места ${place} на доске не найдена` };
 
   const holder = holderOf(lines[i]);
   if (lock) {
     if (holder && holder !== role)
-      return { error: `слот ${slot} занят: держатель «${holder}» — договорись с ним сообщением или возьми свободный слот` };
-    lines[i] = slotRow(slot, role, stamp);
+      return { error: `стенд ${place} занят: держатель «${holder}» — договорись с ним сообщением или возьми свободное место` };
+    lines[i] = placeRow(place, holderWithSlot(role), stamp);
   } else {
     if (holder && holder !== role && role !== 'manager')
-      return { error: `слот ${slot} держит «${holder}» — отдать его может он или Менеджер` };
-    lines[i] = slotRow(slot, '— свободен —', '—');
+      return { error: `стенд ${place} держит «${holder}» — отдать его может он или Менеджер` };
+    lines[i] = placeRow(place, '— свободен —', '—');
   }
   return { text: lines.join(eol), migrated: prep.migrated };
+}
+
+/** Первое свободное место, или `null`. Роль не должна выбирать номер — места безымянны. */
+export function firstFreePlace(text) {
+  const lines = text.split(/\r?\n/);
+  for (const p of PLACES) {
+    const i = lines.findIndex((l) => new RegExp(`^\\|\\s*стенд ${p} из `).test(l));
+    if (i !== -1 && holderOf(lines[i]) === null) return p;
+  }
+  return null;
+}
+
+/**
+ * Место, которое держит роль, или `null`.
+ *
+ * 🔴 Нужно ОТДЕЛЬНО от `firstFreePlace`, и вот почему: умолчание у взятия и у отдачи разное.
+ * Беря место, роль хочет любое СВОБОДНОЕ; отдавая — своё ЗАНЯТОЕ. Одно умолчание на два действия
+ * означало бы, что `unlock-stand` без флага целится в чужую пустую строку и отвечает «отдано»,
+ * не отдав ничего, — а стенд роли остаётся числиться занятым до конца смены.
+ */
+export function placeHeldBy(text, role) {
+  const lines = text.split(/\r?\n/);
+  for (const p of PLACES) {
+    const i = lines.findIndex((l) => new RegExp(`^\\|\\s*стенд ${p} из `).test(l));
+    if (i !== -1 && holderOf(lines[i]) === role) return p;
+  }
+  return null;
 }
 
 /* ── Обвязка: git, замок файла, команды ────────────────────────────────────────────────── */
@@ -276,100 +345,111 @@ function selftest() {
       const r = replaceRoleRow(board, 'qa', { state: 'a|b', doing: 'c|d', waiting: '—', stamp: 'T' });
       return !r.error && !r.text.includes('a|b');
     }],
-    ['замок берётся свободным', () => {
-      const r = replaceStandLock(board, 'qa', true, 'T');
-      return !r.error && r.text.includes('| qa | T |');
+    /* ── МЕСТА СТЕНДА: три за столом, адрес выводится из роли ───────────────────────────── */
+
+    ['место берётся свободным и НЕСЁТ АДРЕС слота роли', () => {
+      const r = replaceStandLock(board, 'qa', true, 'T', 1);
+      return !r.error && /^\|\s*стенд 1 из 3\s*\|\s*qa · слот 2\s*\|\s*T\s*\|/m.test(r.text);
     }],
-    ['занятый замок отказывает с именем держателя', () => {
-      const taken = replaceStandLock(board, 'qa', true, 'T').text;
-      const r = replaceStandLock(taken, 'dev-1', true, 'T2');
-      return !!r.error && r.error.includes('qa');
+    ['занятое место отказывает с именем держателя и советом взять свободное', () => {
+      const taken = replaceStandLock(board, 'qa', true, 'T', 1).text;
+      const r = replaceStandLock(taken, 'dev-1', true, 'T2', 1);
+      return !!r.error && r.error.includes('qa') && r.error.includes('свободное место');
     }],
-    ['держатель отдаёт замок', () => {
-      const taken = replaceStandLock(board, 'qa', true, 'T').text;
-      const r = replaceStandLock(taken, 'qa', false, 'T2');
-      return !r.error && r.text.includes('— свободен —');
+    ['держатель отдаёт своё место', () => {
+      const taken = replaceStandLock(board, 'qa', true, 'T', 1).text;
+      const r = replaceStandLock(taken, 'qa', false, 'T2', 1);
+      return !r.error && /^\|\s*стенд 1 из 3\s*\|\s*—\s*свободен\s*—\s*\|/m.test(r.text);
     }],
-    ['чужой замок не отдать (кроме менеджера)', () => {
-      const taken = replaceStandLock(board, 'qa', true, 'T').text;
-      return !!replaceStandLock(taken, 'dev-1', false, 'T2').error && !replaceStandLock(taken, 'manager', false, 'T2').error;
+    ['чужое место не отдать — кроме Менеджера по праву уборки', () => {
+      const taken = replaceStandLock(board, 'qa', true, 'T', 1).text;
+      return !!replaceStandLock(taken, 'dev-1', false, 'T2', 1).error
+        && !replaceStandLock(taken, 'manager', false, 'T2', 1).error;
+    }],
+    ['🔑 ЗАНЯТОЕ МЕСТО 2 НЕ МЕШАЕТ ВЗЯТЬ МЕСТО 1 — это и есть польза парка', () => {
+      const p2 = replaceStandLock(board, 'qa', true, 'T', 2);
+      if (p2.error) return false;
+      const p1 = replaceStandLock(p2.text, 'dev-2', true, 'T2', 1);
+      return !p1.error
+        && /^\|\s*стенд 2 из 3\s*\|\s*qa · слот 2\s*\|/m.test(p1.text)
+        && /^\|\s*стенд 1 из 3\s*\|\s*dev-2 · слот 4\s*\|/m.test(p1.text);
+    }],
+    ['несуществующее место — отказ, а не тихая правка первого', () => {
+      const r = replaceStandLock(board, 'qa', true, 'T', 7);
+      return !!r.error && r.error.includes('7');
+    }],
+    ['подпись места НЕ несёт портов — они принадлежат слоту держателя', () => {
+      const t = replaceStandLock(board, 'qa', true, 'T', 1).text;
+      const row = t.split(/\r?\n/).find((l) => /^\|\s*стенд 1 из 3\b/.test(l)) ?? '';
+      return !/8181|8191|8201|4173|5173/.test(row) && row.includes('слот 2');
+    }],
+    ['первое свободное место и место роли — разные вопросы с разными ответами', () => {
+      const t = replaceStandLock(board, 'qa', true, 'T', 1).text;
+      return firstFreePlace(t) === 2 && placeHeldBy(t, 'qa') === 1 && placeHeldBy(t, 'dev-1') === null;
     }],
 
-    /* ── Три слота (слово владельца 2026-08-22) ────────────────────────────────────────── */
+    /* ── Миграции: две живые формы доски, и держатель переживает обе ─────────────────────── */
 
-    ['старая одиночная строка мигрирует в ТРИ', () => {
-      const held = replaceStandLock(board, 'qa', true, 'T').text; // на входе ещё старая форма
-      return SLOTS.every((s) => new RegExp(`^\\|\\s*слот ${s}\\b`, 'm').test(held))
-        && /^\|\s*слот 0\b.*\|\s*qa\s*\|/m.test(held);
+    ['старая ОДИНОЧНАЯ строка мигрирует в ТРИ места', () => {
+      const held = replaceStandLock(board, 'qa', true, 'T').text;
+      return [1, 2, 3].every((p) => new RegExp(`^\|\s*стенд ${p} из 3\b`, 'm').test(held));
     }],
 
     /*
      * 🔴 СЛУЧАЙ С ЖИВЫМ ДЕРЖАТЕЛЕМ — тот, ради которого наследование вообще написано.
      *
      * Почему он заведён отдельно. Случай выше проходил ЗЕЛЁНЫМ, не доказывая наследования:
-     * старая строка в его доске СВОБОДНА, поэтому в слоте 0 оказывался тот, кто прямо сейчас
-     * берёт замок, а ветка `inherited` не исполнялась ни разу. Тест, проходящий по неверной
-     * причине, хуже отсутствующего: он занимает место настоящего (`AGENT_GUIDE.md` → «Коммиты»:
-     * после смены поведения спроси, не проходят ли старые тесты по НЕВЕРНОЙ причине).
+     * старая строка в его доске СВОБОДНА, поэтому в первом месте оказывался тот, кто прямо
+     * сейчас берёт замок, а ветка `inherited` не исполнялась ни разу. Тест, проходящий по
+     * неверной причине, хуже отсутствующего: он занимает место настоящего (`AGENT_GUIDE.md`
+     * → «Коммиты»: после смены поведения спроси, не проходят ли старые тесты по НЕВЕРНОЙ
+     * причине).
      *
      * Цена ошибки, которую он стережёт: миграция случается при ПЕРВОЙ же операции замка, а роли
      * работают круглосуточно. Потерять держателя значит тихо освободить занятый стенд — сосед
-     * поднимет свой на тех же портах, и оба увидят чужие данные, не поняв почему.
+     * поднимет свой, и оба увидят чужие данные, не поняв почему.
      */
-    ['🔑 ЖИВОЙ держатель переживает миграцию: слот 0 наследует и роль, и её отметку', () => {
+    ['🔑 ЖИВОЙ держатель переживает миграцию из одиночной строки — с отметкой и адресом', () => {
       const busy = board.replace(
         /^\| стенд\/e2e\/порты .*$/m,
         '| стенд/e2e/порты (8181·9099·9199·4173) | dev-3 | 2026-08-21 23:10 |',
       );
-      const r = replaceStandLock(busy, 'qa', true, 'T', 1); // слот берёт ДРУГАЯ роль
+      const r = replaceStandLock(busy, 'qa', true, 'T', 2);
       return !r.error
-        && /^\|\s*слот 0\b.*\|\s*dev-3\s*\|\s*2026-08-21 23:10\s*\|/m.test(r.text)
-        && /^\|\s*слот 1\b.*\|\s*qa\s*\|/m.test(r.text)
-        && /^\|\s*слот 2\b.*\|\s*—\s*свободен\s*—\s*\|/m.test(r.text);
+        && /^\|\s*стенд 1 из 3\s*\|\s*dev-3 · слот 5\s*\|\s*2026-08-21 23:10\s*\|/m.test(r.text)
+        && /^\|\s*стенд 2 из 3\s*\|\s*qa · слот 2\s*\|/m.test(r.text)
+        && /^\|\s*стенд 3 из 3\s*\|\s*—\s*свободен\s*—\s*\|/m.test(r.text);
     }],
-    ['🔑 унаследованный замок — НАСТОЯЩИЙ: слот 0 после миграции чужому не отдаётся', () => {
+    ['🔑 унаследованный замок — НАСТОЯЩИЙ: чужому место не отдаётся, своему отдаётся', () => {
       const busy = board.replace(
         /^\| стенд\/e2e\/порты .*$/m,
         '| стенд/e2e/порты (8181·9099·9199·4173) | dev-3 | 2026-08-21 23:10 |',
       );
-      const migrated = replaceStandLock(busy, 'qa', true, 'T', 1).text;
-      const steal = replaceStandLock(migrated, 'dev-1', true, 'T2', 0);
-      const release = replaceStandLock(migrated, 'dev-3', false, 'T2', 0);
-      return !!steal.error && steal.error.includes('dev-3') && !release.error;
+      const migrated = replaceStandLock(busy, 'qa', true, 'T', 2).text;
+      return !!replaceStandLock(migrated, 'dev-1', true, 'T2', 1).error
+        && !replaceStandLock(migrated, 'dev-3', false, 'T2', 1).error;
     }],
-    ['🔑 ЗАНЯТЫЙ СЛОТ 1 НЕ МЕШАЕТ ВЗЯТЬ СЛОТ 0 — это и есть польза парка', () => {
-      const s1 = replaceStandLock(board, 'qa', true, 'T', 1);
-      if (s1.error) return false;
-      const s0 = replaceStandLock(s1.text, 'dev-2', true, 'T2', 0);
-      return !s0.error
-        && /^\|\s*слот 1\b.*\|\s*qa\s*\|/m.test(s0.text)
-        && /^\|\s*слот 0\b.*\|\s*dev-2\s*\|/m.test(s0.text);
-    }],
-    ['тот же слот дважды — отказ с именем держателя и советом взять свободный', () => {
-      const s1 = replaceStandLock(board, 'qa', true, 'T', 1).text;
-      const again = replaceStandLock(s1, 'dev-2', true, 'T2', 1);
-      return !!again.error && again.error.includes('qa') && again.error.includes('свободный слот');
-    }],
-    ['слоты 1 и 2 честно помечены непостроенными, слот 0 — нет', () => {
-      const t = replaceStandLock(board, 'qa', true, 'T', 0).text;
-      return /слот 1[^|]*НЕ ПОСТРОЕН/.test(t) && /слот 2[^|]*НЕ ПОСТРОЕН/.test(t)
-        && !/слот 0[^|]*НЕ ПОСТРОЕН/.test(t);
-    }],
-    ['порты слотов взяты из ЕДИНСТВЕННОГО списка и не пересекаются', () => {
-      const all = SLOTS.flatMap(slotPorts);
-      return all.length === new Set(all).size
-        && slotPorts(0).join('·') === '8181·9099·9199·4173·5173'
-        && slotPorts(1).join('·') === '8191·9109·9209·4183·5183'
-        && slotPorts(2).join('·') === '8201·9119·9219·4193·5193';
-    }],
-    ['несуществующий слот — отказ, а не тихая правка слота 0', () => {
-      const r = replaceStandLock(board, 'qa', true, 'T', 7);
-      return !!r.error && r.error.includes('7');
-    }],
-    ['отдать чужой слот нельзя, свой — можно', () => {
-      const s2 = replaceStandLock(board, 'qa', true, 'T', 2).text;
-      return !!replaceStandLock(s2, 'dev-1', false, 'T2', 2).error
-        && !replaceStandLock(s2, 'qa', false, 'T2', 2).error;
+
+    /*
+     * 🔴 ВТОРАЯ ЖИВАЯ ФОРМА — доска «слот 0…2», прожившая полдня между тремя строками и
+     * переименованием. На момент правки она ЗАНЯТА двумя ролями, и мерж случится, когда роли
+     * работают. Держатели обязаны переехать по местам В ТОМ ЖЕ ПОРЯДКЕ, иначе они молча
+     * поменяются стендами.
+     */
+    ['🔑 форма «слот 0…2» мигрирует в места, держатели едут по порядку и не теряются', () => {
+      const mid = [
+        '| Ресурс | Держатель | Взят |',
+        '| слот 0 · 8181·9099·9199·4173·5173 | dev-1 | 2026-08-22 09:46 |',
+        '| слот 1 · 8191·9109·9209·4183·5183 — НЕ ПОСТРОЕН (plans/69 шаги 2–6) | dev-2 | 2026-08-22 10:12 |',
+        '| слот 2 · 8201·9119·9219·4193·5193 — НЕ ПОСТРОЕН (plans/69 шаги 2–6) | — свободен — | — |',
+      ].join('\n');
+      const r = replaceStandLock(mid, 'qa', true, 'T', 3);
+      return !r.error
+        && /^\|\s*стенд 1 из 3\s*\|\s*dev-1 · слот 3\s*\|\s*2026-08-22 09:46\s*\|/m.test(r.text)
+        && /^\|\s*стенд 2 из 3\s*\|\s*dev-2 · слот 4\s*\|\s*2026-08-22 10:12\s*\|/m.test(r.text)
+        && /^\|\s*стенд 3 из 3\s*\|\s*qa · слот 2\s*\|/m.test(r.text)
+        && !/НЕ ПОСТРОЕН/.test(r.text)
+        && !/слот 0 ·/.test(r.text);
     }],
   ];
   let fail = 0;
@@ -401,12 +481,43 @@ else if (cmd === 'show') {
     editBoard((t) => replaceRoleRow(t, target, { state, doing: arg('--doing') ?? '—', waiting: arg('--waiting') ?? '—', stamp }));
     console.log(`✅ строка «${target}»: ${state} · ${stamp}`);
   } else {
-    const slot = Number(arg('--slot') ?? 0);
-    if (!SLOTS.includes(slot)) { console.error(`⛔ слота ${slot} нет: сегодня разведены ${SLOTS.join(', ')}`); process.exit(1); }
-    editBoard((t) => replaceStandLock(t, target, cmd === 'lock-stand', stamp, slot));
-    console.log(cmd === 'lock-stand' ? `✅ слот ${slot} у «${target}» · ${stamp}` : `✅ слот ${slot} свободен`);
-    if (NOT_BUILT.has(slot))
-      console.log(`⚠️  слот ${slot} ещё НЕ ПОСТРОЕН (plans/69 шаги 2–6): стенд там руками не поднимется`);
+    /*
+     * 🔴 `--slot` здесь БОЛЬШЕ НЕ ПРИНИМАЕТСЯ, и отказ громкий (переименование 2026-08-22).
+     * Флаг полдня означал строку замка, а теперь слот — это адрес портов роли, который никто не
+     * выбирает руками. Молча истолковать старый флаг как место значило бы исполнить не то, что
+     * человек сказал; отказ с объяснением стоит одной строки и никого не обманывает.
+     */
+    if (process.argv.includes('--slot')) {
+      console.error('⛔ флага --slot больше нет: слот — это АДРЕС портов роли, он выводится из каталога.');
+      console.error('   Строка замка теперь МЕСТО («стенд N из 3»), и берётся оно флагом --place N');
+      console.error('   либо без флага — тогда занимается первое свободное.');
+      process.exit(1);
+    }
+    /*
+     * Умолчания РАЗНЫЕ у взятия и у отдачи, и это не симметрия ради симметрии: беря, роль хочет
+     * любое свободное место; отдавая — своё занятое. Общее умолчание отдавало бы чужую пустую
+     * строку и рапортовало об успехе, оставив стенд роли занятым до конца смены.
+     */
+    const wanted = arg('--place');
+    const lock = cmd === 'lock-stand';
+    editBoard((t) => {
+      // ⚠️ Место ищется в ТЕКСТЕ ДОСКИ, но до миграции строк там может ещё не быть формы мест.
+      // Поэтому сперва приводим форму, а уже потом ищем: иначе первое взятие после переименования
+      // не нашло бы ни одного места и отказало бы на исправной доске.
+      const migrated = (() => { const l = t.split(/\r?\n/); ensurePlaceRows(l); return l.join('\n'); })();
+      const place = wanted !== undefined ? Number(wanted)
+        : lock ? firstFreePlace(migrated) : placeHeldBy(migrated, target);
+      if (place === null) return {
+        error: lock
+          ? 'все три места заняты — посмотри доску (show) и договорись с держателем'
+          : `место за «${target}» не числится: отдавать нечего (посмотри доску: show)`,
+      };
+      const out = replaceStandLock(t, target, lock, stamp, place);
+      if (!out.error) console.log(lock
+        ? `✅ стенд ${place} из 3 у «${holderWithSlot(target)}» · ${stamp}`
+        : `✅ стенд ${place} из 3 свободен`);
+      return out;
+    });
   }
 } else {
   console.log('команды: set [--busy|--free|--offline] [--doing "…"] [--waiting "…"] [--role <р>] · lock-stand · unlock-stand · show · --selftest');
