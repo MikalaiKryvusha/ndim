@@ -1,6 +1,6 @@
 {
   "_": [
-    "КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 5, 2026-08-22. ПОРЦИЯ 1 из 4 (6 карточек из 24).",
+    "КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 5, 2026-08-22. ПОРЦИИ 1 И 2 (12 карточек из 24).",
     "Отмашка Менеджера после вердикта QA по партии 4.",
     "",
     "ПРИНЦИП ОТБОРА — не известность, а ХАЙП-ВОЛНА: слово владельца «в момент релиза добавлять",
@@ -36,17 +36,43 @@
     "",
     "⚠️ ЧЕСТНАЯ ГРАНИЦА ПОРЦИИ: пять из шести объектов вышли в последние три недели, и разбор",
     "их приёма ещё идёт. Оценки в описаниях названы словами, а не числами: числа этих недель",
-    "меняются, а строка карточки живёт долго."
+    "меняются, а строка карточки живёт долго.",
+    "",
+    "🅿 ПАРКОВКА СМЕНЫ 2026-08-22: в файле 12 карточек из 24, обе порции с зелёными воротами.",
+    "Оставшиеся 12 — по списку researches/48 §3, строки 13…24, в том же порядке хайп-волны:",
+    "Forza Horizon 6 · «Гражданин-мститель» · Voicemails for Isabelle · Husbands in Action ·",
+    "«Смерть Робин Гуда» · «Служебный роман» · Gothic Remake · «Давление» · «Сначала дамы» ·",
+    "Lego Batman: Legacy of the Dark Knight · «Пассажир» · «Чёрный шар»."
   ],
   "candidates": [
     {
       "wikidata": "Q125878994",
       "sitelinks": 13,
-      "title": { "ru": "Мятеж", "en": "Mutiny" },
-      "type": { "ru": "Фильм", "en": "Film" },
-      "author": { "ru": "Жан-Франсуа Рише", "en": "Jean-François Richet" },
+      "title": {
+        "ru": "Мятеж",
+        "en": "Mutiny"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Жан-Франсуа Рише",
+        "en": "Jean-François Richet"
+      },
       "year": "2026",
-      "tags": ["фильм", "movie", "кино", "film", "боевик", "action", "триллер", "thriller", "выживание", "survival"],
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "боевик",
+        "action",
+        "триллер",
+        "thriller",
+        "выживание",
+        "survival"
+      ],
       "description": {
         "ru": "Боевик с триллерной основой, снятый Жан-Франсуа Рише. Коул Рид — бывший полицейский и боец спецподразделения, служит телохранителем у предпринимателя Тибу Кампалло. Тибу убивают в засаде, а вину вешают на Рида: он остаётся вне закона, и на руках у него уцелевший сын хозяина, Камерон, которого надо довезти живым. Дорога приводит их на сухогруз «Артемида», и там открывается то, ради чего убивали: судно возит людей, и в трюме держат живой товар. Рид сходится с Энджи Эллис, женщиной из команды, у которой на берегу осталась дочь, и вдвоём они начинают выводить заложников. Центральный выбор героя назван прямо: он не уходит с корабля, пока не выпустит всех. Развязка стоит ему имени — чтобы уйти от обвинения, Рида объявляют погибшим, и он остаётся человеком без документов, зато Энджи возвращается к дочери. Играют Джейсон Стейтем, Аннабелль Уоллис, Роланд Мёллер, Рамон Тикарам и Эдриан Лестер. Стейтем не только исполнил главную роль, но и продюсировал картину вместе с Марком Бутаном; снимали в Великобритании и на Мальте осенью 2024 года. В прокате США фильм с 21 августа 2026 года, в России — с 27 августа. Приняли его сдержанно: рецензенты хвалили постановку драк и ругали запутанный ход сюжета и мрачный тон, а зрительская оценка вышла заметно теплее критической. За два дня до премьеры полная копия по ошибке оказалась в открытом доступе на стриминговой площадке, и об этом писали больше, чем о самом фильме.",
         "en": "An action thriller directed by Jean-François Richet. Cole Reed, a former police officer and commando, works as bodyguard to the businessman Tibu Campallo. Tibu is killed in an ambush, Reed is framed for the murder, and he is left outside the law with Tibu's surviving son Kameron to keep alive. The road takes them aboard the cargo ship Artemis, where the reason for the killing surfaces: the vessel carries people, and there are hostages in the hold. Reed joins forces with Angie Ellis, a crew member whose daughter waits ashore, and the two begin freeing the captives. His central choice is stated plainly — he will not leave the ship until everyone is off it. The ending costs him his name: to escape the charges he is declared dead, and he walks away as a man without papers, while Angie returns to her daughter. Jason Statham, Annabelle Wallis, Roland Møller, Ramon Tikaram and Adrian Lester star. Statham both took the lead and produced alongside Marc Butan; filming ran through the autumn of 2024 in the United Kingdom and Malta. The film opened in the United States on 21 August 2026 and in Russia on 27 August. Reception was measured: reviewers praised the staging of the fights and faulted the tangled plotting and the grim tone, while audience scores came out noticeably warmer than the critical ones. Two days before the premiere a complete copy briefly appeared on a streaming service by mistake, and that drew more comment than the film itself."
@@ -56,11 +82,31 @@
     {
       "wikidata": "Q136311783",
       "sitelinks": 14,
-      "title": { "ru": "Астрал 6: Они уже здесь", "en": "Insidious: Out of the Further" },
-      "type": { "ru": "Фильм", "en": "Film" },
-      "author": { "ru": "Джейкоб Чэйз", "en": "Jacob Chase" },
+      "title": {
+        "ru": "Астрал 6: Они уже здесь",
+        "en": "Insidious: Out of the Further"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джейкоб Чэйз",
+        "en": "Jacob Chase"
+      },
       "year": "2026",
-      "tags": ["фильм", "movie", "кино", "film", "ужасы", "horror", "мистика", "supernatural", "триллер", "thriller"],
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "мистика",
+        "supernatural",
+        "триллер",
+        "thriller"
+      ],
       "description": {
         "ru": "Сверхъестественный хоррор, поставленный Джейкобом Чэйзом по сюжету, написанному им вместе с Дэвидом Лесли Джонсоном. Джемма работает гигиенистом в стоматологии и одна растит дочь; после смерти матери ей достаётся родительский дом, а вместе с ним то, о чём мать молчала всю жизнь. Мать была проводником: она умела ходить в Дальше — изнанку мира, где остаются души умерших, — и выводить их обратно к живым. Смерть она выбрала сама, чтобы закрыть эту дорогу духу по имени Сайрус, вожаку секты, застрявшему на той стороне. Дар передаётся по крови, и Сайрус приходит к Джемме именно за этим: через неё он может вернуться живым. Дочь Джеммы, Майя, проводник тоже, так что защищать приходится обеих сразу, и здесь у фильма его главная тема — то, что мать передаёт ребёнку помимо своей воли. Развязка строится на том, что героиня перестаёт убегать: она уводит собственный дом в Дальше и оставляет Сайруса тем, кого он там держал. Играют Амелия Ева, Брэндон Переа, Мэйси Ричардсон-Селлерс, Сэм Спруэлл и Лин Шэй, вернувшаяся к роли медиума Элис Рейнер. Это шестая часть ряда, начатого в 2010 году, и первая, где устройство Дальше объясняется через наследуемый дар, а не через случайную встречу. Снимали в Мельбурне осенью 2025 года. Премьера прошла в Лос-Анджелесе 18 августа 2026 года, в прокат США картина вышла 21 августа. Приняли её ровно: рецензенты называли ход сюжета предсказуемым, но отдельные сцены страха относили к лучшим во всём ряду.",
         "en": "A supernatural horror film directed by Jacob Chase from a story he wrote with David Leslie Johnson-McGoldrick. Gemma works as a dental hygienist and raises her daughter alone; when her mother dies she inherits the family house and, with it, everything her mother kept from her. The mother was a courier: she could walk into the Further, the underside of the world where the souls of the dead remain, and bring them back among the living. She chose her own death to close that road to a spirit named Cyrus, a cult leader stranded on the other side. The gift runs in the blood, and Cyrus comes to Gemma for exactly that reason: through her he can return alive. Gemma's daughter Maya is a courier too, so both of them need protecting at once, and here the film finds its subject — what a mother hands down to a child without meaning to. The resolution turns on Gemma refusing to run any further: she carries her own house into the Further and leaves Cyrus to the souls he had been holding there. Amelia Eve, Brandon Perea, Maisie Richardson-Sellers, Sam Spruell and Lin Shaye star, the last returning as the medium Elise Rainier. This is the sixth entry in a series that began in 2010, and the first to explain the Further through an inherited gift rather than a chance encounter. Filming took place in Melbourne in the autumn of 2025. The premiere was held in Los Angeles on 18 August 2026, with the United States release following on 21 August. Reception was even: reviewers called the plotting predictable while singling out individual set pieces as among the most effective the series has produced."
@@ -70,11 +116,33 @@
     {
       "wikidata": "Q129165193",
       "sitelinks": 15,
-      "title": { "ru": "Последний дом", "en": "The Last House" },
-      "type": { "ru": "Фильм", "en": "Film" },
-      "author": { "ru": "Луи Летерье", "en": "Louis Leterrier" },
+      "title": {
+        "ru": "Последний дом",
+        "en": "The Last House"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Луи Летерье",
+        "en": "Louis Leterrier"
+      },
       "year": "2026",
-      "tags": ["фильм", "movie", "кино", "film", "научная фантастика", "science fiction", "ужасы", "horror", "выживание", "survival", "постапокалипсис", "post-apocalyptic"],
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "научная фантастика",
+        "science fiction",
+        "ужасы",
+        "horror",
+        "выживание",
+        "survival",
+        "постапокалипсис",
+        "post-apocalyptic"
+      ],
       "description": {
         "ru": "Научно-фантастический хоррор о выживании, поставленный Луи Летерье по сценарию Мэттью Робинсона. Семья Дельгадо просыпается в собственном доме под Сиэтлом и не может выйти: двери и окна запечатаны, а снаружи происходит что-то, чего никто им не объясняет. Джейсон, инженер без работы, и его жена Энн остаются с двумя детьми в четырёх стенах на пять лет. Быт превращается в инженерную задачу: счёт припасов, вода, самодельные системы, расписание, по которому живут все. В дожди к дому выходят существа, и каждая такая ночь стоит семье сил. Дети растут внутри этого срока — сын Грэм и дочь Рут взрослеют прямо на экране, и внешний мир, который старший ещё помнит, для младшей остаётся почти воображаемым. Центральный выбор делает именно Рут: когда существо прорывается внутрь, она требует его не убивать. Милосердие оказывается ключом — тварь пропускает семью, и Дельгадо уходят на лодке по затопленной планете искать других уцелевших. Играют Вагнер Моура, Грета Ли, Кингсли Бен-Адир и Арден Чо. Музыку написал Яир Элазар Глотман, снимали на студии Шеппертон в Англии. Картина вышла на стриминге 7 августа 2026 года. Приняли её холодно: рецензенты хвалили актёрские работы и находили повествование однообразным, а пятилетний срок — тянущимся дольше, чем того требует история. Прокатчик запомнился отдельно рекламной затеей, при которой актёр несколько дней жил на бульваре внутри обставленного щита.",
         "en": "A science fiction survival horror film directed by Louis Leterrier from a screenplay by Matthew Robinson. The Delgado family wakes in their own house outside Seattle and cannot get out: the doors and windows are sealed, and something is happening beyond them that nobody explains. Jason, an engineer out of work, and his wife Ann stay inside those walls with two children for five years. Daily life turns into an engineering problem — counting stores, finding water, building systems by hand, keeping a schedule everyone lives by. Creatures come to the house during rainstorms, and every such night costs the family something. The children grow up inside that stretch of time: their son Graham and daughter Ruth age on screen, and the outside world the elder still remembers stays close to imaginary for the younger. The central choice belongs to Ruth: when a creature breaks in, she insists that it not be killed. Mercy turns out to be the key — the creature lets them pass, and the Delgados leave by boat across a flooded planet to look for other survivors. Wagner Moura, Greta Lee, Kingsley Ben-Adir and Arden Cho star. Yair Elazar Glotman wrote the score, and filming took place at Shepperton Studios in England. The film was released on streaming on 7 August 2026. Reception was cold: reviewers praised the performances while finding the storytelling repetitive and the five-year span longer than the story needed. The release drew separate attention for a stunt in which an actor spent days living inside a furnished billboard above a boulevard."
@@ -84,11 +152,33 @@
     {
       "wikidata": "Q135906833",
       "sitelinks": 14,
-      "title": { "ru": "Только на одну ночь", "en": "One Night Only" },
-      "type": { "ru": "Фильм", "en": "Film" },
-      "author": { "ru": "Уилл Глак", "en": "Will Gluck" },
+      "title": {
+        "ru": "Только на одну ночь",
+        "en": "One Night Only"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Уилл Глак",
+        "en": "Will Gluck"
+      },
       "year": "2026",
-      "tags": ["фильм", "movie", "кино", "film", "комедия", "comedy", "мелодрама", "romance", "антиутопия", "dystopia", "сатира", "satire"],
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "мелодрама",
+        "romance",
+        "антиутопия",
+        "dystopia",
+        "сатира",
+        "satire"
+      ],
       "description": {
         "ru": "Романтическая комедия с сатирическим устройством, поставленная Уиллом Глаком. Действие идёт в Соединённых Штатах ближайшего будущего, где добрачная близость запрещена законом, а на неё отводят одну ночь в году — двенадцать часов, начало которых отмечает браслет на руке. Оуэн держит пиццерию и собирается сделать предложение своей девушке Малике; Элли поёт джинглы для рекламы и ищет не случайной встречи, а человека. Ночь сталкивает их снова и снова — в суши-баре, у подъезда, в круглосуточном магазине, в баре и на чужой вечеринке, — и каждый раз оба расходятся дальше, к тем, к кому шли. Город вокруг работает как часы: очереди, расписание, всеобщая спешка, и на этом фоне двое постепенно понимают, что по-настоящему разговаривают только друг с другом. Центральный выбор они делают против условия: не сходятся в отведённые часы, а решают ждать до следующего года. Сатира здесь направлена на государство, назначающее людям время, и на саму мысль, что близость можно расписать по часам. Играют Моника Барбаро, Каллум Тёрнер, Молли Рингуолд, Левар Бертон и Майя Хоук. Премьера прошла в Манхэттене 3 августа 2026 года, широкий прокат США начался 7 августа. Приняли картину прохладно: рецензенты писали, что придуманный мир остался недоработанным и мешает роману, а история о запретной ночи вышла на удивление целомудренной. Зрители оценили её теплее критиков, но в прокате она не окупилась.",
         "en": "A romantic comedy built on a satirical premise, directed by Will Gluck. It takes place in a near-future United States where sex before marriage is banned by law and permitted for one night a year — a twelve-hour window whose start is marked by a wristband. Owen runs a pizza shop and plans to propose to his girlfriend Malika; Allie sings jingles for advertising and is looking for a person rather than an encounter. The night throws them together again and again — at a sushi bar, outside an apartment building, in an all-night store, in a bar, at somebody else's party — and each time they part and go on toward the people they set out for. The city around them runs like clockwork: queues, schedules, a shared hurry, and against that background the two slowly realise they are only really talking to each other. Their central choice goes against the rule: instead of taking the hours allotted, they decide to wait until the following year. The satire is aimed at a state that assigns people their time, and at the very idea that intimacy can be put on a schedule. Monica Barbaro, Callum Turner, Molly Ringwald, LeVar Burton and Maya Hawke star. The premiere was held in Manhattan on 3 August 2026 and the wide United States release followed on 7 August. Reception was cool: reviewers wrote that the invented world stayed underdeveloped and got in the way of the romance, and that a story about a forbidden night turned out surprisingly chaste. Audiences rated it more warmly than critics, but it did not recover its costs in cinemas."
@@ -98,11 +188,31 @@
     {
       "wikidata": "Q136773033",
       "sitelinks": 13,
-      "title": { "ru": "Мороженщик", "en": "Ice Cream Man" },
-      "type": { "ru": "Фильм", "en": "Film" },
-      "author": { "ru": "Элай Рот", "en": "Eli Roth" },
+      "title": {
+        "ru": "Мороженщик",
+        "en": "Ice Cream Man"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Элай Рот",
+        "en": "Eli Roth"
+      },
       "year": "2026",
-      "tags": ["фильм", "movie", "кино", "film", "ужасы", "horror", "триллер", "thriller", "месть", "revenge"],
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "триллер",
+        "thriller",
+        "месть",
+        "revenge"
+      ],
       "description": {
         "ru": "Хоррор, снятый Элаем Ротом по собственному сценарию. В приморский городок Бейлин-Бей приезжает фургон с мороженым, и дети быстро делают его своим. Угощение меняет тех, кто его съел: ребёнок становится послушен чужой воле и опасен для всех, кто рядом. Первыми гибнут родители и учителя, а трое детей, которых не тронуло — Джаред, Томми и Мия, — запираются в школе и пытаются понять, что происходит с городом. За фургоном стоит Джонатан Смайли, человек, осуждённый несколько десятилетий назад за то, чего не делал, и вернувшийся мстить городу его же детьми. Ход мести обеспечивает священник, оказавшийся некромантом. Развязка держится не на победе: Джаред и Лиззи, пытаясь остановить происходящее, убивают собственных родителей, а Смайли уводит детей за собой и уходит из города. Двое выживших остаются посреди разорённых улиц, и на них фильм и заканчивается. Играют Эри Миллен, Бенджамин Байрон Дэвис и Карен Клише. Рот снял картину для собственной хоррор-студии, съёмки прошли в Гамильтоне в провинции Онтарио летом 2025 года, музыку записал Снуп Догг. В прокат США фильм вышел 7 августа 2026 года более чем в тысяче семистах кинотеатрах. Приняли его резко отрицательно: рецензенты писали, что жестокости здесь много, а замысла мало, и что самоирония подменяет постановщику содержание. Отдельным поводом для спора стало признание студии, что часть кадров сделана порождающими моделями, — прежде их называли нарисованными вручную.",
         "en": "A horror film written and directed by Eli Roth. An ice cream truck arrives in the seaside town of Bayleen Bay, and the local children quickly make it their own. The treats change whoever eats them: a child becomes obedient to someone else's will and dangerous to everyone nearby. Parents and teachers die first, while three children left untouched — Jared, Tommy and Mia — barricade themselves inside the school and try to work out what is happening to the town. Behind the truck stands Jonathan Smiley, a man convicted decades earlier for something he did not do, who has come back to take his revenge on the town through its own children. A priest who turns out to be a necromancer keeps the revenge running. The ending does not rest on a victory: trying to stop what is happening, Jared and Lizzie kill their own parents, and Smiley leads the children away out of town. The two survivors are left standing in the ruined streets, and there the film ends. Ari Millen, Benjamin Byron Davis and Karen Cliche star. Roth made the picture for his own horror label; filming took place in Hamilton, Ontario, in the summer of 2025, and Snoop Dogg supplied the music. It opened in the United States on 7 August 2026 across more than seventeen hundred cinemas. Reception was sharply negative: reviewers wrote that there is a great deal of gore here and very little behind it, and that self-awareness stands in for substance. A separate argument followed the studio's admission that some shots were made with generative models after they had been described as hand-drawn."
@@ -112,16 +222,246 @@
     {
       "wikidata": "Q134739750",
       "sitelinks": 8,
-      "title": { "ru": "Beast of Reincarnation", "en": "Beast of Reincarnation" },
-      "type": { "ru": "Видеоигра", "en": "Video game" },
-      "author": { "ru": "Game Freak", "en": "Game Freak" },
+      "title": {
+        "ru": "Beast of Reincarnation",
+        "en": "Beast of Reincarnation"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Game Freak",
+        "en": "Game Freak"
+      },
       "year": "2026",
-      "tags": ["видеоигра", "video game", "экшен", "action", "ролевая игра", "role-playing game", "постапокалипсис", "post-apocalyptic", "приключения", "adventure", "фэнтези", "fantasy"],
+      "tags": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "постапокалипсис",
+        "post-apocalyptic",
+        "приключения",
+        "adventure",
+        "фэнтези",
+        "fantasy"
+      ],
       "description": {
         "ru": "Ролевой боевик, сделанный японской студией Game Freak. Действие идёт в Японии сорок первого века: мир изувечен порчей, земля отравлена, и почти всё живое либо погибло, либо переродилось во что-то иное. Играть предстоит за восемнадцатилетнюю Эмму по прозвищу Печатница, которая умеет управлять растениями, и за её спутника — бездомного пса по кличке Ку. Эти двое и составляют весь отряд: игра построена как история одного человека и одной собаки, и пёс участвует и в бою, и в поиске дороги. Растительная сила служит сразу двум задачам — ею прокладывают путь там, где пути нет, и ею же дерутся, потому что противники здесь это мутанты и уцелевшие машины. Бой требует счёта и точного времени, а не перебора приёмов, и в этом игра стоит ближе к суровой школе японских боевиков, чем к привычным ролевым системам. Цель Эммы названа прямо: снять с земли порчу и вернуть миру возможность жить. Художественно игра тянется к рисованной японской анимации о природе и человеке, и сравнение с фильмами о лесных духах возникает сразу. Игру выпустили 4 августа 2026 года на PlayStation 5, Windows и Xbox Series X и S, собрана она на Unreal Engine 5. Приняли её неровно: оценки на разных платформах разошлись, и 13 августа студия извинилась перед игроками за то, что впечатление вышло не таким, как она рассчитывала.",
         "en": "An action role-playing game made by the Japanese studio Game Freak. It is set in Japan in the forty-first century: the world has been maimed by blight, the land is poisoned, and almost everything alive has either died or been reborn as something else. The player takes the part of Emma the Sealer, an eighteen-year-old who can command plants, together with her companion Koo, a stray dog. Those two are the whole party: the game is built as the story of one person and one dog, and the dog takes part both in fighting and in finding the way. The plant power serves two purposes at once — it opens a road where there is none, and it is also a weapon, since the opponents here are mutants and surviving machines. Combat rewards timing and judgement rather than a run through a list of moves, which places the game closer to the harsher school of Japanese action titles than to familiar role-playing systems. Emma's goal is stated plainly: lift the blight from the land and make the world liveable again. Visually the game reaches toward hand-drawn Japanese animation about nature and people, and the comparison with films about forest spirits comes quickly. It was released on 4 August 2026 for PlayStation 5, Windows and Xbox Series X and S, and it runs on Unreal Engine 5. Reception was uneven: scores diverged from platform to platform, and on 13 August the studio apologised to players for an experience that had not turned out as it intended."
       },
       "agentNote": "Русского названия у игры нет — реестр держит имя латиницей в мультиязычной метке, и обе половины названия заполнены ею намеренно: измерение без title.ru сервер синхронизации в индекс каталога не берёт. Имя режиссёра в описание не вошло: русской метки реестр не даёт. Издатель в реестре пуст, поэтому в поле автора стоит разработчик — как в карточках игр партий 3 и 4."
+    },
+    {
+      "wikidata": "Q136311776",
+      "sitelinks": 9,
+      "title": {
+        "ru": "Тони",
+        "en": "Tony"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Мэтт Джонсон",
+        "en": "Matt Johnson"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "биография",
+        "biography",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "Биографическая драма, снятая Мэттом Джонсоном по книге воспоминаний, которую Энтони Бурден написал в 2000 году о своей кухонной молодости. Лето 1975 года, Провинстаун на побережье Массачусетса. Девятнадцатилетний студент мечтает писать и врёт домашним, что получил литературную стипендию в Нью-Йорке; на самом деле он едет за девушкой по имени Нэнси и застаёт её с другим. Чтобы остаться в городе, он нанимается посудомойщиком в рыбный ресторан, соврав, что работал на кухне. Кухня оказывается тем, чего он не искал: жара, крик, ритм, в котором надо держаться, и шеф, который берётся его учить. Из посудомойщиков герой переходит в повара, и вместе с местом приходит характер — вспыльчивость, кураж и небрежность, из-за которой он однажды устраивает пожар и сжигает ресторан дотла. Центральный выбор он делает после этого: не сбегает, а возвращается и вместе со всеми собирает деньги на восстановление большим застольем с моллюсками. Шеф пишет ему рекомендацию в кулинарный институт, герой впервые называет себя полным именем — и отсюда начинаются тридцать лет за плитой. Играют Доминик Сесса, Антонио Бандерас, Эмилия Джонс, Лео Вудалл и Рич Соммер. Ограниченный прокат США начался 7 августа 2026 года, широкий — 21 августа. Приняли картину тепло и на редкость единодушно: рецензенты называли её признанием в любви к наставничеству, а работу Бандераса в роли шефа — лучшей в фильме.",
+        "en": "A biographical drama directed by Matt Johnson, drawn from the memoir Anthony Bourdain published in 2000 about his years in kitchens. It is the summer of 1975 in Provincetown on the Massachusetts coast. A nineteen-year-old college student who wants to be a writer tells his family he has won a literary fellowship in New York; in truth he has come after a girl named Nancy, and he finds her with someone else. To stay in town he takes a job washing dishes at a seafood restaurant, having lied about his kitchen experience. The kitchen turns out to be what he was not looking for: the heat, the shouting, a rhythm you either hold or lose, and a chef who decides to teach him. He moves from the dish pit to the line, and the job brings a character with it — a temper, a swagger, and the carelessness that one night starts a grease fire and burns the restaurant down. His central choice comes after that: he does not run, he comes back and helps raise the money to rebuild through a large clam bake. The chef writes him a recommendation to culinary school, the young man uses his full name for the first time, and thirty years behind a stove begin there. Dominic Sessa, Antonio Banderas, Emilia Jones, Leo Woodall and Rich Sommer star. The limited United States release began on 7 August 2026 and the wide release on 21 August. Reception was warm and unusually united: reviewers called the film a declaration of love for mentorship, and singled out Banderas as the chef as its finest work."
+      },
+      "agentNote": "Год реестр знает грубее дня (в разведке помечен ⚠️): взята первая дата периода. Сценаристов у фильма четверо, в описании назван только режиссёр — остальных реестр русскими метками не даёт."
+    },
+    {
+      "wikidata": "Q137926888",
+      "sitelinks": 12,
+      "title": {
+        "ru": "Пасть дьявола",
+        "en": "The Devil's Mouth"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джефф Уодлоу",
+        "en": "Jeff Wadlow"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "триллер",
+        "thriller",
+        "выживание",
+        "survival",
+        "ужасы",
+        "horror"
+      ],
+      "description": {
+        "ru": "Триллер о выживании, поставленный Джеффом Уодлоу. Пятеро друзей едут в Таиланд отмечать окончание учёбы, и поездка задумана как память об отце Сары, которого недавно не стало. Дружба Сары и Макс держится на перекосе: решения всегда принимает Макс, а остальные соглашаются, чтобы не спорить. Настояв на своём в очередной раз, Макс уводит компанию в пресноводные пещеры опасным маршрутом. После штормового нагона в этих пещерах заперта тупорылая акула — вид, который живёт и в пресной воде, — а обратный ход отрезан водой. Дальше идёт счёт: гибнут Грег, Адриенн, проводник Ват и Джеймс, и с каждым разом яснее, что с хищником не договориться, а спорить с Макс надо было раньше. Сара выбирается сама: заманивает акулу под свод, обрушивает его и находит другой выход на сушу. Тема фильма не в акуле — в том, как человек привыкает уступать чужой воле и чем эта привычка кончается. Играют Кэтрин Ньютон, Лана Кондор, Гэвин Касаленьо, Нико Хирага и Тайме Таптимтонг. Музыку написал Беар Маккрири; снимали восемь недель в Таиланде — в настоящих пресноводных пещерах и в павильоне. Картина вышла на стриминге 29 июля 2026 года. Приняли её сдержанно: рецензенты хвалили подводную съёмку и тесноту кадра, а ход событий находили предсказуемым.",
+        "en": "A survival thriller directed by Jeff Wadlow. Five friends travel to Thailand to mark their graduation, and the trip is meant as a memorial to Sara's recently deceased father. The friendship between Sara and Max rests on a tilt: Max makes every decision and the others go along rather than argue. Getting her way once more, Max leads the group into freshwater caves by a dangerous route. A storm surge has trapped a bull shark in those caves — a species that survives in fresh water — and the way back is under water. What follows is a count: Greg, Adrienne, the guide Wat and James are killed, and with each one it becomes clearer that the animal cannot be reasoned with and that Max should have been argued with much earlier. Sara gets out on her own, luring the shark beneath an overhang, bringing it down, and finding another way to dry land. The subject of the film is not the shark but the habit of yielding to someone else's will, and where that habit ends. Kathryn Newton, Lana Condor, Gavin Casalegno, Nico Hiraga and Tayme Thapthimthong star. Bear McCreary wrote the score, and filming ran eight weeks in Thailand, in real freshwater caves and on sound stages. The film was released on streaming on 29 July 2026. Reception was measured: reviewers praised the underwater photography and the tightness of the frame while finding the course of events predictable."
+      },
+      "agentNote": "Русское название героини в реестре — Макс (Max Leviton), это женский персонаж; в описании род согласован по персонажу, а не по имени."
+    },
+    {
+      "wikidata": "Q134822854",
+      "sitelinks": 10,
+      "title": {
+        "ru": "Splatoon Raiders",
+        "en": "Splatoon Raiders"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Nintendo",
+        "en": "Nintendo"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "экшен",
+        "action",
+        "приключения",
+        "adventure",
+        "кооператив",
+        "co-op",
+        "постапокалипсис",
+        "post-apocalyptic"
+      ],
+      "description": {
+        "ru": "Кооперативный шутер с добычей, сделанный внутренними студиями Nintendo. Действие идёт через двенадцать тысяч лет после исчезновения людей: море поднялось, землю заселили другие, а из-за подвижек земной коры на поверхность вернулись Спиргалитские острова. Играть предстоит за механика — инклинга или октолинга на выбор, — которого нанимает поп-трио Deep Cut. Повод простой и денежный: город Сплатсвилл должен шестьдесят миллиардов, а на островах, по слухам, лежат сокровища. Вертолёт разбивается на первом же перелёте, и команда обустраивает базу в остове выброшенного корабля. Дальше игра идёт кругами: вылазка на остров, поиск добычи, схватка с волнами салмонидов и отход, пока не накрыло. Снаряжение собирается из гаджетов, которые меняют и движение, и бой, так что один и тот же остров проходится по-разному. В отличие от основного ряда это одиночная история с необязательным совместным прохождением вчетвером, и трудность подстраивается под число игроков. Игру выпустили 23 июля 2026 года на Nintendo Switch 2. Приняли её хорошо: рецензенты хвалили темп, простор для опытов со снаряжением и рисованный мир, а упрекали в том, что нового относительно основного ряда немного. Оценки игроков вышли ещё выше критических, а за первую неделю в Японии разошлось около 475 тысяч копий.",
+        "en": "A cooperative looter shooter made by Nintendo's internal studios. It takes place twelve thousand years after people disappeared: the sea has risen, others have settled the land, and shifts in the crust have brought the Spirhalite Islands back to the surface. The player takes the part of a mechanic — an Inkling or an Octoling, by choice — hired by the pop trio Deep Cut. The reason is simple and financial: the city of Splatsville owes sixty billion, and the islands are said to hold treasure. The helicopter crashes on the first flight out, and the crew makes a base inside the hull of a beached ship. From there the game runs in circles: land on an island, hunt for loot, fight off waves of Salmonids, and get out before they overwhelm you. Loadouts are built from gadgets that change both movement and combat, so the same island plays differently each time. Unlike the main entries this is a single-player story with optional four-player co-op, and the difficulty adjusts to the number of players. It was released on 23 July 2026 for Nintendo Switch 2. Reception was good: reviewers praised the pace, the room for experimenting with gadgets and the art direction, while faulting how little is new against the main series. Player scores came out higher still than critical ones, and around 475,000 copies sold in Japan in the first week."
+      },
+      "agentNote": "Реестр даёт по этой записи ИЗДАТЕЛЯ (Nintendo) и не даёт разработчика — в поле автора стоит издатель, и это названо здесь, чтобы вычитка не приняла за небрежность. Русского названия у игры нет: имя латиницей в обеих половинах, иначе сервер синхронизации не возьмёт запись в индекс каталога."
+    },
+    {
+      "wikidata": "Q138589086",
+      "sitelinks": 17,
+      "title": {
+        "ru": "Assassin’s Creed Black Flag Resynced",
+        "en": "Assassin’s Creed Black Flag Resynced"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Ubisoft Singapore",
+        "en": "Ubisoft Singapore"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "приключения",
+        "adventure",
+        "история",
+        "history",
+        "открытый мир",
+        "open world"
+      ],
+      "description": {
+        "ru": "Приключенческий боевик, заново собранный студиями Ubisoft: это не переиздание, а полная переделка игры 2013 года — от прежнего кода не осталось ничего. Место действия сохранено: Карибское море времён золотого века пиратства. Герой прежний — Эдвард Кенуэй, пират, которого случай затягивает в вековую вражду ассасинов и тамплиеров, хотя сам он идёт за деньгами и свободой. Игра делится надвое: вылазки в городах и джунглях пешком и жизнь на собственном корабле, который здесь не средство передвижения, а второй герой — он растёт, вооружается и обрастает командой. Морской бой остался тем, ради чего игру помнят: погоня, залп бортом, абордаж. Переделано движение — оно стало плавнее, бой — точнее и короче, подводная часть шире, настройка корабля глубже. Сюжет дополнили линиями Энн Бонни, Чёрной Бороды и Стида Боннета, а вставки о нашем времени заменили эпизодами в духе «а что, если». Из прежнего содержания убрали дополнение про восстание рабов и возможность переигрывать задания. Игра вышла 9 июля 2026 года на PlayStation 5, Xbox Series X и S и Windows. Приняли её хорошо: хвалили карибский мир и вид, спорили о переделанном бое и движении. Продажи оказались сильными — свыше трёх миллионов копий за первую неделю и рекорд ряда по числу игроков одновременно.",
+        "en": "An action-adventure game rebuilt from the ground up by Ubisoft studios: not a remaster but a full remake of the 2013 original, with none of the old code left. The setting is kept: the Caribbean during the golden age of piracy. The hero is the same — Edward Kenway, a pirate drawn by accident into the centuries-old feud between Assassins and Templars, though what he is after is money and freedom. The game divides in two: raids through towns and jungle on foot, and life aboard his own ship, which is not transport here but a second character that grows, arms itself and gathers a crew. Naval combat remains the thing the game is remembered for: the chase, the broadside, the boarding. Movement has been remade and now flows more smoothly, combat is tighter and shorter, the underwater sections are wider and ship customisation runs deeper. The story gained strands for Anne Bonny, Blackbeard and Stede Bonnet, while the present-day sequences were replaced with what-if episodes. Two things went: the expansion about the slave uprising and the option to replay missions. It was released on 9 July 2026 for PlayStation 5, Xbox Series X and S, and Windows. Reception was good: the Caribbean world and the look drew praise, the reworked combat and movement drew argument. Sales were strong — over three million copies in the first week and a series record for players online at once."
+      },
+      "agentNote": "🔴 Реестр по этой записи МОЛЧИТ о разработчике и издателе: оба свойства пусты. В поле автора стоит Ubisoft Singapore — ведущая студия из пятнадцати, названная статьёй; страну Сингапур реестр подтверждает. Отступление от правила «поля из реестра» названо здесь намеренно, чтобы вычитка знала цену строки. Дополнение Freedom Cry в описании названо по содержанию, а не именем: русского названия у него нет."
+    },
+    {
+      "wikidata": "Q136002124",
+      "sitelinks": 9,
+      "title": {
+        "ru": "Молодой Вашингтон",
+        "en": "Young Washington"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джон Эрвин",
+        "en": "Jon Erwin"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "история",
+        "history",
+        "война",
+        "war",
+        "биография",
+        "biography"
+      ],
+      "description": {
+        "ru": "Историческая военная драма, снятая Джоном Эрвином по собственному сценарию. Действие охватывает молодость Джорджа Вашингтона — от смерти отца в 1743 году до назначения полковником в 1755-м. Юноша учится землемерному делу у сводного брата Лоуренса и рано остаётся в семье старшим. Он просит британского офицерского патента и получает отказ: колонисту в регулярной армии места нет, и путь остаётся один — виргинское ополчение по протекции. Дальше идут события войны с французами и индейцами: Вашингтон везёт французам ультиматум в земли Огайо, участвует в стычке у Жюмонвиля, держит форт Несессити под осадой и служит адъютантом при генерале Брэддоке. В сражении при Мононгахеле, больной, он собирает разбитые части и выводит их — после этого за ним и закрепляется слава человека, которого хранит провидение. Фильм о том, как характер складывается из отказов и поражений, и о колонисте, которому империя не даёт хода. Играют Уильям Франклин Миллер, Бен Кингсли, Энди Сёркис, Келси Грэммер и Мэри-Луиз Паркер. Музыку написали Кевин, Шон и Дина Кайнер; снимали в Ирландии в конце лета 2025 года. Премьера прошла на фестивале Трайбека 13 июня 2026 года, широкий прокат США начался 3 июля почти в двух тысячах семистах кинотеатрах. Приняли картину по-разному: рецензенты хвалили батальные сцены и находили рассказ приглушённым, зато зрительские оценки вышли заметно выше критических, а сборы обогнали ожидания.",
+        "en": "A historical war drama written and directed by Jon Erwin. It covers George Washington's early years, from his father's death in 1743 to his appointment as colonel in 1755. The young man learns surveying from his half-brother Lawrence and becomes the eldest in the household early. He asks for a British officer's commission and is refused: there is no place in the regular army for a colonial, and one road remains — the Virginia militia, entered through patronage. What follows are the campaigns of the war with the French and their allies: Washington carries an ultimatum into the Ohio Country, takes part in the skirmish at Jumonville Glen, holds Fort Necessity under siege and serves as aide-de-camp to General Braddock. At the Monongahela, ill and barely upright, he gathers the broken units and brings them out — and from there comes his reputation as a man under providential protection. The film is about a character assembled out of refusals and defeats, and about a colonial whom the empire will not let rise. William Franklyn-Miller, Ben Kingsley, Andy Serkis, Kelsey Grammer and Mary-Louise Parker star. Kevin, Sean and Deana Kiner wrote the score, and filming took place in Ireland in late summer 2025. The premiere was held at the Tribeca Festival on 13 June 2026, and the wide United States release followed on 3 July across some two thousand seven hundred cinemas. Reception was divided: reviewers praised the battle sequences and found the telling muted, while audience scores came out markedly higher than the critical ones and takings ran ahead of expectations."
+      },
+      "agentNote": "Один из трёх сценаристов русской метки в реестре не имеет, поэтому в описании назван только режиссёр, он же автор сценария. Продолжение о событиях 1776 года объявлено, но в описание не вошло: объекта ещё нет."
+    },
+    {
+      "wikidata": "Q133876041",
+      "sitelinks": 13,
+      "title": {
+        "ru": "Энола Холмс 3",
+        "en": "Enola Holmes 3"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Фил Барантини",
+        "en": "Philip Barantini"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "детектив",
+        "detective",
+        "триллер",
+        "thriller",
+        "приключения",
+        "adventure"
+      ],
+      "description": {
+        "ru": "Детективный триллер, поставленный Филом Барантини по оригинальному сценарию Джека Торна: впервые в ряду история не взята из книг. Энола и Тьюксбери едут на Мальту жениться, Шерлок приезжает тоже, но брак сестры не одобряет. На месте всё срывается: Шерлок исчезает, а умирающий солдат оставляет Эноле несколько слов, которые ведут её к профессору Аделине Рат. Профессора убивает снайпер прямо посреди разговора, и за именем Рат обнаруживается Мориарти, бежавшая из тюрьмы. Место свадьбы выбрано не случайно: Мориарти сама подвела Энолу к Мальте, чтобы её руками разгадать загадку о золоте, вывезенном из Афганистана. Расследование упирается в британских офицеров, укравших это золото после боя под Хостом, и здесь фильм говорит о том, чего прежние части не касались, — о делах империи в чужих землях. Клад Энола находит с помощью Ватсона и мальтийца Микиэля Мицци; Мориарти арестована, а не убита, золото возвращается Афганистану. Тьюксбери отказывается от титула и женится на Эноле под её собственным именем — так закрывается тема, которую ряд вёл с первой части. Играют Милли Бобби Браун, Генри Кавилл, Хелена Бонэм Картер, Луис Партридж, Химеш Патель и Шэрон Дункан-Брюстер. Картина вышла на стриминге 1 июля 2026 года. Приняли её неровно: рецензенты хвалили повзрослевшую героиню и антиколониальный мотив, а саму загадку находили вялой.",
+        "en": "A detective thriller directed by Philip Barantini from an original screenplay by Jack Thorne — the first entry in the series not taken from the novels. Enola and Tewkesbury travel to Malta to be married, and Sherlock comes too, though he does not approve of his sister's marriage. Everything falls apart on arrival: Sherlock disappears, and a dying soldier leaves Enola a few words that lead her to Professor Adeline Rathe. A sniper kills the professor in the middle of their conversation, and behind the name Rathe stands Moriarty, escaped from prison. The wedding's location was no accident: Moriarty steered Enola to Malta so that Enola's own hands would solve a puzzle about gold carried out of Afghanistan. The investigation runs into British officers who stole that gold after the fighting at Khost, and here the film speaks about something the earlier entries left alone — what the empire did in other people's countries. Enola finds the treasure with help from Watson and a Maltese fighter, Mikiel Mizzi; Moriarty is arrested rather than killed, and the gold goes back to Afghanistan. Tewkesbury gives up his title and marries Enola under her own name, closing a thread the series has carried since the first film. Millie Bobby Brown, Henry Cavill, Helena Bonham Carter, Louis Partridge, Himesh Patel and Sharon Duncan-Brewster star. The film was released on streaming on 1 July 2026. Reception was uneven: reviewers praised the grown-up heroine and the anti-colonial theme while finding the mystery itself sluggish."
+      },
+      "agentNote": "Мориарти здесь женский персонаж, и это не ошибка согласования: роль исполняет Шэрон Дункан-Брюстер, реестр подтверждает. Первый фильм ряда, снятый другим постановщиком."
     }
   ]
 }
