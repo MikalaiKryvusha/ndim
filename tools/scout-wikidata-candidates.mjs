@@ -23,14 +23,53 @@
  * Инвариант эпика В3 = А: агент никогда не заводит измерение без вычитки владельцем. Прибор
  * только СМОТРИТ и печатает список.
  *
+ * 🆕 ТРИ ФИКСА 2026-08-22 (постановка Менеджера; разбор каждого — в шапке `tools/lib/scout-core.mjs`):
+ *   1. **Год объекта — минимум ПОЛНОГО набора дат** `p:P577/ps:P577`, а не любая дата в году и не
+ *      `wdt:`. `P577` пишет отдельной датой каждый порт, ремастер и прокат в другой стране, и на
+ *      партии 5 почти половина «новинок» оказалась переизданиями. Число отсеянных прибор теперь
+ *      НАЗЫВАЕТ — и в консоли, и в отчёте.
+ *   2. **Сериалы добираются через сезоны.** Своей даты у сериала часто нет вовсе, её несёт сезон
+ *      (`P179` / `P4908`), и прежде такой сериал отсеивался ДО сверки с каталогом: не «его нет»,
+ *      а «его не спросили». Добор идёт ОДНИМ общим запросом, per-series дозапроса нет.
+ *   3. **`--out` принимает путь или каталог** — прибор обязан запускаться и при замороженном
+ *      `candidates/`. Прежняя форма (голое имя файла) сохранена.
+ *
+ * 📐 **ЧИСЛА ЖИВОГО КОНТРОЛЬНОГО ПРОГОНА 2026-08-22** (`--year 2026 --min-sitelinks 8 --limit 200`,
+ * отчёт уведён в `test-results/`, `candidates/` не тронут). Это НАБЛЮДЕНИЕ, а не ворота: живой
+ * источник недетерминирован, приёмка идёт на фикстурах (`tools/scout-core.test.mjs`).
+ *
+ *   | Вид       | Новинок | Отсеяно минимумом дат | Добрано через сезон |
+ *   |-----------|--------:|----------------------:|--------------------:|
+ *   | Фильм     |      49 |                    42 |                   — |
+ *   | Сериал    |       3 |                    29 |                   3 |
+ *   | Видеоигра |      42 |                    51 |                   — |
+ *   | Книга     |       2 |                     0 |                   — |
+ *   | Альбом    |      18 |                     1 |                   — |
+ *   | **Итого** | **114** |               **123** |               **3** |
+ *
+ * 🔴 **Из 237 кандидатов, найденных сужением, 123 — 52 % — оказались переизданиями**, и прежний
+ * прибор объявил бы их новинками. Замер Дизайнера по партии 5 давал «почти половину» — сходится
+ * независимо. Живьём пойманный образец: «Тачки» 2006 года попадают в поиск 2026-го из-за даты
+ * переиздания, а полный набор дат возвращает 2006.
+ * 🔴 **У 45 сериалов из 47 даты живут ТОЛЬКО на сезонах** (отдельная прицельная проба) — то есть
+ * прежний запрос не находил их вовсе, и это была дыра охвата, а не отсутствие сериалов.
+ * ⚠️ Сервис нестабилен: за один прогон один и тот же запрос отвечал 429, 502 и обрывом сокета.
+ * Без повтора из разведки молча выпадали ЦЕЛЫЕ ВИДЫ — в этом прогоне повтор спас три вида из пяти.
+ *
  * Запуск: node tools/scout-wikidata-candidates.mjs [--year 2026] [--min-sitelinks 12] [--limit 400]
+ *                                                  [--out <путь|каталог/|имя>] [--out-json <путь>]
  * Пишет: candidates/scouts/<год>_wikidata_new_releases.md — ТЕЗИСНЫЙ СПИСОК (+ JSON в
  *         test-results/, из него агент пишет развёрнутые объекты в candidates/batches/).
  *         Устройство мастерской и правила заполнения — candidates/README.md.
+ * Проверки: node --test tools/scout-core.test.mjs   ·   npm run test:tools
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 import { normalizeForSearch } from '../src/lib/model/feed.ts';
+import {
+  sparqlNarrow, sparqlEnrich, narrowRowsToQids, rowsToItems, resolveOutPath,
+} from './lib/scout-core.mjs';
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
@@ -41,8 +80,13 @@ const YEAR = Number(arg('--year', '2026'));
 const MIN_SITELINKS = Number(arg('--min-sitelinks', '12'));
 const LIMIT = Number(arg('--limit', '400'));
 const SNAPSHOT = 'src/lib/content/dims-build.json';
-const OUT_MD = `candidates/scouts/${arg('--out', `${YEAR}_wikidata_new_releases`)}.md`;
-const OUT_JSON = `test-results/scout-candidates-${YEAR}.json`;
+/*
+ * 🆕 `--out` ПРИНИМАЕТ ПУТЬ, А НЕ ТОЛЬКО ИМЯ (фикс 3). Прежде путь собирался жёстко внутрь
+ * `candidates/`, и при замороженном судом каталоге штатный прибор запустить было нельзя —
+ * Дизайнеру пришлось обходиться разовыми скриптами. Прежняя форма (голое имя) сохранена.
+ */
+const OUT_MD = resolveOutPath(arg('--out', ''), YEAR);
+const OUT_JSON = arg('--out-json', `test-results/scout-candidates-${YEAR}.json`);
 
 /**
  * Виды объектов, которые мы ищем. Список сознательно короткий: это те виды, которых в каталоге
@@ -50,7 +94,9 @@ const OUT_JSON = `test-results/scout-candidates-${YEAR}.json`;
  */
 const KINDS = [
   { qid: 'Q11424', ru: 'Фильм', en: 'Film' },
-  { qid: 'Q5398426', ru: 'Сериал', en: 'TV series' },
+  // 🆕 У сериала своей даты выпуска часто нет вовсе — её несёт СЕЗОН (фикс 2). Флаг включает
+  // ветку сезонов в запросе; для остальных видов она ничего не находит и стоит лишним обходом.
+  { qid: 'Q5398426', ru: 'Сериал', en: 'TV series', viaSeasons: true },
   { qid: 'Q7889', ru: 'Видеоигра', en: 'Video game' },
   { qid: 'Q7725634', ru: 'Книга', en: 'Book' },
   { qid: 'Q482994', ru: 'Альбом', en: 'Album' },
@@ -60,49 +106,75 @@ const ENDPOINT = 'https://query.wikidata.org/sparql';
 /** Wikidata просит называть себя. Без внятного User-Agent сервис отвечает 403. */
 const UA = 'NDimSpace-catalog-scout/1.0 (https://ndimspace.app; agent of NDim Space 2.0)';
 
-/**
+/*
  * Один запрос на ОДИН вид объекта, а не всё сразу: широкий запрос по пяти видам упирается в
  * 60-секундный потолок WDQS и отдаёт таймаут, из которого не следует ничего.
+ *
+ * 🆕 Построение запроса и разбор ответа переехали в `tools/lib/scout-core.mjs` (фиксы 1 и 2).
+ * Причина не в красоте: пока правило года жило строкой SPARQL, проверить его без живой сети было
+ * нечем, а живой источник недетерминирован и в ворота не ставится. Теперь запрос отдаёт ПОЛНЫЙ
+ * набор дат, а год выбирает код — и это проверяется фикстурой.
  */
-function sparqlFor(kindQid) {
-  return `
-SELECT ?item ?sitelinks ?labelEn ?labelRu ?date WHERE {
-  ?item wdt:P31 wd:${kindQid} ;
-        wikibase:sitelinks ?sitelinks ;
-        wdt:P577 ?date .
-  FILTER(YEAR(?date) = ${YEAR})
-  FILTER(?sitelinks >= ${MIN_SITELINKS})
-  OPTIONAL { ?item rdfs:label ?labelEn . FILTER(LANG(?labelEn) = "en") }
-  OPTIONAL { ?item rdfs:label ?labelRu . FILTER(LANG(?labelRu) = "ru") }
-}
-ORDER BY DESC(?sitelinks)
-LIMIT ${LIMIT}`;
+/**
+ * Один запрос к WDQS с внятным отчётом о неудаче. Обрыв сокета на шестидесятой секунде — это
+ * потолок сервиса, и он называется отдельно от HTTP-ошибки: разные беды лечатся по-разному.
+ */
+/*
+ * 🔴 ПАУЗА МЕЖДУ ЗАПРОСАМИ — не вежливость, а условие работы. После разделения на сужение и
+ * добор прибор шлёт не пять запросов, а полтора десятка, и живой прогон 2026-08-22 получил на
+ * первом же виде **HTTP 429**: сервис ограничил темп, и целый вид выпал из разведки. Пауза
+ * дешевле пропущенного вида; она же оставляет запас другим потребителям WDQS.
+ */
+const ПАУЗА_МС = Number(arg('--pause', '2000'));
+const подождать = (мс) => new Promise((r) => { setTimeout(r, мс); });
+
+/*
+ * 🔴 ПОВТОР — потому что отказ ЗАМЕРЕН НЕСТАБИЛЬНЫМ, а не постоянным. За один вечер один и тот
+ * же запрос отвечал 429, 502 и обрывом сокета, а на следующей попытке проходил. Без повтора из
+ * разведки молча выпадал ЦЕЛЫЙ ВИД — и «фильмов 2026 года не найдено» читалось бы как факт о
+ * мире, хотя это факт о сети (класс `EXP-0165`: утверждение о поиске выдано за утверждение о
+ * мире). Попыток немного и пауза растёт: чинить чужую перегрузку настойчивостью нельзя.
+ */
+const ПОПЫТОК = Number(arg('--retries', '3'));
+
+async function спросить(query, чтоЭто) {
+  let последняя = 'неизвестно';
+  for (let попытка = 1; попытка <= ПОПЫТОК; попытка += 1) {
+    await подождать(ПАУЗА_МС * попытка);
+    try {
+      const ответ = await fetch(`${ENDPOINT}?format=json&query=${encodeURIComponent(query)}`,
+        { headers: { 'User-Agent': UA, Accept: 'application/sparql-results+json' } });
+      if (ответ.ok) return (await ответ.json()).results.bindings;
+      последняя = `HTTP ${ответ.status}`;
+    } catch (e) {
+      последняя = `обрыв ${e?.cause?.code ?? e?.message ?? 'неизвестно'} (вероятен 60-секундный потолок WDQS)`;
+    }
+    if (попытка < ПОПЫТОК) console.error(`  ↻ ${чтоЭто}: ${последняя} — попытка ${попытка + 1} из ${ПОПЫТОК}`);
+  }
+  console.error(`  ⚠️ ${чтоЭто}: ${последняя} — пропущено после ${ПОПЫТОК} попыток, и это НАЗВАНО, а не скрыто`);
+  return null;
 }
 
+/** Два шага: дёшево СУЗИТЬ по году, затем ДОБРАТЬ полный набор дат по названным QID. */
 async function ask(kind) {
-  const url = `${ENDPOINT}?format=json&query=${encodeURIComponent(sparqlFor(kind.qid))}`;
-  const response = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/sparql-results+json' } });
-  if (!response.ok) {
-    console.error(`  ⚠️ ${kind.ru}: HTTP ${response.status} — вид пропущен, и это НАЗВАНО, а не скрыто`);
-    return [];
+  const пусто = { найденные: [], переиздания: [], черезСезон: 0 };
+  const узкие = await спросить(sparqlNarrow(kind.qid, {
+    year: YEAR, minSitelinks: MIN_SITELINKS, limit: LIMIT, viaSeasons: Boolean(kind.viaSeasons),
+  }), `${kind.ru} · сужение`);
+  if (!узкие) return пусто;
+
+  const qids = narrowRowsToQids(узкие);
+  if (qids.length === 0) return пусто;
+
+  // Добор идёт кусками: `VALUES` из сотен строк раздувает запрос, а он едет в адресе.
+  const собранные = [];
+  for (let i = 0; i < qids.length; i += 120) {
+    const кусок = qids.slice(i, i + 120);
+    const строки = await спросить(sparqlEnrich(кусок, { viaSeasons: Boolean(kind.viaSeasons) }),
+      `${kind.ru} · добор дат ${i + 1}…${i + кусок.length}`);
+    if (строки) собранные.push(...строки);
   }
-  const body = await response.json();
-  const seen = new Map();
-  for (const row of body.results.bindings) {
-    const qid = row.item.value.split('/').pop();
-    // У объекта может быть несколько дат публикации (страны, платформы) — берём его один раз.
-    if (seen.has(qid)) continue;
-    seen.set(qid, {
-      qid,
-      kindRu: kind.ru,
-      kindEn: kind.en,
-      titleEn: row.labelEn?.value ?? '',
-      titleRu: row.labelRu?.value ?? '',
-      year: String(new Date(row.date.value).getUTCFullYear()),
-      sitelinks: Number(row.sitelinks.value),
-    });
-  }
-  return [...seen.values()];
+  return rowsToItems(собранные, kind, YEAR);
 }
 
 // ── Наш каталог: против чего дедуплицируем ──────────────────────────────────────────────────
@@ -126,10 +198,21 @@ console.log(`наш каталог: ${ours.length} измерений · нор�
 // ── Разведка ────────────────────────────────────────────────────────────────────────────────
 console.log(`\nразведка Wikidata: год ${YEAR}, порог известности ${MIN_SITELINKS} языковых разделов\n`);
 const found = [];
+/*
+ * 🆕 ЧИСЛА ДНЯ, КОТОРЫЕ ПРИБОР ОБЯЗАН НАЗВАТЬ (фиксы 1 и 2). Отсев переизданий — это и есть
+ * замеренный класс «почти половина новинок оказалась переизданием»: без него они молча уезжали
+ * в список как новинки. Добор через сезон — мера того, сколько сериалов прежде терялось целиком.
+ */
+let ОТСЕЯНО_ПЕРЕИЗДАНИЙ = 0;
+let ДОБРАНО_ЧЕРЕЗ_СЕЗОН = 0;
 for (const kind of KINDS) {
-  const rows = await ask(kind);
-  console.log(`  ${kind.ru.padEnd(10)} найдено ${rows.length}`);
-  found.push(...rows);
+  const { найденные, переиздания, черезСезон } = await ask(kind);
+  ОТСЕЯНО_ПЕРЕИЗДАНИЙ += переиздания.length;
+  ДОБРАНО_ЧЕРЕЗ_СЕЗОН += черезСезон;
+  console.log(`  ${kind.ru.padEnd(10)} найдено ${найденные.length}`
+    + ` · отсеяно минимумом дат ${переиздания.length}`
+    + (kind.viaSeasons ? ` · добрано через сезон ${черезСезон}` : ''));
+  found.push(...найденные);
 }
 
 /*
@@ -220,7 +303,16 @@ console.log(`  (имя добыто дозапросом у ${РАЗРЕШЕНО
 console.log(`
 итого строк разобрано: ${found.length} = ${fresh.length} новых + ${already.length} наших + ${unnamed.length} без имени`);
 
-writeFileSync(OUT_JSON, JSON.stringify({ year: YEAR, minSitelinks: MIN_SITELINKS, fresh, already, unnamed }, null, 1), 'utf8');
+mkdirSync(dirname(OUT_JSON), { recursive: true });
+writeFileSync(OUT_JSON, JSON.stringify({
+  year: YEAR,
+  minSitelinks: MIN_SITELINKS,
+  отсеяноПереизданий: ОТСЕЯНО_ПЕРЕИЗДАНИЙ,
+  добраноЧерезСезон: ДОБРАНО_ЧЕРЕЗ_СЕЗОН,
+  fresh,
+  already,
+  unnamed,
+}, null, 1), 'utf8');
 
 // ── Документ разведки ───────────────────────────────────────────────────────────────────────
 const rows = fresh
@@ -282,6 +374,8 @@ ${ours.length} наших измерений.
 | 🆕 **Которых у нас НЕТ** | **${fresh.length}** |
 | ⏭ Имя не разрешилось — **сверка не проводилась** | ${unnamed.length} |
 | Имя добыто дозапросом (\`mul\` и заголовки разделов) | ${РАЗРЕШЕНО_ДОЗАПРОСОМ} |
+| 🆕 Отсеяно МИНИМУМОМ ДАТ — переиздания, а не новинки | **${ОТСЕЯНО_ПЕРЕИЗДАНИЙ}** |
+| 🆕 Сериалов ДОБРАНО через даты сезонов | **${ДОБРАНО_ЧЕРЕЗ_СЕЗОН}** |
 
 ⚠️ **Честные границы этой разведки, чтобы её не переоценили:**
 - мера известности — число языковых разделов Википедии, а не касса и не хайп. Свежий релиз может
@@ -315,6 +409,9 @@ ${unnamedSection}
 вычитки владельцем.
 `;
 
+// Каталог назначения создаётся сам: `--out` теперь принимает произвольный путь, и требовать от
+// вызывающего заранее сделанной папки значило бы вернуть ту же преграду, что мы только что сняли.
+mkdirSync(dirname(OUT_MD), { recursive: true });
 writeFileSync(OUT_MD, md, 'utf8');
 console.log(`\nдокумент разведки: ${OUT_MD}`);
 console.log(`данные для следующего шага: ${OUT_JSON}`);
