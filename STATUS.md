@@ -871,7 +871,10 @@ demo-ndim-loop "node tools/verify-candidate-return-loop.mjs"` (**11**, без э
 `verify-owner-reviews` (**86**) · `verify-dimension-pages` (**30**) ·
 `verify-prod-dimension-pages` (**44**, бой) · `verify-prod-lang-redirects` (**16**, бой) ·
 `verify-prod-b4` (**81**, бой) · `verify-prod-dim-ratings` (**7**, бой) ·
-`verify-product-vocabulary` (**7**) · `verify-lang-module` (**17**) · `verify-admin-home` (**17**) ·
+`verify-product-vocabulary` (**12**, было 7; 🆕 216 некаталожных h1 под судом — вырез h1 был
+безусловным и прятал заголовки лендинга, «Меню» и семейства «Тест»; ⛔ в `BANNED` НЕ добавлять
+«совместимость» и «платформа» — это слово владельца и утверждённое имя страницы, страж покраснел
+бы на его тексте) · `verify-lang-module` (**17**) · `verify-admin-home` (**17**) ·
 `verify-bug104` (**22**) · `verify-bug105` (**56**) · `verify-plan08` (**60**) ·
 `verify-bug81` (**36**) · `verify-bug40` (**71**) · `verify-bug69` · `verify-pwa` (**24**) ·
 `verify-account` (**84**) ·
