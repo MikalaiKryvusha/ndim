@@ -65,7 +65,8 @@ import { pathToFileURL } from 'node:url';
  */
 import { ARTIFACT_PATTERNS } from './check-candidate-descriptions.mjs';
 
-import { proseProblems } from './lib/prose-gates.mjs';
+import { proseProblems, proseNotes } from './lib/prose-gates.mjs';
+import { создатьКорзину } from './lib/gate-notes.mjs';
 
 const JOURNAL_DIR = 'homeworks';
 const SNAPSHOT = 'src/lib/content/dims-build.json';
@@ -93,8 +94,22 @@ const MARKERS_BY_LANG = {
     /транслировал(ся|ась|ись)/i, /состоит из \d+ сезон/i],
 };
 
+/**
+ * 🆕 ЗАМЕЧАНИЯ — ВТОРОЙ ВЫХОД `checkEdit` (общий канал ворот, 2026-08-22).
+ *
+ * У ворот было одно слово — ОТКАЗ, — и `proseNotes` («*the score was composed by*» и прочее
+ * артефактное подлежащее) не звал НИКТО: функция была написана, объявлена решением Менеджера
+ * «предъявлять, а не отказывать» — и не подключена ни к одному прогону. Класс `EXP-0194`.
+ *
+ * Совместимость держится формой возврата: `checkEdit` по-прежнему отдаёт МАССИВ проблем, и все
+ * прежние вызовы (`gate-rewrites.mjs`, самотест, рабочий режим) работают без правки. Замечания
+ * висят на нём вторым полем — `problems.замечания`. Так канал стал общим, не сломав ни одного
+ * потребителя; отдельная функция-близнец разъехалась бы с этой на первом же новом признаке.
+ */
 export function checkEdit(edit) {
   const problems = [];
+  const замечания = [];
+  problems.замечания = замечания;
   const lang = edit.lang ?? 'en';
   if (!edit.slug) problems.push('нет slug');
   if (!MARKERS_BY_LANG[lang]) problems.push(`неизвестный язык «${lang}»`);
@@ -187,6 +202,7 @@ export function checkEdit(edit) {
      * ⛔ Русскую правку английский список не судит — модуль сам возвращает пустое на `lang ≠ en`.
      */
     problems.push(...proseProblems(где, lang));
+    замечания.push(...proseNotes(где, lang));
   }
   return problems;
 }
@@ -381,13 +397,21 @@ console.log(apply ? 'Режим: ЗАПИСЬ В БОЕВОЙ КАТАЛОГ\n' 
 
 // 1. Проверки, которым база не нужна.
 let broken = 0;
+/* Общий канал ворот: замечание предъявляется человеку и работу не останавливает. */
+const корзина = создатьКорзину();
 for (const e of edits) {
   const problems = checkEdit(e);
+  корзина.добавитьВсе('ворота прозы', e.slug, problems.замечания);
   if (problems.length) {
     broken += 1;
     console.log(`  ❌ ${e.slug}: ${problems.join(' · ')}`);
   }
 }
+/* Печатается ДО отказа по браку: замечания собраны и по забракованным правкам тоже.
+ * [NOT-TESTED] Сквозной прогон писаря требует снимка каталога `dims-build.json` (17 МБ, в
+ * `.gitignore`), которого в ветке нет. Части проверены юнитами: `checkEdit` отдаёт
+ * `.замечания`, корзина печатает формат (`tools/gate-notes.test.mjs`). */
+корзина.напечатать();
 if (broken) {
   console.log(`\n❌ негодных правок: ${broken} — ни одна не записана, поправьте файл.`);
   process.exit(1);

@@ -27,6 +27,7 @@ import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { words, longestCommonRun, RUN_THRESHOLD, isInsideQuotes } from './measure-wikipedia-overlap.mjs';
 import { checkEdit } from './rewrite-catalog-descriptions.mjs';
+import { создатьКорзину } from './lib/gate-notes.mjs';
 
 const arg = (n, d = null) => {
   const i = process.argv.indexOf(n);
@@ -100,6 +101,12 @@ console.log(`правок из журнала: ${все.length}`);
 
 const годные = [];
 const брак = [];
+/*
+ * КАНАЛ ЗАМЕЧАНИЙ — общий с воротами мастерской (`tools/lib/gate-notes.mjs`).
+ * Заведён потому, что `proseNotes` производилась и НИКУДА НЕ ДОЕЗЖАЛА: замечание, которого
+ * никто не видит, — это молчание, а не мягкий отказ.
+ */
+const корзинаЗамечаний = создатьКорзину();
 let непроверено = 0;
 let частично = 0;
 
@@ -117,6 +124,8 @@ for (const e of все) {
   }
   const after = текст.split(e.find).join(e.replace);
   const проблемы = checkEdit({ ...e, before: текст, after, lang: LANG });
+  /* Замечания собираются ДАЖЕ у забракованной правки: человек читает их вместе, а не по одному. */
+  корзинаЗамечаний.добавитьВсе('ворота прозы', e.slug, проблемы.замечания);
   if (проблемы.length) {
     брак.push({ ...e, беда: проблемы.join(' · ') });
     continue;
@@ -164,4 +173,9 @@ console.log(`  ✅ годных: ${годные.length}`);
 console.log(`  ⚠️ из них ЗАПИСЬ ОСТАЁТСЯ КОПИЕЙ (ряд в соседнем предложении): ${частично}`);
 console.log(`  ❌ брака: ${брак.length}${непроверено ? ` (из них НЕ ПРОВЕРЕНО: ${непроверено})` : ''}`);
 for (const b of брак.slice(0, 12)) console.log(`     ${b.slug}: ${b.беда}`);
+/* Замечания — общий канал ворот. Печатаются ВСЕГДА, в том числе при зелёном прогоне.
+ * [NOT-TESTED] Именно ЭТА строка сквозным прогоном не проверена: воротам нужен журнал и
+ * снимок каталога `dims-build.json` (17 МБ, в `.gitignore`). Проверено юнитами по частям —
+ * `checkEdit` отдаёт `.замечания` (`gate-notes.test.mjs`), корзина печатает формат (там же). */
+корзинаЗамечаний.напечатать();
 console.log(`\nзаписано: ${OUT}`);
