@@ -16,8 +16,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  firstReleaseYear, sparqlNarrow, sparqlEnrich, narrowRowsToQids, rowsToItems, resolveOutPath,
-  SEASON_PROPS, DEFAULT_OUT_DIR,
+  firstReleaseYear, firstReleaseDate, sparqlNarrow, sparqlEnrich, narrowRowsToQids, rowsToItems,
+  resolveOutPath, SEASON_PROPS, DEFAULT_OUT_DIR,
 } from './lib/scout-core.mjs';
 
 const ВИД_ФИЛЬМ = { qid: 'Q11424', ru: 'Фильм', en: 'Film' };
@@ -178,4 +178,63 @@ test('--out уводит отчёт из candidates/, и прежнее пове
 
 test('--out принимает windows-путь с обратными косыми', () => {
   assert.equal(resolveOutPath('test-results\\scout.md', 2026), 'test-results/scout.md');
+});
+
+// ── 6. КЛАСС 1 ВЛАДЕЛЬЦА: НЕ ВЫШЕДШИЙ ОБЪЕКТ В РАЗВЕДКУ НЕ ИДЁТ ─────────────────────────────
+//
+// Его слово 2026-08-22, самое злое из девяти классов: «Если назначен, то какого хуя ты завёл его
+// и даёшь мне на вычитку как то, чем якобы люди будут формировать свой профиль NDim ID? Как ты
+// себе это представляешь, если люди ещё не видели этот фильм?»
+// Класс 1 — фильтр ОТБОРА, а не правка текста, поэтому он и стоит здесь, в разведке.
+
+test('дата первого выпуска берётся целиком, минимумом по всему набору', () => {
+  assert.equal(firstReleaseDate('2026-12-14T00:00:00Z|2026-03-01T00:00:00Z'), '2026-03-01');
+  assert.equal(firstReleaseDate(['2026-05-07T00:00:00Z']), '2026-05-07');
+});
+
+test('пустой набор — null, а не «сегодня»: отсутствующая дата это отсутствующий факт', () => {
+  assert.equal(firstReleaseDate(''), null);
+  assert.equal(firstReleaseDate(null), null);
+});
+
+test('🔴 новинка года, которая ЕЩЁ НЕ ВЫШЛА, отсеивается и НАЗЫВАЕТСЯ', () => {
+  // Resident Evil Requiem — ровно тот случай, за который он вернул карточку: год 2026 верный,
+  // а дата в будущем. Года для класса 1 мало, нужна дата.
+  const { найденные, невышедшие, переиздания } = rowsToItems(
+    [строка({ qid: 'Q124983920', sitelinks: 20, ru: 'Resident Evil Requiem', en: 'Resident Evil Requiem', dates: '2026-12-14T00:00:00Z' })],
+    ВИД_ФИЛЬМ, 2026, { releasedBy: '2026-08-22' },
+  );
+  assert.equal(найденные.length, 0, 'невышедшему в партии не место');
+  assert.equal(переиздания.length, 0, 'это не переиздание — причина отсева другая, и путать их нельзя');
+  assert.equal(невышедшие.length, 1, 'отсев обязан быть НАЗВАН, а не молчалив');
+  assert.equal(невышедшие[0].перваяДата, '2026-12-14');
+});
+
+test('🔴 контроль: ВЫШЕДШАЯ новинка того же года проходит', () => {
+  const { найденные, невышедшие } = rowsToItems(
+    [строка({ qid: 'Q125131076', sitelinks: 20, ru: 'Закулисье реальности', en: 'Backrooms', dates: '2026-05-07T00:00:00Z|2026-05-29T00:00:00Z' })],
+    ВИД_ФИЛЬМ, 2026, { releasedBy: '2026-08-22' },
+  );
+  assert.equal(найденные.length, 1);
+  assert.equal(невышедшие.length, 0);
+  assert.equal(найденные[0].перваяДата, '2026-05-07');
+});
+
+test('🔴 граница: объект БЕЗ ЕДИНОЙ ДАТЫ фильтром выхода не отсеивается — решает человек', () => {
+  // Отсутствие даты не доказывает выхода, но и не доказывает обратного. Умолчание прибора здесь
+  // было бы решением за человека, а канон мастерской велит называть нехватку, а не гадать.
+  const { найденные, невышедшие } = rowsToItems(
+    [строка({ qid: 'Q1', sitelinks: 20, ru: 'Без даты', en: 'No date', dates: '' })],
+    ВИД_ФИЛЬМ, 2026, { releasedBy: '2026-08-22' },
+  );
+  assert.equal(найденные.length + невышедшие.length, 0, 'без даты год не совпадёт и запись уйдёт в переиздания');
+});
+
+test('без releasedBy прибор ведёт себя как прежде — фильтр не включается сам', () => {
+  const { найденные, невышедшие } = rowsToItems(
+    [строка({ qid: 'Q124983920', sitelinks: 20, ru: 'Ещё не вышло', en: 'Not out yet', dates: '2026-12-14T00:00:00Z' })],
+    ВИД_ФИЛЬМ, 2026,
+  );
+  assert.equal(найденные.length, 1);
+  assert.equal(невышедшие.length, 0);
 });
