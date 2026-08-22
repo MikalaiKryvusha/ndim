@@ -38,28 +38,35 @@
     "их приёма ещё идёт. Оценки в описаниях названы словами, а не числами: числа этих недель",
     "меняются, а строка карточки живёт долго.",
     "",
-    "🅿 СОСТОЯНИЕ: в файле 18 карточек из 24, все три порции с зелёными воротами.",
-    "Оставшиеся 6 — по списку researches/48 §3, строки 19…24, в том же порядке хайп-волны:",
-    "«Служебный роман» · Gothic Remake · «Давление» · Paralives · «Сначала дамы» ·",
-    "Lego Batman: Legacy of the Dark Knight.",
+    "🅿 СОСТОЯНИЕ: партия ПОЛНАЯ — 24 карточки из 24, все четыре порции с зелёными воротами.",
     "",
     "🔴 ИСПРАВЛЕНА ОШИБКА ОЧЕРЕДИ, стоявшая здесь с прошлой смены. Прежняя парковочная записка",
     "ссылалась на §3 строки 13…24 И ТУТ ЖЕ пересказывала их своими словами — пересказ разошёлся",
     "с источником: назывались Forza Horizon 6, «Пассажир» и «Чёрный шар», которых в разведке нет",
     "вовсе (Forza Horizon упомянута там лишь примером жанра в §6.5), и терялись настоящие строки",
-    "13, 18 и 22 — Star Fox, Meccha Chameleon, Paralives. Порция 3 написана ПО ИСТОЧНИКУ, а не по",
-    "пересказу. Урок класса: список рядом со ссылкой на список — вторая правда, и расходится она",
-    "молча.",
+    "13, 18 и 22 — Star Fox, Meccha Chameleon, Paralives. Порции 3 и 4 написаны ПО ИСТОЧНИКУ, а не",
+    "по пересказу, и состав партии теперь ровно равен списку разведки. Урок класса: список рядом",
+    "со ссылкой на список — вторая правда, и расходится она молча.",
     "",
-    "🔴 ЧЕСТНАЯ ГРАНИЦА ЗЕЛЁНОГО ПРОГОНА У ПОРЦИИ 3 — ворота приёмки ищут статью Википедии",
-    "полнотекстовым поиском и берут ПЕРВОЕ попадание, не сверяя, что оно об этом объекте. На",
-    "порции 3 промахов вышло четыре из двенадцати половин: русские описания сверялись со статьями",
-    "«Робинсон, Ник» (Voicemails for Isabelle), «Ли Да-хи» (Husbands in Action), «Big Walk»",
-    "(Meccha Chameleon) и «Star Fox» — франшизой вместо игры 2026 года. Все четыре получили ✅.",
-    "Пересверено вручную тем же ядром по ПРАВИЛЬНЫМ статьям: Star Fox ru — ряд 5 слов, чисто;",
-    "Meccha Chameleon ru — ряд 4 слова, чисто. У «Voicemails for Isabelle» и «Husbands in Action»",
-    "русской статьи НЕТ вовсе, и русская половина у них честно НЕ ПРОВЕРЕНА — зелёный прибора",
-    "по ним недействителен. Дефект заведён отдельным документом в bugs/."
+    "🔴 ЧЕСТНАЯ ГРАНИЦА ЗЕЛЁНОГО ПРОГОНА — ворота приёмки ищут статью Википедии полнотекстовым",
+    "поиском и берут ПЕРВОЕ попадание, не сверяя, что оно об этом объекте. На порциях 3 и 4",
+    "промахов СЕМЬ из двадцати четырёх половин, все на русской стороне:",
+    "· сверено с чужой статьёй и получило ✅ — «Робинсон, Ник» (Voicemails for Isabelle),",
+    "  «Ли Да-хи» (Husbands in Action), «Big Walk» (Meccha Chameleon), «Star Fox» — франшиза",
+    "  вместо игры 2026 года, «Прикосновение (фильм, 1992)» (Сначала дамы), «Бэтмен» — франшиза",
+    "  вместо игры (Lego Batman);",
+    "· пропущена СВОЯ статья — у Paralives русская статья есть, а поиск вернул пустоту.",
+    "Пересверено вручную тем же ядром по ПРАВИЛЬНЫМ статьям, все чисто: Star Fox ru — ряд 5 слов,",
+    "Meccha Chameleon ru — 4, Paralives ru — 4, Lego Batman ru — 4. У «Voicemails for Isabelle»,",
+    "«Husbands in Action» и «Сначала дамы» русской статьи НЕТ вовсе, и русская половина у них",
+    "честно НЕ ПРОВЕРЕНА — зелёный прибора по ним недействителен. Границы записаны в agentNote",
+    "каждой из семи карточек. Дефект заведён отдельным документом в bugs/.",
+    "",
+    "📋 ЧТО ЖДЁТ СЛОВА ВЛАДЕЛЬЦА (вопросы лежат в agentNote поимённо):",
+    "· латиница в именах людей, у которых в реестре нет русской формы — их в партии трое",
+    "  (Leah McKendrick, Park Gyu-tae, Kang Han-na); пока стоят латиницей, как студии в играх;",
+    "· пары тегов под «симулятор жизни» и «многопользовательские прятки» в проверенном словаре",
+    "  каталога нет, и своих терминов я не изобретала — у двух игровых карточек тегов меньше."
   ],
   "candidates": [
     {
@@ -691,6 +698,214 @@
         "en": "Multiplayer hide-and-seek grown from one simple thought: you can hide by painting yourself to match your surroundings. People split into hunters and chameleons; a chameleon paints its body with an eyedropper and a colour mixer, picks a shape and a pose — curl up, lie down, stretch out — can run off copies of itself and freeze among the furniture, while the hunter has to find them all before time runs out. Beyond the main mode there is infection, where everyone caught joins the hunters; a double mode where all hide first and all seek after; and a reverse race in which one player's paint job is shown to the rest, who then race to find them on the map. There are seven maps — a mansion, a country house, a sewer, backrooms, a hotel, a land of sweets and Osaka — and new ones are made by players themselves and handed round through the Steam workshop. Up to twenty-four people can join, though the developers recommend between two and twelve. A chameleon may swing the camera about freely and spy on the hunter, or whistle and give itself away on purpose; a server can be set so that the whistle escapes by itself after a set time. Two Japanese independent developers, Lemorion_1224 and Haganeiro, built the game in two months out of the parts of their own earlier projects. It came out on 10 June 2026. What followed was planned by nobody: with no advertising at all the game spread through short clips and streams, drew twenty thousand people at once on release day and more than three hundred and forty thousand by the end of June, putting it among the fifty most crowded games in the history of Steam. Reviewers praised the invention and noted that the game is interesting even to watch from the side. The popularity brought trouble too: maps carrying malware turned up in the workshop, the official community server was broken into through it, and the developers closed the hole with an update that forbids maps to run unrelated files."
       },
       "agentNote": "🔴 РЕЕСТР МОЛЧИТ О РАЗРАБОТЧИКЕ: свойства «разработчик» у записи нет вовсе, имя стоит только в тексте описания реестра. В поле автора — ведущий разработчик по статьям (Lemorion_1224: замысел, графика, уровни, модели, музыка), напарник Haganeiro (программирование и эффекты) назван в описании. Отступление названо вслух, как в карточке Splatoon Raiders. ⚠️ Тегов у карточки меньше обычного намеренно: жанру «многопользовательские прятки» пары в словаре каталога нет, а изобретать свой термин канон запрещает. Числа продаж расходятся между статьями (15 против 20 млн копий) и в описание не вошли; названы только одновременные игроки, которые в обеих статьях совпадают. ⚠️ Ворота на заимствование по русской половине промахнулись статьёй — взяли «Big Walk». Пересверено вручную по статье «Meccha Chameleon»: ряд 4 слова, чисто."
+    },
+    {
+      "wikidata": "Q133627085",
+      "sitelinks": 15,
+      "title": {
+        "ru": "Служебный роман",
+        "en": "Office Romance"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Ол Паркер",
+        "en": "Ol Parker"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "романтика",
+        "romance",
+        "отношения",
+        "relationships"
+      ],
+      "description": {
+        "ru": "Американская романтическая комедия Ола Паркера; с одноимённой советской картиной Эльдара Рязанова 1977 года её не связывает ничего, кроме русского названия. Джеки Круз возглавила авиакомпанию AirCruz, когда от дел отошёл её отец, эту компанию и основавший. Она блестящий управленец и вдобавок сертифицированный пилот, но правит железной рукой и держит в напряжении весь штат, сама того не замечая; среди заведённых ею правил есть и запрет на любые романы между сотрудниками. Британский юрист Дэниел перебрался в Штаты по семейным обстоятельствам и попал в AirCruz младшим при многолетнем главном юристе компании. Травма старшего коллеги выталкивает его на передний край, и работать теперь приходится вплотную с самой Круз. Командировка на слушания в Доминикану, куда Джеки летит сама за штурвалом служебного самолёта, оставляет их вдвоём вдали от офиса — там оба и сдаются взаимному притяжению. Дальше всё держится на одном узле: роман приходится прятать от компании, чьи правила запретила сама героиня, а юристы противной стороны пытаются обратить эту связь в оружие против неё. Проблематика названа прямо — женщина на верхнем этаже, которая всю жизнь доказывает состоятельность отцу и совету директоров, и цена одиночества, выстроенного собственными руками. Развязка приходит на пресс-конференции, где Джеки собирается объявить об отставке, а Дэниел успевает к последней минуте и заступается за неё вслух. Играют Дженнифер Лопес и Бретт Голдстин, он же соавтор сценария; рядом заняты Бетти Гилпин, Эдвард Джеймс Олмос, Брэдли Уитфорд, Эми Седарис и Тони Хейл. Вышел фильм 5 июня 2026 года сразу на стриминге. Приняли сдержанно: хвалили пару исполнителей и упрекали картину в том, что она слишком послушно идёт накатанными правилами жанра.",
+        "en": "An American romantic comedy directed by Ol Parker, sharing nothing but its Russian release title with Eldar Ryazanov's Soviet picture of 1977. Jackie Cruz took over the airline Air Cruz when her father, who founded it, stepped back. She is a formidable manager and a certified pilot besides, but she rules with an iron hand and keeps the whole staff on edge without noticing it; among the rules she herself laid down is a ban on any romance between employees. Daniel, a British attorney, moved to the States on family business and joined Air Cruz as junior to the company's long-serving chief counsel. An injury to the older man pushes him to the front line, and the work now puts him shoulder to shoulder with Cruz herself. A deposition trip to the Dominican Republic, which Jackie flies herself at the controls of the company plane, leaves the two of them alone far from the office, and there they both give in to the pull between them. From there everything hangs on a single knot: the affair has to be hidden from a company whose rules the heroine wrote, while opposing counsel try to turn that affair into a weapon against her. The theme is stated plainly — a woman at the top who has spent her life proving herself to her father and to the board, and the price of a solitude she built with her own hands. The resolution comes at a press conference where Jackie means to announce her resignation, and Daniel arrives at the last minute to speak up for her. Jennifer Lopez and Brett Goldstein star, Goldstein co-writing as well; Betty Gilpin, Edward James Olmos, Bradley Whitford, Amy Sedaris and Tony Hale fill out the cast. The film went out on 5 June 2026 straight to streaming. Reception was measured: reviewers liked the pairing and faulted the picture for following the standard rules of its genre too obediently."
+      },
+      "agentNote": "🔴 КАПКАН ИМЕНИ, названный разведкой (researches/48 §6.3): это НЕ «Служебный роман» Рязанова. Дублем машина запись не считает — значит рязановского фильма у нас нет вовсе, и человек, набравший название в поиске, найдёт только эту карточку. Поэтому первое же предложение разводит их прямо. Фамилия юриста в описании не названа намеренно: русская статья даёт «Блэнч-Флауэр», английская Blanchflower, своей транслитерации не изобретаю. Реестр числит сценаристом одного Бретта Голдстина, обе статьи называют вторым Джо Келли — в описание вошло только бесспорное."
+    },
+    {
+      "wikidata": "Q102219949",
+      "sitelinks": 8,
+      "title": {
+        "ru": "Gothic 1 Remake",
+        "en": "Gothic 1 Remake"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Alkimia Interactive",
+        "en": "Alkimia Interactive"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "фэнтези",
+        "fantasy",
+        "экшен",
+        "action",
+        "открытый мир",
+        "open world",
+        "приключения",
+        "adventure"
+      ],
+      "description": {
+        "ru": "Ролевой боевик в открытом фэнтезийном мире — ремейк «Готики» 2001 года, с которой началась вся серия. Играть предстоит за безымянного заключённого, брошенного в исправительную рудничную колонию: Долину рудников накрывает магический барьер, наружу не выходит никто, и внутри выросло собственное общество — лагеря со своими законами, вожаками и застарелыми счётами друг к другу. Герой начинает ни с чем, без единого умения и без карты-подсказки в углу экрана, и место в этом обществе выбирает сам: к какому лагерю прибиться, кому служить, чем зарабатывать на жизнь. Мир пересобран заметно крупнее прежнего — места, до которых в 2001 году не дошли руки, дописаны, и в них появились свои задания. Сюжетные дыры первой игры разработчики закрыли и объяснили, а главы со второй по пятую, урезанные тогда из-за сроков, развернули. Отдельно взялись за обитателей: у каждого свой распорядок дня, движения набраны с живых актёров, а об орках рассказано куда больше прежнего — их язык расширяли вместе с лингвистом. Сделала игру испанская студия Alkimia Interactive, основанная в Барселоне специально под эту работу, издала THQ Nordic, а музыку переосмыслил Кай Розенкранц, писавший её и для оригинала. Немецкая Piranha Bytes, придумавшая серию, к ремейку отношения не имеет: студия лишилась прав и в 2024 году закрылась. Вышла игра 5 июня 2026 года. Приняли неровно — оценки сошлись на средних, и это заметный шаг вниз против оригинала, которым в своё время восхищались; за первую неделю разошлось больше полумиллиона копий.",
+        "en": "An action role-playing game in an open fantasy world, remaking the Gothic of 2001 that started the whole series. The player takes a nameless convict thrown into a penal mining colony: a magical barrier seals the Valley of Mines, nobody gets out, and a society of its own has grown up inside — camps with their own laws, their own leaders and old scores between them. The hero starts with nothing, without a single skill and without a minimap in the corner of the screen, and picks his own place in that society: which camp to join, whom to serve, how to earn a living. The world has been rebuilt noticeably larger than before, with places nobody got round to in 2001 now written out and carrying quests of their own. Plot holes of the first game have been closed and explained, and chapters two through five, cut short back then for time, are opened out. The inhabitants got separate attention: each keeps a daily routine, their movement was captured from live actors, and the orcs are given far more than before, their language expanded with a linguist's help. The Spanish studio Alkimia Interactive, founded in Barcelona for this job alone, built the game, THQ Nordic published it, and Kai Rosenkranz, who scored the original, reworked the music. Piranha Bytes of Germany, who invented the series, had no hand in the remake: the studio lost the rights and shut down in 2024. The game came out on 5 June 2026. Reception was uneven — scores settled at mixed, a marked step down from an original that was once admired, and half a million copies sold in the first week."
+      },
+      "agentNote": "⚠️ Имя объекта расходится внутри самого реестра: метка стоит «Gothic Remake», а официальное название и заголовки обеих статей — «Gothic 1 Remake», и оно же лежит в реестре английским псевдонимом. Взято более точное; разведка (researches/48 §3, строка 20) звала игру по метке. 🔴 Свойства «разработчик» у записи НЕТ — реестр даёт только издателя (THQ Nordic), а Alkimia Interactive названа в тексте описания реестра и обеими статьями. Отступление то же, что в карточке Splatoon Raiders, и названо вслух. Насколько мир больше оригинального, источники расходятся (10–20 % против 10–30 %), поэтому в описании доля не названа. Капкан ремейка из разведки (§6.1) закрыт: карточка говорит, ремейк ЧЕГО это, и что оригинальная команда к нему непричастна."
+    },
+    {
+      "wikidata": "Q127698549",
+      "sitelinks": 16,
+      "title": {
+        "ru": "Давление",
+        "en": "Pressure"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Энтони Марас",
+        "en": "Anthony Maras"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "война",
+        "war",
+        "исторический",
+        "historical",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "Военная драма по пьесе Дэвида Хэйга — о трёх сутках, в которые решалась дата высадки в Нормандии. Июнь 1944 года, союзники готовят «Оверлорд», и главнокомандующий Дуайт Эйзенхауэр вызывает в штаб шотландского метеоролога Джеймса Стегга: нужен прогноз на утро 5 июня, до которого остаётся немногим больше двух суток. Стеггу противостоит американский полковник Ирвинг Крик, предсказывающий погоду по историческим совпадениям — если много лет подряд в эти дни над проливом было ясно, будет ясно и теперь. Стегг читает свежие данные со станций и видит две быстро идущие депрессии у Азорских островов: шторм, низкая облачность, высокая волна, при которых высадка сорвётся. Спор двух метеорологов и есть весь фильм — один опирается на прошлое, другой на измерения, а между ними человек, обязанный решить за всю операцию. Давит и Монтгомери: любое промедление грозит выдать противнику всю игру в дезинформацию, а следующее подходящее окно приливов и луны наступит только через две недели. Личная линия идёт рядом и не отпускает — госпиталь, куда увезли беременную жену Стегга, разбомблен, судьба её неизвестна, но своего прогноза он не меняет. Эйзенхауэр откладывает высадку, шторм приходит точно по расчёту, а следом Стегг находит в данных редкий разрыв в непогоде и называет новое утро — 6 июня. Играют Эндрю Скотт, Брендан Фрейзер, Керри Кондон, Крис Мессина и Дэмиэн Льюис; поставил и смонтировал картину Энтони Марас, производство британо-французское. Вышла она 29 мая 2026 года в США. Приняли в основном хорошо.",
+        "en": "A war drama from David Haig's stage play, about the three days in which the date of the Normandy landings was decided. It is June 1944, the Allies are preparing Overlord, and the supreme commander Dwight Eisenhower calls the Scottish meteorologist James Stagg to headquarters: he needs a forecast for the morning of 5 June, a little over two days away. Against Stagg stands the American colonel Irving Krick, who predicts weather from historical coincidence — if the Channel was clear on these days for years running, it will be clear now. Stagg reads fresh data from the stations and sees two fast-moving depressions off the Azores: storm, low cloud and high seas, under which the landing would fail. The argument between the two forecasters is the whole film — one leans on the past, the other on measurement, and between them stands a man obliged to decide for the entire operation. Montgomery presses too: any delay risks giving the enemy the whole deception game, and the next fit window of tide and moon is a fortnight off. A private line runs alongside and does not let go — the hospital holding Stagg's pregnant wife has been bombed and her fate is unknown, yet he does not bend his forecast. Eisenhower postpones the landing, the storm arrives exactly on the reckoning, and then Stagg finds a rare break in the weather in the data and names a new morning, 6 June. Andrew Scott, Brendan Fraser, Kerry Condon, Chris Messina and Damian Lewis star; Anthony Maras directed and edited, in a British and French production. It opened in the United States on 29 May 2026. Reception was largely good."
+      },
+      "agentNote": "Год по МИНИМУМУ полного набора дат реестра: 28 мая 2026 (Гонконг и Сингапур), 29 мая (США), 6 июня (Китай), 11 сентября (Великобритания), 17 сентября (Германия). Фамилия метеоролога дана в русской форме статьи — «Стегг»; в реестре роль записана латиницей (James Stagg), русской формы у неё нет. Первоисточник назван реестром прямо — пьеса «Pressure» Дэвида Хэйга, и это основание для тега «экранизация»."
+    },
+    {
+      "wikidata": "Q98545425",
+      "sitelinks": 11,
+      "title": {
+        "ru": "Paralives",
+        "en": "Paralives"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Paralives Studio",
+        "en": "Paralives Studio"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "инди",
+        "indie",
+        "открытый мир",
+        "open world"
+      ],
+      "description": {
+        "ru": "Симулятор жизни с открытым миром, вышедший в ранний доступ: человек строит дома, придумывает жильцов и ведёт их сквозь жизнь. Жильцов зовут парафолками, и собирают их в редакторе, где настраивается всё — рост, телосложение, оттенок кожи и волос, одежда, нрав. Тем же способом устроено строительство: стены, полы, окна, двери и мебель двигаются, меняются в размере, цвете и фактуре без привязки к сетке, и дом выходит почти любой формы. Чтобы жильцы при этом не застревали в собственных стенах, движения считаются на ходу и подстраиваются под то, что вокруг, — иначе свободная планировка обернулась бы застрявшими людьми. Парафолкам нужны сон, еда и деньги; они ходят на работу, заводят отношения и детей, растут и стареют, проходя жизненные ступени, и выбираются на городские праздники. Разговаривают они на «парли» — выдуманном языке, который собирали вместе с лингвистами. Ничего потустороннего в игре нет намеренно: ни призраков, ни магии, ни пришельцев. Начал её в одиночку канадец Алекс Массе, недовольный тем, как устроено строительство в чужих симуляторах жизни, и вдохновлённый редактором дорог из Cities: Skylines; к выпуску вокруг него собралась студия примерно из полутора десятков человек, а работу все эти годы оплачивали читатели на краудфандинге — открыто, с отчётами о ходе дела и правом подсказать, что делать дальше. Ранний доступ открылся 25 мая 2026 года. Приём вышел горячим: четверть миллиона копий разошлась за первые восемь часов, миллион — за первый месяц. Дальше обещано около двух лет раннего доступа и бесплатные обновления вместо платных дополнений.",
+        "en": "An open-world life simulation released into early access: you build houses, invent the people who live in them and steer them through their lives. The residents are called Parafolk, and they are assembled in an editor where everything can be set — height, build, skin and hair, clothing, temperament. Building works the same way: walls, floors, windows, doors and furniture move, resize, recolour and change texture off any grid, so a house comes out in almost any shape. To keep the residents from getting stuck in their own walls, movement is computed as they go and adjusts to whatever is around them — otherwise free-form layout would end in people wedged in doorways. Parafolk need sleep, food and money; they go to work, form relationships, have children, grow up and grow old through life stages, and get out to festivals in town. They speak Parlie, an invented language put together with linguists. Nothing otherworldly is in the game on purpose: no ghosts, no magic, no aliens. Alex Massé of Canada started it alone, dissatisfied with how building worked in other life simulators and taken with the road tool of Cities: Skylines; by release a studio of about fifteen had gathered round him, and the years of work were paid for by readers on crowdfunding — openly, with progress reports and the right to suggest what came next. Early access opened on 25 May 2026. The welcome was hot: a quarter of a million copies went in the first eight hours and a million within the first month. About two years of early access are promised from here, with free updates in place of paid add-ons."
+      },
+      "agentNote": "Реестр не даёт по этой записи разработчика отдельным свойством — стоит только издатель (Paralives Studio), он же и разработчик по обеим статьям; в поле автора он. ⚠️ Тегов меньше обычного намеренно: пары под «симулятор жизни» в проверенном словаре каталога нет, а изобретать свой термин канон запрещает — свежего полного снимка каталога в моей ветке нет, замерить частоту слова нечем. ❓ Прошу замер: если «симулятор»/«simulation» в каталоге живёт, пара просится сюда и в карточку Meccha Chameleon. Число людей в студии в источниках разное (14 и 15), поэтому названо приблизительно. ⚠️ Ворота на заимствование по русской половине статью НЕ НАШЛИ и честно написали «не проверено» — но статья «Paralives» в русской Википедии ЕСТЬ. Это вторая сторона того же дефекта ворот: поиск не только подсовывает чужую статью, но и пропускает свою. Пересверено вручную по правильной статье: ряд 4 слова, чисто."
+    },
+    {
+      "wikidata": "Q131760054",
+      "sitelinks": 12,
+      "title": {
+        "ru": "Сначала дамы",
+        "en": "Ladies First"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Теа Шэррок",
+        "en": "Thea Sharrock"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "сатира",
+        "satire",
+        "отношения",
+        "relationships",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "Сатирическая комедия о перевёрнутом мире, выросшая из французской картины «Со мной непросто» 2018 года. Дэмиен Сакс — рекламный управленец, богатый и твёрдо убеждённый в мужском превосходстве; его агентство борется за кампанию пива, обращённую к женщинам, а заказчик недоволен тем, что наверху у агентства женщин нет ни одной. Дэмиен на ходу выдумывает недавно повышенную женщину-креатора и поручает помощнице срочно найти кого-нибудь на эту роль. Выбор падает на Алекс Фокс — мать-одиночку, двадцать лет проработавшую в агентстве и все двадцать лет обойдённую повышением. Поняв, зачем её подняли, Алекс уходит, а Дэмиен, догоняя её на улице и перечисляя женские недостатки, оступается и разбивает голову. Очнувшись, он попадает в мир, где всё наоборот: наверху женщины, мужчины на подхвате, и роли его самого и Алекс поменялись местами. Дальше комедия работает зеркалом — Дэмиену приходится пройти всё, через что он прогонял других: сесть на диету, привести себя в вид, приятный чужому взгляду, терпеть двусмысленные приглашения начальницы и слушать сексистские речи в свой адрес из женских уст. Проблематика от этого не прячется: пока дискриминация касалась не его, она была для героя выдумкой, а став его собственной, оказалась очевидной за неделю. Возвращается он изменившимся — извиняется перед Алекс, зовёт её обратно на лучших условиях и уступает ей кабинет, а её замысел кампании приносит агентству награды. Играют Саша Барон Коэн, Розамунд Пайк, Эмили Мортимер, Чарльз Дэнс и Фиона Шоу; поставила фильм Теа Шэррок. Вышел он 22 мая 2026 года сразу на стриминге. Приняли отрицательно.",
+        "en": "A satirical comedy about a world turned upside down, grown out of the French picture I Am Not an Easy Man of 2018. Damien Sachs is an advertising executive, rich and firmly convinced of male superiority; his agency is bidding for a beer campaign aimed at women, and the client is unhappy that the agency has no women at the top at all. Damien invents a recently promoted female creative director on the spot and tells his assistant to find someone for the part in a hurry. The choice falls on Alex Fox, a single mother who has worked at the agency for twenty years and been passed over for all twenty. Learning why she was raised, Alex quits, and Damien, chasing her into the street and listing the deficiencies of women, loses his footing and cracks his head. He wakes in a world where everything is reversed: women at the top, men fetching and carrying, and his own role and Alex's swapped. From there the comedy works as a mirror — Damien has to go through everything he put others through: a diet, a makeover into something pleasing to another's eye, suggestive invitations from his boss, and sexist speeches aimed at him in women's voices. The theme does not hide behind any of it: while discrimination touched somebody else it was a fiction to him, and once it was his own it became obvious within a week. He comes back changed — apologises to Alex, asks her back on better terms and gives up his office to her, and her idea for the campaign wins the agency awards. Sacha Baron Cohen, Rosamund Pike, Emily Mortimer, Charles Dance and Fiona Shaw star; Thea Sharrock directed. It went out on 22 May 2026 straight to streaming. Reception was negative."
+      },
+      "agentNote": "Русское название взято из реестра — «Сначала дамы»; там же лежит псевдоним «Дамы вперёд», в карточку не пошёл. Из состава намеренно убран Ричард Э. Грант: правило мастерской запрещает в описаниях сокращения с точкой внутри — счёт предложений ломается ровно на них (класс EXP-0183), а полного имени взамен инициала у меня нет. Реестр называет первоисточником французский фильм, английская статья говорит осторожнее — «вдохновлён им»; в описании выбрана осторожная формулировка, тег «экранизация» оставлен по реестру. ⚠️ Зелёный ворот по русской половине НЕДЕЙСТВИТЕЛЕН: прибор сверил текст со статьёй «Прикосновение (фильм, 1992)». Русской статьи у фильма нет, сверять не с чем — половина честно НЕ ПРОВЕРЕНА."
+    },
+    {
+      "wikidata": "Q135909032",
+      "sitelinks": 12,
+      "title": {
+        "ru": "Lego Batman: Legacy of the Dark Knight",
+        "en": "Lego Batman: Legacy of the Dark Knight"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "TT Games",
+        "en": "TT Games"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "приключения",
+        "adventure",
+        "экшен",
+        "action",
+        "супергерои",
+        "superhero",
+        "головоломка",
+        "puzzle",
+        "открытый мир",
+        "open world"
+      ],
+      "description": {
+        "ru": "Приключенческий боевик по вселенной Бэтмена — четвёртая игра лего-ряда о нём и первая с собственной историей, а не пересказом чужой. Рассказывают её с начала: мальчик Брюс Уэйн видит убийство родителей, через десять лет находит Готэм всё тем же — в руках преступников и купленных ими чиновников — и уходит учиться в Лигу теней к Ра'су аль Гулу. Узнав, что Ра'с собирается не спасти город, а стереть его, Брюс сжигает храм и возвращается домой, чтобы выйти на улицы Бэтменом. Дальше игра ведёт его через всю биографию: союз с несговорчивым полицейским Джимом Гордоном, разоблачение Кармайна Фальконе, падение Джека Напье в чан с химикатами и рождение Джокера, знакомство с Селиной Кайл, воспитание Дика Грейсона и Барбары Гордон. Играют не за сотни персонажей, как в прежних лего-играх, а всего за семерых, зато у каждого своя снасть: у Селины кнут, у Гордона пенный пистолет. Готэм-Сити собран открытым лего-городом, по которому летают на крюке-кошке и ездят на бэтмобиле, а бой заметно ближе к серии Arkham, чем к прежним лего-играм. В пещере расставляют машины, костюмы и трофеи, собранные по ходу. Облики героев берут из комиксов и экранизаций — среди них Женщина-кошка Мишель Пфайффер, Пингвин Дэнни Де Вито и Джокер Хита Леджера. Сделала игру британская TT Games на движке Unreal Engine 5, а не на собственном, как прежние части ряда; издала Warner Brothers Games. Вышла она 22 мая 2026 года, версия для Nintendo Switch 2 назначена на 18 сентября. Приняли благосклонно.",
+        "en": "An action-adventure set in the world of Batman — the fourth Lego game about him and the first with a story of its own rather than a retelling of somebody else's. It starts at the beginning: the boy Bruce Wayne sees his parents murdered, ten years on finds Gotham unchanged, in the hands of criminals and the officials they have bought, and goes to train with the League of Shadows under Ra's al Ghul. Learning that Ra's means not to save the city but to erase it, Bruce burns the temple and comes home to take the streets as Batman. From there the game carries him through the whole biography: the alliance with the one incorruptible policeman, Jim Gordon, the exposure of Carmine Falcone, Jack Napier's fall into a vat of chemicals and the birth of the Joker, the meeting with Selina Kyle, the raising of Dick Grayson and Barbara Gordon. There are no hundreds of playable characters as in earlier Lego games, only seven, but each carries their own kit: a whip for Selina, a foam gun for Gordon. Gotham City is built as an open Lego town crossed by grappling hook and Batmobile, and the fighting sits far closer to the Arkham series than to earlier Lego games. In the cave you arrange the vehicles, suits and trophies collected along the way. The looks of the characters are drawn from comics and adaptations, among them Michelle Pfeiffer's Catwoman, Danny DeVito's Penguin and Heath Ledger's Joker. TT Games of the United Kingdom built it on Unreal Engine 5 rather than their own engine as in earlier entries, and Warner Brothers Games published it. It came out on 22 May 2026, with a Nintendo Switch 2 version set for 18 September. Reception was favourable."
+      },
+      "agentNote": "Лор вселенной не тронут по запрету владельца: имена мира (Готэм-Сити, Лига теней, Ра'с аль Гул, бэтмобиль) — суть объекта, а не украшение. Автор — разработчик по реестру (TT Games); английская статья называет разработчиком Traveller's Tales, это то же предприятие, и в описании оставлена форма реестра. Издатель написан «Warner Brothers» полным словом намеренно: сокращение с точкой внутри ломает счёт предложений в воротах (класс EXP-0183). Год по единственной дате реестра — 22 мая 2026; выход версии для Nintendo Switch 2 18 сентября отдельной датой в реестре не стоит и взят из статьи. ⚠️ Ворота на заимствование по русской половине промахнулись статьёй — взяли «Бэтмен», франшизу вместо игры. Пересверено вручную по статье «Lego Batman: Legacy of the Dark Knight»: ряд 4 слова, чисто."
     }
   ]
 }
