@@ -21,6 +21,8 @@
  */
 
 /** Имя переменной — одно на проект, чтобы «взял не ту строку» было невыразимо. */
+import { loadEnv } from './env.mjs';
+
 export const DEBUG_TOKEN_VAR = 'NDIM_APP_CHECK_DEBUG_TOKEN';
 
 /**
@@ -30,6 +32,11 @@ export const DEBUG_TOKEN_VAR = 'NDIM_APP_CHECK_DEBUG_TOKEN';
  * (`src/lib/firebase.ts` → `maybeInitAppCheck`), и пропуск там не нужен.
  */
 export function debugToken() {
+  // 🔴 `.env` читается ЗДЕСЬ, а не подразумевается в оболочке (`bugs/197`). Прежняя редакция
+  // брала голый `process.env`, и дверь выката падала на собственном последнем рубеже у всякого,
+  // кто не задал переменную руками: пропуск лежал в файле, а до прибора не доезжал. Загрузчик
+  // идемпотентен и не перезаписывает уже заданное — явный `$env:X` по-прежнему побеждает файл.
+  loadEnv();
   const value = process.env[DEBUG_TOKEN_VAR]?.trim();
   return value ? value : null;
 }
