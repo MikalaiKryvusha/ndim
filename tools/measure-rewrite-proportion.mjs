@@ -38,13 +38,26 @@
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { basename } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { genreDepth, depthShift, openingClass } from './lib/genre-depth.mjs';
+
+/*
+ * 🔴 ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН — файл экспортирует `parseJournal` и `языкТекста`, значит его
+ * ПОДКЛЮЧАЮТ, и при этом держал рабочий режим на верхнем уровне вместе с `process.exit(2)`.
+ * Импорт убивал ЧУЖОЙ процесс, разобрав чужой argv как список журналов: замер, поставленный
+ * ради `bugs/188`, умер строкой «нужен хотя бы один журнал», не начавшись.
+ * Класс закреплён у трёх соседей (`rewrite-catalog-descriptions.mjs`,
+ * `check-candidate-descriptions.mjs`, `measure-batch-residual.mjs`) и ловится здесь ЧЕТВЁРТЫЙ
+ * раз: **файл, у которого есть и экспорт, и работа на верхнем уровне, обязан спрашивать,
+ * запустили его или подключили.**
+ */
+const runAsScript = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 
 const АРГ = process.argv.slice(2);
 const ПОКАЗАТЬ = АРГ.includes('--show');
 const ФАЙЛЫ = АРГ.filter((a) => !a.startsWith('--'));
 
-if (!ФАЙЛЫ.length) {
+if (runAsScript && !ФАЙЛЫ.length) {
   console.error('нужен хотя бы один журнал: node tools/measure-rewrite-proportion.mjs homeworks/*journal*.md');
   process.exit(2);
 }
@@ -117,6 +130,7 @@ export function parseJournal(текст) {
   return записи;
 }
 
+if (runAsScript) {
 const итог = {
   всего: 0,
   ухудшение: 0, улучшение: 0, ровно: 0, 'жанр пропал': 0, 'жанр появился': 0,
@@ -260,3 +274,5 @@ if (ПОКАЗАТЬ) {
 console.log('\n🔴 ПРИБОР ПРЕДЪЯВЛЯЕТ, А НЕ СУДИТ: порога-приговора здесь нет.');
 console.log('   Эталон владельца для сравнения: «День разоблачения» ru 2 / en 3 · «Кобра» ru 1 / en 3');
 console.log('   · его собственный зачин о «Матрице» — 2. Выборка эталона мала, и это сказано вслух.\n');
+
+} // ← конец рабочего режима (предохранитель выше)
