@@ -4,7 +4,11 @@
 // Прибор ловит то, что ловится ТЕКСТОМ. Классы 1 и 2 закрываются им лишь частично,
 // и он говорит об этом вслух: зелёный прогон означает «машина не нашла», а не «чисто».
 //
-//   node tools/check-owner-classes.mjs candidates/batches/06_*.json [--today 2026-08-22]
+//   node tools/check-owner-classes.mjs candidates/batches/06_*.json
+//   node tools/check-owner-classes.mjs <файл> --today 2026-08-22   # задним числом, для фикстур
+//
+// 🔴 «Сегодня» БЕЗ ФЛАГА берётся с ЛОКАЛЬНЫХ часов машины — правило владельца 2026-08-23.
+// Флаг нужен только чтобы судить прошлым днём; в работе он не используется.
 //
 // Код возврата 1, если найдено хоть одно нарушение классов 3–9 или будущая дата (класс 1).
 //
@@ -237,10 +241,29 @@ export function scanCard(card, today) {
 }
 
 function main(argv) {
+  /*
+   * 🔴 СЕГОДНЯ БЕРЁТСЯ С ЧАСОВ МАШИНЫ — правило владельца 2026-08-23, дословно: «на момент
+   * написания проверить локальное время машины ОБЯЗАТЕЛЬНО!!!! И дальше насрать, как написана
+   * википедия». Флаг существует только чтобы прогнать прибор задним числом на фикстурах.
+   *
+   * ⚠️ Локальные часы, а не UTC (`bugs/195`): `toISOString` переводит время в UTC и в вечерние
+   * часы отдаёт ЗАВТРАШНЮЮ дату, а в ночные — вчерашнюю. Для правила, которое решает «вышел или
+   * ещё нет», сдвиг на сутки означает противоположный вердикт у объекта, вышедшего сегодня.
+   */
   const todayArg = argv.indexOf('--today');
-  const today = todayArg >= 0 ? argv[todayArg + 1] : new Date().toISOString().slice(0, 10);
-  // значение флага не должно уехать в список файлов — иначе прибор падает на «2026-08-22» как на файле
-  const files = argv.filter((a, i) => !a.startsWith('--') && i !== todayArg + 1);
+  const localToday = () => {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  };
+  const today = todayArg >= 0 ? argv[todayArg + 1] : localToday();
+  /*
+   * 🔴 `-1 + 1 = 0` СЪЕДАЛ ПЕРВЫЙ ФАЙЛ (`bugs/195`). Без флага `indexOf` даёт -1, условие
+   * превращалось в `i !== 0` и вычёркивало сам файл партии — то есть документированная форма
+   * запуска не работала НИКОГДА. Индекс значения флага теперь не существует, когда флага нет.
+   */
+  const valueIndex = todayArg >= 0 ? todayArg + 1 : -1;
+  const files = argv.filter((a, i) => !a.startsWith('--') && i !== valueIndex);
 
   if (!files.length) {
     console.error('Укажи файл партии: node tools/check-owner-classes.mjs candidates/batches/06_*.json');
