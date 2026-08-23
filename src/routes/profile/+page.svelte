@@ -959,7 +959,7 @@
       en: 'Describe the axis: what it is and why (5–300 chars). An admin will review it.',
     },
     suggestSend: { ru: 'Отправить', en: 'Send' },
-    suggestSent: { ru: 'Спасибо! Заявка отправлена — так Пространство растёт снизу.', en: 'Thank you! Suggestion sent — this is how the Space grows bottom-up.' },
+    suggestSent: { ru: 'Ваша заявка отправлена и будет принята в работу. Спасибо за Ваш вклад в развитие Пространства NDim!', en: 'Your suggestion has been sent and will be taken into work. Thank you for contributing to the NDim Space!' },
     suggestMore: { ru: 'Предложить ещё', en: 'Suggest another' },
   } as const;
 
