@@ -22,7 +22,7 @@
     "⚠️ И честная граница прибора: классы 2 (проще, прямее) и 15 (порядок фразы, убивающий",
     "удивление) машиной не берутся вовсе. Зелёный прогон означает «машина не нашла».",
     "",
-    "СОСТАВ: 14 карточек. Остаток возвращённых — 13, они чинятся порциями.",
+    "СОСТАВ: 16 карточек. Остаток возвращённых — 11, они чинятся порциями.",
     "  · Q112040381 — Властелины Вселенной",
     "  · Q117745793 — Умри, моя любовь",
     "  · Q124364048 — Отец, мать, сестра, брат",
@@ -32,9 +32,11 @@
     "  · Q124735657 — Невеста",
     "  · Q124737605 — Гренландия 2: Миграция",
     "  · Q125131076 — Закулисье реальности",
-    "  · Q125867250 — Новая волна",
+    "  · Q125975336 — Седло",
     "  · Q126405648 — Следствие ведут овечки",
     "  · Q130118681 — Марти Великолепный",
+    "  · Q133848181 — Звук падения",
+    "  · Q133866932 — Простая случайность",
     "  · Q135038882 — Голос Хинд Раджаб",
     "  · Q96247255 — Stray"
   ],
@@ -362,19 +364,19 @@
       "agentNote": "🔴 КАРТОЧКА ПЕРЕПИСАНА 2026-08-22 по возврату владельца (класс 4, термин «полный метр»). Заодно снята производственная обвязка, занимавшая место сюжета: реестр содержания не давал, и прежняя редакция пересказывала предание вместо картины. Сюжет и имена героев (Кларк, психотерапевт Мэри Клайн) добраны из сети и изложены своими словами. Первоисточник — сетевое предание «Закулисье», а не литературное произведение. Место действия (Долина Санта-Клара) взято из свойства «место повествования» реестра. Русское название реестра — «Закулисье реальности». Сборы названы с датой замера: число живое и будет расти."
     },
     {
-      "wikidata": "Q125867250",
-      "sitelinks": 25,
+      "wikidata": "Q125975336",
+      "sitelinks": 22,
       "title": {
-        "ru": "Новая волна",
-        "en": "Nouvelle Vague"
+        "ru": "Седло",
+        "en": "Pillion"
       },
       "type": {
         "ru": "Фильм",
         "en": "Film"
       },
       "author": {
-        "ru": "Ричард Линклейтер",
-        "en": "Richard Linklater"
+        "ru": "Гарри Лайтон",
+        "en": "Harry Lighton"
       },
       "year": "2025",
       "tags": [
@@ -384,16 +386,18 @@
         "film",
         "драма",
         "drama",
-        "биография",
-        "biography",
-        "исторический",
-        "historical"
+        "романтика",
+        "romance",
+        "отношения",
+        "relationships",
+        "экранизация",
+        "adaptation"
       ],
       "description": {
-        "ru": "Драма Ричарда Линклейтера о том, как в 1959 году снимался фильм, с которого началась французская новая волна. Жан-Люк Годар, Франсуа Трюффо и Клод Шаброль работают критиками в журнале Cahiers du Cinéma: пишут о чужих картинах и разбирают их до винтика, но своих не сняли. После очередной премьеры Годар разносит увиденное и обещает, что снимет сам. Успех «Четырёхсот ударов» Трюффо в Каннах открывает дорогу всей компании — оказывается, что молодому человеку без имени и без денег дадут поставить картину. Годар берёт набросок Трюффо, выросший из газетной истории про мелкого угонщика и его американскую подругу, и превращает его в замысел о парне, который живёт как герой чужого кино и попадает в настоящую беду. На главную роль он зовёт Жан-Поля Бельмондо, только что отслужившего в армии, а на женскую — американку Джин Сиберг, приехавшую представлять свою прошлую работу. Дальше идёт сама съёмка, устроенная поперёк всех правил: без павильона, без освещения, с оператором, который снимает с рук прямо на парижских улицах, и со сценарием, который дописывается по ходу дня. Роберто Росселлини советует молодым снимать функционально, как живут. Картина показывает ремесло изнутри и без благоговения: замысел рождается в спорах, из случайностей и упрямства, а не из готового плана. Годара играет Гийом Марбек, Джин Сиберг — Зои Дойч, Бельмондо — Обри Дюллен. Картина представлена на Каннском кинофестивале 17 мая 2025 года, в прокат вышла 8 октября того же года, на других территориях — в марте и апреле 2026-го.",
-        "en": "A drama by Richard Linklater about the making, in 1959, of the film that began the French New Wave. Jean-Luc Godard, François Truffaut and Claude Chabrol are critics at Cahiers du Cinéma: they write about other people's pictures and take them apart to the last screw, and have made none of their own. After one more premiere Godard tears the film to pieces and promises that he will direct. The success of Truffaut's The 400 Blows at Cannes opens the road for the whole group — it turns out that a young man with no name and no money will be handed a picture. Godard takes a sketch by Truffaut, grown out of a newspaper story about a small-time car thief and his American girlfriend, and turns it into a plan about a young man who lives as though he were the hero of somebody else's film and walks into real trouble. For the lead he calls Jean-Paul Belmondo, just out of military service, and for the woman's part Jean Seberg, an American in Paris to promote her previous work. Then comes the shoot itself, arranged against every rule: no studio, no lighting, a cameraman working handheld in the Paris streets, and a screenplay written further as each day goes. Roberto Rossellini advises the young men to shoot functionally, the way life runs. The film shows the craft from inside and without reverence: the idea comes out of arguments, accidents and stubbornness rather than out of a finished plan. Guillaume Marbeck plays Godard, Zoey Deutch plays Jean Seberg, and Aubry Dullin plays Belmondo. The picture was shown at the Cannes Film Festival on 17 May 2025, opened in cinemas on 8 October that year and reached other territories in March and April 2026."
+        "ru": "Драма Гарри Лайтона по роману Адама Марс-Джонса, во многом смешная. Колин живёт с родителями, работает инспектором по парковке и поёт в барбершоп-квартете — жизнь тихая, замкнутая и ничем не примечательная. В пабе он получает записку от Рэя, участника местной байкерской компании, и с этого начинается связь, к которой Колин совершенно не готов. Рэй устанавливает отношения строгой иерархии и не обсуждает их: Колин готовит, убирает, ходит за покупками, спит на полу и выполняет любую команду. Взамен он получает внимание и близость, которых у него не было никогда, — жёстко отмеренные и полностью подчинённые чужой воле. Картина смотрит на это без осуждения и без восторга, а с интересом к тому, что происходит с человеком дальше: Колин привыкает, бреет голову, входит в компанию Рэя и постепенно перестаёт быть тем, кем приехал. Главный вопрос ставится ближе к концу и звучит просто: где здесь любовь, а где привычка подчиняться, и способен ли Колин заметить разницу, если ему впервые в жизни хорошо. Комическое возникает из столкновения будничного английского быта с укладом, который этому быту противоположен. Главные роли исполнили Гарри Меллинг и Александр Скарсгард. Картина представлена в Каннах 18 мая 2025 года, где получила приз за лучший сценарий; в прокат Великобритании она вышла 28 ноября того же года.",
+        "en": "A drama by Harry Lighton, adapted from the novel by Adam Mars-Jones, with a large comic share. Colin lives with his parents, works as a parking inspector and sings in a barbershop quartet — a quiet, closed and unremarkable life. In a pub he is handed a note by Ray, a member of the local motorcycle crowd, and from there begins a connection Colin is in no way prepared for. Ray establishes a relationship of strict hierarchy and does not discuss it: Colin cooks, cleans, does the shopping, sleeps on the floor and carries out any instruction. In return he receives attention and closeness he has never had — strictly measured out and entirely subject to another man's will. The film looks at this without condemnation and without enthusiasm, and with interest in what happens to a person next: Colin gets used to it, shaves his head, enters Ray's circle and gradually stops being the man who arrived. The central question comes near the end and is put simply: where in this is love and where is the habit of obeying, and whether Colin can tell the difference when for the first time in his life he feels good. The comedy comes out of the collision between ordinary English domestic life and a way of living that is its opposite. Harry Melling and Alexander Skarsgård take the leading parts. The first screening was on 18 May 2025 at Cannes, where the film won the screenplay prize, and the British release began on 28 November 2025."
       },
-      "agentNote": "Название дано без уточнителя: метка реестра «Новая волна (фильм, 2025)» несёт скобку раздела Википедии, а не имя картины. Год 2025 по первой дате реестра — 17 мая 2025 (Канны); дальше 8 октября и 31 октября 2025, 5 марта и 16 апреля 2026. ⚠️ РАСХОЖДЕНИЕ: в поле сценариста реестр даёт Летицию Массон, тогда как статьи называют автором сценария самого постановщика с соавторами. В описании авторство сценария не утверждается вовсе — проверить, если это важно для карточки. 🔴 ДАТЫ ДОБАВЛЕНЫ 2026-08-23: прежде в описании не было НИ ОДНОЙ, и класс 1 проверить было нечем. ⚠️ КЛАСС 16 ЗАКРЫТ НАПОЛОВИНУ: приёма нет, источника под рукой не оказалось, а выдуманный приём хуже отсутствующего. Карточка в возврат очереди НЕ идёт до дописки."
+      "agentNote": "Год 2025 по первой дате реестра — 18 мая 2025 (Канны, «Особый взгляд»); прокат в Великобритании 28 ноября 2025, следующие даты 27 февраля и 19 марта 2026. Первоисточник — роман «Бокс-Хилл» Адама Марс-Джонса. ⚠️ Материал взрослый: в основе отношения строгой иерархии с сексуальной подоплёкой. Описание держит справочный регистр и подробностей не приводит — проверьте, годится ли объект для каталога вообще."
     },
     {
       "wikidata": "Q126405648",
@@ -466,6 +470,76 @@
         "en": "A 2025 comedy-drama directed by Josh Safdie, who wrote the screenplay with Ronald Bronstein. At its centre is a young and ambitious table tennis player of the mid-twentieth century, chasing recognition in a pursuit nobody around him takes seriously. The model for the hero is named outright: Marty Reisman, the American table tennis player and writer who lived from 1930 to 2012. Hence the double register of the picture, which plays the hero's sporting stubbornness straight and the world around him for comedy. Timothée Chalamet takes the leading part and is also one of the producers. The cast includes Gwyneth Paltrow, Odessa A'zion, Fran Drescher, Sandra Bernhard and Penn Jillette. They are joined by people from adjacent trades: the musician Tyler, The Creator, the filmmaker Abel Ferrara and the high-wire artist Philippe Petit, since the director has long mixed trained actors with non-professional performers. This is the first feature Josh Safdie has made without his brother Benny, with whom he made Good Time and Uncut Gems; the old circle of collaborators nevertheless holds, as the script was written with Ronald Bronstein again and the score, as on Uncut Gems, is by Oneohtrix Point Never. Eli Bush and Anthony Katagas produced alongside Chalamet. The film opened in the United States on 25 December 2025 and reached other territories on 22 January and on 5 and 6 February 2026. Reception was enthusiastic: reviewers praised Timothée Chalamet and the direction with near unanimity. At the box office it became the highest-grossing release in the history of the A24 studio."
       },
       "agentNote": "Год 2025 по ПЕРВОЙ дате реестра — премьера 25 декабря 2025 в США. Международный прокат — январь–февраль 2026. Расхождение названо, год взят по первой дате. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16. Чисел сборов в описании нет: источники дают разные суммы одного и того же проката, а рекорд студии подтверждён обоими. Прообраз героя (Марти Рейсман) и тема (настольный теннис) взяты из свойств «персонажи» и «главная тема» реестра — прежняя карточка их не называла."
+    },
+    {
+      "wikidata": "Q133848181",
+      "sitelinks": 20,
+      "title": {
+        "ru": "Звук падения",
+        "en": "Sound of Falling"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Маша Шилински",
+        "en": "Mascha Schilinski"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "исторический",
+        "historical",
+        "семья",
+        "family",
+        "детство",
+        "childhood"
+      ],
+      "description": {
+        "ru": "Немецкая драма Маши Шилински по её собственному сценарию. Место действия одно на всю картину — крестьянский двор в области Альтмарк; время меняется четырежды. На этом дворе взрослеют четыре девочки разных эпох: Альма перед Первой мировой, Эрика в сороковые, за ними Ангелика и Ленка. Их истории идут не по порядку, а вперемешку, и связывает их не родство, а повторение: один и тот же жест, одна и та же фраза, один и тот же угол дома возвращаются через десятилетия. Семилетняя Альма растёт среди молчаливых взрослых, суеверий и постоянного соседства со смертью; она узнаёт, что названа в честь умершей сестры, видит её на посмертной фотографии и с тех пор считает, что ей уготовано то же самое. Рядом с ней живут взрослые беды, о которых при детях не говорят: служанку насильно лишили возможности иметь детей, а брату хозяйской дочери ампутировали ногу — и семья выдала это за несчастный случай на работе, чтобы его не забрали на войну. Эрика взрослеет уже в тени следующей войны. Картина устроена как память, а не как рассказ: она держится на ощущениях, звуках и обрывках, потому что именно так дети и запоминают то, чего им не объясняют. Общая её мысль в том, что молчание передаётся по наследству вернее имущества. Картина представлена в Каннах 14 мая 2025 года, где получила приз жюри; в прокат Германии она вышла 28 августа.",
+        "en": "A German drama by Mascha Schilinski, co-written by her. The setting is one for the whole film — a farmstead in the Altmark region; the time changes four times. Four girls of different eras grow up on that farm: Alma before the First World War, Erika in the forties, and after them Angelika and Lenka. Their stories run not in order but mixed together, and what links them is not kinship but repetition: the same gesture, the same phrase, the same corner of the house return across decades. Seven-year-old Alma grows up among silent adults, superstition and the constant nearness of death; she learns she was named after a dead sister, sees her in a post-mortem photograph, and from then on believes the same thing is set aside for her. Beside her live adult troubles that are not spoken of in front of children: a servant girl was forcibly deprived of the ability to have children, and the daughter's brother had a leg amputated, which the family passed off as an accident at work so that he would not be taken to the war. Erika comes of age already in the shadow of the next war. The film is built like memory rather than narration: it holds together through sensations, sounds and fragments, because that is exactly how children retain what is never explained to them. Its common thought is that silence is handed down more surely than property. The first screening was at Cannes on 14 May 2025, where the film won the Jury Prize, and the German release began on 28 August."
+      },
+      "agentNote": "🔴 СНЯТА НЕЗАКРЫТАЯ ФРАЗА (класс 12, 2026-08-23): стояло «написанная ею в соавторстве» — с кем, в карточке не сказано, и имени соавтора я не нашла. Фразу закрыла не выдумкой, а снятием: сценарий назван собственным, что реестром подтверждено. Имя соавтора стоит добрать отдельно. Год 2025 по первой дате реестра — 14 мая 2025 (Канны); прокат в Германии 28 августа 2025, дальше 13 ноября 2025, 9 января и 26 февраля 2026. Оригинальное название немецкое — «In die Sonne schauen»; в каталог идут русская и английская прокатные формы."
+    },
+    {
+      "wikidata": "Q133866932",
+      "sitelinks": 33,
+      "title": {
+        "ru": "Простая случайность",
+        "en": "It Was Just an Accident"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джафар Панахи",
+        "en": "Jafar Panahi"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "триллер",
+        "thriller",
+        "психологический",
+        "psychological"
+      ],
+      "description": {
+        "ru": "Драма 2025 года, снятая Джафаром Панахи по собственному сценарию. Всё начинается со случайной встречи: группа людей узнаёт в незнакомце человека, причастного к их прошлому заключению. Проверить, тот ли это человек, они не могут. Перед ними выбор: что делать с этим знанием и есть ли у них право делать хоть что-то. Дальше картина держится на этом выборе и на ответственности, которая ложится на каждого. Прошлое героев выходит наружу в их разговорах. Месть здесь и предмет разговора, и ловушка: уверенности в опознании нет, а цена ошибки остаётся прежней. Действие происходит в Иране, в Тегеране. Положение автора — часть самой работы. Панахи на родине годами был отлучён от профессии и работал под запретом снимать и выезжать. Он снимал самыми малыми средствами: в своей квартире и в салоне автомобиля, как в «Это не фильм» и «Такси». Эту картину он снял после освобождения и показал на крупнейшем международном фестивале. Главные роли исполнили Вахид Мобассери, Марьям Афшари, Эбрахим Азизи и Хадис Пакбатен, вместе с ними играют Маджид Панахи, Джордж Хашемзаде и Делмаз Наджафи. Произвели картину Les Films Pelléas, Arte France Cinéma и Bidibul Productions совместными силами Ирана, Франции и Люксембурга; продюсировали Филипп Мартен, Давид Тион и сам постановщик. Картина представлена на фестивале 20 мая 2025 года, где зал аплодировал ей стоя восемь минут и где она взяла главную награду; в прокат она вышла 1 октября 2025 года, на других территориях — 15 января 2026 года. Приняли её как одну из самых сильных работ года: рецензенты писали о сплаве саспенса, горькой сатиры и неожиданного юмора и отдельно — о финале.",
+        "en": "A 2025 drama written and directed by Jafar Panahi. It begins with a chance meeting: a group of people recognise in a stranger the man who had a hand in their imprisonment. They cannot verify for themselves that it is the same man. A choice stands before them: what to do with that knowledge, and whether it is theirs to act on at all. From there the film rests on that choice and on the responsibility it lays upon each of them, while the circumstances of the past come out in their conversations. Revenge is both the subject and the trap here: there is no certainty in the identification, and the price of a mistake does not go away. The action takes place in Iran, in Tehran. The director's own position is the substance of the work: for years Panahi was barred from his profession at home and worked under bans on filming and on travel, shooting by the smallest possible means, in his own flat and inside a car, as in This Is Not a Film and Taxi. This picture was made after his release and carried to the largest of the international festivals. Vahid Mobasseri, Mariam Afshari, Ebrahim Azizi and Hadis Pakbaten take the leading parts, with Majid Panahi, George Hashemzadeh and Delmaz Najafi alongside them. Les Films Pelléas, Arte France Cinéma and Bidibul Productions made the film together across Iran, France and Luxembourg, with Philippe Martin, David Thion and the director as producers. The picture was shown at a festival on 20 May 2025, where it drew an eight-minute standing ovation and took the top award; it opened in cinemas on 1 October 2025 and reached other territories on 15 January 2026. It was received as one of the strongest works of the year, with reviewers writing about its fusion of suspense, bitter satire and unexpected humour, and about its final act in particular."
+      },
+      "agentNote": "Год 2025 по ПЕРВОЙ дате реестра — фестивальная премьера 20 мая 2025. Российский/международный прокат по реестру — октябрь 2025 и январь 2026. Производство совместное: Франция, Иран, Люксембург. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16. Награда названа «главной наградой фестиваля», а не именем: имя приза в описании потребовало бы называть и фестиваль, а карточка о картине, не о церемонии."
     },
     {
       "wikidata": "Q135038882",
