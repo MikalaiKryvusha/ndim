@@ -1,0 +1,192 @@
+{
+  "_": [
+    "КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 6, 2026-08-23. ПОРЦИЯ 1 (8 карточек из 60).",
+    "",
+    "ЗАКАЗ ВЛАДЕЛЬЦА, дословно: «напишите мне ещё 60 измерений на вычитку с учётом моих",
+    "критических комментариев только!!!» + «это задача помимо прочих по планам». Значит партия",
+    "меряется списком его возвратов — candidates/owner-critical-notes-2026-08-22.md, шестнадцать",
+    "классов, — а не общим вкусом.",
+    "",
+    "🔴 ПЕРВОЙ ИДЁТ ЕГО СОБСТВЕННАЯ ЗАЯВКА. «Супергеройский фильм СПАВН 1997» он подал кнопкой в",
+    "приложении 2026-08-23; заявка прочитана из боя (tools/probe-prod-suggestions.mjs), в каталоге",
+    "объекта не было. Вторая его заявка того же дня — «Фильм Возвращение 2027 про Одиссея» — в",
+    "каталоге УЖЕ ЕСТЬ («Возвращение Одиссея», 2024), и он это подтвердил словами «забыл, что он",
+    "есть».",
+    "",
+    "ОТБОР ОСТАЛЬНЫХ: разведка Wikidata 2026-08-23, год 2026, порог известности 8 языковых",
+    "разделов, предел 300. Найдено 133 новинки, 19 уже наши, 114 новых; за вычетом партий 1–5",
+    "остаётся 83 кандидата. Взяты верхние по известности среди кино, сериалов и игр.",
+    "🔴 Альбомы (16 штук) НЕ взяты: под музыку нет проверенных правил мастерской — то же решение,",
+    "что в партии 5, и по той же причине («сюжет, герои, проблематика» у альбома читается иначе).",
+    "🔴 Невышедшего в партии нет: разведка отсеивает объекты, у которых все точные даты в будущем,",
+    "и называет их поимённо в своём отчёте.",
+    "",
+    "ОТКУДА ЧТО ВЗЯТО:",
+    "· ПОЛЯ (название, вид, год, автор) — из реестра по идентификатору, запросом, а не по памяти.",
+    "· СОДЕРЖАНИЕ — из прочитанных статей, изложено своими словами. Дословных рядов не переносилось.",
+    "· sitelinks — число языковых разделов Википедии, служебная мера разведки. В текст не попадает.",
+    "",
+    "ГОД: у «Спауна» реестр даёт три даты 1997 года, взята первая полная — 1 августа 1997."
+  ],
+  "candidates": [
+    {
+      "wikidata": "Q1474393",
+      "sitelinks": 27,
+      "title": { "ru": "Спаун", "en": "Spawn" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Марк Диппе", "en": "Mark A.Z. Dippé" },
+      "year": "1997",
+      "tags": [
+        "фильм", "movie", "кино", "film",
+        "супергерои", "superhero",
+        "фэнтези", "fantasy",
+        "ужасы", "horror",
+        "месть", "revenge"
+      ],
+      "description": {
+        "ru": "Экранизация комикса Тодда Макфарлейна, поставленная Марком Диппе. Эл Симмонс служит полковником морской разведки и оперативником тайного ведомства, и начальник Джейсон Винн отправляет его на завод химического оружия в Северной Корее. Следом Винн посылает наёмную убийцу, и Симмонс сгорает заживо. В аду ему предлагают сделку: он возвращается на Землю и снова видит невесту Ванду, а взамен обязуется возглавить адское войско в грядущей войне. Симмонс соглашается и приходит обратно изуродованным существом в живой броне, с опозданием на пять лет — Ванда вышла замуж за его лучшего друга и растит дочь. Картина ведёт героя между двумя наставниками: демон-клоун Осквернитель толкает его к мести и к обещанной роли предводителя, а старик Коглиостро — такой же посланник ада, сумевший освободить свою душу, — учит владеть бронёй и удерживает от убийства. Винн тем временем торгует биологическим оружием и вживляет себе в сердце устройство, способное выпустить заразу по всему миру, если это сердце остановится. Финал приводит Симмонса к отказу от сделки и к выбору защищать чужие жизни вместо мести. Главную роль исполнил Майкл Джей Уайт, и лента стала одной из первых, где чернокожий актёр сыграл крупного героя комиксов. Рядом с ним сыграли Джон Легуизамо, Мартин Шин и Тереза Рэндл; для Никола Уильямсона роль Коглиостро стала последней в кино. Постановщик пришёл из компьютерной графики, и живой плащ героя с адскими пейзажами делались как главный аттракцион картины. Музыку написал Грэм Ревелл, а песни саундтрека записаны парами, где рок-группа работала вместе с электронным музыкантом. В прокат США картина вышла 1 августа 1997 года и собрала около 88 миллионов долларов при бюджете в 40–45 миллионов. Критики приняли её холодно — хвалили облик Спауна и ругали сценарий вместе с гримом злодея, — а среди поклонников комикса она осталась культовой.",
+        "en": "An adaptation of the Todd McFarlane comic, directed by Mark Dippé. Al Simmons serves as a Marine intelligence colonel and covert operative, and his superior Jason Wynn sends him to a chemical weapons plant in North Korea. Wynn sends an assassin after him, and Simmons burns to death. In Hell he is offered a bargain: he returns to Earth and sees his fiancée Wanda again, and in exchange he agrees to lead Hell's army in the war to come. Simmons accepts and comes back as a disfigured being in living armour, five years late — Wanda has married his best friend and is raising a daughter. The film moves its hero between two mentors: the clown demon Violator pushes him towards revenge and the leadership he promised, while the old man Cogliostro — another envoy of Hell, one who managed to free his own soul — teaches him to wield the armour and holds him back from killing. Wynn meanwhile deals in biological weapons and has a device implanted in his heart that will release the plague worldwide if that heart stops. The ending brings Simmons to refuse the bargain and to choose the defence of other lives over revenge. Michael Jai White took the lead, and the film became one of the first in which a Black actor played a major comic-book hero. John Leguizamo, Martin Sheen and Theresa Randle played beside him; the role of Cogliostro was Nicol Williamson's last on screen. The director came from computer graphics, and the hero's living cape together with the landscapes of Hell were built as the film's central attraction. Graeme Revell wrote the score, and the soundtrack songs were recorded in pairs, each teaming a rock band with an electronic musician. The film opened in the United States on 1 August 1997 and took about 88 million dollars against a budget of 40 to 45 million. Critics received it coldly — they praised the look of Spawn and faulted the script along with the villain's make-up — and among readers of the comic it has remained a cult picture."
+      },
+      "agentNote": "🔴 ЭТО ЗАЯВКА ВЛАДЕЛЬЦА, поданная кнопкой в приложении 2026-08-23: «Супергеройский фильм СПАВН 1997». Реестр даёт три даты 1997 года (1 августа, 30 октября, год без дня); взята первая полная — она же прокатная премьера США. Сборы названы «около 88 миллионов»: русский и английский разделы дают 87 и 87,9 миллиона, бюджет — 40–45 миллионов, точное число студия не объявляла."
+    },
+    {
+      "wikidata": "Q120277524",
+      "sitelinks": 35,
+      "title": { "ru": "Рыцарь Семи Королевств", "en": "A Knight of the Seven Kingdoms" },
+      "type": { "ru": "Телесериал", "en": "TV Series" },
+      "author": { "ru": "Айра Паркер", "en": "Ira Parker" },
+      "year": "2026",
+      "tags": [
+        "кино", "movie", "фильм", "film",
+        "телесериал", "TV series",
+        "фэнтези", "fantasy",
+        "драма", "drama",
+        "приключения", "adventure",
+        "средневековье", "medieval"
+      ],
+      "description": {
+        "ru": "Экранизация повестей Джорджа Мартина о Дунке и Эгге, приквел «Игры престолов» и третий сериал по его книгам. Первый сезон взял за основу «Межевого рыцаря» — раннюю повесть цикла, действие которой идёт в Вестеросе за девяносто лет до событий главной саги. Дункан Высокий, рослый оруженосец бедного странствующего рыцаря, хоронит своего наставника под деревом, забирает его доспехи и меч и отправляется на турнир в Эшфорд, чтобы назваться рыцарем самому. По дороге к нему прибивается девятилетний бритоголовый мальчишка Эгг и настойчивостью выпрашивает место оруженосца. В Эшфорде простолюдина в чужих латах отказываются вносить в списки, пока за него не поручится кто-нибудь из знати, и право носить шпоры Дунк отстаивает храбростью. Мальчик оказывается принцем из дома Таргариенов, а турнирная ссора вырастает в судебный поединок, куда выходят самые громкие рыцари королевства вместе с наследником престола. Гибель этого наследника меняет и судьбу Дунка, и линию наследования Семи Королевств. Питер Клэффи играет Дунка, Декстер Сол Анселл — Эгга, в окружении заняты Берти Карвел, Сэм Спруэлл, Финн Беннетт и Дэниэл Ингс. Сезон снят шестью получасовыми сериями — вдвое короче обычной для этого мира серии, и камерность выбрана намеренно: история идёт про двоих на дороге, а не про войну домов. Мартин выступил сценаристом и исполнительным продюсером, музыку написал Дэн Ромер. Первый сезон вышел на HBO 18 января 2026 года. Критики приняли сериал тепло, назвав его самой человечной работой по книгам Мартина; первый сезон собрал девять номинаций на «Эмми», включая лучший драматический сериал, а второй сезон канал заказал ещё до премьеры первого.",
+        "en": "An adaptation of George Martin's Dunk and Egg novellas, a prequel to Game of Thrones and the third series drawn from his books. The first season takes The Hedge Knight as its base — an early novella set in Westeros some ninety years before the main saga. Duncan the Tall, the tall squire of a poor wandering knight, buries his mentor beneath a tree, takes up his armour and sword and rides for the tourney at Ashford to name himself a knight. A shaven-headed boy of nine called Egg attaches himself along the way and badgers Dunk into taking him as squire. At Ashford a commoner in another man's plate is refused a place on the lists until some noble vouches for him, and Dunk holds on to his spurs through plain courage. The boy turns out to be a prince of House Targaryen, and a quarrel at the tourney grows into a trial by combat that draws the loudest knights of the realm along with the heir to the throne. The death of that heir changes both Dunk's fortunes and the line of succession of the Seven Kingdoms. Peter Claffey plays Dunk and Dexter Sol Ansell plays Egg, with Bertie Carvel, Sam Spruell, Finn Bennett and Daniel Ings around them. The season runs to six half-hour episodes — half the usual length for this world, and the smaller scale is deliberate: the story follows two people on a road rather than a war between houses. Martin served as writer and executive producer, and Dan Romer wrote the score. The first season began on HBO on 18 January 2026. Critics welcomed it warmly and called it the most human work drawn from Martin's books; the season took nine Emmy nominations including Outstanding Drama Series, and the network ordered a second season before the first had even premiered."
+      },
+      "agentNote": "Год по началу показа первого сезона — правило владельца «год сериала всегда по году первого сезона или первой серии». Второй сезон снят и выйдет в 2027 году; в описание это не вошло — карточка про то, что человек уже может посмотреть и оценить."
+    },
+    {
+      "wikidata": "Q114779504",
+      "sitelinks": 26,
+      "title": { "ru": "Чудо-человек", "en": "Wonder Man" },
+      "type": { "ru": "Телесериал", "en": "TV Series" },
+      "author": { "ru": "Дестин Дэниел Креттон", "en": "Destin Daniel Cretton" },
+      "year": "2026",
+      "tags": [
+        "кино", "movie", "фильм", "film",
+        "телесериал", "TV series",
+        "супергерои", "superhero",
+        "комедия", "comedy",
+        "сатира", "satire"
+      ],
+      "description": {
+        "ru": "Комедия о Голливуде внутри киновселенной Marvel, придуманная Дестином Дэниелом Креттоном и Эндрю Гестом. Саймон Уильямс пробуется на роли и держит в тайне собственную силу: в этом мире людям со сверхспособностями сниматься запрещено особой оговоркой в контрактах. Он пробует себя на заглавную роль в ремейке старой ленты «Чудо-человек»: супергерой играет супергероя и обязан доказывать, что справится. Напарником Саймона становится Тревор Слэттери, актёр-неудачник, когда-то изображавший главаря террористов и похищенный настоящей преступной организацией; сериал закрывает его историю, начатую в «Железном человеке 3» и продолженную в «Шан-Чи». Сатира бьёт по кинопроизводству: режиссёр-небожитель Фон Ковак собран из черт нескольких больших постановщиков, агенты торгуются, а сами себя играют Джо Пантольяно и Джош Гэд. Яхья Абдул-Матин II ведёт главную роль, Бен Кингсли возвращается к Слэттери, рядом сыграли Икс Майо, Ариан Мояед, Байрон Бауэрс и Златко Бурич. Съёмки шли в Лос-Анджелесе с апреля 2023 года, остановились из-за забастовки сценаристов и возобновились только в 2024-м, из-за чего выход задержался больше чем на год. Все восемь серий вышли на Disney+ 27 января 2026 года под маркой «Marvel Spotlight» — то есть смотреть их можно, не зная остальных проектов студии. Критики приняли сериал хорошо, Абдул-Матин получил номинацию на «Эмми». Второй сезон канал заказал в марте 2026 года и отменил в июле того же года.",
+        "en": "A Hollywood comedy set inside the Marvel Cinematic Universe, created by Destin Daniel Cretton and Andrew Guest. Simon Williams goes to auditions and keeps his own powers secret: in this world a clause in the contracts bars superpowered people from working in film. The part he goes after is the lead in a remake of an old picture called Wonder Man, so a superhero is auditioning to play a superhero and has to prove he can carry it. His partner becomes Trevor Slattery, a failed actor who once posed as a terrorist leader and was then kidnapped by a real criminal organisation; the series closes the story he began in Iron Man 3 and continued in Shang-Chi. The satire lands on filmmaking itself: the lofty director Von Kovak is assembled from the traits of several major auteurs, agents haggle, and Joe Pantoliano and Josh Gad appear as versions of themselves. Yahya Abdul-Mateen II carries the lead, Ben Kingsley returns as Slattery, and X Mayo, Arian Moayed, Byron Bowers and Zlatko Burić play alongside them. Filming ran in Los Angeles from April 2023, stopped for the writers' strike and resumed only in 2024, which pushed the release back by more than a year. All eight episodes arrived on Disney+ on 27 January 2026 under the Marvel Spotlight banner, meaning they can be watched without knowing the studio's other projects. Critics received the series well and Abdul-Mateen earned an Emmy nomination. The network ordered a second season in March 2026 and cancelled it that July."
+      },
+      "agentNote": "Русский раздел Википедии описывает сериал как ещё не вышедший («станет частью», «будет связан») и называет в составе Эда Харриса, которого английский раздел в вышедшем составе не приводит вовсе. Содержание взято по английскому разделу, описывающему уже показанный сериал; Эд Харрис в карточку не вошёл. Это ровно класс 1б наоборот — устаревший текст источника, а не наш."
+    },
+    {
+      "wikidata": "Q123956515",
+      "sitelinks": 24,
+      "title": { "ru": "Паук-Нуар", "en": "Spider-Noir" },
+      "type": { "ru": "Телесериал", "en": "TV Series" },
+      "author": { "ru": "Орен Узиэль", "en": "Oren Uziel" },
+      "year": "2026",
+      "tags": [
+        "кино", "movie", "фильм", "film",
+        "телесериал", "TV series",
+        "супергерои", "superhero",
+        "нуар", "noir",
+        "детектив", "detective",
+        "криминал", "crime"
+      ],
+      "description": {
+        "ru": "Супергеройский нуар о Нью-Йорке тридцатых годов, поставленный по комиксам Marvel о Человеке-пауке Нуар. Бен Рейли зарабатывает частным сыском, пьёт и донашивает славу единственного героя этого города — паучью силу он получил на фронте Первой мировой, когда его укусило подопытное существо в немецком лагере. Маску он снял пять лет назад, после того как пойманный им преступник убил его невесту. Новое дело возвращает Рейли к костюму и сводит его с газетчиком Робби Робертсоном, певицей ночного клуба Кэт Харди и ирландским мафиозным боссом Сильвермейном, чьи связи уходят в прошлое самого сыщика. Николас Кейдж играет Рейли и описал свой рисунок роли как семьдесят процентов Хамфри Богарта и тридцать процентов Багза Банни; рядом заняты Ламорн Моррис, Ли Цзюнь Ли, Брендан Глисон, Джек Хьюстон и Абрахам Попула. Сериал сделан жанром, а не отсылками: сыщик в шляпе, роковая женщина, продажный мэр и мафия времён сухого закона держат историю крепче, чем принадлежность к вселенной. Снимали в Лос-Анджелесе с августа 2024 по март 2025 года, восемь серий. Сериал вышел на MGM+ 25 мая 2026 года в цветном виде, а 27 мая добрался до Prime Video по всему миру сразу в двух вариантах — цветном и чёрно-белом. Критики приняли работу тепло и отдельно хвалили Кейджа, а сериал собрал одиннадцать номинаций на «Эмми».",
+        "en": "A superhero noir set in the New York of the 1930s, drawn from the Marvel comics about Spider-Man Noir. Ben Reilly makes his living as a private investigator, drinks, and wears out the fame of being this city's only hero — he gained his spider strength at the front in the First World War, bitten by an experimental creature in a German camp. He put the mask away five years ago, after a criminal he had caught murdered his fiancée. A new case brings Reilly back into the suit and throws him together with the newspaperman Robbie Robertson, the nightclub singer Cat Hardy, and the Irish mob boss Silvermane, whose connections reach into the investigator's own past. Nicolas Cage plays Reilly and described his approach to the part as seventy percent Humphrey Bogart and thirty percent Bugs Bunny; Lamorne Morris, Li Jun Li, Brendan Gleeson, Jack Huston and Abraham Popoola play alongside him. The series works through genre rather than references: the detective in a hat, the femme fatale, the crooked mayor and Prohibition-era gangsters hold the story together more firmly than any shared universe. Filming ran in Los Angeles from August 2024 to March 2025, across eight episodes. The premiere came to MGM+ on 25 May 2026 in a colour version, and on 27 May the series went out worldwide on Prime Video in two versions at once, colour and black-and-white. Critics received the work warmly and singled out Cage, and the series collected eleven Emmy nominations."
+      },
+      "agentNote": "Год по началу показа. Русский раздел ошибочно называет Кейджа исполнителем «Человека-паука Нуар»; в самом сериале героя зовут Бен Рейли, и он не Питер Паркер — это подтверждают оба раздела в описании персонажей. Взято верное имя."
+    },
+    {
+      "wikidata": "Q114771310",
+      "sitelinks": 18,
+      "title": { "ru": "Возвращение в Сайлент Хилл", "en": "Return to Silent Hill" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Кристоф Ган", "en": "Christophe Gans" },
+      "year": "2026",
+      "tags": [
+        "фильм", "movie", "кино", "film",
+        "ужасы", "horror",
+        "психологический", "psychological",
+        "драма", "drama"
+      ],
+      "description": {
+        "ru": "Экранизация второй игры серии Konami, снятая Кристофом Ганом, — третья картина о Сайлент Хилле и одновременно перезапуск истории. Художник Джеймс Сандерленд получает письмо от жены Мэри, которая зовёт его вернуться в город их общего прошлого. Город встречает его туманом, падающим пеплом и пустотой: жителей выкосила неназванная болезнь. Джеймс спускается в этот пейзаж и встречает тех, кто помнит Мэри по-своему, — девочку Лору, женщину Анджелу и Марию, похожую на его жену до неразличимости. Улицы и больница на глазах превращаются в изнанку самих себя, и по этой изнанке за Джеймсом ходит Пирамидоголовый, палач с железным колпаком на плечах. Правда, к которой картина ведёт зрителя, оказывается не о городе: Мэри умерла задолго до письма, а вина, которую Джеймс носит, устроила ему весь этот путь. Джереми Ирвин играет Джеймса, Ханна Эмили Андерсон — Мэри и Марию, Эви Темплтон — Лору. Музыку написал Акира Ямаока, автор саундтреков к самим играм, и его звук держит связь с первоисточником крепче любой цитаты. Снимали в Германии и Сербии с апреля 2023 по февраль 2024 года. В российский прокат картина вышла 22 января 2026 года, в американский — 23 января, во французский — 4 февраля. Приняли её плохо: критики писали о вялом ритме и слабой игре, кассы фильм не собрал и быстро уехал на стриминговые сервисы.",
+        "en": "An adaptation of the second Konami game, directed by Christophe Gans — the third Silent Hill picture and a reboot of the story at the same time. The painter James Sunderland receives a letter from his wife Mary calling him back to the town of their shared past. The town meets him with fog, falling ash and emptiness: an unnamed illness has swept the residents away. James walks down into this landscape and meets people who each remember Mary in their own way — the girl Laura, the woman Angela, and Maria, who resembles his wife past telling apart. The streets and the hospital turn inside out before his eyes, and through that other side walks Pyramid Head, an executioner with an iron cowl on his shoulders. The truth the film leads its viewer towards turns out not to be about the town: Mary died long before the letter, and the guilt James carries staged this whole journey for him. Jeremy Irvine plays James, Hannah Emily Anderson plays Mary and Maria, and Evie Templeton plays Laura. Akira Yamaoka, who scored the games themselves, wrote the music, and his sound holds the link to the source more firmly than any quotation could. The shoot moved between Germany and Serbia and lasted from April 2023 until February 2024. The film opened in Russia on 22 January 2026, in the United States on 23 January and in France on 4 February. Reception was poor: critics wrote of a sluggish rhythm and weak playing, the film failed at the box office and moved quickly to streaming services."
+      },
+      "agentNote": "Реестр даёт три даты (23 января, 4 и 5 февраля); российская премьера 22 января названа русским разделом. Все три поданы событиями во фразе. Сборы числом не приведены: русский раздел пишет «провалился в прокате», английский — 47,9 миллиона при бюджете 23 миллиона, то есть разделы противоречат друг другу в оценке; названо то, в чём они согласны."
+    },
+    {
+      "wikidata": "Q117815027",
+      "sitelinks": 19,
+      "title": { "ru": "Железное лёгкое", "en": "Iron Lung" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Марк Фишбах", "en": "Mark Fischbach" },
+      "year": "2026",
+      "tags": [
+        "фильм", "movie", "кино", "film",
+        "ужасы", "horror",
+        "фантастика", "science fiction",
+        "выживание", "survival"
+      ],
+      "description": {
+        "ru": "Фантастический фильм ужасов по одноимённой игре Дэвида Шимански, снятый Марком Фишбахом — видеоблогером, для которого эта работа стала режиссёрским дебютом. Он же написал сценарий, спродюсировал картину за свои деньги и сыграл главную роль. В далёком будущем событие, названное Тихим вознесением, стирает звёзды, планеты и человечество; уцелели те, кто в этот час находился на станциях и кораблях. Заключённого по имени Саймон отправляют на недавно найденную луну и сажают в подводную лодку с заваренным иллюминатором — за это ему обещают свободу. Океан этой луны состоит из крови, смотреть наружу нельзя, и Саймон снимает дно примитивной камерой, полагаясь на радио и на голос командира на поверхности. Погружение приносит ему снимок исполинского скелета, потом медальон предыдущего пилота, потом живое существо, которое бьёт по корпусу. Дальше связь обрывается, кровь просачивается внутрь, и герой перестаёт отличать увиденное от бреда. Замысел картины держится на клаустрофобии: зритель заперт в железной коробке вместе с человеком, у которого есть только фотоаппарат и чужой голос в наушниках. Рядом с Фишбахом сыграли Каролин Роуз Каплан и Трой Бейкер, музыку написал Эндрю Халшалт, снимали в Остине. Автор игры Шимански работал над фильмом с первых дней и появился в эпизоде. Премьера состоялась 30 января 2026 года. Критики разошлись во мнениях, признав крепкую атмосферу при неровном сценарии, а публика приняла картину заметно теплее.",
+        "en": "A science-fiction horror film based on the game of the same name by David Szymanski, directed by Mark Fischbach — a video blogger for whom this work was a directing debut. He also wrote the script, financed the production himself and took the lead role. Far in the future an event known as the Quiet Rapture erases the stars, the planets and humanity; those who happened to be aboard stations and ships survived. A prisoner named Simon is sent to a newly found moon and placed in a submarine with a welded-over porthole, and freedom is what he is promised for it. The ocean of that moon consists of blood, looking outside is impossible, and Simon photographs the floor with a primitive camera, relying on the radio and on the voice of a commander at the surface. The dive brings him an image of a colossal skeleton, then the locket of a previous pilot, then a living thing that strikes the hull. The link then breaks, blood seeps inside, and the hero stops telling what he saw from what he imagined. The design of the film rests on claustrophobia: the viewer is locked in an iron box with a man who has only a camera and someone else's voice in his headphones. Caroline Rose Kaplan and Troy Baker played beside Fischbach, Andrew Hulshult wrote the music, and shooting took place in Austin. Szymanski, who made the game, worked on the film from the first days and appears in a small part. The premiere came on 30 January 2026. Critics divided, granting the film a solid atmosphere over an uneven script, while audiences received it noticeably more warmly."
+      },
+      "agentNote": "Автором назван Марк Фишбах, а не сетевое имя Markiplier: в поле «автор» каталога стоят имена людей. Сетевое имя в описание тоже не вынесено отдельной строкой — оно названо ролью («видеоблогер»), потому что для человека, который читает карточку первым в жизни, важен факт дебюта, а не псевдоним."
+    },
+    {
+      "wikidata": "Q123172835",
+      "sitelinks": 19,
+      "title": { "ru": "Грязные деньги", "en": "In the Grey" },
+      "type": { "ru": "Фильм", "en": "Film" },
+      "author": { "ru": "Гай Ричи", "en": "Guy Ritchie" },
+      "year": "2026",
+      "tags": [
+        "фильм", "movie", "кино", "film",
+        "боевик", "action",
+        "триллер", "thriller",
+        "криминал", "crime"
+      ],
+      "description": {
+        "ru": "Криминальный боевик Гая Ричи, который написал сценарий и спродюсировал картину сам. Рэйчел Уайлд выбивает долги для богатых клиентов и берётся вернуть миллиард долларов с теневого магната Мэнни Салазара, укрывшегося на собственном испанском острове. Первая попытка стоит жизни её наставнику: Салазар убивает переговорщика вместо ответа. Рэйчел отвечает не оружием, а осадой — её люди останавливают стройки магната, глушат нефтяную вышку, находят лазейки в законе и приводят к нему надзорные органы, так что вместо прибыли он получает штрафы и аресты имущества. Силовую часть работы ведут двое: Сид и Бронко, оперативники, которые готовят высадку на остров с той же дотошностью, с какой юристы готовят иск, — арсенал завезён заранее, пути отхода размечены, ловушки расставлены. Переговоры на острове кончаются попыткой убить Рэйчел и перестрелкой, из которой её вытаскивают. Настоящий противник обнаруживается позже, и он со стороны заказчика: представитель фирмы Бобби Шин присваивает её долю и сдаёт её местонахождение Салазару. Генри Кавилл и Джейк Джилленхол играют Сида и Бронко, Эйса Гонсалес — Рэйчел, Розамунд Пайк — Бобби Шин, Карлос Бардем — Салазара. Снимали в Испании с осени 2023 года; премьеру дважды переносили, и в прокат картина вышла 15 мая 2026 года. Приняли её сдержанно: рецензенты хвалили работу дуэта оперативников и ругали растянутость, кассовые сборы вышли слабыми.",
+        "en": "A crime action picture by Guy Ritchie, who wrote the script and produced it himself. Rachel Wild recovers debts for wealthy clients and takes on the return of a billion dollars from the shadowy magnate Manny Salazar, holed up on his own Spanish island. The first attempt costs her mentor his life: Salazar has the negotiator killed instead of answering. Rachel replies with a siege rather than a gun — her people halt the magnate's construction sites, cripple his oil rig, find gaps in the law and bring regulators down on him, so that fines and seizures arrive where profit used to. Two men handle the forceful half of the work: Sid and Bronco, operatives who prepare the landing on the island with the same thoroughness lawyers bring to a filing — the arsenal is delivered ahead of time, escape routes are mapped, traps are set. The talks on the island end in an attempt on Rachel's life and a firefight she is pulled out of. The real opponent surfaces later, and he stands on the client's side: the firm's executive Bobby Sheen keeps her share and hands her whereabouts to Salazar. Henry Cavill and Jake Gyllenhaal play Sid and Bronco, Eiza Gonzalez plays Rachel, Rosamund Pike plays Bobby Sheen and Carlos Bardem plays Salazar. Shooting ran in Spain from the autumn of 2023; the premiere was postponed twice, and the film opened on 15 May 2026. Reception was measured: reviewers praised the work of the two operatives and faulted the length, and the box office came out weak."
+      },
+      "agentNote": "Русское прокатное название «Грязные деньги» расходится с оригинальным «In the Grey» («в серой зоне»); взято прокатное, как принято в каталоге. Роли распределены по английскому разделу: русский раздел называет Рэйчел «специалистом по взысканию», английский — юристом, и обе версии сходятся на сути занятия, поэтому названа именно она."
+    },
+    {
+      "wikidata": "Q102290641",
+      "sitelinks": 22,
+      "title": { "ru": "007 First Light", "en": "007 First Light" },
+      "type": { "ru": "Видеоигра", "en": "Video game" },
+      "author": { "ru": "IO Interactive", "en": "IO Interactive" },
+      "year": "2026",
+      "tags": [
+        "видеоигра", "video game",
+        "экшен", "action",
+        "стелс", "stealth",
+        "шпионский", "spy",
+        "приключения", "adventure"
+      ],
+      "description": {
+        "ru": "Приключенческий боевик со стелсом, сделанный студией IO Interactive по книгам Яна Флеминга и фильмам о Джеймсе Бонде. История здесь оригинальная и ранняя: Бонду двадцать шесть лет, он ещё не агент с двумя нулями и проходит задание, которое даёт право носить этот номер. Начинается всё в Исландии, где отряд особой воздушной службы попадает в засаду и выживает один Бонд; вопреки приказу он спасает захваченных учёных и подрывает лагерь наёмников. За этот поступок его берут в обновлённую программу «00» под начало Джона Гринвея, неохотно взявшего новичка. Первое же задание команды кончается взрывом в словацком отеле, гибелью товарищей и следом, который ведёт к заговору вокруг квантового суперкомпьютера, предсказывающего теракты для разведки. Игрок ведёт Бонда от третьего лица и сам выбирает способ: пройти силой, отбивая удары и проводя захваты, или обмануть — заговорить охрану, воспользоваться обстановкой и уйти незамеченным. Право убивать герой получает не всегда, а только когда противник открыто идёт на его жизнь, и это ограничение работает как правило игры, а не как оговорка сюжета. Главный инструмент — часы с начинкой лаборатории Кью, вскрывающие электронику. Бонда играет Патрик Гибсон, наставника Гринвея — Ленни Джеймс. Выход для Windows, PlayStation 5 и Xbox Series состоялся 27 мая 2026 года. Отзывы вышли хорошими: критики хвалили бой, сценарий и работу Гибсона, а к августу 2026 года продажи достигли четырёх миллионов копий.",
+        "en": "An action-adventure with stealth, made by IO Interactive from the Ian Fleming books and the James Bond films. The story here is original and early: Bond is twenty-six, not yet a double-o agent, and works through the mission that earns him the number. It opens in Iceland, where a Special Air Service team is ambushed and Bond alone survives; against orders he frees the captive scientists and blows up the mercenary camp. That act brings him into the renewed double-o programme under John Greenway, who takes the newcomer reluctantly. The team's first assignment ends in an explosion at a Slovak hotel, the death of his fellows, and a trail leading to a conspiracy around a quantum supercomputer that predicts terrorist attacks for the intelligence service. The player moves Bond in third person and chooses the method: force, parrying blows and taking enemies down, or deception — talking guards round, using the surroundings and slipping past unseen. The licence to kill is not granted at all times, only when an opponent openly comes for his life, and that limit works as a rule of play rather than a line of story. His main tool is a watch built out by Q's lab, able to break into electronics. Patrick Gibson plays Bond and Lennie James plays his mentor Greenway. The release for Windows, PlayStation 5 and Xbox Series came on 27 May 2026. Reviews were good: critics praised the combat, the writing and Gibson's performance, and by August 2026 sales had reached four million copies."
+      },
+      "agentNote": "Реестр даёт две даты — 27 марта и 27 мая 2026 года; оба раздела Википедии называют выходом 27 мая, взята она. Версия для Nintendo Switch 2 перенесена на более поздний срок и в описание не вошла: карточка называет то, во что уже можно играть."
+    }
+  ]
+}
