@@ -1,6 +1,6 @@
 {
   "_": [
-    "КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 6, 2026-08-23. ПОРЦИИ 1–5 (26 карточек), из них 3 — культовая классика.",
+    "КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 6, 2026-08-23. ПОРЦИИ 1–5 (27 карточек), из них 4 — культовая классика.",
     "",
     "ЗАКАЗ ВЛАДЕЛЬЦА, дословно: «напишите мне ещё 60 измерений на вычитку с учётом моих",
     "критических комментариев только!!!» + «это задача помимо прочих по планам». Значит партия",
@@ -932,6 +932,40 @@
         "en": "An action-adventure by the British studio Core Design that began both the series and Lara Croft herself. The businesswoman Jacqueline Natla hires the archaeologist Lara to find an ancient artefact called the Scion, and the search takes her across four corners of the world: mountain caves in Peru, a medieval monastery in Greece, an Egyptian temple and the sunken Atlantis. The artefact turns out to be split into three parts, each with its own keeper, while the woman who hired her is the third of an ancient triumvirate, the one who broke the balance for the sake of power. Play runs in third person, and the hero does almost everything by the player's own hand: pulling up onto a ledge, leaping a gap, swimming underwater, throwing a lever. The levels are built out of a cubic grid devised from the structure of Egyptian tombs, and that grid stayed the series' signature for five years to come. Enemies are few, traps are many: spike pits, rolling boulders, swinging blades. The artist Toby Gard created Lara, drawing on comics and on adventure cinema; production took eighteen months and cost four hundred and forty thousand pounds. Nathan McCree wrote the music, working from English classical forms. The game came out on 25 October 1996 for the Sega Saturn, followed by the PlayStation and personal computers. Reception was enthusiastic: the three-dimensional graphics, the controls and the level design all drew praise, seven million copies sold on the PlayStation alone, and Lara Croft became one of the most recognisable faces in the whole of gaming culture."
       },
       "agentNote": "Из разведки культовой классики. Русского названия у игры нет ни в реестре, ни в русской Википедии — статья озаглавлена латиницей, так игру и знают; в каталоге латиница в обеих половинах стоит у 1113 записей из 5125. Год по первому выходу в мир — 25 октября 1996 года, Sega Saturn; переиздания вплоть до 2024 года на год не влияют."
+    },
+    {
+      "wikidata": "Q8275",
+      "sitelinks": 180,
+      "title": {
+        "ru": "Илиада",
+        "en": "Iliad"
+      },
+      "type": {
+        "ru": "Книга",
+        "en": "Book"
+      },
+      "author": {
+        "ru": "Гомер",
+        "en": "Homer"
+      },
+      "year": "—",
+      "tags": [
+        "книга",
+        "book",
+        "литература",
+        "literature",
+        "эпос",
+        "epic",
+        "мифология",
+        "mythology",
+        "классика",
+        "classic"
+      ],
+      "description": {
+        "ru": "Древнейший уцелевший памятник греческой словесности, эпическая поэма, которую приписывают Гомеру. Пятнадцать с лишним тысяч стихов гекзаметра рассказывают о пятидесяти днях последнего года десятилетней осады Трои. Предводитель ахейцев Агамемнон отбирает у Ахилла пленницу Брисеиду, и оскорблённый герой уходит из войны, отказываясь вернуться даже тогда, когда цари приносят ему богатые дары. Друг Ахилла Патрокл не выдерживает вида отступающего войска, выпрашивает у него доспехи и гибнет от руки троянца Гектора. Горе возвращает Ахилла в бой: он убивает Гектора под стенами города и таскает тело за колесницей, вымещая боль на мёртвом. Заканчивается поэма не победой, а состраданием — старый царь Приам приходит в шатёр убийцы сына безоружным, и Ахилл отдаёт ему тело и объявляет перемирие на время похорон. Падения Трои и деревянного коня в поэме нет вовсе: то и другое пришло из более поздних источников. Сложилась «Илиада» в девятом или восьмом веке до нашей эры в греческих городах Малой Азии из устных преданий крито-микенской поры, а на двадцать четыре песни её разделил александрийский учёный Зенодот Эфесский — по числу букв греческого алфавита. Имя поэмы идёт от Илиона, второго имени Трои. Европейская литература отсчитывает себя от этой книги, а гнев Ахилла остаётся её первой и самой цитируемой темой.",
+        "en": "The oldest surviving monument of Greek letters, an epic poem attributed to Homer. Over fifteen thousand lines of hexameter tell of fifty days in the final year of the ten-year siege of Troy. Agamemnon, leader of the Achaeans, takes the captive Briseis from Achilles, and the insulted hero withdraws from the war, refusing to return even when the kings bring him rich gifts. His friend Patroclus cannot bear the sight of the army falling back, begs Achilles for his armour and dies at the hands of the Trojan Hector. Grief brings Achilles back to the fighting: he kills Hector beneath the city walls and drags the body behind his chariot, taking out his pain on the dead. The poem ends not in victory but in compassion — the old king Priam comes unarmed into the tent of his son's killer, and Achilles gives the body back and declares a truce for the funeral. The fall of Troy and the wooden horse are absent from the poem entirely: both came from later sources. The Iliad took shape in the ninth or eighth century before our era in the Greek cities of Asia Minor, out of oral traditions of the Cretan and Mycenaean age, and the Alexandrian scholar Zenodotus of Ephesus divided it into twenty-four books, one for each letter of the Greek alphabet. Its name comes from Ilion, the second name of Troy. European literature counts itself from this book, and the wrath of Achilles remains its first and most quoted theme."
+      },
+      "agentNote": "🔴 ГОДА У ОБЪЕКТА НЕТ, и это не пропуск: поэма сложилась в девятом или восьмом веке до нашей эры, точной даты выхода в мир у неё не существует. Поле заполнено прочерком — проверьте, как каталог должен показывать такие записи; если нужен год вроде «VIII в. до н. э.», скажите форму, и я поставлю её всем древним памятникам разом. Разведка классики нашла таких немало: Махабхарата, Рамаяна, Эпос о Гильгамеше, Шахнаме, Упанишады."
     }
   ]
 }
