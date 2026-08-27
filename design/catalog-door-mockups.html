@@ -165,14 +165,31 @@
   }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-  /* образ Пространства: безымянные огоньки, НИ ОДНОГО числа и имени */
-  .fieldviz { position: relative; height: 74px; border-radius: 12px; overflow: hidden;
+  /* образ Пространства: безымянные огоньки, НИ ОДНОГО числа и имени.
+     Правка владельца (№050): между точками — тонкие линии связей, пульсирующие светом
+     («то белеют, то тусклеют в серый — сеть Пространства живёт, как нейронная сеть»).
+     ⚠️ В тёмной теме свет линий — белый, как он сказал; в светлой белое невидимо на белом,
+     поэтому «свет» там — светло-синий той же пульсации. Смотреть обе темы. */
+  :root { --link-dim: #c7d3e4; --link-bright: #5f96e8; }
+  :root[data-theme="dark"] { --link-dim: #263a5c; --link-bright: #f2f7ff; }
+  .fieldviz { position: relative; height: 96px; border-radius: 12px; overflow: hidden;
     background: radial-gradient(120% 140% at 50% 110%, var(--accent-soft), transparent 70%);
     border: 1px dashed var(--edge); margin-top: .8rem; }
+  .fieldviz svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .fieldviz line { stroke: var(--link-dim); stroke-width: 1.2; vector-effect: non-scaling-stroke;
+    animation: linkpulse 3s ease-in-out infinite; }
+  @keyframes linkpulse { 0%, 100% { stroke: var(--link-dim); } 50% { stroke: var(--link-bright); } }
   .fieldviz i { position: absolute; width: 7px; height: 7px; border-radius: 50%;
+    transform: translate(-50%, -50%);
     background: var(--accent); opacity: .75; animation: glow 2.8s ease-in-out infinite; }
-  .fieldviz i.you { background: var(--star); width: 9px; height: 9px; box-shadow: 0 0 0 4px rgba(240,165,0,.18); animation: none; }
-  @keyframes glow { 0%,100% { opacity: .35; transform: scale(.9); } 50% { opacity: .9; transform: scale(1.15); } }
+  .fieldviz i.you { background: var(--star); width: 10px; height: 10px; box-shadow: 0 0 0 4px rgba(240,165,0,.18); animation: none; }
+  @keyframes glow { 0%,100% { opacity: .35; transform: translate(-50%,-50%) scale(.9); } 50% { opacity: .9; transform: translate(-50%,-50%) scale(1.15); } }
+
+  /* панель-мостик по правкам владельца: центрированное подтверждение + большая кнопка */
+  .ack { text-align: center; font-weight: 700; color: var(--heading); font-size: 1.05rem; }
+  .ack-sub { text-align: center; font-size: .92rem; line-height: 1.55; margin-top: .35rem; }
+  .go.big { width: 100%; max-width: 360px; text-align: center; padding: .95rem 1.6rem;
+    font-size: 1.05rem; border-radius: 999px; }
 
   .similar { margin-top: 1.4rem; padding-top: .9rem; border-top: 1px solid var(--edge); }
   .similar h3 { font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
@@ -191,9 +208,9 @@
 
 <div class="picker">
   <b>Дверь карточки:</b>
-  <button data-v="d1" class="active">Д1 · Кнопка-мост</button>
+  <button data-v="d1">Д1 · Кнопка-мост</button>
   <button data-v="d2">Д2 · Звёзды на карточке</button>
-  <button data-v="d3">Д3 · Панель после касания</button>
+  <button data-v="d3" class="active">Д3 · Панель после касания ✓ выбран</button>
   <button data-v="d4">Д4 · Дверь-витрина</button>
   <span class="sp"></span>
   <b>Ширина:</b>
@@ -212,7 +229,7 @@
 на самой карточке.</p>
 
 <!-- ═══════════ Д1 ═══════════ -->
-<section class="variant active" id="d1">
+<section class="variant" id="d1">
   <p class="caption">Д1 · «Кнопка-мост» — сегодняшняя дверь, ведущая в гостя, с пульсацией</p>
   <div class="stage" data-w="390">
     <div class="screen">
@@ -292,8 +309,8 @@
 </section>
 
 <!-- ═══════════ Д3 ═══════════ -->
-<section class="variant" id="d3">
-  <p class="caption">Д3 · «Панель после касания» — звёзды + выезжающий мостик, как на главной</p>
+<section class="variant active" id="d3">
+  <p class="caption">Д3 · «Панель после касания» — ✓ выбран владельцем, правки №050 внесены</p>
   <div class="stage" data-w="390">
     <div class="screen">
       <p class="up"><a href="#">← Фильмы</a></p>
@@ -318,26 +335,41 @@
         <div class="rate-row" id="stars3">
           <i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i>★</i><i>★</i>
         </div>
-        <p class="rate-hint">Ваша оценка: 8 из 10 <span class="draft">текст на вычитку</span></p>
+        <p class="rate-hint">Ваша оценка: 8 из 10</p>
         <div class="bridge">
-          <p><b style="color:var(--heading)">Оценка засчитана.</b> В Пространстве уже есть
-            люди — узнайте, кто думает, как Вы. <span class="draft">текст на вычитку</span></p>
+          <!-- Тексты — слово владельца, №050 (чат 2026-08-28); плашек вычитки больше нет. -->
+          <p class="ack">Ваша оценка засчитана!</p>
+          <p class="ack-sub">В Пространстве NDim множество людей — оно поможет Вам найти
+            тех, кто разделяет Ваши взгляды.</p>
           <div class="fieldviz" aria-hidden="true">
+            <!-- линии связей: пульсируют светом вразнобой — сеть живёт -->
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+              <line x1="48" y1="58" x2="22" y2="30" style="animation-delay:0s"/>
+              <line x1="48" y1="58" x2="70" y2="22" style="animation-delay:.7s"/>
+              <line x1="48" y1="58" x2="82" y2="60" style="animation-delay:1.4s"/>
+              <line x1="48" y1="58" x2="34" y2="78" style="animation-delay:.35s"/>
+              <line x1="48" y1="58" x2="12" y2="62" style="animation-delay:2.1s"/>
+              <line x1="22" y1="30" x2="58" y2="16" style="animation-delay:1s"/>
+              <line x1="58" y1="16" x2="70" y2="22" style="animation-delay:1.8s"/>
+              <line x1="82" y1="60" x2="70" y2="22" style="animation-delay:.5s"/>
+              <line x1="12" y1="62" x2="34" y2="78" style="animation-delay:2.5s"/>
+            </svg>
             <i class="you" style="left:48%;top:58%"></i>
             <i style="left:22%;top:30%"></i><i style="left:70%;top:22%;animation-delay:.5s"></i>
-            <i style="left:82%;top:60%;animation-delay:1.1s"></i><i style="left:34%;top:70%;animation-delay:.8s"></i>
-            <i style="left:58%;top:18%;animation-delay:1.6s"></i><i style="left:12%;top:62%;animation-delay:.2s"></i>
+            <i style="left:82%;top:60%;animation-delay:1.1s"></i><i style="left:34%;top:78%;animation-delay:.8s"></i>
+            <i style="left:58%;top:16%;animation-delay:1.6s"></i><i style="left:12%;top:62%;animation-delay:.2s"></i>
           </div>
-          <a class="go pulse" href="#">Смотреть больше</a>
+          <a class="go big pulse" href="#">Войти в Пространство</a>
         </div>
       </section>
     </div>
   </div>
-  <p class="after"><b>Как это живёт:</b> до касания панели нет — карточка как в Д2. Первое
-    касание звёзд открывает мостик (на макете он открыт): подтверждение, образ Пространства
-    БЕЗ чисел и имён, и «Смотреть больше» — слова, которыми Вы вносили человека с главной.
-    Клик — внутри гостем с этой оценкой. Точный повтор механики, которую Вы выбрали для
-    главной, на поверхности притока.</p>
+  <p class="after"><b>Как это живёт:</b> до касания панели нет — только звёзды. Первое касание
+    открывает мостик (на макете он открыт): по центру «Ваша оценка засчитана!», строкой ниже
+    Ваш текст про Пространство, живая карта — узлы и тонкие линии связей, пульсирующие светом
+    вразнобой (в тёмной теме белеют и тускнеют в серый; в светлой «свет» — светло-синий, белое
+    на белом невидимо), и большая синяя кнопка «Войти в Пространство» с пульсацией по контуру.
+    Клик — внутри гостем, оценка 8 переносится с собой.</p>
 </section>
 
 <!-- ═══════════ Д4 ═══════════ -->
