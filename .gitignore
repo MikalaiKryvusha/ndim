@@ -83,3 +83,4 @@ NDIM_WORKTREE_DEV_TEAM_STATUS.md.tmp
 # нечего — закоммиченный, он разъехался бы с исходником при первой же правке `firebase.json`.
 # Слот 0 генерации не требует вовсе: он работает штатным `firebase.json`.
 firebase.slot*.json
+.kaif/update-journal.json
