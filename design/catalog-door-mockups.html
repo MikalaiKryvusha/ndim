@@ -170,20 +170,20 @@
      («то белеют, то тусклеют в серый — сеть Пространства живёт, как нейронная сеть»).
      ⚠️ В тёмной теме свет линий — белый, как он сказал; в светлой белое невидимо на белом,
      поэтому «свет» там — светло-синий той же пульсации. Смотреть обе темы. */
-  /* 🔄 Правка владельца (№050, второй заход): линии были «ужасно яркие и заметные».
-     Теперь едва-едва видимые (пик прозрачности 0.30, тоньше) и пульс В 5 РАЗ медленнее
-     (3s → 15s). Узлы возвращены на прежние места — сеть Д3 как была. */
-  :root { --link-dim: #b9c6da; --link-bright: #7fa8e0; }
+  /* 🔄 Правки владельца (№050, заходы 2 и 3): линии «ужасно яркие» → едва заметные, пульс
+     в 5 раз медленнее (15s). Заход 3: линии НЕ исчезают в ноль — нижний порог всегда
+     «едва-едва видимый»; в светлой теме серый не читается — линии синеватые. */
+  :root { --link-dim: #9db9e4; --link-bright: #5b93e6; }
   :root[data-theme="dark"] { --link-dim: #33456a; --link-bright: #d9e6fb; }
   .fieldviz { position: relative; height: 96px; border-radius: 12px; overflow: hidden;
     background: radial-gradient(120% 140% at 50% 110%, var(--accent-soft), transparent 70%);
     border: 1px dashed var(--edge); margin-top: .8rem; }
   .fieldviz svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .fieldviz line { stroke: var(--link-dim); stroke-width: 0.8; vector-effect: non-scaling-stroke;
-    opacity: .12; animation: linkpulse 15s ease-in-out infinite; }
+    opacity: .18; animation: linkpulse 15s ease-in-out infinite; }
   @keyframes linkpulse {
-    0%, 100% { opacity: .08; stroke: var(--link-dim); }
-    50% { opacity: .30; stroke: var(--link-bright); }
+    0%, 100% { opacity: .18; stroke: var(--link-dim); }
+    50% { opacity: .38; stroke: var(--link-bright); }
   }
   .fieldviz i { position: absolute; width: 7px; height: 7px; border-radius: 50%;
     transform: translate(-50%, -50%);
