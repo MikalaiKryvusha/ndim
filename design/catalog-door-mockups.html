@@ -1,385 +1,410 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NDim Space — дверь в Рейтинги из личного приложения, 4 варианта</title>
+<title>NDim Space — дверь карточки каталога в гостя: 4 макета (plans/75 Ш0)</title>
 <style>
   /* ─────────────────────────────────────────────────────────────────────────
-     ДВЕРЬ В РЕЙТИНГИ ИЗ ЛИЧНОГО ПРИЛОЖЕНИЯ — четыре варианта.
+     ШАГ 0 ПЛАНА plans/75 — ЧЕТЫРЕ МАКЕТА ДВЕРИ КАРТОЧКИ КАТАЛОГА.
 
-     ВОПРОС ВЛАДЕЛЬЦА (дословно, 2026-08-22):
-       «а где хабы в приложении? …может для них напрашивается отдельный пункт
-        в рельсе навигации?»
+     Решение уже принято владельцем (№049 В1 = А, 2026-08-28 00:54): клик по двери
+     карточки вносит человека в продукт ГОСТЕМ, без единой формы. Здесь выбирается
+     только ФОРМА двери — как она выглядит и что человек трогает.
 
-     ═══ ФАКТ, С КОТОРОГО ВСЁ НАЧАЛОСЬ — проверен грепом, а не памятью ═══
-     Из личных экранов на `/{lang}/catalog` НЕ ВЕДЁТ НИ ОДНА ССЫЛКА. Проверка:
-       grep -rn "catalog" src/routes/profile src/routes/dims src/routes/menu \
-                          src/routes/space src/routes/relations src/lib/ui
-     Единственное совпадение — слово «catalogue» в английском тексте виджета
-     «Пространства», и это не ссылка. Публичные страницы строились для пришедших
-     из поиска; двери ЖИТЕЛЯ в задумке не было вовсе.
+     Сцена одна на все четыре варианта: настоящая карточка каталога
+     «Аллея кошмаров» (ru/dimension/nightmare-alley…, по ней был живой клик из
+     Google 2026-08-24) в состоянии «Ещё без голосов» — это состояние двух третей
+     каталога и главный случай притока.
 
-     ═══ ЧТО РЕШАЕТ ЭТА СТРАНИЦА — ОДИН вопрос ═══
-     ГДЕ у жителя дверь в публичные Рейтинги. Четыре места, четыре цены.
+     🔴 Тексты двери НЕ выдуманы: заголовок, абзац и кнопка — дословно из
+     сегодняшней карточки (тексты владельца, `dimension/[slug]/+page.svelte`).
+     Каждый НОВЫЙ текст помечен плашкой «текст на вычитку» и до слова владельца
+     каноном не является.
 
-     ═══ ЧЕСТНОСТЬ МАКЕТА ═══
-       · Токены обеих тем скопированы из `src/routes/+layout.svelte` ДОСЛОВНО.
-       · Пункты рельса и нижней панели — из `SideRail.svelte` и `BottomNav.svelte`:
-         тот же порядок, те же подписи, те же пороги.
-       · Иконки — НАСТОЯЩИЕ контуры из `src/lib/ui/icons.ts`, подставлены прибором,
-         а не перерисованы. Иконка `stars` в наборе УЖЕ ЕСТЬ — новую рисовать
-         не пришлось ни в одном варианте.
-       · Числа видов — из `src/lib/content/dim-kind.ts`: фильмы 2774 · видеоигры
-         1221 · сериалы 370 · романы 231 · практики 228.
-       · Рельс живёт от 1024px, ниже работает нижняя панель (порог объявлен в обоих
-         компонентах). Поэтому на 390 у каждого варианта показано СВОЁ мобильное
-         решение, а не десктопное в узком окне.
-
-     ═══ СЛОВАРЬ ═══
-     Наружу — «Рейтинги» и «NDim Space Rating». Слова «хаб» на лице нет нигде:
-     это наш внутренний жаргон (`AGENT_GUIDE.md` → Словарь продукта).
+     ⛔ Числа похожести НЕ показываются нигде (инвариант владельца): образ
+     «в Пространстве есть люди» передан безымянными точками-огоньками, без
+     процентов и без имён.
   ───────────────────────────────────────────────────────────────────────── */
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* ── Токены светлой темы «Бумага» (дословно из src/routes/+layout.svelte) ── */
   :root {
-    --bg: #f6f8fb; --panel: #ffffff; --panel-solid: #ffffff;
-    --edge: #e6eef7; --edge-soft: #eef4fa;
-    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1f7fc9; --star: #e8a516;
-    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
-    --card-shadow: 0 16px 40px rgba(29, 50, 71, 0.08);
+    --bg: #f5f7fb; --panel: #ffffff; --edge: #e3e9f3; --edge-soft: #eef2f9;
+    --heading: #0f1b2d; --text: #4a5a70; --muted: #8a97ab;
+    --accent: #1667d6; --accent-soft: #e8f0fd;
+    --primary: #1667d6; --primary-ink: #ffffff;
+    --ok: #128a5a; --ok-soft: #e6f6ee;
+    --card-shadow: 0 1px 2px rgba(16,32,64,.05), 0 8px 24px rgba(16,32,64,.06);
+    --star: #f0a500; --star-off: #dbe3ee;
   }
-  :root[data-theme='dark'] {
-    --bg: #060b14; --panel: rgba(10, 21, 38, 0.78); --panel-solid: #091322;
-    --edge: rgba(77, 159, 255, 0.22); --edge-soft: rgba(77, 159, 255, 0.14);
-    --primary: #1467d6; --primary-ink: #ffffff; --accent: #3fd9ff; --star: #ffc93d;
-    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
-    --card-shadow: 0 0 0 1px rgba(63, 217, 255, 0.06), 0 24px 60px rgba(2, 8, 20, 0.6);
+  :root[data-theme="dark"] {
+    --bg: #070c16; --panel: #0e1626; --edge: #1c2942; --edge-soft: #131e33;
+    --heading: #eaf1ff; --text: #9fb1cb; --muted: #6c7f9c;
+    --accent: #2f86ff; --accent-soft: #10233f;
+    --primary: #2f86ff; --primary-ink: #06101f;
+    --ok: #38d39a; --ok-soft: #0d2a20;
+    --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    --star: #ffc44d; --star-off: #26344c;
   }
 
-  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f1826; }
+  body {
+    font: 15px/1.55 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); padding: 170px 16px 60px;
+  }
+  @media (min-width: 900px) { body { padding-top: 110px; } }
 
   .picker {
-    position: sticky; top: 0; z-index: 100;
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    padding: 10px 14px; background: #14293d; color: #fff; font-size: 13px;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel);
+    border-bottom: 1px solid var(--edge); box-shadow: var(--card-shadow);
+    font-size: 13px;
   }
-  .picker b { margin-right: 6px; }
+  .picker b { color: var(--heading); margin-right: 4px; }
   .picker button {
-    font: inherit; cursor: pointer; padding: 6px 13px; border-radius: 999px;
-    border: 1px solid #2d4a66; background: transparent; color: #cfe0ef;
+    font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--edge); background: var(--bg); color: var(--text);
   }
-  .picker button.active { background: #1467d6; border-color: transparent; color: #fff; font-weight: 600; }
+  .picker button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
   .picker .sp { flex: 1; }
+  .picker .hint { color: var(--muted); font-size: 12px; }
 
   .note {
-    padding: 14px 16px; background: #0d1b2a; color: #b7cde0; font-size: 14px; line-height: 1.65;
-    border-bottom: 1px solid #1d3247;
+    max-width: 960px; margin: 0 auto 16px; padding: 11px 15px;
+    background: var(--accent-soft); border: 1px solid var(--edge);
+    border-radius: 12px; font-size: 13px; line-height: 1.5; color: var(--heading);
   }
-  .note b { color: #fff; }
-  .note .price { color: #9fe6b4; }
-  .note .risk { color: #ffb9a8; }
+  .note b { color: var(--accent); }
 
-  .stage { padding: 26px 16px 70px; background: #0f1826; }
-  .cap { color: #8fa9c0; font-size: 13px; text-align: center; margin-bottom: 12px; line-height: 1.5; }
-  .cap b { color: #fff; }
+  .stage { margin: 0 auto; transition: max-width .2s; }
+  .stage[data-w="390"]  { max-width: 390px; }
+  .stage[data-w="1024"] { max-width: 760px; }
+  .stage[data-w="1440"] { max-width: 920px; }
 
-  /* ── Полотно приложения ─────────────────────────────────────────────────── */
-  .app {
-    margin: 0 auto; background: var(--bg); color: var(--text);
-    border-radius: 20px; overflow: hidden; box-shadow: var(--card-shadow); display: grid;
-  }
-  .stage[data-w='390'] .app { width: 390px; grid-template-rows: auto 1fr auto; min-height: 730px; }
-  .stage[data-w='1440'] .app { width: 1180px; grid-template-columns: 216px 1fr; grid-template-rows: auto 1fr; min-height: 680px; }
+  .variant { display: none; }
+  .variant.active { display: block; }
 
-  /* Шапка тянется во всю ширину поверх рельса (V3-А, ideas/17). */
-  .bar {
-    grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
-    padding: 0 16px; height: 55px; background: var(--panel-solid); border-bottom: 1px solid var(--edge);
+  .caption {
+    max-width: 960px; margin: 22px auto 8px; font-size: 12px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
   }
-  .stage[data-w='390'] .bar { height: 61px; }
-  .bar .mark {
-    width: 26px; height: 26px; border-radius: 8px; background: var(--primary);
-    color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px;
-  }
-  .bar .ttl { color: var(--heading); font-weight: 650; font-size: 15px; }
 
-  /* ── Рельс (из SideRail.svelte) ─────────────────────────────────────────── */
-  .rail { display: none; }
-  .stage[data-w='1440'] .rail {
-    display: flex; flex-direction: column; gap: 3px;
-    padding: 16px 12px; background: var(--panel); border-right: 1px solid var(--edge);
+  .screen {
+    background: var(--bg); border: 1px solid var(--edge); border-radius: 20px;
+    box-shadow: var(--card-shadow); overflow: hidden; margin: 0 auto 18px;
+    padding: 20px 18px;
   }
-  .rail a {
-    display: flex; align-items: center; gap: 11px; padding: 10px 12px;
-    border-radius: 10px; font-size: 14px; text-decoration: none; color: var(--dim);
-  }
-  .rail a.on { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font-weight: 650; }
-  .rail a.newdoor { color: var(--primary); }
-  .rail .ico { width: 22px; display: flex; justify-content: center; line-height: 1; }
-  .rail .ico svg { width: 22px; height: 22px; fill: currentColor; }
+  .stage[data-w="1440"] .screen { padding: 28px 40px; }
 
-  /* ── Нижняя панель (из BottomNav.svelte) ────────────────────────────────── */
-  .bnav { display: none; }
-  .stage[data-w='390'] .bnav {
-    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-    background: var(--panel-solid); border-top: 1px solid var(--edge); padding: 6px 2px 10px;
-  }
-  .bnav a {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    text-decoration: none; color: var(--dim); font-size: 11px; text-align: center;
-    padding: 4px 1px; border-radius: 10px; min-width: 0;
-  }
-  .bnav a.on { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); font-weight: 650; }
-  .bnav a.newdoor { color: var(--primary); }
-  .bnav .ico svg { width: 26px; height: 26px; fill: currentColor; }
-  /* Шесть пунктов вместо пяти: подпись обязана ужаться — это и есть цена V1 на телефоне. */
-  .bnav.six a { font-size: 9.5px; letter-spacing: -0.015em; }
-  .bnav.six .ico svg { width: 23px; height: 23px; }
+  /* ── настоящая анатомия карточки каталога ─────────────────────────────── */
+  .up { font-size: .8rem; margin-bottom: .5rem; }
+  .up a { color: var(--accent); text-decoration: none; }
+  h1.title { color: var(--heading); font-size: 1.5rem; line-height: 1.25; margin: 0 0 .15rem; }
+  .orig { color: var(--muted); font-size: .95rem; margin-bottom: 1rem; }
 
-  /* ── Контент ────────────────────────────────────────────────────────────── */
-  .content { padding: 20px 16px 26px; display: flex; flex-direction: column; gap: 13px; min-width: 0; }
-  .h1 { color: var(--heading); font-size: 20px; font-weight: 700; }
-  .sub { color: var(--dim); font-size: 13px; line-height: 1.5; }
-  .card { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 14px; }
-  .card h3 { color: var(--heading); font-size: 14px; font-weight: 650; margin-bottom: 9px; }
+  .dossier {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    box-shadow: var(--card-shadow); padding: 1rem; margin-bottom: 1.1rem;
+  }
+  .novotes { color: var(--muted); font-size: .92rem; }
+  .dossier dl { display: grid; grid-template-columns: auto 1fr; gap: .35rem .9rem; margin-top: .8rem; font-size: .92rem; }
+  .dossier dt { color: var(--muted); }
+  .dossier dd { color: var(--heading); }
+  .tags { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .tags span { background: var(--edge-soft); border-radius: 999px; padding: .1rem .6rem; font-size: .8rem; }
 
-  /* Дверь-карточка (V2) и виджет-дверь (V3) */
+  .desc { line-height: 1.68; font-size: 1rem; margin-bottom: 1.4rem; }
+  .desc .cut { color: var(--muted); }
+
   .door {
-    display: flex; align-items: center; gap: 12px; text-decoration: none;
-    border: 1px solid color-mix(in srgb, var(--primary) 34%, var(--edge));
-    background: color-mix(in srgb, var(--primary) 6%, var(--panel));
-    border-radius: 14px; padding: 13px 14px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    box-shadow: var(--card-shadow); padding: 1rem;
   }
-  .door .ico { color: var(--primary); display: flex; }
-  .door .ico svg { width: 24px; height: 24px; fill: currentColor; }
-  .door .tx { flex: 1; min-width: 0; }
-  .door .tx b { display: block; color: var(--heading); font-size: 14.5px; font-weight: 650; }
-  .door .tx span { color: var(--dim); font-size: 12.5px; }
-  .door .chev { color: var(--faint); display: flex; }
-  .door .chev svg { width: 13px; height: 13px; fill: currentColor; }
+  .door h2 { font-size: 1rem; color: var(--heading); margin-bottom: .4rem; }
+  .door p { font-size: .92rem; line-height: 1.6; }
 
-  /* Плитки видов — публичная витрина */
-  .kinds { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 9px; }
-  .kind { border: 1px solid var(--edge); border-radius: 12px; padding: 10px 12px; background: var(--panel); }
-  .kind b { display: block; color: var(--heading); font-size: 13.5px; font-weight: 650; }
-  .kind span { color: var(--dim); font-size: 12px; }
+  .go {
+    display: block; width: fit-content; margin: 1rem auto 0; padding: .7rem 1.4rem;
+    border-radius: 999px; background: var(--primary); color: var(--primary-ink);
+    font-weight: 600; font-size: .92rem; text-decoration: none; position: relative;
+  }
 
-  /* Строки экрана «Измерения» — МОЁ оценивание */
-  .row { display: flex; align-items: center; gap: 10px; padding: 11px 13px;
-         background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; }
-  .row .nm { flex: 1; color: var(--heading); font-size: 14px; font-weight: 600; }
-  .row .st { color: var(--star); font-size: 13px; letter-spacing: 1px; }
+  /* пульсация-волны — выбор владельца в мостике лендинга (№043, А2); здесь тот же жест */
+  .pulse::before, .pulse::after {
+    content: ''; position: absolute; inset: -4px; border-radius: 999px;
+    border: 2px solid var(--primary); opacity: 0; pointer-events: none;
+    animation: wave 2.6s ease-out infinite;
+  }
+  .pulse::after { animation-delay: 1.3s; }
+  @keyframes wave {
+    0% { transform: scale(.96); opacity: .55; }
+    70% { transform: scale(1.18); opacity: 0; }
+    100% { opacity: 0; }
+  }
 
-  /* Сетка виджетов «Пространства» */
-  .wgrid { display: grid; gap: 12px; }
-  .stage[data-w='1440'] .wgrid { grid-template-columns: 1fr 1fr; }
-  .kv { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 13px; }
-  .kv .k { color: var(--dim); } .kv .v { color: var(--heading); font-weight: 650; }
-  .ndsr { color: var(--primary); font-weight: 700; }
-  .door.wdoor { margin-top: 10px; }
+  .subline { text-align: center; font-size: .8rem; color: var(--muted); margin-top: .55rem; }
 
-  /* Строки экрана «Меню» */
-  .mrow { display: flex; align-items: center; gap: 11px; padding: 12px 13px;
-          background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; text-decoration: none; }
-  .mrow .ic { color: var(--dim); display: flex; }
-  .mrow .ic svg { width: 20px; height: 20px; fill: currentColor; }
-  .mrow .lb { flex: 1; color: var(--text); font-size: 14px; }
-  .mrow .chev { color: var(--faint); display: flex; }
-  .mrow .chev svg { width: 13px; height: 13px; fill: currentColor; }
-  .mrow.newdoor { border-color: color-mix(in srgb, var(--primary) 34%, var(--edge)); }
-  .mrow.newdoor .ic, .mrow.newdoor .lb { color: var(--primary); font-weight: 600; }
-  .mhead { color: var(--faint); font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; margin: 8px 0 -3px 4px; }
+  .draft {
+    display: inline-block; background: var(--ok-soft); color: var(--ok);
+    border-radius: 6px; font-size: .68rem; font-weight: 700; letter-spacing: .06em;
+    padding: .1rem .45rem; text-transform: uppercase; vertical-align: middle; margin-left: .4rem;
+  }
+
+  /* ── звёзды ввода (Д2, Д3): классические 0–10 из 1.x ─────────────────── */
+  .rate-row { display: flex; flex-wrap: wrap; gap: .15rem; justify-content: center; margin-top: .9rem; font-size: 1.5rem; line-height: 1; }
+  .rate-row i { font-style: normal; color: var(--star-off); cursor: pointer; transition: transform .12s, color .12s; }
+  .rate-row i.lit { color: var(--star); }
+  .rate-row i:hover { transform: scale(1.18); }
+  .rate-hint { text-align: center; font-size: .8rem; color: var(--muted); margin-top: .4rem; }
+
+  /* ── панель-мостик (Д3) ───────────────────────────────────────────────── */
+  .bridge {
+    margin-top: 1rem; border-top: 1px solid var(--edge); padding-top: 1rem;
+    animation: rise .5s ease-out;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* образ Пространства: безымянные огоньки, НИ ОДНОГО числа и имени */
+  .fieldviz { position: relative; height: 74px; border-radius: 12px; overflow: hidden;
+    background: radial-gradient(120% 140% at 50% 110%, var(--accent-soft), transparent 70%);
+    border: 1px dashed var(--edge); margin-top: .8rem; }
+  .fieldviz i { position: absolute; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); opacity: .75; animation: glow 2.8s ease-in-out infinite; }
+  .fieldviz i.you { background: var(--star); width: 9px; height: 9px; box-shadow: 0 0 0 4px rgba(240,165,0,.18); animation: none; }
+  @keyframes glow { 0%,100% { opacity: .35; transform: scale(.9); } 50% { opacity: .9; transform: scale(1.15); } }
+
+  .similar { margin-top: 1.4rem; padding-top: .9rem; border-top: 1px solid var(--edge); }
+  .similar h3 { font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+  .similar a { display: block; color: var(--accent); text-decoration: none; font-size: .92rem; padding: .15rem 0; }
+  .similar .y { color: var(--muted); margin-left: .5rem; font-size: .8rem; }
+
+  .after {
+    max-width: 960px; margin: 0 auto 26px; font-size: 13px; line-height: 1.55;
+    padding: 10px 15px; border-left: 3px solid var(--accent); color: var(--text);
+    background: var(--panel); border-radius: 0 12px 12px 0;
+  }
+  .after b { color: var(--heading); }
 </style>
 </head>
 <body>
+
 <div class="picker">
-  <b>Дверь в Рейтинги:</b>
-  <button data-v="1" class="active">V1 — пункт рельса</button>
-  <button data-v="2">V2 — с «Измерений»</button>
-  <button data-v="3">V3 — виджет «Пространства»</button>
-  <button data-v="4">V4 — пункт «Меню»</button>
+  <b>Дверь карточки:</b>
+  <button data-v="d1" class="active">Д1 · Кнопка-мост</button>
+  <button data-v="d2">Д2 · Звёзды на карточке</button>
+  <button data-v="d3">Д3 · Панель после касания</button>
+  <button data-v="d4">Д4 · Дверь-витрина</button>
   <span class="sp"></span>
-  <button id="theme">☾ тёмная</button>
-  <button id="width">Телефон 390</button>
+  <b>Ширина:</b>
+  <button data-w="390" class="active">390</button>
+  <button data-w="1024">1024</button>
+  <button data-w="1440">1440</button>
+  <b>Тема:</b>
+  <button data-t="light" class="active">светлая</button>
+  <button data-t="dark">тёмная</button>
 </div>
-<div class="note" id="note"></div>
-<div class="stage" id="stage" data-w="390">
-  <div class="cap" id="cap"></div>
-  <div id="app"></div>
-</div>
-<script>
-/* Контуры иконок подставлены прибором из src/lib/ui/icons.ts — не перерисованы. */
-const ICONS = /* из icons.ts */ {"home":{"box":"0 0 48 48","d":"<path fill-rule=\"evenodd\" d=\"M22.7 3.5a7 7 0 0 0-2.21.91A743 743 0 0 0 2.25 22.56c-.68 1.05.18 2.31 1.42 2.08.24-.05.48-.22 1.02-.75l.7-.68v8.75c0 5.5.03 8.96.09 9.3a4.1 4.1 0 0 0 3.1 3.3c.64.13 30.2.13 30.84 0a4.1 4.1 0 0 0 3.11-3.3c.06-.34.09-3.8.09-9.3v-8.75l.7.69c.54.52.78.7 1.02.74 1.24.23 2.1-1.03 1.42-2.08A748 748 0 0 0 27.52 4.4a6.5 6.5 0 0 0-4.83-.91m.15 2.81a5 5 0 0 0-.76.35c-.18.1-3.37 3.24-7.11 6.97l-6.8 6.77.03 10.4.02 10.38.32.32.32.31 4.15.03 4.14.02v-5.7c0-4.77.02-5.77.13-6.18a4.4 4.4 0 0 1 3-3.05c.68-.2 6.77-.2 7.45 0a4.6 4.6 0 0 1 2.65 2.13c.48.94.48.92.48 7.1v5.7h4.03c4.5 0 4.42 0 4.76-.59l.18-.32V20.4l-6.8-6.77a300 300 0 0 0-7.1-6.96 4 4 0 0 0-3.1-.36m-2 23.31c-.34.15-.73.57-.86.92-.07.2-.1 1.78-.1 5.8l-.01 5.52h8.3l-.02-5.52c0-4.02-.03-5.6-.1-5.8a1.8 1.8 0 0 0-.88-.92c-.39-.17-5.95-.16-6.33 0\"/>"},"relations":{"box":"0 0 48 48","d":"<path fill-rule=\"evenodd\" d=\"M11.32 4.14a6.6 6.6 0 0 0-3.93 2.6 6.5 6.5 0 0 0-.42 6.67 7.6 7.6 0 0 0 2.71 2.66c1.84.9 3.93.93 5.69.07a6.3 6.3 0 0 0 3.42-4.25c.35-1.49.1-3.38-.61-4.61a7 7 0 0 0-2.84-2.61 6.2 6.2 0 0 0-4.02-.53m22.32.05a6.34 6.34 0 0 0-4.88 6.14c0 .49.02 1.02.06 1.18a6.6 6.6 0 0 0 3.97 4.83 6.44 6.44 0 0 0 8.53-4.41 7.4 7.4 0 0 0-.05-3.21 6.43 6.43 0 0 0-7.63-4.53M11.3 6.5c-.67.22-1.55.86-2 1.46a4.2 4.2 0 0 0-.28 4.46 5 5 0 0 0 1.84 1.7c1.51.72 3.41.37 4.63-.85a4.1 4.1 0 0 0 .87-4.48 4.5 4.5 0 0 0-2.02-2.08c-.61-.3-.74-.33-1.58-.36-.73-.03-1.02 0-1.46.15m22.45.03a4.2 4.2 0 0 0-2.3 2 4 4 0 0 0 .8 4.76 3.9 3.9 0 0 0 3.47 1.15 4.3 4.3 0 0 0 2.93-1.98c.57-.95.7-2.4.29-3.5a4.4 4.4 0 0 0-2.6-2.47 4.6 4.6 0 0 0-2.59.04M6.98 16.05a5.2 5.2 0 0 0-3.78 2.9A14 14 0 0 0 2 24.59c0 1.67.33 2.64 1.21 3.6a4.4 4.4 0 0 0 2.24 1.26c.65.17 1 .17 7.28.17 5.76 0 6.67-.01 7.24-.14a4.4 4.4 0 0 0 3.28-2.85c.52-1.48.18-5.13-.66-7.08-.9-2.06-2.23-3.19-4.16-3.5-.88-.14-1.2-.06-2.23.59-2.62 1.63-4.27 1.65-6.76.07-1.18-.75-1.45-.82-2.46-.65m22.44 0c-3 .5-4.84 3.7-4.84 8.39 0 2.06.26 2.87 1.24 3.83.61.6 1.2.94 2.11 1.17.66.17 1 .17 7.3.17 7.35 0 7.34 0 8.44-.57a4.3 4.3 0 0 0 2.07-2.33c.2-.5.21-.65.21-2.18 0-1.85-.15-2.89-.59-4.23q-1.22-3.78-4.49-4.27c-.84-.13-1.16-.03-2.35.72a5.7 5.7 0 0 1-3.28 1.1c-1.16 0-2.04-.33-3.48-1.26-.96-.63-1.3-.7-2.34-.53M6.9 18.42c-1.54.47-2.58 2.97-2.58 6.19 0 .5.05 1.08.1 1.26.14.45.55.94.97 1.16.66.33 1.34.36 7.82.34l6.24-.03.47-.22a2.1 2.1 0 0 0 1.17-1.3c.14-.56.12-2.01-.04-3.19-.3-2.1-1.06-3.56-2.14-4.09-.75-.36-.98-.33-1.78.2a7.5 7.5 0 0 1-8.71.03c-.43-.27-.85-.49-.94-.48s-.36.06-.58.13m22.68-.06a3 3 0 0 0-1.18.7c-1 1.05-1.53 2.91-1.54 5.38v1.4l.27.43c.37.61.89.9 1.78 1.03.47.06 2.82.08 6.87.06 6.75-.03 6.53-.02 7.19-.58.7-.6.82-1.13.7-2.97-.19-3.21-1.27-5.25-2.91-5.5-.36-.05-.44-.01-1.08.4a9 9 0 0 1-2.58 1.2c-.9.26-2.62.28-3.5.04a10 10 0 0 1-2.7-1.2c-.68-.46-.88-.52-1.32-.39M11.94 35.01c-.9.2-1.53.55-2.23 1.25a4.37 4.37 0 0 0 0 6.35 4.6 4.6 0 0 0 3.15 1.37 4.7 4.7 0 0 0 4.08-2.6l.33-.7h13.7l.35.7a4.6 4.6 0 0 0 4.33 2.58 4.6 4.6 0 0 0 4.15-3.62c.16-.75.16-1.07 0-1.81-.2-.95-.54-1.57-1.24-2.27S37.23 35.2 36.29 35a3.5 3.5 0 0 0-1.82 0 4.7 4.7 0 0 0-3.37 2.93l-.09.24h-13.8l-.11-.34A4.6 4.6 0 0 0 13.8 35a4 4 0 0 0-1.86 0m.41 2.36q-1 .31-1.42 1.26c-.69 1.52.8 3.28 2.4 2.86a2.11 2.11 0 1 0-.98-4.12m22.38.04c-.5.19-.75.38-1.05.8a2 2 0 0 0-.05 2.36 2.1 2.1 0 0 0 3.62-.16c.28-.5.31-1.39.06-1.87-.5-.97-1.66-1.47-2.58-1.13\"/>"},"space":{"box":"0 0 48 48","d":"<path fill-rule=\"evenodd\" d=\"M23.58 3.23c-2.06.19-3.95.63-5.96 1.41l-.84.33-.36-.25a3.64 3.64 0 0 0-4.7.44 3.6 3.6 0 0 0-1 3.44l.09.47-.58.59c-.31.32-.63.7-.7.85-.5.96.45 2.08 1.5 1.76q.3-.08.87-.68l.55-.59.53.2c1.45.5 2.87.2 3.95-.88.28-.29.55-.52.6-.52.18 0 1.76.63 2.78 1.12l1.1.53v.8c.01.56.06.89.15 1.11l.14.33-.92.95a38 38 0 0 0-1.37 1.46l-.43.5-.63-.04a3.7 3.7 0 0 0-3.51 1.78l-.3.49h-.5c-.71 0-2.2.14-3.5.33-1.95.3-1.79.3-2.25-.2l-.4-.45.19-.56c.27-.83.85-2.1 1.36-3 .55-.98.62-1.2.5-1.6-.24-.89-1.39-1.25-2.03-.64-.5.48-1.63 2.75-2.22 4.42l-.23.67-.52.13c-.78.19-1.29.47-1.84 1.02a3.6 3.6 0 0 0-.71 4.22c.28.6 1.07 1.4 1.68 1.68.27.13.47.28.47.35 0 .89.51 3.62.92 4.92a22 22 0 0 0 4.71 8.16l.55.57-.1.42a3.6 3.6 0 0 0 1.02 3.41 3.65 3.65 0 0 0 4.64.48l.33-.21.63.26a20.8 20.8 0 0 0 15.68.15l.84-.32.37.24a3.64 3.64 0 0 0 4.7-.43 3.7 3.7 0 0 0 .98-3.5l-.1-.37.55-.58a24 24 0 0 0 2.37-3.03c.68-1.04 1.66-3 2.1-4.19.39-1.03.88-2.98 1.07-4.26.21-1.37.22-4.37 0-5.71-.33-2.2-.93-4.28-1.7-5.9l-.4-.86.22-.46c.66-1.4.37-3.04-.75-4.16a3.6 3.6 0 0 0-3.34-1.02q-.58.13-.4-.37c.15-.37.2-1.36.1-1.83a3.9 3.9 0 0 0-2.81-2.88 3.8 3.8 0 0 0-3.16.76l-.32.28-.34-.15a23 23 0 0 0-4.96-1.27c-1.1-.15-3.34-.21-4.36-.12m.07 2.55a19 19 0 0 0-4.97 1.15c-.38.14-.66.29-.62.32s.4.18.8.32a30 30 0 0 1 3.1 1.33l.78.4.3-.2c.63-.44 1.1-.57 2.03-.57.95 0 1.4.14 2.1.62l.38.26 1.36-.66c.76-.36 1.8-.82 2.34-1.02.82-.3.96-.38.94-.52-.04-.32-2.39-1.04-4.24-1.3a24 24 0 0 0-4.3-.13m11.72.27a1.7 1.7 0 0 0-.83 1c-.09.49.03.87.4 1.24.6.6 1.33.6 1.92 0 .55-.55.58-1.26.09-1.83-.43-.5-1.03-.64-1.58-.4m-21.6.4a1.7 1.7 0 0 0-.82 1c-.09.5.03.87.4 1.24.6.6 1.33.6 1.92 0 .55-.55.58-1.26.09-1.83-.43-.5-1.03-.64-1.58-.4m19 3.39a33 33 0 0 0-3.01 1.27l-1 .5v.42c0 .24-.05.64-.1.9l-.08.47 1.05 1.09a30 30 0 0 1 4.62 6.18l.45.83.48.03c.26.02.51 0 .55-.05.2-.24 1.62-3.26 2.04-4.34.7-1.76.69-1.6.15-2.19a3.65 3.65 0 0 1-.76-4c.06-.16.05-.16-.37-.05a3.7 3.7 0 0 1-3.3-.8c-.36-.31-.47-.35-.72-.26m-8.25 1.04a1.7 1.7 0 0 0-.82 1c-.1.49.03.86.4 1.24.6.59 1.32.59 1.91 0 .55-.56.59-1.27.1-1.84-.44-.49-1.04-.64-1.59-.4m15.52.25a1.7 1.7 0 0 0-.83.99c-.09.5.03.87.4 1.24.6.6 1.33.6 1.92 0 .55-.55.58-1.26.09-1.83-.44-.49-1.03-.64-1.58-.4m-13.63 4.47c-.66.27-1.9.3-2.57.05l-.44-.16-.69.71c-.37.4-.9.97-1.17 1.29l-.5.57.28.56.28.56 1.11.19a42 42 0 0 1 9.54 2.97c.17 0-1.54-2.68-2.47-3.86-.62-.8-1.86-2.16-2.47-2.72l-.4-.37zm14.82.44-.37.07-.32.88c-.5 1.4-1.24 3.07-1.99 4.52l-.7 1.35.22.31c.44.67.56 1.12.57 2.06v.87l.79.6a40 40 0 0 1 2.7 2.24l.52.49.11-.37a19 19 0 0 0 .66-5.7c-.1-2.53-.64-4.94-1.52-6.77l-.3-.62zm-23.77 2.88a1.7 1.7 0 0 0-.82 1c-.1.49.03.86.4 1.24.6.59 1.32.59 1.91 0 .55-.55.59-1.26.1-1.83-.44-.5-1.04-.65-1.59-.4m-12.31 1.3a1.7 1.7 0 0 0-.83 1c-.09.5.03.87.4 1.24.6.6 1.33.6 1.92 0 .55-.55.58-1.26.09-1.83-.43-.49-1.03-.64-1.58-.4m7.96 1.2c-1.44.16-3.45.43-3.62.5q-.17.05-.21.38a3.8 3.8 0 0 1-1.71 2.37l-.48.3.04.38c.42 3.6 1.8 7.12 3.88 9.92.66.89 1.31 1.58 1.44 1.53.09-.03.12-.55.15-2.4.04-1.76.09-2.63.22-3.46a30 30 0 0 1 2.08-7.53l.32-.76-.25-.35a5 5 0 0 1-.37-.66c-.12-.29-.14-.3-.48-.3zm8.04.66a3.8 3.8 0 0 1-3.21 1.79h-.5l-.3.68c-.73 1.7-1.39 4-1.7 5.89a25 25 0 0 0-.33 4.41v1.58l.23.09c.56.2.96.45 1.36.81l.43.4 1.1-.49a36 36 0 0 0 10.1-6.52c.9-.8 1.59-1.51 3.23-3.3l.24-.26-.22-.56a4 4 0 0 1-.27-1.24l-.05-.69-.54-.24a38 38 0 0 0-9.16-2.73c-.13-.03-.22.06-.41.38m13.3 1.82a1.7 1.7 0 0 0-.83 1c-.1.49.03.86.4 1.24.38.38.76.5 1.27.4.4-.08.97-.64 1.05-1.05q.12-.68-.32-1.18c-.43-.5-1.03-.65-1.58-.4m2.76 4.33.2 1.05c.24 1.2.25 1.64.07 2.01-.37.8-1.69.86-2.14.1a5 5 0 0 1-.3-1.09c-.24-1.38-.25-1.4-.6-1.47l-.48-.1c-.13-.03-.31.13-.83.73-.84.96-2.96 3.05-3.92 3.88a40 40 0 0 1-10.23 6.32c-.52.22-.96.42-1 .45s-.06.16-.1.3l-.04.27.84.33a18.3 18.3 0 0 0 13.05.04l.8-.3v-.5c0-1.57.93-2.93 2.35-3.5q.4-.14.45-.34c.03-.1.06-.67.06-1.26 0-.9.04-1.12.18-1.41.19-.38.67-.69 1.1-.69s.92.3 1.12.71c.17.35.18.46.14 1.76-.03 1-.02 1.4.05 1.4.12 0 .86-.77 1.45-1.49a20 20 0 0 0 1.88-2.88l.32-.62-.6-.58c-1.27-1.24-3.83-3.33-3.82-3.12M13.7 38.81a1.7 1.7 0 0 0-.83 1c-.1.48.03.86.4 1.24.39.37.76.5 1.27.4.4-.08.97-.64 1.05-1.05q.13-.68-.31-1.19c-.44-.49-1.03-.64-1.58-.4m22 .16a1.7 1.7 0 0 0-.83 1c-.1.49.03.86.4 1.24.39.38.76.5 1.27.4.4-.08.97-.64 1.05-1.05q.13-.68-.31-1.18c-.44-.5-1.03-.65-1.58-.4\"/>"},"dimensions":{"box":"0 0 48 48","d":"<path fill-rule=\"evenodd\" d=\"M21.37 6.84c-2.2 2.21-2.6 2.64-2.65 2.92-.15.83.51 1.47 1.33 1.3.22-.05.64-.4 1.58-1.34l1.29-1.27v7.3l-6.04 3.02-6.04 3.02v14.15l-2.76 1.38c-1.52.76-2.78 1.36-2.8 1.35s.23-.88.56-1.92c.68-2.13.7-2.4.22-2.88-.23-.23-.34-.27-.72-.27-.7 0-.9.26-1.35 1.7L2.83 39q-.8 2.52-.7 2.59c.05.03 1.7.53 3.64 1.11 3.9 1.17 3.98 1.18 4.48.68.23-.23.27-.34.27-.72 0-.74-.22-.9-2.25-1.55l-1.72-.55L9.3 39.2l2.75-1.38 5.98 2.99L24 43.78l5.97-2.98 5.98-2.99 2.75 1.38c1.6.8 2.69 1.4 2.61 1.43a107 107 0 0 1-3.03.95c-.2.05-.48.22-.63.37-.22.23-.26.35-.26.72 0 .38.04.49.28.73.52.52.64.5 4.66-.71a51 51 0 0 0 3.7-1.2q.09-.1 0-.06c-.05.03-.53-1.35-1.23-3.61-1.06-3.37-1.18-3.7-1.47-3.99-.27-.27-.37-.31-.75-.31-.37 0-.5.04-.72.26-.47.45-.46.64.26 2.85.36 1.1.63 2.01.6 2.04-.02.02-1.28-.58-2.8-1.34l-2.76-1.38V21.8l-6.04-3.02-6.04-3.02v-3.63c0-2.17.03-3.63.08-3.63s.6.54 1.24 1.21c1.2 1.28 1.5 1.47 2.05 1.37.32-.07.72-.43.82-.76.04-.12.04-.36 0-.55-.05-.28-.43-.7-2.64-2.92-1.42-1.42-2.6-2.59-2.63-2.59s-1.21 1.17-2.63 2.6m-2.13 13.2-4.71 2.37 4.73 2.36L24 27.15l4.75-2.38 4.76-2.38-4.71-2.35c-2.59-1.3-4.74-2.35-4.78-2.35s-2.19 1.07-4.78 2.37M13 29.99v5.82l4.96 2.48 4.96 2.47V29.1L18 26.63c-2.7-1.35-4.93-2.45-4.96-2.45S13 26.79 13 29.99m16.97-3.35-4.89 2.45v11.67l4.96-2.47L35 35.8v-5.82c0-3.2-.03-5.81-.07-5.8s-2.27 1.1-4.96 2.45\"/>"},"menu":{"box":"0 0 48 48","d":"<path fill-rule=\"evenodd\" d=\"M5.55 5.62a4.8 4.8 0 0 0-3.47 5.39 4.7 4.7 0 0 0 3.45 3.85c.73.2 1.62.2 18.45.2 19.29 0 18.43.03 19.57-.63a4.8 4.8 0 0 0 2.21-2.76 5 5 0 0 1 .25-.75c.12-.23.14-1.55.02-1.43-.04.05-.14-.19-.23-.52a4.8 4.8 0 0 0-2.22-2.88c-1.16-.68-.23-.65-19.63-.64-15.26 0-17.86.03-18.4.18m.4 2.75c-.5.27-.74.5-.98.98-.51 1-.1 2.2.95 2.74.41.21.98.22 18.08.22s17.67-.01 18.08-.22a2.04 2.04 0 0 0 0-3.7c-.41-.2-.98-.2-18.1-.2-15.91 0-17.72.02-18.03.18m-3.91 1.87c0 .41.02.58.04.38a4 4 0 0 0 0-.75c-.02-.2-.04-.04-.04.37m3.51 9.12a4.8 4.8 0 0 0-3.47 5.39 4.7 4.7 0 0 0 3.45 3.85c.73.2 1.62.2 18.45.2 19.29 0 18.43.03 19.57-.63a4.8 4.8 0 0 0 2.21-2.76 5 5 0 0 1 .25-.76c.12-.22.14-1.54.02-1.42-.04.05-.14-.19-.23-.52a4.8 4.8 0 0 0-2.22-2.88c-1.16-.68-.23-.65-19.63-.64-15.26 0-17.86.03-18.4.18m.4 2.75a2 2 0 0 0-.98.98c-.51 1-.1 2.2.95 2.74.41.21.98.22 18.08.22s17.67-.01 18.08-.22a2.04 2.04 0 0 0 0-3.69c-.41-.21-.98-.22-18.1-.21-15.91 0-17.72.02-18.03.18M2.04 24c0 .41.02.58.04.38a4 4 0 0 0 0-.75c-.02-.2-.04-.04-.04.37m3.51 9.12a4.8 4.8 0 0 0-3.47 5.39 4.7 4.7 0 0 0 3.45 3.85c.73.2 1.62.2 18.45.2 19.29 0 18.43.03 19.57-.63a4.8 4.8 0 0 0 2.21-2.76 5 5 0 0 1 .25-.76c.12-.22.14-1.54.02-1.42-.04.05-.14-.19-.23-.52a4.8 4.8 0 0 0-2.22-2.88c-1.16-.68-.23-.65-19.63-.64-15.26 0-17.86.03-18.4.18m.4 2.75c-.5.27-.74.5-.98.98-.51 1-.1 2.2.95 2.74.41.21.98.22 18.08.22s17.67-.01 18.08-.22a2.04 2.04 0 0 0 0-3.69c-.41-.21-.98-.22-18.1-.21-15.91 0-17.72.02-18.03.18m-3.91 1.87c0 .41.02.58.04.38a4 4 0 0 0 0-.75c-.02-.2-.04-.04-.04.37\"/>"},"stars":{"box":"0 0 16 16","d":"<path d=\"M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z\"/>"},"chevron":{"box":"0 0 16 16","d":"<path fill-rule=\"evenodd\" d=\"M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708\"/>"},"manual":{"box":"0 0 16 16","d":"<path d=\"M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783\"/>"},"terms":{"box":"0 0 16 16","d":"<path d=\"M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5\"/><path d=\"M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z\"/>"},"privacy":{"box":"0 0 16 16","d":"<path d=\"M5.338 1.59a61 61 0 0 0-2.837.856.48.48 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.7 10.7 0 0 0 2.287 2.233c.346.244.652.42.893.533q.18.085.293.118a1 1 0 0 0 .101.025 1 1 0 0 0 .1-.025q.114-.034.294-.118c.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56\"/><path d=\"M7.001 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.553.553 0 0 1-1.1 0z\"/>"}};
 
+<p class="note"><b>Что выбирается:</b> форма двери, которая вносит человека из поиска в
+Пространство гостем (Ваше «А» в №049 В1). Сцена — настоящая карточка «Аллея кошмаров» в
+состоянии «Ещё без голосов» (так выглядят две трети каталога). Все четыре двери ведут в одно
+место: клик — и человек внутри, без почты и форм. Отличается только то, что он видит и трогает
+на самой карточке.</p>
 
-const svg = (name) => {
-  const i = ICONS[name];
-  return i ? `<svg viewBox="${i.box}" aria-hidden="true">${i.d}</svg>` : '';
-};
-
-/* Пункты навигации — порядок и подписи из SideRail.svelte / BottomNav.svelte. */
-const NAV = [
-  { key: 'profile', icon: 'home', label: 'Профиль' },
-  { key: 'relations', icon: 'relations', label: 'Связи' },
-  { key: 'space', icon: 'space', label: 'Пространство' },
-  { key: 'dims', icon: 'dimensions', label: 'Измерения' },
-  { key: 'menu', icon: 'menu', label: 'Меню' },
-];
-const DOOR = { key: 'ratings', icon: 'stars', label: 'Рейтинги', door: true };
-
-const rail = (items, active) => `<nav class="rail">${items.map((i) =>
-  `<a class="${i.key === active ? 'on' : ''} ${i.door ? 'newdoor' : ''}"><span class="ico">${svg(i.icon)}</span>${i.label}</a>`).join('')}</nav>`;
-
-const bnav = (items, active) => `<nav class="bnav ${items.length > 5 ? 'six' : ''}">${items.map((i) =>
-  `<a class="${i.key === active ? 'on' : ''} ${i.door ? 'newdoor' : ''}"><span class="ico">${svg(i.icon)}</span>${i.label}</a>`).join('')}</nav>`;
-
-const bar = (title) => `<header class="bar"><span class="mark">N</span><span class="ttl">${title}</span></header>`;
-
-/* Виды каталога — числа из src/lib/content/dim-kind.ts. */
-const KINDS = [
-  ['Фильмы', 2774], ['Видеоигры', 1221], ['Сериалы', 370], ['Романы', 231], ['Практики', 228],
-];
-const kindTiles = () => `<div class="kinds">${KINDS.map(([n, c]) =>
-  `<div class="kind"><b>${n}</b><span>${c.toLocaleString('ru')} в рейтинге</span></div>`).join('')}</div>`;
-
-/* Публичная витрина Рейтингов — то, КУДА ведёт дверь. Одинаково во всех вариантах. */
-const ratingsScreen = () => `<div class="content">
-  <div class="h1">Рейтинги</div>
-  <div class="sub">NDim Space Rating отображает симпатии жителей Пространства NDim Space.</div>
-  ${kindTiles()}
-</div>`;
-
-/* Экран «Измерения» — МОЁ оценивание. Роли не путать: здесь я ставлю оценки. */
-const dimsScreen = (withDoor) => `<div class="content">
-  <div class="h1">Измерения</div>
-  ${withDoor ? `<a class="door"><span class="ico">${svg('stars')}</span>
-    <span class="tx"><b>Рейтинги Пространства</b><span>Как это оценили все — NDim Space Rating</span></span>
-    <span class="chev">${svg('chevron')}</span></a>` : ''}
-  <div class="sub">Мои оценки</div>
-  <div class="row"><span class="nm">«Одиссея»</span><span class="st">★★★★★★★★☆☆</span></div>
-  <div class="row"><span class="nm">«Кобра»</span><span class="st">★★★★★★★☆☆☆</span></div>
-  <div class="row"><span class="nm">Плавание</span><span class="st">★★★★★★★★★☆</span></div>
-</div>`;
-
-/* Экран «Пространство» — виджетная сетка (канон дашборда, решение владельца 2026-07-12). */
-const spaceScreen = (withWidget) => `<div class="content">
-  <div class="h1">Пространство</div>
-  <div class="wgrid">
-    ${withWidget ? `<div class="card">
-      <h3>Сегодня в Рейтингах</h3>
-      <div class="kv"><span class="k">«Одиссея»</span><span class="v ndsr">8,4</span></div>
-      <div class="kv"><span class="k">«Кобра»</span><span class="v ndsr">7,1</span></div>
-      <div class="kv"><span class="k">Плавание</span><span class="v ndsr">9,0</span></div>
-      <a class="door wdoor"><span class="ico">${svg('stars')}</span>
-        <span class="tx"><b>Все Рейтинги</b><span>5 видов · 5 125 измерений</span></span>
-        <span class="chev">${svg('chevron')}</span></a>
-    </div>` : ''}
-    <div class="card"><h3>Сегодня</h3>
-      <div class="kv"><span class="k">Новых жителей</span><span class="v">3</span></div>
-      <div class="kv"><span class="k">Новых оценок</span><span class="v">128</span></div>
-    </div>
-    <div class="card"><h3>Сейчас в Пространстве</h3>
-      <div class="kv"><span class="k">Всего людей</span><span class="v">342</span></div>
-      <div class="kv"><span class="k">Новых за 30 дней</span><span class="v">17</span></div>
-    </div>
-    <div class="card"><h3>Сервер синхронизации</h3>
-      <div class="kv"><span class="k">Состояние</span><span class="v">Работает</span></div>
+<!-- ═══════════ Д1 ═══════════ -->
+<section class="variant active" id="d1">
+  <p class="caption">Д1 · «Кнопка-мост» — сегодняшняя дверь, ведущая в гостя, с пульсацией</p>
+  <div class="stage" data-w="390">
+    <div class="screen">
+      <p class="up"><a href="#">← Фильмы</a></p>
+      <h1 class="title">Аллея кошмаров</h1>
+      <p class="orig">Nightmare Alley</p>
+      <section class="dossier">
+        <span class="novotes">Ещё без голосов</span>
+        <dl>
+          <dt>Вид</dt><dd>Фильм</dd>
+          <dt>Год</dt><dd>2021</dd>
+          <dt>Автор</dt><dd>Гильермо дель Торо</dd>
+          <dt>Теги</dt><dd class="tags"><span>фильм</span><span>триллер</span><span>нуар</span></dd>
+        </dl>
+      </section>
+      <div class="desc">Бродячий артист Стэнтон Карлайл прибивается к передвижному цирку и
+        перенимает у ярмарочной гадалки технику «чтения людей»… <span class="cut">〈текст
+        карточки сокращён для макета〉</span></div>
+      <section class="door">
+        <h2>NDim Space Rating — уникальная система рейтинга Пространства NDim Space</h2>
+        <p>NDim Space Rating отображает симпатии пользователей Пространства NDim Space.
+          Оцените «Аллея кошмаров» и ещё несколько вещей, которые Вы любите, и Пространство
+          NDim Space найдёт Вам людей, которые думают так же, как и Вы. Ваша оценка будет
+          первой!</p>
+        <a class="go pulse" href="#">Оцените, чтобы найти людей, кто думает, как Вы</a>
+      </section>
+      <nav class="similar"><h3>Похожие по каталогу</h3>
+        <a href="#">Форма воды<span class="y">2017</span></a>
+        <a href="#">Лабиринт Фавна<span class="y">2006</span></a>
+      </nav>
     </div>
   </div>
-</div>`;
+  <p class="after"><b>После нажатия:</b> человек сразу внутри гостем, на своей странице оценок.
+    Минимальная правка сегодняшней карточки: тексты не меняются вовсе, кнопка получает
+    пульсацию-волны (Ваш выбор в мостике лендинга) и ведёт в гостя вместо экрана входа.</p>
+</section>
 
-/* Экран «Меню». */
-const menuScreen = (withDoor) => `<div class="content">
-  <div class="h1">Меню</div>
-  ${withDoor ? `<div class="mhead">Пространство</div>
-  <a class="mrow newdoor"><span class="ic">${svg('stars')}</span><span class="lb">Рейтинги</span><span class="chev">${svg('chevron')}</span></a>` : ''}
-  <div class="mhead">Документы</div>
-  <a class="mrow"><span class="ic">${svg('manual')}</span><span class="lb">Руководство</span><span class="chev">${svg('chevron')}</span></a>
-  <a class="mrow"><span class="ic">${svg('terms')}</span><span class="lb">Условия</span><span class="chev">${svg('chevron')}</span></a>
-  <a class="mrow"><span class="ic">${svg('privacy')}</span><span class="lb">Приватность</span><span class="chev">${svg('chevron')}</span></a>
-</div>`;
+<!-- ═══════════ Д2 ═══════════ -->
+<section class="variant" id="d2">
+  <p class="caption">Д2 · «Звёзды на карточке» — оценка прямо здесь, первое касание вносит внутрь</p>
+  <div class="stage" data-w="390">
+    <div class="screen">
+      <p class="up"><a href="#">← Фильмы</a></p>
+      <h1 class="title">Аллея кошмаров</h1>
+      <p class="orig">Nightmare Alley</p>
+      <section class="dossier">
+        <span class="novotes">Ещё без голосов</span>
+        <dl>
+          <dt>Вид</dt><dd>Фильм</dd>
+          <dt>Год</dt><dd>2021</dd>
+          <dt>Автор</dt><dd>Гильермо дель Торо</dd>
+        </dl>
+      </section>
+      <div class="desc">Бродячий артист Стэнтон Карлайл прибивается к передвижному цирку…
+        <span class="cut">〈сокращено〉</span></div>
+      <section class="door">
+        <h2>NDim Space Rating — уникальная система рейтинга Пространства NDim Space</h2>
+        <p>NDim Space Rating отображает симпатии пользователей Пространства NDim Space.
+          Оцените «Аллея кошмаров» и ещё несколько вещей, которые Вы любите, и Пространство
+          NDim Space найдёт Вам людей, которые думают так же, как и Вы. Ваша оценка будет
+          первой!</p>
+        <div class="rate-row" id="stars2">
+          <i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i>
+        </div>
+        <p class="rate-hint">Ваша оценка: 0–10 <span class="draft">текст на вычитку</span></p>
+      </section>
+      <nav class="similar"><h3>Похожие по каталогу</h3>
+        <a href="#">Форма воды<span class="y">2017</span></a>
+        <a href="#">Лабиринт Фавна<span class="y">2006</span></a>
+      </nav>
+    </div>
+  </div>
+  <p class="after"><b>После касания звезды:</b> оценка засчитана, человек внутри гостем, и эта
+    оценка — первая в его Пространстве (переносится с собой). Жест 1.x — классические звёзды
+    0–10 как ввод. Самая короткая дорога «интерес → труд»: человек начинает пользоваться
+    продуктом ДО того, как узнал слово «гость». Кнопки нет — дверью служит сам жест.</p>
+</section>
 
-/* ── Четыре варианта ────────────────────────────────────────────────────── */
-const VARIANTS = {
-  1: {
-    cap: '<b>V1 — шестой пункт рельса «Рейтинги».</b> Дверь стоит вровень с разделами продукта.<br>На телефоне рельса нет, поэтому пункт обязан встать в нижнюю панель — и она становится шестиместной.',
-    note: '<b>V1 — шестой пункт рельса.</b> Вариант, который назвал сам владелец. Дверь видна всегда и с любого экрана, иконка <b>stars</b> в наборе уже есть — рисовать нечего. '
-        + '<span class="price">Цена: правка двух компонентов (SideRail, BottomNav) + активное состояние на публичных страницах.</span> '
-        + '<b>Тесноты на телефоне НЕТ — это проверено кадром, а не предположено:</b> подпись ужимается с 11px до 9,5px, и «Пространство», самое длинное слово панели, помещается целиком. '
-        + '<span class="risk">Настоящий риск другой и он не про вёрстку: шестой пункт впервые ставит ПУБЛИЧНУЮ поверхность вровень с личными разделами. Четыре содержательных пункта из пяти — это «моё» (мой профиль, мои связи, моё Пространство, мои измерения), пятый «Меню» служебный; «Рейтинги» — «общее». Если это верно по замыслу — вариант лучший из четырёх.</span>',
-    desktop: () => rail([...NAV.slice(0, 4), DOOR, NAV[4]], 'ratings') + ratingsScreen(),
-    mobile: () => ratingsScreen() + bnav([...NAV.slice(0, 4), DOOR, NAV[4]], 'ratings'),
-    title: 'Рейтинги',
-  },
-  2: {
-    cap: '<b>V2 — дверь с экрана «Измерения».</b> Рядом с тем, что человек оценивает сам.<br>Роли РАЗВЕДЕНЫ: «Измерения» — мои оценки, «Рейтинги Пространства» — как это оценили все.',
-    note: '<b>V2 — дверь с «Измерений».</b> Дверь стоит там, где мысль о рейтинге уже возникла: человек ставит оценку и тут же видит, что думают остальные. Одинаково работает на телефоне и десктопе — правится один экран. '
-        + '<span class="price">Цена: одна карточка в /dims, ни рельс, ни панель не трогаются.</span> '
-        + '<span class="risk">Риск: дверь видна только на «Измерениях» — с «Профиля» и «Связей» до Рейтингов по-прежнему не дойти. И главный риск — СМЕШЕНИЕ РОЛЕЙ: если подпись не разведёт «мои оценки» и «оценки всех», человек решит, что это одно и то же.</span>',
-    desktop: () => rail(NAV, 'dims') + dimsScreen(true),
-    mobile: () => dimsScreen(true) + bnav(NAV, 'dims'),
-    title: 'Измерения',
-  },
-  3: {
-    cap: '<b>V3 — виджет «Сегодня в Рейтингах» на «Пространстве».</b> Дверь показывает СОДЕРЖИМОЕ, а не только ведёт.<br>Виджетная сетка — канон дашборда (решение владельца 2026-07-12).',
-    note: '<b>V3 — виджет на «Пространстве».</b> Единственный вариант, где дверь что-то РАССКАЗЫВАЕТ до нажатия: три живых NDSR видны сразу. Ложится в виджетную сетку, то есть в будущем переставляется и убирается наравне с остальными. '
-        + '<span class="price">Цена: новый виджет + запрос трёх значений NDSR (данные уже в каталоге, новых чтений базы не нужно).</span> '
-        + '<span class="risk">Риск: «Пространство» — экран, куда заходят не каждый день, и виджет конкурирует за первый экран с четырьмя существующими. На телефоне сетка одноколоночная — порядок виджетов решает, увидят его или нет.</span>',
-    desktop: () => rail(NAV, 'space') + spaceScreen(true),
-    mobile: () => spaceScreen(true) + bnav(NAV, 'space'),
-    title: 'Пространство',
-  },
-  4: {
-    cap: '<b>V4 — пункт в «Меню».</b> Самый дешёвый вариант, взят для сравнения цены.<br>Новая группа «Пространство» над документами — чтобы Рейтинги не читались как ещё один правовой документ.',
-    note: '<b>V4 — пункт в «Меню».</b> Одна строка, ноль правок навигации, работает на обеих ширинах сразу. Взят как нижняя граница цены — с ним сравниваются остальные три. '
-        + '<span class="price">Цена: одна строка в /menu. Дешевле не бывает.</span> '
-        + '<span class="risk">Риск: «Меню» — ящик для документов и настроек, и Рейтинги в нём выглядят служебными. Житель, не открывавший «Меню», о публичных Рейтингах не узнает вовсе — то есть вопрос «а где хабы?» останется в силе, просто ответ на него будет существовать.</span>',
-    desktop: () => rail(NAV, 'menu') + menuScreen(true),
-    mobile: () => menuScreen(true) + bnav(NAV, 'menu'),
-    title: 'Меню',
-  },
-};
+<!-- ═══════════ Д3 ═══════════ -->
+<section class="variant" id="d3">
+  <p class="caption">Д3 · «Панель после касания» — звёзды + выезжающий мостик, как на главной</p>
+  <div class="stage" data-w="390">
+    <div class="screen">
+      <p class="up"><a href="#">← Фильмы</a></p>
+      <h1 class="title">Аллея кошмаров</h1>
+      <p class="orig">Nightmare Alley</p>
+      <section class="dossier">
+        <span class="novotes">Ещё без голосов</span>
+        <dl>
+          <dt>Вид</dt><dd>Фильм</dd>
+          <dt>Год</dt><dd>2021</dd>
+          <dt>Автор</dt><dd>Гильермо дель Торо</dd>
+        </dl>
+      </section>
+      <div class="desc">Бродячий артист Стэнтон Карлайл прибивается к передвижному цирку…
+        <span class="cut">〈сокращено〉</span></div>
+      <section class="door">
+        <h2>NDim Space Rating — уникальная система рейтинга Пространства NDim Space</h2>
+        <p>NDim Space Rating отображает симпатии пользователей Пространства NDim Space.
+          Оцените «Аллея кошмаров» и ещё несколько вещей, которые Вы любите, и Пространство
+          NDim Space найдёт Вам людей, которые думают так же, как и Вы. Ваша оценка будет
+          первой!</p>
+        <div class="rate-row" id="stars3">
+          <i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i class="lit">★</i><i>★</i><i>★</i>
+        </div>
+        <p class="rate-hint">Ваша оценка: 8 из 10 <span class="draft">текст на вычитку</span></p>
+        <div class="bridge">
+          <p><b style="color:var(--heading)">Оценка засчитана.</b> В Пространстве уже есть
+            люди — узнайте, кто думает, как Вы. <span class="draft">текст на вычитку</span></p>
+          <div class="fieldviz" aria-hidden="true">
+            <i class="you" style="left:48%;top:58%"></i>
+            <i style="left:22%;top:30%"></i><i style="left:70%;top:22%;animation-delay:.5s"></i>
+            <i style="left:82%;top:60%;animation-delay:1.1s"></i><i style="left:34%;top:70%;animation-delay:.8s"></i>
+            <i style="left:58%;top:18%;animation-delay:1.6s"></i><i style="left:12%;top:62%;animation-delay:.2s"></i>
+          </div>
+          <a class="go pulse" href="#">Смотреть больше</a>
+        </div>
+      </section>
+    </div>
+  </div>
+  <p class="after"><b>Как это живёт:</b> до касания панели нет — карточка как в Д2. Первое
+    касание звёзд открывает мостик (на макете он открыт): подтверждение, образ Пространства
+    БЕЗ чисел и имён, и «Смотреть больше» — слова, которыми Вы вносили человека с главной.
+    Клик — внутри гостем с этой оценкой. Точный повтор механики, которую Вы выбрали для
+    главной, на поверхности притока.</p>
+</section>
 
-let current = 1;
-const stage = document.getElementById('stage');
-const render = () => {
-  const v = VARIANTS[current];
-  document.getElementById('cap').innerHTML = v.cap;
-  document.getElementById('note').innerHTML = v.note;
-  const wide = stage.dataset.w === '1440';
-  document.getElementById('app').innerHTML =
-    `<div class="app">${bar(v.title)}${wide ? v.desktop() : v.mobile()}</div>`;
-};
+<!-- ═══════════ Д4 ═══════════ -->
+<section class="variant" id="d4">
+  <p class="caption">Д4 · «Дверь-витрина» — образ Пространства виден сразу, до касания</p>
+  <div class="stage" data-w="390">
+    <div class="screen">
+      <p class="up"><a href="#">← Фильмы</a></p>
+      <h1 class="title">Аллея кошмаров</h1>
+      <p class="orig">Nightmare Alley</p>
+      <section class="dossier">
+        <span class="novotes">Ещё без голосов</span>
+        <dl>
+          <dt>Вид</dt><dd>Фильм</dd>
+          <dt>Год</dt><dd>2021</dd>
+          <dt>Автор</dt><dd>Гильермо дель Торо</dd>
+        </dl>
+      </section>
+      <div class="desc">Бродячий артист Стэнтон Карлайл прибивается к передвижному цирку…
+        <span class="cut">〈сокращено〉</span></div>
+      <section class="door">
+        <h2>NDim Space Rating — уникальная система рейтинга Пространства NDim Space</h2>
+        <p>NDim Space Rating отображает симпатии пользователей Пространства NDim Space.
+          Оцените «Аллея кошмаров» и ещё несколько вещей, которые Вы любите, и Пространство
+          NDim Space найдёт Вам людей, которые думают так же, как и Вы. Ваша оценка будет
+          первой!</p>
+        <div class="fieldviz" aria-hidden="true">
+          <i class="you" style="left:50%;top:62%"></i>
+          <i style="left:18%;top:26%"></i><i style="left:66%;top:20%;animation-delay:.4s"></i>
+          <i style="left:84%;top:52%;animation-delay:1s"></i><i style="left:30%;top:66%;animation-delay:.7s"></i>
+          <i style="left:56%;top:14%;animation-delay:1.4s"></i><i style="left:10%;top:58%;animation-delay:.2s"></i>
+          <i style="left:76%;top:74%;animation-delay:1.8s"></i>
+        </div>
+        <a class="go pulse" href="#">Оцените, чтобы найти людей, кто думает, как Вы</a>
+        <p class="subline">Жёлтая точка — Вы. Вход без почты и пароля.
+          <span class="draft">текст на вычитку</span></p>
+      </section>
+    </div>
+  </div>
+  <p class="after"><b>После нажатия:</b> человек внутри гостем. Отличие от Д1 — ценность видна
+    ДО клика: живой образ Пространства (безымянные огоньки, ни одного числа) стоит на карточке
+    сразу и обещает не «форму регистрации», а людей. Кнопка и тексты — сегодняшние.</p>
+</section>
 
-document.querySelectorAll('.picker button[data-v]').forEach((b) => {
-  b.onclick = () => {
-    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
-    b.classList.add('active');
-    current = Number(b.dataset.v);
-    render();
-  };
-});
-
-const themeBtn = document.getElementById('theme');
-themeBtn.onclick = () => {
-  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
-  themeBtn.textContent = dark ? '☾ тёмная' : '☀ светлая';
-};
-
-/* Ширины ровно 390 и 1440 — их ждёт съёмщик tools/shoot-mockups.mjs. */
-const widthBtn = document.getElementById('width');
-widthBtn.onclick = () => {
-  const wide = stage.dataset.w === '1440';
-  stage.dataset.w = wide ? '390' : '1440';
-  widthBtn.textContent = wide ? 'Телефон 390' : 'Десктоп 1440';
-  render();
-};
-
-render();
+<script>
+  // Переключатели — как в прошлых макетах: вариант · ширина · тема.
+  const buttons = document.querySelectorAll('.picker button');
+  buttons.forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.v) {
+      document.querySelectorAll('[data-v]').forEach((x) => x.classList.toggle('active', x === b));
+      document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === b.dataset.v));
+    }
+    if (b.dataset.w) {
+      document.querySelectorAll('[data-w]').forEach((x) => { if (x.tagName === 'BUTTON') x.classList.toggle('active', x === b); });
+      document.querySelectorAll('.stage').forEach((s) => s.dataset.w = b.dataset.w);
+    }
+    if (b.dataset.t) {
+      document.querySelectorAll('[data-t]').forEach((x) => x.classList.toggle('active', x === b));
+      document.documentElement.dataset.theme = b.dataset.t;
+    }
+  }));
+  // Звёзды Д2 подсвечиваются до курсора — чтобы жест ощущался живым уже в макете.
+  const s2 = document.getElementById('stars2');
+  if (s2) [...s2.children].forEach((star, i, all) => {
+    star.addEventListener('mouseenter', () => all.forEach((x, j) => x.classList.toggle('lit', j <= i)));
+    s2.addEventListener('mouseleave', () => all.forEach((x) => x.classList.remove('lit')));
+  });
 </script>
 </body>
 </html>
