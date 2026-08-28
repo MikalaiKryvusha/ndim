@@ -54,23 +54,58 @@ const TOOLS = join(ROOT, 'tools');
  * Признак составной, и обе половины обязательны: браузер (иначе счётчикам неоткуда взяться —
  * продукт не исполняется) И достижимость живого адреса (иначе счёт уходит в эмулятор стенда).
  */
-export function isLiveBrowserProbe(source) {
+/**
+ * 🔴 ПОИМЁННЫЙ ОПТ-ИН — приборы, чьё членство в корпусе НЕЛЬЗЯ вывести из их текста.
+ *
+ * ═══ ПОЧЕМУ СПИСОК, А НЕ ПРИЗНАК «УЖЕ ЗНАЕТ МЕТКУ» ═══
+ *
+ * Первая редакция держала этих троих в корпусе их СОБСТВЕННОЙ меткой:
+ * `drivesBrowser && (reachesLive || knowsMark)`. Это дефект, найденный судом QA, и он
+ * ровно того класса, за которым охотится вопрос 1 лестницы трёх вопросов:
+ *
+ *   снял метку с прибора → прибор ВЫПАЛ ИЗ КОРПУСА → страж зелёный, «осмотрено 15» молча
+ *   стало 14. Проверка не покраснела, потому что её ОТЦЕПИЛИ, а не сломали.
+ *
+ * Воспроизведено дважды перед починкой: снятие ТОЛЬКО вызова краснит (импорт держит
+ * членство), снятие вызова ВМЕСТЕ с импортом — зелёный с кодом 0. То есть моя собственная
+ * мутация при постройке стража НЕ СОСТОЯЛАСЬ: она била по вызову, а не по членству
+ * (`EXP-0193` — тот же класс, другая одежда).
+ *
+ * ═══ ПОЧЕМУ ЭТО ЛЕЧИТ ═══
+ *
+ * Членство теперь выводится из того, чего мутация стереть НЕ МОЖЕТ: либо адрес живого
+ * контура в тексте прибора, либо имя в этом списке. Метка перестала быть пропуском в корпус
+ * и осталась тем, чем должна быть, — предметом суда.
+ *
+ * ⚠️ Список ПОИМЁННЫЙ и с причиной у каждой строки — той же формы, что исключение самого
+ * стража ниже. Молчаливого списка здесь не будет: он растёт, и через месяц страж судит
+ * пустоту.
+ */
+const LIVE_BY_NAME = new Map([
+  ['smoke.mjs', 'набор SMOKE гоняется дверью выката и принимает --base — в живой контур направляется рукой'],
+  ['probe-bridge.mjs', 'зонд моста лендинга: по умолчанию localhost, но --base уводит его в бой'],
+  ['verify-funnel-v2.mjs', 'приёмка воронки: ходит по слоту стенда, а пишет РЕАЛЬНЫЕ счётчики'],
+]);
+
+export function isLiveBrowserProbe(source, name = '') {
   const drivesBrowser = /chromium\.launch\(/.test(source);
   const reachesLive =
     /ndimspace\.app/.test(source) ||
     /ndim-stage\.web\.app/.test(source) ||
     /lib\/contours\.mjs/.test(source);
-  /*
-   * 🔑 ТРЕТЬЯ ПОЛОВИНА ПРИЗНАКА — «уже знает метку». Она закрывает слепую зону, названную
-   * первым же прогоном: `smoke.mjs` и `probe-bridge.mjs` живого адреса в себе не держат
-   * (по умолчанию идут на `localhost`), но принимают `--base` и в живой контур направляются
-   * рукой. Признак «есть адрес боя в файле» их не видит, и добавленный завтра контекст
-   * остался бы непомеченным.
-   * Правило простое и не расширяет корпус: **опт-ин необратим**. Прибор, однажды взявший
-   * помощник, судится на ПОЛНОТУ — все его сессии обязаны быть помечены.
-   */
+  return drivesBrowser && (reachesLive || LIVE_BY_NAME.has(name));
+}
+
+/**
+ * Прибор носит метку — но по признакам в корпус не попадает.
+ *
+ * Это ровно то состояние, из которого рождался дефект: пока метка на месте, всё выглядит
+ * исправным; снимут — и прибор молча уйдёт из-под суда. Поэтому состояние объявляется
+ * НАРУШЕНИЕМ сразу, а не ждёт мутации: лечение — одна строка в `LIVE_BY_NAME` с причиной.
+ */
+export function marksWithoutMembership(name, source) {
   const knowsMark = /lib\/probe-mark\.mjs/.test(source);
-  return drivesBrowser && (reachesLive || knowsMark);
+  return knowsMark && !isLiveBrowserProbe(source, name);
 }
 
 /** Сколько сессий браузера прибор заводит: каждая — своё `sessionStorage`, своя метка. */
@@ -94,7 +129,7 @@ export function countMarks(source) {
  * позже, к метке привыкли и о ней не думают.
  */
 export function judgeProbe(name, source) {
-  if (!isLiveBrowserProbe(source)) return [];
+  if (!isLiveBrowserProbe(source, name)) return [];
   const sessions = countSessions(source);
   if (sessions === 0) return [];
   const marks = countMarks(source);
@@ -179,6 +214,32 @@ const SELFTEST_CASES = [
     name: 'КОНТРОЛЬ: прибор только на localhost НЕ судится — счёт уходит в эмулятор',
     run: () =>
       judgeProbe('probe-x.mjs', `import { chromium } from 'playwright';\nconst BASE='http://localhost:5173';\nawait chromium.launch();\nconst ctx = await browser.newContext();\n`).length === 0,
+  },
+  /*
+   * ── СЛУЧАИ САМОГО ДЕФЕКТА (найден судом QA 2026-08-28) ────────────────────────────
+   * Прежняя редакция держала приборы без живого адреса в корпусе их СОБСТВЕННОЙ меткой,
+   * и полный отцеп (вызов + импорт) ронял прибор ИЗ КОРПУСА, а не в красное. Эти три
+   * случая существуют, чтобы дефект не вернулся молча.
+   */
+  {
+    name: '🔴 ДЕФЕКТ СУДА: поимённый прибор БЕЗ живого адреса и БЕЗ метки вовсе — красный, а не выпавший',
+    run: () =>
+      judgeProbe('smoke.mjs', `import { chromium } from 'playwright';\nconst BASE='http://localhost:4173';\nawait chromium.launch();\nconst context = await browser.newContext();\n`).length === 1,
+  },
+  {
+    name: '🔴 членство даёт ИМЯ, а не метка: тот же текст под ЧУЖИМ именем в корпус не попадает',
+    run: () =>
+      judgeProbe('probe-neizvestnyj.mjs', `import { chromium } from 'playwright';\nconst BASE='http://localhost:4173';\nawait chromium.launch();\nconst context = await browser.newContext();\n`).length === 0,
+  },
+  {
+    name: '🔑 носит метку, но в корпусе не числится — само по себе нарушение',
+    run: () =>
+      marksWithoutMembership('probe-neizvestnyj.mjs', `import { markProbeContext } from './lib/probe-mark.mjs';\nconst BASE='http://localhost:4173';\nawait chromium.launch();\nconst c = await browser.newContext();\nawait markProbeContext(c);\n`) === true,
+  },
+  {
+    name: 'КОНТРОЛЬ: поимённый прибор с меткой нарушением НЕ является',
+    run: () =>
+      marksWithoutMembership('smoke.mjs', `import { markProbeContext } from './lib/probe-mark.mjs';\nconst BASE='http://localhost:4173';\nawait chromium.launch();\nconst c = await browser.newContext();\nawait markProbeContext(c);\n`) === false,
   },
   {
     name: 'КОНТРОЛЬ: живой адрес БЕЗ браузера не судится — продукт не исполняется',
@@ -278,12 +339,37 @@ function run() {
    * с причиной; молчаливого списка исключений тут не будет.
    */
   const SELF = 'verify-probe-mark.mjs';
-  for (const file of readdirSync(TOOLS).filter((name) => name.endsWith('.mjs')).sort()) {
+  const files = readdirSync(TOOLS).filter((name) => name.endsWith('.mjs')).sort();
+  const seenByName = new Set();
+
+  for (const file of files) {
     if (file === SELF) continue;
     const source = readFileSync(join(TOOLS, file), 'utf8');
-    if (!isLiveBrowserProbe(source)) continue;
+
+    // Носит метку, а в корпус не попадает — состояние, из которого рождался дефект суда.
+    if (marksWithoutMembership(file, source)) {
+      faults.push(
+        `${file}: носит метку, но в корпусе НЕ ЧИСЛИТСЯ — снятие метки прошло бы молча. ` +
+          'Лечение: строка в LIVE_BY_NAME с причиной',
+      );
+    }
+
+    if (!isLiveBrowserProbe(source, file)) continue;
+    if (LIVE_BY_NAME.has(file)) seenByName.add(file);
     judged += 1;
     faults.push(...judgeProbe(file, source));
+  }
+
+  /*
+   * 🔑 ПОИМЁННЫЙ СПИСОК — ЭТО И ЕСТЬ ПОЛ КОРПУСА, и он обязан сойтись.
+   * Прибор, переименованный или удалённый, унёс бы с собой и суд над собой: корпус тихо
+   * сократился бы, а страж остался зелёным. Число в списке проверяет себя само — жёсткого
+   * «приборов должно быть N» здесь нет намеренно, такое число устаревает первым.
+   */
+  for (const [name, why] of LIVE_BY_NAME) {
+    if (!seenByName.has(name)) {
+      faults.push(`${name}: назван в LIVE_BY_NAME, но в tools/ не найден или браузер не запускает (${why})`);
+    }
   }
 
   if (judged === 0) {
