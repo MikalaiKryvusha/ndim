@@ -59,8 +59,17 @@ import { settleExit } from './lib/exit-code.mjs';
 /** Первоисточник разрешения. Прибор ЧИТАЕТ его, а не носит цитату в себе (вердикт №7 QA). */
 const AUTH_DOC = join('bugs', '203_yandex_vykidyvaet_stranitsy_glavnaya_pod_noindex.md');
 
-const DEFAULT_QUEUE = join('test-results', 'ya-incident', 'recrawl-rest.txt');
-const DEFAULT_SENT = join('test-results', 'ya-incident', 'recrawl-sent.txt');
+/**
+ * Очередь и журнал живут в ВЕРСИОНИРУЕМОМ месте (замечание З3 вердикта №7 QA).
+ *
+ * 🔴 Прежде они лежали под `test-results/`, а он в `.gitignore`. Для наблюдений это нормально,
+ * но здесь — память о НЕОБРАТИМОМ действии: подача уходит в чужой индекс и назад не отзывается.
+ * Без версионируемого журнала на вопрос «что мы уже отправили» ответить нечем, и адреса уходят
+ * повторно, тратя суточную квоту впустую. Тождество перенесённой очереди доказано хешом —
+ * `reports/YANDEX_RECRAWL/README.md`.
+ */
+const DEFAULT_QUEUE = join('reports', 'YANDEX_RECRAWL', 'recrawl-queue.txt');
+const DEFAULT_SENT = join('reports', 'YANDEX_RECRAWL', 'recrawl-sent.txt');
 
 /** Пауза между вызовами: 150 запросов подряд в чужой сервис — это вежливость, а не техника. */
 const PACE_MS = 400;
@@ -134,8 +143,9 @@ async function main(argv) {
 
 	if (!existsSync(args.queue)) {
 		throw new Error(
-			`нет файла очереди ${args.queue} — он лежит в test-results/ (вне git) и в рабочие копии\n` +
-				'ролей не едет. Возьмите его из главной копии либо укажите путь доводом --queue.',
+			`нет файла очереди ${args.queue}.` +
+				'\nОчередь версионируется (reports/YANDEX_RECRAWL/) — значит она обязана быть в дереве.' +
+				'\nНет её — либо ветка отстала, либо путь доводом --queue задан неверно.',
 		);
 	}
 	const queue = parseAddresses(readFileSync(args.queue, 'utf8'));
