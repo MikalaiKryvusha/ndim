@@ -27,6 +27,7 @@
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const BASE = process.env.PROBE_BASE ?? 'https://ndimspace.app';
 const PAGE = '/ru/menu/manual';
@@ -55,6 +56,7 @@ try {
         deviceScaleFactor: 2,
         locale: 'ru-RU',
       });
+      await markProbeContext(context);
       await context.addInitScript((v) => localStorage.setItem('ndim-theme', v), theme);
       const page = await context.newPage();
       await page.goto(`${BASE}${PAGE}`, { waitUntil: 'domcontentloaded' });
