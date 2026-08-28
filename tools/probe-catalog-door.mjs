@@ -43,6 +43,7 @@ import { fileURLToPath } from 'node:url';
 
 import { portsFor, slotOf } from './lib/stand-slot.mjs';
 import { watchHttpFailures } from './lib/http-failures.mjs';
+import { settleExit } from './lib/exit-code.mjs';
 
 const argv = process.argv.slice(2);
 const opt = (name, fallback) => {
@@ -540,17 +541,34 @@ const run = async () => {
 
   console.log(`\nИТОГ: пройдено ${pass} · провалено ${fail}`);
   if (guestUid) console.log(`Гость прогона ${guestUid} — заведён и убран.`);
-  process.exit(fail === 0 ? 0 : 1);
+  return fail === 0 ? 0 : 1;
 };
 
-run().catch(async (e) => {
-  console.error('\nприбор упал:', e?.stack ?? e);
-  /*
-   * 🔑 УБОРКА ЖИВЁТ И НА ПУТИ ПАДЕНИЯ. Прибор, упавший на середине, оставляет за собой ровно
-   * тот же мусор, что и дошедший до конца, — а падает он чаще. Уборка «только когда всё хорошо»
-   * убирает ровно в том случае, когда убирать почти нечего.
-   */
-  const leftovers = await cleanupStand().catch((err) => [`уборка упала: ${err?.message ?? err}`]);
-  if (leftovers.length > 0) console.error('след НЕ убран:', leftovers.join(' · '));
-  process.exit(2);
-});
+/*
+ * 🔴 КОД ВОЗВРАТА ВЫСТАВЛЯЕТСЯ, А НЕ ВЫСТРЕЛИВАЕТСЯ — класс `bugs/216`, общий хвост
+ * `tools/lib/exit-code.mjs`.
+ *
+ * Прибор ходит в сеть не только браузером: уборка выше делает десяток запросов к REST эмулятора
+ * НЕПОСРЕДСТВЕННО перед завершением. `process.exit()` при живом сокете роняет процесс на Windows
+ * (`Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)`) и отдаёт код **127 вместо 1** — то
+ * есть прибор печатает правильный отказ, а ворота, судящие по коду, видят бессмыслицу.
+ * Дренирования тела не хватает: сокет держит пул соединений.
+ *
+ * ⚠️ Поимённый корпус `tools/exit-after-fetch.test.mjs` этот файл НЕ судит — он про приборы
+ * консолей поисковиков, а браузерные исключены там намеренно (они закрывают браузер до выхода).
+ * Исключение верно для БРАУЗЕРНОЙ половины и не покрывает REST-половину, которая появилась
+ * здесь вместе с уборкой. Поэтому хвост взят своей рукой: общий, а не копией.
+ */
+settleExit(
+  run().catch(async (e) => {
+    console.error('\nприбор упал:', e?.stack ?? e);
+    /*
+     * 🔑 УБОРКА ЖИВЁТ И НА ПУТИ ПАДЕНИЯ. Прибор, упавший на середине, оставляет за собой ровно
+     * тот же мусор, что и дошедший до конца, — а падает он чаще. Уборка «только когда всё
+     * хорошо» убирает ровно в том случае, когда убирать почти нечего.
+     */
+    const leftovers = await cleanupStand().catch((err) => [`уборка упала: ${err?.message ?? err}`]);
+    if (leftovers.length > 0) console.error('след НЕ убран:', leftovers.join(' · '));
+    return 2;
+  }),
+);
