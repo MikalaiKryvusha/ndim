@@ -26,6 +26,7 @@ import { join } from 'node:path';
 import { bingKey, callMethod, SITE_URL, API, LEGACY_RETIREMENT } from './lib/bing-webmaster.mjs';
 import { rankAndTrafficRows, bingTotals, explainBingError } from './lib/bing-snapshot-core.mjs';
 import { isoDate, snapshotFileName } from './lib/console-snapshot-core.mjs';
+import { settleExit } from './lib/exit-code.mjs';
 
 const DEFAULT_OUT = join('reports', 'CONSOLES');
 
@@ -118,14 +119,5 @@ async function main(argv) {
 	return 0;
 }
 
-// Код возврата выставляется, а не выстреливается: прибор ходит в сеть, и `process.exit()` при
-// живом соединении роняет процесс с кодом 127 вместо честного 1 (поймано на indexnow-submit).
-main(process.argv.slice(2)).then(
-	(code) => {
-		process.exitCode = code;
-	},
-	(error) => {
-		console.error(`🔴 ${error.message}`);
-		process.exitCode = 1;
-	},
-);
+// Хвост общий на все сетевые приборы — довод и цена в `tools/lib/exit-code.mjs`.
+settleExit(main(process.argv.slice(2)));

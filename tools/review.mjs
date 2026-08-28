@@ -22,7 +22,7 @@
 import { createServer } from 'node:http';
 import { spawn, spawnSync } from 'node:child_process';
 import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync } from 'node:fs';
-import { join, relative, resolve, basename } from 'node:path';
+import { join, relative, resolve, basename, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
@@ -238,10 +238,30 @@ button:disabled{opacity:.5;cursor:default}
  * Зачем вообще звук: есть класс критериев, который агент измерить не может — «красиво», «приятно»
  * (`AGENT_GUIDE` → «Класс вкуса»). Судящему звук нужен ЗВУК, а не описание звука.
  */
-function inlineAudio(html) {
-	return html.replace(/<a href="([^"]+\.(wav|mp3|ogg))">([^<]*)<\/a>/g, (_, src, ext, label) => {
-		const p = resolve(ROOT, decodeURIComponent(src));
-		if (!existsSync(p)) return `<span class="meta">нет файла: ${esc(src)}</span>`;
+/**
+ * Адрес файла разрешается ОТ САМОГО ДОКУМЕНТА и лишь затем — от корня проекта.
+ *
+ * Порядок куплен №055 (`bugs/210`): интервью лежит в `interviews/` и честно писало
+ * `../test-results/…` — корневое разрешение уводило `../` ВЫШЕ проекта, файл «не находился»,
+ * и владелец получил вопрос «какой макет берём» без единого кадра. Внешние адреса (`http…`)
+ * не разрешаются вовсе — они остаются обычными ссылками.
+ */
+function resolveAsset(src, docDir) {
+	const rel = decodeURIComponent(src);
+	const near = resolve(docDir, rel);
+	if (existsSync(near)) return near;
+	const atRoot = resolve(ROOT, rel);
+	if (existsSync(atRoot)) return atRoot;
+	return null;
+}
+
+const isExternal = (src) => /^[a-z][a-z0-9+.-]*:\/\//i.test(src);
+
+function inlineAudio(html, docDir) {
+	return html.replace(/<a href="([^"]+\.(wav|mp3|ogg))">([^<]*)<\/a>/g, (m, src, ext, label) => {
+		if (isExternal(src)) return m;
+		const p = resolveAsset(src, docDir);
+		if (!p) return `<span class="meta">нет файла: ${esc(src)}</span>`;
 		const mime = ext === 'mp3' ? 'audio/mpeg' : ext === 'ogg' ? 'audio/ogg' : 'audio/wav';
 		const b64 = readFileSync(p).toString('base64');
 		return `<span class="audio">${esc(label)}<audio controls preload="metadata" src="data:${mime};base64,${b64}"></audio></span>`;
@@ -259,10 +279,11 @@ function inlineAudio(html) {
  * ⚠️ Вкладывается ровно то, что лежит в файле. Макет с внешними зависимостями внутри рамки
  * развалится — но в этом проекте макеты по канону самодостаточны (свои стили, свои скрипты).
  */
-function inlineHtmlFrames(html) {
-	return html.replace(/<a href="([^"]+\.html)">([^<]*)<\/a>/g, (_, src, label) => {
-		const p = resolve(ROOT, decodeURIComponent(src));
-		if (!existsSync(p)) return `<span class="meta">нет файла: ${esc(src)}</span>`;
+function inlineHtmlFrames(html, docDir) {
+	return html.replace(/<a href="([^"]+\.html)">([^<]*)<\/a>/g, (m, src, label) => {
+		if (isExternal(src)) return m;
+		const p = resolveAsset(src, docDir);
+		if (!p) return `<span class="meta">нет файла: ${esc(src)}</span>`;
 		return `<figure class="embed">
 			<figcaption><b>${esc(label)}</b>
 				<button type="button" class="apart primary">Открыть отдельным экраном</button>
@@ -281,10 +302,11 @@ function inlineHtmlFrames(html) {
  * `test-results/` вне git — ссылка на них с http-страницы браузером блокируется, а вшитая
  * картинка работает всегда.
  */
-function inlineImages(html) {
-	return html.replace(/<a href="([^"]+\.(png|jpe?g|webp|svg))">([^<]*)<\/a>/g, (_, src, ext, label) => {
-		const p = resolve(ROOT, decodeURIComponent(src));
-		if (!existsSync(p)) return `<span class="meta">нет файла: ${esc(src)}</span>`;
+function inlineImages(html, docDir) {
+	return html.replace(/<a href="([^"]+\.(png|jpe?g|webp|svg))">([^<]*)<\/a>/g, (m, src, ext, label) => {
+		if (isExternal(src)) return m;
+		const p = resolveAsset(src, docDir);
+		if (!p) return `<span class="meta">нет файла: ${esc(src)}</span>`;
 		const mime =
 			ext === 'svg' ? 'image/svg+xml' : ext === 'webp' ? 'image/webp' : ext === 'png' ? 'image/png' : 'image/jpeg';
 		const b64 = readFileSync(p).toString('base64');
@@ -751,7 +773,8 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 </body></html>`;
 
 	// Порядок важен: HTML-рамки первыми — иначе ссылка на макет успела бы стать картинкой.
-	return inlineImages(inlineAudio(inlineHtmlFrames(page)));
+	const docDir = dirname(docPath);
+	return inlineImages(inlineAudio(inlineHtmlFrames(page, docDir), docDir), docDir);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1069,9 +1092,42 @@ function preflightHasOpenQuestions(docPath) {
 	return false;
 }
 
+/**
+ * ПРЕДПОЛЁТНАЯ ПРОВЕРКА 3: страница, ссылающаяся на файл, которого НЕТ, не поднимается.
+ *
+ * Куплена №055 (`bugs/210`, слово владельца дословно в баге): вопрос «какой макет берём»
+ * поднялся без единого кадра — картинки «не находились» и тихо деградировали в подпись
+ * «нет файла». Для ВИЗУАЛЬНОГО выбора это пустой стол; «есть в md» и «дошло до глаз» —
+ * разные факты, и проверяется здесь второй.
+ */
+function preflightAssets(docPath) {
+	const text = readMd(docPath);
+	const docDir = dirname(docPath);
+	const missing = [];
+	const seen = new Set();
+	const ASSET_REF = /!?\[[^\]]*\]\(([^)\s]+\.(?:png|jpe?g|webp|svg|wav|mp3|ogg|html))\)/gi;
+	for (const m of text.matchAll(ASSET_REF)) {
+		const src = m[1];
+		if (isExternal(src) || seen.has(src)) continue;
+		seen.add(src);
+		if (!resolveAsset(src, docDir)) missing.push(src);
+	}
+	if (!missing.length) return true;
+	console.error('\n⛔ СТРАНИЦА НЕ ПОДНЯТА: она ссылается на файлы, которых НЕТ.\n');
+	for (const s of missing) console.error(`   нет файла: ${s}`);
+	console.error(
+		'\n   Кадры и макеты — СОДЕРЖИМОЕ вопроса: без них владелец получает пустой стол\n' +
+			'   (уже случилось на выборе макета двери корня — `bugs/210`).\n\n' +
+			'   Лечение: поправь путь (он разрешается от самого документа, затем от корня\n' +
+			'   проекта) либо положи файл на место.\n',
+	);
+	return false;
+}
+
 async function cmdOpen(docPath) {
 	if (!preflight(docPath)) return 1;
 	if (!preflightHasOpenQuestions(docPath)) return 1;
+	if (!preflightAssets(docPath)) return 1;
 	const server = startServer({
 		docPath,
 		// Сервер одного документа живёт ровно до записи решения: поднялся → записал → умер.
@@ -1148,9 +1204,10 @@ const plural = (n, a, b, c) => {
 
 /** Снимает страницу в файл — самодостаточную и открывающуюся офлайн. */
 function cmdRender(docPath) {
-	// Та же предполётная проверка, что и у `open`: офлайн-страница отнимает время владельца
-	// ровно так же, как живая, и отсылка «см. выше» в ней ничем не лучше.
+	// Те же предполётные проверки, что и у `open`: офлайн-страница отнимает время владельца
+	// ровно так же, как живая, и отсылка «см. выше» или пропавший кадр в ней ничем не лучше.
 	if (!preflight(docPath)) return 1;
+	if (!preflightAssets(docPath)) return 1;
 	const outDir = join(ROOT, 'test-results', 'owner-reviews');
 	mkdirSync(outDir, { recursive: true });
 	const out = opt('--out', join(outDir, basename(docPath).replace(/\.md$/, '.html')));
