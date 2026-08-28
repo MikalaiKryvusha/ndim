@@ -392,7 +392,7 @@ function selftest() {
 
     ['старая ОДИНОЧНАЯ строка мигрирует в ТРИ места', () => {
       const held = replaceStandLock(board, 'qa', true, 'T').text;
-      return [1, 2, 3].every((p) => new RegExp(`^\|\s*стенд ${p} из 3\b`, 'm').test(held));
+      return [1, 2, 3].every((p) => new RegExp(`^\\|\\s*стенд ${p} из 3\\b`, 'm').test(held));
     }],
 
     /*

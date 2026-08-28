@@ -1,0 +1,40 @@
+# CI команды NDIM_WORKTREE_DEV_TEAM — машинная опора правила «main всегда зелёный»
+# (манифест → «Git-процесс команды», п.1; разведка — researches/53; заказ владельца 2026-08-28).
+#
+# ЗДЕСЬ ТОЛЬКО ДЕШЁВЫЕ ВОРОТА: юниты, ворота инструментов, svelte-check, типы.
+# Без секретов, без эмуляторов, без стенда — тяжёлая динамика (test:rules, e2e, смоуки)
+# остаётся локальной за замком стенда, как велит канон. Красный CI на ветке роли
+# блокирует заявку на мерж так же, как отсутствие вердикта QA.
+#
+# Такой же workflow предложен в исток KAIF как поставка /team-deployment:
+# https://github.com/MikalaiKryvusha/KAIF/issues/29 — мы его первое поле.
+name: team-ci
+on:
+  push:
+    branches: ['main', 'ndim_*']
+  pull_request:
+    branches: ['main']
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Полная история: ворота прозы читают исторические коммиты (`git show <sha>:файл` —
+          # корпуса возвратов владельца). Неглубокий клон уронил самый первый прогон CI.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # engines: >=23.6; на машине команды 24.15
+          cache: npm
+      - run: npm ci
+      - name: Юниты продукта
+        run: npm test
+      - name: Ворота инструментов
+        run: npm run test:tools
+      - name: svelte-check
+        run: npm run check
+      - name: Типы
+        run: npm run typecheck
