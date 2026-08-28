@@ -20,6 +20,7 @@
  */
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const BASE = process.env.PROBE_BASE ?? 'http://localhost:5173';
 const OUT = 'test-results/ideas21';
@@ -39,6 +40,7 @@ function fact(name, got, want, ok) {
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 780 } });
+await markProbeContext(ctx);
 const page = await ctx.newPage();
 const consoleErrors = [];
 page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text().slice(0, 160)));
@@ -362,6 +364,7 @@ await shot('14-15-space');
 // ─────────────────────────────────────────────────────────────────────────────
 say('\nП. 7 (второй заход) · тёмная тема + тап пальцем');
 const touchCtx = await browser.newContext({ viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true });
+await markProbeContext(touchCtx);
 const tp = await touchCtx.newPage();
 await tp.addInitScript(() => localStorage.setItem('ndim-theme', 'dark'));
 await tp.goto(BASE + '/menu', { waitUntil: 'domcontentloaded' });

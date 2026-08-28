@@ -36,12 +36,30 @@
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const BASE = process.argv[2] ?? 'https://ndimspace.app';
 /** Вход в продукт: `/` (распознаватель) · `/ru`, `/en` (лендинг) · `/profile` (start_url PWA). */
 const ENTRY = process.argv.slice(3).find((a) => !a.startsWith('--')) ?? '/';
 /** Стендовый режим: войти по-настоящему, а не подделывать маркер (см. шапку). */
 const REAL_SESSION = process.argv.includes('--real-session');
+/**
+ * 🅿 `--slow` — ОКНО БОЯ НА СТЕНДЕ (`bugs/194`, требование постановки 2026-08-23).
+ *
+ * Зачем. Стенд отвечает по локальной сети мгновенно, и окно мелькания там ДВА кадра против
+ * сорока в бою. Замер, снятый на стенде без замедления, честен — и меряет ДРУГОЕ ОКНО:
+ * ровно так починка `bugs/40` п. 2 показала `/ru` 0/2 → 2/0 и была признана закрытой, а бой
+ * дал 33 кадра лендинга. Это класс «зелёное на стенде, где окно короче реального».
+ *
+ * Замедление ставится через CDP `Network.emulateNetworkConditions` — штатный механизм
+ * платформы, тот же, которым пользуется панель Network в DevTools. Профиль близок к «Slow 4G»:
+ * задержка 300 мс и узкая полоса, чтобы гидратация и динамический импорт Firebase заняли
+ * заметное время — то есть чтобы окно ВООБЩЕ МОГЛО показать лендинг, если он показывается.
+ *
+ * 🔑 Это и есть третий вопрос ЛЕСТНИЦЫ («мог ли МАТЕРИАЛ дать проверке упасть»): без
+ * замедления стендовый прогон не способен покраснеть, сколько бы кадров мы ни снимали.
+ */
+const SLOW = process.argv.includes('--slow');
 const OUT = 'test-results/bug40-live';
 mkdirSync(OUT, { recursive: true });
 
@@ -54,6 +72,7 @@ const results = [];
 
 for (const round of ['холодный контекст', 'повторное открытие']) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await markProbeContext(ctx);
   if (!REAL_SESSION) {
     // Признак сессии — ровно тот, по которому щит решает подниматься (`src/lib/data/session.ts`).
     await ctx.addInitScript(() => {
@@ -65,6 +84,18 @@ for (const round of ['холодный контекст', 'повторное о
     });
   }
   const page = await ctx.newPage();
+
+  if (SLOW) {
+    // Окно боя на стенде: узкая полоса и задержка, чтобы окно мелькания вообще существовало.
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send('Network.enable');
+    await cdp.send('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 300,
+      downloadThroughput: (400 * 1024) / 8,
+      uploadThroughput: (200 * 1024) / 8,
+    });
+  }
 
   if (REAL_SESSION) {
     // Стенд логинит dev-пользователя сам: заходим внутрь и ЖДЁМ, пока продукт поставит маркер.
@@ -112,7 +143,12 @@ for (const round of ['холодный контекст', 'повторное о
 
 await browser.close();
 
-console.log(`\nБАЗА: ${BASE}   ·   ВХОД: ${ENTRY}   ·   кадров на раунд: ${FRAMES} по ${STEP_MS} мс\n`);
+// 🔴 РЕЖИМ ЗАМЕРА ПЕЧАТАЕТСЯ РЯДОМ С ЧИСЛАМИ. Число без названного метода — это класс, за
+// который проект уже платил («47 % объёма описаний», воспроизвести не смог никто). Поддельный
+// маркер и настоящая сессия дают РАЗНЫЕ числа по построению, и путать их нельзя.
+const РЕЖИМ = REAL_SESSION ? 'НАСТОЯЩАЯ СЕССИЯ' : 'ПОДДЕЛЬНЫЙ МАРКЕР';
+const ОКНО = SLOW ? '   ·   ОКНО БОЯ (сеть замедлена)' : '';
+console.log(`\nБАЗА: ${BASE}   ·   ВХОД: ${ENTRY}   ·   кадров: ${FRAMES} по ${STEP_MS} мс   ·   ${РЕЖИМ}${ОКНО}\n`);
 console.log('раунд                 щит   ЛЕНДИНГ   приложение   путь');
 for (const r of results) {
   console.log(

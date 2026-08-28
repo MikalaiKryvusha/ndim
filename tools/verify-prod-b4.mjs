@@ -18,6 +18,7 @@ import { mkdirSync } from 'node:fs';
 import { contourFromArgv } from './lib/contours.mjs';
 import { watchHttpFailures } from './lib/http-failures.mjs';
 import { grantAppCheckDebug } from './lib/app-check-debug.mjs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const CONTOUR = contourFromArgv();
 const BASE = CONTOUR.site;
@@ -56,6 +57,7 @@ const browser = await chromium.launch();
 for (const theme of THEMES) {
   for (const size of SIZES) {
     const ctx = await browser.newContext({ viewport: { width: size.w, height: size.h } });
+    await markProbeContext(ctx);
     // Тему продукта задаёт ключ ndim-theme ДО загрузки — системный colorScheme её не меняет.
     await ctx.addInitScript((t) => localStorage.setItem('ndim-theme', t), theme);
     // Пропуск через защиту от роботов — в бою App Check включён, без него будет 403.
@@ -129,6 +131,7 @@ for (const theme of THEMES) {
 
 // Контракт свежести — в боевом чанке, скачанном браузером.
 const ctx = await browser.newContext();
+await markProbeContext(ctx);
 // Пропуск и здесь: этот контекст тоже грузит приложение, а значит тоже проходит App Check.
 await grantAppCheckDebug(ctx, { required: CONTOUR.name === 'prod', quiet: true });
 const page = await ctx.newPage();
