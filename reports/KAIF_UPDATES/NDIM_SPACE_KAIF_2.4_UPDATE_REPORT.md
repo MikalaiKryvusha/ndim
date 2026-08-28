@@ -5,6 +5,7 @@
 tracking origin, 5 agent systems · **OS:** Windows 11 Pro 10.0.26200 · **Node:** v24.15.0
 · **Date:** 2026-08-28 (started ≈ 13:56 +03:00) · **Author:** the project's agent (Claude Code /
 Fable 5), answering for this text.
+· **Delivered to origin:** issue #25 (this report) · issue #24 comment (the R1 +1 observation).
 
 ## 1. Chronology with numbers (every number is a command's output)
 

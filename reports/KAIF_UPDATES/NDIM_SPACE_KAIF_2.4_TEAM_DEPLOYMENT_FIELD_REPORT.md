@@ -2,8 +2,9 @@
 
 **Project:** NDim Space · **KAIF:** 2.4, tracking origin, i18n translated · **Date:** 2026-08-28
 · **Author:** the project's agent (Claude Code / Fable 5), answering for this text.
+**Delivered to origin:** issue #26.
 **Companion:** the update itself is reported separately
-(`NDIM_SPACE_KAIF_2.4_UPDATE_REPORT.md`); this report covers only the TEAM part: reconciling
+(`NDIM_SPACE_KAIF_2.4_UPDATE_REPORT.md`, origin issue #25); this report covers only the TEAM part: reconciling
 our live six-role team (running since 2026-08-21) with the new skill's canon, the owner's
 decisions, and the written retrospective (operation 5).
 
