@@ -51,11 +51,13 @@
 
 ## Скиллы
 
-Сессия: `/resume` · `/pause` (мягкая парковка — чат продолжится) · `/end-chat` (полное завершение
-с передачей эстафеты) — Автономия: `/autoloop` · `/dayloop` · `/nightloop`
+Сессия: `/resume` · `/pause` (мягкая парковка — чат продолжится) · `/end-chat-soft` (полное
+неспешное завершение с передачей эстафеты) · `/end-chat-force` (срочное закрытие «зафиксируй и
+уходи») — Автономия: `/autoloop` · `/dayloop` · `/nightloop`
 Гигиена: `/refresh-context` · `/check-backlog` — Знание: `/experience` · `/report-bug` ·
 `/bug-research` · `/propose-idea`
 Владелец: `/interview` · `/fix-vision` — Планирование: `/revision` · `/what-next`
+Команда: `/team-deployment` (развёртывание команды агентов — состав утверждает владелец)
 Стражи качества: `/derive-styleguide` — Помощь: `/help-kaif` — Выпуск: `/release`
 Дисциплина исполнения: `/fable-method` · `/fable-loop` · `/fable-judge` · `/fable-domain`
 Жизненный цикл KAIF: `/kaif-version` · `/kaif-update` · `/kaif-fork` · `/kaif-switch-origin` · `/kaif-remove`

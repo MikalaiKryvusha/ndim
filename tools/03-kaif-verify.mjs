@@ -93,7 +93,7 @@ if (!placeholderHits) pass(`плейсхолдеров не осталось (п
 // --- 3. Скиллы: канонический name, локализованный description -------------------
 const SKILLS_DIR = '.claude/skills';
 const EXPECTED_SKILLS = [
-  'resume', 'pause', 'end-chat', 'autoloop', 'dayloop', 'nightloop', 'refresh-context',
+  'resume', 'pause', 'autoloop', 'dayloop', 'nightloop', 'refresh-context',
   'check-backlog', 'experience', 'report-bug', 'bug-research', 'propose-idea', 'interview',
   'revision', 'fix-vision', 'what-next', 'help-kaif', 'release', 'derive-styleguide',
   'kaif-version', 'kaif-update', 'kaif-fork', 'kaif-switch-origin', 'kaif-remove',
@@ -102,6 +102,8 @@ const EXPECTED_SKILLS = [
   'plan-task', 'plan-epic', 'guarded-loop', 'code-revision', 'owner-voice', 'owner-reviews',
   // Приехал с KAIF 2.2: пинок «продолжай» одной командой.
   'kaif-go',
+  // Приехали с KAIF 2.4: /end-chat расщеплён на пару, развёртывание команды агентов.
+  'end-chat-soft', 'end-chat-force', 'team-deployment',
 ];
 const hasCyrillic = (s) => /[а-яёА-ЯЁ]/.test(s);
 
