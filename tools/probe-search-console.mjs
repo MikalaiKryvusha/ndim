@@ -14,7 +14,12 @@
  * (prod и stage), и на этой двоичности стоит вся защита «ключ не того контура»: `contours.mjs`
  * сверяется с `src/lib/firebase.ts` и ПАДАЕТ при расхождении. Третий контур пошёл бы не по новому
  * коду, а по старым двоичным развилкам — ровно класс `bugs/129` («условие „всё, что не X, — это Y“
- * живёт до появления Z»). Поэтому ключ читается здесь, своей строкой, и сверяется своей проверкой.
+ * живёт до появления Z»). Поэтому ключ читается своей строкой и сверяется своей проверкой.
+ *
+ * 📍 Ключ, токен и запросы переехали в `tools/lib/console-auth.mjs` 2026-08-28, когда у доступа
+ * появился второй потребитель — `tools/console-snapshot.mjs` (фаза 2 `plans/74`). Копия подписи
+ * JWT во втором файле была бы парой «истина ↔ зеркало», которая разъедется молча. Поведение
+ * этого прибора правкой не менялось: тот же вывод, те же коды возврата.
  *
  * Зависимостей нет намеренно: JWT подписывается штатным `node:crypto`, запросы — штатным `fetch`.
  *
@@ -25,93 +30,14 @@
  * Молчаливого зелёного нет: «ресурсов ноль» — это КРАСНЫЙ, потому что именно так выглядит
  * непройденный шаг владельца, и ворота, которые его пропустят, покрасят зелёным ничто.
  */
-import { createSign } from 'node:crypto';
-import { loadEnv } from './lib/env.mjs';
-
-const SCOPE = 'https://www.googleapis.com/auth/webmasters.readonly';
-const TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const API = 'https://searchconsole.googleapis.com/webmasters/v3';
-
-/** Ресурс, который мы завели в консоли: ДОМЕННЫЙ (`homeworks/04`, часть 1, шаг 2). */
-const EXPECTED_PROPERTY = 'sc-domain:ndimspace.app';
-
-const b64url = (buf) => Buffer.from(buf).toString('base64url');
-
-/**
- * Ключ аккаунта чтения консолей из `.env`.
- *
- * Проверяет не только наличие, но и ЧЕЙ ключ: перепутанная строка в `.env` иначе дала бы
- * невнятную ошибку авторизации через минуту работы вместо адреса лечения сразу.
- */
-function consoleReaderKey() {
-	loadEnv();
-	const raw = process.env.NDIM_CONSOLE_SA_B64;
-	if (!raw) {
-		throw new Error(
-			'нет ключа: переменная NDIM_CONSOLE_SA_B64 пуста.\n' +
-				'Значение — base64 от JSON-ключа аккаунта ndim-console-reader@ndim-space (см. .env.example).',
-		);
-	}
-	let key;
-	try {
-		key = JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
-	} catch (error) {
-		throw new Error(`NDIM_CONSOLE_SA_B64 не разбирается: ожидался base64 от JSON (${error.message})`);
-	}
-	if (!key.client_email?.startsWith('ndim-console-reader@')) {
-		throw new Error(
-			`NDIM_CONSOLE_SA_B64 содержит ключ аккаунта «${key.client_email}», а ожидался ` +
-				'ndim-console-reader@ndim-space.iam.gserviceaccount.com.\n' +
-				'🔴 Боевой ключ Firebase сюда подставлять НЕЛЬЗЯ: им можно перезаписать данные живых людей, ' +
-				'а этому прибору нужно только чтение метрик.',
-		);
-	}
-	return key;
-}
-
-/** Меняет подписанный JWT на токен доступа. Своими руками — чтобы не тащить зависимость. */
-async function accessToken(key) {
-	const now = Math.floor(Date.now() / 1000);
-	const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-	const claims = b64url(
-		JSON.stringify({
-			iss: key.client_email,
-			scope: SCOPE,
-			aud: TOKEN_URL,
-			iat: now,
-			exp: now + 3600,
-		}),
-	);
-	const signer = createSign('RSA-SHA256');
-	signer.update(`${header}.${claims}`);
-	const jwt = `${header}.${claims}.${signer.sign(key.private_key, 'base64url')}`;
-
-	const response = await fetch(TOKEN_URL, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-		body: new URLSearchParams({
-			grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-			assertion: jwt,
-		}),
-	});
-	const body = await response.json();
-	if (!response.ok) {
-		throw new Error(
-			`обмен JWT на токен не удался (${response.status}): ${body.error} — ${body.error_description}\n` +
-				'Если сказано «API has not been used» — включите его: ' +
-				'gcloud services enable searchconsole.googleapis.com --project ndim-space',
-		);
-	}
-	return body.access_token;
-}
-
-async function api(token, path) {
-	const response = await fetch(`${API}${path}`, {
-		headers: { Authorization: `Bearer ${token}` },
-	});
-	const body = await response.json().catch(() => ({}));
-	return { ok: response.ok, status: response.status, body };
-}
+import {
+	consoleReaderKey,
+	accessToken,
+	apiGet,
+	SCOPE,
+	EXPECTED_PROPERTY,
+	API,
+} from './lib/console-auth.mjs';
 
 async function main() {
 	const key = consoleReaderKey();
@@ -123,7 +49,7 @@ async function main() {
 	const token = await accessToken(key);
 	console.log('✅ токен доступа получен — ключ и включённый API в порядке\n');
 
-	const sites = await api(token, '/sites');
+	const sites = await apiGet(token, '/sites');
 	if (!sites.ok) {
 		console.error(`🔴 список ресурсов не отдан (${sites.status}): ${sites.body.error?.message ?? ''}`);
 		return 1;
