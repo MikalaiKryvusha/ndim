@@ -1,0 +1,475 @@
+{
+  "_": [
+    "ВОЗВРАТ ИСПРАВЛЕННЫХ КАРТОЧЕК В ОЧЕРЕДЬ ВЫЧИТКИ, ПОРЦИЯ 2 — собрано 2026-08-28, смена 7.",
+    "",
+    "🔴 ЭТО НЕ НОВАЯ ПАРТИЯ. Здесь нет ни одного нового объекта: только карточки, которые владелец",
+    "ВЕРНУЛ на доработку и которые починены по его ДОСЛОВНЫМ замечаниям из боя. Источник замечаний —",
+    "живая выгрузка node tools/read-returned-candidates.mjs --contour prod от 2026-08-28 (13 карточек),",
+    "мерило классов — candidates/owner-critical-notes-2026-08-22.md.",
+    "",
+    "ПОЧЕМУ ОТДЕЛЬНЫМ ФАЙЛОМ, а не партиями 03/04/06. Дверь выгрузки отказывает ВСЕЙ партии, если в",
+    "ней есть объект, уже заведённый в каталоге. В партиях такие есть. Точечный файл разводит две",
+    "разные работы: «предложить новое» и «вернуть исправленное». Тот же довод, что у порции 1",
+    "(candidates/batches/07_returned_fixed.json).",
+    "",
+    "СОСТАВ: 12 карточек из 13 живых возвращённых. Двух исключений ровно два, и оба названы:",
+    "  ⛔ «Вот это драма!» (Q130590402) — реестр даёт только ГОД без даты, а год по точности",
+    "     неотличим от 1 января (EXP-0206). Вышла картина или нет — по имеющемуся не определить,",
+    "     нужен источник. Ожидание здесь законно, догадка — нет.",
+    "  ⛔ «Новая волна» (Q125867250) — В ЖИВОЙ ОЧЕРЕДИ ВОЗВРАЩЁННЫХ ЕЁ БОЛЬШЕ НЕТ (замер 2026-08-28).",
+    "     В реестре 23.08 она числилась возвращённой; из очереди она ушла, и слать её значило бы",
+    "     вернуть владельцу то, что он уже решил.",
+    "",
+    "✅ ЧЕМ ПРОВЕРЕНО: node tools/check-owner-classes.mjs candidates/batches/08_returned_fixed_2.json",
+    "⚠️ И честная граница прибора: классы 2 (проще, прямее) и 15 (порядок фразы, убивающий удивление)",
+    "машиной не берутся ВОВСЕ. Зелёный прогон означает «машина не нашла», а не «чисто».",
+    "",
+    "ОТКУДА ВЗЯТА КАЖДАЯ КАРТОЧКА (правка живёт в партии, здесь — её копия для доставки):",
+    "  · Q124983920 — Resident Evil Requiem  ←  03_2026_films_and_games.json",
+    "  · Q126394034 — Ограбление в Лос-Анджелесе  ←  04_2026_films_and_games.json",
+    "  · Q126488898 — Наследник  ←  04_2026_films_and_games.json",
+    "  · Q130375767 — Военная машина  ←  04_2026_films_and_games.json",
+    "  · Q130532687 — Мелодия их мечты  ←  04_2026_films_and_games.json",
+    "  · Q131441164 — Завет Анны Ли  ←  04_2026_films_and_games.json",
+    "  · Q132731331 — Зловещие мертвецы: Пекло  ←  04_2026_films_and_games.json",
+    "  · Q134054683 — Я иду искать 2  ←  04_2026_films_and_games.json",
+    "  · Q134083296 — Приглашение  ←  04_2026_films_and_games.json",
+    "  · Q134480207 — Выход 8  ←  04_2026_films_and_games.json",
+    "  · Q135411818 — Каратель: Последнее убийство  ←  04_2026_films_and_games.json",
+    "  · Q317620 — Tomb Raider  ←  06_2026_films_series_games.json"
+  ],
+  "candidates": [
+    {
+      "wikidata": "Q124983920",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Resident Evil Requiem",
+        "en": "Resident Evil Requiem"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Capcom",
+        "en": "Capcom"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "ужасы",
+        "horror",
+        "выживание",
+        "survival",
+        "экшен",
+        "action",
+        "шутер",
+        "shooter",
+        "приключения",
+        "adventure"
+      ],
+      "description": {
+        "ru": "Survival horror японской компании Capcom, девятая основная часть серии Resident Evil, идущей с 1996 года. Действие связано с Раккун-Сити — городом, уничтоженным в ходе одной из вирусных вспышек; одно из играбельных лиц — сотрудница ФБР Грейс Эшкрофт. Постоянные опоры этого мира держатся с первых частей: корпорация Umbrella с её биологическими разработками, заражения, превращающие людей в существ, и сам Раккун-Сити как место, где всё это однажды вышло наружу. Устройство игры серия во многом задала сама: игрок исследует замкнутые помещения, открывающиеся постепенно, по мере нахождения ключей и решения задач с механизмами, а противников вокруг больше, чем средств с ними справиться. Боеприпасы и лечебные средства расходуются быстрее, чем восполняются, поэтому изрядная часть игры уходит на экономию, на распределение места в инвентаре и на изготовление предметов из собранных компонентов. Отдельная опора — преследователь, которого обычно нельзя или невыгодно устранять: встречи с ним разрешаются бегством и обходным путём, а не боем. Эти три приёма — ограниченный ресурс, замкнутая планировка и неустранимый преследователь — воспроизводятся теперь и у других разработчиков. Современные части сделаны на собственном движке Capcom RE Engine и допускают вид и от первого, и от третьего лица. Игра вышла 27 февраля 2026 года на Microsoft Windows, PlayStation 5, Xbox Series X/S и Nintendo Switch 2.",
+        "en": "A survival horror game by the Japanese company Capcom, the ninth main instalment of the Resident Evil series that has run since 1996. The action is tied to Raccoon City, the town destroyed in one of the viral outbreaks; one of the playable figures is the FBI agent Grace Ashcroft. The standing supports of this world have held since the first instalments: the Umbrella corporation with its biological work, infections that turn people into creatures, and Raccoon City itself as the place where all of it once broke loose. The shape of the game is one the series largely set: the player explores enclosed rooms that open up gradually, as keys are found and mechanisms are solved, while there are more opponents about than there are means of dealing with them. Ammunition and medical supplies run out faster than they are replaced, so a fair part of the game goes on economy, on the division of inventory space and on making items from gathered components. A separate support is the pursuer, who usually cannot or should not be put down: encounters with him are settled by running and going around rather than by fighting. These three devices — limited resource, enclosed layout and an unkillable pursuer — are now reproduced by other developers as well. The recent instalments are built on Capcom's own RE Engine and allow both a first-person and a third-person view. The game came out on 27 February 2026 on Microsoft Windows, PlayStation 5, Xbox Series X/S and Nintendo Switch 2."
+      },
+      "agentNote": "Игра ВЫШЛА 27 февраля 2026 года, и описание переписано в завершённой форме по правилу владельца о часах машины: на 2026-08-28 эта дата в прошлом. Прежняя редакция говорила о выходе как о будущем — за это он карточку и вернул. ⚠️ Выход утверждается по дате реестра (точность до дня); источником уже вышедшей игры он не переподтверждён. ⚠️ Приёма игры в описании нет (класс 16 — пожелание): источника о том, как её встретили, я не нашёл, а выдумывать приём запрещено. Строка «прочие сюжетные подробности пока не раскрыты» устарела вместе с источником и СНЯТА, а не заменена догадкой. Названия ru и en совпадают: русского перевода у названия нет, ruwiki зовёт объект латиницей."
+    },
+    {
+      "wikidata": "Q126394034",
+      "sitelinks": 23,
+      "title": {
+        "ru": "Ограбление в Лос-Анджелесе",
+        "en": "Crime 101"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Барт Лэйтон",
+        "en": "Bart Layton"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "криминал",
+        "crime",
+        "триллер",
+        "thriller",
+        "детектив",
+        "detective",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "Криминальный триллер Барта Лэйтона по повести Дона Уинслоу. Майк Дэвис грабит ювелиров в Лос-Анджелесе и работает один. Правила у него простые и соблюдаются годами: подробный план, никакого оружия в ход, ни одного пострадавшего, уход по сто первому шоссе. Очередное дело идёт не так — пуля проходит вскользь, — и Майк отказывается от следующего налёта. Скупщик краденого находит на его место молодого и несдержанного исполнителя, тот стреляет в продавца, и цепочка аккуратных ограблений впервые оставляет кровь. Детектив Лу Лубесник замечает, что несколько нераскрытых дел сделаны по одному почерку, и приходит к выводу, что работает одиночка. Начальство встречает эту версию без радости: она превращает разрозненные эпизоды в серию, а серия означает, что подразделение годами ничего не находило. Параллельно у Майка появляется Майя, о его занятии ничего не знающая, и впервые за много лет ему есть что терять помимо свободы. Картина сталкивает двух профессионалов, которые уважают чужую работу и не могут разойтись: один довёл ремесло до безупречности, другой этим ремеслом и опознаёт его. Главные роли исполнили Крис Хемсворт, Марк Руффало и Барри Кеоган; в картине также снимались Хэлли Берри, Моника Барбаро, Дженнифер Джейсон Ли и Ник Нолти. Картина представлена в Лондоне 28 января 2026 года, в прокат США вышла 13 февраля.",
+        "en": "A crime thriller by Bart Layton, adapted from the novella by Don Winslow. Mike Davis robs jewellers in Los Angeles and works alone. His rules are simple and have held for years: a detailed plan, no weapon used, nobody hurt, and an exit along Route 101. One job goes wrong — a bullet grazes him — and Mike calls off the next robbery. His fence finds a younger and less restrained man to take the work, that man shoots a shop assistant, and the chain of clean robberies leaves blood for the first time. Detective Lou Lubesnick notices that several unsolved cases carry one signature and concludes that a single man is behind them. His superiors receive the theory without joy: it turns scattered episodes into a series, and a series means the unit found nothing for years. Meanwhile Mike meets Maya, who knows nothing of his occupation, and for the first time in years he has something to lose besides his freedom. The film sets two professionals against each other who respect the other's work and cannot walk away: one has brought the craft to a fine edge, and the other recognises him by that very craft. Chris Hemsworth, Mark Ruffalo and Barry Keoghan take the leading parts, with Halle Berry, Monica Barbaro, Jennifer Jason Leigh and Nick Nolte also appearing. The first screening took place in London on 28 January 2026, and the American release began on 13 February."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 28 января 2026 (Лондон); прокат 12 и 13 февраля 2026. Первоисточник — повесть Дона Уинслоу «Crime 101»."
+    },
+    {
+      "wikidata": "Q126488898",
+      "sitelinks": 20,
+      "title": {
+        "ru": "Наследник",
+        "en": "How to Make a Killing"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джон Пэттон Форд",
+        "en": "John Patton Ford"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "триллер",
+        "thriller",
+        "криминал",
+        "crime",
+        "семья",
+        "family"
+      ],
+      "description": {
+        "ru": "Чёрная комедия с триллерной основой, снятая Джоном Пэттоном Фордом по собственному сценарию. Бекет Редфеллоу — наследник многомиллиардного состояния, которого из семьи выставили. Права на деньги у него нет, желание получить их никуда не делось, и между ним и наследством стоит очередь родственников: дед, дядя, тётка, кузены и кузины, каждый со своим местом в семейной иерархии. Бекет начинает эту очередь сокращать. Комическое здесь строится на несоответствии: способ действия страшный, а тон разговора остаётся светским, и никто из семьи ни разу не выходит из образа воспитанного человека. Постепенно выясняется, что и остальные Редфеллоу заняты примерно тем же, только медленнее и с лучшими адвокатами. Сюжет позаимствован у британской картины 1949 года «Добрые сердца и короны», где обделённый наследник точно так же продвигался к титулу, устраняя всех, кто стоял впереди. Здесь та же схема перенесена в наши дни и в американскую семью, у которой богатство давно заменило родство. Отдельная линия — Джулия, подруга детства Бекета: она единственная знает его прежним и понимает, во что он превращается. Главные роли исполнили Глен Пауэлл, Маргарет Куолли и Эд Харрис; в картине также снимались Джессика Хенвик, Билл Кэмп, Зак Вудс и Тофер Грейс. Первый показ прошёл 20 февраля 2026 года.",
+        "en": "A black comedy on a thriller base, written and directed by John Patton Ford. Beckett Redfellow is the heir to a multibillion fortune and has been thrown out of the family. He has no right to the money, the wish to have it has not gone anywhere, and between him and the inheritance stands a queue of relatives: a grandfather, an uncle, an aunt, cousins, each with a place in the family order. Beckett begins to shorten that queue. The comedy is built on mismatch: the method is horrifying while the tone of conversation stays polite, and no one in the family ever steps out of the character of a well-brought-up person. It gradually emerges that the other Redfellows are occupied with much the same thing, only more slowly and with better lawyers. The plot is borrowed from the 1949 British film Kind Hearts and Coronets, in which a disinherited heir advanced toward a title in the same way, removing everyone ahead of him. Here the same scheme is moved to the present day and to an American family for whom wealth long ago replaced kinship. A separate line belongs to Julia, Beckett's childhood friend: she alone knew him as he was and can see what he is turning into. Glen Powell, Margaret Qualley and Ed Harris take the leading parts, with Jessica Henwick, Bill Camp, Zach Woods and Topher Grace also appearing. The first screening took place on 20 February 2026."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 20 февраля 2026. Первоисточник назван в статье как британская картина 1949 года «Добрые сердца и короны»; реестр поля первоисточника не заполняет."
+    },
+    {
+      "wikidata": "Q130375767",
+      "sitelinks": 22,
+      "title": {
+        "ru": "Военная машина",
+        "en": "War Machine"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Патрик Хьюз",
+        "en": "Patrick Hughes"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "фантастика",
+        "science fiction",
+        "боевик",
+        "action",
+        "война",
+        "war",
+        "выживание",
+        "survival"
+      ],
+      "description": {
+        "ru": "Научно-фантастический боевик Патрика Хьюза, снятый по сценарию, написанному вместе с Джеймсом Бофортом. Начало идёт в Афганистане: старший сержант приходит на выручку колонне, застрявшей из-за поломки, и там же гибнет его брат — тот самый, который за минуту до нападения уговаривал его подавать в рейнджеры. Сержант выносит раненого и теряет сознание по дороге, а очнувшись в госпитале, узнаёт, что не донёс. Награду за этот бой он получает вместе с искалеченным коленом. Через два года он всё-таки идёт на отбор в рейнджеры и получает номер восемьдесят один. Учится он лучше всех и при этом держится ото всех в стороне: от командной должности отказывается, на подводных занятиях едва не тонет, и командование начинает подозревать, что дело не в выносливости, а в том, что человек не собирается возвращаться живым. Ему предлагают уйти на лечение, он отказывается — и его ставят старшим группы на итоговое учение в лесу. Там подготовка перестаёт быть подготовкой: в лесу оказывается нечто, к чему армейская выучка не готовила никого, и группа из отрабатывающих задачу превращается в тех, кого убивают по одному. Картина рассказывает о человеке, который искал способ умереть достойно и получил ровно такую возможность, и о том, что делать, когда рядом чужие жизни. Главные роли исполнили Алан Ритчсон, Деннис Куэйд, Стефан Джеймс и Джай Кортни. В ограниченный прокат картина вышла 12 февраля 2026 года, в сети — 6 марта.",
+        "en": "A science fiction action film by Patrick Hughes, from a screenplay he wrote with James Beaufort. It opens in Afghanistan: a staff sergeant comes to help a convoy stuck with a breakdown, and there his brother is killed — the same brother who, a minute before the attack, was urging him to apply to the Rangers. The sergeant carries the wounded man and passes out on the way, and when he comes round in hospital he learns he did not get there in time. He receives a decoration for that fight along with a ruined knee. Two years later he goes to Ranger selection after all and is given the number eighty-one. He trains better than anyone and keeps apart from everyone: he turns down a team leader's post, nearly drowns during underwater work, and the command begins to suspect that the issue is not stamina but that the man does not intend to come back alive. He is offered medical leave and refuses, and is put in charge of a squad for the final exercise in the forest. There the training stops being training: something is in that forest that no army instruction prepared anyone for, and the squad turns from men working a problem into men being killed one at a time. From there it is a film about a man who was looking for a decent way to die and has been handed exactly that chance — and about what to do when other lives are alongside. Alan Ritchson, Dennis Quaid, Stephan James and Jai Courtney take the leading parts. The limited theatrical run began on 12 February 2026, and the film went to streaming on 6 March."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 12 февраля 2026 (ограниченный прокат в Австралии); в сети 6 марта 2026."
+    },
+    {
+      "wikidata": "Q130532687",
+      "sitelinks": 19,
+      "title": {
+        "ru": "Мелодия их мечты",
+        "en": "Song Sung Blue"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Крэйг Брюэр",
+        "en": "Craig Brewer"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "музыка",
+        "music",
+        "биография",
+        "biography",
+        "мюзикл",
+        "musical"
+      ],
+      "description": {
+        "ru": "Музыкальная драма Крэйга Брюэра о настоящей паре музыкантов из Милуоки. Майк Сардина зарабатывает выступлениями и не может выступать под своим именем: в 1987 году его выпускают на ярмарке подменять чужого подражателя, запрещают петь собственные песни — и он уходит со сцены. Через год он сталкивается с соседкой Клэр, которая днём работает парикмахером, а вечером поёт чужие песни в костюме другой певицы. Клэр и подсказывает ему дорогу: не искать своё, а взять репертуар Нила Даймонда и делать его хорошо. Так рождается дуэт «Молния и Гром» — муж и жена, поющие чужие песни, и постепенно становящиеся в родном городе теми, ради кого приходят. Картина всерьёз занята вопросом, которого в историях о музыкантах обычно избегают: можно ли считать себя состоявшимся, если ты всю жизнь исполняешь чужое, и что происходит с человеком, когда он перестаёт стыдиться этого ответа. Вторая её половина — про то, что удерживает вместе двоих, у которых на двоих одна сцена, один заработок и одна мечта, никогда не сбывшаяся так, как задумывалось. Основой послужил документальный фильм 2008 года о тех же людях. Главные роли исполнили Хью Джекман и Кейт Хадсон; в картине также снимались Майкл Империоли, Фишер Стивенс и Джеймс Белуши. Картина представлена на фестивале 26 октября 2025 года, в прокат США вышла 25 декабря.",
+        "en": "A musical drama by Craig Brewer about a real pair of musicians from Milwaukee. Mike Sardina makes a living from performing and cannot perform his own material: in 1987 he is put on at a state fair to stand in for another impersonator, is forbidden to sing his own songs, and walks off the stage. A year later he runs into his neighbour Claire, who works as a hairdresser by day and sings other people's songs in another singer's costume by night. It is Claire who points him the way: stop looking for your own and take Neil Diamond's repertoire and do it well. That is how the duo Lightning & Thunder comes about — a husband and wife singing other people's songs and gradually becoming, in their own town, the people audiences come for. The film takes seriously a question that stories about musicians usually avoid: whether a person can count as having made it while performing someone else's work all their life, and what happens once they stop being ashamed of that answer. Its second half is about what holds two people together when they share one stage, one income and one dream that never came true the way it was meant to. The source is a 2008 documentary about the same people. Hugh Jackman and Kate Hudson take the leading parts, with Michael Imperioli, Fisher Stevens and James Belushi also appearing. The first screening was on 26 October 2025, and the American release began on 25 December."
+      },
+      "agentNote": "Год 2025: первая по календарю дата реестра — 26 октября 2025 (фестиваль AFI), прокат 25 декабря 2025, дальше 8 января 2026. ⚠️ В реестре даты перечислены не по порядку — 25 декабря стоит первой строкой; год взят по РАННЕЙ дате. Первоисточник — одноимённый документальный фильм 2008 года Грега Кохса."
+    },
+    {
+      "wikidata": "Q131441164",
+      "sitelinks": 20,
+      "title": {
+        "ru": "Завет Анны Ли",
+        "en": "The Testament of Ann Lee"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Мона Фастволд",
+        "en": "Mona Fastvold"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "исторический",
+        "historical",
+        "религия",
+        "religion",
+        "биография",
+        "biography",
+        "мюзикл",
+        "musical"
+      ],
+      "description": {
+        "ru": "Исторический музыкальный фильм Моны Фастволд, написанный ею вместе с Брэди Корбетом. Картина рассказывает об Анне Ли — основательнице шейкеров — и ведёт её жизнь с самого начала. Анна родилась в Манчестере в 1736 году и ребёнком работала вместе с братом на хлопковой фабрике. Дома она однажды застала родителей вместе, приняла увиденное за грех, сказала об этом вслух — и была за эти слова наказана отцом. Из этого детского потрясения потом вырастет учение, в котором телесная близость объявлена главным препятствием к спасению. Повзрослев, Анна работает кухаркой в лазарете и приходит к бывшим квакерам Уордли, у которых на молитве не столько говорят, сколько поют, выкрикивают и пляшут, а учат, что Христос вернётся в женском образе. Скоро последователи объявят этим образом её саму. Дальше идёт история общины, которую гонят с места на место, и которая в итоге строит в Америке одно из крупнейших утопических обществ своего времени — с общим имуществом, безбрачием и работой как формой молитвы. Постановщица снимает это как музыкальную картину не для украшения: у шейкеров пляска и была богослужением, и другого способа показать их веру изнутри нет. Роль Анны Ли исполнила Аманда Сейфрид; в картине также снимались Томасин Маккензи, Льюис Пуллман, Кристофер Эбботт и Тим Блейк Нельсон. Первый показ прошёл 1 сентября 2025 года в Венеции.",
+        "en": "A historical musical film by Mona Fastvold, written with Brady Corbet. Its subject is Ann Lee, the founder of the Shakers, and her life is shown from the beginning. Ann was born in Manchester in 1736 and as a child worked with her brother at a cotton factory. At home she once came upon her parents together, took what she saw for sin, said so aloud, and was punished by her father for those words. Out of that childhood shock would later grow a teaching in which bodily intimacy is declared the chief obstacle to salvation. Grown up, Ann works as a cook at an infirmary and comes to the Wardleys, former Quakers, at whose worship people sing, cry out and dance more than they speak, and who teach that Christ will return in the form of a woman. Her followers will soon declare her to be that form. What follows is the history of a community driven from place to place, which finally builds in America one of the largest utopian societies of its time — with common property, celibacy and work as a form of prayer. The director films this as a musical not for decoration: among the Shakers dance was the worship, and there is no other way to show their faith from inside. Amanda Seyfried plays Ann Lee, with Thomasin McKenzie, Lewis Pullman, Christopher Abbott and Tim Blake Nelson also appearing. The first screening took place in Venice on 1 September 2025."
+      },
+      "agentNote": "Год 2025 по первой дате реестра — 1 сентября 2025 (Венеция); следующая дата 12 марта 2026. Название дано в варианте «Завет Анны Ли» (метка реестра); статья на русском озаглавлена «Завещание Анны Ли» — если для каталога вернее второй вариант, поправьте."
+    },
+    {
+      "wikidata": "Q132731331",
+      "sitelinks": 23,
+      "title": {
+        "ru": "Зловещие мертвецы: Пекло",
+        "en": "Evil Dead Burn"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Себастьян Ваничек",
+        "en": "Sébastien Vaniček"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "сверхъестественное",
+        "supernatural",
+        "демоны",
+        "demons",
+        "выживание",
+        "survival"
+      ],
+      "description": {
+        "ru": "Фильм ужасов о сверхъестественном, снятый Себастьяном Ваничеком по сценарию, написанному вместе с Флораном Бернаром. Молодая женщина недавно похоронила мужа и приезжает к его родне, в уединённый загородный дом, чтобы пережить утрату среди своих. Семья собирается вместе — и это единственный тёплый эпизод картины, после которого всё идёт вниз. В доме хранятся записи покойного деда, и из них становится ясно, чем занималась семья до нынешнего поколения: Некрономикон был открыт, и через него в мир вышли дедайты — духи, вселяющиеся в живых. Один за другим родственники перестают быть собой, и та самая близость, ради которой героиня приехала, оборачивается против неё: в доме нет чужих, и каждый, кто ещё говорит человеческим голосом, может через минуту заговорить не своим голосом. Изгнать дедайтов способен кандарианский кинжал, и поиски его составляют вторую половину картины. Серия «Зловещих мертвецов» держится на одном приёме с 1981 года — тесное замкнутое место, где враг носит лицо близкого человека, — и эта часть работает ровно с ним, добавляя к нему семейное горе как исходное состояние героини. Шестая картина серии и прямое продолжение «Восстания зловещих мертвецов». Главную роль исполнила Сухейла Якуб; рядом с ней Тэнди Райт, Хантер Дуэн, Лючиане Бьюкэнэн и Джордж Пуллар. В прокат США картина вышла 10 июля 2026 года.",
+        "en": "A supernatural horror film directed by Sébastien Vaniček, from a screenplay he wrote with Florent Bernard. A young woman has just buried her husband and comes to his relatives, at a secluded country house, to get through the loss among family. The family gathers, and this is the one warm passage of the film, after which everything goes downward. The house holds recordings left by the late grandfather, and from them it becomes clear what the family did before the present generation: the Necronomicon was opened, and through it the Deadites came into the world — spirits that take possession of the living. One after another the relatives stop being themselves, and the very closeness the heroine came for turns against her: there are no strangers in the house, and anyone still speaking in a human voice may in a minute speak in another. The Kandarian dagger can drive the Deadites back, and the search for it makes up the second half of the picture. The Evil Dead series has rested on one device since 1981 — a tight enclosed place where the enemy wears the face of someone you love — and this installment works with exactly that, adding family grief as the heroine's starting condition. It is the sixth film of the series and a direct sequel to Evil Dead Rise. Souheila Yacoub takes the leading part, with Tandi Wright, Hunter Doohan, Luciane Buchanan and George Pullar beside her. The American release began on 10 July 2026."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 9 июля 2026; прокат в США 10 июля, ещё одна дата 24 июля. Съёмки шли в Новой Зеландии — в описание не вынесено как факт производства."
+    },
+    {
+      "wikidata": "Q134054683",
+      "sitelinks": 20,
+      "title": {
+        "ru": "Я иду искать 2",
+        "en": "Ready or Not 2: Here I Come"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Мэттью Беттинелли-Олпин, Тайлер Джиллетт",
+        "en": "Matt Bettinelli-Olpin, Tyler Gillett"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "комедия",
+        "comedy",
+        "триллер",
+        "thriller",
+        "выживание",
+        "survival"
+      ],
+      "description": {
+        "ru": "Комедийный фильм ужасов Мэттью Беттинелли-Олпина и Тайлера Джиллетта, продолжение «Я иду искать». Действие начинается сразу после первой части: Грейс, пережившая ночь, когда семья мужа пыталась принести её в жертву, теряет сознание у ворот поместья и попадает в больницу. Там она снова видит младшую сестру Фэйт, с которой не разговаривала с её отъезда в колледж. Выясняется, что семья Ле Домас была не одна: над ней стоял Совет из шести старейших родов, живущих по тому же уговору, и гибель одного из них означает, что место в этом кругу освободилось. Оставшиеся семьи собираются в отельном комплексе, чтобы разыграть освободившееся место по правилам, которых никто из них не смеет нарушить: один из глав пытается убить Грейс до срока и вместе со всей роднёй погибает на месте. Грейс и Фэйт похищают и объявляют предметом новой игры. Картина снова ведёт охоту на человека, со сдвигом: в первой части Грейс отбивалась одна и за себя, здесь ей надо вытащить сестру, а сестра ничего об этих людях не знает и до последнего не верит в происходящее. Комическое держится на том же приёме, что и раньше: смертельная игра ведётся с безупречной светской вежливостью. Главные роли исполнили Самара Уивинг и Кэтрин Ньютон; в картине также снимались Сара Мишель Геллар, Дэвид Кроненберг, Кевин Дюранд и Элайджа Вуд. Картина представлена на фестивале 13 марта 2026 года, в прокат США вышла 20 марта.",
+        "en": "A comedy horror film by Matt Bettinelli-Olpin and Tyler Gillett, the sequel to Ready or Not. The action begins immediately after the first part: Grace, who survived the night her husband's family tried to sacrifice her, collapses at the gates of the estate and is taken to hospital. There she sees her younger sister Faith again, having not spoken to her since Faith left for college. It emerges that the Le Domas family was not alone: above it stood a Council of six old houses living by the same bargain, and the death of one of them means a seat in that circle has come free. The remaining families gather at a hotel complex to play for the empty seat by rules none of them dares break: one of the heads tries to kill Grace ahead of time and dies on the spot along with all his kin. Grace and Faith are seized and declared the subject of the new game. From there it is again a story about hunting a person, but with a shift: in the first part Grace fought alone and for herself, and here she has to get her sister out, while the sister knows nothing about these people and refuses until the last to believe what is happening. The comedy rests on the same device as before: a lethal game conducted with impeccable social courtesy. Samara Weaving and Kathryn Newton take the leading parts, with Sarah Michelle Gellar, David Cronenberg, Kevin Durand and Elijah Wood also appearing. The first screening was on 13 March 2026, and the American release began on 20 March."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 13 марта 2026 (South by Southwest); прокат в США 20 марта, дальше 26 марта и 10 апреля 2026."
+    },
+    {
+      "wikidata": "Q134083296",
+      "sitelinks": 22,
+      "title": {
+        "ru": "Приглашение",
+        "en": "The Invite"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Оливия Уайлд",
+        "en": "Olivia Wilde"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "драма",
+        "drama",
+        "отношения",
+        "relationships",
+        "семья",
+        "family"
+      ],
+      "description": {
+        "ru": "Комедия Оливии Уайлд по сценарию Рашиды Джонс и Уилла Маккормака, англоязычный пересъём испанской картины «Соседи сверху». Всё действие идёт за один вечер и не выходит за пределы одной квартиры в Сан-Франциско. Джо преподаёт в консерватории и возвращается домой не в духе: спина болит, велосипед, на котором жена заставляет его ездить ради здоровья, радости не приносит. Дома выясняется, что Энджела, не спросив его, позвала на ужин соседей сверху — тех самых, чьи ночные звуки давно доводят Джо до бешенства. Он собирается наконец всё им высказать; она хочет выглядеть гостеприимной хозяйкой. Ссора идёт полным ходом, когда в дверь звонят. Вечер не задаётся с первой минуты: суфле подгорело, вина никто не купил, хозяин настроен воинственно. Соседи, впрочем, реагируют спокойно и приветливо — и разговор понемногу выравнивается. А затем Хоук сам извиняется за шум и делает предложение, после которого разговор идёт совсем в другую сторону, а обеим парам приходится вслух назвать то, о чём они не говорили годами. Картина держится как разговорная пьеса: четыре человека, одна комната и вечер, из которого никто не вышел прежним. Главные роли исполнили Сет Роген, Оливия Уайлд, Пенелопа Крус и Эдвард Нортон. Картина представлена на фестивале «Сандэнс» 24 января 2026 года, в прокат США вышла 26 июня.",
+        "en": "A comedy by Olivia Wilde, from a screenplay by Rashida Jones and Will McCormack, an English-language remake of the Spanish film The People Upstairs. The whole action runs across one evening and never leaves a single San Francisco apartment. Joe teaches at a conservatory and comes home out of sorts: his back hurts, and the bicycle his wife makes him ride for his health brings him no joy. At home it emerges that Angela, without asking him, has invited the upstairs neighbours to dinner — the same neighbours whose night-time noises have been driving Joe to fury for months. He intends to finally have it out with them; she wants to look like a gracious hostess. The argument is in full swing when the doorbell rings. The evening fails from the first minute: the soufflé has burnt, nobody bought wine, and the host is spoiling for a fight. The neighbours, however, respond calmly and warmly, and the conversation gradually levels out. Then Hawk apologises for the noise himself and makes a proposal after which the conversation goes somewhere else entirely, and both couples have to say aloud what they have not spoken about for years. From there the film works as a chamber play: four people, one room, and an evening none of them leaves unchanged. Seth Rogen, Olivia Wilde, Penélope Cruz and Edward Norton take the leading parts. The first screening was at the Sundance festival on 24 January 2026, and the American release began on 26 June."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 24 января 2026 («Сандэнс»); ограниченный прокат 26 июня, широкий 2 и 30 июля 2026. Первоисточник — испанская картина «Соседи сверху» Сеска Гая. ⚠️ Предмет разговора в фильме взрослый; описание называет его без подробностей."
+    },
+    {
+      "wikidata": "Q134480207",
+      "sitelinks": 19,
+      "title": {
+        "ru": "Выход 8",
+        "en": "Exit 8"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Гэнки Кавамура",
+        "en": "Genki Kawamura"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "психологический",
+        "psychological",
+        "триллер",
+        "thriller",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "Японский психологический хоррор Гэнки Кавамуры по мотивам одноимённой видеоигры. Начало короткое, и от него зависит вся картина. Молодой человек едет в переполненном вагоне, в наушниках у него «Болеро». Неподалёку сидит женщина с плачущим младенцем, стоящий над ней мужчина кричит на неё и требует унять ребёнка. Не вступается никто, и герой возвращает наушники в уши. Выйдя из поезда, он отвечает на звонок: подруга, с которой они решили расстаться, сообщает, что беременна, и спрашивает, что ей делать. Он обещает приехать в больницу. Связь пропадает, переход пустеет — и оказывается, что выйти из него нельзя. Герой идёт на указатель к выходу номер восемь, поворачивает, проходит длинный коридор с рекламой, встречает идущего навстречу человека в белой рубашке, минует камеры хранения и фотобудку, поворачивает снова — и опять видит тот же указатель. Круг повторяется без конца. Двери заперты, встречный на вопросы не отвечает, и единственное, что остаётся герою, — замечать, что именно в очередном круге стало другим. Картина превращает игровое правило в разговор о человеке, который однажды предпочёл не заметить, и теперь обязан замечать всё. Картина представлена в Каннах 19 мая 2025 года, в прокат Японии вышла 29 августа.",
+        "en": "A Japanese psychological horror film by Genki Kawamura, based on the video game of the same name. The opening is short, and the whole film turns on it. A young man rides a crowded train with Boléro in his earphones. Nearby a woman sits with a crying infant, and a man standing over her shouts at her and demands that she silence the child. No one intervenes, and the young man puts his earphones back in. Leaving the train, he takes a call: the girlfriend he has agreed to separate from tells him she is pregnant and asks what she should do. He promises to come to the hospital. The signal drops, the passage empties, and it turns out there is no way out of it. He follows the sign to exit number eight, turns, walks a long corridor lined with advertising, passes a man in a white shirt coming toward him, goes by the lockers and the photo booth, turns again — and sees the same sign. The circle repeats without end. The doors are locked, the man coming toward him answers no questions, and the only thing left is to notice what exactly has changed on this pass. The film turns the game's rule into a conversation about a man who once chose not to notice, and who now has to notice everything. The first screening was at Cannes on 19 May 2025, and the Japanese release began on 29 August."
+      },
+      "agentNote": "Год 2025 по первой дате реестра — 19 мая 2025 (Канны); прокат в Японии 29 августа 2025, дальше даты 2025 и 2026 годов вплоть до 13 августа 2026. Первоисточник — видеоигра «The Exit 8» студии Kotake Create."
+    },
+    {
+      "wikidata": "Q135411818",
+      "sitelinks": 21,
+      "title": {
+        "ru": "Каратель: Последнее убийство",
+        "en": "The Punisher: One Last Kill"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Рейнальдо Маркус Грин",
+        "en": "Reinaldo Marcus Green"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "боевик",
+        "action",
+        "криминал",
+        "crime",
+        "супергерои",
+        "superhero",
+        "месть",
+        "revenge"
+      ],
+      "description": {
+        "ru": "Супергеройская картина Рейнальдо Маркуса Грина по сценарию, написанному вместе с Джоном Бернталом, по комиксам Marvel. Фрэнк Касл потерял семью и много лет отвечал на это единственным доступным ему способом — убивал тех, кто был к её гибели причастен. К началу действия список закончился: последние из преступного семейства Ньюччи мертвы, мстить больше некому. Оказывается, что жить после этого не проще, а труднее. Касл поселяется в жилом доме в нью-йоркской Маленькой Сицилии, запирает своё снаряжение и пытается стать обычным жильцом, но прошлое приходит к нему галлюцинациями: он видит людей, которых больше нет. Он идёт на могилы семьи, чтобы закончить и это, — и его останавливают. Тем временем район, оставшийся без прежних хозяев, заполняет новая преступность, и соседи Касла оказываются между ней и собой. Это обычные жильцы, которым некуда переехать и не к кому обратиться, и они впервые видят в нём не чужого молчаливого мужчину с верхнего этажа, а единственного, кто способен вмешаться. Картина ставит перед героем один вопрос: человек, у которого месть была единственным содержанием жизни, должен решить, чем он занят теперь — защитой живых или продолжением привычки. Роль Фрэнка Касла снова исполнил Джон Бернтал, игравший её в прежних сериалах о персонаже. Картина вышла 12 мая 2026 года на потоковом сервисе, отдельным выпуском, а не серией.",
+        "en": "A superhero film by Reinaldo Marcus Green, from a screenplay he wrote with Jon Bernthal, based on Marvel comics. Frank Castle lost his family and for years answered that in the only way available to him: he killed the men who had a hand in their deaths. By the time the action begins the list is finished — the last of the Gnucci crime family are dead, and there is no one left to avenge. It turns out that living afterwards is not easier but harder. Castle settles into an apartment building in New York's Little Sicily, locks his gear away and tries to be an ordinary tenant, but the past comes to him as hallucinations: he sees people who are no longer there. He goes to his family's graves to end that too, and is stopped. Meanwhile the neighbourhood, left without its former owners, fills up with new crime, and Castle's neighbours end up caught between it and themselves. From this comes the question of the film: a man whose whole life was revenge must decide what he is doing now — protecting the living, or continuing a habit. Jon Bernthal plays Frank Castle again, the part he held in the earlier series about the character. The film was released on 12 May 2026 on a streaming service, as a single presentation rather than a series."
+      },
+      "agentNote": "🔴 ВИД ПОД ВОПРОСОМ: реестр даёт «телевизионная спецпрограмма» И «фильм». Это одиночный полнометражный выпуск на потоковом сервисе, поэтому вид взят как «Фильм» — но если в каталоге такие вещи должны идти телешоу, поправьте. Год 2026 по единственной дате реестра — 12 мая 2026."
+    },
+    {
+      "wikidata": "Q317620",
+      "sitelinks": 43,
+      "title": {
+        "ru": "Tomb Raider",
+        "en": "Tomb Raider"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Core Design",
+        "en": "Core Design"
+      },
+      "year": "1996",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "приключения",
+        "adventure",
+        "экшен",
+        "action",
+        "головоломка",
+        "puzzle",
+        "классика",
+        "classic"
+      ],
+      "description": {
+        "ru": "Приключенческий боевик британской студии Core Design, с которого началась и серия, и сама Лара Крофт. Бизнес-леди Жаклин Натла нанимает археолога Лару найти древний артефакт Сцион, и поиски ведут её через четыре края света: горные пещеры Перу, средневековый монастырь в Греции, египетский храм и затонувшую Атлантиду. Артефакт оказывается разъятым на три части, у каждой свой хранитель, а заказчица — той самой третьей из древнего триумвирата, ради власти нарушившей равновесие. Игра идёт от третьего лица, и почти всё герой делает руками игрока: подтягивается на уступ, перепрыгивает пропасть, плывёт под водой, дёргает рычаг. Уровни собраны из кубической сетки, придуманной по устройству египетских гробниц, и эта сетка осталась фирменным знаком серии на пять лет вперёд. Врагов немного, зато много ловушек: ямы с шипами, катящиеся валуны, качающиеся лезвия. Образ Лары придумал художник Тоби Гард, опираясь на комиксы и на приключенческое кино; производство заняло полтора года и стоило четыреста сорок тысяч фунтов. Музыку написал Натан Маккри, отталкиваясь от английской классики. Игра вышла 25 октября 1996 года на Sega Saturn, следом на PlayStation и персональных компьютерах. Приняли её восторженно: хвалили трёхмерную картинку, управление и устройство уровней, семь миллионов копий разошлись на одной только PlayStation, а Лара Крофт стала одним из самых узнаваемых лиц во всей игровой культуре.",
+        "en": "An action-adventure by the British studio Core Design that began both the series and Lara Croft herself. The businesswoman Jacqueline Natla hires the archaeologist Lara to find an ancient artefact called the Scion, and the search takes her across four corners of the world: mountain caves in Peru, a medieval monastery in Greece, an Egyptian temple and the sunken Atlantis. The artefact turns out to be split into three parts, each with its own keeper, while the woman who hired her is the third of an ancient triumvirate, the one who broke the balance for the sake of power. The game runs in third person, and the hero does almost everything by the player's own hand: pulling up onto a ledge, leaping a gap, swimming underwater, throwing a lever. The levels are built out of a cubic grid devised from the structure of Egyptian tombs, and that grid stayed the series' signature for five years to come. Enemies are few, traps are many: spike pits, rolling boulders, swinging blades. The artist Toby Gard created Lara, drawing on comics and on adventure cinema; production took eighteen months and cost four hundred and forty thousand pounds. Nathan McCree wrote the music, working from English classical forms. The game came out on 25 October 1996 for the Sega Saturn, followed by the PlayStation and personal computers. Reception was enthusiastic: the three-dimensional graphics, the controls and the level design all drew praise, seven million copies sold on the PlayStation alone, and Lara Croft became one of the most recognisable faces in the whole of gaming culture."
+      },
+      "agentNote": "Из разведки культовой классики. Русского названия у игры нет ни в реестре, ни в русской Википедии — статья озаглавлена латиницей, так игру и знают; в каталоге латиница в обеих половинах стоит у 1113 записей из 5125. Год по первому выходу в мир — 25 октября 1996 года, Sega Saturn; переиздания вплоть до 2024 года на год не влияют."
+    }
+  ]
+}
