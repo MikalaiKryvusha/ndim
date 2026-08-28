@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — дверь корня для Яндекса: 4 макета (интервью №052 В1 = А, bugs/203)</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     ЧЕТЫРЕ МАКЕТА ДВЕРИ КОРНЯ `ndimspace.app/`.
+
+     ПОВОД. Яндекс выкинул из поиска 1352 страницы (`bugs/203`). Его же вердикт
+     в Вебмастере: «При обращении к главной странице сайта не удалось получить
+     документ: URL запрещён к индексированию тегом noindex». Google судит
+     страницы поодиночке и растёт; Яндекс считает главную ЛИЦОМ ХОСТА и за
+     недоступную главную штрафует весь домен.
+
+     РЕШЕНИЕ ВЛАДЕЛЬЦА — интервью №052, В1 = А (2026-08-28 16:24, страницей):
+     «Корень становится видимой страницей-дверью. Убираем "не индексируй"; на
+     странице — название, одна строка о Пространстве и две большие кнопки:
+     "Русский" и "English"». Здесь выбирается только ФОРМА этой двери.
+
+     🔴 КОГО ЭТА СТРАНИЦА ВИДИТ. Человек с включённым JS её НЕ ВИДИТ: инлайн-
+     распознаватель уводит его на свой язык до первой отрисовки, и это поведение
+     остаётся нетронутым. Дверь существует для роботов, для людей без JS и для
+     тех, у кого распознаватель не сработал. Отсюда главное следствие для
+     дизайна: у гостя этой страницы ЯЗЫК ЕЩЁ НЕ ВЫБРАН, поэтому строка о
+     Пространстве стоит на ОБОИХ языках во всех четырёх вариантах.
+
+     ⛔ ЧЕГО МАКЕТЫ НЕ ТРОГАЮТ: лендинги `/ru` и `/en` (решение №010 Р5 «у
+     каждого языка свой адрес» в силе) · вход по ссылкам из писем через корень ·
+     инлайн-распознаватель · `noscript`-ссылки.
+
+     🔴 ТЕКСТЫ — КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦА, каноном не являются до его
+     слова. Помечены плашкой. Строка о Пространстве выведена из ЕГО же строки
+     лендинга («Здесь Вы найдёте людей, действительно похожих на Вас» —
+     `landing-copy.ts`, его слово 2026-08-02 «оставляем»), поэтому меняется в
+     ней ровно одно: «Здесь» уступает имени бренда, потому что на двери «здесь»
+     читается как «на этой странице».
+
+     ЗНАК. N-сеть 1.x — 4 узла, 3 ребра, геометрия NDim_LOGO_v11, вариант V3
+     «Диагональ» (утверждён владельцем 2026-07-11). Форма НЕ тронута ни в одном
+     варианте; Ч/Б-инвариант держится — залей знак одной краской, получится
+     классический логотип.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* Светлая «Бумага» (утверждена 2026-07-11) и тёмная — те же токены, что у прошлых наборов. */
+  :root {
+    --bg: #f5f7fb; --panel: #ffffff; --edge: #e3e9f3; --edge-soft: #eef2f9;
+    --heading: #0f1b2d; --text: #4a5a70; --muted: #8a97ab;
+    --accent: #1667d6; --accent-soft: #e8f0fd;
+    --primary: #1667d6; --primary-ink: #ffffff;
+    --card-shadow: 0 1px 2px rgba(16,32,64,.05), 0 8px 24px rgba(16,32,64,.06);
+    --mark-a: #1467d6; --mark-b: #1fa8c9; --plate: #0b1420;
+  }
+  :root[data-theme="dark"] {
+    --bg: #070c16; --panel: #0e1626; --edge: #1c2942; --edge-soft: #131e33;
+    --heading: #eaf1ff; --text: #9fb1cb; --muted: #6c7f9c;
+    --accent: #2f86ff; --accent-soft: #10233f;
+    --primary: #2f86ff; --primary-ink: #06101f;
+    --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    --mark-a: #4d9fff; --mark-b: #3fd9ff; --plate: #060b14;
+  }
+
+  body {
+    font: 15px/1.55 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); padding: 150px 16px 60px;
+  }
+  @media (min-width: 900px) { body { padding-top: 96px; } }
+
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel);
+    border-bottom: 1px solid var(--edge); box-shadow: var(--card-shadow); font-size: 13px;
+  }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--edge); background: var(--bg); color: var(--text);
+  }
+  .picker button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: var(--muted); font-size: 12px; }
+
+  .note {
+    max-width: 940px; margin: 0 auto 18px; padding: 11px 15px;
+    background: var(--accent-soft); border: 1px solid var(--edge);
+    border-radius: 12px; font-size: 13px; line-height: 1.5; color: var(--heading);
+  }
+  .note b { color: var(--accent); }
+
+  .caption {
+    max-width: 940px; margin: 26px auto 8px; font-size: 12px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+  }
+  .why { max-width: 940px; margin: 0 auto 14px; font-size: 13px; line-height: 1.6; }
+  .why p { margin-bottom: 10px; }
+  .why b { color: var(--heading); }
+  .cost { color: var(--muted); }
+
+  #stage { margin: 0 auto; transition: max-width .2s; }
+  #stage[data-w="390"]  { max-width: 390px; }
+  #stage[data-w="1024"] { max-width: 900px; }
+  #stage[data-w="1440"] { max-width: 1180px; }
+
+  .variant { display: none; }
+  .variant.active { display: block; }
+
+  /* ── Рамка браузера: у двери корня адрес и есть половина смысла ───────────── */
+  .browser {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    box-shadow: var(--card-shadow); overflow: hidden; margin: 0 auto 10px;
+  }
+  .urlbar {
+    display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+    background: var(--edge-soft); border-bottom: 1px solid var(--edge);
+    font-size: 12px; color: var(--muted);
+  }
+  .urlbar .dots { display: flex; gap: 5px; }
+  .urlbar .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--edge); display: block; }
+  .urlbar .addr {
+    flex: 1; background: var(--panel); border: 1px solid var(--edge); border-radius: 7px;
+    padding: 4px 10px; color: var(--heading); font-family: ui-monospace, 'Cascadia Mono', monospace;
+  }
+
+  /* Сама страница-дверь. Фон её собственный — она не в приложении. */
+  .door { background: var(--bg); padding: 44px 22px 40px; }
+  #stage[data-w="1440"] .door { padding: 72px 40px 64px; }
+
+  .mark { display: block; margin: 0 auto; }
+  .word {
+    text-align: center; color: var(--heading); font-weight: 800; letter-spacing: -.02em;
+    font-size: 30px; line-height: 1.15; margin-top: 16px;
+  }
+  #stage[data-w="1440"] .word { font-size: 40px; }
+  .line {
+    text-align: center; max-width: 30em; margin: 12px auto 0; font-size: 15.5px; line-height: 1.6;
+  }
+  #stage[data-w="1440"] .line { font-size: 17px; }
+  .line.en { color: var(--muted); margin-top: 7px; }
+
+  /* Кнопки языка — «две большие», как он и написал. */
+  .langs { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+  .lang {
+    flex: 1 1 160px; max-width: 240px; text-align: center; text-decoration: none;
+    padding: 16px 20px; border-radius: 14px; font-size: 17px; font-weight: 700;
+    background: var(--primary); color: var(--primary-ink); border: 1px solid var(--primary);
+  }
+  .lang.ghost { background: transparent; color: var(--accent); }
+  /* 🔴 На 390 колонка обязана снять `flex-basis: 160px`: в колонке базис становится ВЫСОТОЙ,
+     и кнопки вырастают в стокилограммовые плиты. Поймано кадром V4-390, глазами по HTML не
+     видно вовсе — ровно тот случай, ради которого канон требует смотреть кадры до показа. */
+  #stage[data-w="390"] .langs { flex-direction: column; }
+  #stage[data-w="390"] .lang { max-width: none; flex: 0 0 auto; }
+
+  .draft {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700;
+    letter-spacing: .04em; border: 1px solid var(--edge);
+  }
+  .drafthold { text-align: center; margin-top: 22px; }
+
+  /* ── V2: две половины ─────────────────────────────────────────────────────── */
+  /* 🔴 Половины держатся на симметрии, поэтому кнопки прибиты к низу (`margin-top: auto`):
+     русская строка переносится на две строки, английская укладывается в одну, и без этого
+     кнопки встают на разной высоте — вариант рассыпается ровно в том, ради чего сделан.
+     Поймано кадром V2-1440-light. */
+  .halves { display: flex; gap: 16px; margin-top: 26px; align-items: stretch; }
+  #stage[data-w="390"] .halves { flex-direction: column; }
+  .half {
+    flex: 1; display: flex; flex-direction: column;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    padding: 26px 22px; text-align: center; box-shadow: var(--card-shadow);
+  }
+  .half .h { color: var(--heading); font-weight: 800; font-size: 21px; }
+  .half .t { margin: 10px auto 0; font-size: 14.5px; line-height: 1.6; max-width: 24em; }
+  /* Кнопка прибита к низу половины: `auto` съедает разницу высот двух текстов.
+     На 390 половины идут друг под другом, разницу равнять не с чем — там обычный отступ. */
+  .half .lang { display: block; max-width: none; flex: 0 0 auto; margin-top: auto; padding-top: 20px; }
+  #stage[data-w="390"] .half .lang { margin-top: 20px; padding-top: 16px; }
+
+  /* ── V3: знак крупно, поле точек вокруг ───────────────────────────────────── */
+  .hero { position: relative; height: 190px; margin-bottom: 6px; }
+  #stage[data-w="1440"] .hero { height: 250px; }
+  .hero svg { position: absolute; inset: 0; margin: auto; }
+  .field circle { fill: var(--mark-b); }
+
+  /* ── V4: строка живых чисел ───────────────────────────────────────────────── */
+  .facts {
+    display: flex; gap: 12px; margin-top: 30px; padding-top: 24px;
+    border-top: 1px solid var(--edge); flex-wrap: wrap;
+  }
+  .fact { flex: 1 1 150px; text-align: center; }
+  /* На 390 три числа ломались на 2 + 1 и читались как ошибка вёрстки — ставим их столбцом.
+     `flex: 0 0 auto` здесь обязателен по той же причине, что и у кнопок: в колонке базис
+     150px становится ВЫСОТОЙ, и между числами повисают пустые полосы. Один класс ошибки,
+     пойманный в этом наборе дважды. */
+  #stage[data-w="390"] .facts { flex-direction: column; gap: 18px; }
+  #stage[data-w="390"] .fact { flex: 0 0 auto; }
+  .fact .n { color: var(--heading); font-weight: 800; font-size: 24px; letter-spacing: -.01em; }
+  .fact .l { font-size: 13px; line-height: 1.45; margin-top: 4px; }
+  .fact .l .en { display: block; color: var(--muted); font-size: 12px; }
+
+  .tech {
+    max-width: 940px; margin: 26px auto 0; padding: 15px 18px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    font-size: 13px; line-height: 1.65;
+  }
+  .tech h3 { color: var(--heading); font-size: 14px; margin-bottom: 8px; }
+  .tech li { margin-left: 18px; margin-bottom: 5px; }
+  .tech code {
+    font-family: ui-monospace, 'Cascadia Mono', monospace; font-size: 12.5px;
+    background: var(--edge-soft); padding: 1px 5px; border-radius: 5px; color: var(--heading);
+  }
+</style>
+</head>
+<body>
+
+<!-- Канонический знак: 4 узла, 3 ребра. Форма не тронута — только размер и краска. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gMark" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70">
+      <stop offset="0" stop-color="#4d9fff"/><stop offset="1" stop-color="#3fd9ff"/>
+    </linearGradient>
+    <symbol id="nmark" viewBox="0 0 96 96">
+      <rect width="96" height="96" rx="22" fill="var(--plate)"/>
+      <g stroke="url(#gMark)" stroke-width="6.7" fill="none">
+        <line x1="36.5" y1="29" x2="30" y2="66"/>
+        <line x1="36.5" y1="29" x2="59.5" y2="66"/>
+        <line x1="59.5" y1="66" x2="66" y2="29"/>
+      </g>
+      <g fill="url(#gMark)">
+        <circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/>
+        <circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="picker">
+  <b>Дверь корня — 4 макета:</b>
+  <button data-v="1" class="active">V1 Порог</button>
+  <button data-v="2">V2 Две половины</button>
+  <button data-v="3">V3 Знак</button>
+  <button data-v="4">V4 Витрина</button>
+  <span class="sp"></span>
+  <button id="width-mid">1024</button>
+  <button id="width">390 ↔ 1440</button>
+  <button id="theme">тема</button>
+  <span class="hint">интервью №052 В1 = А · bugs/203</span>
+</div>
+
+<div class="note">
+  <b>Что выбирается.</b> Только форма двери: решение принято владельцем (интервью №052, В1 = А) —
+  корень становится видимой страницей, <code>noindex</code> снимается, содержимое: название, одна
+  строка о Пространстве, две большие кнопки. <b>Человек с JS этой страницы не видит</b> — его
+  уводит распознаватель, и это поведение остаётся. Дверь существует для роботов и для людей без
+  JS. Поэтому строка о Пространстве стоит на обоих языках: язык гостя ещё не выбран.
+</div>
+
+<div id="stage" data-w="390">
+
+  <!-- ═══════════════════ V1 — ПОРОГ ═══════════════════ -->
+  <div class="variant active" id="1">
+    <div class="caption">V1 «Порог» — минимальная дверь</div>
+    <div class="browser">
+      <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
+      <div class="door">
+        <svg class="mark" width="76" height="76"><use href="#nmark"/></svg>
+        <div class="word">NDim Space</div>
+        <p class="line">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
+        <p class="line en">In the NDim Space you will find people who are genuinely like you.</p>
+        <div class="langs">
+          <a class="lang" href="/ru">Русский</a>
+          <a class="lang ghost" href="/en">English</a>
+        </div>
+        <div class="drafthold"><span class="draft">текст на вычитку</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ V2 — ДВЕ ПОЛОВИНЫ ═══════════════════ -->
+  <div class="variant" id="2">
+    <div class="caption">V2 «Две половины» — язык выбирается целой половиной</div>
+    <div class="browser">
+      <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
+      <div class="door">
+        <svg class="mark" width="64" height="64"><use href="#nmark"/></svg>
+        <div class="word">NDim Space</div>
+        <div class="halves">
+          <div class="half">
+            <div class="h">Пространство NDim</div>
+            <p class="t">Здесь Вы найдёте людей, действительно похожих на Вас.</p>
+            <a class="lang" href="/ru">Русский</a>
+          </div>
+          <div class="half">
+            <div class="h">NDim Space</div>
+            <p class="t">Here you will find people who are genuinely like you.</p>
+            <a class="lang" href="/en">English</a>
+          </div>
+        </div>
+        <div class="drafthold"><span class="draft">текст на вычитку</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ V3 — ЗНАК ═══════════════════ -->
+  <div class="variant" id="3">
+    <div class="caption">V3 «Знак» — лицо хоста, а не техническая развилка</div>
+    <div class="browser">
+      <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
+      <div class="door">
+        <div class="hero">
+          <!-- Поле точек — это НЕ часть знака: оно вокруг него и краской слабее.
+               Канон формы (4 узла, 3 ребра) остаётся нетронутым в центре. -->
+          <svg class="field" width="320" height="190" viewBox="0 0 320 190" aria-hidden="true" opacity=".28">
+            <circle cx="24" cy="40" r="3"/><circle cx="62" cy="150" r="2.4"/>
+            <circle cx="286" cy="52" r="2.8"/><circle cx="252" cy="158" r="3.2"/>
+            <circle cx="150" cy="18" r="2.2"/><circle cx="176" cy="174" r="2.6"/>
+            <circle cx="40" cy="96" r="2"/><circle cx="298" cy="112" r="2.2"/>
+          </svg>
+          <svg width="132" height="132"><use href="#nmark"/></svg>
+        </div>
+        <div class="word">NDim Space</div>
+        <p class="line">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
+        <p class="line en">In the NDim Space you will find people who are genuinely like you.</p>
+        <div class="langs">
+          <a class="lang" href="/ru">Русский</a>
+          <a class="lang ghost" href="/en">English</a>
+        </div>
+        <div class="drafthold"><span class="draft">текст на вычитку</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ V4 — ВИТРИНА ═══════════════════ -->
+  <div class="variant" id="4">
+    <div class="caption">V4 «Витрина» — дверь, за которой видно Пространство</div>
+    <div class="browser">
+      <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
+      <div class="door">
+        <svg class="mark" width="72" height="72"><use href="#nmark"/></svg>
+        <div class="word">NDim Space</div>
+        <p class="line">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
+        <p class="line en">In the NDim Space you will find people who are genuinely like you.</p>
+        <div class="langs">
+          <a class="lang" href="/ru">Русский</a>
+          <a class="lang ghost" href="/en">English</a>
+        </div>
+        <div class="facts">
+          <div class="fact"><div class="n">5 111</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
+          <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
+          <div class="fact"><div class="n">2 344</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
+        </div>
+        <div class="drafthold"><span class="draft">текст и числа на вычитку</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="caption">Чем варианты отличаются и чем каждый платит</div>
+<div class="why">
+  <p><b>V1 «Порог».</b> Ровно то, что названо в решении, и ничего сверх. Самая лёгкая страница из
+  четырёх, читается роботом мгновенно, служит одному делу — снять с хоста метку «главная
+  недоступна». <span class="cost">Платит тем, что главная выглядит служебной: содержания на ней
+  почти нет, и человек без JS узнаёт о Пространстве одну строку.</span></p>
+
+  <p><b>V2 «Две половины».</b> Язык выбирается целой половиной экрана, и каждая половина говорит
+  на своём языке целиком. Форма прямо выражает то, что записано в цели проекта: у нас
+  симметрично. Русский гость и английский гость получают одинаковое обращение — ни один не
+  оказывается гостем на чужой странице. <span class="cost">Платит высотой: на 390 половины встают
+  друг под друга, и вторая уходит под сгиб.</span></p>
+
+  <p><b>V3 «Знак».</b> Главная выглядит лицом хоста: знак крупно, вокруг него поле точек —
+  Пространство как множество людей. Яндекс судит главную как лицо сайта, и здесь она на лицо
+  похожа. <span class="cost">Платит весом разметки: графика добавляет к странице около двух
+  килобайт. Всё нарисовано вектором прямо в HTML, тяжёлых картинок нет ни одной, догрузки после
+  отрисовки нет — правило готовности графики не задето.</span></p>
+
+  <p><b>V4 «Витрина».</b> Дверь, за которой видно Пространство: три живых числа под кнопками.
+  Роботу главная перестаёт быть пустой развилкой и становится страницей с содержанием, человеку
+  без JS даёт повод войти. <span class="cost">Платит двумя обязательствами. Числа берутся снимком
+  на сборке — значит, у главной появляется контракт свежести, как у витрины лендинга. И слова
+  подобраны так, чтобы не бросать термин голым: «объектов человеческой культуры», а не
+  «измерений» — правило витрины, выведенное из Вашей же правки 2026-08-02.</span></p>
+</div>
+
+<div class="tech">
+  <h3>Что на этой странице есть, но глазом не видно</h3>
+  <ul>
+    <li><code>hreflang</code> тремя строками: <code>ru</code>, <code>en</code> и
+      <code>x-default</code> — поисковикам этим сказано, что у страницы две языковые пары, а по
+      умолчанию открывается английская (то же правило, что у распознавателя).</li>
+    <li><b>Мета <code>noindex</code> снята.</b> Ради этого дверь и делается: именно её Вебмастер
+      назвал причиной — «URL запрещён к индексированию тегом noindex».</li>
+    <li><b>Инлайн-распознаватель остаётся первым</b> и уводит человека с JS до отрисовки. Порядок
+      его проверок не тронут: сначала ссылка из письма (<code>mode=signIn</code> уезжает в
+      <code>/profile</code> с нетронутым запросом), потом память, потом язык браузера.</li>
+    <li><b>Ссылки <code>noscript</code> остаются</b> и совпадают с видимыми кнопками — то есть
+      перестают быть отдельной сущностью, которая живёт своей жизнью.</li>
+    <li><b>Лендинги <code>/ru</code> и <code>/en</code> не тронуты</b>: решение «у каждого языка
+      свой адрес» (№010 Р5) остаётся в силе.</li>
+  </ul>
+</div>
+
+<script>
+  // Переключатели дома стиля: вариант · ширина · тема. Съёмщик tools/shoot-mockups.mjs
+  // жмёт ровно эти кнопки и читает #stage[data-w], поэтому имена и роли менять нельзя.
+  const stage = document.getElementById('stage');
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === b.dataset.v));
+  }));
+  document.getElementById('width').addEventListener('click', () => {
+    stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390';
+  });
+  document.getElementById('width-mid').addEventListener('click', () => { stage.dataset.w = '1024'; });
+  document.getElementById('theme').addEventListener('click', () => {
+    const el = document.documentElement;
+    el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+  });
+</script>
+</body>
+</html>
