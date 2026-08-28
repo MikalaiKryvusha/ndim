@@ -42,6 +42,7 @@ import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { portsFor, slotOf } from './lib/stand-slot.mjs';
+import { watchHttpFailures } from './lib/http-failures.mjs';
 
 const argv = process.argv.slice(2);
 const opt = (name, fallback) => {
@@ -62,6 +63,48 @@ if (!/localhost|127\.0\.0\.1/.test(BASE)) {
   console.error('Только стенд: прибор заводит гостей и пишет оценки — в бою это портило бы данные.');
   process.exit(1);
 }
+
+/**
+ * 🔴 УШИ ПРИБОРА — лечение слепоты, из-за которой `bugs/212` дожил до суда.
+ *
+ * Прибор был ЗЕЛЁНЫМ при четырёх ответах 404 на каждое касание звезды. И это не оплошность
+ * автора, а свойство класса: все тридцать проверок здесь судят ПОВЕДЕНИЕ — панель раскрылась,
+ * гость родился, оценка легла в базу, — а поведение было исправным. Мёртвая предзагрузка
+ * поведения не меняет вовсе, она меняет только СКОРОСТЬ и содержимое консоли. Проверка
+ * поведения такой дефект не видит по построению; видит его только тот, кто слушает ответы.
+ * Ровно этот урок записан в `AGENT_GUIDE` («у каждого класса дефектов есть свой прибор»).
+ *
+ * Слушает общий модуль (`bugs/169`), СУДИТ прибор — и это разделение намеренное: модуль не
+ * судит никогда, потому что 4xx с чужого домена в бою обычное дело. Здесь чужих доменов нет
+ * по построению (прибор работает только на localhost), но граница всё равно проводится
+ * явно — судим лишь то, что отдаёт НАШ адрес.
+ */
+const OWN_HOST = new URL(BASE).host;
+/** @type {ReturnType<typeof watchHttpFailures>[]} */
+const ears = [];
+/** Подписывает страницу на неудачные ответы и включает её в общий итог прогона. */
+const listen = (page, tag) => {
+  ears.push(watchHttpFailures(page, { label: `[${tag}] ` }));
+};
+/**
+ * Отказы СО СВОЕГО адреса — только они судятся.
+ *
+ * Схлопываем по «код + адрес» ЧЕРЕЗ страницы: модуль складывает повторы внутри одной страницы,
+ * а один и тот же мёртвый чанк просят все семь контекстов прогона. Без склейки красная строка
+ * повторяет пять адресов тридцать пять раз и перестаёт читаться — то есть перестаёт называть
+ * виновника, ради чего уши и заведены (`bugs/169`).
+ */
+const ownFailures = () => {
+  const merged = new Map();
+  for (const e of ears.flatMap((net) => net.entries())) {
+    if (!e.address.startsWith(OWN_HOST)) continue;
+    const key = `${e.code} ${e.address}`;
+    const known = merged.get(key);
+    if (known) known.count += e.count;
+    else merged.set(key, { ...e });
+  }
+  return [...merged.values()];
+};
 
 let pass = 0;
 let fail = 0;
@@ -90,10 +133,12 @@ async function docs(path) {
  * абсолют: в базе стенда могли остаться числа прошлых прогонов, и «счётчик не ноль» доказывало
  * бы лишь то, что кто-то когда-то касался двери.
  */
+/** Ключ дня воронки. Одно место правды: его же читает уборка, и разъехаться им нечем. */
+const today = () => new Date().toISOString().slice(0, 10);
+
 async function funnelToday() {
-  const day = new Date().toISOString().slice(0, 10);
   const res = await fetch(
-    `${FIRESTORE}/v1/projects/${PROJECT}/databases/(default)/documents/space/funnel/days/${day}`,
+    `${FIRESTORE}/v1/projects/${PROJECT}/databases/(default)/documents/space/funnel/days/${today()}`,
     { headers: { Authorization: 'Bearer owner' } },
   );
   if (!res.ok) return {};
@@ -111,6 +156,112 @@ async function ratingOf(uid, dimId) {
   if (!res.ok) return null;
   const f = (await res.json()).fields ?? {};
   return Number(f.value?.integerValue ?? f.value?.doubleValue ?? NaN);
+}
+
+/* ═══ УБОРКА: письменные органы REST-а. Все — от владельца, правила писателю их не отдают ═══ */
+
+/** Удаляет документ. Подколлекции Firestore при этом НЕ исчезают — их сносим отдельно. */
+async function dropDoc(path) {
+  await fetch(`${FIRESTORE}/v1/projects/${PROJECT}/databases/(default)/documents/${path}`, {
+    method: 'DELETE',
+    headers: { Authorization: 'Bearer owner' },
+  });
+}
+
+/** Возвращает оценке прежнее значение (или удаляет её, если прежде оценки не было). */
+async function restoreRating(uid, dimId, value) {
+  const path = `points/${uid}/dims/${dimId}`;
+  if (value === null || Number.isNaN(value)) return dropDoc(path);
+  await fetch(
+    `${FIRESTORE}/v1/projects/${PROJECT}/databases/(default)/documents/${path}?updateMask.fieldPaths=value`,
+    {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { value: { integerValue: String(value) } } }),
+    },
+  );
+}
+
+/** Возвращает счётчикам воронки их дособытийные значения. */
+async function restoreFunnel(before) {
+  const mask = 'updateMask.fieldPaths=door_click&updateMask.fieldPaths=guest_start';
+  await fetch(
+    `${FIRESTORE}/v1/projects/${PROJECT}/databases/(default)/documents/space/funnel/days/${today()}?${mask}`,
+    {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          door_click: { integerValue: String(before.door_click ?? 0) },
+          guest_start: { integerValue: String(before.guest_start ?? 0) },
+        },
+      }),
+    },
+  );
+}
+
+/**
+ * Слепок «до». Живёт в области модуля, а не прогона, намеренно: уборку зовёт и штатный хвост,
+ * и обработчик падения — прибор, упавший на середине, оставляет за собой ровно тот же мусор.
+ * @type {{points: string[], ratings: Map<string, number|null>, funnel: object, dimId: string,
+ *         funnelExisted: boolean} | null}
+ */
+let snapshot = null;
+
+/**
+ * 🧹 УБОРКА СЛЕДА ПРОГОНА — и она ОБЯЗАНА быть проверяемой, а не заявленной.
+ *
+ * Возвращает список НЕубранного: пустой список и есть вердикт уборки. Порядок обратный
+ * порядку записи: сначала оценки гостей, потом сами гости, потом счётчики.
+ * @returns {Promise<string[]>}
+ */
+async function cleanupStand() {
+  if (snapshot === null) return [];
+  const known = new Set(snapshot.points);
+  const leftovers = [];
+
+  // 1. Точки, которых до прогона не было, — наши гости. Сносим вместе с их подколлекцией:
+  //    удаление документа в Firestore подколлекции не трогает, и они остались бы сиротами.
+  const born = (await docs('points')).map((d) => d.name).filter((n) => !known.has(n));
+  for (const name of born) {
+    const uid = name.split('/').pop();
+    for (const dim of await docs(`points/${uid}/dims`)) {
+      await dropDoc(`points/${uid}/dims/${dim.name.split('/').pop()}`);
+    }
+    await dropDoc(`points/${uid}`);
+  }
+
+  // 2. Точка ЖИТЕЛЯ стенда прогоном не рождена — её удалять нельзя, ей возвращают прежнее
+  //    значение (раздел 3 ставит ему оценку 5 по этому измерению).
+  for (const [uid, was] of snapshot.ratings) {
+    const now = await ratingOf(uid, snapshot.dimId);
+    const same = (was === null && now === null) || was === now;
+    if (!same) await restoreRating(uid, snapshot.dimId, was);
+  }
+
+  // 3. Счётчики воронки: их двигают все шесть касаний прогона.
+  if (snapshot.funnelExisted) await restoreFunnel(snapshot.funnel);
+  else await dropDoc(`space/funnel/days/${today()}`);
+
+  /* ── ПРОВЕРКА УБОРКИ. Без неё уборка — обещание, а обещание уже стоило базе 54 точек ── */
+  const after = (await docs('points')).map((d) => d.name);
+  const extra = after.filter((n) => !known.has(n));
+  if (extra.length > 0) leftovers.push(`лишних точек ${extra.length}: ${extra.join(', ')}`);
+  const gone = snapshot.points.filter((n) => !after.includes(n));
+  if (gone.length > 0) leftovers.push(`уборка снесла ЧУЖОЕ — пропало точек ${gone.length}`);
+  for (const [uid, was] of snapshot.ratings) {
+    const now = await ratingOf(uid, snapshot.dimId);
+    const same = (was === null && now === null) || was === now;
+    if (!same) leftovers.push(`оценка точки ${uid} не вернулась: было ${was}, стало ${now}`);
+  }
+  const funnelNow = await funnelToday();
+  for (const key of ['door_click', 'guest_start']) {
+    const was = snapshot.funnelExisted ? (snapshot.funnel[key] ?? 0) : 0;
+    const now = funnelNow[key] ?? 0;
+    if (was !== now) leftovers.push(`счётчик ${key} не вернулся: было ${was}, стало ${now}`);
+  }
+  note(`убрано гостей ${born.length}`);
+  return leftovers;
 }
 
 /**
@@ -139,6 +290,41 @@ const run = async () => {
   console.log(`Карточка: /ru/dimension/${card.slug} · измерение ${card.dimId}`);
   console.log(`Стенд: ${BASE} · Firestore ${FIRESTORE}`);
 
+  /*
+   * ═══ СЛЕПОК «ДО» — ради уборки (замечание З2 вердикта QA №5, класс `bugs/103`) ═══
+   *
+   * База стенда общая на все прогоны, и правило класса прямое: прибор, ПИШУЩИЙ в неё, обязан
+   * вернуть её в исходное состояние и нести ВСТРОЕННУЮ проверку уборки. Прежняя редакция честно
+   * говорила «уборка рестартом стенда» — и за один суд QA база набрала 54 лишние точки, потому
+   * что стенд между прогонами никто не рестартовал. Обещание уборки, которое исполняет человек,
+   * уборкой не является.
+   *
+   * Слепок снимается ДО первого касания и ровно по тем осям, которые прибор трогает:
+   *   · какие точки существовали (всё лишнее после прогона — наше и подлежит удалению);
+   *   · какая оценка стояла у каждой из них по ЭТОМУ измерению (раздел 3 пишет в точку
+   *     жителя стенда — её нельзя удалять, её надо ВЕРНУТЬ);
+   *   · счётчики воронки за сегодня (их двигают все шесть касаний прогона).
+   */
+  const startPoints = (await docs('points')).map((d) => d.name);
+  const startRatings = new Map();
+  for (const name of startPoints) {
+    const uid = name.split('/').pop();
+    startRatings.set(uid, await ratingOf(uid, card.dimId));
+  }
+  const startFunnel = await funnelToday();
+  const funnelExisted = (await docs('space/funnel/days')).some((d) => d.name.endsWith(`/${today()}`));
+  snapshot = {
+    points: startPoints,
+    ratings: startRatings,
+    funnel: startFunnel,
+    dimId: card.dimId,
+    funnelExisted,
+  };
+  note(
+    `слепок «до»: точек ${startPoints.length} · door_click ${startFunnel.door_click ?? 0} · ` +
+      `guest_start ${startFunnel.guest_start ?? 0}`,
+  );
+
   const browser = await chromium.launch({ headless: !HEADED });
 
   /* ═══ 1. Незнакомец из поиска: касание звезды рождает гостя и пишет НАСТОЯЩУЮ оценку ═══ */
@@ -147,6 +333,7 @@ const run = async () => {
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 900 } });
     const page = await context.newPage();
+    listen(page, '1-незнакомец');
     /*
      * 🔴 ЗАПОМИНАЕМ ИМЕНА, А НЕ ЧИСЛО ТОЧЕК.
      *
@@ -222,6 +409,7 @@ const run = async () => {
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 900 } });
     const page = await context.newPage();
+    listen(page, '2-клик двери');
     await page.goto(`${BASE}/ru/dimension/${card.slug}?as=none`, { waitUntil: 'domcontentloaded' });
     await page.locator('[data-star]').nth(7).click();
     await page.waitForTimeout(400);
@@ -248,6 +436,7 @@ const run = async () => {
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 900 } });
     const page = await context.newPage();
+    listen(page, '3-житель');
     // Голый адрес стенда = вошедший dev@ndim.space. Это и есть «житель».
     await page.goto(`${BASE}/profile`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(4000);
@@ -276,6 +465,7 @@ const run = async () => {
   {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     const page = await context.newPage();
+    listen(page, '4-секции');
     await page.goto(`${BASE}/ru/dimension/${card.slug}`, { waitUntil: 'domcontentloaded' });
     for (const [name, sel] of [
       ['шапка с языками и «Войти»', 'header a[href="/profile"], a[href="/profile"]'],
@@ -300,6 +490,7 @@ const run = async () => {
     for (const width of [390, 1440]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 } });
       const page = await context.newPage();
+      listen(page, `5-${theme}-${width}`);
       await page.goto(`${BASE}/ru/dimension/${card.slug}?as=none`, { waitUntil: 'domcontentloaded' });
       // Тема — атрибут на <html>, а не media-query (её ставит инлайн-скрипт `app.html`).
       await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
@@ -318,6 +509,7 @@ const run = async () => {
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 900 }, javaScriptEnabled: false });
     const page = await context.newPage();
+    listen(page, '6-без JS');
     await page.goto(`${BASE}/ru/dimension/${card.slug}`, { waitUntil: 'domcontentloaded' });
     const plain = page.locator('[data-door-plain]');
     check(await plain.isVisible(), '6а с выключенным JS видна обычная дверь');
@@ -329,12 +521,36 @@ const run = async () => {
   }
 
   await browser.close();
+
+  /* ═══ 7. УШИ: страница не должна отдавать отказов со своего адреса (`bugs/212`) ═══ */
+  section('7. УШИ — ответы страницы, а не только её поведение');
+  const bad = ownFailures();
+  check(
+    bad.length === 0,
+    '7а ни одного ответа ≥ 400 со своего адреса',
+    bad.length === 0
+      ? `свой адрес ${OWN_HOST}, отказов ноль`
+      : bad.map((e) => `${e.code} ${e.type} ${e.address}${e.count > 1 ? ` ×${e.count}` : ''}`).join(' ; '),
+  );
+
+  /* ═══ 8. УБОРКА и ЕЁ ПРОВЕРКА (`bugs/103`, замечание З2 вердикта №5) ═══ */
+  section('8. След прогона убран — и это проверено, а не обещано');
+  const leftovers = await cleanupStand();
+  check(leftovers.length === 0, '8а база стенда вернулась в исходное состояние', leftovers.join(' · '));
+
   console.log(`\nИТОГ: пройдено ${pass} · провалено ${fail}`);
-  if (guestUid) console.log(`Заведён гость ${guestUid} — стендовая база, уборка рестартом стенда.`);
+  if (guestUid) console.log(`Гость прогона ${guestUid} — заведён и убран.`);
   process.exit(fail === 0 ? 0 : 1);
 };
 
-run().catch((e) => {
+run().catch(async (e) => {
   console.error('\nприбор упал:', e?.stack ?? e);
+  /*
+   * 🔑 УБОРКА ЖИВЁТ И НА ПУТИ ПАДЕНИЯ. Прибор, упавший на середине, оставляет за собой ровно
+   * тот же мусор, что и дошедший до конца, — а падает он чаще. Уборка «только когда всё хорошо»
+   * убирает ровно в том случае, когда убирать почти нечего.
+   */
+  const leftovers = await cleanupStand().catch((err) => [`уборка упала: ${err?.message ?? err}`]);
+  if (leftovers.length > 0) console.error('след НЕ убран:', leftovers.join(' · '));
   process.exit(2);
 });
