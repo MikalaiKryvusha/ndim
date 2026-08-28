@@ -12,7 +12,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "prebuild": "node -e \"require('fs').rmSync('build',{recursive:true,force:true});require('fs').rmSync('.svelte-kit/output',{recursive:true,force:true})\"",
+    "prebuild": "node -e \"require('fs').rmSync('build',{recursive:true,force:true});require('fs').rmSync('.svelte-kit/output',{recursive:true,force:true})\" && vite build --config vite.door.config.ts",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
