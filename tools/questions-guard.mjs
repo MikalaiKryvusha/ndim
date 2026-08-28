@@ -57,7 +57,10 @@ const debtKey = (h) =>
 	`${h.file}#${createHash('sha1').update(h.text.trim()).digest('hex').slice(0, 12)}`;
 
 /** Рабочие директории, где вопросу владельцу висеть НЕЛЬЗЯ. */
-const SCAN_DIRS = ['bugs', 'plans', 'ideas', 'researches', 'homeworks', 'design'];
+// `candidates` и `reports` добавлены 2026-08-28: разнос №048 уехал в канон мастерской
+// (candidates/README.md), и страж, не видя каталога, объявил разнесённое неразнесённым —
+// ложный красный, который дважды доложили роли на запуске смены 7.
+const SCAN_DIRS = ['bugs', 'plans', 'ideas', 'researches', 'homeworks', 'design', 'candidates', 'reports'];
 
 /**
  * Документы, объявленные ОЧЕРЕДЬЮ РЕШЕНИЙ или ЛЕТОПИСЬЮ, — правило их не касается по замыслу.
