@@ -36,6 +36,7 @@
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const BASE = process.argv[2] ?? 'https://ndimspace.app';
 /** Вход в продукт: `/` (распознаватель) · `/ru`, `/en` (лендинг) · `/profile` (start_url PWA). */
@@ -71,6 +72,7 @@ const results = [];
 
 for (const round of ['холодный контекст', 'повторное открытие']) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await markProbeContext(ctx);
   if (!REAL_SESSION) {
     // Признак сессии — ровно тот, по которому щит решает подниматься (`src/lib/data/session.ts`).
     await ctx.addInitScript(() => {

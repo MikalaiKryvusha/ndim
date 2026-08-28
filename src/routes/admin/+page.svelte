@@ -70,6 +70,11 @@
       ru: 'Каталог измерений: создать, отредактировать, разобрать предложенные людьми.',
       en: 'The dimension catalogue: create, edit, review what people suggested.',
     },
+    funnel: { ru: 'Воронка', en: 'Funnel' },
+    funnelAbout: {
+      ru: 'Сколько людей прошло каждый шаг пути: по суткам и за неделю.',
+      en: 'How many people passed each step of the path: by day and by week.',
+    },
   } as const;
   /*
    * 🗑 Сняты 2026-08-17 вместе с постройкой Менеджера измерений: пометка «скоро» и обещание «появится в
@@ -117,6 +122,20 @@
               <Icon name="chevron" size={14} />
             </span>
             <span class="tool-about">{t.dimsAbout[lang]}</span>
+          </a>
+        </li>
+        <!--
+          🆕 2026-08-28 — ВТОРОЙ ИНСТРУМЕНТ, приехавший ровно так, как обещала эта строка
+          (`plans/74` фаза 1 Ш4, закрывает `ideas/06`). Раздел от него не переименовывается:
+          форма «общая панель, инструменты внутри» — слово владельца (интервью №035).
+        -->
+        <li>
+          <a class="tool" href="/admin/funnel">
+            <span class="tool-head">
+              <span class="tool-name">{t.funnel[lang]}</span>
+              <Icon name="chevron" size={14} />
+            </span>
+            <span class="tool-about">{t.funnelAbout[lang]}</span>
           </a>
         </li>
       </ul>

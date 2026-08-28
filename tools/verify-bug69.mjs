@@ -28,6 +28,7 @@
 
 import { mkdir } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const PROD = process.argv.includes('--prod');
 const BASE = PROD ? 'https://ndimspace.app' : 'http://localhost:5173';
@@ -154,6 +155,7 @@ try {
     for (const speed of SPEEDS) {
       console.log(`${target.path} · графика не «на горячую» (${theme}, ${width}, ${speed.key}):`);
       const context = await browser.newContext({ viewport: { width, height: 820 }, locale: 'ru-RU' });
+      await markProbeContext(context);
       await context.addInitScript((value) => localStorage.setItem('ndim-theme', value), theme);
       await context.addInitScript((code) => eval(code), SAMPLER);
       const page = await context.newPage();

@@ -21,6 +21,7 @@
  */
 import { chromium } from 'playwright';
 import { CONTOURS } from './lib/contours.mjs';
+import { markProbePage } from './lib/probe-mark.mjs';
 
 // Адреса и проекты — из реестра контуров: он один и сверяет себя с приложением.
 const STAGE = { name: CONTOURS.stage.title, base: CONTOURS.stage.site, own: CONTOURS.stage.project, alien: CONTOURS.prod.project };
@@ -39,6 +40,7 @@ const WATCHED = /firestore\.googleapis\.com|identitytoolkit\.googleapis\.com|fir
 async function inspect(contour, browser) {
 	console.log(`\n── ${contour.name} · ${contour.base} ──`);
 	const page = await browser.newPage();
+	await markProbePage(page);
 	const seen = [];
 	const errors = [];
 

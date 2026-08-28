@@ -17,6 +17,7 @@
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const baseArg = process.argv.indexOf('--base');
 const BASE = baseArg === -1 ? 'https://ndimspace.app' : process.argv[baseArg + 1];
@@ -59,6 +60,7 @@ for (const cfg of CONFIGS) {
     viewport: { width: cfg.width, height: cfg.height },
     locale: 'ru-RU',
   });
+  await markProbeContext(ctx);
   // Тему кладём ДО загрузки: системный colorScheme тему продукта не меняет (урок verify-icons).
   await ctx.addInitScript((theme) => {
     try { localStorage.setItem('ndim-theme', theme); } catch { /* приватный режим */ }

@@ -39,6 +39,7 @@ import { mkdirSync } from 'node:fs';
 import { contourFromArgv } from './lib/contours.mjs';
 import { watchHttpFailures } from './lib/http-failures.mjs';
 import { grantAppCheckDebug } from './lib/app-check-debug.mjs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 /*
  * 🔑 КОНТУР ВЫБИРАЕТСЯ ОДИН РАЗ И ЦЕЛИКОМ (`plans/53` фаза 4).
@@ -112,6 +113,7 @@ for (const cfg of CONFIGS) {
   console.log(`\n▶ ${CONTOUR.title} ${BASE} · ${cfg.theme} ${cfg.width}×${cfg.height}`);
 
   const ctx = await browser.newContext({ viewport: { width: cfg.width, height: cfg.height }, locale: 'ru-RU' });
+  await markProbeContext(ctx);
   await ctx.addInitScript((theme) => {
     try { localStorage.setItem('ndim-theme', theme); } catch { /* приватный режим */ }
   }, cfg.theme);
