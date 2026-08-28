@@ -22,6 +22,16 @@
  *   · страница карточки объявлена `csr = false`: ждать «приложение ожило» здесь нечего и
  *     нельзя. Признак готовности — сам остров, то есть ответ разметки на клик.
  *
+ * 🔴 ЭТОТ ПРИБОР НАМЕРЕННО НЕ МЕТИТ СВОИ СЕССИИ МЕТКОЙ `ndim-probe`, И ВОТ ПОЧЕМУ.
+ * Метка существует, чтобы прогон прибора не попадал в воронку (`plans/74` Ф1 Ш3, лечение
+ * `bugs/202`): под ней `track()` молчит. Но одна из проверок здесь — «касание двери СОСЧИТАНО
+ * воронкой»; под меткой она не смогла бы стать зелёной НИКОГДА, то есть проверяла бы пустоту.
+ * Загрязнения при этом нет по построению, и держится оно не дисциплиной, а отказом ниже:
+ * прибор ОТКАЗЫВАЕТСЯ работать на любом адресе, кроме localhost, — до живой воронки ему не
+ * дотянуться. Страж `tools/verify-probe-mark.mjs` этот файл не судит (у него нет ни адреса боя,
+ * ни помощника метки — та самая слепая зона, названная в `EXP-0215`); сказано здесь вслух,
+ * чтобы это было решением, а не случайностью.
+ *
  * Стенд обязан быть поднят (`npm run stand`), замок доски — взят.
  *   node tools/probe-catalog-door.mjs [--base http://localhost:4203] [--headed]
  */
@@ -71,6 +81,25 @@ async function docs(path) {
   );
   if (!res.ok) return [];
   return (await res.json()).documents ?? [];
+}
+
+/**
+ * Счётчики воронки за сегодня — REST эмулятора: правила читателю их не отдают.
+ *
+ * Нужен для шага `door_click` (контракт dev-2, фаза 1 `plans/74`). Считаем ПРИРОСТ, а не
+ * абсолют: в базе стенда могли остаться числа прошлых прогонов, и «счётчик не ноль» доказывало
+ * бы лишь то, что кто-то когда-то касался двери.
+ */
+async function funnelToday() {
+  const day = new Date().toISOString().slice(0, 10);
+  const res = await fetch(
+    `${FIRESTORE}/v1/projects/${PROJECT}/databases/(default)/documents/space/funnel/days/${day}`,
+    { headers: { Authorization: 'Bearer owner' } },
+  );
+  if (!res.ok) return {};
+  const f = (await res.json()).fields ?? {};
+  const num = (k) => Number(f[k]?.integerValue ?? f[k]?.doubleValue ?? 0);
+  return { door_click: num('door_click'), guest_start: num('guest_start') };
 }
 
 /** Оценка конкретной точки по конкретному измерению, либо null. */
@@ -127,6 +156,7 @@ const run = async () => {
      * прогону, и он же ловится только сверкой ИМЁН до и после.
      */
     const before = new Set((await docs('points')).map((d) => d.name));
+    const funnelBefore = await funnelToday();
 
     // `?as=none` — «сессии нет вовсе»: так выглядит человек, пришедший из поиска. Без этой
     // двери стенд молча впустил бы dev-пользователя, и гость не родился бы никогда.
@@ -164,6 +194,24 @@ const run = async () => {
       // 🔴 Вердикт записи — С БАЗЫ, а не с экрана: экран зелен и при потерянной записи.
       check(value === 8, '1з оценка 8 ЛЕЖИТ В БАЗЕ у нового гостя', `значение ${value}`);
     }
+
+    /*
+     * Шаг воронки `door_click` — контракт dev-2 (фаза 1 `plans/74`). Считаем ПРИРОСТ: абсолютное
+     * число ничего не доказывает, в базе стенда живут следы прошлых прогонов. Ждём с запасом —
+     * счётчик уходит своей дорогой (`void`) и записи оценки не задерживает, значит он может
+     * долететь ПОЗЖЕ неё.
+     */
+    let funnelAfter = await funnelToday();
+    for (let i = 0; i < 20 && (funnelAfter.door_click ?? 0) <= (funnelBefore.door_click ?? 0); i++) {
+      await page.waitForTimeout(500);
+      funnelAfter = await funnelToday();
+    }
+    const grew = (funnelAfter.door_click ?? 0) - (funnelBefore.door_click ?? 0);
+    check(
+      grew >= 1,
+      '1и касание двери СОСЧИТАНО воронкой (door_click +1)',
+      `было ${funnelBefore.door_click ?? 0}, стало ${funnelAfter.door_click ?? 0}`,
+    );
 
     await page.locator('.door').screenshot({ path: `${OUT}/door-touched-390.png` }).catch(() => {});
     await context.close();
