@@ -19,7 +19,9 @@
  *   6. правило малых чисел различает 3→5 (шум) и 651→2158 (сигнал);
  *   7. порог существования: из нуля гипотез не производим;
  *   8. свежесть различает «докуда ответили» и «докуда были показы»;
- *   9. страж возраста краснеет на пустой директории — ряда нет и есть худший ряд.
+ *   9. страж возраста краснеет на пустой директории — ряда нет и есть худший ряд;
+ *  10. полосы позиций не теряют строк на границах, а перекрёстный разрез РАЗДЕЛЯЕТ устройства —
+ *      без этого разделения гипотеза Г-2 непроверяема по построению.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -40,6 +42,9 @@ import {
 	weekOverWeek,
 	topBy,
 	ageVerdict,
+	positionBands,
+	bandsByDevice,
+	POSITION_BANDS,
 	RETENTION_MONTHS,
 } from './lib/console-snapshot-core.mjs';
 
@@ -282,4 +287,81 @@ test('посторонние файлы директории стража не �
 	);
 	assert.equal(в.newest, '2026-08-28');
 	assert.equal(в.stale, false);
+});
+
+// ── 8. ПОЛОСЫ ПОЗИЦИЙ И ПЕРЕКРЁСТНЫЙ РАЗРЕЗ (гипотеза Г-2) ───────────────────────────────
+
+test('полосы позиций не теряют и не задваивают строки на границах', () => {
+	// Границы полукрытые: 10 попадает в «1–10», 11 — уже в «11–20». Ровно на этих числах
+	// ошибка в границе даёт задвоение или потерю, и никакое среднее её не покажет.
+	const rows = [
+		строка('a', 10, 0, 1),
+		строка('b', 10, 0, 10),
+		строка('c', 10, 0, 11),
+		строка('d', 10, 0, 20),
+		строка('e', 10, 0, 21),
+		строка('f', 10, 0, 51),
+		строка('g', 10, 0, 101),
+	];
+	const полосы = positionBands(rows);
+	assert.deepEqual(
+		полосы.map((b) => [b.band, b.rows]),
+		[['1–10', 2], ['11–20', 2], ['21–50', 1], ['51–100', 1], ['101+', 1]],
+	);
+	assert.equal(
+		полосы.reduce((s, b) => s + b.rows, 0),
+		rows.length,
+		'сумма по полосам равна входу — ни одна строка не потеряна и не посчитана дважды',
+	);
+});
+
+test('строка без позиции ни в одну полосу не попадает — и это честно', () => {
+	const полосы = positionBands([строка('a', 10, 0, null), строка('b', 10, 0, 5)]);
+	assert.equal(полосы.reduce((s, b) => s + b.rows, 0), 1);
+});
+
+test('полос ровно пять, и их границы объявлены одним местом', () => {
+	assert.equal(POSITION_BANDS.length, 5);
+	assert.equal(positionBands([]).length, 5, 'пустой вход даёт все полосы нулями, а не пустоту');
+});
+
+test('перекрёстный разрез РАЗДЕЛЯЕТ устройства, а не смешивает их', () => {
+	// Это и есть суть проверки Г-2: сравнивать устройства ВНУТРИ одной полосы позиций.
+	const cross = [
+		{ device: 'DESKTOP', page: '/a', clicks: 0, impressions: 100, ctr: 0, position: 5 },
+		{ device: 'DESKTOP', page: '/b', clicks: 0, impressions: 200, ctr: 0, position: 60 },
+		{ device: 'MOBILE', page: '/a', clicks: 5, impressions: 50, ctr: 0.1, position: 5 },
+	];
+	const разрез = bandsByDevice(cross);
+	assert.equal(разрез.length, 2);
+	assert.equal(разрез[0].device, 'DESKTOP', 'первым — тот, у кого больше показов');
+	assert.equal(разрез[0].impressions, 300);
+	assert.equal(разрез[1].device, 'MOBILE');
+	assert.equal(разрез[1].clicks, 5);
+
+	// И главное: у каждого устройства СВОИ полосы, иначе сравнивать было бы нечего.
+	const десктопПервая = разрез[0].bands.find((b) => b.band === '1–10');
+	const мобильныйПервый = разрез[1].bands.find((b) => b.band === '1–10');
+	assert.equal(десктопПервая.impressions, 100);
+	assert.equal(мобильныйПервый.impressions, 50);
+	assert.equal(мобильныйПервый.clicks, 5);
+	assert.equal(десктопПервая.clicks, 0);
+});
+
+test('перекрёстный разрез понимает и составной ключ API, и разобранную строку', () => {
+	// Прибор кладёт в снимок разобранные поля, но ядро обязано принимать и сырую форму `keys`.
+	const изKeys = bandsByDevice([
+		{ keys: ['MOBILE', '/a'], clicks: 1, impressions: 10, ctr: 0.1, position: 3 },
+	]);
+	assert.equal(изKeys[0].device, 'MOBILE');
+	assert.equal(изKeys[0].impressions, 10);
+});
+
+test('строка без устройства в разрез не попадает, а не приписывается соседу', () => {
+	const разрез = bandsByDevice([
+		{ device: null, page: '/a', clicks: 9, impressions: 90, ctr: 0.1, position: 3 },
+		{ device: 'MOBILE', page: '/b', clicks: 1, impressions: 10, ctr: 0.1, position: 3 },
+	]);
+	assert.equal(разрез.length, 1);
+	assert.equal(разрез[0].clicks, 1, 'чужие девять кликов не приписаны мобильному');
 });

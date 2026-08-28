@@ -55,6 +55,8 @@ import {
 	weekOverWeek,
 	topBy,
 	ageVerdict,
+	positionBands,
+	bandsByDevice,
 } from './lib/console-snapshot-core.mjs';
 
 const DEFAULT_OUT = join('reports', 'CONSOLES');
@@ -67,6 +69,14 @@ const SLICES = [
 	{ name: 'byCountry', dimension: 'country' },
 	{ name: 'byDevice', dimension: 'device' },
 ];
+
+/**
+ * ШЕСТОЙ СРЕЗ — ПЕРЕКРЁСТНЫЙ, и он не «ещё один», а единственный, на котором проверяема
+ * гипотеза Г-2 (`reports/CONSOLES/2026-08-28_hypotheses.md`). Раздельные срезы устройств и
+ * страниц не позволяют сравнить устройства ВНУТРИ одной полосы позиций — а именно это и
+ * различает «десктоп хуже конвертирует» от «десктопные показы просто глубже».
+ */
+const CROSS_SLICE = { name: 'byDevicePage', dimensions: ['device', 'page'] };
 
 /**
  * Состояние ДРУГИХ консолей — результат разведки Ш2, вписывается в шапку каждого снимка.
@@ -115,7 +125,7 @@ function parseArgs(argv) {
  * и «топ-10 по показам» посчитался бы по усечённому набору — то есть был бы неверен, оставаясь
  * правдоподобным.
  */
-async function fetchSlice(token, property, dimension, window) {
+async function fetchSlice(token, property, dimensions, window) {
 	const rows = [];
 	for (let startRow = 0; ; startRow += ROW_LIMIT) {
 		const response = await apiPost(
@@ -124,7 +134,7 @@ async function fetchSlice(token, property, dimension, window) {
 			{
 				startDate: window.startDate,
 				endDate: window.endDate,
-				dimensions: [dimension],
+				dimensions,
 				type: 'web',
 				dataState: 'all',
 				rowLimit: ROW_LIMIT,
@@ -133,7 +143,7 @@ async function fetchSlice(token, property, dimension, window) {
 		);
 		if (!response.ok) {
 			throw new Error(
-				`срез «${dimension}» не отдан (${response.status}): ${response.body.error?.message ?? ''}`,
+				`срез «${dimensions.join('×')}» не отдан (${response.status}): ${response.body.error?.message ?? ''}`,
 			);
 		}
 		const page = response.body.rows ?? [];
@@ -196,7 +206,7 @@ async function main(argv) {
 	// ── Пять срезов ────────────────────────────────────────────────────────────────────────
 	const slices = {};
 	for (const slice of SLICES) {
-		const rows = await fetchSlice(token, target.siteUrl, slice.dimension, window);
+		const rows = await fetchSlice(token, target.siteUrl, [slice.dimension], window);
 		slices[slice.name] = rows.map((row) => ({
 			key: row.keys?.[0] ?? null,
 			clicks: row.clicks ?? 0,
@@ -210,6 +220,19 @@ async function main(argv) {
 
 	const dateRows = slices.__rawDate ?? [];
 	delete slices.__rawDate;
+
+	// Перекрёстный разрез: устройство × страница. Ключи составные, порядок — как в запросе.
+	const crossRaw = await fetchSlice(token, target.siteUrl, CROSS_SLICE.dimensions, window);
+	const cross = crossRaw.map((row) => ({
+		device: row.keys?.[0] ?? null,
+		page: row.keys?.[1] ?? null,
+		clicks: row.clicks ?? 0,
+		impressions: row.impressions ?? 0,
+		ctr: row.ctr ?? 0,
+		position: row.position ?? null,
+	}));
+	console.log(`  device×page — строк ${cross.length}`);
+	const deviceBands = bandsByDevice(cross);
 
 	const summary = totals(dateRows);
 	const fresh = freshness(dateRows, todayIso);
@@ -238,7 +261,9 @@ async function main(argv) {
 			pages: topBy(slices.byPage.map(toRow), 'impressions', 20),
 			queries: topBy(slices.byQuery.map(toRow), 'impressions', 20),
 		},
-		slices,
+		positionBands: positionBands(slices.byPage.map(toRow)),
+		deviceBands,
+		slices: { ...slices, byDevicePage: cross },
 		otherConsoles: OTHER_CONSOLES,
 		boundaries: [
 			'тип поиска — только web (картинки, видео, Discover не входят)',
@@ -264,6 +289,22 @@ async function main(argv) {
 		);
 	} else {
 		console.log('НЕДЕЛЯ К НЕДЕЛЕ: полных недель меньше двух — сравнивать нечем');
+	}
+
+	// Полосы позиций по устройствам — то, ради чего снят перекрёстный разрез (гипотеза Г-2).
+	console.log('\nПОЛОСЫ ПОЗИЦИЙ ПО УСТРОЙСТВАМ (различают «устройство» и «глубина выдачи»):');
+	for (const item of deviceBands) {
+		console.log(
+			`  ${item.device}: показов ${item.impressions} · кликов ${item.clicks} · ` +
+				`CTR ${(item.ctr * 100).toFixed(2)} % · позиция ${item.position?.toFixed(1) ?? '—'}`,
+		);
+		for (const band of item.bands) {
+			if (band.impressions === 0) continue;
+			console.log(
+				`      поз ${band.band.padEnd(7)} показов ${String(band.impressions).padStart(5)} ` +
+					`кликов ${String(band.clicks).padStart(3)}  CTR ${(band.ctr * 100).toFixed(2)} %`,
+			);
+		}
 	}
 
 	if (args.dry) {
