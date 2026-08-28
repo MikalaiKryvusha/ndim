@@ -1955,7 +1955,7 @@ git, потеря требует археологии, а не безвозвр�
 
 #### 🔴 БЛОКЕР — разрешение владельца непроверяемо по построению
 
-`bugs/NEW_razreshenie_vladeltsa_zhivet_tolko_v_tom_chto_razreshaet.md`.
+`bugs/217_razreshenie_vladeltsa_zhivet_tolko_v_tom_chto_razreshaet.md`.
 
 Цитата, отпирающая подачу («*агент будет сам отправлять правки в яндекс*»), встречается **ровно
 один раз во всём репозитории** — в шапке `tools/yandex-recrawl.mjs:14`, то есть в файле, который
