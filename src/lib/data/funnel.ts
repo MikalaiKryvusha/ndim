@@ -53,9 +53,66 @@ const SESSION_PREFIX = 'ndim-funnel-';
  * чем смотреть.
  */
 
-/** Ключ дня в UTC — `2026-07-12`. Один документ на сутки. */
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
+/*
+ * ── КЛЮЧ СУТОК ──────────────────────────────────────────────────────────────
+ *
+ * 🔴 СУТКИ СЧИТАЮТСЯ ПО ЧАСАМ ВЛАДЕЛЬЦА, а не в UTC и не по часам посетителя
+ * (`bugs/NEW_klyuch_dnya_voronki_beryotsya_v_utc`, замер 2026-08-28).
+ *
+ * Здесь стояло `new Date().toISOString().slice(0, 10)` — ключ в UTC. Пока числа читали из
+ * консоли раз в жизни, сдвиг никого не трогал; экран воронки делает строку «сегодня»
+ * утверждением о сутках, которые владелец видит на своих часах. При UTC+3 первые три часа
+ * локальных суток (00:00–02:59) падали в документ ПРЕДЫДУЩЕГО дня — то есть ночной выкат
+ * ложился во вчерашний день, и ворота фазы («в день смоука `guest_start` не прыгает» против
+ * журнала двери выката) сверяли бы разные сутки.
+ *
+ * 🔑 ПОЧЕМУ НЕ «ЧАСЫ ПОСЕТИТЕЛЯ», хотя `new Date()` их и так знает. `track()` исполняется в
+ * браузере посетителя, а посетители живут по всему миру: ключ по их часам превратил бы одну
+ * строку ряда в смесь двух с лишним десятков разных суток. Такой ряд определён ХУЖЕ UTC-ряда.
+ * Фиксированный пояс даёт каждой строке постоянный 24-часовой интервал И совпадение с часами
+ * того единственного человека, который эти числа читает.
+ *
+ * Побочная выгода, на которой стоит экран: пространство ключей становится предсказуемым —
+ * дни ряда это ровно календарь владельца, и таблицу можно собрать по вычисленным ключам,
+ * не спрашивая базу, какие документы там вообще есть.
+ */
+
+/** Часовой пояс владельца — этим поясом определены сутки ряда. Смена пояса = правка строки. */
+const OWNER_TIMEZONE = 'Europe/Moscow';
+
+/*
+ * Разбор по частям, а не `format()` с локалью `en-CA`: части собираются нами явно, и никакая
+ * смена данных локали в рантайме не может подсунуть другой разделитель или порядок полей
+ * (канон стиля: у всего, что сравнивается и кэшируется, вывод детерминирован).
+ */
+const DAY_PARTS = new Intl.DateTimeFormat('en-US', {
+  timeZone: OWNER_TIMEZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+/**
+ * Ключ суток — `2026-07-12`, по часам владельца. Момент принимается аргументом: иначе юнит
+ * проверял бы часы машины прогона, а не эту функцию.
+ */
+export function dayKey(at: Date = new Date()): string {
+  const parts = DAY_PARTS.formatToParts(at);
+  const part = (type: 'year' | 'month' | 'day'): string =>
+    parts.find((candidate) => candidate.type === type)?.value ?? '';
+  return `${part('year')}-${part('month')}-${part('day')}`;
+}
+
+/**
+ * Соседний день ряда — арифметика по САМОМУ КЛЮЧУ, а не «минус 24 часа от момента».
+ * Ключ это календарная дата, и сдвигать её надо календарно: шаг в миллисекундах на переходе
+ * зимнего времени пропустил бы день или повторил его.
+ */
+export function shiftDayKey(key: string, deltaDays: number): string {
+  const [year, month, day] = key.split('-').map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1, day) + deltaDays * 86_400_000);
+  const pad = (value: number): string => String(value).padStart(2, '0');
+  return `${shifted.getUTCFullYear()}-${pad(shifted.getUTCMonth() + 1)}-${pad(shifted.getUTCDate())}`;
 }
 
 /**
@@ -73,7 +130,7 @@ export async function track(step: FunnelStep): Promise<void> {
       import('../firebase.ts'),
       import('firebase/firestore'),
     ]);
-    await setDoc(doc(db(), 'space', 'funnel', 'days', today()), { [step]: increment(1) }, { merge: true });
+    await setDoc(doc(db(), 'space', 'funnel', 'days', dayKey()), { [step]: increment(1) }, { merge: true });
   } catch (error) {
     // Счётчик — не продукт. Молча выживаем, но оставляем след для отладки стенда.
     console.debug('Воронка: шаг не записан', step, error);
@@ -90,7 +147,7 @@ export interface FunnelDay {
 }
 
 /** Читает счётчики дня. Правила пустят сюда только админа — это приборная панель владельца. */
-export async function readFunnelDay(date: string = today()): Promise<FunnelDay> {
+export async function readFunnelDay(date: string = dayKey()): Promise<FunnelDay> {
   const [{ db }, { doc, getDoc }] = await Promise.all([
     import('../firebase.ts'),
     import('firebase/firestore'),
