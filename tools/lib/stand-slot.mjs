@@ -36,11 +36,13 @@ import { STAND_PORTS } from './stand-cleanup.mjs';
  * Роли команды В ПОРЯДКЕ СЛОТОВ: индекс в этом массиве И ЕСТЬ слот роли.
  *
  * Порядок — из манифеста (`NDIM_WORKTREE_DEV_TEAM_MANIFEST.md` → «Карта команды»), и он же
- * зафиксирован разведкой: manager 0 · designer 1 · qa 2 · dev-1 3 · dev-2 4 · dev-3 5.
+ * зафиксирован разведкой: manager 0 · designer 1 · qa 2 · dev-1 3 · integrator 4 · dev-3 5.
+ * Слот 4 до 2026-08-28 звался dev-2 — роль переквалифицирована в Интегратора словом владельца;
+ * слот и порты НЕ менялись (позиция та же), старое имя каталога живёт наследием ниже.
  * ⚠️ Порядок — часть контракта, а не оформление: переставить строку значит переселить роль на
  * чужие порты и обнулить её конфиг слота. Новая роль дописывается В КОНЕЦ.
  */
-export const ROLES = Object.freeze(['manager', 'designer', 'qa', 'dev-1', 'dev-2', 'dev-3']);
+export const ROLES = Object.freeze(['manager', 'designer', 'qa', 'dev-1', 'integrator', 'dev-3']);
 
 /** Слоты, которые вообще существуют: по одному на роль. */
 export const SLOTS = Object.freeze(ROLES.map((_, i) => i));
@@ -76,7 +78,10 @@ export function roleFromDirName(dir) {
   if (ROLES.includes(dir)) return dir; // старое имя каталога, до приписки
   const m = String(dir).match(/^ndim_(.+)$/);
   if (!m) return null;
-  const role = m[1].replace(/^dev(\d)$/, 'dev-$1'); // ndim_dev1 → dev-1
+  let role = m[1].replace(/^dev(\d)$/, 'dev-$1'); // ndim_dev1 → dev-1
+  // Наследие переквалификации 2026-08-28: каталог ndim_dev2 ещё не переехал (окно держало
+  // его при переименовании). Снять эту строку ПОСЛЕ `git worktree move … ndim_integrator`.
+  if (role === 'dev-2') role = 'integrator';
   return ROLES.includes(role) ? role : null;
 }
 
@@ -226,7 +231,8 @@ export function checks() {
       slotOf('ndim_designer').slot === 1 &&
       slotOf('ndim_qa').slot === 2 &&
       slotOf('ndim_dev1').slot === 3 &&
-      slotOf('ndim_dev2').slot === 4 &&
+      slotOf('ndim_integrator').slot === 4 &&
+      slotOf('ndim_dev2').slot === 4 && // наследие: каталог до переезда опознаётся Интегратором
       slotOf('ndim_dev3').slot === 5],
 
     ['старые имена каталогов (до приписки ndim_) ещё принимаются', () =>
@@ -281,7 +287,7 @@ export function checks() {
     ['🔴 ПОТОЛОК ВЛАДЕЛЬЦА: четвёртый стенд получает отказ С ИМЕНАМИ занятых', () => {
       const v = capacityVerdict([0, 2, 4], 3);
       return v.ok === false && v.reason.includes('слот 0') && v.reason.includes('слот 2') &&
-        v.reason.includes('слот 4') && v.reason.includes('dev-2');
+        v.reason.includes('слот 4') && v.reason.includes('integrator');
     }],
 
     ['три стенда разом — законны: третий поднимается', () => capacityVerdict([0, 2], 4).ok === true],
