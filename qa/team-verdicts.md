@@ -2073,7 +2073,7 @@ git, потеря требует археологии, а не безвозвр�
    самотесте доски), найденный стражем этой ветки в смене 6, в `main` УЖЕ ПОЧИНЕН — строка стоит
    правильной (`\\|\\s*`). Мерж ради него не нужен; нужен сам страж (см. ниже).
 
-#### 🔴 ДЕФЕКТ, найденный этим судом В `main` — `bugs/NEW_ekranirovanie_v_shablonnoy_stroke_oslepilo_pravilo_N9.md`
+#### 🔴 ДЕФЕКТ, найденный этим судом В `main` — `bugs/218_ekranirovanie_v_shablonnoy_stroke_oslepilo_pravilo_N9.md`
 
 Я прогнала страж ПЯТИДНЕВНОЙ ветки (`tools/regexp-escaping.test.mjs`) по СЕГОДНЯШНЕМУ `main` —
 и он назвал живой дефект за секунды: `tools/lib/grammar-agreement.mjs:475`, `\s` внутри
