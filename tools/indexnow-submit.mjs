@@ -39,6 +39,7 @@ import {
 	buildPayload,
 	explainStatus,
 } from './lib/indexnow.mjs';
+import { settleExit } from './lib/exit-code.mjs';
 
 const HOST = 'ndimspace.app';
 const STATIC_DIR = 'static';
@@ -201,21 +202,6 @@ async function main(argv) {
 	return 0;
 }
 
-/**
- * ⚠️ КОД ВОЗВРАТА ВЫСТАВЛЯЕТСЯ, А НЕ ВЫСТРЕЛИВАЕТСЯ `process.exit()` — и это оплачено прогоном.
- *
- * Прибор ходит в сеть, а `process.exit()` при живом соединении роняет процесс на Windows:
- * `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)` и **код 127 вместо 1**. Отказ
- * предохранителя печатался правильно, а вызывающий, судящий по коду, видел бессмыслицу.
- * Дренирования тела ответа не хватило — сокет держит пул соединений. `process.exitCode` даёт
- * циклу событий закрыться самому, и код доезжает честным.
- */
-main(process.argv.slice(2)).then(
-	(code) => {
-		process.exitCode = code;
-	},
-	(error) => {
-		console.error(`🔴 ${error.message}`);
-		process.exitCode = 1;
-	},
-);
+// Хвост общий на все сетевые приборы. Довод и уплаченная за него цена (код 127 вместо 1 при
+// живом сокете) живут в `tools/lib/exit-code.mjs` — здесь они не повторяются.
+settleExit(main(process.argv.slice(2)));
