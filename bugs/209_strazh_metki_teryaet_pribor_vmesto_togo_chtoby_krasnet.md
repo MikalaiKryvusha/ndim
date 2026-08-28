@@ -110,4 +110,4 @@ node tools/verify-probe-mark.mjs            # ❌ красный, прибор �
 ## Ссылки
 
 `qa/team-verdicts.md` (смена 7, суд №3 — полный замер) · `tools/verify-probe-mark.mjs` ·
-`plans/NEW_funnel_v2_phase1_operational.md` → решение 5 · `bugs/202` · `EXP-0198`
+`plans/76_funnel_v2_phase1_operational.md` → решение 5 · `bugs/202` · `EXP-0198`

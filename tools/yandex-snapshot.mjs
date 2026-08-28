@@ -94,7 +94,7 @@ async function main(argv) {
 	if (!host) {
 		console.error(`🔴 хост ${EXPECTED_HOST} токену не виден. Доступные: ${hostList.length}`);
 		for (const item of hostList) console.error(`   · ${item.host_id ?? item.unicode_host_url}`);
-		console.error('   Права на сайт подтверждает владелец в Вебмастере — см. homeworks/NEW_.');
+		console.error('   Права на сайт подтверждает владелец в Вебмастере — см. homeworks/15_console_keys_yandex_bing.md.');
 		return 1;
 	}
 

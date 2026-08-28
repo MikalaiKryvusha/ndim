@@ -3,7 +3,7 @@
  *
  * Второй машинный источник миссии консолей (`ideas/37`, фаза 2 `plans/74`). Первый — Google
  * (`tools/lib/console-auth.mjs`); третьим будет Bing. Разведка API по первоисточникам, со
- * ссылками и границами, — `researches/NEW_console_apis_bing_yandex.md`.
+ * ссылками и границами, — `researches/56_console_apis_bing_yandex.md`.
  *
  * 🔴 ЗАЧЕМ ЭТОТ ИСТОЧНИК ВООБЩЕ НУЖЕН, ЕСЛИ GOOGLE УЖЕ РАБОТАЕТ. Потому что он отвечает на
  * вопрос, на который Google не отвечает НИКОГДА: **какие наши страницы выпали из поиска и
@@ -31,7 +31,7 @@ export const EXPECTED_HOST = 'ndimspace.app';
  *
  * Права, которых он требует, названы первоисточником: `webmaster:hostinfo` + `webmaster:verify`.
  * Живёт **6 месяцев** — то есть протухает молча и дважды в год; шаги владельца по перевыпуску —
- * `homeworks/NEW_console_keys_yandex_bing.md`.
+ * `homeworks/15_console_keys_yandex_bing.md`.
  *
  * ⚠️ Подсказка про worktree здесь та же, что у ключа Google, и по той же причине (`.env` в
  * `.gitignore`, в рабочие копии ролей не едет) — оплачено уроком `EXP-0216`.
@@ -45,7 +45,7 @@ export function yandexToken() {
 		throw new Error(
 			'нет токена: переменная NDIM_YANDEX_WEBMASTER_TOKEN пуста.\n' +
 				'Это НЕ поломка прибора — токен выдаёт владелец, шаги расписаны в\n' +
-				'homeworks/NEW_console_keys_yandex_bing.md (OAuth Яндекс ID, права\n' +
+				'homeworks/15_console_keys_yandex_bing.md (OAuth Яндекс ID, права\n' +
 				'webmaster:hostinfo + webmaster:verify, живёт 6 месяцев).\n' +
 				'Работаете в рабочей копии роли (worktree)? `.env` туда не едет — возьмите\n' +
 				'ТОЛЬКО эту переменную из главной копии, не файл целиком.',

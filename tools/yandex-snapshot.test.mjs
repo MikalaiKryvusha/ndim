@@ -5,7 +5,7 @@
  *   node --test tools/yandex-snapshot.test.mjs   ·   npm run test:tools
  *
  * 🔴 ФИКСТУРЫ ПОСТРОЕНЫ НА ДВУХ РАЗНЫХ ИСТОЧНИКАХ, И ЭТО ГЛАВНОЕ В ЭТОМ ФАЙЛЕ.
- * Форма ответа взята из документации Яндекса (`researches/NEW_console_apis_bing_yandex.md`), а
+ * Форма ответа взята из документации Яндекса (`researches/56_console_apis_bing_yandex.md`), а
  * ЗНАЧЕНИЯ кодов — из ЖИВОЙ консоли, снятой Менеджером 2026-08-28 на нашем инциденте
  * (`bugs/203`): `LOW_DEMAND` и `META_NO_INDEX`. Обоих этих кодов в документированном перечне
  * `ApiExcludedUrlStatus` НЕТ.

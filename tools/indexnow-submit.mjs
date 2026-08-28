@@ -2,7 +2,7 @@
  * ПОДАЧА АДРЕСОВ ЧЕРЕЗ INDEXNOW — Яндекс и Bing одним протоколом.
  *
  * Фаза 2 эпика `plans/74`, постановка Менеджера смены 7. Разбор протокола с первоисточниками —
- * `researches/NEW_console_apis_bing_yandex.md` §3.6.
+ * `researches/56_console_apis_bing_yandex.md` §3.6.
  *
  * Запуск:
  *   node tools/indexnow-submit.mjs --file <список.txt>            # СУХОЙ прогон (по умолчанию)

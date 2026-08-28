@@ -23,7 +23,7 @@
  * при этом не теряется — оно лежит в истории git, а `takenAt` в файле всегда говорит, когда
  * снимали на самом деле.
  *
- * ⚠️ ГРАНИЦЫ, названные честно (полностью — в `researches/NEW_console_apis_bing_yandex.md`):
+ * ⚠️ ГРАНИЦЫ, названные честно (полностью — в `researches/56_console_apis_bing_yandex.md`):
  * · снимается ТИП ПОИСКА `web` — картинки, видео и Discover сюда не входят;
  * · ПОКРЫТИЯ (проиндексировано / исключено и почему) у этого API нет вовсе — дыра остаётся дырой;
  * · Bing и Яндекс машинного снимка пока не дают — состояние их API стоит в шапке снимка.
@@ -86,7 +86,7 @@ const CROSS_SLICE = { name: 'byDevicePage', dimensions: ['device', 'page'] };
  * файле только Google. Разбор с первоисточниками — в разведдоке, ссылка ниже.
  */
 const OTHER_CONSOLES = {
-	research: 'researches/NEW_console_apis_bing_yandex.md',
+	research: 'researches/56_console_apis_bing_yandex.md',
 	bing: {
 		machineReadable: true,
 		blocked: 'нужен ключ API из веб-интерфейса Bing Webmaster Tools — шаг владельца',

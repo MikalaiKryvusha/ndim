@@ -2,7 +2,7 @@
  * ДОСТУП К BING WEBMASTER TOOLS API — ключ, адреса, разбор ответа.
  *
  * Третий машинный источник миссии консолей (`ideas/37`, `plans/74` Ф2). Разведка по
- * первоисточникам — `researches/NEW_console_apis_bing_yandex.md` §2.
+ * первоисточникам — `researches/56_console_apis_bing_yandex.md` §2.
  *
  * 🔴🔴 ДОПУЩЕНИЕ, НА КОТОРОМ СТОИТ ВЕСЬ ЭТОТ МОДУЛЬ, И ОНО НЕ ПРОВЕРЕНО.
  *
@@ -49,7 +49,7 @@ export function bingKey() {
 		throw new Error(
 			'нет ключа: переменная NDIM_BING_WEBMASTER_KEY пуста.\n' +
 				'Это НЕ поломка прибора — ключ выдаёт владелец в панели Bing Webmaster Tools\n' +
-				'(Settings → API Access → Generate API Key), шаги — homeworks/NEW_console_keys_yandex_bing.md.\n' +
+				'(Settings → API Access → Generate API Key), шаги — homeworks/15_console_keys_yandex_bing.md.\n' +
 				'Работаете в рабочей копии роли (worktree)? `.env` туда не едет — возьмите\n' +
 				'ТОЛЬКО эту переменную из главной копии, не файл целиком.',
 		);
