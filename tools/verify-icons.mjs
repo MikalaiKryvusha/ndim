@@ -18,6 +18,7 @@
  */
 import { mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const LOCAL = 'http://127.0.0.1:4173';
 const PROD = 'https://ndimspace.app';
@@ -42,6 +43,7 @@ async function overflow(origin) {
   const found = [];
   for (const width of WIDTHS) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+    await markProbeContext(ctx);
     const page = await ctx.newPage();
     for (const path of PAGES) {
       try {
@@ -81,6 +83,7 @@ for (const theme of ['light', 'dark']) {
   console.log(`\n── Тема: ${theme} ──`);
   for (const width of [390, 1440]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme });
+    await markProbeContext(ctx);
     const page = await ctx.newPage();
 
     // Тема у продукта СВОЯ (AppBar: data-theme + localStorage 'ndim-theme'), системный

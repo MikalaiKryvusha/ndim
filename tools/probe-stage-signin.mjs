@@ -12,6 +12,7 @@
  * Запуск: node tools/probe-stage-signin.mjs [--base https://ndim-stage.web.app] [--email адрес]
  */
 import { chromium } from 'playwright';
+import { markProbePage } from './lib/probe-mark.mjs';
 
 const arg = (name, fallback) => {
 	const i = process.argv.indexOf(name);
@@ -23,6 +24,7 @@ const EMAIL = arg('--email', 'probe-stage@stage.local');
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
+await markProbePage(page);
 
 const errors = [];
 const failed = [];

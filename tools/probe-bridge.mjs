@@ -27,6 +27,7 @@
 
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const argv = process.argv.slice(2);
 const opt = (name, fallback) => {
@@ -81,6 +82,7 @@ const overlap = (a, b) =>
 
 async function freshPage(browser, { width = 390 } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 900 } });
+  await markProbeContext(context);
   const page = await context.newPage();
   const errors = [];
   page.on('console', (m) => {
@@ -202,6 +204,7 @@ const run = async () => {
       viewport: { width: 390, height: 900 },
       reducedMotion: 'reduce',
     });
+    await markProbeContext(context);
     const page = await context.newPage();
     await page.goto(`${BASE}/ru`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(800);
@@ -323,6 +326,7 @@ const run = async () => {
 
     // КОНТРОЛЬ ПРИБОРА: человеку, пришедшему своим ходом, мостика быть не должно.
     const clean = await browser.newContext({ viewport: { width: 390, height: 900 } });
+    await markProbeContext(clean);
     const cleanPage = await clean.newPage();
     await cleanPage.goto(`${BASE}/relations?as=guest`, { waitUntil: 'domcontentloaded' });
     await cleanPage.waitForTimeout(3000);
