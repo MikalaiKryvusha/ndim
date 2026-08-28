@@ -61,6 +61,42 @@ export function snapshotFileName(dateIso, source = 'google_search_console') {
 	return `${dateIso}_${source}.json`;
 }
 
+/** Дата из имени файла снимка, либо `null`, если имя не наше. */
+export function dateFromFileName(name) {
+	const match = /^(\d{4}-\d{2}-\d{2})_[a-z0-9_]+\.json$/.exec(name);
+	return match ? match[1] : null;
+}
+
+/**
+ * Приговор возрасту ряда: не устарел ли самый свежий снимок.
+ *
+ * 🔑 ЗАЧЕМ ЭТО В ПРИБОРЕ, А НЕ В ЧЬЕЙ-ТО ПАМЯТИ. Регулярность, записанная словами «снимать раз в
+ * неделю», — это пожелание: его исполняют, пока помнят, и перестают после первой занятой недели.
+ * Канон проекта на этот счёт прямой («Форма обязательства — команда, шаг или чекбокс»; журнал
+ * опыта — ТРЕТИЙ сорт лечения после ловушки и стража). Здесь обязательство получает команду,
+ * которая краснеет сама, и её можно поставить в любой ритуал, не переписывая прибор.
+ *
+ * Пустая директория — это тоже просрочка, а не «пока нечего проверять»: ряд, которого нет,
+ * и есть худшее состояние ряда.
+ */
+export function ageVerdict(fileNames, todayIso, maxAgeDays) {
+	const dates = fileNames.map(dateFromFileName).filter(Boolean).sort();
+	const newest = dates.at(-1) ?? null;
+	if (!newest) {
+		return { newest: null, ageDays: null, stale: true, reason: 'снимков нет вовсе' };
+	}
+	const ageDays = daysBetween(newest, todayIso);
+	return {
+		newest,
+		ageDays,
+		stale: ageDays > maxAgeDays,
+		reason:
+			ageDays > maxAgeDays
+				? `самый свежий снимок от ${newest} — ему ${ageDays} сут. при потолке ${maxAgeDays}`
+				: `самый свежий снимок от ${newest} — ${ageDays} сут., в пределах ${maxAgeDays}`,
+	};
+}
+
 /** ── СВОД ──────────────────────────────────────────────────────────────────────────────── */
 
 /**

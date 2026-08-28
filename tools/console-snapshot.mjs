@@ -11,6 +11,8 @@
  *   node tools/console-snapshot.mjs --months 3     # окно короче (быстрее, для проб)
  *   node tools/console-snapshot.mjs --dry          # сходить и напечатать, ничего не записывая
  *   node tools/console-snapshot.mjs --out <дир>    # другая директория (по умолчанию reports/CONSOLES)
+ *   node tools/console-snapshot.mjs --check-age 8 # СТРАЖ ВОЗРАСТА ряда: сети не касается,
+ *                                                  код 1, если свежего снимка нет
  *
  * Код возврата: 0 — снимок снят · 1 — доступа нет либо консоль не ответила.
  *
@@ -29,7 +31,7 @@
  * ⛔ Ключ — только из `.env` (канон-правило владельца 2026-08-15). Прибор ЧИТАЮЩИЙ: область
  * доступа `webmasters.readonly`, ни одной пишущей операции в коде нет.
  */
-import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
@@ -52,6 +54,7 @@ import {
 	weeklyBuckets,
 	weekOverWeek,
 	topBy,
+	ageVerdict,
 } from './lib/console-snapshot-core.mjs';
 
 const DEFAULT_OUT = join('reports', 'CONSOLES');
@@ -86,13 +89,17 @@ const OTHER_CONSOLES = {
 	},
 };
 
-/** Разбор аргументов. Намеренно скудный: у прибора четыре флага и все они очевидны. */
+/** Разбор аргументов. Намеренно скудный: у прибора пять флагов и все они очевидны. */
 function parseArgs(argv) {
-	const args = { months: RETENTION_MONTHS, out: DEFAULT_OUT, dry: false };
+	const args = { months: RETENTION_MONTHS, out: DEFAULT_OUT, dry: false, checkAge: null };
 	for (let i = 0; i < argv.length; i += 1) {
 		if (argv[i] === '--months') args.months = Number(argv[++i]);
 		else if (argv[i] === '--out') args.out = argv[++i];
 		else if (argv[i] === '--dry') args.dry = true;
+		else if (argv[i] === '--check-age') args.checkAge = Number(argv[++i]);
+	}
+	if (args.checkAge !== null && (!Number.isFinite(args.checkAge) || args.checkAge < 0)) {
+		throw new Error(`--check-age ожидает неотрицательное число суток, получено «${args.checkAge}»`);
 	}
 	if (!Number.isFinite(args.months) || args.months <= 0) {
 		throw new Error(`--months ожидает положительное число, получено «${args.months}»`);
@@ -151,6 +158,20 @@ async function main(argv) {
 	const now = new Date(); // ЛОКАЛЬНЫЕ часы машины — правило владельца, `bugs/195`
 	const todayIso = isoDate(now);
 	const window = snapshotWindow(now, args.months);
+
+	// ── Режим стража возраста: сети не касается, снимка не делает ─────────────────────────
+	if (args.checkAge !== null) {
+		const names = existsSync(args.out) ? readdirSync(args.out) : [];
+		const verdict = ageVerdict(names, todayIso, args.checkAge);
+		console.log(`ВОЗРАСТ РЯДА СНИМКОВ (${args.out})\n`);
+		console.log(`  ${verdict.reason}`);
+		if (verdict.stale) {
+			console.error('\n🔴 РЯД ПРОСРОЧЕН — снимите снимок: node tools/console-snapshot.mjs');
+			return 1;
+		}
+		console.log('\n✅ ряд свежий');
+		return 0;
+	}
 
 	console.log('СНИМОК ПОИСКОВЫХ КОНСОЛЕЙ\n');
 	console.log(`сегодня: ${todayIso}`);
