@@ -3,13 +3,25 @@
  * без сторонних трекеров).
  *
  * ЗАЧЕМ. Путь человека: лендинг → потрогал демо → стал гостем → создал аккаунт.
- * Где он рвётся — неизвестно, а чинить вслепую нельзя. Четыре счётчика на день
- * отвечают на этот вопрос и больше ни на какой.
+ * Где он рвётся — неизвестно, а чинить вслепую нельзя. Счётчики на день отвечают
+ * на этот вопрос и больше ни на какой.
+ *
+ * 🆕 ВТОРОЙ ВХОД, 2026-08-28 (`plans/74` фаза 1, лечение `bugs/202`). Аудит показал: органика
+ * приходит НЕ на лендинг, а на карточки каталога (10 из 14 кликов за две недели), и там путь
+ * не считался ничем. Добавлены `door_click` (нажата дверь карточки) и `signin_wall_view`
+ * (показан экран «Войдите в Пространство» — первый прямой замер стены `bugs/200`).
+ *
+ * ⛔ ШАГА «ОТКРЫЛ КАРТОЧКУ» ЗДЕСЬ НЕТ, И ЭТО РЕШЕНИЕ, А НЕ ПРОБЕЛ (разведка `plans/75` п.7).
+ * Он тащил бы SDK Firebase на каждый просмотр SEO-поверхности — 10 222 пререндеренные
+ * страницы собраны с `csr = false` и клиентского JS не несут вовсе — ради числа, которое и
+ * так отдаёт Search Console. `door_click` этой цены не платит: в момент касания двери
+ * Firebase грузится всё равно.
  *
  * ЧТО ЗДЕСЬ НЕ ХРАНИТСЯ. Ничего персонального: ни UID, ни почты, ни адреса, ни
- * идентификатора устройства. Только четыре числа в документе `space/funnel/days/{дата}`.
+ * идентификатора устройства. Только числа в документе `space/funnel/days/{дата}`.
  * Даже теоретически восстановить по ним человека нельзя — это и есть ответ на
  * «аналитика без слежки». Правила разрешают ровно +1 к одному счётчику за запись.
+ * ⛔ Имя шага говорит о МЕСТЕ пути, и никогда — о предмете оценки (интервью №002, В4).
  *
  * ПОЧЕМУ ДИНАМИЧЕСКИЙ ИМПОРТ FIREBASE. Первый шаг воронки считается на лендинге, а
  * лендинг обязан оставаться лёгким (Lighthouse 100). Статический импорт затащил бы
@@ -17,11 +29,53 @@
  * куском и только там, где действительно нужен.
  */
 
-/** Четыре шага пути. Имена совпадают с полями документа и с именами в правилах. */
-export type FunnelStep = 'landing_view' | 'demo_touch' | 'guest_start' | 'account_created';
+/**
+ * Шаги пути. Имена совпадают с полями документа и с именами в правилах Firestore —
+ * добавляя шаг сюда, добавь его и в `funnelCounters()` в `firestore.rules`, иначе запись
+ * будет отбита правилом, а `track()` проглотит отказ молча.
+ */
+export type FunnelStep =
+  | 'landing_view'
+  | 'demo_touch'
+  | 'guest_start'
+  | 'account_created'
+  | 'door_click'
+  | 'signin_wall_view';
+
+/**
+ * Все шаги списком — один источник правды для экрана воронки и для стража, сверяющего
+ * этот список с правилами. Пара «тип ↔ список» держится тем, что список типизирован
+ * `FunnelStep[]`: забытый здесь шаг типы не уронит, ЗАБЫТЫЙ В ПРАВИЛАХ — уронит страж.
+ */
+export const FUNNEL_STEPS: readonly FunnelStep[] = [
+  'landing_view',
+  'demo_touch',
+  'guest_start',
+  'account_created',
+  'door_click',
+  'signin_wall_view',
+];
 
 /** Один визит — один шаг каждого вида: иначе счётчик считал бы клики, а не людей. */
 const SESSION_PREFIX = 'ndim-funnel-';
+
+/**
+ * 🔬 МЕТКА СВОЕГО ПРОГОНА (`plans/74` фаза 1 Ш3, лечение `bugs/202` дефект 2).
+ *
+ * Наши боевые смоуки входят настоящей дверью гостя и до сих пор были НЕОТЛИЧИМЫ от людей:
+ * `guest_start` за 25 дней = 77, и четыре всплеска из них (10 · 16 · 11 · 26) пришлись ровно
+ * на дни выкатов. То есть прибор считал нас самих и врал владельцу о притоке.
+ *
+ * Лечение простейшее из возможных: прибор ставит эту метку в `sessionStorage` ДО первой
+ * навигации (`tools/lib/probe-mark.mjs` → `addInitScript`), и `track()` при ней молчит.
+ * Метка живёт ровно одну вкладку и человеку достаться не может — её некому поставить.
+ *
+ * ⚠️ Почему не `navigator.webdriver`, хотя он был бы бесплатным: признак автоматизации
+ * снимается флагами запуска и меняется от версии к версии, то есть прибор оказался бы
+ * защищён тем, чем управляет не он. Явная метка проверяема и стережётся своим стражем
+ * (`tools/verify-probe-mark.mjs`).
+ */
+export const PROBE_MARK = 'ndim-probe';
 
 /*
  * ✅ ПРЕДОХРАНИТЕЛЬ СНЯТ 2026-08-01 — воронка считает В БОЮ.
@@ -116,14 +170,48 @@ export function shiftDayKey(key: string, deltaDays: number): string {
 }
 
 /**
+ * Прогон помечен как наш? Обращение к хранилищу защищено: в приватном режиме и при
+ * заблокированном хранилище оно БРОСАЕТ, а воронка не имеет права ронять продукт.
+ * Не смогли спросить — считаем, что метки нет: молчать по ошибке хуже, чем посчитать.
+ */
+export function probeMarked(): boolean {
+  try {
+    return sessionStorage.getItem(PROBE_MARK) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Занимает шаг за этот визит: `true` — записывать, `false` — молчать.
+ *
+ * Вся ЛОГИКА решения собрана здесь и отделена от записи в базу намеренно: так её берут
+ * юниты без Firebase и без браузера, а `track()` остаётся тонким.
+ *
+ * Порядок проверок значим. Метка смотрится ПЕРВОЙ, и под меткой шаг не «расходуется»:
+ * иначе прибор, сходивший по вкладке, съел бы шаг у человека, который сядет за неё следующим.
+ */
+export function claimStep(step: FunnelStep): boolean {
+  if (probeMarked()) return false;
+  try {
+    const seen = `${SESSION_PREFIX}${step}`;
+    if (sessionStorage.getItem(seen) !== null) return false;
+    sessionStorage.setItem(seen, '1');
+    return true;
+  } catch {
+    // Хранилища нет — дедуплицировать нечем. Считать «людей» без дедупликации значит
+    // считать клики (EXP-0028), поэтому честнее не считать вовсе.
+    return false;
+  }
+}
+
+/**
  * Отмечает шаг воронки. Никогда не бросает и никогда не заставляет ждать: аналитика
  * не имеет права ломать или тормозить продукт. Повторный вызов того же шага в том же
- * визите ничего не делает.
+ * визите ничего не делает; помеченный прогон прибора не делает ничего вовсе.
  */
 export async function track(step: FunnelStep): Promise<void> {
-  const seen = `${SESSION_PREFIX}${step}`;
-  if (sessionStorage.getItem(seen)) return;
-  sessionStorage.setItem(seen, '1');
+  if (!claimStep(step)) return;
 
   try {
     const [{ db }, { doc, increment, setDoc }] = await Promise.all([
@@ -137,13 +225,15 @@ export async function track(step: FunnelStep): Promise<void> {
   }
 }
 
-/** Сводка за день — для «Пространства» владельца (ideas/06). Читает только админ. */
+/** Сводка за день — для экрана воронки владельца (`ideas/06`). Читает только админ. */
 export interface FunnelDay {
   readonly date: string;
   readonly landing_view: number;
   readonly demo_touch: number;
   readonly guest_start: number;
   readonly account_created: number;
+  readonly door_click: number;
+  readonly signin_wall_view: number;
 }
 
 /** Читает счётчики дня. Правила пустят сюда только админа — это приборная панель владельца. */
@@ -153,12 +243,55 @@ export async function readFunnelDay(date: string = dayKey()): Promise<FunnelDay>
     import('firebase/firestore'),
   ]);
   const snapshot = await getDoc(doc(db(), 'space', 'funnel', 'days', date));
-  const data = (snapshot.data() ?? {}) as Partial<FunnelDay>;
+  return dayFrom(date, snapshot.data() ?? {});
+}
+
+/**
+ * Разбор документа дня в сводку. Отделён от чтения намеренно: он чистый, поэтому его
+ * берут юниты, и он же отвечает за ГЛАВНОЕ свойство ряда — **день, которого нет, это
+ * нули, а не поломка**.
+ *
+ * 🔑 Именно здесь живёт совместимость со швом ряда. Дни до 2026-08-28 писались ключом в
+ * UTC и не знают полей `door_click`/`signin_wall_view` вовсе; читаются они теми же нулями,
+ * что и любой пустой день, и экран на них не падает.
+ */
+export function dayFrom(date: string, data: Partial<Record<FunnelStep, number>>): FunnelDay {
   return {
     date,
     landing_view: data.landing_view ?? 0,
     demo_touch: data.demo_touch ?? 0,
     guest_start: data.guest_start ?? 0,
     account_created: data.account_created ?? 0,
+    door_click: data.door_click ?? 0,
+    signin_wall_view: data.signin_wall_view ?? 0,
   };
+}
+
+/**
+ * Ряд последних `count` суток, СВЕЖИЕ ПЕРВЫМИ, — вход экрана воронки.
+ *
+ * Читается вычисленными ключами, а не запросом к коллекции: ключи ряда это ровно календарь
+ * владельца (см. «Ключ суток»), поэтому спрашивать базу, какие документы там есть, незачем —
+ * а `count` чтений админского экрана дешевле индекса и запроса-списка. Пустой день приезжает
+ * нулями и в ряду присутствует: дыра в таблице читалась бы как «данных нет», а не как «ноль».
+ */
+export async function readFunnelDays(count = 14, from: string = dayKey()): Promise<FunnelDay[]> {
+  const [{ db }, { doc, getDoc }] = await Promise.all([
+    import('../firebase.ts'),
+    import('firebase/firestore'),
+  ]);
+  const keys = Array.from({ length: count }, (_, back) => shiftDayKey(from, -back));
+  const snapshots = await Promise.all(
+    keys.map((key) => getDoc(doc(db(), 'space', 'funnel', 'days', key))),
+  );
+  return keys.map((key, index) => dayFrom(key, snapshots[index].data() ?? {}));
+}
+
+/** Сумма ряда по каждому счётчику — «итого за неделю» на экране. */
+export function sumDays(days: readonly FunnelDay[]): Record<FunnelStep, number> {
+  const total = Object.fromEntries(FUNNEL_STEPS.map((step) => [step, 0])) as Record<FunnelStep, number>;
+  for (const day of days) {
+    for (const step of FUNNEL_STEPS) total[step] += day[step];
+  }
+  return total;
 }
