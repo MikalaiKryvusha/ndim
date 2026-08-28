@@ -34,11 +34,20 @@
  * ради чего в ядре стоит правило «коды складываются как пришли, без перевода»: прибор, который
  * «нормализовал» бы одно в другое, вписал бы в данные выдумку. Разбор — `bugs/203`.
  *
+ * ── ГДЕ В СНИМКЕ ПОЛНЫЙ ПОИМЁННЫЙ СПИСОК ───────────────────────────────────────────────────
+ * `searchEvents.samples` — ВСЕ события целиком, по записи на адрес (url · event · event_date ·
+ * excluded_url_status · …). Это ДАННЫЕ: поимённый список выпавших с причинами лежит здесь.
+ * `searchEvents.byReason` — сводка с ДО 20 образцов адресов на причину; это витрина для глаз,
+ * НЕ данные. Правило: считать по `samples`, показывать по `byReason`.
+ * ⚠️ Цена правила уплачена недоразумением: агент посмотрел на срезанный вывод ключей объекта,
+ * не увидел `samples` (седьмой ключ) и объявил полный список отсутствующим — «нет строки» было
+ * утверждением о поиске, а не о мире (`EXP-0165`).
+ *
  * ⛔ ПРИБОР ЧИТАЮЩИЙ. Переобход (`recrawl/queue`) отсюда НЕ вызывается: это действие, меняющее
  * поведение наших страниц в чужом индексе, и оно требует слова владельца. Читается только КВОТА —
  * это вопрос «сколько можно», а не действие.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
@@ -59,6 +68,7 @@ import {
 	indicatorsToRows,
 } from './lib/yandex-snapshot-core.mjs';
 import { isoDate, snapshotFileName } from './lib/console-snapshot-core.mjs';
+import { shouldWriteSnapshot, snapshotExitCode } from './lib/yandex-snapshot-core.mjs';
 import { settleExit } from './lib/exit-code.mjs';
 
 const DEFAULT_OUT = join('reports', 'CONSOLES');
@@ -143,8 +153,18 @@ async function main(argv) {
 		date_from: isoDate(from),
 		date_to: todayIso,
 	});
+	// 🔴 bugs/215: половина статистики МОЛЧАЛА при отказе — пустой массив неотличим от честного
+	// нуля («тихий ноль», класс bugs/202). Теперь отказ называется и делает снимок НЕПОЛНЫМ.
 	const queryHistory = history.ok ? indicatorsToRows(history.body) : [];
-	console.log(`СТАТИСТИКА ПОИСКА за ${args.days} сут. — строк ${queryHistory.length}`);
+	const complete = history.ok;
+	if (history.ok) {
+		console.log(`СТАТИСТИКА ПОИСКА за ${args.days} сут. — строк ${queryHistory.length}`);
+	} else {
+		console.error(
+			`🔴 СТАТИСТИКА ПОИСКА НЕ ОТДАНА (${history.status}) — снимок НЕПОЛОН. ` +
+				'Ноль строк здесь означал бы замер; это не замер, а отказ.',
+		);
+	}
 
 	// ── События поиска: что появилось и что выпало, с причинами ────────────────────────────
 	const samples = await pagedSamples(token, `${base}/search-urls/events/samples`);
@@ -179,7 +199,9 @@ async function main(argv) {
 		recrawlQuota: quotaBody
 			? { ...quotaBody, sentByHand: args.sentByHand, poolVerdict: verdict }
 			: { error: quota.status, poolVerdict: verdict },
-		queryHistory: { days: args.days, rows: queryHistory },
+		queryHistory: history.ok
+			? { days: args.days, rows: queryHistory }
+			: { days: args.days, rows: [], error: history.status },
 		searchEvents: {
 			total: samples.length,
 			removed: removed.length,
@@ -203,9 +225,24 @@ async function main(argv) {
 
 	mkdirSync(args.out, { recursive: true });
 	const file = join(args.out, snapshotFileName(todayIso, 'yandex_webmaster'));
-	writeFileSync(file, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
-	console.log(`✅ ЗАПИСАН: ${file}`);
-	return 0;
+	const existed = existsSync(file);
+	const writeVerdict = shouldWriteSnapshot({ complete, fileExists: existed });
+
+	if (!writeVerdict.write) {
+		console.error(`
+⛔ ФАЙЛ ДНЯ НЕ ТРОНУТ: ${writeVerdict.why}`);
+		console.error(`   ${file} остался прежним — перезапустите, когда API ответит целиком.`);
+		return snapshotExitCode({ complete });
+	}
+
+	writeFileSync(file, `${JSON.stringify(snapshot, null, 2)}
+`, 'utf8');
+	// Я-10 набора `qa/suites/yandex-webmaster.md`: перезапись НАЗЫВАЕТСЯ. Прежняя редакция писала
+	// «ЗАПИСАН» и тогда, когда затирала сегодняшний файл, — оператор не видел, что затёр.
+	console.log(`✅ ${existed ? 'ПЕРЕЗАПИСАН' : 'ЗАПИСАН'}: ${file}`);
+	if (existed) console.log('   (повтор дня — прежнее содержимое осталось в истории git)');
+	if (!complete) console.error('   ⚠️ снимок НЕПОЛОН — поле queryHistory.error несёт код отказа');
+	return snapshotExitCode({ complete });
 }
 
 settleExit(main(process.argv.slice(2)));

@@ -36,6 +36,8 @@ import {
 	indicatorsToRows,
 	EVENT_REMOVED,
 	EVENT_APPEARED,
+	shouldWriteSnapshot,
+	snapshotExitCode,
 } from './lib/yandex-snapshot-core.mjs';
 
 /** Строка выборки в форме первоисточника. Коды — из ЖИВОЙ консоли, см. шапку. */
@@ -220,4 +222,54 @@ test('имена показателей НЕ зашиты: новый показ
 test('пустой и кривой ответ не роняют развёртку', () => {
 	assert.deepEqual(indicatorsToRows({}), []);
 	assert.deepEqual(indicatorsToRows({ indicators: { TOTAL_SHOWS: [{ value: 1 }] } }), []);
+});
+
+// ── bugs/215: ХУДШИЙ СНИМОК НЕ ЗАТИРАЕТ ЛУЧШИЙ ─────────────────────────────────────────────
+//
+// Дефект нашёл суд QA: половины снимка переживали отказ API несимметрично — события бросали,
+// статистика тихо давала пустой массив, и файл дня перезаписывался пустотой с кодом 0.
+// Инвариант лечения: частичный снимок НИКОГДА не затирает существующий, полный — затирает всегда.
+
+test('🔴 неполный снимок НЕ затирает уже лежащий файл дня', () => {
+	const v = shouldWriteSnapshot({ complete: false, fileExists: true });
+	assert.equal(v.write, false, 'иначе худший снимок молча затрёт лучший — ровно дефект bugs/215');
+	assert.match(v.why, /худший не затирает лучший/);
+});
+
+test('неполный снимок ПИШЕТСЯ, когда файла дня ещё нет — день без файла хуже', () => {
+	const v = shouldWriteSnapshot({ complete: false, fileExists: false });
+	assert.equal(v.write, true, 'ряд копится, и пропущенный день невосстановим');
+});
+
+test('полный снимок перезаписывает день — идемпотентность НЕ сломана', () => {
+	// ⛔ Отменять перезапись дня было бы лечением не того: консоль пересматривает свежие дни
+	// задним числом, и поздний ПОЛНЫЙ прогон несёт строго лучшие данные.
+	const v = shouldWriteSnapshot({ complete: true, fileExists: true });
+	assert.equal(v.write, true);
+	assert.match(v.why, /перезапись дня полным снимком/);
+});
+
+test('полный снимок пишется и первым за день', () => {
+	assert.equal(shouldWriteSnapshot({ complete: true, fileExists: false }).write, true);
+});
+
+test('🔴 неполный снимок СЛЫШЕН вызывающему кодом возврата', () => {
+	assert.equal(snapshotExitCode({ complete: false }), 1, 'тихий ноль — это и был дефект');
+	assert.equal(snapshotExitCode({ complete: true }), 0);
+});
+
+test('таблица решений покрыта целиком: четыре сочетания полноты и наличия файла', () => {
+	const cases = [
+		[true, true, true],
+		[true, false, true],
+		[false, false, true],
+		[false, true, false],
+	];
+	for (const [complete, fileExists, expected] of cases) {
+		assert.equal(
+			shouldWriteSnapshot({ complete, fileExists }).write,
+			expected,
+			`полный=${complete} файл=${fileExists}`,
+		);
+	}
 });
