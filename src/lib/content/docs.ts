@@ -451,6 +451,13 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         }
       },
       {
+        "type": "p",
+        "text": {
+          "ru": "2.6. Система Пространство NDim использует сервис продуктовой аналитики PostHog для понимания того, как люди пользуются Системой. Данные хранятся на серверах в Европейском союзе, во Франкфурте. Условия обработки данных этим сервисом описаны в его собственных документах: https://posthog.com/privacy.",
+          "en": "2.6. The NDim Space System uses the product analytics service PostHog to understand how people use the System. The data is stored on servers in the European Union, in Frankfurt. The terms on which this service processes data are set out in its own documents: https://posthog.com/privacy."
+        }
+      },
+      {
         "type": "h2",
         "text": {
           "ru": "3. Права и обязанности Пользователя в отношении личных данных",
