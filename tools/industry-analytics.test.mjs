@@ -114,7 +114,7 @@ test('имя события читается из JSON и из формы, а и
   assert.equal(pickJson('{"event":"guest_start"}', ['event']), 'guest_start');
   assert.equal(pickJson('{"events":[{"event_type":"door_click"}]}', ['events.0.event_type']), 'door_click');
   assert.equal(pickJson('data={"event":"demo_touch"}&sent_at=1', ['event']), 'demo_touch');
-  assert.equal(pickJson(' сжатая пачка', ['event']), null, 'из нечитаемого тела имя обязано быть null, а не догадкой');
+  assert.equal(pickJson('\x00\x01\x02сжатая пачка', ['event']), null, 'из нечитаемого тела имя обязано быть null, а не догадкой');
   assert.equal(pickJson('', ['event']), null);
   assert.equal(pickJson(null, ['event']), null);
   assert.equal(parseBody('не форма и не json'), null);
