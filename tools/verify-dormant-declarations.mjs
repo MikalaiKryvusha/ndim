@@ -115,6 +115,44 @@ export function countIdent(text, name) {
 	return n;
 }
 
+/**
+ * ОПТ-АУТ С ОБЯЗАТЕЛЬНОЙ ПРИЧИНОЙ — `// СПЯЩЕЕ НАМЕРЕННО: <причина>`.
+ *
+ * Заведён по замечанию З1 вердикта №17. Вычистка смены 10 была механически безупречна — читателя
+ * у сорока двух ключей не было по построению языка, — но вместе с мёртвыми текстами уехал
+ * комментарий, ПРЯМО ЗАПИСАВШИЙ НАМЕРЕНИЕ СОХРАНИТЬ спящее: «`acctSince` убран по слову владельца
+ * (интервью №007 В10)… оставленный перевод — приглашение вернуть её обратно следующей сессии».
+ * Намерение было записано человеческим языком, и машина прочла его как мертвечину.
+ *
+ * 🔑 Формулировка судьи, которая тут важнее механики: это ЗЕРКАЛО `EXP-0228`. Там отказ,
+ * записанный в код с доводом, следующий агент прочёл как закрытый вопрос; здесь СОХРАНЕНИЕ,
+ * записанное с доводом, машина прочла как мусор. Оба раза довод был, и оба раза его формат не
+ * был машиночитаем. Опт-аут даёт намерению форму, которую видит прибор.
+ *
+ * ПРИЧИНА ОБЯЗАТЕЛЬНА, и это не формальность: маркер без причины — это «не трогай, потому что не
+ * трогай», то есть вечное исключение без срока и без автора. Образец взят у соседа —
+ * `LIVE_BY_NAME` в `verify-probe-mark.mjs` (форма предложена судьёй). Маркер без причины НЕ
+ * освобождает: прибор краснеет отдельной строкой и требует дописать довод.
+ */
+const OPT_OUT = 'СПЯЩЕЕ НАМЕРЕННО:';
+const MIN_REASON = 12;
+
+/**
+ * Причина опт-аута для объявления в строке `i`: ищется в самой строке и в сплошном блоке
+ * комментариев НАД ней. Возвращает `null` (маркера нет) либо строку причины (возможно пустую —
+ * тогда прибор краснеет по-другому).
+ */
+export function optOutReason(lines, i) {
+	const has = (s) => s.includes(OPT_OUT);
+	if (has(lines[i])) return lines[i].slice(lines[i].indexOf(OPT_OUT) + OPT_OUT.length).trim();
+	for (let j = i - 1; j >= 0; j -= 1) {
+		const t = lines[j].trim();
+		if (!(t.startsWith('//') || t.startsWith('*') || t.startsWith('/*'))) break;
+		if (has(t)) return t.slice(t.indexOf(OPT_OUT) + OPT_OUT.length).trim();
+	}
+	return null;
+}
+
 const DECL = /^[ \t]*export[ \t]+(?:async[ \t]+)?(?:const|let|var|function|class)[ \t]+([A-Za-z_$][A-Za-z0-9_$]*)/;
 
 /** Экспорты модуля: [{ name, line }]. CRLF снимается — точка не матчит возврат каретки. */
@@ -123,7 +161,7 @@ export function declaredExports(text) {
 	const lines = String(text || '').split('\n');
 	for (let i = 0; i < lines.length; i++) {
 		const m = lines[i].replace(/\r$/, '').match(DECL);
-		if (m && !FRAMEWORK.has(m[1])) out.push({ name: m[1], line: i + 1 });
+		if (m && !FRAMEWORK.has(m[1])) out.push({ name: m[1], line: i + 1, optOut: optOutReason(lines, i) });
 	}
 	return out;
 }
@@ -170,7 +208,7 @@ export function declaredTexts(text) {
 		const ancestors = stack.map((e) => e.name);
 		const block = lines.slice(i, i + LOOKAHEAD).join(' ');
 		if (HAS_RU.test(block) && HAS_EN.test(block)) {
-			out.push({ name: m[1], line: i + 1, owner, ownerExported, ancestors });
+			out.push({ name: m[1], line: i + 1, owner, ownerExported, ancestors, optOut: optOutReason(lines, i) });
 		}
 		stack.push({ indent, name: m[1] });
 	}
@@ -212,19 +250,29 @@ export function judgeCorpus(corpus) {
 		/* Фикстуры тестов — не лицо продукта: объект отдают функции целиком, по имени ключа не зовут. */
 		if (!/[.]test[.]/.test(path)) {
 			const indexed = indexedIdents(text);
-			for (const { name, line, owner, ownerExported, ancestors } of declaredTexts(text)) {
+			for (const { name, line, owner, ownerExported, ancestors, optOut } of declaredTexts(text)) {
 				if (ownerExported) continue;
 				// карту или её ветку читают вычисленным ключом — доказать смерть нельзя
 				if (indexed.has(owner) || ancestors.some((a) => indexed.has(a))) continue;
 				if (countIdent(text, name) > 1) continue;
+				if (optOut !== null && optOut.length >= MIN_REASON) continue; // намерение объявлено с доводом
+				if (optOut !== null) {
+					rows.push({ path, line, name, rule: 'П0', why: 'маркер «СПЯЩЕЕ НАМЕРЕННО» без внятной причины — довод обязателен' });
+					continue;
+				}
 				rows.push({ path, line, name, rule: 'П1', why: 'текст объявлен в местной карте и не читается даже своим файлом' });
 			}
 		}
 
-		for (const { name, line } of declaredExports(text)) {
+		for (const { name, line, optOut } of declaredExports(text)) {
 			if (countIdent(text, name) > 1 || usedInOtherCode(name, path)) continue;
 			const planned = namedInLiveDoc(name);
 			if (planned.length > 0) continue; // код под живой план — не мертвечина
+			if (optOut !== null && optOut.length >= MIN_REASON) continue;
+			if (optOut !== null) {
+				rows.push({ path, line, name, rule: 'П0', why: 'маркер «СПЯЩЕЕ НАМЕРЕННО» без внятной причины — довод обязателен' });
+				continue;
+			}
 			rows.push({ path, line, name, rule: 'П2', why: 'экспорт не читается кодом и не назван ни одним живым документом' });
 		}
 	}
@@ -287,6 +335,32 @@ function selftest() {
 			const p1 = judgeCorpus(c).filter((r) => r.rule === 'П1');
 			return p1.length === 1 && p1[0].name === 'leftover';
 		}],
+		/*
+		 * ОПТ-АУТ. Замечание З1 вердикта №17: намерение сохранить спящее было записано словами и
+		 * прочитано машиной как мусор. Проверяется ОБЕ стороны — что маркер освобождает и что
+		 * маркер БЕЗ ДОВОДА не освобождает: иначе он выродится в «не трогай, потому что не трогай».
+		 */
+		['🔑 опт-аут с причиной освобождает ключ', () => {
+			const c = new Map([
+				['src/routes/a/+page.svelte', 'const t = {\n  alive: { ru: 1, en: 2 },\n  // СПЯЩЕЕ НАМЕРЕННО: перевод оставлен под возврат строки по слову владельца\n  kept: { ru: 3, en: 4 },\n};\nconst s = t.alive;'],
+			]);
+			return judgeCorpus(c).length === 0;
+		}],
+		['🔑 опт-аут БЕЗ причины НЕ освобождает — краснеет отдельным правилом П0', () => {
+			const c = new Map([
+				['src/routes/a/+page.svelte', 'const t = {\n  alive: { ru: 1, en: 2 },\n  // СПЯЩЕЕ НАМЕРЕННО:\n  kept: { ru: 3, en: 4 },\n};\nconst s = t.alive;'],
+			]);
+			const r = judgeCorpus(c);
+			return r.length === 1 && r[0].rule === 'П0' && r[0].name === 'kept';
+		}],
+		['опт-аут работает и на экспорте (П2)', () => {
+			const c = new Map([['src/lib/x.ts', '// СПЯЩЕЕ НАМЕРЕННО: подключается фазой 2 эпика, читателя ещё нет\nexport function later() {}']]);
+			return judgeCorpus(c).length === 0;
+		}],
+		['опт-аут виден и в хвосте самой строки', () =>
+			optOutReason(['const q = 1; // СПЯЩЕЕ НАМЕРЕННО: довод внутри строки'], 0) === 'довод внутри строки'],
+		['опт-аут НЕ подхватывается через пустую строку (чужой комментарий не освобождает)', () =>
+			optOutReason(['// СПЯЩЕЕ НАМЕРЕННО: чужой довод', '', '  dead: {'], 2) === null],
 		['П1 не считает картой объект без ru/en', () => {
 			const c = new Map([['src/routes/a/+page.svelte', 'const t = {\n  plain: { size: 1 },\n};']]);
 			return !judgeCorpus(c).some((r) => r.rule === 'П1');
@@ -369,8 +443,13 @@ function main(argv) {
 		console.log('✅ спящих объявлений нет.');
 		return 0;
 	}
+	const p0 = rows.filter((r) => r.rule === 'П0');
 	const p1 = rows.filter((r) => r.rule === 'П1');
 	const p2 = rows.filter((r) => r.rule === 'П2');
+	if (p0.length) {
+		console.log(`\n🔴 П0 маркер «СПЯЩЕЕ НАМЕРЕННО» без внятной причины: ${p0.length}`);
+		for (const r of p0) console.log(`   ${r.path}:${r.line}  ${r.name}`);
+	}
 	console.log(`\n🔴 П1 спящий текст (объявлен, не читается ни одним файлом кода): ${p1.length}`);
 	for (const r of p1) console.log(`   ${r.path}:${r.line}  ${r.name}`);
 	console.log(`\n🔴 П2 спящий экспорт (не читается кодом и не назван живым документом): ${p2.length}`);
