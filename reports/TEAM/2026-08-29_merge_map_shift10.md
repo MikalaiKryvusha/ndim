@@ -220,7 +220,7 @@ git ls-tree -r ndim_dev1 tools/guards.mjs | ... | grep -c 'argv:'   # 7, то е
 | dev-3 | `bugs/NEW_korpus_tegov_raskololsya…` | `bugs/219` |
 | dev-3 | `bugs/NEW_ostatok-kvoty-v-stroke-zhurnala…` | `bugs/220` |
 | QA | `bugs/NEW_dver_razresheniya_opoznaet…` | `bugs/221` |
-| dev-1 | `researches/NEW_analytics_event_models_of_tops.md` | `researches/61` |
+| dev-1 | `researches/63_analytics_event_models_of_tops.md` | `researches/61` |
 | Интегратор | `researches/61_1x_analytics_events_doc.md` | `researches/62` |
 | Интегратор | `researches/62_gate_phase4_texts_audit.md` | `researches/63` |
 

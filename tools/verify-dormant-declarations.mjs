@@ -41,8 +41,10 @@
  * границы слова (класс `bugs/218`) и покрасила 397 объявлений из 397. Токены заодно снимают и
  * подстрочные совпадения: `card` не удовлетворяется словом `delCard`.
  *
- * Запуск:   node tools/verify-dormant-declarations.mjs
- * Самотест: node tools/verify-dormant-declarations.mjs --selftest
+ * Запуск:   node tools/verify-dormant-declarations.mjs   ·   самотест: --selftest
+ * Ворота:   `npm run guards` — с окна мержей смены 10 (правило «ноль красных на слитом дереве»:
+ *           на дереве шага 3 даёт 0/0, а на каждой ветке по отдельности давал красные).
+ * Код возврата: 0 — спящих объявлений нет · 1 — есть П0/П1/П2.
  */
 
 import { execFileSync } from 'node:child_process';
