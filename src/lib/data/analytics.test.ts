@@ -131,9 +131,56 @@ describe('контур — считает только бой', () => {
     assert.equal(analyticsHostAllowed('ndim-stage.firebaseapp.com'), false);
   });
 
-  test('бой считает', () => {
-    assert.equal(analyticsHostAllowed('ndim-space.web.app'), true);
-    assert.equal(analyticsHostAllowed('ndim-space.firebaseapp.com'), true);
+  /**
+   * 🔴 БОЕВОЙ ДОМЕН НАЗВАН ЯВНО — дефект Д3 вердикта QA №14, вторая его половина.
+   * Здесь проверялись только `ndim-space.web.app` и `ndim-space.firebaseapp.com`, а домен,
+   * на котором живут настоящие посетители, в наборе не был назван ВООБЩЕ. Пока список был
+   * чёрным, оба случая проходили; перепиши функцию на белый — и набор остался бы зелёным,
+   * а бой замолчал бы. Материал не был способен отличить исправное от чёрного списка.
+   */
+  test('🔴 ЗЕРКАЛО: дом продукта из `site.ts` считается — иначе бой молчит', () => {
+    const source = readFileSync(new URL('../site.ts', import.meta.url), 'utf8');
+    const origin = source.match(/SITE_ORIGIN = '([^']+)'/u)?.[1];
+    assert.notEqual(origin, undefined, 'в site.ts не найден SITE_ORIGIN — сверять не с чем');
+    const home = new URL(origin as string).hostname;
+    assert.equal(
+      analyticsHostAllowed(home),
+      true,
+      `дом продукта «${home}» из site.ts аналитикой НЕ считается — бой молчит`,
+    );
+  });
+
+  /**
+   * 🔑 ЦЕНА БЕЛОГО СПИСКА, ПРИБИТАЯ К ИСТОЧНИКУ. Новый боевой адрес белый список молча не
+   * посчитает — поэтому ожидаемые адреса выводятся из `.firebaserc`, а не набираются здесь
+   * руками. Заведут третий сайт хостинга — этот случай покраснеет раньше, чем ряд опустеет.
+   */
+  test('🔴 ЗЕРКАЛО: служебные адреса Firebase всех сайтов из `.firebaserc` считаются', () => {
+    type Проект = { hosting?: Record<string, string[]> };
+    const rc = JSON.parse(readFileSync(new URL('../../../.firebaserc', import.meta.url), 'utf8')) as {
+      targets?: Record<string, Проект>;
+    };
+    const sites = Object.values(rc.targets ?? {})
+      .flatMap((проект) => Object.values(проект.hosting ?? {}))
+      .flat();
+    assert.ok(sites.length > 0, 'в .firebaserc не нашлось ни одного сайта хостинга');
+    for (const site of sites) {
+      for (const host of [`${site}.web.app`, `${site}.firebaseapp.com`]) {
+        assert.equal(
+          analyticsHostAllowed(host),
+          true,
+          `адрес «${host}» сайта «${site}» из .firebaserc не считается — белый список отстал от источника`,
+        );
+      }
+    }
+  });
+
+  test('🔴 канал предпросмотра и «второй стейдж» МОЛЧАТ — их ловил только белый список', () => {
+    // Живой прогон судьи по чёрному списку: все три считались. Теперь ни один.
+    assert.equal(analyticsHostAllowed('ndim-space--pr42-a1b2c3d4.web.app'), false);
+    assert.equal(analyticsHostAllowed('ndim-stage-2.web.app'), false);
+    assert.equal(analyticsHostAllowed('192.168.1.50'), false);
+    assert.equal(analyticsHostAllowed('ndimspace.app.evil.example'), false);
   });
 
   test('пустой хост не считается — «нет хоста» это не «бой»', () => {
