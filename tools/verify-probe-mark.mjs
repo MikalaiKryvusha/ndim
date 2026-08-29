@@ -38,6 +38,7 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = process.cwd();
 const TOOLS = join(ROOT, 'tools');
@@ -388,5 +389,16 @@ function run() {
   process.exit(1);
 }
 
-if (process.argv.includes('--selftest')) selftest();
-else run();
+/**
+ * 🔴 ПРЕДОХРАНИТЕЛЬ «ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН» (`ideas/43`; страж класса — `verify-import-safety.mjs`).
+ * Без него импорт этого файла ради чистых функций (их здесь девять экспортов, и они просятся в
+ * чужие проверки) запускал обход дерева и звал `process.exit`, убивая чужой процесс.
+ */
+const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+function выполнить() {
+  if (process.argv.includes('--selftest')) selftest();
+  else run();
+}
+
+if (ЗАПУЩЕН_НАПРЯМУЮ) выполнить();
