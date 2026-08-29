@@ -274,57 +274,6 @@
       ru: 'После смены почты вход на других устройствах придётся выполнить заново.',
       en: 'After the change you will need to sign in again on your other devices.',
     },
-    // ── Виджет «Удаление аккаунта» (фаза 8) ────────────────────────────────────────────
-    delCard: { ru: 'Удаление аккаунта', en: 'Delete account' },
-    delLede: {
-      ru: 'Мы не сможем восстановить Ваши данные.',
-      en: 'We will not be able to restore your data.',
-    },
-    delOpenBtn: { ru: 'Удалить аккаунт', en: 'Delete account' },
-    // 🔴 ДОСЛОВНО 1.x. Слово «безвозвратно» — формулировка владельца, и он подтвердил её
-    // 2026-08-01 (В4 = А). Правило продукта запрещает «навсегда», а не «безвозвратно», и
-    // здесь это правда: удаление действительно необратимо.
-    delWarn: {
-      ru: 'Ваша учётная запись и все её данные будут безвозвратно удалены. Удалить?',
-      en: 'Your account and all its data will be irrevocably deleted. Delete?',
-    },
-    lossDims: { ru: 'Ваш NDim ID и', en: 'your NDim ID and' },
-    lossDimsTail: { ru: 'по Измерениям', en: 'across dimensions' },
-    lossDimsPlain: {
-      ru: 'Ваш NDim ID и все оценки по Измерениям',
-      en: 'your NDim ID and all your ratings across dimensions',
-    },
-    lossPhoto: { ru: 'фотографию', en: 'your photo' },
-    lossRelations: { ru: 'связи, которые для Вас посчитаны', en: 'the relations computed for you' },
-    delConfirmLabel: {
-      ru: 'Введите Вашу почту, чтобы подтвердить:',
-      en: 'Type your email to confirm:',
-    },
-    delMismatch: { ru: 'Почта не совпадает с Вашей.', en: 'This is not your email address.' },
-    delCancel: { ru: 'Оставить всё как есть', en: 'Keep everything' },
-    delWorking: { ru: 'Удаляем…', en: 'Deleting…' },
-    delWaitTitle: { ru: 'Подтвердите, что это Вы', en: 'Confirm it is you' },
-    delWaitBody: {
-      ru: 'Мы отправили письмо на Вашу почту. Перейдите по ссылке из него — и удаление завершится.',
-      en: 'We sent a letter to your email. Follow the link in it and the deletion will complete.',
-    },
-    // Честно про сутки — решение владельца В3 = А.
-    delTail: {
-      ru: 'Из чужих списков связей Вы исчезнете в течение суток.',
-      en: 'You will disappear from other people’s relation lists within a day.',
-    },
-    delDoneTitle: { ru: 'Аккаунт удалён', en: 'Account deleted' },
-    delDoneBody: {
-      ru: 'Спасибо, что были в Пространстве.',
-      en: 'Thank you for being part of the Space.',
-    },
-    delToLanding: { ru: 'На главную', en: 'To the home page' },
-    // Отказ каскада. Главное здесь — не извинение, а факт: вход цел.
-    delStopped: { ru: 'Удалить не удалось — остановились на шаге', en: 'Deletion failed — stopped at' },
-    delStillYours: {
-      ru: 'Ваш вход цел: войдите ещё раз и повторите.',
-      en: 'Your sign-in still works: sign in again and retry.',
-    },
     guestTitle: { ru: 'Вы смотрите Пространство гостем', en: 'You are exploring as a guest' },
     guestBody: {
       ru: 'У гостя нет почты, поэтому управлять пока нечем. Сохраните свои результаты — и этот экран станет Вашим.',

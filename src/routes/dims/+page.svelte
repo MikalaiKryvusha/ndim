@@ -1140,7 +1140,6 @@
     // Своя кнопка очистки поля (ideas/21 п. 4). Нативный крестик браузера показать
     // принудительно нельзя — он живёт только при фокусе, а фокус мы снимаем ради п. 5.
     searchClear: { ru: 'Очистить поле поиска', en: 'Clear the search field' },
-    loading: { ru: 'Загрузка', en: 'Loading' },
     allDone: {
       ru: 'Вы оценили все измерения Пространства. Это по-настоящему редкое достижение.',
       en: 'You have rated every dimension in the Space. That is a genuinely rare feat.',

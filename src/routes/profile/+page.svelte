@@ -667,10 +667,6 @@
     // Слово владельца дословно (интервью №007, В3=А): «Выйти? Ваши оценки исчезнут».
     acctLeaveConfirm: { ru: 'Выйти? Ваши оценки исчезнут', en: 'Sign out? Your ratings will be gone' },
     acctLeaveCancel: { ru: 'Отмена', en: 'Cancel' },
-    // `acctSince` удалён: строка «В Пространстве с …» убрана из профиля по слову владельца
-    // (интервью №007 В10, повторно 2026-07-31). Оставленный перевод — приглашение вернуть её
-    // обратно следующей сессии.
-    acctNoName: { ru: 'Без имени', en: 'No name' },
     seeMe: { ru: 'Как меня видят', en: 'How others see me' },
     backBtn: { ru: 'Назад', en: 'Back' },
     connecting: { ru: 'Подключаюсь…', en: 'Connecting…' },
@@ -814,7 +810,6 @@
         en: 'Nobody sees you yet. What to show and to whom is entirely your decision, in the “Visibility” tab.',
       },
       close: { ru: 'Продолжить', en: 'Continue' },
-      retry: { ru: 'Попробовать снова', en: 'Try again' },
       // Состояние «почта занята другим профилем» — отдельный вид карточки, а не красная
       // строка под заголовком «Сейчас Вы гость» (bugs/84, половина «б»).
       mineTitle: {
@@ -863,9 +858,6 @@
       en: 'A new property is hidden from everyone until you open it yourself.',
     },
     myNdimId: { ru: 'Мой NDim ID', en: 'My NDim ID' },
-    // Осей в Пространстве тысячи: дробь «X из N» бессмысленна и демотивирует (правка
-    // владельца, 2026-07-11). Показываем только абсолютное число оценённого.
-    ratedDims: { ru: 'Оценено измерений', en: 'Dimensions rated' },
     toDims: { ru: 'К измерениям →', en: 'To dimensions →' },
 
     // Вводная подсказка «Дома» 1.x (index.html:818) — адаптирована: убрано обещание
@@ -910,34 +902,8 @@
       en: 'Relations have not been computed yet. The sync server will compute them after your first ratings.',
     },
     toRelations: { ru: 'К связям →', en: 'To relations →' },
-    searchDims: { ru: 'Найти среди {n} измерений…', en: 'Search {n} dimensions…' },
-    filters: {
-      mine: { ru: 'Мои', en: 'Mine' },
-      unrated: { ru: 'Не оценено', en: 'Unrated' },
-      all: { ru: 'Все', en: 'All' },
-    },
-    // Пустой список ОБЯЗАН объяснить себя. На боевом проде новичок открывал «Измерения» и видел
-    // белое ничто: фильтр по умолчанию — «Мои», а своих оценок у него ноль (2026-07-12).
-    // Пустота, которая молчит, — это не минимализм, это брошенный человек.
-    dimsEmpty: {
-      mine: {
-        ru: 'Вы ещё не оценили ни одного измерения. Откройте «Не оценено» — и поставьте первые звёзды.',
-        en: 'You have not rated any dimension yet. Open “Unrated” and give your first stars.',
-      },
-      search: {
-        ru: 'Ничего не нашлось. Попробуйте другое слово.',
-        en: 'Nothing found. Try another word.',
-      },
-      none: { ru: 'Здесь пока пусто.', en: 'Nothing here yet.' },
-    },
     votes: { ru: 'голосов', en: 'votes' },
-    yourRating: { ru: 'Ваша оценка', en: 'Your rating' },
-    collapse: { ru: 'Свернуть ▴', en: 'Collapse ▴' },
     soon: { ru: 'скоро', en: 'soon' },
-    barsHint: {
-      ru: 'Свёрнуто — бар (просмотр), раскрыто — звёзды (ввод). Оценки видите только Вы.',
-      en: 'Collapsed — a bar (viewing), expanded — stars (rating). Only you can see your ratings.',
-    },
     seenBy: { ru: 'Так Вас видит аудитория', en: 'How this audience sees you' },
     me: { ru: 'Я', en: 'Me' },
     everyone: { ru: 'Все', en: 'Everyone' },
@@ -959,12 +925,6 @@
     genders: { m: { ru: 'Мужской', en: 'Male' }, w: { ru: 'Женский', en: 'Female' }, nb: { ru: 'Небинарный', en: 'Non-binary' } },
     noValue: { ru: 'не заполнено', en: 'not filled' },
     noAvatar: { ru: 'нет фото', en: 'no photo' },
-    nav: {
-      profile: { ru: 'Профиль', en: 'Profile' },
-      relations: { ru: 'Связи', en: 'Relations' },
-      space: { ru: 'Пространство', en: 'Space' },
-      menu: { ru: 'Меню', en: 'Menu' },
-    },
     edit: { ru: 'Редактировать', en: 'Edit' },
     save: { ru: 'Сохранить', en: 'Save' },
     cancel: { ru: 'Отмена', en: 'Cancel' },
@@ -990,14 +950,6 @@
       month: { ru: 'Месяц', en: 'Month' },
       day: { ru: 'День', en: 'Day' },
     },
-    suggestTitle: { ru: 'Предложить новое измерение', en: 'Suggest a new dimension' },
-    suggestHint: {
-      ru: 'Опишите ось: что это и зачем (5–300 символов). Заявку рассмотрит админ.',
-      en: 'Describe the axis: what it is and why (5–300 chars). An admin will review it.',
-    },
-    suggestSend: { ru: 'Отправить', en: 'Send' },
-    suggestSent: { ru: 'Ваша заявка отправлена и будет принята в работу. Спасибо за Ваш вклад в развитие Пространства NDim!', en: 'Your suggestion has been sent and will be taken into work. Thank you for contributing to the NDim Space!' },
-    suggestMore: { ru: 'Предложить ещё', en: 'Suggest another' },
   } as const;
 
   const NAME_FIELD_KEYS = ['firstRu', 'firstEn', 'nickRu', 'nickEn', 'middleRu', 'middleEn', 'lastRu', 'lastEn'] as const;
