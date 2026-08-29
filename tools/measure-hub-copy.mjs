@@ -1,7 +1,8 @@
 /**
  * ЗАМЕР ТЕКСТОВ ХАБОВ КАТАЛОГА — длина описаний, работа лестницы отката, фикстура для юнита.
  *
- * Запуск: node tools/measure-hub-copy.mjs · фикстура: --fixture · порог: D_LIMIT=155
+ * Запуск: node tools/measure-hub-copy.mjs · фикстура: --fixture · самотест: --selftest
+ *   · порог: D_LIMIT=155
  * Ворота: нет — это МЕРИТЕЛЬ, а не страж: он печатает числа о живом каталоге и никого не судит.
  *   Нижняя граница длины описаний станет воротами внутри юнита порции dev-1, на фикстуре, —
  *   там у неё есть предмет. Здесь предмета нет: каталог растёт, и «красный» означал бы
@@ -40,6 +41,13 @@ import { fileURLToPath } from 'node:url';
 
 /** Корень дерева, из которого запущен прибор, — от собственного файла, а не от cwd и не литералом. */
 const КОРЕНЬ = new URL('../', import.meta.url);
+
+// Самотест не трогает настоящий каталог и обязан отработать ДО его загрузки: он про то,
+// КУДА прибор смотрит, а не про то, что он там увидит.
+if (process.argv.includes('--selftest')) {
+  const { самотест } = await import(new URL('measure-hub-copy.selftest.mjs', import.meta.url).href);
+  process.exit(самотест(КОРЕНЬ));
+}
 
 const { groupByKind, pageCount, placesIn, slicePage } = await import(
   new URL('src/lib/content/catalog-hub.ts', КОРЕНЬ).href
