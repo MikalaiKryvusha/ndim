@@ -21,6 +21,7 @@
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(name);
@@ -117,6 +118,7 @@ async function newGuest(label) {
     viewport: { width: WIDTH, height: WIDTH < 500 ? 844 : 900 },
     locale: 'ru-RU',
   });
+  await markProbeContext(ctx);
   await ctx.addInitScript(() => { try { localStorage.setItem('ndim-theme', 'light'); } catch { /**/ } });
   const page = await ctx.newPage();
   const errors = [];

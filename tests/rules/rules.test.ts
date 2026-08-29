@@ -1367,6 +1367,84 @@ describe('Воронка онбординга — только +1 и ничег�
     await assertFails(deleteDoc(doc(anonymous().firestore(), DAY)));
     await assertFails(deleteDoc(doc(verified(ALICE).firestore(), DAY)));
   });
+
+  /*
+   * ── ВТОРОЙ ВХОД ВОРОНКИ (`plans/74` фаза 1, лечение `bugs/202`) ────────────────────
+   *
+   * Два новых счётчика — `door_click` (нажата дверь карточки) и `signin_wall_view`
+   * (показан экран «Войдите в Пространство»). Правило переписано с перечисления веток
+   * на «тронуто ровно одно поле, и оно выросло на +1»; тесты выше НЕ ТРОГАЛИСЬ намеренно —
+   * они и есть доказательство, что прежние запреты пережили переписывание.
+   *
+   * 🔑 Главный тест здесь — исторический день. Документы до 2026-08-28 знают только четыре
+   * старых поля, и первая же запись нового счётчика приходит в них слиянием. Если бы правило
+   * требовало присутствия всех имён, весь старый ряд стал бы недоступен для дозаписи, и
+   * дефект вскрылся бы уже в бою.
+   */
+
+  test('новый счётчик door_click пишется как все: +1', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertSucceeds(updateDoc(doc(db, DAY), { door_click: increment(1) }));
+  });
+
+  test('новый счётчик signin_wall_view пишется как все: +1', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertSucceeds(updateDoc(doc(db, DAY), { signin_wall_view: increment(1) }));
+  });
+
+  test('🔑 ИСТОРИЧЕСКИЙ ДЕНЬ (только четыре старых поля) принимает новый счётчик слиянием', async () => {
+    await seedDay(); // ровно те четыре поля, что писались до второго входа
+    const db = anonymous().firestore();
+    await assertSucceeds(setDoc(doc(db, DAY), { door_click: increment(1) }, { merge: true }));
+  });
+
+  test('первый за день создаёт документ НОВЫМ счётчиком со значением 1', async () => {
+    const db = anonymous().firestore();
+    await assertSucceeds(
+      setDoc(doc(db, 'space/funnel/days/2026-08-29'), { signin_wall_view: increment(1) }, { merge: true }),
+    );
+  });
+
+  test('🔒 накрутка нового счётчика: +2 за одну запись запрещена', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertFails(updateDoc(doc(db, DAY), { door_click: increment(2) }));
+  });
+
+  test('🔒 два НОВЫХ счётчика за одну запись — нельзя (шаг воронки ровно один)', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertFails(
+      updateDoc(doc(db, DAY), { door_click: increment(1), signin_wall_view: increment(1) }),
+    );
+  });
+
+  test('🔒 новый счётчик вверх и СТАРЫЙ вниз одной записью — нельзя', async () => {
+    // Ровно то, что прежде держала связка `holds(...)`: под видом законного шага
+    // нельзя переписать соседнее число.
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertFails(
+      updateDoc(doc(db, DAY), { door_click: increment(1), landing_view: increment(-1) }),
+    );
+  });
+
+  test('🔒 имя, похожее на счётчик, счётчиком не является', async () => {
+    // `catalog_view` снят разведкой `plans/75` п.7 и в правила НЕ заводился.
+    // Тест держит это решение: имя, о котором думали и отказались, обязано быть отбито.
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertFails(updateDoc(doc(db, DAY), { catalog_view: increment(1) }));
+    await assertFails(updateDoc(doc(db, DAY), { door_clicks: increment(1) }));
+  });
+
+  test('🔒 пустая запись — не шаг: тронуть ноль полей нельзя', async () => {
+    await seedDay();
+    const db = anonymous().firestore();
+    await assertFails(updateDoc(doc(db, DAY), { landing_view: 10 }));
+  });
 });
 
 describe('Статистика Пространства — витрина, которую никто не может подделать (ideas/06)', () => {

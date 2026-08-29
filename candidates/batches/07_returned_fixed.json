@@ -1,0 +1,615 @@
+{
+  "_": [
+    "ВОЗВРАТ ИСПРАВЛЕННЫХ КАРТОЧЕК В ОЧЕРЕДЬ ВЫЧИТКИ — собрано 2026-08-23, смена 6.",
+    "",
+    "🔴 ЭТО НЕ НОВАЯ ПАРТИЯ. Здесь нет ни одного нового объекта: только карточки, которые",
+    "владелец ВЕРНУЛ на доработку и которые уже починены по его классам замечаний.",
+    "Мерило — candidates/owner-critical-notes-2026-08-22.md, шестнадцать классов с его",
+    "дословным словом.",
+    "",
+    "ПОЧЕМУ ОТДЕЛЬНЫМ ФАЙЛОМ, а не прежними партиями 02…04. Дверь выгрузки отказывает всей",
+    "партии, если в ней есть объект, УЖЕ ЗАВЕДЁННЫЙ в каталоге, — и отказывает правильно:",
+    "партия это набор новых. В партиях 02…04 такие объекты есть (Обсессия, День разоблачения,",
+    "Deltarune — владелец их одобрил, они уже измерения). Точечный файл разводит две разные",
+    "работы: «предложить новое» и «вернуть исправленное».",
+    "",
+    "⛔ ОДОБРЕННЫХ ЗДЕСЬ НЕТ НИ ОДНОЙ. Пять одобренных карточек с теми же дефектами чинятся",
+    "текстом по его слову «чините», но в очередь не возвращаются: иначе он будет судить",
+    "собственное решение второй раз.",
+    "",
+    "✅ КАЖДАЯ КАРТОЧКА ФАЙЛА ПРОВЕРЕНА ПРИБОРОМ КЛАССОВ — 0 находок:",
+    "   node tools/check-owner-classes.mjs --today 2026-08-23 candidates/batches/07_returned_fixed.json",
+    "⚠️ И честная граница прибора: классы 2 (проще, прямее) и 15 (порядок фразы, убивающий",
+    "удивление) машиной не берутся вовсе. Зелёный прогон означает «машина не нашла».",
+    "",
+    "СОСТАВ: 16 карточек. Остаток возвращённых — 11, они чинятся порциями.",
+    "  · Q112040381 — Властелины Вселенной",
+    "  · Q117745793 — Умри, моя любовь",
+    "  · Q124364048 — Отец, мать, сестра, брат",
+    "  · Q124393313 — Нюрнберг",
+    "  · Q124450734 — Я бы тебя пнула, если бы могла",
+    "  · Q124566659 — Казнить нельзя помиловать",
+    "  · Q124735657 — Невеста",
+    "  · Q124737605 — Гренландия 2: Миграция",
+    "  · Q125131076 — Закулисье реальности",
+    "  · Q125975336 — Седло",
+    "  · Q126405648 — Следствие ведут овечки",
+    "  · Q130118681 — Марти Великолепный",
+    "  · Q133848181 — Звук падения",
+    "  · Q133866932 — Простая случайность",
+    "  · Q135038882 — Голос Хинд Раджаб",
+    "  · Q96247255 — Stray"
+  ],
+  "candidates": [
+    {
+      "wikidata": "Q112040381",
+      "sitelinks": 31,
+      "title": {
+        "ru": "Властелины Вселенной",
+        "en": "Masters of the Universe"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Трэвис Найт",
+        "en": "Travis Knight"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "фэнтези",
+        "fantasy",
+        "приключения",
+        "adventure",
+        "супергеройский",
+        "superhero",
+        "боевик",
+        "action"
+      ],
+      "description": {
+        "ru": "Фэнтезийный приключенческий боевик 2026 года с супергеройской основой, поставленный Трэвисом Найтом. Десятилетний принц Адам терпит крушение на Земле и теряет Меч Силы. Пятнадцать лет спустя меч сам находит его и уводит обратно на Этернию, родную планету Адама. Дома — того, каким он его помнил, — там больше нет: власть держит колдун Скелетор. Средоточие Этернии — замок Серого Черепа, древняя крепость, в которой заперто могущество: кто войдёт внутрь и возьмёт его, будет править всем. Скелетор добивается того же входа, и вся история франшизы держится на обороне крепости и на удержании Меча. Адам сходится со своими — воительницей Тилой и оружейником Дунканом — и принимает то, от чего был отрезан пятнадцать лет: силой меча он обращается в воина Хи-Мена. Центральный выбор героя назван прямо в имени: он перестаёт быть принцем в изгнании и становится тем, кого на Этернии ждали. Первоисточник начался в первой половине 1980-х годов линией игрушек, потом пришёл в комиксы и мультсериалы; эта картина — первое игровое его воплощение. Главные роли исполняют Николас Голицын и Камила Мендес, вместе с ними играют Идрис Эльба, Джаред Лето, Элисон Бри, Морена Баккарин, Джеймс Пьюрфой и Шарлотта Райли. Постановщик пришёл к работе из кукольной анимации: он руководил студией Laika и снял «Кубо. Легенда о самурае». Сценарий написал Крис Батлер, музыку сочинил Дэниэл Пембертон. Экранизацию готовили много лет: проект откладывали и меняли постановщиков, пока дело не дошло до съёмок. Картина вышла в прокат 18 мая 2026 года, на остальных территориях — в начале июня. Приняли её без пиетета: в отзывах картину называли обаятельно-нелепой и отмечали, что она не стесняется своего происхождения из игрушечной линии.",
+        "en": "A 2026 fantasy adventure with a superhero footing, directed by Travis Knight. Prince Adam crashes on Earth at the age of ten and is parted from the Sword of Power. Fifteen years later the sword finds him of its own accord and leads him back to Eternia, the planet he came from. The home he remembers is no longer there: the sorcerer Skeletor holds power. The heart of Eternia is Castle Grayskull, an ancient stronghold with a power locked inside it: whoever gets in and takes it commands everything. Skeletor is after the same entrance, and the whole story of the franchise rests on holding the castle and holding the Sword. Adam joins his own people, the warrior Teela and the armourer Duncan, and takes up what he was cut off from for fifteen years: the sword turns him into the warrior He-Man. His central choice is stated in the name itself, as he stops being a prince in exile and becomes the one Eternia was waiting for. The source began in the first half of the 1980s as a toy line, then moved into comics and animated series; this picture is its first live-action form. Nicholas Galitzine and Camila Mendes take the leading parts, with Idris Elba, Jared Leto, Alison Brie, Morena Baccarin, James Purefoy and Charlotte Riley alongside them. The director came to it from stop-motion animation: he ran the Laika studio and made Kubo and the Two Strings. Chris Butler wrote the screenplay and Daniel Pemberton composed the score. The adaptation spent years in development, postponed and passed between directors before it reached a camera. The picture opened in cinemas on 18 May 2026 and reached the remaining territories in early June. Reception carried no reverence: reviewers called it delightfully silly and noted that it makes no secret of having come from a toy line."
+      },
+      "agentNote": "🔴 КАРТОЧКА ПЕРЕПИСАНА 2026-08-22 по возврату владельца (класс 6). Прежняя редакция сюжета не знала вовсе и строилась на первоисточнике и производстве: реестр содержания не раскрывал. Сюжет добран из сети по решению владельца 2026-08-22 («откуда угодно можно, но переписывать своими словами») и изложен своими словами. Проверяемые опоры: принц Адам, разлука с Мечом Силы на пятнадцать лет, возвращение на Этернию под властью Скелетора, союзники Тила и Дункан. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16 («Ни слова о дате премьеры, об восприятии картины обществом»). Честная граница: под рукой был ОДИН развёрнутый отзыв, поэтому приём назван словами и без чисел, а «в отзывах» не значит «у большинства». Стоит сверить вторым источником."
+    },
+    {
+      "wikidata": "Q117745793",
+      "sitelinks": 25,
+      "title": {
+        "ru": "Умри, моя любовь",
+        "en": "Die My Love"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Линн Рэмси",
+        "en": "Lynne Ramsay"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "психологический",
+        "psychological",
+        "экранизация",
+        "adaptation",
+        "семья",
+        "family"
+      ],
+      "description": {
+        "ru": "Психологическая драма Линн Рэмси по роману аргентинской писательницы Арианы Харвич. Грэйс и Джексон — молодые супруги — уезжают из Нью-Йорка в глухую Монтану — в дом на краю леса, доставшийся Джексону по наследству. Оба едут за тишиной: он собирается заниматься музыкой, она — писать роман вдали от города. Рождается сын, и жизнь расходится с замыслом сразу. Грэйс уходит в послеродовую депрессию, которая перерастает в психоз. Джексон подолгу отсутствует и всё хуже понимает, что творится с женой; страсть, на которой держался их брак, гаснет, а разговаривать они разучились. Грэйс подозревает мужа в измене и находит поводы так думать. Реальность у неё смешивается с видениями: в лесу у дома появляется мотоциклист, и остаётся неясным, есть он или его нет. Она пьёт, ведёт себя всё непредсказуемее и всё опаснее — для себя и для тех, кто рядом. Родители Джексона, живущие по соседству, добры и совершенно беспомощны: они видят, что происходит беда, и не понимают, какая именно. Финал построен как тревожный сон и допускает несколько прочтений сразу. Картина говорит о материнстве без утешительных оговорок — о состоянии, которое принято описывать словом «усталость», и о том, как долго вокруг человека может никто ничего не замечать. Главные роли исполнили Дженнифер Лоуренс и Роберт Паттинсон; рядом с ними Сисси Спейсек, Ник Нолти и Лакит Стэнфилд. Картина представлена на Каннском кинофестивале 17 мая 2025 года, где зал аплодировал ей стоя шесть минут; в прокат США она вышла 7 ноября того же года. Приняли её неровно: работу Дженнифер Лоуренс называли лучшей в её карьере, а саму картину упрекали в манерности и тягучем темпе.",
+        "en": "A psychological drama by Lynne Ramsay, adapted from the novel by the Argentine writer Ariana Harwicz. Grace and Jackson, a young married couple, leave New York for remote Montana and the house at the forest's edge that Jackson has inherited. Both are going after quiet: he intends to make music, she intends to write a novel away from the city. A son is born, and life parts from the plan at once. Grace sinks into a postpartum depression that turns into psychosis. Jackson is away for long stretches and understands less and less of what is happening to his wife; the passion the marriage rested on goes out, and the two have lost the habit of talking. Grace suspects him of an affair and finds reasons to think so. Reality mixes with vision for her: a motorcyclist appears in the woods by the house, and whether he is there at all stays open. She drinks, and her behaviour grows less predictable and more dangerous, to herself and to those around her. Jackson's parents, who live nearby, are kind and entirely helpless: they can see that something is badly wrong and cannot tell what. The ending is built like an anxious dream and allows several readings at once. The film speaks about motherhood without consoling qualifications — about a condition usually described with the word tiredness, and about how long everyone around a person can notice nothing. Jennifer Lawrence and Robert Pattinson take the leading parts, with Sissy Spacek, Nick Nolte and LaKeith Stanfield beside them."
+      },
+      "agentNote": "Год 2025 по первой дате реестра — 17 мая 2025 (Канны); прокат в США 7 ноября 2025, следующая дата 5 февраля 2026. Первоисточник — роман «Умри, моя любовь» Арианы Харвич. 🔴 ДОБАВЛЕНЫ ПРЕМЬЕРА И ПРИЁМ по классу 16 (2026-08-23): прежде в описании не было ни одной даты вовсе. Факты о приёме взяты из сети и изложены своими словами — шестиминутная овация в Канне, неровные отзывы, работа Лоуренс названа лучшей в карьере."
+    },
+    {
+      "wikidata": "Q124364048",
+      "sitelinks": 22,
+      "title": {
+        "ru": "Отец, мать, сестра, брат",
+        "en": "Father Mother Sister Brother"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джим Джармуш",
+        "en": "Jim Jarmusch"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "комедия",
+        "comedy",
+        "семья",
+        "family",
+        "антология",
+        "anthology"
+      ],
+      "description": {
+        "ru": "Комедийная драма Джима Джармуша, собранная из трёх отдельных историй. Каждая — про взрослых детей, приехавших к родителю, с которым давно нет близости, и все три идут в разных городах: в американской провинции, в Дублине и в Париже. В первой брат и сестра едут по зимней дороге к отцу-затворнику. Сестра не понимает, на что он живёт после смерти матери; брат тайком ему помогает и молчит об этом. Отец держит во дворе старый пикап и нарочно оставляет в комнате беспорядок — пока на его запястье не оказываются часы, которые он тут же объявляет подделкой. Настоящее своё положение он прячет от детей, и прячет умело. Во второй истории дочери приезжают к матери-писательнице, и разговор идёт по тем же кругам, что и двадцать лет назад. В третьей брат и сестра разбирают квартиру родителей, которых уже нет. Общее у трёх частей одно: люди любят друг друга и совершенно не умеют это показать, поэтому говорят о погоде, о деньгах, о еде — обо всём, кроме того, зачем приехали. Постановщик снимает это тихо, длинными сценами и почти без музыки, и комическое здесь возникает из неловкости, а не из шуток. В картине заняты Том Уэйтс, Адам Драйвер, Маим Бялик, Шарлотта Рэмплинг, Кейт Бланшетт, Вики Крипс, Индия Мур и Лука Шабаш. Картина представлена на Венецианском кинофестивале 31 августа 2025 года и получила там «Золотого льва»; в прокат США она вышла 24 декабря того же года.",
+        "en": "A comedy drama by Jim Jarmusch, assembled from three separate stories. Each is about grown children visiting a parent they have long lost closeness with, and all three run in different cities: the American provinces, Dublin and Paris. In the first, a brother and sister drive a winter road to their reclusive father. The sister cannot work out what he lives on since their mother died; the brother quietly supports him and says nothing about it. The father keeps an old pickup in the yard and messes up the living room on purpose — until a watch turns up on his wrist, which he immediately declares a fake. His real position he hides from his children, and hides it well. In the second story daughters come to their mother, a writer, and the conversation runs the same circles it ran twenty years ago. In the third, a brother and sister clear out the flat of parents who are gone. One thing is common to all three parts: these people love each other and are entirely unable to show it, so they talk about the weather, about money, about food — about everything except why they came. The director films this quietly, in long scenes and almost without music, and the comedy comes out of awkwardness rather than jokes. Tom Waits, Adam Driver, Mayim Bialik, Charlotte Rampling, Cate Blanchett, Vicky Krieps, Indya Moore and Luka Sabbat appear. The film won the Golden Lion at the 2025 Venice Film Festival."
+      },
+      "agentNote": "Год 2025 по первой дате реестра. Премьера 31 августа 2025 (Венеция), прокат в США 24 декабря 2025, следующая дата 5 февраля 2026."
+    },
+    {
+      "wikidata": "Q124393313",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Нюрнберг",
+        "en": "Nuremberg"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джеймс Вандербилт",
+        "en": "James Vanderbilt"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "исторический",
+        "historical",
+        "война",
+        "war",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "Драма 2025 года, снятая Джеймсом Вандербилтом, который выступил и автором сценария, и одним из продюсеров. В основе — Нюрнбергский процесс, суд над руководителями нацистской Германии, проходивший в 1945–1946 годах: он закрепил в международном праве личную ответственность за преступления против человечности и стал образцом для последующих трибуналов. Картина смотрит не на зал заседаний, а на человека рядом с подсудимыми: Дуглас Келли, военный психиатр армии США, отвечал за состояние высокопоставленных заключённых, ожидавших начала процесса. Месяцами он наблюдал их, проводил обследования и вёл долгие беседы, стараясь понять, есть ли у этих людей общие психические особенности — или же ничего особенного в них нет, и это самое трудное из возможных заключений. Наибольшую известность получили его встречи с Германом Герингом. Главные роли исполнили Рами Малек и Рассел Кроу, сыгравшие психиатра и его собеседника из числа подсудимых. Снято по документальной книге американского журналиста Джека Эль-Хая «Нацист и психиатр». В картине также снимались Майкл Шеннон, Ричард Э. Грант, Лео Вудалл, Джон Слэттери, Ренн Шмидт, Лотте Вербек, Андреас Пичман, Колин Хэнкс и Марк О'Брайен. Вандербилт известен прежде всего как сценарист: он написал «Зодиак» Дэвида Финчера. Режиссёрских работ у него немного. Музыку написал Брайан Тайлер. Картина представлена на кинофестивале 7 сентября 2025 года, в прокат вышла 7 ноября того же года, на других территориях — в декабре 2025-го и в январе 2026-го. Приняли её в основном благосклонно: рецензенты хвалили работу Рами Малека и Рассела Кроу и упрекали картину в вольностях с историей и в провисающем темпе. Зрительские оценки вышли заметно выше критических, а в прокате картина собрала больше, чем стоила.",
+        "en": "A 2025 drama directed by James Vanderbilt, who also wrote the screenplay and produced. At its base is the Nuremberg trial, the court that judged the leaders of Nazi Germany in 1945 and 1946: it fixed individual responsibility for crimes against humanity in international law and became the model for the tribunals that followed. The film looks not at the courtroom but at the man seated beside the defendants: Douglas Kelley, a United States Army psychiatrist, was answerable for the condition of the high-ranking prisoners awaiting the start of the proceedings. For months he observed them, ran examinations and held long conversations, trying to establish whether these men shared any psychiatric traits at all, or whether there was nothing remarkable in them, which is the hardest of the available conclusions. His meetings with Hermann Goering became the best known of them. Rami Malek and Russell Crowe take the leading parts as the psychiatrist and his interlocutor among the accused. The source is the documentary book The Nazi and the Psychiatrist by the American journalist Jack El-Hai. Michael Shannon, Richard E. Grant, Leo Woodall, John Slattery, Wrenn Schmidt, Lotte Verbeek, Andreas Pietschmann, Colin Hanks and Mark O'Brien also appear. Vanderbilt is known above all as a screenwriter, having written Zodiac for David Fincher, and his directing credits are few. The score is by Brian Tyler. The picture was shown at a film festival on 7 September 2025 and opened in cinemas on 7 November that year, reaching other territories in December 2025 and January 2026. Reception was largely favourable: reviewers praised the work of Rami Malek and Russell Crowe while faulting the film for its liberties with history and for its sagging pace. Audience scores came out well above the critical ones, and the picture took more at the box office than it cost."
+      },
+      "agentNote": "Год 2025 по ПЕРВОЙ дате реестра — фестивальная премьера 7 сентября 2025. Далее по реестру: ноябрь и декабрь 2025, январь 2026. Первоисточник — документальная книга «Нацист и психиатр» Джека Эль-Хая. Тема историческая и тяжёлая; описание держится справочного регистра. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16. Числа в описание НЕ вынесены намеренно: источники дают разные цифры сборов, и спорное число в карточке не печатается — сказано словами то, что подтверждено обоими."
+    },
+    {
+      "wikidata": "Q124450734",
+      "sitelinks": 20,
+      "title": {
+        "ru": "Я бы тебя пнула, если бы могла",
+        "en": "If I Had Legs I'd Kick You"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Мэри Бронштейн",
+        "en": "Mary Bronstein"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "психологический",
+        "psychological",
+        "семья",
+        "family"
+      ],
+      "description": {
+        "ru": "Психологическая драма Мэри Бронштейн по собственному сценарию. Линда работает психотерапевтом и держится на пределе: у её дочери расстройство пищевого поведения, ночью девочку кормят через трубку, днём приходится следить за каждым съеденным граммом и возить её в дневной стационар, где Линда обязана присутствовать сама. Муж — капитан судна — восемь недель в рейсе, звонит и в основном высказывает претензии. Дальше положение рушится окончательно: в квартире обваливается потолок, жильё заливает, и мать с дочерью переезжают в обшарпанный мотель. Спать в одном номере невозможно из-за шума насоса, и Линда проводит ночи вне номера — с алкоголем, музыкой и едой из круглосуточных заведений, оставляя ребёнка одного. Утром она снова психотерапевт, к которому приходят люди в кризисе, и должна выслушивать чужое отчаяние, не имея права показать собственное. Врачи предупреждают, что при недоборе веса девочку заберут под более строгое наблюдение, и Линда начинает избегать встреч с ними. Картина смотрит на человека, у которого нет ни одного законного способа отказаться, и не даёт ему ни утешения, ни оправдания. Само название — реплика такой силы, какую в реальном разговоре не произносят: оно и есть точная мера того, что героиня чувствует и вслух сказать не может. Главную роль исполнила Роуз Бирн; её игра принесла картине основную часть наград. Картина представлена на фестивале 24 января 2025 года, в прокат США вышла 10 октября того же года.",
+        "en": "A psychological drama written and directed by Mary Bronstein. Linda works as a psychotherapist and is holding on at the limit: her daughter has a feeding disorder, the girl is fed through a tube at night, and by day every gram has to be watched and the child driven to a day hospital where Linda is required to be present herself. Her husband, a ship's captain, is eight weeks at sea, calls, and mostly voices complaints. Then the situation collapses completely: the ceiling of their apartment comes down, the place floods, and mother and daughter move into a shabby motel. Sleeping in one room is impossible because of the pump's noise, and Linda spends her nights outside it — with alcohol, music and food from all-night places, leaving the child alone. In the morning she is a psychotherapist again, receiving people in crisis, obliged to hear out other people's despair with no right to show her own. The doctors warn that if the weight targets are missed the girl will be taken into stricter care, and Linda begins avoiding them. The film looks at a person who has no legitimate way to refuse anything, and gives her neither comfort nor excuse. The title itself is a line of a force nobody says in a real conversation: it is the exact measure of what the heroine feels and cannot say aloud. Rose Byrne takes the leading part, and her performance brought the film most of its awards. The first screening was on 24 January 2025, and the American release began on 10 October."
+      },
+      "agentNote": "Год 2025 по первой дате реестра — 24 января 2025 («Сандэнс»); прокат в США 10 октября 2025, дальше 5 февраля и 5 марта 2026."
+    },
+    {
+      "wikidata": "Q124566659",
+      "sitelinks": 26,
+      "title": {
+        "ru": "Казнить нельзя помиловать",
+        "en": "Mercy"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Тимур Бекмамбетов",
+        "en": "Timur Bekmambetov"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "научная фантастика",
+        "science fiction",
+        "триллер",
+        "thriller",
+        "детектив",
+        "detective",
+        "драма",
+        "drama"
+      ],
+      "description": {
+        "ru": "Научно-фантастический триллер 2026 года, снятый Тимуром Бекмамбетовым по сценарию Марко Ван Белле. В недалёком будущем судебное разбирательство ведёт система искусственного интеллекта, а у обвиняемого — полицейского, которому вменяют убийство жены, — есть строго отмеренный срок, чтобы доказать невиновность. Допущение об автоматическом правосудии держит судебный сюжет на жёстком отсчёте времени: спорить приходится не с прокурором, а с процедурой, у которой нет ни сомнения, ни жалости, ни возможности передумать. Пространство картины ограничено и подчинено ходу этой процедуры. Для Бекмамбетова, снявшего прежде «Ночной дозор», «Особо опасен» и «Бен-Гура», это продолжение работы с замкнутым, технологически заданным пространством. Он придумал приём screenlife — способ изложения, когда действие целиком идёт на экранах компьютеров и телефонов. Так сделаны спродюсированные им «Убрать из друзей» и «Профиль». Главные роли исполнили Крис Прэтт и Ребекка Фергюсон, вместе с ними играют Аннабелль Уоллис, Кали Рейс, Рафи Гаврон, Крис Салливан, Кеннет Чои, Кайли Роджерс и Джефф Пьер. Картину произвели Atlas Entertainment и Bazelevs, продюсером выступил Чарльз Ровен. Музыку написал Рамин Джавади. Картина вышла в прокат 22 января 2026 года, на других территориях — днём позже. Критики её разгромили, зрители приняли заметно теплее: и те и другие хвалили работу Криса Прэтта и Ребекки Фергюсон, а рецензенты не приняли сюжетных допущений и дыр в логике. В прокате картина не окупилась, зато быстро стала одной из самых смотримых в домашнем показе.",
+        "en": "A 2026 science fiction thriller directed by Timur Bekmambetov from a screenplay by Marco van Belle. In the near future a court case is conducted by an artificial intelligence system, and the accused — a policeman charged with the murder of his own wife — is given a strictly limited span of time in which to prove his innocence. The speculative premise of automated justice serves as the frame for a courtroom story on a hard clock: the argument is not with a prosecutor but with a procedure that has no doubt, no mercy and no way of changing its mind. The space of the film is confined and subordinated to the course of that procedure. For Bekmambetov, who previously made Night Watch, Wanted and Ben-Hur, the work continues his occupation with enclosed, technologically defined space: he is known for the device he calls screenlife, a manner of telling in which the action takes place entirely on computer and telephone screens, used in Unfriended and Profile, both of which he produced. Chris Pratt and Rebecca Ferguson take the leading parts, with Annabelle Wallis, Kali Reis, Rafi Gavron, Chris Sullivan, Kenneth Choi, Kylie Rogers and Jeff Pierre alongside them. Atlas Entertainment and Bazelevs produced the film, with Charles Roven as producer. The score is by Ramin Djawadi. The film opened in cinemas on 22 January 2026 and reached other territories a day later. Critics savaged it and audiences took to it far more warmly; both sides praised the work of Chris Pratt and Rebecca Ferguson, while reviewers refused its plot conveniences and holes in the logic. It failed to recoup in cinemas and became one of the most watched titles at home within weeks."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 22 января 2026. Сюжет реестром не раскрыт: описание держится известной предпосылки, авторского метода и производства. Русское название реестра — «Казнить нельзя помиловать», английское — «Mercy». 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16: расхождение критики и зрителей велико и названо словами, без процентов — числа рейтингов меняются, а строка карточки живёт долго."
+    },
+    {
+      "wikidata": "Q124735657",
+      "sitelinks": 29,
+      "title": {
+        "ru": "Невеста",
+        "en": "The Bride!"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Мэгги Джилленхол",
+        "en": "Maggie Gyllenhaal"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "драма",
+        "drama",
+        "романтика",
+        "romance",
+        "научная фантастика",
+        "science fiction"
+      ],
+      "description": {
+        "ru": "Фильм ужасов 2026 года с драматической и романтической линией, поставлен Мэгги Джилленхол. Она же написала сценарий и продюсировала. История восходит к «Франкенштейну» Мэри Шелли, где учёный собирает живое существо из мёртвой материи, а созданное им требует изготовить себе пару. В кино эту линию закрепила «Невеста Франкенштейна» Джеймса Уэйла 1935 года: оживлённая спутница отвергает того, для кого её сделали, и главный ужас истории приходится на этот отказ. Действие происходит в Америке 1930-х годов — в то самое время, когда снимал Уэйл, и место действия само отсылает к экранному первоисточнику. Главные роли исполнили Кристиан Бейл и Джесси Бакли, вместе с ними играют Пенелопа Крус, Аннетт Бенинг, Питер Сарсгаард, Джулианна Хаф, Джон Магаро, Джейк Джилленхол, Джинни Берлин, Линда Эмонд и Мэттью Мехер. Для Мэгги Джилленхол, пришедшей в режиссуру из актёрской профессии, это вторая постановка после «Пропавшей дочери» по роману Элены Ферранте. Музыку написала Хильдюр Гвюднадоуттир. Продюсировали вместе с постановщицей Оснат Хандельсман-Керен, Талиа Клейнхендлер и Эмма Тиллинджер Коскофф. Роман Мэри Шелли вышел в свет в 1818 году, и с тех пор эту историю пересказывают на сцене, на экране и в комиксах. Картина вышла в прокат 26 февраля 2026 года, на других территориях — 5 и 6 марта. Приняли её разноголосо: одни рецензенты хвалили замысел постановщицы и любовь картины к самому кинематографу, другие называли исполнение сумбурным. В прокате картина провалилась — сборы не покрыли и малой части того, что она стоила.",
+        "en": "A 2026 horror film with a dramatic and romantic line, directed by Maggie Gyllenhaal, who also wrote the screenplay and produced. The story goes back to Mary Shelley's Frankenstein, in which a scientist assembles a living being out of dead matter and the creature then demands that a mate be made for it. On screen the line was fixed by James Whale's Bride of Frankenstein of 1935: the revived companion rejects the one she was made for, and the horror of the story falls on that refusal. The action takes place in America in the 1930s, the very years in which Whale was working, and the setting itself nods to the screen original. Christian Bale and Jessie Buckley take the leading parts, with Penélope Cruz, Annette Bening, Peter Sarsgaard, Julianne Hough, John Magaro, Jake Gyllenhaal, Jeannie Berlin, Linda Emond and Matthew Maher alongside them. For Maggie Gyllenhaal, who came to directing from acting, this is a second feature after The Lost Daughter, adapted from the novel by Elena Ferrante. The score is by Hildur Gudnadottir. Osnat Handelsman-Keren, Talia Kleinhendler and Emma Tillinger Koskoff produced alongside the director. The novel by Mary Shelley appeared in 1818, and the story has been retold on stage, on screen and in comics ever since. The film opened in cinemas on 26 February 2026 and reached other territories on 5 and 6 March. Reception was divided: some reviewers praised the director's design and the film's open love of cinema itself, while others called the execution muddled. At the box office it failed outright, taking back only a small part of what it cost."
+      },
+      "agentNote": "Картина ВЫШЛА: первая дата реестра — 26 февраля 2026 года, она в прошлом относительно 23 августа 2026 года. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16. Провал в прокате назван словами, без чисел: источники дают разные оценки убытка, и печатать спорное число в карточке нельзя. Описание намеренно не пересказывает событий — развёрнуты первоисточник (линия «Франкенштейна» Мэри Шелли и фильма 1935 года), авторство, состав и производственная обвязка. Русское название реестра — «Невеста», английское — «The Bride!» с восклицательным знаком."
+    },
+    {
+      "wikidata": "Q124737605",
+      "sitelinks": 20,
+      "title": {
+        "ru": "Гренландия 2: Миграция",
+        "en": "Greenland 2: Migration"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Рик Роман Во",
+        "en": "Ric Roman Waugh"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "катастрофа",
+        "disaster",
+        "постапокалипсис",
+        "post-apocalyptic",
+        "выживание",
+        "survival",
+        "боевик",
+        "action"
+      ],
+      "description": {
+        "ru": "Постапокалиптический фильм-катастрофа Рика Романа Во, продолжение «Гренландии». Прошло пять лет с падения межзвёздной кометы, уничтожившей цивилизацию и большую часть жизни на Земле. Планета не успокоилась: идут внезапные электромагнитные бури, держится радиоактивное заражение, из кольца обломков продолжают падать куски, а от удара по-прежнему расходятся землетрясения. Семья Гэррити живёт в подземном убежище в Гренландии, рядом с бывшей авиабазой. Эллисон стала одним из старших в общине, Джон ходит в разведку и чинит то, что держит убежище живым, а их сын Нейтан, теперь подросток, хочет в разведчики и слышит отказ. Землетрясение обрушивает убежище, и людям приходится выходить наверх — туда, где остались другие уцелевшие, и где встреча с ними опаснее любой бури. Уходить надо всей общиной и пешком, через местность, которая за пять лет перестала быть картой: дорог нет, ориентиры сменились, а запасов хватает на считаные переходы. Картина отличается от первой части предметом разговора: там семья пробивалась к укрытию, здесь укрытия больше нет, и вопрос стоит иначе — можно ли восстановить не убежище, а общий порядок, когда у выживших нет ни власти, ни закона, ни причин доверять друг другу. Роли Эллисон и Джона снова исполнили Джерард Батлер и Морена Баккарин; их сына играет Роман Гриффин Дэвис. Картина вышла в прокат 6 января 2026 года, в США — 9 января. Приняли её ровно: рецензенты отмечали, что конец света здесь тише, чем в первой части, и держится картина на самом Джерарде Батлере. В прокате она не окупилась и своё нашла позже, в домашнем показе.",
+        "en": "A post-apocalyptic disaster film by Ric Roman Waugh, the sequel to Greenland. Five years have passed since an interstellar comet struck and destroyed civilisation and most life on Earth. The planet has not settled: sudden electromagnetic storms come through, radioactive fallout lingers, fragments keep falling from the debris ring, and the ground still shakes where the comet came down. In Greenland, beside a disused air base, the Garrity family keeps to a shelter dug below the surface. Allison has become one of the community's leaders, John scouts and repairs what keeps the shelter alive, and their son Nathan, now a teenager, wants to scout and is told no. An earthquake brings the shelter down, and the people have to come up to the surface — where other survivors have remained, and where meeting them is more dangerous than any storm. The film differs from the first part in its subject: there a family fought its way toward shelter, here the shelter is gone, and the question is put differently — whether what can be rebuilt is not a refuge but a common order, when the survivors have no authority, no law and no reason to trust one another. Gerard Butler and Morena Baccarin play Allison and John again, with Roman Griffin Davis as their son. The release began on 6 January 2026, and in the United States on 9 January."
+      },
+      "agentNote": "Год 2026 по первой дате реестра — 8 января 2026; прокат в США 9 января, дальше 14 и 28 января 2026. В статье первая дата названа как 6 января (Австрия) — расхождение в двое суток, поле года от него не зависит. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16, факты взяты из сети и изложены своими словами. Чисел сборов в описании нет намеренно: источники дают разные цифры по одному и тому же прокату, а спорное число в карточку не печатается."
+    },
+    {
+      "wikidata": "Q125131076",
+      "sitelinks": 40,
+      "title": {
+        "ru": "Закулисье реальности",
+        "en": "Backrooms"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Кейн Парсонс",
+        "en": "Kane Parsons"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "психологический",
+        "psychological",
+        "научная фантастика",
+        "science fiction",
+        "мистика",
+        "mystery"
+      ],
+      "description": {
+        "ru": "Психологический хоррор 2026 года с приключенческой основой, снятый Кейном Парсонсом по сценарию, который он написал вместе с Роберто Патино. Кларк — хозяин мебельного магазина — находит у себя дверь, за которой начинается бесконечная череда одинаковых нежилых комнат, и пропадает в них. Искать его отправляется его психотерапевт Мэри Клайн, и чем глубже она заходит, тем сильнее подаётся её собственная реальность. Главный герой здесь само место: одинаковые коридоры с жёлтыми обоями, вытертым ковром и гудящими люминесцентными лампами, ровный свет и тишина, в которой человек теряет счёт пройденному. Расстояния, время и выходы перестают работать так, как должны. В основе лежит сетевое предание о Закулисье, выросшее из подписи к фотографии пустого офиса: дальше его дописывали сотни анонимных авторов, и у лабиринта появились ярусы, обитатели и правила поведения, которые нельзя нарушать. Действие происходит в Долине Санта-Клара — обжитой и ничем не примечательной местности. Главные роли исполнили Чиветел Эджиофор и Ренате Реинсве, рядом с ними играют Марк Дюпласс, Лукита Максуэлл, Финн Беннетт, Эван Джогиа и Криста Косонен. Полнометражная картина выросла из короткометражной серии, которую Парсонс снял ещё подростком и выложил в сеть: она стала самой известной экранизацией предания и собрала зрителей задолго до большой картины. Картина вышла в прокат 7 мая 2026 года, широкий выпуск в США состоялся 29 мая. К середине июня мировые сборы дошли до 390 миллионов долларов.",
+        "en": "A 2026 psychological horror with an adventure streak, directed by Kane Parsons from a screenplay he wrote with Roberto Patino. Clark, who owns a furniture shop, finds a door in it that opens onto an endless run of identical uninhabited rooms, and he goes missing inside them. His therapist Mary Kline goes in after him, and the deeper she walks the more her own reality gives way. The place itself is the leading character: identical corridors with yellow wallpaper, worn carpet and humming fluorescent lights, even light, and a silence in which a person loses count of the distance covered. Distance, time and exits stop working as they should. It grows out of the Backrooms, an internet legend that began with a caption to a photograph of an empty office: hundreds of anonymous authors kept adding to it, giving the maze its levels, its inhabitants and its rules that must not be broken. The action is set in the Santa Clara Valley, a lived-in and altogether unremarkable stretch of country. Chiwetel Ejiofor and Renate Reinsve take the leading parts, with Mark Duplass, Lukita Maxwell, Finn Bennett, Avan Jogia and Krista Kosonen alongside them. The feature grew out of a run of shorts Parsons made as a teenager and posted online: they became the best-known screen version of the legend and gathered an audience long before the big picture existed. The film opened in cinemas on 7 May 2026 and went out wide in the United States on 29 May. By the middle of June its worldwide takings had reached 390 million dollars."
+      },
+      "agentNote": "🔴 КАРТОЧКА ПЕРЕПИСАНА 2026-08-22 по возврату владельца (класс 4, термин «полный метр»). Заодно снята производственная обвязка, занимавшая место сюжета: реестр содержания не давал, и прежняя редакция пересказывала предание вместо картины. Сюжет и имена героев (Кларк, психотерапевт Мэри Клайн) добраны из сети и изложены своими словами. Первоисточник — сетевое предание «Закулисье», а не литературное произведение. Место действия (Долина Санта-Клара) взято из свойства «место повествования» реестра. Русское название реестра — «Закулисье реальности». Сборы названы с датой замера: число живое и будет расти."
+    },
+    {
+      "wikidata": "Q125975336",
+      "sitelinks": 22,
+      "title": {
+        "ru": "Седло",
+        "en": "Pillion"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Гарри Лайтон",
+        "en": "Harry Lighton"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "романтика",
+        "romance",
+        "отношения",
+        "relationships",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "Драма Гарри Лайтона по роману Адама Марс-Джонса, во многом смешная. Колин живёт с родителями, работает инспектором по парковке и поёт в барбершоп-квартете — жизнь тихая, замкнутая и ничем не примечательная. В пабе он получает записку от Рэя, участника местной байкерской компании, и с этого начинается связь, к которой Колин совершенно не готов. Рэй устанавливает отношения строгой иерархии и не обсуждает их: Колин готовит, убирает, ходит за покупками, спит на полу и выполняет любую команду. Взамен он получает внимание и близость, которых у него не было никогда, — жёстко отмеренные и полностью подчинённые чужой воле. Картина смотрит на это без осуждения и без восторга, а с интересом к тому, что происходит с человеком дальше: Колин привыкает, бреет голову, входит в компанию Рэя и постепенно перестаёт быть тем, кем приехал. Главный вопрос ставится ближе к концу и звучит просто: где здесь любовь, а где привычка подчиняться, и способен ли Колин заметить разницу, если ему впервые в жизни хорошо. Комическое возникает из столкновения будничного английского быта с укладом, который этому быту противоположен. Главные роли исполнили Гарри Меллинг и Александр Скарсгард. Картина представлена в Каннах 18 мая 2025 года, где получила приз за лучший сценарий; в прокат Великобритании она вышла 28 ноября того же года.",
+        "en": "A drama by Harry Lighton, adapted from the novel by Adam Mars-Jones, with a large comic share. Colin lives with his parents, works as a parking inspector and sings in a barbershop quartet — a quiet, closed and unremarkable life. In a pub he is handed a note by Ray, a member of the local motorcycle crowd, and from there begins a connection Colin is in no way prepared for. Ray establishes a relationship of strict hierarchy and does not discuss it: Colin cooks, cleans, does the shopping, sleeps on the floor and carries out any instruction. In return he receives attention and closeness he has never had — strictly measured out and entirely subject to another man's will. The film looks at this without condemnation and without enthusiasm, and with interest in what happens to a person next: Colin gets used to it, shaves his head, enters Ray's circle and gradually stops being the man who arrived. The central question comes near the end and is put simply: where in this is love and where is the habit of obeying, and whether Colin can tell the difference when for the first time in his life he feels good. The comedy comes out of the collision between ordinary English domestic life and a way of living that is its opposite. Harry Melling and Alexander Skarsgård take the leading parts. The first screening was on 18 May 2025 at Cannes, where the film won the screenplay prize, and the British release began on 28 November 2025."
+      },
+      "agentNote": "Год 2025 по первой дате реестра — 18 мая 2025 (Канны, «Особый взгляд»); прокат в Великобритании 28 ноября 2025, следующие даты 27 февраля и 19 марта 2026. Первоисточник — роман «Бокс-Хилл» Адама Марс-Джонса. ⚠️ Материал взрослый: в основе отношения строгой иерархии с сексуальной подоплёкой. Описание держит справочный регистр и подробностей не приводит — проверьте, годится ли объект для каталога вообще."
+    },
+    {
+      "wikidata": "Q126405648",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Следствие ведут овечки",
+        "en": "The Sheep Detectives"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Кайл Балда",
+        "en": "Kyle Balda"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "анимация",
+        "animation",
+        "комедия",
+        "comedy",
+        "детектив",
+        "detective",
+        "семейный",
+        "family"
+      ],
+      "description": {
+        "ru": "Анимационный детектив 2026 года для семейного просмотра, поставленный Кайлом Балдой. Каждый вечер пастух Джордж Харди читал своему стаду вслух детективы. Его находят мёртвым на выгоне — и овцы, знающие о розыске убийц из этих книг, берутся установить, что произошло, сами. Расследование возглавляет Лили, самая сообразительная в стаде. Всё показано только с их стороны. Овцы рассуждают по-своему и плохо понимают человеческие порядки — собственность, право, родство. Из этого несовпадения растут и комедия, и сама загадка. Снято по роману немецкой писательницы Леони Свонн «Три мешка полны», вышедшему в свет в 2005 году: там схему классического детектива и перенесли в овечье стадо. Сценарий написал Крэйг Мэйзин, известный как автор сериалов «Чернобыль» и «Одни из нас». В озвучании заняты Хью Джекман, Эмма Томпсон, Брайан Крэнстон и Джулия Луи-Дрейфус, к ним присоединились Николас Голицын, Николас Браун, Молли Гордон, Хонг Чау, Тосин Коул и Конлет Хилл. Музыку написал Эйтор Перейра. Произвели картину Working Title Films, Lord Miller Productions и Amazon MGM Studios, продюсировали Тим Беван и Эрик Феллнер, стоящие за Working Title Films. Картина вышла в прокат 7 мая 2026 года, днём позже — на других территориях. Приняли её тепло и критики, и зрители: хвалили сердечность истории и уютную интонацию, за которой у картины оказались нешуточные темы. В прокате она разошлась медленно и в итоге окупилась с запасом.",
+        "en": "A 2026 animated detective story for family viewing, directed by Kyle Balda. Every evening the shepherd George Hardy read detective stories aloud to his flock. He is found dead in his pasture, and the sheep, who know how murders are solved from those very books, set out to establish what happened themselves. The investigation is led by Lily, the sharpest head in the flock. Everything is shown from their side alone. Sheep reason in their own way and grasp human arrangements poorly — property, law, kinship. Out of that mismatch grow both the comedy and the puzzle itself. The source is the novel Three Bags Full by the German writer Leonie Swann, published in 2005, where the scheme of the classical detective story was first carried into a flock of sheep. The screenplay is by Craig Mazin, known as the author of the series Chernobyl and The Last of Us. The voice cast includes Hugh Jackman, Emma Thompson, Bryan Cranston and Julia Louis-Dreyfus, joined by Nicholas Galitzine, Nicholas Braun, Molly Gordon, Hong Chau, Tosin Cole and Conleth Hill. The score is by Heitor Pereira. Working Title Films, Lord Miller Productions and Amazon MGM Studios produced, with Tim Bevan and Eric Fellner, who stand behind Working Title Films, as producers. The film opened in cinemas on 7 May 2026 and reached other territories a day later. Critics and audiences alike took to it warmly, praising the warmth of the story and its cosy tone, behind which the film turned out to carry weighty themes. It built its box office slowly and ended up well in profit."
+      },
+      "agentNote": "Картина ВЫШЛА: первые даты реестра — 7 и 8 мая 2026 года, обе в прошлом относительно 23 августа 2026 года. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16. Чисел сборов нет: источники дают разные суммы, сходятся только на том, что прокат окупил производство. Первоисточник — роман Леони Свонн «Три мешка полны» (2005). Описание разворачивает первоисточник и производство, событий фильма не пересказывает. Названные исполнители по реестру заняты в озвучании. 🔴 РАСХОЖДЕНИЕ: сторонние источники называют картину смешанной — живые актёры плюс компьютерная анимация, и Хью Джекман играет пастуха Джорджа Харди в кадре, а не только голосом. Имена пастуха и главной овцы (Лили; в романе Свонн она Мисс Мапл) взяты из этих источников, реестр их не даёт."
+    },
+    {
+      "wikidata": "Q130118681",
+      "sitelinks": 34,
+      "title": {
+        "ru": "Марти Великолепный",
+        "en": "Marty Supreme"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джош Сафди",
+        "en": "Josh Safdie"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "комедия",
+        "comedy",
+        "спорт",
+        "sport",
+        "исторический",
+        "historical"
+      ],
+      "description": {
+        "ru": "Драматическая комедия 2025 года: поставил Джош Сафди, сценарий написал вместе с Рональдом Бронштейном. В центре — молодой честолюбивый игрок в настольный теннис середины XX века, добивающийся признания в занятии, которое вокруг него всерьёз не принимают. Прообраз героя назван прямо: это Марти Рейсман, американский игрок в настольный теннис и литератор, живший с 1930 по 2012 год. Отсюда и двойная интонация картины: спортивное упорство героя показано всерьёз, а мир вокруг него — с комедийной стороны. Главную роль исполнил Тимоти Шаламе, выступивший и одним из продюсеров. В составе — Гвинет Пэлтроу, Одесса Адлон, Фрэн Дрешер, Сандра Бернхард и Пенн Джиллетт. К ним присоединились люди из смежных занятий: музыкант Tyler, The Creator, режиссёр Абель Феррара и канатоходец Филипп Пети — режиссёр давно смешивает профессиональных актёров с непрофессиональными исполнителями. Для Джоша Сафди это первая полнометражная картина, снятая без брата Бенни, вместе с которым сделаны «Хорошее время» и «Неогранённые алмазы»; прежний круг соавторов при этом сохранён — сценарий снова написан с Рональдом Бронштейном, музыку, как и в «Неогранённых алмазах», сочинил Oneohtrix Point Never. Продюсировали также Илай Буш и Энтони Катагас. Картина вышла в прокат в США 25 декабря 2025 года, на других территориях — 22 января, 5 и 6 февраля 2026 года. Приняли её восторженно: рецензенты почти единодушно хвалили и работу Тимоти Шаламе, и саму постановку. В прокате картина стала самой кассовой за всю историю студии A24.",
+        "en": "A 2025 comedy-drama directed by Josh Safdie, who wrote the screenplay with Ronald Bronstein. At its centre is a young and ambitious table tennis player of the mid-twentieth century, chasing recognition in a pursuit nobody around him takes seriously. The model for the hero is named outright: Marty Reisman, the American table tennis player and writer who lived from 1930 to 2012. Hence the double register of the picture, which plays the hero's sporting stubbornness straight and the world around him for comedy. Timothée Chalamet takes the leading part and is also one of the producers. The cast includes Gwyneth Paltrow, Odessa A'zion, Fran Drescher, Sandra Bernhard and Penn Jillette. They are joined by people from adjacent trades: the musician Tyler, The Creator, the filmmaker Abel Ferrara and the high-wire artist Philippe Petit, since the director has long mixed trained actors with non-professional performers. This is the first feature Josh Safdie has made without his brother Benny, with whom he made Good Time and Uncut Gems; the old circle of collaborators nevertheless holds, as the script was written with Ronald Bronstein again and the score, as on Uncut Gems, is by Oneohtrix Point Never. Eli Bush and Anthony Katagas produced alongside Chalamet. The film opened in the United States on 25 December 2025 and reached other territories on 22 January and on 5 and 6 February 2026. Reception was enthusiastic: reviewers praised Timothée Chalamet and the direction with near unanimity. At the box office it became the highest-grossing release in the history of the A24 studio."
+      },
+      "agentNote": "Год 2025 по ПЕРВОЙ дате реестра — премьера 25 декабря 2025 в США. Международный прокат — январь–февраль 2026. Расхождение названо, год взят по первой дате. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16. Чисел сборов в описании нет: источники дают разные суммы одного и того же проката, а рекорд студии подтверждён обоими. Прообраз героя (Марти Рейсман) и тема (настольный теннис) взяты из свойств «персонажи» и «главная тема» реестра — прежняя карточка их не называла."
+    },
+    {
+      "wikidata": "Q133848181",
+      "sitelinks": 20,
+      "title": {
+        "ru": "Звук падения",
+        "en": "Sound of Falling"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Маша Шилински",
+        "en": "Mascha Schilinski"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "исторический",
+        "historical",
+        "семья",
+        "family",
+        "детство",
+        "childhood"
+      ],
+      "description": {
+        "ru": "Немецкая драма Маши Шилински по её собственному сценарию. Место действия одно на всю картину — крестьянский двор в области Альтмарк; время меняется четырежды. На этом дворе взрослеют четыре девочки разных эпох: Альма перед Первой мировой, Эрика в сороковые, за ними Ангелика и Ленка. Их истории идут не по порядку, а вперемешку, и связывает их не родство, а повторение: один и тот же жест, одна и та же фраза, один и тот же угол дома возвращаются через десятилетия. Семилетняя Альма растёт среди молчаливых взрослых, суеверий и постоянного соседства со смертью; она узнаёт, что названа в честь умершей сестры, видит её на посмертной фотографии и с тех пор считает, что ей уготовано то же самое. Рядом с ней живут взрослые беды, о которых при детях не говорят: служанку насильно лишили возможности иметь детей, а брату хозяйской дочери ампутировали ногу — и семья выдала это за несчастный случай на работе, чтобы его не забрали на войну. Эрика взрослеет уже в тени следующей войны. Картина устроена как память, а не как рассказ: она держится на ощущениях, звуках и обрывках, потому что именно так дети и запоминают то, чего им не объясняют. Общая её мысль в том, что молчание передаётся по наследству вернее имущества. Картина представлена в Каннах 14 мая 2025 года, где получила приз жюри; в прокат Германии она вышла 28 августа.",
+        "en": "A German drama by Mascha Schilinski, co-written by her. The setting is one for the whole film — a farmstead in the Altmark region; the time changes four times. Four girls of different eras grow up on that farm: Alma before the First World War, Erika in the forties, and after them Angelika and Lenka. Their stories run not in order but mixed together, and what links them is not kinship but repetition: the same gesture, the same phrase, the same corner of the house return across decades. Seven-year-old Alma grows up among silent adults, superstition and the constant nearness of death; she learns she was named after a dead sister, sees her in a post-mortem photograph, and from then on believes the same thing is set aside for her. Beside her live adult troubles that are not spoken of in front of children: a servant girl was forcibly deprived of the ability to have children, and the daughter's brother had a leg amputated, which the family passed off as an accident at work so that he would not be taken to the war. Erika comes of age already in the shadow of the next war. The film is built like memory rather than narration: it holds together through sensations, sounds and fragments, because that is exactly how children retain what is never explained to them. Its common thought is that silence is handed down more surely than property. The first screening was at Cannes on 14 May 2025, where the film won the Jury Prize, and the German release began on 28 August."
+      },
+      "agentNote": "🔴 СНЯТА НЕЗАКРЫТАЯ ФРАЗА (класс 12, 2026-08-23): стояло «написанная ею в соавторстве» — с кем, в карточке не сказано, и имени соавтора я не нашла. Фразу закрыла не выдумкой, а снятием: сценарий назван собственным, что реестром подтверждено. Имя соавтора стоит добрать отдельно. Год 2025 по первой дате реестра — 14 мая 2025 (Канны); прокат в Германии 28 августа 2025, дальше 13 ноября 2025, 9 января и 26 февраля 2026. Оригинальное название немецкое — «In die Sonne schauen»; в каталог идут русская и английская прокатные формы."
+    },
+    {
+      "wikidata": "Q133866932",
+      "sitelinks": 33,
+      "title": {
+        "ru": "Простая случайность",
+        "en": "It Was Just an Accident"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Джафар Панахи",
+        "en": "Jafar Panahi"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "триллер",
+        "thriller",
+        "психологический",
+        "psychological"
+      ],
+      "description": {
+        "ru": "Драма 2025 года, снятая Джафаром Панахи по собственному сценарию. Всё начинается со случайной встречи: группа людей узнаёт в незнакомце человека, причастного к их прошлому заключению. Проверить, тот ли это человек, они не могут. Перед ними выбор: что делать с этим знанием и есть ли у них право делать хоть что-то. Дальше картина держится на этом выборе и на ответственности, которая ложится на каждого. Прошлое героев выходит наружу в их разговорах. Месть здесь и предмет разговора, и ловушка: уверенности в опознании нет, а цена ошибки остаётся прежней. Действие происходит в Иране, в Тегеране. Положение автора — часть самой работы. Панахи на родине годами был отлучён от профессии и работал под запретом снимать и выезжать. Он снимал самыми малыми средствами: в своей квартире и в салоне автомобиля, как в «Это не фильм» и «Такси». Эту картину он снял после освобождения и показал на крупнейшем международном фестивале. Главные роли исполнили Вахид Мобассери, Марьям Афшари, Эбрахим Азизи и Хадис Пакбатен, вместе с ними играют Маджид Панахи, Джордж Хашемзаде и Делмаз Наджафи. Произвели картину Les Films Pelléas, Arte France Cinéma и Bidibul Productions совместными силами Ирана, Франции и Люксембурга; продюсировали Филипп Мартен, Давид Тион и сам постановщик. Картина представлена на фестивале 20 мая 2025 года, где зал аплодировал ей стоя восемь минут и где она взяла главную награду; в прокат она вышла 1 октября 2025 года, на других территориях — 15 января 2026 года. Приняли её как одну из самых сильных работ года: рецензенты писали о сплаве саспенса, горькой сатиры и неожиданного юмора и отдельно — о финале.",
+        "en": "A 2025 drama written and directed by Jafar Panahi. It begins with a chance meeting: a group of people recognise in a stranger the man who had a hand in their imprisonment. They cannot verify for themselves that it is the same man. A choice stands before them: what to do with that knowledge, and whether it is theirs to act on at all. From there the film rests on that choice and on the responsibility it lays upon each of them, while the circumstances of the past come out in their conversations. Revenge is both the subject and the trap here: there is no certainty in the identification, and the price of a mistake does not go away. The action takes place in Iran, in Tehran. The director's own position is the substance of the work: for years Panahi was barred from his profession at home and worked under bans on filming and on travel, shooting by the smallest possible means, in his own flat and inside a car, as in This Is Not a Film and Taxi. This picture was made after his release and carried to the largest of the international festivals. Vahid Mobasseri, Mariam Afshari, Ebrahim Azizi and Hadis Pakbaten take the leading parts, with Majid Panahi, George Hashemzadeh and Delmaz Najafi alongside them. Les Films Pelléas, Arte France Cinéma and Bidibul Productions made the film together across Iran, France and Luxembourg, with Philippe Martin, David Thion and the director as producers. The picture was shown at a festival on 20 May 2025, where it drew an eight-minute standing ovation and took the top award; it opened in cinemas on 1 October 2025 and reached other territories on 15 January 2026. It was received as one of the strongest works of the year, with reviewers writing about its fusion of suspense, bitter satire and unexpected humour, and about its final act in particular."
+      },
+      "agentNote": "Год 2025 по ПЕРВОЙ дате реестра — фестивальная премьера 20 мая 2025. Российский/международный прокат по реестру — октябрь 2025 и январь 2026. Производство совместное: Франция, Иран, Люксембург. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16. Награда названа «главной наградой фестиваля», а не именем: имя приза в описании потребовало бы называть и фестиваль, а карточка о картине, не о церемонии."
+    },
+    {
+      "wikidata": "Q135038882",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Голос Хинд Раджаб",
+        "en": "The Voice of Hind Rajab"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Каутер Бен Хания",
+        "en": "Kaouther Ben Hania"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "документальный",
+        "documentary",
+        "война",
+        "war"
+      ],
+      "description": {
+        "ru": "Драма 2025 года, снятая тунисским режиссёром Каутер Бен Хания по собственному сценарию. В основе — подлинные аудиозаписи телефонного разговора, сохранённые гуманитарной службой, которая принимала экстренные звонки. Записи связаны с обращением шестилетней девочки из сектора Газа, оказавшейся в обстрелянном автомобиле: принявшие звонок диспетчеры удерживали связь с ней и одновременно пытались согласовать выезд помощи. Постановка разделена на два плана: подлинная фонограмма звучит с экрана как есть, без переозвучивания и без актёрской имитации, а работа диспетчерской воссоздана игровым способом — в павильонной декорации, с актёрами в ролях операторов и координаторов. Голос ребёнка остаётся настоящим, и на нём держится всё; вокруг него играют взрослые, которые не могут добраться до него вовремя. Картина стоит между документальным и игровым кино: звук здесь документальный, изображение целиком постановочное. Метод продолжает линию прежних работ режиссёра — «Человек, который продал свою кожу» и «Четыре дочери», — где документальный материал и реконструкция также сводились в пределах одного произведения. Главные роли исполнили Амер Хлехель, Клара Хури, Мотаз Малхис и Саджа Килани. Произвели картину Film4 Productions и Sunnyland Film, продюсировали Надим Шейхруха, Одесса Рэй и Джеймс Уилсон. Картина представлена на фестивале 3 сентября 2025 года, следующий показ прошёл 10 сентября. В прокат она вышла 26 ноября 2025 года, на других территориях — 22 января 2026 года. Приняли её сильно: на фестивальном показе зал аплодировал стоя больше двадцати минут, картина получила там второй по значению приз, а дальше собрала главные международные номинации сезона.",
+        "en": "A 2025 drama written and directed by the Tunisian filmmaker Kaouther Ben Hania. Its material is a set of genuine audio recordings of a telephone call, kept by the humanitarian service that took emergency calls. The recordings belong to a call made by a six-year-old girl from the Gaza Strip who was trapped in a car under fire: the dispatchers who took the call kept the line open with her while trying to get help dispatched. The staging rests on a division of two planes: the real recording is heard from the screen as it is, without redubbing and without actorly imitation, while the work of the call centre is recreated as fiction, in a built set, with actors as the operators and coordinators. The child's voice stays real and everything rests on it; around it play adults who cannot reach her in time. This arrangement places the film in the ground between documentary and fiction, where the sound remains documentary and the image belongs entirely to the staging. The method continues the line of the director's earlier work, The Man Who Sold His Skin and Four Daughters, in which documentary material and reconstruction were likewise brought inside a single piece. Amer Hlehel, Clara Khoury, Motaz Malhees and Saja Kilani take the leading parts. Film4 Productions and Sunnyland Film produced, with Nadim Cheikhrouha, Odessa Rae and James Wilson as producers. The picture was shown at a festival on 3 September 2025, with a further screening on 10 September. It opened in cinemas on 26 November 2025 and reached other territories on 22 January 2026. The response was powerful: the festival screening drew a standing ovation of more than twenty minutes, the film took the second most important prize there, and it went on to collect the season's major international nominations."
+      },
+      "agentNote": "🔴 Тема крайне тяжёлая: в основе — подлинная аудиозапись, связанная с гибелью ребёнка в секторе Газа. Описание намеренно держится справочного регистра — устройство картины, метод режиссёра и производство, — и не даёт оценок сторонам конфликта. Брать ли объект в каталог — решение владельца. Год 2025 по ПЕРВОЙ дате реестра (фестивальная премьера 3 сентября 2025). 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16. Названия наград в описание не вынесены намеренно: тема тяжёлая, и перечень премий рядом с гибелью ребёнка читался бы отчётом о призах. Сказано, ЧТО случилось с картиной у людей."
+    },
+    {
+      "wikidata": "Q96247255",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Stray",
+        "en": "Stray"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "BlueTwelve Studio",
+        "en": "BlueTwelve Studio"
+      },
+      "year": "2022",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "приключения",
+        "adventure",
+        "научная фантастика",
+        "science fiction",
+        "головоломка",
+        "puzzle",
+        "постапокалипсис",
+        "post-apocalyptic",
+        "инди",
+        "indie"
+      ],
+      "description": {
+        "ru": "Приключенческая игра с головоломками в киберпанковом антураже, сделанная небольшой французской студией BlueTwelve Studio и изданная Annapurna Interactive. Игрок управляет бездомным рыжим котом, который, отбившись от сородичей, падает в закрытый подземный город и ищет дорогу наверх, к свету. Люди исчезли отсюда задолго до начала событий, а обиход поддерживают человекоподобные роботы, перенявшие у прежних обитателей одежду, речь и привычку собираться в барах. Спутником кота становится небольшой летающий дрон по имени B-12: он переводит речь роботов и хранит обрывки памяти о прошлом города. Двигается герой по-кошачьи: прыгает только по заданным уступам и карнизам, протискивается в узкие проходы и лазает. Мяукать и царапать поверхности можно отдельными кнопками, и обе служат инструментом решения задач. Повествование идёт почти без слов и держится на устройстве пространства. Прохождение чередует разделы преследования, где от враждебных существ приходится убегать, с разделами исследования неоновых улиц вертикального города. Облик города собран по образцу плотной застройки с висящими проводами и вывесками. Музыкальный ряд игры выполнен в электронном стиле. Игра вышла 19 июля 2022 года на Microsoft Windows, PlayStation 4 и PlayStation 5, позднее появилась на Xbox One, Xbox Series X/S, macOS и Nintendo Switch. Последнее издание вышло в свет 28 мая 2026 года. Приняли её очень тепло: рецензенты сходились на высоких оценках, игра взяла две награды за независимую разработку и за дебют, а разошлась миллионными тиражами уже в первый месяц.",
+        "en": "An adventure game with puzzles in a cyberpunk setting, made by the small French studio BlueTwelve Studio and published by Annapurna Interactive. The player controls a stray ginger cat who, separated from his fellows, falls into a sealed underground city and looks for a way back up to the light. People vanished from it long before the events begin, and daily life is kept going by humanoid robots who have taken on the clothes, the speech and the bar-going habits of the former inhabitants. The cat's companion is a small flying drone named B-12, who translates the robots' speech and holds fragments of memory about the city's past. Movement is bound to what a cat can do: jumps happen only along set ledges and cornices, and getting on means squeezing through narrow gaps and climbing. Separate buttons are given to meowing and to scratching surfaces, and both serve as tools for solving problems rather than as decoration. The storytelling runs almost without words and rests on the arrangement of space instead of on dialogue. Play alternates chase sections, where hostile creatures have to be outrun, with exploration of the neon streets of the vertical city. The look of the city follows dense urban building with hanging wires and signs. The musical score of the game is done in an electronic style. The game came out on 19 July 2022 for Microsoft Windows, PlayStation 4 and PlayStation 5, and later appeared on Xbox One, Xbox Series X/S, macOS and Nintendo Switch. The most recent edition came out on 28 May 2026. Reception was very warm: reviewers settled on high marks, the game took two awards for independent development and for a debut, and it sold in the millions within its first month."
+      },
+      "agentNote": "Объект 2022 года. В разведку новинок 2026 попал по последней дате реестра — 28 мая 2026 (издание для новой платформы). Год взят по ПЕРВОЙ дате реестра, по правилу владельца 2026-08-21 о годе первого выпуска. Названия ru и en совпадают: русского перевода у названия нет, ruwiki зовёт объект латиницей. 🔴 ПРИЁМ ДОБАВЛЕН 2026-08-23 по классу 16. Точных чисел продаж в описании нет: источники дают разные цифры за один и тот же месяц."
+    }
+  ]
+}

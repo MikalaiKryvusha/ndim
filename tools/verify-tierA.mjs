@@ -12,6 +12,7 @@
 
 import { mkdir } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const BASE = 'http://localhost:5173';
 const SHOTS = 'test-results/tierA';
@@ -44,6 +45,7 @@ async function awaitRelationsWidget(page) {
 
 async function person(browser, { theme = 'light', width = 390, lang } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 820 }, locale: 'ru-RU' });
+  await markProbeContext(context);
   await context.addInitScript((value) => localStorage.setItem('ndim-theme', value), theme);
   if (lang) await context.addInitScript((value) => localStorage.setItem('ndim-lang', value), lang);
   const page = await context.newPage();

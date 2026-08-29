@@ -49,6 +49,7 @@
 
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const argv = process.argv.slice(2);
 const opt = (name, fallback) => {
@@ -222,6 +223,7 @@ const EXPECTED =
 
 async function person(browser) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'ru-RU' });
+  await markProbeContext(context);
   const page = await context.newPage();
   const errors = [];
   page.on('console', (m) => {

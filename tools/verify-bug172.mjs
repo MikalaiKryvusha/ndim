@@ -72,11 +72,18 @@
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
+import { standAddresses, addressesLine } from './lib/stand-addresses.mjs';
 
-const STAND = 'http://localhost:5173';
-const AUTH = 'http://127.0.0.1:9099';
-const FS = 'http://127.0.0.1:8181';
-const PROJECT = 'demo-ndim-dev';
+/*
+ * Адреса стенда берутся ИЗ ОКРУЖЕНИЯ, умолчания — слот 0 (замечание QA 2026-08-22: прибор держал
+ * три литеральных адреса и потому умел работать только на том слоте, где стоит дверь выката).
+ * Таблица «роль → порты» живёт у хозяина парка и здесь НЕ дублируется — см. шапку модуля.
+ */
+const АДРЕСА = standAddresses();
+const STAND = АДРЕСА.app;
+const AUTH = АДРЕСА.auth;
+const FS = АДРЕСА.firestore;
+const PROJECT = АДРЕСА.project;
 
 const TRACE = process.argv.includes('--trace');
 /** Режим покадровой съёмки ~10 к/с — поручение владельца из bugs/172. */
@@ -187,6 +194,9 @@ try {
   await page.waitForSelector('article.dim[data-dim]', { timeout: 30000 });
 
   const appliedTheme = await page.evaluate(() => document.documentElement.dataset.theme ?? '(нет)');
+  // Адреса печатаются ВСЕГДА: кадры и числа, снятые не на том стенде, ничем не отличаются от
+  // снятых на том — кроме этой строки.
+  say(addressesLine(АДРЕСА));
   say(`тема: заказана «${THEME}», применена «${appliedTheme}» · ширина ${WIDTH}`);
   if (appliedTheme !== THEME) {
     say('❌ тема НЕ применилась — прогон мерил бы не то, что заявляет.');

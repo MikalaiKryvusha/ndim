@@ -82,7 +82,7 @@ Fourteen key documents ship with a deployment (thirteen project documents plus t
 | `GOAL.md` | The owner's vision. | **The owner.** |
 | `MASTER_PLAN.md` | The phased road from the current state to the GOAL. | Agent derives (`/revision`). |
 | `STATUS.md` | The living SUMMARY of now and the baton between sessions (soft target ~200 lines; closed work moves to the chronicle — the bonsai trim). | Agent, after every task. |
-| `PROJECT_HISTORY.md` | The append-only chronicle: closed sessions/phases/releases, newest first; NOT in `/resume`'s canon set — archaeology on demand (2.1, epic H). | Agent, at `/end-chat`'s trim. |
+| `PROJECT_HISTORY.md` | The append-only chronicle: closed sessions/phases/releases, newest first; NOT in `/resume`'s canon set — archaeology on demand (2.1, epic H). | Agent, at `/end-chat-soft`'s trim. |
 | `EXPERIENCE.md` | The grep-friendly journal of lessons with trigger tags. | Agent (`/experience`). |
 | `PROJECT_STRUCTURE_EXTERNAL_MAP.md` | The external map: directories, files. | Agent maintains. |
 | `PROJECT_ARCHITECTURE_INTERNAL_MAP.md` | The internal map: abstractions and interactions. | Agent maintains. |
@@ -111,11 +111,11 @@ project's working language); **OTHER KAIF documents** — the project's local "h
 
 ## 6. The skill system
 
-Thirty-five skills — the verbs of project work — deploy to `.claude/skills/` (canonical) and are
+Thirty-seven skills — the verbs of project work — deploy to `.claude/skills/` (canonical) and are
 mirrored into every declared agent system (§7.3). Groups:
 
 - **Session:** `resume` (read ALL canon documents, pick one main thing) · `pause` (soft-park the
-  chat: logical stopping point, green tree, local commit, NO pushes) · `end-chat` (full closure:
+  chat: logical stopping point, green tree, local commit, NO pushes) · `end-chat-soft` (the unhurried full closure) + `end-chat-force` (the urgent capture-and-go closure:
   STATUS baton, judge, commit AND push) · `refresh-context` · `check-backlog`.
 - **Autonomy loops:** `autoloop` · `dayloop` · `nightloop` — grind the backlog; every item ends
   with a mandatory judge pass; an owner's drive-by note is filed to the backlog, not a task switch —
@@ -166,8 +166,10 @@ placeholders from project reality (package.json, git config, LICENSE); writes fi
 mirrors; wires the marker, npm handles and the deploy manifest (v2, §12.2); writes ONE cognitive
 deliverable — `KAIF_ADAPTATION_TASK.md`, whose items close only via `checkpoint <id>` commands
 (the `field-report` item requires the mandatory field install report to exist in
-`reports/KAIF_UPDATES/` before it ticks); `verify-final` runs the final gates (§7.5) and
-self-cleans the installer.
+`reports/KAIF_UPDATES/` before it ticks; the `owner-voice` item closes the voice-portrait
+question BEFORE any owner-facing text is written — portrait installed, or a canonical
+`no voice portrait` line recorded in the deployed AGENT_GUIDE); `verify-final` runs the final
+gates (§7.5) and self-cleans the installer.
 
 ### 7.3 Agent systems
 
@@ -178,11 +180,19 @@ never edited by hand.
 
 ### 7.4 Languages
 
-Nine language packs (ru, es, pt, fr, de, zh-Hans, ja, hi, ar) override the owner-facing documents
-and inject trigger aliases into each skill's `description:`. Agent documents stay English by
-default. A project that translated its wrapper wholesale declares `"i18n": "translated"` in the
-marker: mechanical replacement is then disabled in favor of per-module diffs, and the machinery
-never wars with the translation (§10.2).
+Two language packs are MAINTAINED: `en` (the source language itself) and `ru`. The other eight —
+es, pt, fr, de, zh-Hans, ja, hi, ar — are FROZEN at their full KAIF 2.2 state (owner's decision
+#56, named in the open: nine parallel packs are heavy to maintain and do not yet pay for
+themselves). A frozen pack STAYS in the bundle and deploys exactly as it did in 2.2 — the
+owner-facing documents plus skill trigger aliases — but receives no updates with new releases;
+its byte state is pinned by the origin's guard, so silent degradation cannot ride a release. A
+frozen pack is REVIVED on community demand: open an issue at the origin. Deploying with one stays
+legal, and the install log says its status honestly.
+
+A pack overrides the owner-facing documents and injects trigger aliases into each skill's
+`description:`. Agent documents stay English by default. A project that translated its wrapper
+wholesale declares `"i18n": "translated"` in the marker: mechanical replacement is then disabled
+in favor of per-module diffs, and the machinery never wars with the translation (§10.2).
 
 ### 7.5 The final gates
 
@@ -270,11 +280,15 @@ meta block's `policyChanges`, keyed by version. The update task prints them in a
 
 ### 10.7 Commands
 
-`update` (mechanical pass) · `diff` (audit: protected vs replace-eligible; `--source`: per-module
-preview against another version — a v1 manifest gets a synthetic baseline of the deployed version,
-`--baseline` overrides its source) · `adopt-current` (after a MANUAL migration: re-adopt reality so
-the mechanical road stays alive) · `sync` (re-mirror skills) · `modules` (print the machinery's
-module cut) · `checkpoint` · `update-verify` · `check` · `version`.
+`update` (mechanical pass; writes a crash journal before its first tree mutation and removes it
+as its last act — a run killed mid-flight stays visible) · `resume` (after a crashed update:
+restore the pre-update tree byte-exact from the journal's backup, remove files the dead run
+created, consume the journal) · `diff` (audit: protected vs replace-eligible; `--source`:
+per-module preview against another version — a v1 manifest gets a synthetic baseline of the
+deployed version, `--baseline` overrides its source; a bare `github.com/<owner>/<repo>` source
+resolves to its latest-release assets) · `adopt-current` (after a MANUAL migration: re-adopt
+reality so the mechanical road stays alive) · `sync` (re-mirror skills) · `modules` (print the
+machinery's module cut) · `checkpoint` · `update-verify` · `check` · `version`.
 
 ### 10.8 Predicting a pass
 
@@ -352,6 +366,16 @@ reconcile the canon by hand) · `marker` (pristine marker snapshot backing self-
 `update-verify`). `date` and `verifiedAt` are MOMENTS, so both carry the time and the offset in
 the owner's local clock — full ISO 8601 (`2026-08-08T07:13:00+03:00`), never a bare date: on a
 day carrying two updates a date-only receipt cannot say which one it proves.
+
+### 12.4 The crash journal (`.kaif/update-journal.json`)
+
+Written by `update` (and a version-moving bootstrap) after the pre-update backup and BEFORE the
+first tree mutation; removed as the run's last act. `from`, `to`, `source`, `route`,
+`startedAt` (a moment, §12.3 convention), `backupDir`, `born` (paths the run will create). A run
+killed mid-flight therefore leaves either an untouched tree or a visible journal — never a
+half-updated tree without a trace. While the journal exists, `update` and the bootstrap refuse
+and name `resume`, which restores every backed-up file byte-exact, removes the `born` files and
+consumes the journal. Git-ignored (ignore-first): it is transient run state, not history.
 
 ## 13. Conventions
 

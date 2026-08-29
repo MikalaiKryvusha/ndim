@@ -82,23 +82,67 @@ async function restDelete(path) {
   }).catch(() => {});
 }
 
-/** Истина о топе гостя — прямо из базы, мимо всякого кэша. */
+/**
+ * Число из значения Firestore REST. Форма зависит от того, чем документ записан: одно и то же
+ * поле приезжает `integerValue` (строкой!) или `doubleValue`. Читать одну форму значит однажды
+ * молча получить `undefined` и судить по нему.
+ */
+const число = (v) =>
+  v?.integerValue !== undefined
+    ? Number(v.integerValue)
+    : v?.doubleValue !== undefined
+      ? Number(v.doubleValue)
+      : null;
+
+/**
+ * Истина о топе гостя — прямо из базы, мимо всякого кэша.
+ *
+ * 🔴 ВОЗВРАЩАЕТ НЕ ТОЛЬКО ЧИСЛО ЛЮДЕЙ (`bugs/162`). Прежняя редакция отдавала `{exists, people}`
+ * и была СЛЕПА к главному: сервер синхронизации каждым тактом переписывает `relations/{uid}` с
+ * ТЕМ ЖЕ числом людей и другими значениями похожести — жителей стенда четверо, список людей
+ * стабилизируется мгновенно, а величины продолжают ездить. Заморозка живёт ровно в этом окне,
+ * и признак «людей в базе больше, чем карточек» её не видит НИКОГДА.
+ */
 async function topInDb(uid) {
   const snap = await restDoc(`relations/${uid}`);
-  if (snap === null) return { exists: false, people: 0 };
+  if (snap === null) return { exists: false, people: 0, computedAt: null, sims: [] };
   const top = snap.fields?.top?.arrayValue?.values ?? [];
-  return { exists: true, people: top.length };
+  const sims = top.map((e) => число(e.mapValue?.fields?.similarity));
+  return {
+    exists: true,
+    people: top.length,
+    computedAt: число(snap.fields?.computedAt),
+    sims,
+  };
 }
 
 /* ── Экран: классификация того, что видит человек на «Связях» ── */
 
+/**
+ * 🔴 СНИМАЕТ И ЗНАЧЕНИЯ С КАРТОЧЕК, А НЕ ТОЛЬКО ИХ ЧИСЛО (`bugs/162`).
+ *
+ * Тройка величин на карточке — `commonality · proximity · similarity` (порядок взят из
+ * `src/routes/relations/+page.svelte:338`, а не из головы: похожесть там ТРЕТЬЯ, и прибор,
+ * взявший первую ячейку «потому что она главная», мерил бы общность).
+ *
+ * Берём ВСЕ ТРИ: экран считается переехавшим, если сдвинулась любая из них. Это делает признак
+ * строже — заморозку не спрячет совпадение одной величины между двумя тактами.
+ */
+async function screenVector(page) {
+  return page.$$eval('.card .trio', (trios) =>
+    trios.map((t) =>
+      [...t.querySelectorAll('.cell b')].map((b) => Number(String(b.textContent).replace(/[^\d]/g, ''))),
+    ),
+  );
+}
+
 async function screenState(page) {
   const cards = await page.locator('.card .who').count();
   const text = await page.innerText('body');
-  if (cards > 0) return { kind: 'cards', people: cards };
-  if (/Связей пока нет/i.test(text)) return { kind: 'empty', people: 0 };
-  if (/Не удалось загрузить/i.test(text)) return { kind: 'down', people: 0 };
-  return { kind: 'other', people: 0 };
+  if (cards > 0) return { kind: 'cards', people: cards, vector: await screenVector(page) };
+  if (/Связей пока нет/i.test(text)) return { kind: 'empty', people: 0, vector: [] };
+  if (/Не удалось загрузить/i.test(text)) return { kind: 'down', people: 0, vector: [] };
+  return { kind: 'other', people: 0, vector: [] };
 }
 
 /** Сессия гостя — из IndexedDB, где её держит Firebase (приём tools/smoke.mjs). */
@@ -366,9 +410,44 @@ for (const v of result.visits) {
   console.log(`${v.label.padStart(5)} | ${v.sinceT0.padStart(21)} | ${db.padEnd(21)} | ${scr}`);
 }
 
-// Заморозка — это ОТСТАВАНИЕ экрана от базы: пустой экран при непустом топе ИЛИ карточек меньше,
-// чем людей в базе (первый визит поймал промежуточный топ, дальше база уехала, экран остался).
-const frozen = result.visits.some((v) => v.db.exists && v.db.people > v.screen.people);
+/*
+ * ── ПРИЗНАК ЗАМОРОЗКИ (`bugs/162`) ────────────────────────────────────────────────────────────
+ *
+ * Прежняя редакция считала заморозкой ТОЛЬКО «людей в базе больше, чем карточек на экране» — и
+ * печатала одну и ту же строку на здоровом и на сломанном коде. Причина названа замером: сервер
+ * синхронизации переписывает топ КАЖДЫМ тактом с тем же числом людей и другими величинами.
+ *
+ * Настоящий признак — ОТСТАВАНИЕ, а не недобор: **база уехала (`computedAt` сдвинулся), а экран
+ * не шелохнулся**. Число людей остаётся ВСПОМОГАТЕЛЬНЫМ признаком: оно ловит форму «пустой экран
+ * при непустом топе», которую вектор не покажет (пустому экрану нечем двигаться).
+ */
+const одинаково = (a, b) => JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
+/** Пары соседних визитов, где база ПЕРЕЕХАЛА: только на них и можно судить о заморозке. */
+const переезды = result.visits
+  .map((v, i) => (i === 0 ? null : { было: result.visits[i - 1], стало: v }))
+  .filter(Boolean)
+  .filter((p) => p.было.db.exists && p.стало.db.exists)
+  .filter((p) => p.было.db.computedAt !== null && p.стало.db.computedAt !== null)
+  .filter((p) => p.стало.db.computedAt > p.было.db.computedAt);
+const застывшие = переезды.filter(
+  (p) => p.было.screen.kind === 'cards' && одинаково(p.было.screen.vector, p.стало.screen.vector),
+);
+/** Вспомогательный признак прежней редакции — сохранён, он ловит другую форму. */
+const недобор = result.visits.some((v) => v.db.exists && v.db.people > v.screen.people);
+const frozen = застывшие.length > 0 || недобор;
+
+console.log(
+  `\nпереездов базы между визитами: ${переезды.length} · из них экран не шелохнулся: ${застывшие.length}` +
+    (переезды.length === 0
+      ? '\n   ⚠️ база за прогон НИ РАЗУ не переехала — судить о заморозке нечем, это «не измерено»'
+      : ''),
+);
+for (const p of застывшие) {
+  console.log(
+    `   · ${p.было.label} → ${p.стало.label}: база ${p.было.db.computedAt} → ${p.стало.db.computedAt}, ` +
+      `экран остался ${JSON.stringify(p.было.screen.vector)}`,
+  );
+}
 const ctrl = result.afterRefresh;
 console.log(
   `\nконтроль (жест обновления): база ${ctrl.db.exists ? `топ ${ctrl.db.people}` : 'топа нет'} → экран ${
@@ -382,8 +461,20 @@ if (frozen && ctrl.screen.kind === 'cards') {
   console.log('   жест обновления показал состояние базы — данные были, не показывались.');
 } else if (frozen) {
   console.log('🔴 Экран отстал от базы, но контроль жестом не показал данных — прибор под вопросом, не продукт.');
+} else if (переезды.length === 0) {
+  /*
+   * 🔑 РАЗДЕЛЕНИЕ, РАДИ КОТОРОГО ВСЁ И ПРАВИЛОСЬ (`bugs/162`). Прежний прибор сваливал сюда оба
+   * исхода — и «мерить было нечем», и «мерили, заморозки нет», — поэтому его вывод не отличал
+   * починенное от сломанного. Теперь «не измерено» говорится ТОЛЬКО когда база и правда не
+   * переезжала: пустое утверждение обязано звучать пустым.
+   */
+  console.log('⚠️ Заморозка НЕ ИЗМЕРЕНА: база за прогон ни разу не переехала — судить не о чем.');
+  console.log('   Это «нечем было мерить», а не «опровергнуто». Повторить прогон.');
 } else {
-  console.log('⚠️ Заморозка НЕ ПОЙМАНА этим прогоном (гонка с тактом 15 с) — «не измерена», а не «опровергнута».');
+  console.log(
+    `✅ ЗАМОРОЗКИ НЕТ: база переезжала ${переезды.length} раз(а), и экран каждый раз ехал следом.`,
+  );
+  console.log('   Это ОПРОВЕРЖЕНИЕ, а не пропуск: было что мерить, и мера показала здоровое поведение.');
 }
 
 if (result.guestCards) {

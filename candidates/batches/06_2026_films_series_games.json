@@ -1,0 +1,971 @@
+{
+  "_": [
+    "КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — партия 6, 2026-08-23. ПОРЦИИ 1–5 (27 карточек), из них 4 — культовая классика.",
+    "",
+    "ЗАКАЗ ВЛАДЕЛЬЦА, дословно: «напишите мне ещё 60 измерений на вычитку с учётом моих",
+    "критических комментариев только!!!» + «это задача помимо прочих по планам». Значит партия",
+    "меряется списком его возвратов — candidates/owner-critical-notes-2026-08-22.md, шестнадцать",
+    "классов, — а не общим вкусом.",
+    "",
+    "🔴 ПЕРВОЙ ИДЁТ ЕГО СОБСТВЕННАЯ ЗАЯВКА. «Супергеройский фильм СПАВН 1997» он подал кнопкой в",
+    "приложении 2026-08-23; заявка прочитана из боя (tools/probe-prod-suggestions.mjs), в каталоге",
+    "объекта не было. Вторая его заявка того же дня — «Фильм Возвращение 2027 про Одиссея» — в",
+    "каталоге УЖЕ ЕСТЬ («Возвращение Одиссея», 2024), и он это подтвердил словами «забыл, что он",
+    "есть».",
+    "",
+    "ОТБОР ОСТАЛЬНЫХ: разведка Wikidata 2026-08-23, год 2026, порог известности 8 языковых",
+    "разделов, предел 300. Найдено 133 новинки, 19 уже наши, 114 новых; за вычетом партий 1–5",
+    "остаётся 83 кандидата. Взяты верхние по известности среди кино, сериалов и игр.",
+    "🔴 Альбомы (16 штук) НЕ взяты: под музыку нет проверенных правил мастерской — то же решение,",
+    "что в партии 5, и по той же причине («сюжет, герои, проблематика» у альбома читается иначе).",
+    "🔴 Невышедшего в партии нет: разведка отсеивает объекты, у которых все точные даты в будущем,",
+    "и называет их поимённо в своём отчёте.",
+    "",
+    "ОТКУДА ЧТО ВЗЯТО:",
+    "· ПОЛЯ (название, вид, год, автор) — из реестра по идентификатору, запросом, а не по памяти.",
+    "· СОДЕРЖАНИЕ — из прочитанных статей, изложено своими словами. Дословных рядов не переносилось.",
+    "· sitelinks — число языковых разделов Википедии, служебная мера разведки. В текст не попадает.",
+    "",
+    "ГОД: у «Спауна» реестр даёт три даты 1997 года, взята первая полная — 1 августа 1997."
+  ],
+  "candidates": [
+    {
+      "wikidata": "Q1474393",
+      "sitelinks": 27,
+      "title": {
+        "ru": "Спаун",
+        "en": "Spawn"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Марк Диппе",
+        "en": "Mark A.Z. Dippé"
+      },
+      "year": "1997",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "супергерои",
+        "superhero",
+        "фэнтези",
+        "fantasy",
+        "ужасы",
+        "horror",
+        "месть",
+        "revenge"
+      ],
+      "description": {
+        "ru": "Экранизация комикса Тодда Макфарлейна, поставленная Марком Диппе. Эл Симмонс служит полковником морской разведки и оперативником тайного ведомства, и начальник Джейсон Винн отправляет его на завод химического оружия в Северной Корее. Следом Винн посылает наёмную убийцу, и Симмонс сгорает заживо. В аду ему предлагают сделку: он возвращается на Землю и снова видит невесту Ванду, а взамен обязуется возглавить адское войско в грядущей войне. Симмонс соглашается и приходит обратно изуродованным существом в живой броне, с опозданием на пять лет — Ванда вышла замуж за его лучшего друга и растит дочь. Картина ведёт героя между двумя наставниками: демон-клоун Осквернитель толкает его к мести и к обещанной роли предводителя, а старик Коглиостро — такой же посланник ада, сумевший освободить свою душу, — учит владеть бронёй и удерживает от убийства. Винн тем временем торгует биологическим оружием и вживляет себе в сердце устройство, способное выпустить заразу по всему миру, если это сердце остановится. Финал приводит Симмонса к отказу от сделки и к выбору защищать чужие жизни вместо мести. Главную роль исполнил Майкл Джей Уайт, и лента стала одной из первых, где чернокожий актёр сыграл крупного героя комиксов. Рядом с ним сыграли Джон Легуизамо, Мартин Шин и Тереза Рэндл; для Никола Уильямсона роль Коглиостро стала последней в кино. Постановщик пришёл из компьютерной графики, и живой плащ героя с адскими пейзажами делались как главный аттракцион картины. Музыку написал Грэм Ревелл, а песни саундтрека записаны парами, где рок-группа работала вместе с электронным музыкантом. В прокат США картина вышла 1 августа 1997 года и собрала около 88 миллионов долларов при бюджете в 40–45 миллионов. Критики приняли её холодно — хвалили облик Спауна и ругали сценарий вместе с гримом злодея, — а среди поклонников комикса она осталась культовой.",
+        "en": "An adaptation of the Todd McFarlane comic, directed by Mark Dippé. Al Simmons serves as a Marine intelligence colonel and covert operative, and his superior Jason Wynn sends him to a chemical weapons plant in North Korea. Wynn sends an assassin after him, and Simmons burns to death. In Hell he is offered a bargain: he returns to Earth and sees his fiancée Wanda again, and in exchange he agrees to lead Hell's army in the war to come. Simmons accepts and comes back as a disfigured being in living armour, five years late — Wanda has married his best friend and is raising a daughter. The film moves its hero between two mentors: the clown demon Violator pushes him towards revenge and the leadership he promised, while the old man Cogliostro — another envoy of Hell, one who managed to free his own soul — teaches him to wield the armour and holds him back from killing. Wynn meanwhile deals in biological weapons and has a device implanted in his heart that will release the plague worldwide if that heart stops. The ending brings Simmons to refuse the bargain and to choose the defence of other lives over revenge. Michael Jai White took the lead, and the film became one of the first in which a Black actor played a major comic-book hero. John Leguizamo, Martin Sheen and Theresa Randle played beside him; the role of Cogliostro was Nicol Williamson's last on screen. The director came from computer graphics, and the hero's living cape together with the landscapes of Hell were built as the film's central attraction. Graeme Revell wrote the score, and the soundtrack songs were recorded in pairs, each teaming a rock band with an electronic musician. The film opened in the United States on 1 August 1997 and took about 88 million dollars against a budget of 40 to 45 million. Critics received it coldly — they praised the look of Spawn and faulted the script along with the villain's make-up — and among readers of the comic it has remained a cult picture."
+      },
+      "agentNote": "🔴 ЭТО ЗАЯВКА ВЛАДЕЛЬЦА, поданная кнопкой в приложении 2026-08-23: «Супергеройский фильм СПАВН 1997». Реестр даёт три даты 1997 года (1 августа, 30 октября, год без дня); взята первая полная — она же прокатная премьера США. Сборы названы «около 88 миллионов»: русский и английский разделы дают 87 и 87,9 миллиона, бюджет — 40–45 миллионов, точное число студия не объявляла."
+    },
+    {
+      "wikidata": "Q120277524",
+      "sitelinks": 35,
+      "title": {
+        "ru": "Рыцарь Семи Королевств",
+        "en": "A Knight of the Seven Kingdoms"
+      },
+      "type": {
+        "ru": "Телесериал",
+        "en": "TV Series"
+      },
+      "author": {
+        "ru": "Айра Паркер",
+        "en": "Ira Parker"
+      },
+      "year": "2026",
+      "tags": [
+        "кино",
+        "movie",
+        "фильм",
+        "film",
+        "телесериал",
+        "TV series",
+        "фэнтези",
+        "fantasy",
+        "драма",
+        "drama",
+        "приключения",
+        "adventure",
+        "средневековье",
+        "medieval"
+      ],
+      "description": {
+        "ru": "Экранизация повестей Джорджа Мартина о Дунке и Эгге, приквел «Игры престолов» и третий сериал по его книгам. Первый сезон взял за основу «Межевого рыцаря» — раннюю повесть цикла, действие которой идёт в Вестеросе за девяносто лет до событий главной саги. Дункан Высокий, рослый оруженосец бедного странствующего рыцаря, хоронит своего наставника под деревом, забирает его доспехи и меч и отправляется на турнир в Эшфорд, чтобы назваться рыцарем самому. По дороге к нему прибивается девятилетний бритоголовый мальчишка Эгг и настойчивостью выпрашивает место оруженосца. В Эшфорде простолюдина в чужих латах отказываются вносить в списки, пока за него не поручится кто-нибудь из знати, и право носить шпоры Дунк отстаивает храбростью. Мальчик оказывается принцем из дома Таргариенов, а турнирная ссора вырастает в судебный поединок, куда выходят самые громкие рыцари королевства вместе с наследником престола. Гибель этого наследника меняет и судьбу Дунка, и линию наследования Семи Королевств. Питер Клэффи играет Дунка, Декстер Сол Анселл — Эгга, в окружении заняты Берти Карвел, Сэм Спруэлл, Финн Беннетт и Дэниэл Ингс. Сезон снят шестью получасовыми сериями — вдвое короче обычной для этого мира серии, и камерность выбрана намеренно: история идёт про двоих на дороге, а не про войну домов. Мартин выступил сценаристом и исполнительным продюсером, музыку написал Дэн Ромер. Первый сезон вышел на HBO 18 января 2026 года. Критики приняли сериал тепло, назвав его самой человечной работой по книгам Мартина; первый сезон собрал девять номинаций на «Эмми», включая лучший драматический сериал, а второй сезон канал заказал ещё до премьеры первого.",
+        "en": "An adaptation of George Martin's Dunk and Egg novellas, a prequel to Game of Thrones and the third series drawn from his books. The first season takes The Hedge Knight as its base — an early novella set in Westeros some ninety years before the main saga. Duncan the Tall, the tall squire of a poor wandering knight, buries his mentor beneath a tree, takes up his armour and sword and rides for the tourney at Ashford to name himself a knight. A shaven-headed boy of nine called Egg attaches himself along the way and badgers Dunk into taking him as squire. At Ashford a commoner in another man's plate is refused a place on the lists until some noble vouches for him, and Dunk holds on to his spurs through plain courage. The boy turns out to be a prince of House Targaryen, and a quarrel at the tourney grows into a trial by combat that draws the loudest knights of the realm along with the heir to the throne. The death of that heir changes both Dunk's fortunes and the line of succession of the Seven Kingdoms. Peter Claffey plays Dunk and Dexter Sol Ansell plays Egg, with Bertie Carvel, Sam Spruell, Finn Bennett and Daniel Ings around them. The season runs to six half-hour episodes — half the usual length for this world, and the smaller scale is deliberate: the story follows two people on a road rather than a war between houses. Martin served as writer and executive producer, and Dan Romer wrote the score. The first season began on HBO on 18 January 2026. Critics welcomed it warmly and called it the most human work drawn from Martin's books; the season took nine Emmy nominations including Outstanding Drama Series, and the network ordered a second season before the first had even premiered."
+      },
+      "agentNote": "Год по началу показа первого сезона — правило владельца «год сериала всегда по году первого сезона или первой серии». Второй сезон снят и выйдет в 2027 году; в описание это не вошло — карточка про то, что человек уже может посмотреть и оценить."
+    },
+    {
+      "wikidata": "Q114779504",
+      "sitelinks": 26,
+      "title": {
+        "ru": "Чудо-человек",
+        "en": "Wonder Man"
+      },
+      "type": {
+        "ru": "Телесериал",
+        "en": "TV Series"
+      },
+      "author": {
+        "ru": "Дестин Дэниел Креттон",
+        "en": "Destin Daniel Cretton"
+      },
+      "year": "2026",
+      "tags": [
+        "кино",
+        "movie",
+        "фильм",
+        "film",
+        "телесериал",
+        "TV series",
+        "супергерои",
+        "superhero",
+        "комедия",
+        "comedy",
+        "сатира",
+        "satire"
+      ],
+      "description": {
+        "ru": "Комедия о Голливуде внутри киновселенной Marvel, придуманная Дестином Дэниелом Креттоном и Эндрю Гестом. Саймон Уильямс пробуется на роли и держит в тайне собственную силу: в этом мире людям со сверхспособностями сниматься запрещено особой оговоркой в контрактах. Он пробует себя на заглавную роль в ремейке старой ленты «Чудо-человек»: супергерой играет супергероя и обязан доказывать, что справится. Напарником Саймона становится Тревор Слэттери, актёр-неудачник, когда-то изображавший главаря террористов и похищенный настоящей преступной организацией; сериал закрывает его историю, начатую в «Железном человеке 3» и продолженную в «Шан-Чи». Сатира бьёт по кинопроизводству: режиссёр-небожитель Фон Ковак собран из черт нескольких больших постановщиков, агенты торгуются, а сами себя играют Джо Пантольяно и Джош Гэд. Яхья Абдул-Матин II ведёт главную роль, Бен Кингсли возвращается к Слэттери, рядом сыграли Икс Майо, Ариан Мояед, Байрон Бауэрс и Златко Бурич. Съёмки шли в Лос-Анджелесе с апреля 2023 года, остановились из-за забастовки сценаристов и возобновились только в 2024-м, из-за чего выход задержался больше чем на год. Все восемь серий вышли на Disney+ 27 января 2026 года под маркой «Marvel Spotlight» — то есть смотреть их можно, не зная остальных проектов студии. Критики приняли сериал хорошо, Абдул-Матин получил номинацию на «Эмми». Второй сезон канал заказал в марте 2026 года и отменил в июле того же года.",
+        "en": "A Hollywood comedy set inside the Marvel Cinematic Universe, created by Destin Daniel Cretton and Andrew Guest. Simon Williams goes to auditions and keeps his own powers secret: in this world a clause in the contracts bars superpowered people from working in film. The part he goes after is the lead in a remake of an old picture called Wonder Man, so a superhero is auditioning to play a superhero and has to prove he can carry it. His partner becomes Trevor Slattery, a failed actor who once posed as a terrorist leader and was then kidnapped by a real criminal organisation; the series closes the story he began in Iron Man 3 and continued in Shang-Chi. The satire lands on filmmaking itself: the lofty director Von Kovak is assembled from the traits of several major auteurs, agents haggle, and Joe Pantoliano and Josh Gad appear as versions of themselves. Yahya Abdul-Mateen II carries the lead, Ben Kingsley returns as Slattery, and X Mayo, Arian Moayed, Byron Bowers and Zlatko Burić play alongside them. Filming ran in Los Angeles from April 2023, stopped for the writers' strike and resumed only in 2024, which pushed the release back by more than a year. All eight episodes arrived on Disney+ on 27 January 2026 under the Marvel Spotlight banner, meaning they can be watched without knowing the studio's other projects. Critics received the series well and Abdul-Mateen earned an Emmy nomination. The network ordered a second season in March 2026 and cancelled it that July."
+      },
+      "agentNote": "Русский раздел Википедии описывает сериал как ещё не вышедший («станет частью», «будет связан») и называет в составе Эда Харриса, которого английский раздел в вышедшем составе не приводит вовсе. Содержание взято по английскому разделу, описывающему уже показанный сериал; Эд Харрис в карточку не вошёл. Это ровно класс 1б наоборот — устаревший текст источника, а не наш."
+    },
+    {
+      "wikidata": "Q123956515",
+      "sitelinks": 24,
+      "title": {
+        "ru": "Паук-Нуар",
+        "en": "Spider-Noir"
+      },
+      "type": {
+        "ru": "Телесериал",
+        "en": "TV Series"
+      },
+      "author": {
+        "ru": "Орен Узиэль",
+        "en": "Oren Uziel"
+      },
+      "year": "2026",
+      "tags": [
+        "кино",
+        "movie",
+        "фильм",
+        "film",
+        "телесериал",
+        "TV series",
+        "супергерои",
+        "superhero",
+        "нуар",
+        "noir",
+        "детектив",
+        "detective",
+        "криминал",
+        "crime"
+      ],
+      "description": {
+        "ru": "Супергеройский нуар о Нью-Йорке тридцатых годов, поставленный по комиксам Marvel о Человеке-пауке Нуар. Бен Рейли зарабатывает частным сыском, пьёт и донашивает славу единственного героя этого города — паучью силу он получил на фронте Первой мировой, когда его укусило подопытное существо в немецком лагере. Маску он снял пять лет назад, после того как пойманный им преступник убил его невесту. Новое дело возвращает Рейли к костюму и сводит его с газетчиком Робби Робертсоном, певицей ночного клуба Кэт Харди и ирландским мафиозным боссом Сильвермейном, чьи связи уходят в прошлое самого сыщика. Николас Кейдж играет Рейли и описал свой рисунок роли как семьдесят процентов Хамфри Богарта и тридцать процентов Багза Банни; рядом заняты Ламорн Моррис, Ли Цзюнь Ли, Брендан Глисон, Джек Хьюстон и Абрахам Попула. Сериал сделан жанром, а не отсылками: сыщик в шляпе, роковая женщина, продажный мэр и мафия времён сухого закона держат историю крепче, чем принадлежность к вселенной. Снимали в Лос-Анджелесе с августа 2024 по март 2025 года, восемь серий. Сериал вышел на MGM+ 25 мая 2026 года в цветном виде, а 27 мая добрался до Prime Video по всему миру сразу в двух вариантах — цветном и чёрно-белом. Критики приняли работу тепло и отдельно хвалили Кейджа, а сериал собрал одиннадцать номинаций на «Эмми».",
+        "en": "A superhero noir set in the New York of the 1930s, drawn from the Marvel comics about Spider-Man Noir. Ben Reilly makes his living as a private investigator, drinks, and wears out the fame of being this city's only hero — he gained his spider strength at the front in the First World War, bitten by an experimental creature in a German camp. He put the mask away five years ago, after a criminal he had caught murdered his fiancée. A new case brings Reilly back into the suit and throws him together with the newspaperman Robbie Robertson, the nightclub singer Cat Hardy, and the Irish mob boss Silvermane, whose connections reach into the investigator's own past. Nicolas Cage plays Reilly and described his approach to the part as seventy percent Humphrey Bogart and thirty percent Bugs Bunny; Lamorne Morris, Li Jun Li, Brendan Gleeson, Jack Huston and Abraham Popoola play alongside him. The series works through genre rather than references: the detective in a hat, the femme fatale, the crooked mayor and Prohibition-era gangsters hold the story together more firmly than any shared universe. Filming ran in Los Angeles from August 2024 to March 2025, across eight episodes. The premiere came to MGM+ on 25 May 2026 in a colour version, and on 27 May the series went out worldwide on Prime Video in two versions at once, colour and black-and-white. Critics received the work warmly and singled out Cage, and the series collected eleven Emmy nominations."
+      },
+      "agentNote": "Год по началу показа. Русский раздел ошибочно называет Кейджа исполнителем «Человека-паука Нуар»; в самом сериале героя зовут Бен Рейли, и он не Питер Паркер — это подтверждают оба раздела в описании персонажей. Взято верное имя."
+    },
+    {
+      "wikidata": "Q114771310",
+      "sitelinks": 18,
+      "title": {
+        "ru": "Возвращение в Сайлент Хилл",
+        "en": "Return to Silent Hill"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Кристоф Ган",
+        "en": "Christophe Gans"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "психологический",
+        "psychological",
+        "драма",
+        "drama"
+      ],
+      "description": {
+        "ru": "Экранизация второй игры серии Konami, снятая Кристофом Ганом, — третья картина о Сайлент Хилле и одновременно перезапуск истории. Художник Джеймс Сандерленд получает письмо от жены Мэри, которая зовёт его вернуться в город их общего прошлого. Город встречает его туманом, падающим пеплом и пустотой: жителей выкосила неназванная болезнь. Джеймс спускается в этот пейзаж и встречает тех, кто помнит Мэри по-своему, — девочку Лору, женщину Анджелу и Марию, похожую на его жену до неразличимости. Улицы и больница на глазах превращаются в изнанку самих себя, и по этой изнанке за Джеймсом ходит Пирамидоголовый, палач с железным колпаком на плечах. Правда, к которой картина ведёт зрителя, оказывается не о городе: Мэри умерла задолго до письма, а вина, которую Джеймс носит, устроила ему весь этот путь. Джереми Ирвин играет Джеймса, Ханна Эмили Андерсон — Мэри и Марию, Эви Темплтон — Лору. Музыку написал Акира Ямаока, автор саундтреков к самим играм, и его звук держит связь с первоисточником крепче любой цитаты. Снимали в Германии и Сербии с апреля 2023 по февраль 2024 года. В российский прокат картина вышла 22 января 2026 года, в американский — 23 января, во французский — 4 февраля. Приняли её плохо: критики писали о вялом ритме и слабой игре, кассы фильм не собрал и быстро уехал на стриминговые сервисы.",
+        "en": "An adaptation of the second Konami game, directed by Christophe Gans — the third Silent Hill picture and a reboot of the story at the same time. The painter James Sunderland receives a letter from his wife Mary calling him back to the town of their shared past. The town meets him with fog, falling ash and emptiness: an unnamed illness has swept the residents away. James walks down into this landscape and meets people who each remember Mary in their own way — the girl Laura, the woman Angela, and Maria, who resembles his wife past telling apart. The streets and the hospital turn inside out before his eyes, and through that other side walks Pyramid Head, an executioner with an iron cowl on his shoulders. The truth the film leads its viewer towards turns out not to be about the town: Mary died long before the letter, and the guilt James carries staged this whole journey for him. Jeremy Irvine plays James, Hannah Emily Anderson plays Mary and Maria, and Evie Templeton plays Laura. Akira Yamaoka, who scored the games themselves, wrote the music, and his sound holds the link to the source more firmly than any quotation could. The shoot moved between Germany and Serbia and lasted from April 2023 until February 2024. The film opened in Russia on 22 January 2026, in the United States on 23 January and in France on 4 February. Reception was poor: critics wrote of a sluggish rhythm and weak playing, the film failed at the box office and moved quickly to streaming services."
+      },
+      "agentNote": "Реестр даёт три даты (23 января, 4 и 5 февраля); российская премьера 22 января названа русским разделом. Все три поданы событиями во фразе. Сборы числом не приведены: русский раздел пишет «провалился в прокате», английский — 47,9 миллиона при бюджете 23 миллиона, то есть разделы противоречат друг другу в оценке; названо то, в чём они согласны."
+    },
+    {
+      "wikidata": "Q117815027",
+      "sitelinks": 19,
+      "title": {
+        "ru": "Железное лёгкое",
+        "en": "Iron Lung"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Марк Фишбах",
+        "en": "Mark Fischbach"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "фантастика",
+        "science fiction",
+        "выживание",
+        "survival"
+      ],
+      "description": {
+        "ru": "Фантастический фильм ужасов по одноимённой игре Дэвида Шимански, снятый Марком Фишбахом — видеоблогером, для которого эта работа стала режиссёрским дебютом. Он же написал сценарий, спродюсировал картину за свои деньги и сыграл главную роль. В далёком будущем событие, названное Тихим вознесением, стирает звёзды, планеты и человечество; уцелели те, кто в этот час находился на станциях и кораблях. Заключённого по имени Саймон отправляют на недавно найденную луну и сажают в подводную лодку с заваренным иллюминатором — за это ему обещают свободу. Океан этой луны состоит из крови, смотреть наружу нельзя, и Саймон снимает дно примитивной камерой, полагаясь на радио и на голос командира на поверхности. Погружение приносит ему снимок исполинского скелета, потом медальон предыдущего пилота, потом живое существо, которое бьёт по корпусу. Дальше связь обрывается, кровь просачивается внутрь, и герой перестаёт отличать увиденное от бреда. Замысел картины держится на клаустрофобии: зритель заперт в железной коробке вместе с человеком, у которого есть только фотоаппарат и чужой голос в наушниках. Рядом с Фишбахом сыграли Каролин Роуз Каплан и Трой Бейкер, музыку написал Эндрю Халшалт, снимали в Остине. Автор игры Шимански работал над фильмом с первых дней и появился в эпизоде. Премьера состоялась 30 января 2026 года. Критики разошлись во мнениях, признав крепкую атмосферу при неровном сценарии, а публика приняла картину заметно теплее.",
+        "en": "A science-fiction horror film based on the game of the same name by David Szymanski, directed by Mark Fischbach — a video blogger for whom this work was a directing debut. He also wrote the script, financed the production himself and took the lead role. Far in the future an event known as the Quiet Rapture erases the stars, the planets and humanity; those who happened to be aboard stations and ships survived. A prisoner named Simon is sent to a newly found moon and placed in a submarine with a welded-over porthole, and freedom is what he is promised for it. The ocean of that moon consists of blood, looking outside is impossible, and Simon photographs the floor with a primitive camera, relying on the radio and on the voice of a commander at the surface. The dive brings him an image of a colossal skeleton, then the locket of a previous pilot, then a living thing that strikes the hull. The link then breaks, blood seeps inside, and the hero stops telling what he saw from what he imagined. The design of the film rests on claustrophobia: the viewer is locked in an iron box with a man who has only a camera and someone else's voice in his headphones. Caroline Rose Kaplan and Troy Baker played beside Fischbach, Andrew Hulshult wrote the music, and shooting took place in Austin. Szymanski, who made the game, worked on the film from the first days and appears in a small part. The premiere came on 30 January 2026. Critics divided, granting the film a solid atmosphere over an uneven script, while audiences received it noticeably more warmly."
+      },
+      "agentNote": "Автором назван Марк Фишбах, а не сетевое имя Markiplier: в поле «автор» каталога стоят имена людей. Сетевое имя в описание тоже не вынесено отдельной строкой — оно названо ролью («видеоблогер»), потому что для человека, который читает карточку первым в жизни, важен факт дебюта, а не псевдоним."
+    },
+    {
+      "wikidata": "Q123172835",
+      "sitelinks": 19,
+      "title": {
+        "ru": "Грязные деньги",
+        "en": "In the Grey"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Гай Ричи",
+        "en": "Guy Ritchie"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "боевик",
+        "action",
+        "триллер",
+        "thriller",
+        "криминал",
+        "crime"
+      ],
+      "description": {
+        "ru": "Криминальный боевик Гая Ричи, который написал сценарий и спродюсировал картину сам. Рэйчел Уайлд выбивает долги для богатых клиентов и берётся вернуть миллиард долларов с теневого магната Мэнни Салазара, укрывшегося на собственном испанском острове. Первая попытка стоит жизни её наставнику: Салазар убивает переговорщика вместо ответа. Рэйчел отвечает не оружием, а осадой — её люди останавливают стройки магната, глушат нефтяную вышку, находят лазейки в законе и приводят к нему надзорные органы, так что вместо прибыли он получает штрафы и аресты имущества. Силовую часть работы ведут двое: Сид и Бронко, оперативники, которые готовят высадку на остров с той же дотошностью, с какой юристы готовят иск, — арсенал завезён заранее, пути отхода размечены, ловушки расставлены. Переговоры на острове кончаются попыткой убить Рэйчел и перестрелкой, из которой её вытаскивают. Настоящий противник обнаруживается позже, и он со стороны заказчика: представитель фирмы Бобби Шин присваивает её долю и сдаёт её местонахождение Салазару. Генри Кавилл и Джейк Джилленхол играют Сида и Бронко, Эйса Гонсалес — Рэйчел, Розамунд Пайк — Бобби Шин, Карлос Бардем — Салазара. Снимали в Испании с осени 2023 года; премьеру дважды переносили, и в прокат картина вышла 15 мая 2026 года. Приняли её сдержанно: рецензенты хвалили работу дуэта оперативников и ругали растянутость, кассовые сборы вышли слабыми.",
+        "en": "A crime action picture by Guy Ritchie, who wrote the script and produced it himself. Rachel Wild recovers debts for wealthy clients and takes on the return of a billion dollars from the shadowy magnate Manny Salazar, holed up on his own Spanish island. The first attempt costs her mentor his life: Salazar has the negotiator killed instead of answering. Rachel replies with a siege rather than a gun — her people halt the magnate's construction sites, cripple his oil rig, find gaps in the law and bring regulators down on him, so that fines and seizures arrive where profit used to. Two men handle the forceful half of the work: Sid and Bronco, operatives who prepare the landing on the island with the same thoroughness lawyers bring to a filing — the arsenal is delivered ahead of time, escape routes are mapped, traps are set. The talks on the island end in an attempt on Rachel's life and a firefight she is pulled out of. The real opponent surfaces later, and he stands on the client's side: the firm's executive Bobby Sheen keeps her share and hands her whereabouts to Salazar. Henry Cavill and Jake Gyllenhaal play Sid and Bronco, Eiza Gonzalez plays Rachel, Rosamund Pike plays Bobby Sheen and Carlos Bardem plays Salazar. Shooting ran in Spain from the autumn of 2023; the premiere was postponed twice, and the film opened on 15 May 2026. Reception was measured: reviewers praised the work of the two operatives and faulted the length, and the box office came out weak."
+      },
+      "agentNote": "Русское прокатное название «Грязные деньги» расходится с оригинальным «In the Grey» («в серой зоне»); взято прокатное, как принято в каталоге. Роли распределены по английскому разделу: русский раздел называет Рэйчел «специалистом по взысканию», английский — юристом, и обе версии сходятся на сути занятия, поэтому названа именно она."
+    },
+    {
+      "wikidata": "Q102290641",
+      "sitelinks": 22,
+      "title": {
+        "ru": "007 First Light",
+        "en": "007 First Light"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "IO Interactive",
+        "en": "IO Interactive"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "стелс",
+        "stealth",
+        "шпионский",
+        "spy",
+        "приключения",
+        "adventure"
+      ],
+      "description": {
+        "ru": "Приключенческий боевик со стелсом, сделанный студией IO Interactive по книгам Яна Флеминга и фильмам о Джеймсе Бонде. История здесь оригинальная и ранняя: Бонду двадцать шесть лет, он ещё не агент с двумя нулями и проходит задание, которое даёт право носить этот номер. Начинается всё в Исландии, где отряд особой воздушной службы попадает в засаду и выживает один Бонд; вопреки приказу он спасает захваченных учёных и подрывает лагерь наёмников. За этот поступок его берут в обновлённую программу «00» под начало Джона Гринвея, неохотно взявшего новичка. Первое же задание команды кончается взрывом в словацком отеле, гибелью товарищей и следом, который ведёт к заговору вокруг квантового суперкомпьютера, предсказывающего теракты для разведки. Игрок ведёт Бонда от третьего лица и сам выбирает способ: пройти силой, отбивая удары и проводя захваты, или обмануть — заговорить охрану, воспользоваться обстановкой и уйти незамеченным. Право убивать герой получает не всегда, а только когда противник открыто идёт на его жизнь, и это ограничение работает как правило игры, а не как оговорка сюжета. Главный инструмент — часы с начинкой лаборатории Кью, вскрывающие электронику. Бонда играет Патрик Гибсон, наставника Гринвея — Ленни Джеймс. Выход для Windows, PlayStation 5 и Xbox Series состоялся 27 мая 2026 года. Отзывы вышли хорошими: критики хвалили бой, сценарий и работу Гибсона, а к августу 2026 года продажи достигли четырёх миллионов копий.",
+        "en": "An action-adventure with stealth, made by IO Interactive from the Ian Fleming books and the James Bond films. The story here is original and early: Bond is twenty-six, not yet a double-o agent, and works through the mission that earns him the number. It opens in Iceland, where a Special Air Service team is ambushed and Bond alone survives; against orders he frees the captive scientists and blows up the mercenary camp. That act brings him into the renewed double-o programme under John Greenway, who takes the newcomer reluctantly. The team's first assignment ends in an explosion at a Slovak hotel, the death of his fellows, and a trail leading to a conspiracy around a quantum supercomputer that predicts terrorist attacks for the intelligence service. The player moves Bond in third person and chooses the method: force, parrying blows and taking enemies down, or deception — talking guards round, using the surroundings and slipping past unseen. The licence to kill is not granted at all times, only when an opponent openly comes for his life, and that limit works as a rule of play rather than a line of story. His main tool is a watch built out by Q's lab, able to break into electronics. Patrick Gibson plays Bond and Lennie James plays his mentor Greenway. The release for Windows, PlayStation 5 and Xbox Series came on 27 May 2026. Reviews were good: critics praised the combat, the writing and Gibson's performance, and by August 2026 sales had reached four million copies."
+      },
+      "agentNote": "Реестр даёт две даты — 27 марта и 27 мая 2026 года; оба раздела Википедии называют выходом 27 мая, взята она. Версия для Nintendo Switch 2 перенесена на более поздний срок и в описание не вошла: карточка называет то, во что уже можно играть."
+    },
+    {
+      "wikidata": "Q85979990",
+      "sitelinks": 21,
+      "title": {
+        "ru": "Crimson Desert",
+        "en": "Crimson Desert"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Pearl Abyss",
+        "en": "Pearl Abyss"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "приключения",
+        "adventure",
+        "фэнтези",
+        "fantasy",
+        "открытый мир",
+        "open world"
+      ],
+      "description": {
+        "ru": "Приключенческий боевик с открытым миром, сделанный южнокорейской студией Pearl Abyss. Игрок ведёт наёмника Клиффа по континенту Пайвел — фэнтезийной земле, разорванной войной нескольких сторон. Отряд героя, Седые Гривы, гибнет почти целиком под ударом враждебной дружины Чёрных Медведей, уцелевшие рассеяны по свету, и вся история идёт о том, как Клифф собирает своих обратно и добирается до вождя нападавших. Бой держится на связках ударов, магии и движении по местности: герой дерётся верхом, взбирается по скалам и выходит против огромных противников вроде драконов. Мир занят не одними сражениями — там ловят рыбу, готовят, охотятся и мастерят снаряжение, а лагерь союзников растёт и открывает новые возможности. Разработка заняла семь лет: замысел начинался приквелом к сетевой Black Desert Online и по дороге стал отдельной одиночной игрой в своей вселенной. Ландшафты Пайвела студия строила, изучая архитектуру и природу Сицилии. Игра работает на собственном движке студии, названном BlackSpace. Игра вышла 19 марта 2026 года на Windows, PlayStation 5 и Xbox Series. Приняли игру в основном хорошо: рецензенты хвалили бой и размах мира, ругали перегруженность механиками и однообразие поручений, а средняя оценка ведущих изданий вышла около семидесяти девяти баллов из ста. Продажи шли быстро — два миллиона копий в день выхода, пять миллионов за месяц, больше шести за три месяца.",
+        "en": "An open-world action-adventure made by the South Korean studio Pearl Abyss. The player leads the mercenary Kliff across the continent of Pywel — a fantasy land torn by war between several powers. His band, the Greymanes, is nearly wiped out by a strike from the rival Black Bears, the survivors are scattered across the world, and the whole story runs on Kliff gathering his people back together and reaching the leader of the attackers. Combat rests on strings of blows, magic and movement through the terrain: the hero fights on horseback, climbs cliffs and faces enormous opponents such as dragons. The world holds more than battles — there is fishing, cooking, hunting and the crafting of gear, and the allied camp grows to open new possibilities. Development took seven years: the idea began as a prequel to the online Black Desert Online and became a separate single-player game in its own universe along the way. The studio built the landscapes of Pywel by studying the architecture and nature of Sicily. The game runs on the studio's own engine, called BlackSpace. The release came on 19 March 2026 for Windows, PlayStation 5 and Xbox Series. Reception was mostly good: reviewers praised the combat and the scale of the world, faulted the overload of mechanics and the sameness of the quests, and the average score from leading outlets came out near seventy-nine out of a hundred. Sales moved fast — two million copies on release day, five million within a month, more than six million in three."
+      },
+      "agentNote": "Имя героя разошлось между разделами: русский называет и Клиффа, и Макдуфа, английский — только Клиффа из Седых Грив, и он же объясняет расхождение (по словам актёра озвучки, персонажа сперва звали Макдафф). Взято имя вышедшей игры. Версия для Nintendo Switch 2 назначена на 2027 год и в описание не вошла."
+    },
+    {
+      "wikidata": "Q96240015",
+      "sitelinks": 21,
+      "title": {
+        "ru": "Pragmata",
+        "en": "Pragmata"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Capcom",
+        "en": "Capcom"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "приключения",
+        "adventure",
+        "фантастика",
+        "science fiction",
+        "космос",
+        "space"
+      ],
+      "description": {
+        "ru": "Приключенческий боевик Capcom и первая оригинальная вселенная студии за восемь лет. Инженер Хью Уильямс прилетает на лунную добывающую станцию «Колыбель» выяснить, почему оборвалась связь с Землёй, и находит её без единого живого человека. Лунотрясение отрезает его от команды, а очнувшегося героя поднимает девочка-андроид, которую он называет Дианой. Управляющий станцией искусственный разум вышел из повиновения и шлёт на них роботов. Играют сразу за двоих: Хью стреляет и уходит от ударов на ранцевых двигателях, а Диана вскрывает броню врага — игрок ведёт курсор по клеточной сетке к нужному узлу и делает это в реальном времени, под огнём. Из этой двойной работы растёт вторая линия игры: чем дальше идут герои, тем больше Хью относится к Диане как к настоящему ребёнку, а не как к инструменту. Облик Дианы студия искала долго — полностью роботизированный вид убивал её выразительность, и в вышедшей игре она похожа на человека. Нью-Йорк здесь выстроен нарочно так, будто его собрала машина: такси проваливаются сквозь пол, автобусы торчат из стен. Генеративные модели в производстве не применялись ни разу — эту странность разработчики делали руками. Игра работает на движке RE Engine с трассировкой лучей, а волосы Дианы просчитывает система прядей, впервые появившаяся в Resident Evil четвёртой части. Игра вышла 17 апреля 2026 года на PlayStation 5, Windows, Xbox Series и Nintendo Switch 2. Отзывы вышли в основном положительными, а за шестнадцать дней разошлось больше двух миллионов копий.",
+        "en": "An action-adventure from Capcom and the studio's first original universe in eight years. The engineer Hugh Williams flies to the lunar mining station called the Cradle to find out why contact with Earth was cut, and finds it without a single living person. A moonquake separates him from his team, and a child-like android girl he names Diana revives him. The artificial mind running the station has gone rogue and sends robots after them. Two characters are played at once: Hugh shoots and dodges on hip-mounted thrusters, while Diana opens up the enemy's armour — the player guides a cursor across a grid towards the needed node, and does it in real time, under fire. A second line of the game grows out of that double work: the further the pair travels, the more Hugh treats Diana as a real child rather than a tool. The studio searched a long time for Diana's look — a fully robotic appearance killed her expressiveness, and in the released game she resembles a human being. New York here is built deliberately as though a machine had assembled it: taxis sink through the floor, buses stick out of walls. Generative models were never used in production — the developers made that strangeness by hand. The game runs on the RE Engine with ray tracing, and Diana's hair is calculated by the strand system first seen in the fourth Resident Evil. The release came on 17 April 2026 for PlayStation 5, Windows, Xbox Series and Nintendo Switch 2. Reviews came out mostly favourable, and more than two million copies sold within sixteen days."
+      },
+      "agentNote": "«Resident Evil четвёртой части» написано словами намеренно: в описаниях не пишем сокращений с точками и не бросаем цифру без опоры. Финал сюжета в карточку не вынесен — он строится на повороте с второй Прагматой, и раскрывать его владельцу на вычитке значило бы испортить игру тому, кто карточку прочитает."
+    },
+    {
+      "wikidata": "Q136148940",
+      "sitelinks": 20,
+      "title": {
+        "ru": "Forza Horizon 6",
+        "en": "Forza Horizon 6"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Playground Games",
+        "en": "Playground Games"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "гонки",
+        "racing",
+        "аркада",
+        "arcade",
+        "открытый мир",
+        "open world",
+        "автомобили",
+        "cars"
+      ],
+      "description": {
+        "ru": "Гоночная игра студии Playground Games, шестая часть серии Horizon и четырнадцатая во всей франшизе Forza. Место действия — Япония, и главным городом мира выступает переосмысленный Токио, самая крупная городская зона за историю серии: она превосходит города прежних частей впятеро. Токио разбит на районы со своим лицом, в нём воссозданы перекрёсток Сибуя, авеню Гиндза и телебашня, а плотность застройки идёт от неоновых улиц центра к пригородам и портовым промзонам. Игрок начинает туристом, проходит отбор на фестиваль Horizon и поднимается в его рангах: за гонки и трюки дают браслеты, каждый следующий открывает более быстрые машины, а золотой ведёт на Остров легенд с особыми испытаниями. Смена сезонов работает как в четвёртой части и меняет мир целиком — от цветения сакуры до снежной зимы. На старте в игре больше пятисот пятидесяти автомобилей, их хранят в восьми гаражах, которые заодно служат точками быстрого перемещения; отдельно открывается собственное поместье на горном склоне. Японию студия изучала на месте вместе с приглашённым консультантом Кёко Ямаситой — уличные гонки и встречи владельцев на парковке Дайкоку попали в игру с натуры. Игра вышла 19 мая 2026 года на Windows и Xbox Series, версия для PlayStation 5 назначена позже. За девять дней до выхода полная копия утекла в сеть по ошибке самих разработчиков. Приняли игру с восторгом: агрегаторы записали всеобщее признание, а рекомендовали её девяносто девять процентов рецензентов.",
+        "en": "A racing game by Playground Games, the sixth Horizon title and the fourteenth in the whole Forza franchise. The setting is Japan, and the world's main city is a reimagined Tokyo, the largest urban area in the series' history: it exceeds the cities of earlier titles fivefold. Tokyo is split into districts with faces of their own, with Shibuya Crossing, Ginza Avenue and the television tower recreated, and the density running from the neon streets downtown out to suburbs and dockland industry. The player starts as a tourist, qualifies for the Horizon Festival and climbs its ranks: races and stunts earn wristbands, each one unlocking faster cars, and the gold band opens Legend Island with its own challenges. Seasons change as they did in the fourth title and remake the world entirely, from cherry blossom to snowbound winter. More than five hundred and fifty cars are there at launch, kept across eight garages that double as fast-travel points, and a mountainside estate of one's own unlocks separately. The studio studied Japan on the ground together with the cultural consultant Kyoko Yamashita — street racing and the owners' meets in the Daikoku car park went into the game from life. The game came out on 19 May 2026 for Windows and Xbox Series, with the PlayStation 5 version set for later. Nine days before release a complete copy leaked online through an error by the developers themselves. Reception was enthusiastic: the aggregators recorded universal acclaim, and ninety-nine percent of reviewers recommended it."
+      },
+      "agentNote": "Реестр даёт две даты — 15 и 19 мая 2026 года; оба раздела Википедии называют выходом 19 мая, взята она. Про утечку сказано осторожно: русский раздел приводит и версию журналиста, и опровержение студии, поэтому названо только бесспорное — копия оказалась в сети до выхода."
+    },
+    {
+      "wikidata": "Q117429496",
+      "sitelinks": 15,
+      "title": {
+        "ru": "Надежда",
+        "en": "Hope"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "На Хонджин",
+        "en": "Na Hong-jin"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "триллер",
+        "thriller",
+        "фантастика",
+        "science fiction",
+        "ужасы",
+        "horror",
+        "инопланетяне",
+        "aliens"
+      ],
+      "description": {
+        "ru": "Южнокорейский фантастический триллер На Хонджина, его первая работа после «Вопля» десятилетней давности. Лесные пожары увели подкрепление и оборвали связь, и глухая деревня остаётся один на один с существом, пришедшим откуда-то извне. Начальник полицейского поста Помсок вместе с новобранкой Сонэ защищает стариков, оставшихся в деревне, а охотники во главе с Сонги уходят в горы по следу зверя и сами становятся добычей. Беда растёт из простого незнания: люди не понимают, с чем имеют дело, ссорятся между собой и своей враждой доводят частный случай до размаха вселенской трагедии. Хван Чонмин играет Помсока, Чо Ин Сон — охотника Сонги, Чон Хоён — Сонэ; Майкл Фассбендер, Алисия Викандер, Тейлор Расселл и Кэмерон Бриттон играют пришельцев и по-корейски не говорят ни слова. Замысел пришёл к режиссёру за ужином в ресторане, когда снаружи произошло что-то яркое и непонятное, о чём позже рассказали в новостях. Снимали в Южной Корее и в румынских горах Ретезат, оператором стал Хон Гёнпхё, музыку написал Майкл Эбелс. Бюджет превысил всё, что тратило корейское кино прежде. Мировая премьера прошла в основном конкурсе Каннского фестиваля 17 мая 2026 года — первый корейский фильм в борьбе за «Золотую пальмовую ветвь» после «Решения уйти». В корейский прокат картина вышла 15 июля 2026 года и за первый уик-энд собрала полтора миллиона зрителей. Критики приняли её хорошо, хвалили постановку действия и ругали компьютерную графику.",
+        "en": "A South Korean science-fiction thriller by Na Hong-jin, his first work since The Wailing a decade earlier. Wildfires have pulled the reinforcements away and cut communications, and a remote village is left alone with a creature that came from somewhere outside. Bum-seok, the chief of the police outpost, defends the old people who remain in the village together with the rookie officer Sung-ae, while hunters led by Sung-ki go up into the mountains on the beast's trail and become the prey themselves. The disaster grows out of plain ignorance: people fail to understand what they are dealing with, quarrel among themselves, and let their own hostility swell a local incident to cosmic scale. Hwang Jung-min plays Bum-seok, Zo In-sung the hunter Sung-ki and Hoyeon the officer Sung-ae; Michael Fassbender, Alicia Vikander, Taylor Russell and Cameron Britton play the visitors and speak no Korean at all. The idea reached the director over dinner in a restaurant, when something bright and unexplained happened outside and later turned up on the news. Shooting took place in South Korea and in the Romanian Retezat mountains, Hong Kyung-pyo served as cinematographer and Michael Abels wrote the score. The budget went beyond anything Korean cinema had spent before. The world premiere came in the main competition at Cannes on 17 May 2026 — the first Korean film in contention for the Palme d'Or since Decision to Leave. The film opened in Korea on 15 July 2026 and drew a million and a half admissions on its first weekend. Critics received it well, praising the staging of the action and faulting the visual effects."
+      },
+      "agentNote": "🔴 Русский раздел Википедии УСТАРЕЛ и описывает фильм как ещё не вышедший («будущий южнокорейский триллер», «премьера запланирована на 2025 год»), тогда как картина показана в Каннах и прошла корейский прокат. Это ровно класс 1б; содержание взято по английскому разделу. Ом Тхэгу и Ли Гюхён, которых реестр числит в составе, в вышедшую картину не вошли — в описание они не попали."
+    },
+    {
+      "wikidata": "Q120735817",
+      "sitelinks": 16,
+      "title": {
+        "ru": "Мать Мария",
+        "en": "Mother Mary"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Дэвид Лоури",
+        "en": "David Lowery"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "психологический",
+        "psychological",
+        "музыка",
+        "music"
+      ],
+      "description": {
+        "ru": "Психологическая драма Дэвида Лоури о славе и о цене, которую платят за неё вдвоём. Мать Мария — поп-звезда мирового размаха, готовящая возвращение на сцену после падения во время концерта, которое многие сочли попыткой самоубийства. Не выдержав примерки, она сбегает в английскую глушь к Сэм Ансельм, бывшей возлюбленной и художнице по костюмам, с которой когда-то и начинала. До концерта три дня, и Сэм нехотя берётся сшить ей платье. В переоборудованном под мастерскую сарае старые обиды выходят наружу: карьеру они поднимали вдвоём, а имени Сэм в этой карьере не осталось, и из ближнего круга её вычеркнули. Разговор двух женщин оборачивается изгнанием призрака — той общей травмы, которую каждая носила в себе порознь, — и заканчивается платьем, сшитым из неё. Энн Хэтэуэй играет Марию, Микейла Коэл — Сэм; в окружении заняты Хантер Шафер, Кайя Гербер, Джессика Браун Финдлей и певица FKA twigs. Лоури говорил, что вдохновлялся «Дракулой» Копполы и концертным фильмом Тейлор Свифт, а саму героиню представлял как Свифт лет через пятнадцать; Хэтэуэй отталкивалась от голоса Бейонсе. Музыку написал Дэниэл Харт, песни для фильма сочинили Джек Антонофф и Charli XCX, снимали в Германии. В ограниченный прокат США картина вышла 17 апреля 2026 года, в широкий — 24 апреля. Отзывы разошлись: игру Хэтэуэй хвалили почти все, а сам фильм называли то богатым и живым, то красивым и невнятным; сборы вышли слабыми.",
+        "en": "A psychological drama by David Lowery about fame and the price two people pay for it. Mother Mary is a pop star of global scale preparing a return to the stage after a fall during a concert that many took for a suicide attempt. A costume fitting overwhelms her, and she drives out to the English countryside after Sam Anselm, her estranged lover and costume designer, the woman she once started out with. Three days remain before the show, and Sam grudgingly agrees to make her a dress. In the barn turned workshop the old grievances come out: the two of them built that career together, and Sam's name was left out of it while she was cut from the inner circle. The conversation between the two women turns into an exorcism of a ghost — the shared wound each had carried alone — and ends in a dress sewn out of it. Anne Hathaway plays Mary and Michaela Coel plays Sam; Hunter Schafer, Kaia Gerber, Jessica Brown Findlay and the singer FKA twigs fill the world around them. Lowery said he drew on Coppola's Dracula and on a Taylor Swift concert film, and imagined his heroine as Swift some fifteen years on; Hathaway worked from the voice of Beyonce. Daniel Hart wrote the score, Jack Antonoff and Charli XCX wrote songs for the film, and shooting took place in Germany. The film opened in limited release in the United States on 17 April 2026 and went wide on 24 April. Reviews divided: nearly everyone praised Hathaway's performance, while the film itself was called rich and alive by some and beautiful but muddled by others, and the box office came out weak."
+      },
+      "agentNote": "Русский раздел зовёт фильм психологической драмой, реестр — музыкальной; взято первое, потому что и сюжет, и приём картины держатся на драме, а песни в ней обрамление. Поворот с призраком назван, потому что он и есть предмет картины, а не сюрприз развязки: о нём пишут в первых же абзацах оба раздела."
+    },
+    {
+      "wikidata": "Q126285101",
+      "sitelinks": 11,
+      "title": {
+        "ru": "Зловещий свист",
+        "en": "Whistle"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Корин Харди",
+        "en": "Corin Hardy"
+      },
+      "year": "2025",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "ужасы",
+        "horror",
+        "сверхъестественное",
+        "supernatural",
+        "подростки",
+        "teen",
+        "слэшер",
+        "slasher"
+      ],
+      "description": {
+        "ru": "Канадско-ирландский фильм ужасов Корина Харди по рассказу Оуэна Эгертона, который сам же написал сценарий. Школьница Крис Уиллет получает шкафчик умершего баскетболиста и находит внутри костяной свисток. Вещь оказывается ацтекским свистком смерти с надписью «призови свою смерть»: всякий, кто услышал звук, начинает видеть собственного двойника, и двойник приходит убить его тем способом, который ему предназначен. Учитель, отобравший свисток и дунувший в него из любопытства, погибает от опухоли лёгких за одну ночь. Дальше умирают те, кто сидел в тот день на отработке: одну девушку старость догоняет за минуту, другого парня убивает авария, которой не было. Крис вместе с Элли Гейнс ищет выход и узнаёт от бабушки первого погибшего, что проклятие передаётся кровью другому человеку. Обе отказываются спасаться чужой жизнью и находят второй путь — умереть на несколько секунд и вернуться. Дафни Кин играет Крис, Софи Нелисс — Элли, Ник Фрост — учителя, Мишель Фэйрли — знающую бабушку. Снимали в Гамильтоне в канадской провинции Онтарио зимой с ноября 2023 по январь 2024 года. Мировая премьера прошла на фестивале Fantastic Fest 25 сентября 2025 года, в российский прокат картина вышла 5 февраля 2026 года, в американский — 6 февраля, в ирландский — 13 февраля. Отзывы разошлись: сильный замысел с настоящими ацтекскими корнями хвалили, исполнение звали обычным подростковым ужастиком.",
+        "en": "A Canadian-Irish horror film by Corin Hardy, taken from a short story by Owen Egerton, who wrote the screenplay himself. The schoolgirl Chrys Willet inherits the locker of a dead basketball player and finds a bone whistle inside. The object turns out to be an Aztec death whistle inscribed with the words summon your death: whoever hears the sound begins to see a double of himself, and the double comes to kill him in the manner set aside for him. A teacher who confiscates the whistle and blows it out of curiosity dies of lung cancer within a single night. The others who sat in detention that day follow: one girl is overtaken by old age in a minute, another boy is killed by a car crash that never happened. Chrys and Ellie Gains look for a way out and learn from the dead player's grandmother that the curse passes to another person through blood. Both refuse to save themselves at someone else's cost and find a second path — to die for a few seconds and come back. Dafne Keen plays Chrys, Sophie Nelisse plays Ellie, Nick Frost the teacher and Michelle Fairley the grandmother who knows. Shooting took place in Hamilton in the Canadian province of Ontario over the winter from November 2023 to January 2024. The world premiere came at Fantastic Fest on 25 September 2025, the film opened in Russia on 5 February 2026, in the United States on 6 February and in Ireland on 13 February. Reviews divided: the strong idea with its real Aztec roots drew praise, while the execution was called an ordinary teen horror picture."
+      },
+      "agentNote": "🔴 ГОД ОТСТУПАЕТ ОТ ПРАВИЛА «первая дата реестра», и вот почему: у реестра ВООБЩЕ НЕТ даты премьеры — его самая ранняя дата 12 марта 2026 года, это уже прокатная. Мировая премьера прошла на Fantastic Fest 25 сентября 2025 года, и оба раздела Википедии зовут картину фильмом 2025 года. Правило считает год по выходу в свет, а вышла она в 2025-м. Русский раздел вдобавок путает имя режиссёра («Хардли» вместо «Харди») — взято верное."
+    },
+    {
+      "wikidata": "Q129440575",
+      "sitelinks": 14,
+      "title": {
+        "ru": "Reanimal",
+        "en": "Reanimal"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Tarsier Studios",
+        "en": "Tarsier Studios"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "ужасы",
+        "horror",
+        "выживание",
+        "survival",
+        "приключения",
+        "adventure",
+        "стелс",
+        "stealth",
+        "кооператив",
+        "co-op"
+      ],
+      "description": {
+        "ru": "Хоррор на выживание шведской студии Tarsier Studios, той самой, что сделала Little Nightmares. Брат и сестра приходят в себя на затопленном острове, где прошло их детство: вода поднялась, дома гниют, повсюду следы войны, а живут здесь твари, которых лучше не встречать. Дети ищут троих пропавших друзей и по дороге спасают их одного за другим — от долговязого существа, перемещающегося сквозь мёртвые тела, от чудовищного пеликана, от паучьей матери в разорённом приюте. Играть можно одному или вдвоём, вживую и по сети: второй герой достаётся напарнику, а в одиночной игре им управляет машина. Камера здесь подвижная и всё время держит обоих в кадре — студия делала это ради тесноты и напряжения, которых у неподвижной камеры не бывает. Лодка открывает острова в стороне от главного пути, и мир перестаёт быть коридором. Историю рассказывает в основном обстановка, монстры собраны из общих воспоминаний брата и сестры, а развязка переворачивает то, что зритель считал спасением. Игра сделана на Unreal Engine 5, вдохновлялись авторы It Takes Two, The Legend of Zelda: The Wind Waker и Silent Hill 2. Выпустила игру THQ Nordic 13 февраля 2026 года на Windows, PlayStation 5, Xbox Series и Nintendo Switch 2. Приняли её в основном хорошо: хвалили атмосферу, картинку и звук, средняя оценка вышла около восьмидесяти одного балла из ста, а за три месяца разошёлся миллион копий.",
+        "en": "A survival horror by the Swedish studio Tarsier Studios, the same team that made Little Nightmares. A brother and sister come round on the flooded island where their childhood passed: the water has risen, the houses are rotting, signs of war are everywhere, and the creatures living here are best not met. The children search for three missing friends and rescue them one by one along the way — from a lanky thing that travels through dead bodies, from a monstrous pelican, from a spider mother in a ruined orphanage. The game can be played alone or by two people, in the same room or over the network: the second hero goes to a partner, and in single-player the machine controls him. The camera here moves and keeps both children in frame at all times — the studio did this for the closeness and tension a fixed camera never gives. A boat opens up islands away from the main path, and the world stops being a corridor. The story is told mostly by the surroundings, the monsters are assembled out of the siblings' shared memories, and the ending overturns what the player took for a rescue. The game was built on Unreal Engine 5, and its authors named Silent Hill 2, The Wind Waker out of The Legend of Zelda, and It Takes Two among the works they leaned on. THQ Nordic published it on 13 February 2026 for Windows, PlayStation 5, Xbox Series and Nintendo Switch 2. Reception was mostly good: the atmosphere, the visuals and the sound drew praise, the average score came out near eighty-one out of a hundred, and a million copies sold within three months."
+      },
+      "agentNote": "Пара «кооператив»/«co-op» обоснована существом: реестр даёт кооперативный режим, и вся камера игры построена вокруг двоих в кадре. Это ровно тот случай, где тег проверялся третьим вопросом мастерской и прошёл — в отличие от снятого «кооператива» у Meccha Chameleon."
+    },
+    {
+      "wikidata": "Q134707677",
+      "sitelinks": 14,
+      "title": {
+        "ru": "Nioh 3",
+        "en": "Nioh 3"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Team Ninja",
+        "en": "Team Ninja"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "экшен",
+        "action",
+        "фэнтези",
+        "fantasy",
+        "исторический",
+        "historical"
+      ],
+      "description": {
+        "ru": "Ролевой боевик студии Team Ninja, третья часть серии и первая, где действие идёт ПОСЛЕ событий прежних игр. Игрок ведёт Токугаву Такэтиё, внука Иэясу и будущего сёгуна, в день, когда его должны возвести в этот сан. Младший брат Кунимацу, снедаемый завистью, приводит к замку Эдо орду ёкаев, убивает наставников героя и заносит над ним клинок. Дух-хранитель Кусанаги переносит Такэтиё в прошлое, и оттуда он идёт через эпохи японской истории — от Сэнгоку до Бакумацу, — встречая Хаттори Хандзо, Хонду Тадакацу, Минамото-но Ёсицунэ и Такэду Сингэна. Бой построен на двух стилях, между которыми переключаются свободно. Самурайский повторяет прежние части: три стойки, расход энергии Ки, восстановление её точным нажатием после связки, новое парирование. Стиль ниндзя быстрее и живёт уклонением, дальними и воздушными ударами; вместо Ки у него Туман, из которого герой делает своего двойника, отвлекает врага и бьёт со спины. Мир стал шире и потерял линейность: у него есть побочные задания и «ады» — области, пропитанные силой ёкаев, где побеждённый босс открывает дорогу дальше. Полностью открытый мир команда отвергла сознательно, чтобы не разбавить плотность игры. Игра вышла 6 февраля 2026 года на PlayStation 5 и Windows. Приняли её отлично: рекомендовали девяносто три процента рецензентов, средняя оценка около восьмидесяти пяти баллов из ста, а саму работу назвали итогом десяти лет, потраченных студией на свою боевую формулу.",
+        "en": "An action role-playing game by Team Ninja, the third in the series and the first set AFTER the events of the earlier games. The player leads Tokugawa Takechiyo, grandson of Ieyasu and shogun to be, on the day he is due to be raised to that rank. His younger brother Kunimatsu, eaten up by envy, brings a horde of yokai to Edo Castle, kills the hero's mentors and raises a blade over him. The guardian spirit Kusanagi carries Takechiyo into the past, and from there he walks through the eras of Japanese history — from Sengoku to Bakumatsu — meeting Hattori Hanzo, Honda Tadakatsu, Minamoto no Yoshitsune and Takeda Shingen. Combat rests on two styles the player switches between freely. The samurai style repeats the earlier games: three stances, Ki spent on every action, Ki restored by a precise press after a combo, and a new parry. The ninja style is faster and lives on evasion, ranged and aerial strikes; in place of Ki it has Mist, out of which the hero makes a clone of himself, draws the enemy off and strikes from behind. The world has widened and lost its linearity: it holds side quests and Crucibles, regions steeped in yokai power where beating the boss opens the road onward. The team turned down a fully open world deliberately, so as not to thin out the density of play. The game came out on 6 February 2026 for PlayStation 5 and Windows. Reception was excellent: ninety-three percent of reviewers recommended it, the average score came out near eighty-five out of a hundred, and the work itself was called the sum of ten years the studio had spent on its combat formula."
+      },
+      "agentNote": "Имя героя разошлось: русский раздел зовёт его Токугавой Иэмицу, английский — Такэтиё. Оба верны, Такэтиё — детское имя того же человека, и вышедшая игра зовёт его так. Взято имя игры, родство с Иэясу названо, чтобы читатель не потерялся."
+    },
+    {
+      "wikidata": "Q124464991",
+      "sitelinks": 13,
+      "title": {
+        "ru": "Subnautica 2",
+        "en": "Subnautica 2"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Unknown Worlds Entertainment",
+        "en": "Unknown Worlds Entertainment"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "выживание",
+        "survival",
+        "приключения",
+        "adventure",
+        "фантастика",
+        "science fiction",
+        "открытый мир",
+        "open world",
+        "кооператив",
+        "co-op"
+      ],
+      "description": {
+        "ru": "Приключенческий симулятор выживания под водой, третья игра серии Subnautica и первая, где можно играть вчетвером. Колониальный корабль «Цикада» сбивается с курса и падает на неизвестную океаническую луну, которую выжившие называют Протеем. Жизни там много, а человеку она враждебна: давление и тяжёлые металлы убивают колонистов за считанные месяцы. Корабельный разум печатает людям новые тела и возвращает в них сохранённое сознание, сам решая, какое именно состояние памяти восстановить, — бессмертие достаётся вместе с провалами в голове и потерей себя. Колонистов косит болезнь, дающая видения и тягу к смерти, а на дне обитает племя, оставшееся от куда более развитой цивилизации. Игрок появляется через двадцать пять лет после того, как первые поселенцы исчезли, и восстанавливает их судьбу по записям на брошенных станциях. Игрок плавает, строит базы, добывает ресурсы и уходит всё глубже — в одиночку или вчетвером. Сюда же добавили правку собственной ДНК ради новых способностей: эту задумку вырезали ещё из первой части. Игра работает на Unreal Engine 5, музыку написал Бен Пранти. Игра вышла в ранний доступ 14 мая 2026 года на Windows и Xbox Series, полноценный выпуск издатель назначил через два-три года. Разработка досталась студии тяжело: летом 2025 года издатель сменил всё руководство Unknown Worlds, а один из основателей подал на него в суд. Итоговых оценок у игры пока нет: ранний доступ рецензенты окончательно не судят. Приём виден по продажам — миллион копий разошёлся за первый час, два миллиона за половину суток и четыре миллиона за неделю.",
+        "en": "An underwater survival adventure, the third game in the Subnautica series and the first that four people can play together. The colony ship Cicada leaves its course and comes down on an uncharted ocean moon the survivors name Proteus. Life there is abundant and hostile to human beings: pressure and heavy metals kill the colonists within months. The ship's mind prints people new bodies and returns their stored consciousness into them, deciding by itself which state of memory to restore — immortality arrives together with holes in the head and the loss of oneself. A sickness bringing hallucinations and a pull towards death cuts through the colonists, and a tribe left over from a far more advanced civilisation lives on the sea floor. The player appears twenty-five years after the first settlers vanished and reconstructs their fate from recordings left in abandoned stations. The player swims, builds bases, gathers resources and goes ever deeper, alone or in a party of four. Editing one own DNA for new abilities was added here too: that idea had been cut from the first game. The game runs on Unreal Engine 5, and Ben Prunty wrote the music. The game entered early access on 14 May 2026 for Windows and Xbox Series, with the publisher setting the full release two to three years out. Development came hard to the studio: in the summer of 2025 the publisher replaced the entire leadership of Unknown Worlds, and one of the founders took the company to court. Final scores for the game do not exist yet: reviewers do not pass a closing verdict on early access. Its reception shows in the sales — a million copies sold in the first hour, two million within half a day and four million within a week."
+      },
+      "agentNote": "✅ РАННИЙ ДОСТУП В КАТАЛОГ БЕРЁМ — слово владельца 2026-08-23: «ранний доступ берём, да». Год стоит по открытию раннего доступа 14 мая 2026 года: это и есть первый выход игры в мир, люди играют в неё с этого дня. Полный выпуск издатель назначил через два-три года и на год карточки не влияет. Итоговых оценок критики не дают ранним версиям — приём назван продажами, и это сказано в описании прямо, а не выдано за вердикт рецензентов."
+    },
+    {
+      "wikidata": "Q117350388",
+      "sitelinks": 16,
+      "title": {
+        "ru": "Звёздный путь: Академия Звёздного флота",
+        "en": "Star Trek: Starfleet Academy"
+      },
+      "type": {
+        "ru": "Телесериал",
+        "en": "TV Series"
+      },
+      "author": {
+        "ru": "Гайя Виоло",
+        "en": "Gaia Violo"
+      },
+      "year": "2026",
+      "tags": [
+        "кино",
+        "movie",
+        "фильм",
+        "film",
+        "телесериал",
+        "TV series",
+        "фантастика",
+        "science fiction",
+        "приключения",
+        "adventure",
+        "космос",
+        "space"
+      ],
+      "description": {
+        "ru": "Двенадцатый сериал вселенной «Звёздного пути», придуманный Гайей Виоло для Paramount+. Действие идёт в тридцать втором веке — том самом далёком будущем, куда завела зрителя «Дискавери», — и Федерация там поднимается после катастрофы, разорвавшей связи между мирами. Академия Звёздного флота набирает первый за сотню лет курс кадетов, и сериал следит за тем, как подростки взрослеют и учатся быть офицерами. Учат их на борту корабля «Афина», который стоит у кампуса в Сан-Франциско и уходит с флотом, когда нужно. Курс собран из тех, кому в этом флоте прежде места не было: человек, выросший в бегах и ищущий мать; клингон, идущий в медики; голограмма, которой всего несколько недель от роду; дочь адмирала, которой надоела фамилия. Холли Хантер играет капитана «Афины» и канцлера академии в одном лице, Пол Джаматти — противника кадетов; Тиг Нотаро и Одед Фер вернулись из «Дискавери», а Роберт Пикардо снова стал Доктором из «Вояджера», теперь девятисотлетним преподавателем. Компьютер корабля говорит голосом Брит Марлинг, а объявления по академии зачитывает Стивен Кольбер. Снимали в Торонто с августа 2024 по февраль 2025 года. Первые две серии вышли на Paramount+ 15 января 2026 года, остальные восемь выходили по одной до 12 марта. Критики приняли сериал благосклонно, зрительские оценки в первые дни обрушила организованная кампания, а в марте 2026 года канал объявил, что второй сезон станет последним.",
+        "en": "The twelfth series in the Star Trek universe, created by Gaia Violo for Paramount+. It is set in the thirty-second century — the same far future Discovery took its viewers into — where the Federation is recovering from a catastrophe that tore the links between worlds apart. Starfleet Academy takes in its first class of cadets in over a century, and the series follows those young people growing up and learning to become officers. Their classroom is the starship Athena, docked beside the San Francisco campus and sent out with the fleet whenever it is needed. The class is assembled from people who had no place in that fleet before: a human raised on the run and searching for his mother; a Klingon set on becoming a medic; a hologram only weeks old; an admiral's daughter tired of her surname. Holly Hunter plays the Athena's captain and the academy's chancellor in one person, Paul Giamatti plays the cadets' adversary; Tig Notaro and Oded Fehr return from Discovery, and Robert Picardo is once again the Doctor from Voyager, now a nine-hundred-year-old teacher. Brit Marling voices the ship's computer and Stephen Colbert reads out the academy's announcements. Filming ran in Toronto from August 2024 to February 2025. The first two episodes arrived on Paramount+ on 15 January 2026, with the remaining eight released weekly through 12 March. Critics received the series favourably, an organised campaign drove the audience scores down in its first days, and in March 2026 the network announced that the second season would be its last."
+      },
+      "agentNote": "🔴 РУССКОГО НАЗВАНИЯ У ОБЪЕКТА НЕТ НИ В РЕЕСТРЕ, НИ В РУССКОЙ ВИКИПЕДИИ — статьи о сериале там не существует. Поставлено «Звёздный путь: Академия Звёздного флота» по устоявшемуся русскому имени франшизы; проверьте, годится ли. Оставить латиницу в обоих полях каталог тоже умеет — так стоит 1113 записей из 5125, — но у «Звёздного пути» русское имя есть и живёт давно."
+    },
+    {
+      "wikidata": "Q130581843",
+      "sitelinks": 15,
+      "title": {
+        "ru": "Люди, которых мы встречаем в отпуске",
+        "en": "People We Meet on Vacation"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Бретт Хэйли",
+        "en": "Brett Haley"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "драма",
+        "drama",
+        "экранизация",
+        "adaptation"
+      ],
+      "description": {
+        "ru": "Романтическая комедия Бретта Хэйли по роману Эмили Генри, вышедшему в 2021 году. Поппи пишет о путешествиях и живёт в Нью-Йорке, Алекс преподаёт и предпочитает вечер с книгой дома. Сошлись они случайно: студентами делили машину по дороге из Бостона в родной городок в Огайо и обнаружили, что разговаривать друг с другом легче, чем с кем угодно ещё. Десять лет подряд они проводили вместе одну неделю летом, всякий раз в новом месте, и десять лет подряд обходили молчанием то, что между ними происходит. Свадьба в Барселоне даёт Поппи повод позвонить Алексу впервые за два года — она врёт, что летит туда по работе. Картина ведёт две линии сразу: неловкую встречу сегодня и десять прежних поездок, каждая из которых объясняет, почему сегодня так трудно. Ссора в тосканской вилле, после которой они перестали разговаривать, показана последней и объясняет всё. Эмили Бейдер играет Поппи, Том Блит — Алекса; в окружении заняты Сара Кэтрин Хук, Джамила Джамиль, Алан Рак и Молли Шеннон. Сценарий написали Юлин Куан, Эймос Вернон и Нунцио Рандаццо, музыку сочинил Киган Девитт. Картина вышла на Netflix 9 января 2026 года. Приняли её тепло: рецензенты хвалили обоих исполнителей и лёгкость, с которой сделана экранизация, три четверти отзывов оказались положительными.",
+        "en": "A romantic comedy by Brett Haley from the 2021 novel by Emily Henry. Poppy writes about travel and lives in New York, while Alex teaches and would rather spend the evening at home with a book. They came together by accident: as students they shared a car from Boston to their small Ohio hometown and found that talking to each other came easier than talking to anyone else. For ten years running they spent one week of the summer together, in a new place each time, and for ten years running they said nothing about what was happening between them. A wedding in Barcelona gives Poppy a reason to call Alex for the first time in two years — she lies that she is flying out for work. The film runs two lines at once: the awkward meeting today and the ten earlier trips, each explaining why today is so hard. The quarrel at a Tuscan villa after which they stopped speaking comes last and explains everything. Emily Bader plays Poppy and Tom Blyth plays Alex, with Sarah Catherine Hook, Jameela Jamil, Alan Ruck and Molly Shannon around them. Yulin Kuang, Amos Vernon and Nunzio Randazzo wrote the screenplay, and Keegan DeWitt composed the music. The film arrived on Netflix on 9 January 2026. Reception was warm: reviewers praised both leads and the ease of the adaptation, and three quarters of the notices were positive."
+      },
+      "agentNote": "🔴 Русского названия у фильма в реестре нет, статьи в русской Википедии тоже. Поставлено название романа в русском издании — «Люди, которых мы встречаем в отпуске». Пара «экранизация»/«adaptation» проверена по словарю каталога: «экранизация» встречается 10 раз, английской половины у неё пока НЕТ ни разу. Тег поставлен парой сознательно — иначе русская половина каталога получила бы признак, которого нет у английской; если правило дороже, снимите обе."
+    },
+    {
+      "wikidata": "Q130240838",
+      "sitelinks": 14,
+      "title": {
+        "ru": "Майк, и Ник, и Ник, и Элис",
+        "en": "Mike & Nick & Nick & Alice"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Бендэвид Грабински",
+        "en": "BenDavid Grabinski"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "боевик",
+        "action",
+        "криминал",
+        "crime",
+        "фантастика",
+        "science fiction"
+      ],
+      "description": {
+        "ru": "Криминальная комедия Бендэвида Грабински, который сам написал сценарий. Ник выбивает долги для мафиозного босса Сосы, его жена Элис спит с Майком — стрелком из той же банды, — и Майк как раз собрался уходить из дела, потому что убивать больше не хочет. Ночь начинается с просьбы о последней услуге и сворачивает в фантастику: человек, которого Майку велено усыпить хлороформом, оказывается самим Ником, а тот Ник, что отдавал приказ, пришёл из будущего на полгода вперёд. Машину времени построил изобретатель, занявший у Ника денег, и первая попытка прожить эту ночь кончилась смертью Майка. Дальше двое Ников, Майк и Элис проводят ночь вместе, выясняя отношения на троих с половиной и одновременно уходя от каннибала-наёмника, посланного Сосой. Винс Вон играет обоих Ников, Джеймс Марсден — Майка, Эйса Гонсалес — Элис; рядом заняты Кит Дэвид, Джимми Татро, Эмили Хэмпшир и Бен Шварц. Снимали в Виннипеге осенью 2024 года, оператором стал Ларри Фонг, музыку написал Джозеф Трапанезе. Мировая премьера прошла на фестивале South by Southwest 14 марта 2026 года, а 27 марта картина вышла на Hulu и Disney+. Приняли её хорошо: три четверти рецензентов написали одобрительно, а фантастику хвалили за то, что она работает на героев, а не на трюк.",
+        "en": "A crime comedy by BenDavid Grabinski, who wrote the screenplay himself. Nick collects debts for the mob boss Sosa, his wife Alice is sleeping with Mike — a gunman from the same crew — and Mike has just decided to leave the business because he no longer wants to kill. The night begins with a request for one last favour and turns into science fiction: the man Mike is told to chloroform turns out to be Nick himself, while the Nick who gave the order has come back from six months in the future. The time machine was built by an inventor who borrowed money from Nick, and the first attempt at living through this night ended with Mike's death. From there two Nicks, Mike and Alice spend the night together, sorting out a marriage between three and a half people while staying ahead of a cannibal assassin sent by Sosa. Vince Vaughn plays both Nicks, James Marsden plays Mike and Eiza Gonzalez plays Alice, with Keith David, Jimmy Tatro, Emily Hampshire and Ben Schwartz alongside them. Filming took place in Winnipeg in the autumn of 2024, Larry Fong shot it and Joseph Trapanese wrote the score. The world premiere came at South by Southwest on 14 March 2026, and on 27 March the film arrived on Hulu and Disney+. Reception was good: three quarters of reviewers wrote approvingly, and the science fiction drew praise for serving the characters rather than the trick."
+      },
+      "agentNote": "Год по первому выходу в мир — 14 марта 2026 года, фестивальная премьера; выход на стримингах 27 марта. Рабочее название на стадии производства было другим (It Takes Two) и в описание не вынесено: это факт производства, а не содержания."
+    },
+    {
+      "wikidata": "Q131290710",
+      "sitelinks": 13,
+      "title": {
+        "ru": "Опасные отношения",
+        "en": "Over Your Dead Body"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Йорма Такконе",
+        "en": "Jorma Taccone"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "боевик",
+        "action",
+        "триллер",
+        "thriller"
+      ],
+      "description": {
+        "ru": "Комедийный боевик Йормы Такконе, англоязычный пересъём норвежской «Поездки» 2021 года. Дэн когда-то снял один полнометражный фильм и с тех пор делает рекламные ролики, Лиза мечтала об актёрской карьере и не получила её. Брак давно стал формальностью, и супруги едут на выходные в дом у озера, чтобы восстановить отношения. Едут они туда с одинаковым намерением: каждый собирается убить второго и выдать смерть за несчастный случай. План Дэна разваливается первым — Лиза бьёт его электрошокером и связывает, и связанный муж честно рассказывает, что задумал. Ночь идёт дальше по нарастающей: приходит нанятый Дэном подельник, потом сквозь потолок чердака проваливаются трое беглых преступников, прятавшихся в доме с самого их приезда. Общая беда делает то, чего не сделали годы брака: супругам приходится работать вместе, и в этой работе отношения оживают. Джейсон Сигел играет Дэна, Самара Уивинг — Лизу, Тимоти Олифант и Джульетт Льюис — преступников. Продюсировали картину Дэвид Литч и Келли Маккормик, снимали в финском Тампере с ноября 2024 года. Мировая премьера прошла на фестивале South by Southwest 14 марта 2026 года, в американский прокат картина вышла 24 апреля, в российский — 14 мая. Приняли её средне: около трёх четвертей отзывов положительные, а взвешенная оценка критики вышла посередине шкалы.",
+        "en": "An action comedy by Jorma Taccone, an English-language remake of The Trip, a Norwegian film from 2021. Dan made one feature once and has been shooting advertising ever since; Lisa hoped for an acting career and never got one. The marriage has long been a formality, and the couple drive out to a lakeside house for a weekend meant to repair it. They arrive with the same intention: each plans to kill the other and pass the death off as an accident. Dan's plan falls apart first — Lisa tasers him and ties him up, and the bound husband honestly explains what he had in mind. The night escalates from there: the accomplice Dan hired arrives, and then three escaped convicts fall through the attic ceiling, having hidden in the house since the couple turned up. Shared trouble does what years of marriage did not: the two have to work together, and the relationship comes back to life in that work. Jason Segel plays Dan, Samara Weaving plays Lisa, and Timothy Olyphant and Juliette Lewis play the convicts. David Leitch and Kelly McCormick produced, and filming ran in Tampere, Finland, from November 2024. The world premiere came at South by Southwest on 14 March 2026, the film opened in the United States on 24 April and in Russia on 14 May. Reception was middling: about three quarters of the notices are positive, while the weighted critical score came out in the middle of the scale."
+      },
+      "agentNote": "Год по первому выходу в мир — 14 марта 2026 года, фестивальная премьера. Первоисточник — норвежская «Поездка» Томми Виркола, который сперва должен был снимать и пересъём сам; в описание это не вынесено как факт производства. Русское прокатное название «Опасные отношения» с оригинальным не совпадает — взято прокатное, как принято в каталоге."
+    },
+    {
+      "wikidata": "Q127688132",
+      "sitelinks": 13,
+      "title": {
+        "ru": "Шары вверх",
+        "en": "Balls Up"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Питер Фаррелли",
+        "en": "Peter Farrelly"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "приключения",
+        "adventure"
+      ],
+      "description": {
+        "ru": "Комедия Питера Фаррелли по сценарию Ретта Риза и Пола Верника. Изобретатель Элайджа придумал средство защиты нового устройства и вместе с продавцом Брэдом везёт его в Бразилию: они рассчитывают сделать новинку официальным товаром чемпионата мира по футболу. Сделка срывается, обоих увольняют, и полгода они проводят без работы, виня друг друга. Билеты на финал чемпионата, обещанные бразильским чиновником, снова сводят их вместе — и там Элайджа выбегает на поле, чтобы ударить талисман конкурента, и телом перекрывает мяч, летящий в ворота. Бразилия остаётся без ничьей, а двое американцев — без права на спокойное возвращение домой. Дальше картина гонит их через страну, где футбол принимают всерьёз: толпа на улицах, наркокартель в джунглях, гигантский кайман, водопад Игуасу и аргентинская разведка. Взаимная неприязнь по дороге превращается в дружбу, и товар в финале всё-таки продаётся. Марк Уолберг играет продавца, Пол Уолтер Хаузер — изобретателя, Саша Барон Коэн — главаря картеля; рядом заняты Бенджамин Брэтт, Даниэла Мелшиор и Молли Шеннон. Музыку написал Дэйв Палмер. Картина вышла на Amazon Prime Video 15 апреля 2026 года. Критики приняли её плохо и писали о шутках ниже пояса, оставшихся без второго дна.",
+        "en": "A comedy by Peter Farrelly from a screenplay by Rhett Reese and Paul Wernick. The inventor Elijah has come up with a new kind of protective product, and together with the salesman Brad he takes it to Brazil, where the pair hope to make it the official product of the football World Cup. The deal falls through, both men lose their jobs, and they spend six months out of work blaming one another. Tickets to the final, promised by a Brazilian official, bring them back together — and there Elijah runs onto the pitch to punch a rival's mascot and blocks the ball heading for the goal with his own body. Brazil is left without an equaliser, and the two Americans without any right to a quiet trip home. From there the film drives them across a country that takes football seriously: a mob in the streets, a drug cartel in the jungle, a giant caiman, the Iguazu Falls and Argentinian intelligence. Their mutual dislike turns into friendship along the way, and the product finally sells in the end. Mark Wahlberg plays the salesman, Paul Walter Hauser the inventor and Sacha Baron Cohen the cartel boss, with Benjamin Bratt, Daniela Melchior and Molly Shannon around them. Dave Palmer wrote the music. The film arrived on Amazon Prime Video on 15 April 2026. Critics received it badly and wrote of jokes below the belt left without a second layer."
+      },
+      "agentNote": "⚠️ Предмет шутки в картине телесный: изобретение героев — средство барьерной контрацепции, и вся комедия построена вокруг него. Описание называет это оборотом «средство защиты нового устройства» и подробностей не приводит — справочный регистр сохранён. Если объект такого рода для каталога не годится, скажите, и я сниму карточку. Русского названия в реестре нет; «Шары вверх» — прямой перевод оригинального, прокатного имени у фильма пока не появилось."
+    },
+    {
+      "wikidata": "Q134548431",
+      "sitelinks": 13,
+      "title": {
+        "ru": "Чёрный шар",
+        "en": "The Black Ball"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Хавьер Кальво и Хавьер Амбросси",
+        "en": "Javier Calvo and Javier Ambrossi"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "исторический",
+        "historical"
+      ],
+      "description": {
+        "ru": "Испанская драма Хавьера Кальво и Хавьера Амбросси, выросшая из незаконченного замысла Федерико Гарсиа Лорки и пьесы Альберто Конехеро «Тёмный камень». Три эпохи Испании идут в картине рядом: 1932 год перед гражданской войной, военный 1937-й и наши дни. В каждой живёт свой герой, и судьбы троих мужчин связаны влечением, болью и той памятью, которую страна долго отказывалась признавать своей. Лорка появляется в картине действующим лицом, а не тенью: его незаконченная работа дала фильму имя и внутреннюю опору. Постановщики известны по сериалам о современной Испании, и здесь они впервые взялись за историю, где молчание длиной в век важнее любого события. Продюсировала картину студия Педро Альмодовара El Deseo. Гленн Клоуз и Пенелопа Крус играют в одном фильме впервые, вместе с ними заняты Мигель Бернардо, Лола Дуэньяс, Антонио де ла Торре и певец Гитаррикаделафуэнте в главной роли. Музыку написал Рефри, длительность картины — два с половиной часа. Название пришло от той самой незаконченной вещи Лорки: чёрный шар в испанском обиходе означает голос против на закрытом голосовании, отказ, вынесенный тайно и без объяснения. Мировая премьера прошла в основном конкурсе Каннского фестиваля 21 мая 2026 года, где фильм боролся за «Золотую пальмовую ветвь» и «Квир-пальму». Через два дня после показа права на фильм выкупил Netflix.",
+        "en": "A Spanish drama by Javier Calvo and Javier Ambrossi, grown out of an unfinished project by Federico Garcia Lorca and the play The Dark Stone by Alberto Conejero. Three Spanish eras run side by side in the film: 1932 before the civil war, wartime 1937 and the present day. Each holds its own protagonist, and the fates of the three men are bound by desire, by pain and by the memory the country long refused to own. Lorca appears as a character rather than a shadow: his unfinished work gave the film its name and its inner support. The directors are known for series about contemporary Spain, and here they have taken on a history where a century of silence weighs more than any event. Pedro Almodovar's studio El Deseo produced it. Glenn Close and Penelope Cruz appear in the same film for the first time, alongside Miguel Bernardeau, Lola Duenas, Antonio de la Torre and the singer Guitarricadelafuente in the lead. Refree wrote the music, and the film runs two and a half hours. The title comes from that unfinished work of Lorca's: a black ball in Spanish usage means a vote against in a secret ballot, a refusal delivered anonymously and without explanation. The world premiere came in the main competition at Cannes on 21 May 2026, where it contended for the Palme d'Or and the Queer Palm. Two days after the screening Netflix bought the rights to the film."
+      },
+      "agentNote": "Метка реестра несёт скобку раздела Википедии — «Чёрный шар (фильм, 2026)»; в каталог идёт имя без скобки. Год по первому выходу в мир — 21 мая 2026 года, показ в Канне. 🔴 ПРИЁМ НАЗВАН НЕПОЛНО, и это честно: сводных оценок критики источники ещё не приводят, поэтому названо только то, что доказано, — конкурс за две награды и покупка прав Netflix через два дня. Испанский прокат идёт позже, в описание он не вынесен: карточка говорит о том, что уже состоялось."
+    },
+    {
+      "wikidata": "Q152350",
+      "sitelinks": 71,
+      "title": {
+        "ru": "Броненосец «Потёмкин»",
+        "en": "Battleship Potemkin"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Сергей Эйзенштейн",
+        "en": "Sergei Eisenstein"
+      },
+      "year": "1925",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "исторический",
+        "historical",
+        "классика",
+        "classic"
+      ],
+      "description": {
+        "ru": "Немая историческая драма Сергея Эйзенштейна, снятая к двадцатилетию революции 1905 года. Июнь пятого года, Чёрное море: матросам броненосца дают червивое мясо, зачинщиков протеста выводят на расстрел, и команда бросается им на выручку. Офицеров сбрасывают за борт, восстание побеждает, а матрос Вакуленчук, поднявший команду, гибнет в схватке. Одесса стекается на его похороны и встаёт на сторону корабля; правительственные войска расстреливают горожан на лестнице, спускающейся к порту. Черноморская эскадра выходит подавить мятеж, матросы других кораблей отказываются стрелять по восставшим товарищам, и «Потёмкин» проходит сквозь строй. Эйзенштейну было двадцать семь лет, сценарий охватывал всю революцию целиком, а сроки съёмок сгорали, и режиссёр взял из него один эпизод на несколько страниц. Настоящий броненосец шёл на слом, поэтому снимали на другом корабле, стоявшем в Одесском порту. Расстрел на лестнице поставлен монтажом коротких планов, и приём этот кинематограф повторяет век спустя. Красный флаг в финале невозможно было снять на чёрно-белую плёнку, и для премьеры сто восемь кадров раскрасили вручную. Первый показ прошёл 24 декабря 1925 года в Большом театре, широкая премьера — 18 января 1926 года в Москве. Картину десятки раз называли лучшим фильмом всех времён в опросах критиков и режиссёров, а в Германии её резала цензура, признавая опасной.",
+        "en": "A silent historical drama by Sergei Eisenstein, made for the twentieth anniversary of the 1905 revolution. June of that year, the Black Sea: the crew of a battleship is served meat crawling with maggots, the men who protest are led out to be shot, and the crew rushes to save them. The officers go over the side, the mutiny wins, and the sailor Vakulinchuk who raised the crew dies in the fighting. Odessa comes out for his funeral and takes the ship's side; government troops shoot the townspeople on the staircase running down to the port. The Black Sea squadron sails to put the mutiny down, the sailors of the other ships refuse to fire on their own, and the Potemkin passes through the line. Eisenstein was twenty-seven, the screenplay covered the whole revolution and the shooting schedule was burning away, so the director took a single episode of a few pages out of it. The real battleship was being broken up, so another ship standing in Odessa harbour was filmed instead. The killing on the steps is built out of short shots cut together, and cinema has been repeating that method for a century. A red flag could not be photographed on black and white stock, so a hundred and eight frames were painted by hand for the premiere. The first screening came on 24 December 1925 at the Bolshoi Theatre, with the wide premiere in Moscow on 18 January 1926. Polls of critics and directors have named the film the greatest of all time dozens of times, while German censors cut it as dangerous."
+      },
+      "agentNote": "🔴 ПЕРВАЯ КАРТОЧКА ИЗ РАЗВЕДКИ КУЛЬТОВОЙ КЛАССИКИ (заказ владельца 2026-08-23). Год по первому показу людям — 24 декабря 1925 года, Большой театр; широкая премьера 18 января 1926 года названа в описании отдельно. Пара «классика»/«classic» в словаре каталога РЕДКАЯ — проверьте, годится ли; снять её ничего не стоит."
+    },
+    {
+      "wikidata": "Q201293",
+      "sitelinks": 70,
+      "title": {
+        "ru": "Римские каникулы",
+        "en": "Roman Holiday"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Уильям Уайлер",
+        "en": "William Wyler"
+      },
+      "year": "1953",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "драма",
+        "drama",
+        "классика",
+        "classic"
+      ],
+      "description": {
+        "ru": "Романтическая комедия Уильяма Уайлера, снятая в Риме и подарившая кино Одри Хепбёрн. Анна — юная принцесса безымянного европейского государства, приехавшая с дипломатическим туром, где каждая минута расписана протоколом. Вечером она срывается, придворный врач даёт ей снотворное, и принцесса тайком уходит из посольства в город. Засыпающую на парапете девушку подбирает американский репортёр Джо Брэдли, не зная, кого везёт к себе домой. Утром он видит её портрет в газете и понимает, что у него в руках сенсация; дальше он ходит за ней по Риму, притворяясь, что встречи случайны, а фотограф-приятель снимает исподтишка. Один день свободы даёт ей всё, чего не давал титул: стрижку, мороженое на лестнице, первую сигарету, мотороллер, драку на танцплощадке. Репортаж, который вышел бы из этого дня, стоил бы Брэдли карьеры вверх — и он его не пишет. Грегори Пек — на тот момент уже звезда — потребовал поставить имя дебютантки Хепбёрн в титры теми же буквами, что и своё. Сценарий написал Далтон Трамбо, внесённый в чёрный список Голливуда: имя автора в титрах заменили чужим, «Оскар» за сюжет вручили человеку, стоявшему вместо автора, и лишь в 1993 году награду отдали вдове Трамбо. Премьера состоялась 27 августа 1953 года. Хепбёрн получила «Оскар» за лучшую женскую роль, картина взяла ещё две награды, а в 1999 году США взяли её на государственное хранение как имеющую особое культурное значение.",
+        "en": "A romantic comedy by William Wyler, shot in Rome, that gave cinema Audrey Hepburn. Ann is the young princess of an unnamed European state, arrived on a diplomatic tour where protocol fills every minute. One evening she breaks down, the court physician gives her a sedative, and the princess slips out of the embassy into the city. The American reporter Joe Bradley picks up the girl falling asleep on a parapet, with no idea whom he is taking home. In the morning he sees her portrait in the paper and understands he is holding a sensation; from then on he follows her around Rome pretending the meetings are chance, while a photographer friend shoots on the sly. One day of freedom gives her everything the title never did: a haircut, ice cream on the steps, a first cigarette, a scooter, a brawl at a dance. The story that day would have made would have carried Bradley's career upward — and he does not write it. Gregory Peck, already a star, insisted that the newcomer Hepburn be credited beside him, in letters of the same size. Dalton Trumbo wrote the screenplay while on the Hollywood blacklist: another man's name replaced his, a front collected the Academy Award for the story, and only in 1993 was the award handed to Trumbo's widow. The premiere came on 27 August 1953. Hepburn won the Academy Award for Best Actress, the film took two more, and in 1999 the United States took it into national preservation as a work of special cultural significance."
+      },
+      "agentNote": "Год по первому показу — 27 августа 1953 года. История с чёрным списком названа потому, что она часть самой картины, а не производственная обвязка: имя автора вернули в титры только в 2011 году. Жанровая пара «мелодрама» не поставлена намеренно — в каталоге «мелодрама» и «романтика» уже разведены на два слова при одном «romance», и множить раскол нельзя."
+    },
+    {
+      "wikidata": "Q317620",
+      "sitelinks": 43,
+      "title": {
+        "ru": "Tomb Raider",
+        "en": "Tomb Raider"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "Core Design",
+        "en": "Core Design"
+      },
+      "year": "1996",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "приключения",
+        "adventure",
+        "экшен",
+        "action",
+        "головоломка",
+        "puzzle",
+        "классика",
+        "classic"
+      ],
+      "description": {
+        "ru": "Приключенческий боевик британской студии Core Design, с которого началась и серия, и сама Лара Крофт. Бизнес-леди Жаклин Натла нанимает археолога Лару найти древний артефакт Сцион, и поиски ведут её через четыре края света: горные пещеры Перу, средневековый монастырь в Греции, египетский храм и затонувшую Атлантиду. Артефакт оказывается разъятым на три части, у каждой свой хранитель, а заказчица — той самой третьей из древнего триумвирата, ради власти нарушившей равновесие. Игра идёт от третьего лица, и почти всё герой делает руками игрока: подтягивается на уступ, перепрыгивает пропасть, плывёт под водой, дёргает рычаг. Уровни собраны из кубической сетки, придуманной по устройству египетских гробниц, и эта сетка осталась фирменным знаком серии на пять лет вперёд. Врагов немного, зато много ловушек: ямы с шипами, катящиеся валуны, качающиеся лезвия. Образ Лары придумал художник Тоби Гард, опираясь на комиксы и на приключенческое кино; производство заняло полтора года и стоило четыреста сорок тысяч фунтов. Музыку написал Натан Маккри, отталкиваясь от английской классики. Игра вышла 25 октября 1996 года на Sega Saturn, следом на PlayStation и персональных компьютерах. Приняли её восторженно: хвалили трёхмерную картинку, управление и устройство уровней, семь миллионов копий разошлись на одной только PlayStation, а Лара Крофт стала одним из самых узнаваемых лиц во всей игровой культуре.",
+        "en": "An action-adventure by the British studio Core Design that began both the series and Lara Croft herself. The businesswoman Jacqueline Natla hires the archaeologist Lara to find an ancient artefact called the Scion, and the search takes her across four corners of the world: mountain caves in Peru, a medieval monastery in Greece, an Egyptian temple and the sunken Atlantis. The artefact turns out to be split into three parts, each with its own keeper, while the woman who hired her is the third of an ancient triumvirate, the one who broke the balance for the sake of power. The game runs in third person, and the hero does almost everything by the player's own hand: pulling up onto a ledge, leaping a gap, swimming underwater, throwing a lever. The levels are built out of a cubic grid devised from the structure of Egyptian tombs, and that grid stayed the series' signature for five years to come. Enemies are few, traps are many: spike pits, rolling boulders, swinging blades. The artist Toby Gard created Lara, drawing on comics and on adventure cinema; production took eighteen months and cost four hundred and forty thousand pounds. Nathan McCree wrote the music, working from English classical forms. The game came out on 25 October 1996 for the Sega Saturn, followed by the PlayStation and personal computers. Reception was enthusiastic: the three-dimensional graphics, the controls and the level design all drew praise, seven million copies sold on the PlayStation alone, and Lara Croft became one of the most recognisable faces in the whole of gaming culture."
+      },
+      "agentNote": "Из разведки культовой классики. Русского названия у игры нет ни в реестре, ни в русской Википедии — статья озаглавлена латиницей, так игру и знают; в каталоге латиница в обеих половинах стоит у 1113 записей из 5125. Год по первому выходу в мир — 25 октября 1996 года, Sega Saturn; переиздания вплоть до 2024 года на год не влияют."
+    },
+    {
+      "wikidata": "Q8275",
+      "sitelinks": 180,
+      "title": {
+        "ru": "Илиада",
+        "en": "Iliad"
+      },
+      "type": {
+        "ru": "Книга",
+        "en": "Book"
+      },
+      "author": {
+        "ru": "Гомер",
+        "en": "Homer"
+      },
+      "year": "VIII в. до н. э.",
+      "tags": [
+        "книга",
+        "book",
+        "литература",
+        "literature",
+        "эпос",
+        "epic",
+        "мифология",
+        "mythology",
+        "классика",
+        "classic"
+      ],
+      "description": {
+        "ru": "Древнейший уцелевший памятник греческой словесности, эпическая поэма, которую приписывают Гомеру. Пятнадцать с лишним тысяч стихов гекзаметра рассказывают о пятидесяти днях последнего года десятилетней осады Трои. Предводитель ахейцев Агамемнон отбирает у Ахилла пленницу Брисеиду, и оскорблённый герой уходит из войны, отказываясь вернуться даже тогда, когда цари приносят ему богатые дары. Друг Ахилла Патрокл не выдерживает вида отступающего войска, выпрашивает у него доспехи и гибнет от руки троянца Гектора. Горе возвращает Ахилла в бой: он убивает Гектора под стенами города и таскает тело за колесницей, вымещая боль на мёртвом. Заканчивается поэма не победой, а состраданием — старый царь Приам приходит в шатёр убийцы сына безоружным, и Ахилл отдаёт ему тело и объявляет перемирие на время похорон. Падения Трои и деревянного коня в поэме нет вовсе: то и другое пришло из более поздних источников. Сложилась «Илиада» в девятом или восьмом веке до нашей эры в греческих городах Малой Азии из устных преданий крито-микенской поры, а на двадцать четыре песни её разделил александрийский учёный Зенодот Эфесский — по числу букв греческого алфавита. Имя поэмы идёт от Илиона, второго имени Трои. Европейская литература отсчитывает себя от этой книги, а гнев Ахилла остаётся её первой и самой цитируемой темой.",
+        "en": "The oldest surviving monument of Greek letters, an epic poem attributed to Homer. Over fifteen thousand lines of hexameter tell of fifty days in the final year of the ten-year siege of Troy. Agamemnon, leader of the Achaeans, takes the captive Briseis from Achilles, and the insulted hero withdraws from the war, refusing to return even when the kings bring him rich gifts. His friend Patroclus cannot bear the sight of the army falling back, begs Achilles for his armour and dies at the hands of the Trojan Hector. Grief brings Achilles back to the fighting: he kills Hector beneath the city walls and drags the body behind his chariot, taking out his pain on the dead. The poem ends not in victory but in compassion — the old king Priam comes unarmed into the tent of his son's killer, and Achilles gives the body back and declares a truce for the funeral. The fall of Troy and the wooden horse are absent from the poem entirely: both came from later sources. The Iliad took shape in the ninth or eighth century before our era in the Greek cities of Asia Minor, out of oral traditions of the Cretan and Mycenaean age, and the Alexandrian scholar Zenodotus of Ephesus divided it into twenty-four books, one for each letter of the Greek alphabet. Its name comes from Ilion, the second name of Troy. European literature counts itself from this book, and the wrath of Achilles remains its first and most quoted theme."
+      },
+      "agentNote": "Форма года у древних памятников назначена владельцем 2026-08-23: «VIII в. до н. э. — да, норм». Поэма сложилась в девятом или восьмом веке до нашей эры; взят более поздний из двух, как принято у самой ранней доказанной формы текста. ⚠️ Подбор соседей по году такую запись не увидит: он берёт только год из четырёх цифр — защита в коде уже стоит, ничего не ломается, просто «Илиада» не попадёт в ровесники. Форма ляжет на все древние записи разом: Махабхарата, Рамаяна, Эпос о Гильгамеше, Шахнаме, Упанишады."
+    }
+  ]
+}

@@ -38,6 +38,8 @@ import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import { contourFromArgv } from './lib/contours.mjs';
 import { watchHttpFailures } from './lib/http-failures.mjs';
+import { grantAppCheckDebug } from './lib/app-check-debug.mjs';
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 /*
  * 🔑 КОНТУР ВЫБИРАЕТСЯ ОДИН РАЗ И ЦЕЛИКОМ (`plans/53` фаза 4).
@@ -68,6 +70,29 @@ const SCREENS = [
   { path: '/menu', name: 'Меню', mark: /меню|о системе|поддерж/i },
 ];
 
+/**
+ * ЧТЕНИЕ ТЕКСТА СТРАНИЦЫ, ПЕРЕЖИВАЮЩЕЕ НАВИГАЦИЮ (`bugs/196`).
+ *
+ * 🔴 `document.body` бывает `null`, и защита `|| ''` его НЕ ловит: она стоит на `innerText`, а
+ * пустым приходит само тело — во время навигации документ уже заменён, а тело ещё не создано.
+ * `null.innerText` внутри `page.evaluate` роняет ВЕСЬ прогон стек-трейсом, и дверь выката
+ * останавливается, не сообщив ни одного вердикта из двадцати четырёх.
+ *
+ * ⛔ Здесь ждётся СОСТОЯНИЕ ДОКУМЕНТА (появилось ли тело), а не состояние продукта. Содержимое
+ * не ждётся ни одной лишней миллисекунды, ни одна проверка не смягчается: не появилось тело —
+ * возвращается пустая строка, и вердикт краснеет ровно так же, как краснел бы прежде.
+ */
+async function bodyText(page) {
+	for (let attempt = 0; attempt < 20; attempt++) {
+		try {
+			const text = await page.evaluate(() => document.body?.innerText ?? null);
+			if (text !== null) return text;
+		} catch { /* документ меняется прямо сейчас — попробуем ещё раз */ }
+		await page.waitForTimeout(100);
+	}
+	return '';
+}
+
 let pass = 0;
 const fails = [];
 function check(ok, name, detail = '') {
@@ -88,9 +113,13 @@ for (const cfg of CONFIGS) {
   console.log(`\n▶ ${CONTOUR.title} ${BASE} · ${cfg.theme} ${cfg.width}×${cfg.height}`);
 
   const ctx = await browser.newContext({ viewport: { width: cfg.width, height: cfg.height }, locale: 'ru-RU' });
+  await markProbeContext(ctx);
   await ctx.addInitScript((theme) => {
     try { localStorage.setItem('ndim-theme', theme); } catch { /* приватный режим */ }
   }, cfg.theme);
+  // Пропуск через защиту от роботов. В бою App Check ВКЛЮЧЁН, поэтому отсутствие пропуска
+  // роняет прибор: без него прогон даст 403 и красную «консоль чиста» по ЛОЖНОЙ причине.
+  await grantAppCheckDebug(ctx, { required: CONTOUR.name === 'prod' });
 
   const page = await ctx.newPage();
   const errors = [];
@@ -140,10 +169,10 @@ for (const cfg of CONFIGS) {
    * условие снимает лотерею, короткая выдержка сохраняет окно.
    */
   await page
-    .waitForFunction(() => (document.body.innerText || '').length > 100, null, { timeout: 25000 })
+    .waitForFunction(() => (document.body?.innerText || '').length > 100, null, { timeout: 25000 })
     .catch(() => { /* не наполнилась — ниже это станет честным провалом с числом */ });
   await page.waitForTimeout(1500);
-  const bootText = await page.evaluate(() => document.body.innerText || '');
+  const bootText = await bodyText(page);
   check(bootText.length > 100, `[${tag}] приложение стартовало (страница не пуста)`, `символов ${bootText.length}`);
   check(
     !errors.some((e) => /TypeError/i.test(e)),
@@ -179,13 +208,13 @@ for (const cfg of CONFIGS) {
     await guestBtn.first().click();
     await page
       .waitForFunction(
-        (src) => new RegExp(src, 'i').test(document.body.innerText || ''),
+        (src) => new RegExp(src, 'i').test(document.body?.innerText || ''),
         PROFILE_MARK.source,
         { timeout: 25000 },
       )
       .catch(() => { /* не дождались — вердикт ниже снимется с того, что есть, и покраснеет */ });
   }
-  const afterLogin = await page.evaluate(() => document.body.innerText || '');
+  const afterLogin = await bodyText(page);
   // Один образец и на ожидание, и на вердикт: две копии — пара «истина ↔ зеркало», которая
   // однажды разъедется, и тогда прибор ЖДЁТ одного, а СУДИТ другое.
   check(
@@ -204,13 +233,13 @@ for (const cfg of CONFIGS) {
     await seeMe.first().click();
     await page
       .waitForFunction(
-        (src) => new RegExp(src, 'i').test(document.body.innerText || ''),
+        (src) => new RegExp(src, 'i').test(document.body?.innerText || ''),
         SEEME_MARK.source,
         { timeout: 20000 },
       )
       .catch(() => { /* не дождались — вердикт ниже покраснеет по делу */ });
     check(
-      SEEME_MARK.test(await page.evaluate(() => document.body.innerText || '')),
+      SEEME_MARK.test(await bodyText(page)),
       `[${tag}] «Как меня видят» открывается`,
     );
     await page.screenshot({ path: `${OUT}/${tag}-seeme.png` });
@@ -285,9 +314,9 @@ for (const cfg of CONFIGS) {
      * возвращается сразу, как только экран наполнился.
      */
     await page
-      .waitForFunction(() => (document.body.innerText || '').length > 150, null, { timeout: 25000 })
+      .waitForFunction(() => (document.body?.innerText || '').length > 150, null, { timeout: 25000 })
       .catch(() => { /* не наполнился — ниже это станет честным провалом с числом */ });
-    const text = await page.evaluate(() => document.body.innerText || '');
+    const text = await bodyText(page);
     check(text.length > 80 && screen.mark.test(text), `[${tag}] «${screen.name}» отрисован`, `символов ${text.length}`);
     await page.screenshot({ path: `${OUT}/${tag}-${screen.name}.png` });
   }

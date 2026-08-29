@@ -246,8 +246,8 @@ npm run build      # статическая сборка: весь сайт пр
 [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) · дорожная карта — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
 видение автора — [`GOAL.md`](GOAL.md) · канон агента — [`AGENT_GUIDE.md`](AGENT_GUIDE.md).
 Разработка ведётся тандемом «человек-визионер + ИИ-агент» по фреймворку
-[KAIF](https://github.com/MikalaiKryvusha/KAIF) — здесь развёрнута версия **2.2 «Yolden KAIF»**
-(с 2026-08-14; версия и история обновлений — в маркере `.kaif/kaif.json`, проверка —
+[KAIF](https://github.com/MikalaiKryvusha/KAIF) — здесь развёрнута версия **2.4 «Teamed Up KAIF»**
+(с 2026-08-28; версия и история обновлений — в маркере `.kaif/kaif.json`, проверка —
 `npm run kaif:version`).
 
 ## 8. Ограничения текущей версии
