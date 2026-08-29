@@ -6,9 +6,9 @@
 > понравилось больше» — там, где не понравилось ещё никому.
 > Ниже готовые тексты на замену и два вопроса, где решаете Вы.
 > **Создан:** 2026-08-29, смена 12 · **Родитель:** заказ по обогащению каталога ·
-> **Статус:** ✅ ОТВЕЧЕНО 2026-08-29 21:58 — все три вопроса: В1 = А (тексты приняты) ·
+> **Статус:** ✅ ОТВЕЧЕНО ЦЕЛИКОМ 2026-08-29 22:24 — четыре вопроса: В1 = А (тексты приняты) ·
 > В2 = А (имена в выдаче остаются, включая «Секс» на странице практик) · В3 = А (ценность
-> во вводную строку дописываем ОТДЕЛЬНОЙ порцией)
+> во вводную строку дописываем) · В4 = А (английская половина описаний и вводных строк принята)
 
 ---
 
@@ -137,6 +137,54 @@
 **Ответ:** **А**
 *🕒 Сохранено 29 августа 2026 г. в 21:58 · Николай Кривуша*
 <!-- owner-review: by="Николай Кривуша" at="2026-08-29T18:58:07.739Z" транспорт=страница -->
+
+---
+
+## Заход 2 — английская половина, которой в первом заходе НЕ БЫЛО
+
+🔴 **Моя дыра, нашёл исполнитель.** В первом заходе я показал Вам английские ЗАГОЛОВКИ и не показал
+английские описания и вводные строки. Вы приняли тексты — а подставлять на половине сайта нечего.
+Тексты у Дизайнера написаны, я их просто не перенёс в вопрос.
+
+### Описание под заголовком, английское
+
+> **А:** Movies rated by people of NDim Space: “Scream 7”, “Hamnet” and more. What to pick — see
+> NDim Space Rating, the community rating.
+>
+> **Б:** Movies in the NDim Space catalog: “A Fistful of Dollars”, “America” and more. Your rating
+> will be the first, and NDim Space will find you similar people.
+>
+> **В:** Movies in the NDim Space catalog: “Assassin's Creed”, “A Few Good Men” and more. Add your
+> ratings — NDim Space will find you similar people.
+
+### Вводная строка на самой странице, английская
+
+> **А** *(сегодняшняя, без правки)*: The NDim Space top: what people liked more comes first,
+> adjusted for how many rated it.
+>
+> **Б:** NDim Space Rating shows what people of NDim Space like. These movies are waiting for a
+> first rating. Rate the movies you love, and NDim Space will find you people who think the way you
+> do. Your rating will be the first here!
+>
+> **В:** The NDim Space top: what people liked more comes first, adjusted for how many rated it.
+> Further down this page stand the movies waiting for a first rating. Rate them, and NDim Space
+> will find you people who think the way you do.
+
+### В4. Принимаете ли английскую половину?
+
+**Адресат ответа:** порция dev-1 · `plans/56` шаг 7
+
+Это те же три случая и та же мысль, что Вы уже приняли по-русски. Английские тексты по канону
+проекта — такое же лицо продукта, как русские, и «перевода второго сорта» у нас нет.
+
+- **А) Принято** — dev-1 подставляет обе половины разом.
+- **Б) Принято с правками** — впишите правки здесь.
+- **В) Английские тексты вычитываю отдельно, позже** — тогда порция уезжает только с русской
+  половиной, а английские страницы остаются с сегодняшним текстом до Вашего слова.
+
+**Ответ:** **А**
+*🕒 Сохранено 29 августа 2026 г. в 22:24 · Николай Кривуша*
+<!-- owner-review: by="Николай Кривуша" at="2026-08-29T19:24:51.171Z" транспорт=страница -->
 
 ---
 

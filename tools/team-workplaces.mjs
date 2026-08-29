@@ -30,8 +30,10 @@ import { dirname, basename, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const ROLES = ['designer', 'qa', 'dev-1', 'integrator', 'dev-3']; // manager живёт в главной копии — места ему не создаём
-// ⚠️ Каталог Интегратора может ещё зваться ndim_dev2 (переквалификация 2026-08-28, окно держало
-// каталог при переименовании) — первый шаг новой смены: git worktree move … ndim_integrator.
+// ✅ Каталог Интегратора переехал ndim_dev2 → ndim_integrator (2026-08-29, смена 13): владелец
+// закрыл окно VS Code, git worktree move прошёл. ⚠️ Команда relocate этого НЕ умела и не умеет —
+// её legacyWorkplaceFor знает только имя без приписки (ndim-team/<роль>), а там менялось имя РОЛИ.
+// Переквалификация роли переезжает прямым `git worktree move`, не этой командой.
 const TEAM_DIR_NAME = 'ndim-team';
 
 /* ── Чистые функции (--selftest) ───────────────────────────────────────────────────────── */
