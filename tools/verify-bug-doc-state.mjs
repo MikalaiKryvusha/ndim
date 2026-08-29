@@ -28,10 +28,23 @@
  *        входящей ссылки и пришёл к следующей сессии как «новая находка» — то есть был
  *        оплачен дважды.
  *
- * Запуск:  node tools/verify-bug-doc-state.mjs   ·   самотест: --selftest
+ * 🔴 В ВОРОТА (`npm run guards`) ВПИСЫВАЕТСЯ ПЕРВЫМ ДЕЙСТВИЕМ ПОСЛЕ МЕРЖА, А НЕ РАНЬШЕ.
+ * Условие Менеджера — «только при нуле красных» — ПРОВЕРЕНО и выполняется ровно на слитом
+ * дереве, ни на одном из двух по отдельности (замер 2026-08-29, команды в конце шапки):
+ *     ndim_integrator 57ab8db … 4 красных (все П2 — сироты, усыновление лежит в main)
+ *     main            4f9b87b … 14 красных (все П1 — закрытие лежит в этой ветке)
+ *     предпросмотр их мержа … 0 красных
+ * Ветки лечат друг друга: поодиночке красны обе. Вписать строку раньше мержа значит отдать
+ * команде красные ворота; забыть после мержа — оставить `EXP-0227` («страж без мержа — кредит»)
+ * неоплаченным ровно тем способом, ради которого урок и записан.
+ *
+ * Запуск:   node tools/verify-bug-doc-state.mjs            # судит РАБОЧЕЕ ДЕРЕВО запустившего
+ *           node tools/verify-bug-doc-state.mjs --tree <ref>   # любой контур, дерево не трогая
+ *           node tools/verify-bug-doc-state.mjs --holders      # КТО держит каждый баг живым
+ * Самотест: node tools/verify-bug-doc-state.mjs --selftest
  */
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
@@ -100,11 +113,13 @@ export function judgeCorpus(corpus) {
 	return rows;
 }
 
+const CORPUS_FILES = /\.(md|mjs|js|ts|svelte|json|yml|yaml)$/;
+
 function corpusFromGit() {
 	const list = execFileSync('git', ['ls-files'], { encoding: 'utf8' })
 		.trim()
 		.split('\n')
-		.filter((f) => /\.(md|mjs|js|ts|svelte|json|yml|yaml)$/.test(f));
+		.filter((f) => CORPUS_FILES.test(f));
 	const corpus = new Map();
 	for (const f of list) {
 		try {
@@ -114,6 +129,75 @@ function corpusFromGit() {
 		}
 	}
 	return corpus;
+}
+
+/**
+ * Корпус ЛЮБОГО дерева git — `--tree <ref>`.
+ *
+ * ЗАЧЕМ. Страж судит рабочее дерево запустившего, поэтому его число без адреса дерева — слух,
+ * а не число (`EXP-0226`). В командном режиме контуров шесть, и один и тот же документ бывает
+ * сиротой в одной ветке и не сиротой в другой: замер 2026-08-29 дал `ndim_integrator` 4 красных
+ * (все П2), `main` 14 красных (все П1) и НОЛЬ на предпросмотре их мержа — то есть ветки лечат
+ * друг друга, а поодиночке обе красные. Без этой двери такое не увидишь, не сделав мерж.
+ *
+ * Годится и для предпросмотра мержа, не трогая рабочее дерево:
+ *   git merge-tree --write-tree main <ветка>   # печатает oid слитого дерева
+ *   node tools/verify-bug-doc-state.mjs --tree <oid>
+ *
+ * Содержимое берётся по oid-ам блобов через `git cat-file --batch`, а НЕ парой `ref:путь`:
+ * Git Bash (MSYS) молча коверкает такие аргументы (`origin/main:путь` → `origin\main;путь`) и
+ * даёт ложный ответ прибора вместо факта — класс пойман QA на замере ветки dev3-shift6.
+ */
+function corpusFromTree(ref) {
+	const list = execFileSync('git', ['ls-tree', '-r', ref], { encoding: 'utf8', maxBuffer: 1 << 28 })
+		.trim()
+		.split('\n')
+		.map((l) => {
+			const [meta, path] = l.split('\t');
+			const [, type, oid] = meta.split(/\s+/);
+			return { type, oid, path };
+		})
+		.filter((e) => e.type === 'blob' && CORPUS_FILES.test(e.path));
+
+	const out = spawnSync('git', ['cat-file', '--batch'], {
+		input: list.map((e) => e.oid).join('\n') + '\n',
+		maxBuffer: 1 << 30,
+	}).stdout;
+
+	const corpus = new Map();
+	let pos = 0;
+	for (const e of list) {
+		const nl = out.indexOf(0x0a, pos);
+		const size = Number(out.subarray(pos, nl).toString('utf8').split(' ')[2]);
+		corpus.set(e.path, out.subarray(nl + 1, nl + 1 + size).toString('utf8'));
+		pos = nl + 1 + size + 1;
+	}
+	return corpus;
+}
+
+/**
+ * КТО ДЕРЖИТ каждый открытый баг живым — `--holders`. Не приговор, а перемер.
+ *
+ * Заведено потому, что «перемерить потом» без команды не делает никто (тот же класс, ради
+ * которого появилась `close-bug.mjs`). Конкретный повод назван Менеджером заранее: после
+ * ближайшей стрижки бонсая часть ссылок уедет из `STATUS.md` в летопись, и ноль сирот
+ * перестанет быть нулём. Замер 2026-08-29 на предпросмотре мержа: ШЕСТЬ открытых документов
+ * держатся ровно одной строкой `STATUS.md` и ничем больше — 168, 170, 182, 183, 191, 211.
+ */
+export function holdersOf(corpus) {
+	const open = [...corpus.keys()].filter((p) => bugNumber(p) !== null && !isClosed(p));
+	const map = new Map();
+	for (const path of open) {
+		const re = new RegExp('bugs?[/ ]?' + bugNumber(path) + '(?![0-9])', 'i');
+		const who = [];
+		for (const [p, t] of corpus) {
+			if (p === path) continue;
+			if (p.startsWith('bugs/') && isClosed(p)) continue;
+			if (re.test(t)) who.push(p);
+		}
+		map.set(path, who);
+	}
+	return map;
 }
 
 function selftest() {
@@ -162,6 +246,20 @@ function selftest() {
 			const c = new Map([['bugs/4_ok.md', '**Статус:** 🔴 OPEN'], ['STATUS.md', 'работа идёт по bugs/4']]);
 			return judgeCorpus(c).length === 0;
 		}],
+		['перемер: держатель назван поимённо', () => {
+			const c = new Map([['bugs/4_ok.md', '**Статус:** 🔴 OPEN'], ['STATUS.md', 'работа идёт по bugs/4'], ['plans/1_p.md', 'пусто']]);
+			const w = holdersOf(c).get('bugs/4_ok.md');
+			return w.length === 1 && w[0] === 'STATUS.md';
+		}],
+		['перемер: у сироты держателей ноль, и он в перечне', () => {
+			const c = new Map([['bugs/5_x.md', '**Статус:** 🔴 OPEN'], ['STATUS.md', 'ничего']]);
+			const m = holdersOf(c);
+			return m.size === 1 && m.get('bugs/5_x.md').length === 0;
+		}],
+		['перемер судит те же документы, что и приговор', () => {
+			const c = new Map([['bugs/6_a.md', '**Статус:** 🔴 OPEN'], ['bugs/7_DONE_b.md', '**Статус:** ✅ ПОЧИНЕН'], ['STATUS.md', 'пусто']]);
+			return holdersOf(c).size === 1 && holdersOf(c).has('bugs/6_a.md');
+		}],
 	];
 
 	let bad = 0;
@@ -182,11 +280,35 @@ function selftest() {
 function main(argv) {
 	if (argv.includes('--selftest')) return selftest();
 
-	const corpus = corpusFromGit();
+	const ti = argv.indexOf('--tree');
+	const ref = ti !== -1 && argv[ti + 1] && !argv[ti + 1].startsWith('--') ? argv[ti + 1] : null;
+	const corpus = ref ? corpusFromTree(ref) : corpusFromGit();
 	const open = [...corpus.keys()].filter((p) => bugNumber(p) !== null && !isClosed(p));
+
+	/* Контур называется ВСЕГДА: число без адреса дерева — слух, а не число (EXP-0226). */
+	const contour = ref
+		? `дерево ${ref}`
+		: `рабочее дерево ${execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim()}`;
+
+	if (argv.includes('--holders')) {
+		const map = holdersOf(corpus);
+		console.log(`\n══ кто держит открытые bugs/ живыми ══  ${contour} · открытых ${open.length}`);
+		for (const [path, who] of [...map].sort((a, b) => a[1].length - b[1].length)) {
+			console.log(`   ${who.length === 0 ? '🔴 СИРОТА' : String(who.length).padStart(2)} ${path}`);
+			if (who.length > 0 && who.length <= 3) console.log(`        ${who.join(' · ')}`);
+		}
+		const fragile = [...map].filter(([, w]) => w.length === 1 && w[0] === 'STATUS.md');
+		console.log(
+			`\n⚠️ держатся ЕДИНСТВЕННОЙ строкой STATUS.md: ${fragile.length} — они осиротеют, если` +
+				'\n   стрижка бонсая унесёт строку, а летопись указателем не считается. Перемерить ПОСЛЕ стрижки.',
+		);
+		for (const [p] of fragile) console.log(`   ${p}`);
+		return 0;
+	}
+
 	const rows = judgeCorpus(corpus);
 
-	console.log(`\n══ состояние документов bugs/ ══  открытых ${open.length}`);
+	console.log(`\n══ состояние документов bugs/ ══  ${contour} · открытых ${open.length}`);
 	if (rows.length === 0) {
 		console.log('✅ рассогласований нет.');
 		return 0;
