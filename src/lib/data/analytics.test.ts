@@ -32,9 +32,11 @@ import {
   POSTHOG_HOST,
   POSTHOG_TOKEN,
   analyticsHostAllowed,
+  capture,
   eventNameIsSafe,
   nameSmellsOfSubject,
   posthogConfig,
+  setAnalyticsClientForTests,
   whitelistLooksSafe,
 } from './analytics.ts';
 
@@ -150,6 +152,119 @@ describe('контур — считает только бой', () => {
         false,
         `хост стейджа «${host}» из firebase.ts не глушится аналитикой — зеркала разъехались`,
       );
+    }
+  });
+});
+
+/**
+ * 🔴🔴 ЮНИТ НА САМО РЕШЕНИЕ ОБ ОТПРАВКЕ — дефект Д2 вердикта QA №14.
+ *
+ * Судья сформулировала так, что лучше не скажешь: «Набор стережёт ИНГРЕДИЕНТЫ
+ * (`posthogConfig()`, `eventNameIsSafe()`, `analyticsHostAllowed()`, `whitelistLooksSafe()`)
+ * и ни разу — БЛЮДО». Три мутации ПРЯМО В ТЕЛЕ `capture()` оставили набор зелёным:
+ *   · снята проверка контура — стенд и стейдж начинают слать в боевой ряд;
+ *   · снят белый список на отправке — летит любое имя;
+ *   · снята метка прибора — смоуки снова считаются людьми (`bugs/202`).
+ * Причина простая: набор `capture()` даже не импортировал.
+ *
+ * 🔑 И это стояло рядом с собственным утверждением разведдока: «инвариант держит МАШИНА, а не
+ * дисциплина». До этого набора последнюю милю держала дисциплина. Здесь она оплачена.
+ *
+ * Клиент подставной (`setAnalyticsClientForTests`), SDK не грузится вовсе: `capture()` идёт за
+ * ним только при `client === null`. Проверяется ровно то, чего требовал вердикт, — ДОШЛО ли до
+ * клиента.
+ */
+describe('capture() — блюдо, а не ингредиенты (Д2 вердикта №14)', () => {
+  // `props` объявлено НЕобязательным и допускающим `undefined` сразу: проект стоит на
+  // `exactOptionalPropertyTypes`, где «поля нет» и «поле есть, но undefined» — разные вещи,
+  // а клиент SDK второй аргумент вправе не передать вовсе.
+  type Звонок = { event: string; props?: Record<string, unknown> | undefined };
+
+  /** Ставит мир браузера: хост, метку прибора и подставного клиента. Возвращает журнал звонков. */
+  const постановка = ({ hostname = 'ndimspace.app', метка = false } = {}): Звонок[] => {
+    const звонки: Звонок[] = [];
+    (globalThis as Record<string, unknown>).location = { hostname };
+    // probeMarked() читает sessionStorage и на бросок отвечает «метки нет» — подменяем честно.
+    (globalThis as Record<string, unknown>).sessionStorage = {
+      getItem: () => (метка ? '1' : null),
+    };
+    setAnalyticsClientForTests({ capture: (event, props) => звонки.push({ event, props }) });
+    return звонки;
+  };
+
+  const убрать = () => {
+    setAnalyticsClientForTests(null);
+    delete (globalThis as Record<string, unknown>).location;
+    delete (globalThis as Record<string, unknown>).sessionStorage;
+  };
+
+  test('на боевом хосте честное имя ДОХОДИТ до клиента', async () => {
+    const звонки = постановка();
+    try {
+      await capture('relations_view', { has_matches: true });
+      assert.deepEqual(звонки, [{ event: 'relations_view', props: { has_matches: true } }]);
+    } finally {
+      убрать();
+    }
+  });
+
+  test('🔴 стенд НЕ шлёт — иначе прогоны легли бы в боевой ряд', async () => {
+    const звонки = постановка({ hostname: 'localhost' });
+    try {
+      await capture('landing_view');
+      assert.deepEqual(звонки, [], 'со стенда событие дошло до клиента');
+    } finally {
+      убрать();
+    }
+  });
+
+  test('🔴 стейдж НЕ шлёт — проект PostHog у нас ОДИН, ряд был бы общий', async () => {
+    const звонки = постановка({ hostname: 'ndim-stage.web.app' });
+    try {
+      await capture('landing_view');
+      assert.deepEqual(звонки, [], 'со стейджа событие дошло до клиента');
+    } finally {
+      убрать();
+    }
+  });
+
+  test('🔴 под меткой прибора НЕ шлёт — иначе смоуки снова люди (bugs/202)', async () => {
+    const звонки = постановка({ метка: true });
+    try {
+      await capture('landing_view');
+      assert.deepEqual(звонки, [], 'помеченный прогон дошёл до клиента');
+    } finally {
+      убрать();
+    }
+  });
+
+  test('🔴 имя вне белого списка НЕ шлёт — на отправке, а не только в прогоне набора', async () => {
+    const звонки = постановка();
+    try {
+      await capture('rating_saved_dimension_matrix' as never);
+      assert.deepEqual(звонки, [], 'имя вне списка дошло до клиента');
+    } finally {
+      убрать();
+    }
+  });
+
+  test('🔴 свойство вне списка отсекается, а честное рядом — доезжает', async () => {
+    const звонки = постановка();
+    try {
+      await capture('rating_saved', { dim_title: 'Матрица', is_guest: true } as never);
+      assert.deepEqual(звонки, [{ event: 'rating_saved', props: { is_guest: true } }]);
+    } finally {
+      убрать();
+    }
+  });
+
+  test('🔑 КОНТРОЛЬ: без хоста браузера capture() молчит и НЕ бросает', async () => {
+    // Серверный рендер зовёт тот же модуль; падение здесь уронило бы страницу целиком.
+    setAnalyticsClientForTests({ capture: () => { throw new Error('клиента звать не должны'); } });
+    try {
+      await capture('landing_view');
+    } finally {
+      убрать();
     }
   });
 });

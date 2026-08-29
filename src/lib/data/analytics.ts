@@ -204,8 +204,27 @@ export function posthogConfig(): Record<string, unknown> {
 }
 
 /** Загруженный SDK. Держится, чтобы не грузить чанк на каждое событие. */
-let client: { capture: (event: string, props?: Record<string, unknown>) => void } | null = null;
+type AnalyticsClient = { capture: (event: string, props?: Record<string, unknown>) => void };
+let client: AnalyticsClient | null = null;
 let loading: Promise<void> | null = null;
+
+/**
+ * ⛔ ШОВ ИСКЛЮЧИТЕЛЬНО ДЛЯ ПРОВЕРОК. В продукте не зовётся нигде и звать его неоткуда:
+ * единственный путь к клиенту — загрузка SDK внутри `capture()`.
+ *
+ * 🔴 ЗАЧЕМ ОН ЕСТЬ, И ЭТО ОПЛАЧЕНО ВЕРДИКТОМ. Суд №14, дефект Д2: «Набор стережёт ИНГРЕДИЕНТЫ
+ * и ни разу — БЛЮДО». Три мутации прямо в теле `capture()` — снята проверка контура, снят
+ * белый список на отправке, снята метка прибора — оставили набор ЗЕЛЁНЫМ, потому что набор
+ * `capture()` даже не импортировал. Проверить решение о ОТПРАВКЕ, не подставив того, кому
+ * отправляют, нельзя: без шва пришлось бы грузить чужой SDK в юнит, а это уже не юнит.
+ *
+ * Подставленный клиент отменяет загрузку SDK по построению: `capture()` грузит его только при
+ * `client === null`. Отсюда и вторая половина проверки — что до клиента НЕ ДОШЛО.
+ */
+export function setAnalyticsClientForTests(fake: AnalyticsClient | null): void {
+  client = fake;
+  loading = fake === null ? null : Promise.resolve();
+}
 
 /**
  * Отмечает событие в PostHog. **Никогда не бросает и никогда не заставляет ждать** — тот же
