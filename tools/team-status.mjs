@@ -328,8 +328,8 @@ function selftest() {
   const board = [
     '| Роль | Состояние | Что делаю | Жду | Обновлено |',
     '|---|---|---|---|---|',
-    '| manager | 🔲 не в сети | — | — | — |',
-    '| qa | 🔲 не в сети | — | — | — |',
+    '| manager | 🔴 оффлайн | — | — | — |',
+    '| qa | 🔴 оффлайн | — | — | — |',
     '| Ресурс | Держатель | Взят |',
     '| стенд/e2e/порты (8181·9099·9199·4173) | — свободен — | — |',
   ].join('\n');
@@ -342,7 +342,7 @@ function selftest() {
     ['менеджер чинит чужую', () => authorize('manager', 'qa').ok],
     ['перезапись меняет ровно свою строку', () => {
       const r = replaceRoleRow(board, 'qa', { state: '🟢 свободен', doing: 'жду задач', waiting: '—', stamp: 'T' });
-      return !r.error && r.text.includes('| qa | 🟢 свободен | жду задач | — | T |') && r.text.includes('| manager | 🔲 не в сети |');
+      return !r.error && r.text.includes('| qa | 🟢 свободен | жду задач | — | T |') && r.text.includes('| manager | 🔴 оффлайн |');
     }],
     ['неизвестная роль — отказ', () => !!replaceRoleRow(board, 'ghost', { state: 'x' }).error],
     ['вертикальная черта в тексте не рвёт таблицу', () => {
@@ -534,7 +534,7 @@ function main() {
     if (cmd === 'set') {
       const state = process.argv.includes('--busy') ? '🔴 занят'
         : process.argv.includes('--free') ? '🟢 свободен'
-        : process.argv.includes('--offline') ? '🔲 не в сети' : '🟢 свободен';
+        : process.argv.includes('--offline') ? '🔴 оффлайн' : '🟢 свободен';
       editBoard((t) => replaceRoleRow(t, target, { state, doing: arg('--doing') ?? '—', waiting: arg('--waiting') ?? '—', stamp }));
       console.log(`✅ строка «${target}»: ${state} · ${stamp}`);
     } else {
