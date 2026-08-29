@@ -39,6 +39,7 @@ import {
 	shouldWriteSnapshot,
 	snapshotExitCode,
 	snapshotComplete,
+	incompleteReason,
 } from './lib/yandex-snapshot-core.mjs';
 
 /** Строка выборки в форме первоисточника. Коды — из ЖИВОЙ консоли, см. шапку. */
@@ -309,4 +310,34 @@ test('🔴 совет судьи соблюдён: день БЕЗ файла п
 	// второстепенного счётчика». Запрещена ПЕРЕЗАПИСЬ, а не запись: события не теряются.
 	const complete = snapshotComplete({ historyOk: true, quotaOk: false });
 	assert.equal(shouldWriteSnapshot({ complete, fileExists: false }).write, true);
+});
+
+// ── 🔴 ТЕКСТ ОТКАЗА — ТОЖЕ НАБЛЮДАЕМОЕ ПОВЕДЕНИЕ (замечание 1 вердикта №12 QA) ───────────────
+//
+// Класс назвала судья, и он сильнее своего случая: **правильность текста отказа НЕ следует из
+// правильности кода возврата.** Мутация ловит код и молчит про смысл, поэтому текст собирается
+// функцией и стережётся юнитом, а не пишется строкой на месте вызова.
+// Наблюдение, оплатившее класс: при отказе КВОТЫ прибор говорил «поле queryHistory.error несёт
+// код отказа», а этого поля не было вовсе — статистика пришла целой, код лежал в recrawlQuota.error.
+
+test('🔴 отказ КВОТЫ показывает на recrawlQuota, а НЕ на queryHistory', () => {
+	const текст = incompleteReason({ historyOk: true, quotaOk: false });
+	assert.match(текст, /recrawlQuota\.error/);
+	assert.doesNotMatch(текст, /queryHistory\.error/, 'палец показывал на исправную половину');
+});
+
+test('отказ СТАТИСТИКИ показывает на queryHistory, а не на квоту', () => {
+	const текст = incompleteReason({ historyOk: false, quotaOk: true });
+	assert.match(текст, /queryHistory\.error/);
+	assert.doesNotMatch(текст, /recrawlQuota\.error/);
+});
+
+test('отказали ОБЕ — названы обе, ни одна не проглочена', () => {
+	const текст = incompleteReason({ historyOk: false, quotaOk: false });
+	assert.match(текст, /queryHistory\.error/);
+	assert.match(текст, /recrawlQuota\.error/);
+});
+
+test('полный снимок причины НЕ выдумывает', () => {
+	assert.equal(incompleteReason({ historyOk: true, quotaOk: true }), null);
 });

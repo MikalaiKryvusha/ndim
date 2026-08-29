@@ -68,7 +68,12 @@ import {
 	indicatorsToRows,
 } from './lib/yandex-snapshot-core.mjs';
 import { isoDate, snapshotFileName } from './lib/console-snapshot-core.mjs';
-import { shouldWriteSnapshot, snapshotExitCode, snapshotComplete } from './lib/yandex-snapshot-core.mjs';
+import {
+	shouldWriteSnapshot,
+	snapshotExitCode,
+	snapshotComplete,
+	incompleteReason,
+} from './lib/yandex-snapshot-core.mjs';
 import { settleExit } from './lib/exit-code.mjs';
 
 const DEFAULT_OUT = join('reports', 'CONSOLES');
@@ -246,6 +251,9 @@ async function main(argv) {
 	if (!writeVerdict.write) {
 		console.error(`
 ⛔ ФАЙЛ ДНЯ НЕ ТРОНУТ: ${writeVerdict.why}`);
+		// Тот же класс, что замечание 1 №12: отказ обязан назвать, КАКАЯ половина не приехала,
+		// иначе читающий пойдёт чинить исправную.
+		console.error(`   ${incompleteReason({ historyOk: history.ok, quotaOk: quota.ok })}`);
 		console.error(`   ${file} остался прежним — перезапустите, когда API ответит целиком.`);
 		return snapshotExitCode({ complete });
 	}
@@ -256,7 +264,8 @@ async function main(argv) {
 	// «ЗАПИСАН» и тогда, когда затирала сегодняшний файл, — оператор не видел, что затёр.
 	console.log(`✅ ${existed ? 'ПЕРЕЗАПИСАН' : 'ЗАПИСАН'}: ${file}`);
 	if (existed) console.log('   (повтор дня — прежнее содержимое осталось в истории git)');
-	if (!complete) console.error('   ⚠️ снимок НЕПОЛОН — поле queryHistory.error несёт код отказа');
+	// Текст называет ИМЕННО ту половину, что не приехала, и поле с её кодом (замечание 1 №12).
+	if (!complete) console.error(`   ⚠️ ${incompleteReason({ historyOk: history.ok, quotaOk: quota.ok })}`);
 	return snapshotExitCode({ complete });
 }
 
