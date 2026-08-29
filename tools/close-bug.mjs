@@ -1,0 +1,198 @@
+/**
+ * ЗАКРЫТИЕ ДОКУМЕНТА БАГА — команда, а не привычка.
+ *
+ * ПОЧЕМУ ОНА СУЩЕСТВУЕТ. Путь сдачи в этом проекте механизирован весь, кроме одного шага:
+ * у юнитов есть команда, у ворот команда, у вердикта держатель, у мержа держатель, у
+ * перезапуска ветки команда — а у ЗАКРЫТИЯ документа была только строка в `bugs/README.md`.
+ * Поэтому его пропускали все одинаково: 8 из 8 багов, вылеченных в сменах 7–8, остались с
+ * открытыми документами у четырёх разных ролей (эскалация QA, смена 9). Канон KAIF требует
+ * формы обязательства «команда, шаг или чекбокс» — эта команда и есть та форма.
+ *
+ * ПОЧЕМУ КОМАНДА, А НЕ СТРАЖ-ДЕТЕКТОР. Замер перед постройкой (смена 9) показал: детектор
+ * «фикс уже в main, а документ этого не знает» построить нельзя без гадания — кандидат
+ * «имя бага в коммите, менявшем код» красит 62 документа из 97, а у ШЕСТИ из восьми
+ * заведомо вылеченных багов машинного следа лечения в дереве НЕТ ВОВСЕ. Следа нет именно
+ * потому, что у шага не было механизма. Команда создаёт след, которого не существовало, —
+ * и после неё рассогласование становится невозможным по построению, а не вылавливаемым.
+ *
+ * ЧТО ОНА ОТКАЗЫВАЕТСЯ ДЕЛАТЬ (отказ — половина ценности прибора):
+ *   · закрыть документ БЕЗ доказательства лечения — «чем доказано» спрашивается, а не
+ *     проставляется молча; галочка без улики это ложный [TESTED], худший из наших классов;
+ *   · закрыть документ с неулаженным допущением PENDING: — у допущения к закрытию работы
+ *     обязана быть судьба (подтверждено / опровергнуто / спрошено);
+ *   · закрыть уже закрытый или несуществующий — молчаливое «ничего не делаю» здесь опаснее
+ *     отказа, потому что вызывающий уверен, что закрыл.
+ *
+ * Запуск:  node tools/close-bug.mjs <NNN> --proof "<чем доказано>"
+ * Самотест: node tools/close-bug.mjs --selftest
+ */
+
+import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const DIR = 'bugs';
+
+/**
+ * Видимый штамп момента. НЕ импортируется из `tools/team-status.mjs`, хотя такая же функция
+ * `stampNow` живёт там: у доски нет предохранителя прямого запуска, и импорт выполнил бы её
+ * CLI вместе с `process.exit`. Настоящее лечение — вынести штамп в `tools/lib/`, но это
+ * правка чужого общего прибора; названа Менеджеру, здесь не делается.
+ */
+export function stampNow(d = new Date()) {
+	const p = (n) => String(n).padStart(2, '0');
+	const off = -d.getTimezoneOffset();
+	const sign = off >= 0 ? '+' : '-';
+	const abs = Math.abs(off);
+	return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())} ${sign}${p(Math.floor(abs / 60))}:${p(abs % 60)}`;
+}
+
+/**
+ * Документы по номеру: { open, closed }.
+ *
+ * Границу номера держит проверка приставки `NNN_`, а НЕ граница слова: обратный слеш в
+ * шаблонной строке однажды уже превратился в символ забоя и ослепил правило (`bugs/218`), и
+ * тот же класс поймал сам себя на замере, из которого вырос этот прибор. Обратных слешей
+ * здесь нет намеренно — приставка сравнением строк неуязвима к этому классу.
+ */
+export function findDocs(names, n) {
+	const prefix = `${n}_`;
+	const mine = names.filter((f) => f.startsWith(prefix) && f.endsWith('.md'));
+	return {
+		open: mine.filter((f) => !f.includes('_DONE_')),
+		closed: mine.filter((f) => f.includes('_DONE_')),
+	};
+}
+
+/** Имя закрытого документа: `NNN_slug.md` → `NNN_DONE_slug.md`. */
+export function closedName(open) {
+	const i = open.indexOf('_');
+	return `${open.slice(0, i)}_DONE_${open.slice(i + 1)}`;
+}
+
+/**
+ * Приговор ДО всякой записи: список ПРИЧИН ОТКАЗА. Пустой список = закрывать можно.
+ * Чистая функция — её и судит самотест, а не рабочий путь с файлами и `git mv`.
+ */
+export function judge({ open, closed, text, proof }) {
+	const stop = [];
+	if (open.length === 0 && closed.length > 0) stop.push('документ уже закрыт — закрывать нечего');
+	if (open.length === 0 && closed.length === 0) stop.push('документа с таким номером нет');
+	if (open.length > 1) stop.push(`номеру отвечают ${open.length} открытых документа — разберись, какой`);
+	if (open.length === 1) {
+		if (!proof || !proof.trim()) {
+			stop.push('нет доказательства лечения: «чем доказано» обязателен (--proof "…")');
+		} else if (proof.trim().length < 12) {
+			stop.push('доказательство короче двенадцати знаков — это отписка, а не улика');
+		}
+		if (/^\s*PENDING:/m.test(text || '')) {
+			stop.push('в документе есть неулаженное допущение PENDING: — у него обязана быть судьба до закрытия');
+		}
+	}
+	return stop;
+}
+
+/** Секция статуса по канону `bugs/README.md` (живая форма корпуса русская: 36 против 5). */
+export function statusSection(proof, stamp) {
+	return [
+		'',
+		`## ✅ СТАТУС: DONE (${stamp})`,
+		'',
+		`**Чем доказано:** ${proof.trim()}`,
+		'',
+		'> Закрыт командой `node tools/close-bug.mjs` — шаг механизирован, чтобы документ не отставал от кода.',
+		'',
+	].join('\n');
+}
+
+function selftest() {
+	const GOOD = 'мутация даёт красный, прогон приложен';
+	const cases = [
+		['отказ: доказательства нет вовсе', () =>
+			judge({ open: ['1_x.md'], closed: [], text: '', proof: undefined }).some((s) => s.includes('чем доказано'))],
+		['отказ: доказательство-отписка («ок»)', () =>
+			judge({ open: ['1_x.md'], closed: [], text: '', proof: 'ок' }).some((s) => s.includes('отписка'))],
+		['отказ: неулаженное PENDING', () =>
+			judge({ open: ['1_x.md'], closed: [], text: 'PENDING: не спрошено\n', proof: GOOD }).some((s) => s.includes('PENDING'))],
+		['отказ: документ уже закрыт', () =>
+			judge({ open: [], closed: ['1_DONE_x.md'], text: '', proof: GOOD }).some((s) => s.includes('уже закрыт'))],
+		['отказ: документа нет', () =>
+			judge({ open: [], closed: [], text: '', proof: GOOD }).some((s) => s.includes('номером нет'))],
+		['отказ: номеру отвечают два открытых', () =>
+			judge({ open: ['1_a.md', '1_b.md'], closed: [], text: '', proof: GOOD }).some((s) => s.includes('разберись'))],
+		/*
+		 * 🔑 КОНТРОЛЬ, РАДИ КОТОРОГО САМОТЕСТ НЕ ПУСТОЙ: без него набор оставался бы ЗЕЛЁНЫМ и у
+		 * функции, которая отказывает ВСЕГДА. Проверка, умеющая только краснеть, не различает
+		 * ничего — это «зелёное на непроверенном» наизнанку.
+		 */
+		['ПРОПУСК: чистый случай проходит', () =>
+			judge({ open: ['1_x.md'], closed: [], text: 'обычный текст', proof: GOOD }).length === 0],
+		['граница номера: 21 не подхватывает 210 и 212', () => {
+			const r = findDocs(['21_a.md', '210_b.md', '212_c.md'], '21');
+			return r.open.length === 1 && r.open[0] === '21_a.md';
+		}],
+		['открытые и закрытые различаются', () => {
+			const r = findDocs(['7_a.md', '7_DONE_b.md'], '7');
+			return r.open.length === 1 && r.closed.length === 1;
+		}],
+		['имя закрытого строится верно', () =>
+			closedName('201_guest_card_lies.md') === '201_DONE_guest_card_lies.md'],
+		['секция статуса несёт доказательство', () =>
+			statusSection(GOOD, '2026-08-29 10:40 +03:00').includes(GOOD)],
+		['штамп несёт дату, время и пояс', () =>
+			/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} [+-]\d{2}:\d{2}$/.test(stampNow(new Date()))],
+	];
+
+	let bad = 0;
+	for (const [label, run] of cases) {
+		let ok = false;
+		try {
+			ok = Boolean(run());
+		} catch {
+			ok = false;
+		}
+		if (!ok) bad += 1;
+		console.log(`  ${ok ? '✅' : '❌'} ${label}`);
+	}
+	console.log(`\nпроверок ${cases.length} · провалов ${bad}`);
+	return bad === 0 ? 0 : 1;
+}
+
+function main(argv) {
+	if (argv.includes('--selftest')) return selftest();
+
+	const n = argv.find((a) => /^[0-9]+$/.test(a));
+	const pi = argv.indexOf('--proof');
+	const proof =
+		pi !== -1 && argv[pi + 1] && !argv[pi + 1].startsWith('--') ? argv[pi + 1] : undefined;
+
+	if (!n) {
+		console.error('Запуск: node tools/close-bug.mjs <NNN> --proof "<чем доказано>"   ·   самотест: --selftest');
+		return 1;
+	}
+
+	const names = readdirSync(DIR);
+	const { open, closed } = findDocs(names, n);
+	const text = open.length === 1 ? readFileSync(join(DIR, open[0]), 'utf8') : '';
+	const stop = judge({ open, closed, text, proof });
+
+	if (stop.length) {
+		console.error(`\n🔴 ЗАКРЫТИЕ ОТКЛОНЕНО (bugs/${n}):`);
+		for (const s of stop) console.error(`   · ${s}`);
+		return 1;
+	}
+
+	const from = open[0];
+	const to = closedName(from);
+	writeFileSync(join(DIR, from), text.replace(/\s*$/, '\n') + statusSection(proof, stampNow()), 'utf8');
+	execFileSync('git', ['mv', join(DIR, from), join(DIR, to)], { stdio: 'pipe' });
+
+	console.log(`✅ bugs/${n} закрыт: ${to}`);
+	console.log(`   чем доказано: ${proof.trim()}`);
+	return 0;
+}
+
+const запущенНапрямую =
+	Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (запущенНапрямую) process.exitCode = main(process.argv.slice(2));
