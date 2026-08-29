@@ -1,6 +1,6 @@
 {
   "name": "ndim-space",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "description": "NDim Space — честный поиск похожих людей в многомерном пространстве самооценок",
   "license": "AGPL-3.0-only",
