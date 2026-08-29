@@ -26,7 +26,9 @@ import { existsSync, lstatSync, readdirSync, writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { dirname, basename, join, resolve } from 'node:path';
 
-const ROLES = ['designer', 'qa', 'dev-1', 'dev-2', 'dev-3']; // manager живёт в главной копии — места ему не создаём
+const ROLES = ['designer', 'qa', 'dev-1', 'integrator', 'dev-3']; // manager живёт в главной копии — места ему не создаём
+// ⚠️ Каталог Интегратора может ещё зваться ndim_dev2 (переквалификация 2026-08-28, окно держало
+// каталог при переименовании) — первый шаг новой смены: git worktree move … ndim_integrator.
 const TEAM_DIR_NAME = 'ndim-team';
 
 /* ── Чистые функции (--selftest) ───────────────────────────────────────────────────────── */

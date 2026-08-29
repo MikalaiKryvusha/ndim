@@ -58,6 +58,7 @@ import {
 	positionBands,
 	bandsByDevice,
 } from './lib/console-snapshot-core.mjs';
+import { settleExit } from './lib/exit-code.mjs';
 
 const DEFAULT_OUT = join('reports', 'CONSOLES');
 
@@ -326,10 +327,4 @@ function toRow(entry) {
 	return { keys: [entry.key], ...entry };
 }
 
-main(process.argv.slice(2)).then(
-	(code) => process.exit(code),
-	(error) => {
-		console.error(`🔴 ${error.message}`);
-		process.exit(1);
-	},
-);
+settleExit(main(process.argv.slice(2)));

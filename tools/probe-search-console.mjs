@@ -38,6 +38,7 @@ import {
 	EXPECTED_PROPERTY,
 	API,
 } from './lib/console-auth.mjs';
+import { settleExit } from './lib/exit-code.mjs';
 
 async function main() {
 	const key = consoleReaderKey();
@@ -112,10 +113,4 @@ async function main() {
 	return 0;
 }
 
-main().then(
-	(code) => process.exit(code),
-	(error) => {
-		console.error(`🔴 ${error.message}`);
-		process.exit(1);
-	},
-);
+settleExit(main());
