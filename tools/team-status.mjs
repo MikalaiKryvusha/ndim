@@ -138,6 +138,74 @@ export function replaceRoleRow(text, role, { state, doing, waiting, stamp }) {
   return { text: lines.join(eol) };
 }
 
+/* ── ЖДУНЫ: кто стоит и ВЕДУТСЯ ЛИ работы, результата которых он ждёт ─────────────────────
+ *
+ * 🔴 ЗАКАЗ ВЛАДЕЛЬЦА 2026-08-29, дословно: «*и ждунам нужно помогать, как минимум убедиться,
+ * ведутся ли те работы, которых результатов он ждёт*».
+ *
+ * Состояние «🟡 жду, заблокирован» само по себе только НАЗЫВАЕТ остановку — оно её не лечит.
+ * Роль, поставившая жёлтый круг, ушла ждать и больше ничего не сделает; если работа, которой
+ * она ждёт, не ведётся никем, стояние длится до конца смены и обнаруживается на её закрытии.
+ * Поэтому у Менеджера есть команда, отвечающая на вопрос владельца механически.
+ *
+ * 🔑 ГРАНИЦА, НАЗВАННАЯ ЧЕСТНО: машина судит НЕ «делается ли именно то, чего он ждёт» — это
+ * суждение, и оно остаётся Менеджеру. Машина отвечает на более узкий и полностью проверяемый
+ * вопрос: **есть ли вообще кому это делать**. Три ответа, и каждый — настоящий:
+ *   · ждун не назвал роль → проверить нечем, и это дефект самой записи, а не команды;
+ *   · названная роль свободна или оффлайн → работа НЕ ведётся, ждун стоит впустую;
+ *   · названная роль в работе → есть кому; совпадение предмета сверяет Менеджер глазами.
+ *
+ * ⚠️ Роль в колонке «Жду» называется ИДЕНТИФИКАТОРОМ (`qa`, `dev-1`, `integrator`), а не
+ * русским словом: «жду вердикта QA-инженера» машине не адресат. Правило — в манифесте; здесь
+ * оно не угадывается склонениями, потому что угадывание дало бы ложное «работы ведутся».
+ */
+const TEAM_ROLES = ['manager', 'designer', 'qa', 'integrator', 'dev-1', 'dev-3'];
+const STATE_BLOCKED = '🟡 жду, заблокирован';
+const STATE_WORKING = '🔵 в работе';
+
+/** Разобрать доску в строки ролей: { role, state, doing, waiting, stamp }. */
+export function readRoleRows(text) {
+  return text.split(/\r?\n/).reduce((acc, line) => {
+    const cells = line.split('|');
+    if (cells.length < 7) return acc;
+    const role = cells[1].trim();
+    if (!TEAM_ROLES.includes(role)) return acc;
+    acc.push({ role, state: cells[2].trim(), doing: cells[3].trim(), waiting: cells[4].trim(), stamp: cells[5].trim() });
+    return acc;
+  }, []);
+}
+
+/**
+ * Вердикт по каждому ждуну: ведётся ли работа, которой он ждёт.
+ *
+ * Возвращает { ждуны: [...], тревоги: N } — тревога это 🔴, то есть стояние впустую.
+ */
+export function auditWaiting(text) {
+  const rows = readRoleRows(text);
+  const state = new Map(rows.map((r) => [r.role, r.state]));
+  const ждуны = rows.filter((r) => r.state === STATE_BLOCKED).map((r) => {
+    /*
+     * Идентификатор ищется по ГРАНИЦЕ СЛОВА, и границы записаны через `\p{L}`, а не `\b`:
+     * колонка «Жду» русская, а `\b` в JS определён через ASCII и рядом с кириллицей молчит
+     * (страж `verify-cyrillic-word-boundary`, канон «самотест русской проверки»).
+     */
+    const названы = TEAM_ROLES.filter((role) =>
+      role !== r.role && new RegExp(`(?<![\\p{L}\\d-])${role}(?![\\p{L}\\d-])`, 'iu').test(r.waiting));
+    if (названы.length === 0) {
+      return { ...r, вердикт: 'адресат не назван', тревога: true,
+        совет: 'ждун не назвал роль идентификатором в колонке «Жду» — проверить нечем; попроси назвать' };
+    }
+    const мёртвые = названы.filter((role) => state.get(role) !== STATE_WORKING);
+    if (мёртвые.length > 0) {
+      return { ...r, вердикт: 'работа НЕ ведётся', тревога: true, названы,
+        совет: `${мёртвые.map((role) => `${role} — ${state.get(role) ?? 'нет строки'}`).join(' · ')}: ждать нечего, разбери затор` };
+    }
+    return { ...r, вердикт: 'работа ведётся', тревога: false, названы,
+      совет: `${названы.map((role) => `${role} — ${state.get(role)}`).join(' · ')}: сверь ПРЕДМЕТ глазами — это уже суждение` };
+  });
+  return { ждуны, тревоги: ждуны.filter((ж) => ж.тревога).length };
+}
+
 /**
  * Держатель, прочитанный из строки таблицы замка. `null` = свободен.
  *
@@ -433,6 +501,52 @@ function selftest() {
       return !!r.error && r.state === undefined && r.error.includes('--busy') && r.error.includes('--blocked');
     }],
 
+    /* ── ЖДУНЫ: ведутся ли работы, результата которых ждут ──────────────────────────────
+     *
+     * Заказ владельца 2026-08-29: «*ждунам нужно помогать, как минимум убедиться, ведутся ли
+     * те работы, которых результатов он ждёт*». Доска-фикстура строится ЗДЕСЬ, а не берётся
+     * общая: у общей все роли оффлайн, и проверка «работа ведётся» не смогла бы позеленеть
+     * НИ ПРИ КАКОЙ мутации — вопрос 3 лестницы («мог ли материал дать проверке упасть»).
+     */
+
+    ['ждунов нет — тревог нет', () => auditWaiting(board).ждуны.length === 0 && auditWaiting(board).тревоги === 0],
+    ['ждёт от РАБОТАЮЩЕЙ роли — работа ведётся, тревоги нет', () => {
+      const t = replaceRoleRow(replaceRoleRow(board, 'qa', { state: STATE_BLOCKED, doing: 'суд', waiting: 'мержа от manager', stamp: 'T' }).text,
+        'manager', { state: STATE_WORKING, doing: 'мержу', waiting: '—', stamp: 'T' }).text;
+      const a = auditWaiting(t);
+      return a.ждуны.length === 1 && a.тревоги === 0 && a.ждуны[0].вердикт === 'работа ведётся';
+    }],
+    /*
+     * 🔴 ГЛАВНЫЙ СЛУЧАЙ — тот, ради которого владелец правило и назвал: роль стоит, а тот, от
+     * кого она ждёт, не работает. До этой команды такое состояние доска показывала как две
+     * независимые строки, и никто их не складывал.
+     */
+    ['ждёт от НЕработающей роли — 🔴 работа НЕ ведётся', () => {
+      const t = replaceRoleRow(board, 'qa', { state: STATE_BLOCKED, doing: 'суд', waiting: 'мержа от manager', stamp: 'T' }).text;
+      const a = auditWaiting(t);
+      return a.тревоги === 1 && a.ждуны[0].вердикт === 'работа НЕ ведётся' && a.ждуны[0].совет.includes('оффлайн');
+    }],
+    ['ждун не назвал роль — 🔴 проверить нечем', () => {
+      const t = replaceRoleRow(board, 'qa', { state: STATE_BLOCKED, doing: 'суд', waiting: 'когда починят стенд', stamp: 'T' }).text;
+      const a = auditWaiting(t);
+      return a.тревоги === 1 && a.ждуны[0].вердикт === 'адресат не назван';
+    }],
+    /*
+     * 🔑 ГРАНИЦА СЛОВА РЯДОМ С КИРИЛЛИЦЕЙ: колонка «Жду» русская. `\b` тут молчит (страж
+     * verify-cyrillic-word-boundary), поэтому образец собран на `\p{L}`. Случай проверяет обе
+     * стороны: настоящее вхождение находится, а кусок чужого слова — нет.
+     */
+    ['идентификатор роли ловится в русском тексте и не ловится куском слова', () => {
+      const живой = replaceRoleRow(board, 'qa', { state: STATE_BLOCKED, doing: 'd', waiting: 'жду вердикта от manager по ветке', stamp: 'T' }).text;
+      const мнимый = replaceRoleRow(board, 'qa', { state: STATE_BLOCKED, doing: 'd', waiting: 'жду managerской отмашки', stamp: 'T' }).text;
+      return auditWaiting(живой).ждуны[0].названы?.includes('manager') === true
+        && auditWaiting(мнимый).ждуны[0].вердикт === 'адресат не назван';
+    }],
+    ['ждун не считает адресатом САМОГО СЕБЯ', () => {
+      const t = replaceRoleRow(board, 'qa', { state: STATE_BLOCKED, doing: 'd', waiting: 'жду, пока qa освободит стенд', stamp: 'T' }).text;
+      return auditWaiting(t).ждуны[0].вердикт === 'адресат не назван';
+    }],
+
     /* ── МЕСТА СТЕНДА: три за столом, адрес выводится из роли ───────────────────────────── */
 
     ['место берётся свободным и НЕСЁТ АДРЕС слота роли', () => {
@@ -609,6 +723,22 @@ function main() {
   if (process.argv.includes('--selftest')) selftest();
   else if (cmd === 'show') {
     console.log(readFileSync(join(mainRepoRoot(), BOARD_NAME), 'utf8'));
+  } else if (cmd === 'waiting') {
+    /*
+     * Обход ждунов — обязанность Менеджера (заказ владельца, разбор у `auditWaiting`).
+     * Код возврата 1 при тревоге: команда должна годиться в скрипт и в будильник смены, а не
+     * только в глаза. Молчаливый ноль на роли, стоящей впустую, был бы ложным зелёным.
+     */
+    const { ждуны, тревоги } = auditWaiting(readFileSync(join(mainRepoRoot(), BOARD_NAME), 'utf8'));
+    if (ждуны.length === 0) { console.log('✅ ждунов нет: ни одна роль не стоит заблокированной'); process.exit(0); }
+    console.log(`ЖДУНЫ — ${ждуны.length}, из них стоят впустую ${тревоги}\n`);
+    for (const ж of ждуны) {
+      console.log(`${ж.тревога ? '🔴' : '✅'} ${ж.role} · с ${ж.stamp}`);
+      console.log(`   ждёт: ${ж.waiting}`);
+      console.log(`   ${ж.вердикт} — ${ж.совет}\n`);
+    }
+    if (тревоги > 0) console.log('🔴 Менеджер: ждуну нужно ПОМОЧЬ, а не оставить ждать (манифест → Статус-доска).');
+    process.exit(тревоги > 0 ? 1 : 0);
   } else if (cmd === 'set' || cmd === 'lock-stand' || cmd === 'unlock-stand') {
     const caller = callerRole();
     const target = arg('--role') ?? caller;
@@ -662,7 +792,8 @@ function main() {
       });
     }
   } else {
-    console.log('команды: set [--busy|--free|--blocked|--offline] [--doing "…"] [--waiting "…"] [--role <р>] · lock-stand · unlock-stand · show · --selftest');
+    console.log('команды: set [--busy|--free|--blocked|--offline] [--doing "…"] [--waiting "…"] [--role <р>] · lock-stand · unlock-stand · show · waiting · --selftest');
+    console.log('waiting — обход ждунов: ведутся ли работы, результата которых они ждут (код 1, если кто-то стоит впустую)');
     console.log('состояния: 🔵 в работе (--busy) · 🟢 свободен (--free) · 🟡 жду, заблокирован (--blocked, ждёшь коллегу) · 🔴 оффлайн (--offline)');
     process.exit(cmd ? 1 : 0);
   }
