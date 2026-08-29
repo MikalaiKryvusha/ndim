@@ -25,6 +25,7 @@
 import { existsSync, lstatSync, readdirSync, writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { dirname, basename, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const ROLES = ['designer', 'qa', 'dev-1', 'integrator', 'dev-3']; // manager живёт в главной копии — места ему не создаём
 // ⚠️ Каталог Интегратора может ещё зваться ndim_dev2 (переквалификация 2026-08-28, окно держало
@@ -159,75 +160,98 @@ function selftest() {
   process.exit(fail ? 1 : 0);
 }
 
-const [cmd, roleArg] = process.argv.slice(2);
-if (process.argv.includes('--selftest')) selftest();
-else if (cmd === 'create') {
-  const main = mainRepoRoot();
-  if (roleArg === '--all' || process.argv.includes('--all')) for (const r of ROLES) createOne(main, r);
-  else if (roleArg) createOne(main, roleArg);
-  else { console.error('⛔ create: назови роль или --all'); process.exit(1); }
-} else if (cmd === 'list') {
-  const main = mainRepoRoot();
-  console.log(sh('git worktree list', { cwd: main }));
-  for (const r of ROLES) {
-    const wt = workplaceFor(main, r);
-    if (!existsSync(wt)) { console.log(`🔲 ${r}: не развёрнут`); continue; }
-    const behind = sh(`git rev-list --count ${branchFor(r)}..main`, { cwd: main });
-    const nm = existsSync(join(wt, 'node_modules')) ? 'node_modules ✅' : 'node_modules ❌';
-    console.log(`✅ ${r}: ${wt} [${branchFor(r)}] · отстаёт от main на ${behind} · ${nm}`);
-  }
-} else if (cmd === 'relocate') {
-  // Переезд каталогов на имена ndim_<роль> (правка владельца 2026-08-21: приписка нужна
-  // и в заголовках окон VS Code). Требует ЗАКРЫТЫХ окон ролей: Windows держит открытый
-  // рабочий каталог, и git worktree move падает Permission denied.
-  const main = mainRepoRoot();
-  let moved = 0, skipped = 0, failed = 0;
-  for (const r of ROLES) {
-    const from = legacyWorkplaceFor(main, r);
-    const to = workplaceFor(main, r);
-    if (existsSync(to)) { console.log(`✅ ${r}: уже на новом месте — ${to}`); skipped++; continue; }
-    if (!existsSync(from)) { console.log(`🔲 ${r}: не развёрнут — нечего переносить`); skipped++; continue; }
-    try {
-      sh(`git worktree move "${from}" "${to}"`, { cwd: main });
-      console.log(`✅ ${r}: ${from} → ${to}`);
-      moved++;
-    } catch (e) {
-      console.error(`⛔ ${r}: переезд не удался — ${String(e.message).split('\n')[0]}`);
-      console.error(`   Каталог заперт открытым окном VS Code? Закрой окно роли и повтори.`);
-      failed++;
+/**
+ * 🔴 ПРЕДОХРАНИТЕЛЬ «ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН» (`ideas/43`; страж класса — `verify-import-safety.mjs`).
+ *
+ * Парк рабочих мест — точный близнец статус-доски по устройству, и дефект у него был тот же:
+ * импорт ради экспортов уходил в последнюю ветку чейна, печатал подсказку и звал
+ * `process.exit(0)`, убивая чужой процесс кодом успеха. У доски это замерено (`team-status`,
+ * смена 10) и оказалось дороже, чем считалось: такой прибор нельзя покрыть юнитом — файл
+ * умирает до первого утверждения, а `node --test` засчитывает его пройденным.
+ *
+ * Форма выражения сверена на трёх способах вызова (Windows, node 24): абсолютный путь с
+ * обратными слэшами, относительный и со СТРОЧНОЙ буквой диска — совпали во всех трёх.
+ * Снимать эту сверку нельзя: разъедься формы регистром диска, парк молча перестал бы
+ * работать у всех ролей.
+ *
+ * ⛔ Семантика `reset` (`bugs/168`) НЕ тронута — правка чисто входная.
+ */
+const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+// Имя не `main`: внутри веток уже живёт `const main = mainRepoRoot()` — главная копия.
+function выполнить() {
+  const [cmd, roleArg] = process.argv.slice(2);
+  if (process.argv.includes('--selftest')) selftest();
+  else if (cmd === 'create') {
+    const main = mainRepoRoot();
+    if (roleArg === '--all' || process.argv.includes('--all')) for (const r of ROLES) createOne(main, r);
+    else if (roleArg) createOne(main, roleArg);
+    else { console.error('⛔ create: назови роль или --all'); process.exit(1); }
+  } else if (cmd === 'list') {
+    const main = mainRepoRoot();
+    console.log(sh('git worktree list', { cwd: main }));
+    for (const r of ROLES) {
+      const wt = workplaceFor(main, r);
+      if (!existsSync(wt)) { console.log(`🔲 ${r}: не развёрнут`); continue; }
+      const behind = sh(`git rev-list --count ${branchFor(r)}..main`, { cwd: main });
+      const nm = existsSync(join(wt, 'node_modules')) ? 'node_modules ✅' : 'node_modules ❌';
+      console.log(`✅ ${r}: ${wt} [${branchFor(r)}] · отстаёт от main на ${behind} · ${nm}`);
     }
+  } else if (cmd === 'relocate') {
+    // Переезд каталогов на имена ndim_<роль> (правка владельца 2026-08-21: приписка нужна
+    // и в заголовках окон VS Code). Требует ЗАКРЫТЫХ окон ролей: Windows держит открытый
+    // рабочий каталог, и git worktree move падает Permission denied.
+    const main = mainRepoRoot();
+    let moved = 0, skipped = 0, failed = 0;
+    for (const r of ROLES) {
+      const from = legacyWorkplaceFor(main, r);
+      const to = workplaceFor(main, r);
+      if (existsSync(to)) { console.log(`✅ ${r}: уже на новом месте — ${to}`); skipped++; continue; }
+      if (!existsSync(from)) { console.log(`🔲 ${r}: не развёрнут — нечего переносить`); skipped++; continue; }
+      try {
+        sh(`git worktree move "${from}" "${to}"`, { cwd: main });
+        console.log(`✅ ${r}: ${from} → ${to}`);
+        moved++;
+      } catch (e) {
+        console.error(`⛔ ${r}: переезд не удался — ${String(e.message).split('\n')[0]}`);
+        console.error(`   Каталог заперт открытым окном VS Code? Закрой окно роли и повтори.`);
+        failed++;
+      }
+    }
+    console.log(`\nИтог: переехало ${moved} · пропущено ${skipped} · отказов ${failed}`);
+    if (!failed) console.log('Проверка: node tools/team-workplaces.mjs list');
+    process.exitCode = failed ? 1 : 0;
+  } else if (cmd === 'reset') {
+    const main = mainRepoRoot();
+    const v = validateRole(roleArg);
+    if (!v.ok) { console.error(`⛔ ${v.reason}`); process.exit(1); }
+    const wt = workplaceFor(main, roleArg);
+    if (sh('git status --porcelain', { cwd: wt }) !== '') {
+      console.error(`⛔ ${roleArg}: дерево грязное — коммит в ветку роли прежде перезапуска`);
+      process.exit(1);
+    }
+    sh(`git reset --hard main`, { cwd: wt });
+    console.log(`✅ ${roleArg}: ветка ${branchFor(roleArg)} перезапущена от текущего main (${sh('git rev-parse --short main', { cwd: main })})`);
+  } else if (cmd === 'remove') {
+    const main = mainRepoRoot();
+    const v = validateRole(roleArg);
+    if (!v.ok) { console.error(`⛔ ${v.reason}`); process.exit(1); }
+    const wt = workplaceFor(main, roleArg);
+    if (!existsSync(wt)) { console.log(`🔲 ${roleArg}: рабочего места нет — убирать нечего`); process.exit(0); }
+    const dirty = sh('git status --porcelain', { cwd: wt }) !== '';
+    const d = removalDecision({ dirty, force: process.argv.includes('--force') });
+    if (!d.ok) { console.error(`⛔ ${roleArg}: ${d.reason}`); process.exit(1); }
+    // EXP-0175: junction снимается ДО любого рекурсивного удаления.
+    for (const link of findReparse(wt)) {
+      console.log(`   снимаю reparse-точку: ${link}`);
+      execSync(`cmd /c rmdir "${link}"`);
+    }
+    sh(`git worktree remove --force "${wt}"`, { cwd: main });
+    console.log(`✅ ${roleArg}: рабочее место убрано; ветка ${branchFor(roleArg)} сохранена (коммиты — ценность)`);
+  } else {
+    console.log('команды: create <роль>|--all · list · relocate · reset <роль> · remove <роль> [--force] · --selftest');
+    process.exit(cmd ? 1 : 0);
   }
-  console.log(`\nИтог: переехало ${moved} · пропущено ${skipped} · отказов ${failed}`);
-  if (!failed) console.log('Проверка: node tools/team-workplaces.mjs list');
-  process.exitCode = failed ? 1 : 0;
-} else if (cmd === 'reset') {
-  const main = mainRepoRoot();
-  const v = validateRole(roleArg);
-  if (!v.ok) { console.error(`⛔ ${v.reason}`); process.exit(1); }
-  const wt = workplaceFor(main, roleArg);
-  if (sh('git status --porcelain', { cwd: wt }) !== '') {
-    console.error(`⛔ ${roleArg}: дерево грязное — коммит в ветку роли прежде перезапуска`);
-    process.exit(1);
-  }
-  sh(`git reset --hard main`, { cwd: wt });
-  console.log(`✅ ${roleArg}: ветка ${branchFor(roleArg)} перезапущена от текущего main (${sh('git rev-parse --short main', { cwd: main })})`);
-} else if (cmd === 'remove') {
-  const main = mainRepoRoot();
-  const v = validateRole(roleArg);
-  if (!v.ok) { console.error(`⛔ ${v.reason}`); process.exit(1); }
-  const wt = workplaceFor(main, roleArg);
-  if (!existsSync(wt)) { console.log(`🔲 ${roleArg}: рабочего места нет — убирать нечего`); process.exit(0); }
-  const dirty = sh('git status --porcelain', { cwd: wt }) !== '';
-  const d = removalDecision({ dirty, force: process.argv.includes('--force') });
-  if (!d.ok) { console.error(`⛔ ${roleArg}: ${d.reason}`); process.exit(1); }
-  // EXP-0175: junction снимается ДО любого рекурсивного удаления.
-  for (const link of findReparse(wt)) {
-    console.log(`   снимаю reparse-точку: ${link}`);
-    execSync(`cmd /c rmdir "${link}"`);
-  }
-  sh(`git worktree remove --force "${wt}"`, { cwd: main });
-  console.log(`✅ ${roleArg}: рабочее место убрано; ветка ${branchFor(roleArg)} сохранена (коммиты — ценность)`);
-} else {
-  console.log('команды: create <роль>|--all · list · relocate · reset <роль> · remove <роль> [--force] · --selftest');
-  process.exit(cmd ? 1 : 0);
 }
+
+if (ЗАПУЩЕН_НАПРЯМУЮ) выполнить();
