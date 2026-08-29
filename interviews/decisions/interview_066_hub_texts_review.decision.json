@@ -2,13 +2,39 @@
 	"kind": "interview",
 	"document": "interviews/interview_066_hub_texts_review.md",
 	"by": "Николай Кривуша",
-	"at": "2026-08-29T18:55:57.691Z",
+	"at": "2026-08-29T19:24:51.171Z",
 	"comment": "",
 	"answers": {
 		"В1": {
 			"choice": "А",
 			"text": "",
 			"comment": ""
+		},
+		"В2": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В3": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В4": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
 		}
-	}
+	},
+	"artifacts": {},
+	"история": [
+		{
+			"by": "Николай Кривуша",
+			"at": "2026-08-29T18:55:57.691Z"
+		},
+		{
+			"by": "Николай Кривуша",
+			"at": "2026-08-29T18:58:07.739Z"
+		}
+	]
 }
