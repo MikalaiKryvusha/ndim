@@ -15,7 +15,7 @@
  * строки объявлено флагом `--role` и работает только из главной копии.
  *
  * Команды:
- *   node tools/team-status.mjs set [--busy|--free] [--doing "…"] [--waiting "…"] [--role <р>]
+ *   node tools/team-status.mjs set [--busy|--free|--blocked|--offline] [--doing "…"] [--waiting "…"] [--role <р>]
  *   node tools/team-status.mjs lock-stand | unlock-stand [--place N] [--role <р>]
  *
  * 🆕 ТРИ СТРОКИ ЗАМКА — ПО СТРОКЕ НА СТЕНД (слово владельца 2026-08-22, дословно: «*а тут
@@ -322,6 +322,40 @@ function arg(name) {
   return i !== -1 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : undefined;
 }
 
+/* ── СЛОВАРЬ СОСТОЯНИЙ ДОСКИ — одно место на весь инструмент ──────────────────────────────
+ *
+ * Слова принадлежат владельцу, не агенту, и правятся только его словом:
+ *   · 2026-08-29: «*рабочий статус переделываем с занят с красным кругом, на в работе с синим
+ *     кругом*» + прощальный «оффлайн» с красным кругом при закрытии смены;
+ *   · 2026-08-29 (позже, тем же днём): «*новый статус для командной доски: жду, заблокирован и
+ *     жёлтый круг – агент ждёт чегото от коллег*» — отсюда «🟡 жду».
+ *
+ * 🔑 ПОЧЕМУ ЭТО ОТДЕЛЬНОЕ СОСТОЯНИЕ, А НЕ ТЕКСТ В КОЛОНКЕ «Жду». Колонка отвечает на вопрос
+ * «чего именно жду» и читается ПОСЛЕ того, как взгляд уже выбрал строку; состояние с цветом
+ * отвечает на вопрос «кому сейчас нужен я» и читается ПЕРВЫМ, по кругу. Роль, стоящая под
+ * «🔵 в работе» с текстом в колонке «Жду», выглядит занятой — а на деле стоит и не двигается,
+ * пока коллега не ответит. Ровно эту разницу владелец и назвал.
+ *
+ * 🔴 ДВА СОСТОЯНИЯ РАЗОМ — ОТКАЗ, А НЕ ПОБЕДА ПОРЯДКА В КОДЕ. Прежняя цепочка тернарников
+ * молча брала первое подходящее: `set --busy --blocked` записал бы «в работе», то есть НЕ то,
+ * что человек сказал. Родня решения — громкий отказ на снятый флаг `--slot` ниже.
+ */
+const BOARD_STATES = [
+  ['--busy', '🔵 в работе'],
+  ['--free', '🟢 свободен'],
+  ['--blocked', '🟡 жду'],
+  ['--offline', '🔴 оффлайн'],
+];
+const BOARD_STATE_DEFAULT = '🟢 свободен';
+
+function stateFromFlags(argv) {
+  const named = BOARD_STATES.filter(([flag]) => argv.includes(flag));
+  if (named.length > 1) {
+    return { error: `состояний названо ${named.length} (${named.map(([f]) => f).join(' ')}), а строка доски несёт одно — назови одно` };
+  }
+  return { state: named.length === 1 ? named[0][1] : BOARD_STATE_DEFAULT };
+}
+
 /* ── Самопроверка (доказательства отказов и перезаписи — без git и диска) ─────────────── */
 
 function selftest() {
@@ -349,6 +383,36 @@ function selftest() {
       const r = replaceRoleRow(board, 'qa', { state: 'a|b', doing: 'c|d', waiting: '—', stamp: 'T' });
       return !r.error && !r.text.includes('a|b');
     }],
+    /* ── СЛОВАРЬ СОСТОЯНИЙ: слова владельца и их круги ──────────────────────────────────
+     *
+     * Заведено 2026-08-29 вместе с состоянием «🟡 жду»: до этого цепочка выбора состояния не
+     * проверялась НИЧЕМ — самотест знал про роли, строки и места, а про сам словарь молчал.
+     */
+
+    ['«жду» — жёлтый круг (слово владельца: заблокирован, ждёт коллег)', () => stateFromFlags(['node', 'x', 'set', '--blocked']).state === '🟡 жду'],
+    ['рабочее — синий круг, прощальное — красный, свободное — зелёное', () => {
+      const s = (f) => stateFromFlags(['node', 'x', 'set', f]).state;
+      return s('--busy') === '🔵 в работе' && s('--offline') === '🔴 оффлайн' && s('--free') === '🟢 свободен';
+    }],
+    ['без флага — свободен', () => stateFromFlags(['node', 'x', 'set', '--doing', 'что-то']).state === BOARD_STATE_DEFAULT],
+    /*
+     * 🔑 Круги обязаны РАЗЛИЧАТЬСЯ: доска читается взглядом по цвету, и два состояния под одним
+     * кругом сливаются в одно — состояние есть, а разницы не видно. Слова тоже уникальны.
+     */
+    ['у каждого состояния свой круг и своё слово', () => {
+      const circles = BOARD_STATES.map(([, label]) => [...label][0]);
+      const words = BOARD_STATES.map(([, label]) => label);
+      return new Set(circles).size === BOARD_STATES.length && new Set(words).size === BOARD_STATES.length;
+    }],
+    /*
+     * 🔴 Два состояния разом — ОТКАЗ. Без этого случая порядок объявления в `BOARD_STATES` тихо
+     * решал бы за человека, и `set --busy --blocked` записал бы «в работе».
+     */
+    ['два состояния разом — отказ, а не первое подходящее', () => {
+      const r = stateFromFlags(['node', 'x', 'set', '--busy', '--blocked']);
+      return !!r.error && r.state === undefined && r.error.includes('--busy') && r.error.includes('--blocked');
+    }],
+
     /* ── МЕСТА СТЕНДА: три за столом, адрес выводится из роли ───────────────────────────── */
 
     ['место берётся свободным и НЕСЁТ АДРЕС слота роли', () => {
@@ -532,11 +596,10 @@ function main() {
     if (!auth.ok) { console.error(`⛔ ${auth.reason}`); process.exit(1); }
     const stamp = stampNow();
     if (cmd === 'set') {
-      // Словарь состояний — слово владельца 2026-08-29: рабочий статус «🔵 в работе»
-      // (прежнее «🔴 занят»), прощальный при закрытии смены «🔴 оффлайн».
-      const state = process.argv.includes('--busy') ? '🔵 в работе'
-        : process.argv.includes('--free') ? '🟢 свободен'
-        : process.argv.includes('--offline') ? '🔴 оффлайн' : '🟢 свободен';
+      // Словарь состояний живёт ОДНИМ местом — `BOARD_STATES` выше (слова владельца).
+      const chosen = stateFromFlags(process.argv);
+      if (chosen.error) { console.error(`⛔ ${chosen.error}`); process.exit(1); }
+      const state = chosen.state;
       editBoard((t) => replaceRoleRow(t, target, { state, doing: arg('--doing') ?? '—', waiting: arg('--waiting') ?? '—', stamp }));
       console.log(`✅ строка «${target}»: ${state} · ${stamp}`);
     } else {
@@ -579,7 +642,8 @@ function main() {
       });
     }
   } else {
-    console.log('команды: set [--busy|--free|--offline] [--doing "…"] [--waiting "…"] [--role <р>] · lock-stand · unlock-stand · show · --selftest');
+    console.log('команды: set [--busy|--free|--blocked|--offline] [--doing "…"] [--waiting "…"] [--role <р>] · lock-stand · unlock-stand · show · --selftest');
+    console.log('состояния: 🔵 в работе (--busy) · 🟢 свободен (--free) · 🟡 жду (--blocked, ждёшь коллегу) · 🔴 оффлайн (--offline)');
     process.exit(cmd ? 1 : 0);
   }
 }
