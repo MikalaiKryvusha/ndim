@@ -32,7 +32,11 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { breadthWarning, branchHonesty, rowIsNew, hitsIn, ДОЛЯ_ШИРОКОГО } from './where-cured.mjs';
+import {
+  breadthWarning, branchHonesty, rowIsNew, hitsIn, ДОЛЯ_ШИРОКОГО,
+  REFS_COMMAND, GREP_PREFIX, веткиИзВывода, чужиеВетки, тихийОтказ, кПоказу,
+  СЫРЬЁ_НА_ВЕТКУ, НОВОСТЕЙ_НА_ВЕТКУ,
+} from './where-cured.mjs';
 
 const ЗДЕСЬ = dirname(fileURLToPath(import.meta.url));
 const ПРИБОР = join(ЗДЕСЬ, 'where-cured.mjs');
@@ -124,4 +128,60 @@ test('🔑 КОНТРОЛЬ: пустой запрос не совпадает �
   const образец = '/**\n * Класс CRLF объясняется здесь.\n */\n';
   assert.equal(hitsIn(образец, '').length, 0, 'иначе прибор вывалил бы дерево');
   assert.equal(hitsIn(образец, 'crlf').length, 1, 'иначе набор судил бы мёртвый признак');
+});
+
+
+/* ── ОТСОЕДИНЁННОЕ ДЕРЕВО И ПОТОЛКИ (вердикт №30 + находка живым контролем) ───────────────
+ *
+ * 🔴 ПОЧЕМУ ЭТО В ЮНИТЕ, А НЕ ТОЛЬКО В САМОТЕСТЕ: дефект жил неделю именно потому, что
+ * проявляется ТОЛЬКО при запуске из отсоединённого дерева — рабочей ситуации судьи. Самотест
+ * прибора не зовёт никто (ворот у него нет намеренно), значит регрессия вернулась бы молча.
+ * Глоб `tools/*.test.mjs` стоит первой записью guards — это и есть вызов.
+ */
+
+test('🔴 список берётся у for-each-ref, а не у git branch', () => {
+  assert.equal(REFS_COMMAND[0], 'for-each-ref', 'git branch печатает строку про сам HEAD в отсоединённом дереве');
+  assert.ok(REFS_COMMAND.includes('refs/heads/'), 'список ограничен настоящими ветками');
+  assert.ok(!REFS_COMMAND.includes('branch'), 'возврат к git branch — регрессия дефекта №30');
+  assert.deepEqual([...GREP_PREFIX], ['-c', 'core.quotepath=false'], 'страховка от экранирования путей');
+});
+
+test('🔴 ОБА ЖИВЫХ ЛИТЕРАЛА отсеиваются — какой придёт, решает наличие рефлога', () => {
+  // Замер: рефлог ЕСТЬ → «(HEAD detached at <sha>)» · рефлога НЕТ → «(no branch)».
+  // Признак не на литерал: настоящая ссылка обязана нести objectname из 40 hex.
+  const вывод = [
+    '(no branch)',
+    '(HEAD detached at a4e53a0)',
+    `main\t${'a'.repeat(40)}`,
+    `ndim_dev3\t${'b'.repeat(40)}`,
+  ].join('\n');
+  assert.deepEqual(веткиИзВывода(вывод).map((b) => b.name), ['main', 'ndim_dev3']);
+  assert.equal(веткиИзВывода('main\tнеsha').length, 0, 'имя без objectname ссылкой не является');
+});
+
+test('🔴 своя ветка отсекается ПО SHA — в отсоединённом дереве имени у HEAD нет', () => {
+  const ветки = [{ name: 'main', sha: 'a'.repeat(40) }, { name: 'сосед', sha: 'b'.repeat(40) }];
+  assert.deepEqual(чужиеВетки(ветки, 'a'.repeat(40)).map((b) => b.name), ['сосед']);
+  assert.equal(чужиеВетки(ветки, '').length, 2, '🔑 HEAD не разрешился — не отсекаем ничего: лишнее лучше потерянного');
+});
+
+test('🔴 молчим ТОЛЬКО на коде 1: «не найдено» — ответ, 128 — поломка', () => {
+  assert.equal(тихийОтказ({ status: 1 }), true, 'git grep не нашёл — это ответ');
+  assert.equal(тихийОтказ({ status: 128 }), false, 'ветка не разрешилась — ложное «нигде», молчать нельзя');
+  assert.equal(тихийОтказ({}), false, 'запуск не состоялся — тоже не повод молчать');
+  assert.equal(тихийОтказ(undefined), false);
+});
+
+test('🔴 потолок режет ОТВЕТ, а не материал: новость с 9-й позиции доезжает', () => {
+  // Живой случай: у соседа лечение стояло 9-м из 21, прежний единственный потолок брал первые
+  // четыре — все четыре общие с моим деревом, и прибор печатал «0 новых» при существующем новом.
+  assert.ok(СЫРЬЁ_НА_ВЕТКУ > 21, 'сырьё берётся с запасом, отсев новизны идёт ПОСЛЕ него');
+  const одна = кПоказу([{ branch: 'сосед', line: 'L8', path: 'p', text: 't8' }]);
+  assert.equal(одна.показ[0].text, 't8');
+  assert.equal(одна.скрыто, 0, 'скрытого нет — число не выдумывается');
+
+  const двенадцать = ['a', 'b'].flatMap((b) => Array.from({ length: 6 }, (_, i) => ({ branch: b, line: `${b}${i}`, path: 'p', text: `${b}${i}` })));
+  const много = кПоказу(двенадцать);
+  assert.equal(много.показ.length, НОВОСТЕЙ_НА_ВЕТКУ * 2, 'потолок считается ПО ВЕТКЕ');
+  assert.equal(много.скрыто, 4, 'скрытое называется числом — молчаливое усечение это свой дефект');
 });

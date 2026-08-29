@@ -105,3 +105,76 @@ test('tools/stand.mjs больше не называет порт dev-серве
   assert.equal(/STAND_DEV_PORT/.test(text), false, 'вернулось второе место правды о порте');
   assert.equal(/'--port'|"--port"/.test(text), false, 'порт снова назван руками, минуя конфиг');
 });
+
+/*
+ * ═══ ПРЕДУПРЕЖДЕНИЕ О ЧУЖОМ СЛОТЕ — три случая, условие У3 суда №33 ═══
+ *
+ * 🔴 ПОЧЕМУ ЭТИ ТРИ ТЕСТА ВООБЩЕ ЕСТЬ. В шапке `stand-addresses.mjs` стояло «тестируется
+ * подменой `process.chdir()` — так проверены все три случая». Артефакта в дереве у этого
+ * заявления не было: `addressesLine` не упоминался ни в одном `tools/*.test.mjs`. Заявление о
+ * проверке, которое нельзя повторить, — это не проверка (вердикт №33, У3).
+ *
+ * Класс, который стережётся: прибор, позванный из голой оболочки в копии роли, честно падает на
+ * умолчание и уходит мерить стенд ГЛАВНОЙ копии. Отчёт, код выхода и кадры при этом
+ * НЕОТЛИЧИМЫ от честных — единственная улика — эта строка (`EXP-0250`).
+ *
+ * 🔑 Каталоги делаются ВРЕМЕННЫЕ, а не берутся с машины: тест, опирающийся на то, что рядом
+ * лежит `…/ndim_designer`, зелен только у того, у кого он лежит.
+ */
+const сСлотом = async (dirName, env, fn) => {
+  const { mkdtempSync, mkdirSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const база = mkdtempSync(resolve(tmpdir(), 'ndim-slot-'));
+  const каталог = resolve(база, dirName);
+  mkdirSync(каталог);
+  const былCwd = process.cwd();
+  const былиEnv = { ...process.env };
+  try {
+    process.chdir(каталог);
+    for (const ключ of ['PROBE_BASE', 'FIREBASE_AUTH_EMULATOR_HOST', 'FIRESTORE_EMULATOR_HOST'])
+      delete process.env[ключ];
+    Object.assign(process.env, env);
+    // Модуль читает окружение при КАЖДОМ вызове, поэтому импортируется один раз.
+    const { addressesLine } = await import('./lib/stand-addresses.mjs');
+    return fn(addressesLine());
+  } finally {
+    process.chdir(былCwd);
+    for (const ключ of Object.keys(process.env)) delete process.env[ключ];
+    Object.assign(process.env, былиEnv);
+    rmSync(база, { recursive: true, force: true });
+  }
+};
+
+test('🔴 адреса: промах КРИЧИТ — каталог роли со слотом ≠ 0, а адреса по умолчанию', async () => {
+  await сСлотом('ndim_designer', {}, (строка) => {
+    assert.match(строка, /ВНИМАНИЕ/, 'промах вызова обязан кричать, а не шептать');
+    assert.match(строка, /designer/, 'предупреждение обязано назвать РОЛЬ каталога');
+    assert.match(строка, /слот 1/, 'предупреждение обязано назвать НОМЕР слота');
+    assert.match(строка, /stand-launch/, 'предупреждение обязано назвать способ позвать правильно');
+  });
+});
+
+test('адреса: окружение задано — предупреждения НЕТ даже в каталоге роли', async () => {
+  // Штатный путь: `firebase emulators:exec` выставил переменные потомкам. Кричать не о чем.
+  await сСлотом(
+    'ndim_designer',
+    {
+      PROBE_BASE: 'http://localhost:4183',
+      FIREBASE_AUTH_EMULATOR_HOST: 'localhost:9109',
+      FIRESTORE_EMULATOR_HOST: 'localhost:8191',
+    },
+    (строка) => {
+      assert.match(строка, /адреса из окружения/, 'строка обязана назвать источник адресов');
+      assert.doesNotMatch(строка, /ВНИМАНИЕ/, 'ложная тревога на штатном пути');
+    },
+  );
+});
+
+test('адреса: каталог вне рабочих мест ролей — молчит (дверь выката на слоте 0 не задета)', async () => {
+  // ⛔ Главная копия и любой посторонний каталог обязаны вести себя байт-в-байт как до парка:
+  // на слоте 0 стоит дверь выката, и её поведение менять нельзя (довод шапки `stand-launch.mjs`).
+  await сСлотом('ndim', {}, (строка) => {
+    assert.match(строка, /слот 0, умолчание/, 'умолчание обязано быть названо');
+    assert.doesNotMatch(строка, /ВНИМАНИЕ/, 'посторонний каталог не повод кричать');
+  });
+});
