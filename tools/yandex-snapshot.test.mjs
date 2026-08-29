@@ -38,6 +38,7 @@ import {
 	EVENT_APPEARED,
 	shouldWriteSnapshot,
 	snapshotExitCode,
+	snapshotComplete,
 } from './lib/yandex-snapshot-core.mjs';
 
 /** Строка выборки в форме первоисточника. Коды — из ЖИВОЙ консоли, см. шапку. */
@@ -272,4 +273,40 @@ test('таблица решений покрыта целиком: четыре 
 			`полный=${complete} файл=${fileExists}`,
 		);
 	}
+});
+
+// ── 🔴 ПОЛНОТА СЧИТАЕТСЯ ПО ОБЕИМ МОЛЧАЩИМ ЧАСТЯМ (дефект 2 вердикта №10 QA) ─────────────────
+//
+// Инвариант `shouldWriteSnapshot` был верен и раньше — врал ВХОД: прибор подавал ему
+// `complete = history.ok`, полноту одной половины под именем, обещающим всеобщность.
+// Наблюдение судьи подменённым fetch: квота 503 + статистика ОК + файл дня есть → файл
+// ПЕРЕЗАПИСАН, код 0, хеш сменился, живая квота заменена на `{error: 503}`.
+// Решение Менеджера 2026-08-29: «не затирает, пока не полны ОБЕ половины».
+
+test('🔴 отказ КВОТЫ при живой статистике делает снимок НЕПОЛНЫМ', () => {
+	// Ровно случай судьи. Прежний вход (`history.ok`) дал бы здесь true — и затёр день.
+	assert.equal(snapshotComplete({ historyOk: true, quotaOk: false }), false);
+});
+
+test('🔴 отказ СТАТИСТИКИ при живой квоте — тоже неполный (симметрия половин)', () => {
+	assert.equal(snapshotComplete({ historyOk: false, quotaOk: true }), false);
+});
+
+test('полон только тогда, когда приехали ОБЕ половины', () => {
+	assert.equal(snapshotComplete({ historyOk: true, quotaOk: true }), true);
+	assert.equal(snapshotComplete({ historyOk: false, quotaOk: false }), false);
+});
+
+test('🔴 СКВОЗНОЙ случай судьи: квота 503 + файл дня есть → день НЕ затирается, код 1', () => {
+	// Связка целиком, от входа до последствия: именно её судья снимет подменённым fetch.
+	const complete = snapshotComplete({ historyOk: true, quotaOk: false });
+	assert.equal(shouldWriteSnapshot({ complete, fileExists: true }).write, false);
+	assert.equal(snapshotExitCode({ complete }), 1);
+});
+
+test('🔴 совет судьи соблюдён: день БЕЗ файла пишется даже при отказе квоты', () => {
+	// «Делать отказ квоты поводом не писать день я НЕ советую — это выбросит события ради
+	// второстепенного счётчика». Запрещена ПЕРЕЗАПИСЬ, а не запись: события не теряются.
+	const complete = snapshotComplete({ historyOk: true, quotaOk: false });
+	assert.equal(shouldWriteSnapshot({ complete, fileExists: false }).write, true);
 });

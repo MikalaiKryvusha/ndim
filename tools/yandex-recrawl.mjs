@@ -10,6 +10,16 @@
  * Код возврата: 0 — прогон состоялся (в том числе «слать нечего») · 1 — отказ предохранителя,
  * нет токена либо Вебмастер не ответил.
  *
+ * ✅ [TESTED: 2026-08-29 · набор `qa/suites/yandex-webmaster.md`, случаи П-01…П-25] — маркер
+ * выставлен только СЕГОДНЯ и намеренно не раньше: набор сам запретил его до первой живой подачи
+ * («подача, ни разу не подавшая ни одного адреса, фичей проверенной не является, сколько бы
+ * юнитов под ней ни лежало»). Что подтвердила первая живая подача: 150 адресов приняты кодом
+ * 202 · журнал вырос с 0 до 150 строк без дубликатов · повторный прогон их не переподал
+ * (П-15) · остаток квоты, замеренный после, сошёлся с израсходованным (150 из 150).
+ * ⚠️ **Чем маркер НЕ покрыт, и это названо честно:** ветка отказов Вебмастера (400/403/404/409/
+ * 429) живьём не наблюдалась ни разу — сервис отвечал исправно, ронять его нарочно мы не вправе;
+ * она стоит на юнитах фикстур. Подача НЕ проверена на границе суток при живом сбросе квоты.
+ *
  * ── AUTH ───────────────────────────────────────────────────────────────────────────────────
  * 🔴 **Первоисточник разрешения — `bugs/203` § «Разрешение владельца — МАШИННАЯ ПОДАЧА
  * ПЕРЕОБХОДА».** Там цитата дословно, дата со временем, транспорт, развилка с названной ценой,
@@ -41,7 +51,7 @@
  * Контракт API — `researches/56` §3.5, снят с первоисточника. Логика и её юниты —
  * `tools/lib/yandex-recrawl-core.mjs` + `tools/yandex-recrawl.test.mjs`.
  */
-import { readFileSync, existsSync, appendFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, existsSync, appendFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { yandexToken, apiGet, userId, hosts, API, EXPECTED_HOST } from './lib/yandex-webmaster.mjs';
@@ -53,11 +63,18 @@ import {
 	ledgerLine,
 	readOwnerQuote,
 	authMatches,
+	findAuthDoc,
+	settleQuotaLeft,
 } from './lib/yandex-recrawl-core.mjs';
 import { settleExit } from './lib/exit-code.mjs';
 
-/** Первоисточник разрешения. Прибор ЧИТАЕТ его, а не носит цитату в себе (вердикт №7 QA). */
-const AUTH_DOC = join('bugs', '203_yandex_vykidyvaet_stranitsy_glavnaya_pod_noindex.md');
+/**
+ * Директория первоисточника. САМ документ опознаётся по НОМЕРУ (`findAuthDoc`), а не по имени:
+ * имя канон меняет при закрытии бага (`bugs/README.md` → `git mv NN_x.md NN_DONE_x.md`), и
+ * прибор, державший признаком полное имя, запирался на целом разрешении — дефект 1 вердикта
+ * №10 QA, воспроизведённый судьёй живьём.
+ */
+const BUGS_DIR = 'bugs';
 
 /**
  * Очередь и журнал живут в ВЕРСИОНИРУЕМОМ месте (замечание З3 вердикта №7 QA).
@@ -117,25 +134,29 @@ async function main(argv) {
 	// поймано собственным прогоном 2026-08-28, когда квота была выбрана и ветка оказалась
 	// недостижима).
 	if (args.apply) {
-		if (!existsSync(AUTH_DOC)) {
-			console.error(`🔴 ОТКАЗ: нет документа разрешения ${AUTH_DOC}.`);
+		// Опознание по НОМЕРУ переживает штатное закрытие бага (`_DONE_`); отказы РАЗЛИЧАЮТСЯ —
+		// «документа нет» и «раздел разрешения не найден» ведут читающего в разные стороны.
+		const found = findAuthDoc(existsSync(BUGS_DIR) ? readdirSync(BUGS_DIR) : []);
+		if (!found.file) {
+			console.error(`🔴 ОТКАЗ: ${found.why}.`);
 			console.error('   Прибор не исполняет необратимое действие, не прочитав разрешения.');
 			return 1;
 		}
-		const recorded = readOwnerQuote(readFileSync(AUTH_DOC, 'utf8'));
+		const authDoc = join(BUGS_DIR, found.file);
+		const recorded = readOwnerQuote(readFileSync(authDoc, 'utf8'));
 		if (!recorded.quote) {
-			console.error(`🔴 ОТКАЗ: ${recorded.why} (${AUTH_DOC}).`);
+			console.error(`🔴 ОТКАЗ: ${recorded.why} (${authDoc}).`);
 			console.error('   Разрешение стёрли или переписали — подача останавливается.');
 			return 1;
 		}
 		if (!authMatches(args.auth, recorded.quote)) {
 			console.error('🔴 ОТКАЗ: --auth-owner не совпадает со словом, записанным в первоисточнике.');
-			console.error(`   Первоисточник: ${AUTH_DOC} § «Разрешение владельца».`);
+			console.error(`   Первоисточник: ${authDoc} § «Разрешение владельца».`);
 			console.error('   Сверка ТОЧНАЯ: для необратимого действия «что-то набрано» — не ворота.');
 			console.error(`   Подано: «${args.auth.trim() || '(пусто)'}»`);
 			return 1;
 		}
-		console.log(`разрешение:  сверено с ${AUTH_DOC} § «Разрешение владельца» ✅
+		console.log(`разрешение:  сверено с ${authDoc} § «Разрешение владельца» ✅
 `);
 	}
 
@@ -212,11 +233,21 @@ async function main(argv) {
 		await new Promise((resolve) => setTimeout(resolve, PACE_MS));
 	}
 
+	// Остаток квоты для журнала ЗАМЕРЯЕТСЯ, а не берётся из последнего ответа: Яндекс отдаёт
+	// `quota_remainder` ДО списания того же вызова, и строка отставала на единицу (наблюдение
+	// первой живой подачи 2026-08-29 — напечатано 1, немедленный опрос дал 0).
+	const after = await apiGet(token, `/user/${user}/hosts/${hostId}/recrawl/quota`);
+	const settled = settleQuotaLeft({
+		measured: after.ok ? after.body.quota_remainder : null,
+		fromLastResponse: quotaLeft,
+	});
+
 	const queueLeft = remaining.length - accepted - skipped;
 	console.log(`\n✅ ПОДАЧА ЗАВЕРШЕНА: принято ${accepted} · пропущено ${skipped} · отказов ${failed}`);
-	console.log(`   остаток очереди ${queueLeft} · остаток квоты ${quotaLeft}`);
+	console.log(`   остаток очереди ${queueLeft} · остаток квоты ${settled.value}`);
+	if (!settled.measured) console.log(`   ⚠️ ${settled.why}`);
 	console.log('\nСТРОКА ДЛЯ bugs/203 (скопировать в журнал подач):');
-	console.log(ledgerLine({ date: today, accepted, skipped, failed, queueLeft, quotaLeft }));
+	console.log(ledgerLine({ date: today, accepted, skipped, failed, queueLeft, quotaLeft: settled.value }));
 	return 0;
 }
 

@@ -15,7 +15,7 @@
  *
  * Код возврата: 0 — снято · 1 — токена нет либо Вебмастер не ответил.
  *
- * ✅ [TESTED: 2026-08-28 · набор `qa/suites/yandex-webmaster.md`, 9 случаев сняты живым прогоном
+ * ✅ [TESTED: 2026-08-29 · набор `qa/suites/yandex-webmaster.md`, случаи Я-01…Я-18: 43 случая набора, 25 сняты живым прогоном
  * на боевом токене владельца] — маркер ФИЧИ законен только вместе с написанным набором случаев
  * (`TESTING_FRAMEWORK.md`, правило маркеров 7); одно наблюдение переворачивает маркер СЛУЧАЯ.
  * Первая редакция этого маркера стояла на одном прогоне — исправлено в тот же день. Прибор написан был
@@ -68,7 +68,7 @@ import {
 	indicatorsToRows,
 } from './lib/yandex-snapshot-core.mjs';
 import { isoDate, snapshotFileName } from './lib/console-snapshot-core.mjs';
-import { shouldWriteSnapshot, snapshotExitCode } from './lib/yandex-snapshot-core.mjs';
+import { shouldWriteSnapshot, snapshotExitCode, snapshotComplete } from './lib/yandex-snapshot-core.mjs';
 import { settleExit } from './lib/exit-code.mjs';
 
 const DEFAULT_OUT = join('reports', 'CONSOLES');
@@ -144,7 +144,9 @@ async function main(argv) {
 	}
 	console.log(`  пул с интерфейсом: ${verdict.pool} — ${verdict.reason}\n`);
 
-	if (args.quota) return 0;
+	// Режим квоты — тот же класс, что дефект 2: код 0 при неотданной квоте был бы отказом,
+	// выданным за успех. Пул-вердикт печатается в обоих случаях, но слышен вызывающему — только так.
+	if (args.quota) return quota.ok ? 0 : 1;
 
 	// ── Статистика поиска ──────────────────────────────────────────────────────────────────
 	const from = new Date(now.getTime() - args.days * 86_400_000);
@@ -156,7 +158,20 @@ async function main(argv) {
 	// 🔴 bugs/215: половина статистики МОЛЧАЛА при отказе — пустой массив неотличим от честного
 	// нуля («тихий ноль», класс bugs/202). Теперь отказ называется и делает снимок НЕПОЛНЫМ.
 	const queryHistory = history.ok ? indicatorsToRows(history.body) : [];
-	const complete = history.ok;
+	// 🔴 Дефект 2 вердикта №10 QA: `complete` означал полноту ОДНОЙ половины (`history.ok`), а
+	// обещал всеобщность. Наблюдение судьи на стенде с подменённым fetch: квота 503 + статистика
+	// ОК + файл дня есть → «ПЕРЕЗАПИСАН», код 0, хеш сменился, живая квота заменена на
+	// `{error: 503}`. Инвариант bugs/215 («худший не затирает лучший») держал одну сторону.
+	//
+	// Развилка судьи решена в пользу ПОЛНОТЫ, а не переименования в `statsComplete`: имя обещало
+	// всеобщность, и дешевле сделать обещание правдой, чем сузить его. Совет судьи «не делать
+	// отказ квоты поводом НЕ ПИСАТЬ день» при этом соблюдён механикой `shouldWriteSnapshot`:
+	// день БЕЗ файла пишется всегда, неполным в том числе («день без файла хуже»), — запрещена
+	// только ПЕРЕЗАПИСЬ уже лежащего снимка неполным. События ради счётчика не выбрасываются.
+	//
+	// Третья половина, события (`pagedSamples`), сюда не входит намеренно: она БРОСАЕТ исключение
+	// и до записи не доходит вовсе. Молчащих частей ровно две, обе теперь названы.
+	const complete = snapshotComplete({ historyOk: history.ok, quotaOk: quota.ok });
 	if (history.ok) {
 		console.log(`СТАТИСТИКА ПОИСКА за ${args.days} сут. — строк ${queryHistory.length}`);
 	} else {
@@ -195,7 +210,7 @@ async function main(argv) {
 			hostId: host.host_id,
 			verified: host.verified ?? null,
 		},
-		trust: '[TESTED: 2026-08-28 · qa/suites/yandex-webmaster.md — 9 живых случаев] — ветка отказов API на юнитах',
+		trust: '[TESTED: 2026-08-29 · qa/suites/yandex-webmaster.md — 43 случая, 25 живых] — ветка отказов API на юнитах',
 		recrawlQuota: quotaBody
 			? { ...quotaBody, sentByHand: args.sentByHand, poolVerdict: verdict }
 			: { error: quota.status, poolVerdict: verdict },
