@@ -29,7 +29,11 @@
          (форма списка) + `researches/59` (порог W3C: select оправдан после ~20);
        · hreflang + x-default — Tinder (самая широкая машинная разметка набора);
        · «продукт виден до входа» — YouTube/TikTok/Spotify, БЕЗ их модели
-         «корень = приложение»: у нас это несёт гостевой режим.
+         «корень = приложение»: у нас это несут гостевой режим И полоса живого
+         каталога — настоящие объекты прямыми ссылками на свои карточки, по две
+         ссылки на объект (русская и английская), потому что дверь языка не
+         угадывает. Объекты взяты из `src/lib/content/dims-slice.json` — срез
+         каталога, коммит `70b925c` от 2026-08-02; ничего не выдумано.
 
      ⛔ ЧЕГО НЕТ НИ В ОДНОМ ВАРИАНТЕ (раздел «Худшие решения» той же разведки):
      стены входа с полем пароля (Instagram) · куки-баннера первым экраном
@@ -211,6 +215,48 @@
   .fact .l .en { display: block; color: var(--muted); font-size: 12px; }
   .taken { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 14px; }
 
+  /* ── Полоса живого каталога — ШЕСТОЙ КУСОК супер-микса «продукт виден до входа» ──
+     Доноры YouTube · TikTok · Spotify, взятые БЕЗ их модели «корень = приложение»:
+     показывается не лента, а сам предмет оценки — настоящие объекты каталога прямыми
+     ссылками на карточки. Довод сверх содержания: ссылка с главной — самый сильный
+     внутренний сигнал важности, какой есть у сайта (`researches/34` §6.3), органика
+     идёт именно на карточки (10 из 14 кликов, `bugs/200`), и с лица хоста на них до
+     сих пор не вело ничего.
+
+     🔴 ОЦЕНОК ЗДЕСЬ НЕТ, И ЭТО РЕШЕНИЕ, А НЕ ПРОПУСК. В срезе поле `rating` — простое
+     среднее (10,0 при ОДНОМ голосе), а NDim Space Rating по «Словарю продукта» — это
+     фирменная величина, а НЕ «средняя оценка». Подписать среднее именем NDSR значило бы
+     поставить на лицо продукта неверную величину; показать «10,0» при одном голосе —
+     дать человеку число, которое рассыплется при первом взгляде на карточку.
+
+     🔴 У КАЖДОГО ОБЪЕКТА ДВЕ ССЫЛКИ — русская карточка и английская. Дверь языка не
+     угадывает (см. § ярлыка), и внутренний сигнал получают ОБЕ языковые версии сразу. */
+  .cat { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--edge); }
+  .cat-h { color: var(--heading); font-weight: 800; font-size: 17px; text-align: center; }
+  .cat-l { text-align: center; font-size: 13.5px; line-height: 1.55; margin-top: 6px; }
+  .cat-l .en { display: block; color: var(--muted); }
+  .cat-list {
+    list-style: none; display: grid; gap: 10px; margin-top: 16px;
+    grid-template-columns: repeat(3, 1fr); align-items: start;
+  }
+  #stage[data-w="1024"] .cat-list { grid-template-columns: repeat(2, 1fr); }
+  #stage[data-w="390"] .cat-list { grid-template-columns: 1fr; }
+  .cat-list li {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 12px;
+    padding: 12px 14px;
+  }
+  /* 🔴 ЗАКОН ВЛАДЕЛЬЦА (2026-08-14): названия не обрезаются НИКОГДА. Ни
+     `text-overflow: ellipsis`, ни `-webkit-line-clamp` здесь стоять не может — карточка
+     растёт по высоте, а соседи выравниваются ПО ВЕРХУ (`align-items: start` выше),
+     иначе короткая карточка уплывёт на середину многострочного имени. */
+  .cat-list .ct { display: block; color: var(--accent); font-weight: 700; font-size: 14.5px; text-decoration: none; line-height: 1.35; }
+  .cat-list .ce { display: block; color: var(--muted); font-size: 13px; text-decoration: none; margin-top: 3px; line-height: 1.35; }
+  .cat-list .cm { display: block; font-size: 11.5px; color: var(--muted); margin-top: 7px; }
+  .cat-list .cm a { color: var(--muted); }
+  .cat-all { text-align: center; margin-top: 14px; font-size: 14px; font-weight: 600; }
+  .cat-all a { color: var(--accent); text-decoration: none; }
+  .cat-note { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+
   /* ── V2 «Разворот»: речь слева, действие справа ───────────────────────────── */
   .spread { display: flex; gap: 26px; align-items: flex-start; margin-top: 22px; }
   #stage[data-w="390"] .spread { flex-direction: column; gap: 20px; }
@@ -319,7 +365,9 @@
   владельцем (интервью №058, В1 = А): корень становится главной с содержанием — мини-лендингом
   по супер-миксу <code>researches/60</code>, одной ступенью. Состав у всех четырёх вариантов
   один: знак · строка о Пространстве на обоих языках · пояснение «как это устроено» · большая
-  кнопка в дело · тихий вход для своих · подписанный ярлык языка с автонимами · живые числа.
+  кнопка в дело · тихий вход для своих · подписанный ярлык языка с автонимами · живые числа ·
+  полоса живого каталога (настоящие объекты, по две ссылки на объект — русская карточка и
+  английская).
   Различаются варианты <b>формой и композицией</b> — тем, что человек видит первым и что стоит
   рядом с чем. <b>Язык гостя корня ещё не выбран</b>, поэтому дверь говорит на обоих языках сразу
   и ни один из них за человека не угадывает.
@@ -362,6 +410,42 @@
           <div class="fact"><div class="n">5&#160;137</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
           <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
           <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
+        </div>
+        <div class="cat">
+          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <p class="cat-l">Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.<span class="en">Ratings built from what people voted. You can look without an account.</span></p>
+          <ul class="cat-list">
+            <li>
+              <a class="ct" href="/ru/dimension/donnie-darko-1hqyrh7o">Донни Дарко</a>
+              <a class="ce" href="/en/dimension/donnie-darko-1hqyrh7o">Donnie Darko</a>
+              <span class="cm">Фильм · Movie · 2001</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/house-of-the-dragon-0q43wuaq">Дом Дракона</a>
+              <a class="ce" href="/en/dimension/house-of-the-dragon-0q43wuaq">House of the Dragon</a>
+              <span class="cm">Телесериал · TV Series · 2022</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">Warcraft III: Reign of Chaos</a>
+              <span class="cm">Видеоигра · Video game · 2002 · <a href="/en/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">English</a></span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/oliver-twist-3dhodx22">Приключения Оливера Твиста</a>
+              <a class="ce" href="/en/dimension/oliver-twist-3dhodx22">Oliver Twist</a>
+              <span class="cm">Роман · Novel · 1838</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/skiing-11mnoskt">Катание на лыжах</a>
+              <a class="ce" href="/en/dimension/skiing-11mnoskt">Skiing</a>
+              <span class="cm">Практика · Practice</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/twenty-one-pilots-1e8svg81">Twenty One Pilots</a>
+              <span class="cm">Музыкальный исполнитель · Music Artist · 2009 · <a href="/en/dimension/twenty-one-pilots-1e8svg81">English</a></span>
+            </li>
+          </ul>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+          <p class="cat-note">Названия взяты из среза каталога от 2 августа 2026 года · catalogue slice of 2 August 2026</p>
         </div>
       </div>
     </div>
@@ -410,6 +494,42 @@
           <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
           <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
         </div>
+        <div class="cat">
+          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <p class="cat-l">Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.<span class="en">Ratings built from what people voted. You can look without an account.</span></p>
+          <ul class="cat-list">
+            <li>
+              <a class="ct" href="/ru/dimension/donnie-darko-1hqyrh7o">Донни Дарко</a>
+              <a class="ce" href="/en/dimension/donnie-darko-1hqyrh7o">Donnie Darko</a>
+              <span class="cm">Фильм · Movie · 2001</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/house-of-the-dragon-0q43wuaq">Дом Дракона</a>
+              <a class="ce" href="/en/dimension/house-of-the-dragon-0q43wuaq">House of the Dragon</a>
+              <span class="cm">Телесериал · TV Series · 2022</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">Warcraft III: Reign of Chaos</a>
+              <span class="cm">Видеоигра · Video game · 2002 · <a href="/en/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">English</a></span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/oliver-twist-3dhodx22">Приключения Оливера Твиста</a>
+              <a class="ce" href="/en/dimension/oliver-twist-3dhodx22">Oliver Twist</a>
+              <span class="cm">Роман · Novel · 1838</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/skiing-11mnoskt">Катание на лыжах</a>
+              <a class="ce" href="/en/dimension/skiing-11mnoskt">Skiing</a>
+              <span class="cm">Практика · Practice</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/twenty-one-pilots-1e8svg81">Twenty One Pilots</a>
+              <span class="cm">Музыкальный исполнитель · Music Artist · 2009 · <a href="/en/dimension/twenty-one-pilots-1e8svg81">English</a></span>
+            </li>
+          </ul>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+          <p class="cat-note">Названия взяты из среза каталога от 2 августа 2026 года · catalogue slice of 2 August 2026</p>
+        </div>
       </div>
     </div>
   </div>
@@ -455,6 +575,42 @@
           <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
           <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
         </div>
+        <div class="cat">
+          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <p class="cat-l">Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.<span class="en">Ratings built from what people voted. You can look without an account.</span></p>
+          <ul class="cat-list">
+            <li>
+              <a class="ct" href="/ru/dimension/donnie-darko-1hqyrh7o">Донни Дарко</a>
+              <a class="ce" href="/en/dimension/donnie-darko-1hqyrh7o">Donnie Darko</a>
+              <span class="cm">Фильм · Movie · 2001</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/house-of-the-dragon-0q43wuaq">Дом Дракона</a>
+              <a class="ce" href="/en/dimension/house-of-the-dragon-0q43wuaq">House of the Dragon</a>
+              <span class="cm">Телесериал · TV Series · 2022</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">Warcraft III: Reign of Chaos</a>
+              <span class="cm">Видеоигра · Video game · 2002 · <a href="/en/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">English</a></span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/oliver-twist-3dhodx22">Приключения Оливера Твиста</a>
+              <a class="ce" href="/en/dimension/oliver-twist-3dhodx22">Oliver Twist</a>
+              <span class="cm">Роман · Novel · 1838</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/skiing-11mnoskt">Катание на лыжах</a>
+              <a class="ce" href="/en/dimension/skiing-11mnoskt">Skiing</a>
+              <span class="cm">Практика · Practice</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/twenty-one-pilots-1e8svg81">Twenty One Pilots</a>
+              <span class="cm">Музыкальный исполнитель · Music Artist · 2009 · <a href="/en/dimension/twenty-one-pilots-1e8svg81">English</a></span>
+            </li>
+          </ul>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+          <p class="cat-note">Названия взяты из среза каталога от 2 августа 2026 года · catalogue slice of 2 August 2026</p>
+        </div>
       </div>
     </div>
   </div>
@@ -482,6 +638,42 @@
             <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
           </div>
           <p class="taken">Снимок 23 августа 2026 года · snapshot of 23 August 2026</p>
+        </div>
+        <div class="cat">
+          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <p class="cat-l">Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.<span class="en">Ratings built from what people voted. You can look without an account.</span></p>
+          <ul class="cat-list">
+            <li>
+              <a class="ct" href="/ru/dimension/donnie-darko-1hqyrh7o">Донни Дарко</a>
+              <a class="ce" href="/en/dimension/donnie-darko-1hqyrh7o">Donnie Darko</a>
+              <span class="cm">Фильм · Movie · 2001</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/house-of-the-dragon-0q43wuaq">Дом Дракона</a>
+              <a class="ce" href="/en/dimension/house-of-the-dragon-0q43wuaq">House of the Dragon</a>
+              <span class="cm">Телесериал · TV Series · 2022</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">Warcraft III: Reign of Chaos</a>
+              <span class="cm">Видеоигра · Video game · 2002 · <a href="/en/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">English</a></span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/oliver-twist-3dhodx22">Приключения Оливера Твиста</a>
+              <a class="ce" href="/en/dimension/oliver-twist-3dhodx22">Oliver Twist</a>
+              <span class="cm">Роман · Novel · 1838</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/skiing-11mnoskt">Катание на лыжах</a>
+              <a class="ce" href="/en/dimension/skiing-11mnoskt">Skiing</a>
+              <span class="cm">Практика · Practice</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/twenty-one-pilots-1e8svg81">Twenty One Pilots</a>
+              <span class="cm">Музыкальный исполнитель · Music Artist · 2009 · <a href="/en/dimension/twenty-one-pilots-1e8svg81">English</a></span>
+            </li>
+          </ul>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+          <p class="cat-note">Названия взяты из среза каталога от 2 августа 2026 года · catalogue slice of 2 August 2026</p>
         </div>
         <a class="cta" href="/profile?guest=1">
           <span class="r">Войти в Пространство</span>
@@ -513,16 +705,18 @@
   16personalities, единственной двери набора, живущей на органическом трафике, как наш вход:
   человек без предзнания получает предложение, объяснение и дорогу в одном движении сверху вниз.
   <span class="cost">Платит воздухом на широком экране: колонка держит меру строки, и на 1440 по
-  бокам остаются поля. И числа стоят последними — человек, ушедший внутрь на кнопке, их не
-  увидит.</span></p>
+  бокам остаются поля. И числа с каталогом стоят последними — человек, ушедший внутрь на кнопке,
+  их не увидит; замер на 390: большая кнопка на 716 px от начала двери, то есть выше сгиба, а
+  каталог начинается уже за ним.</span></p>
 
   <p><b>V2 «Разворот».</b> Речь и действие разведены по сторонам: слева знак, строка и объяснение,
   справа — панель, в которой ярлык языка стоит вплотную над большой кнопкой. Человек видит выбор
   языка и дорогу внутрь одним взглядом, без прокрутки. Форма лучше всех четырёх использует ширину
   десктопа.
-  <span class="cost">Платит порядком складывания: на 390 панель действия уезжает под объяснение,
-  и до большой кнопки человек добирается прокруткой. На 1024 панель забирает треть ширины у
-  текста, и строка о Пространстве переносится раньше.</span></p>
+  <span class="cost">Платит шириной текста на 1024: панель забирает треть, и строка о
+  Пространстве переносится раньше. ⚠️ Прежнюю цену «на 390 до кнопки надо прокручивать» снимаю —
+  замер её опроверг: панель складывается под объяснение, но верх большой кнопки оказывается на
+  727 px от начала двери, то есть ВЫШЕ сгиба телефона (≈ 844 px).</span></p>
 
   <p><b>V3 «Две речи».</b> Выбор языка и дорога внутрь — одно действие: две равные половины, каждая
   говорит на своём языке целиком и несёт свою большую кнопку. Русский гость и английский гость
@@ -530,16 +724,20 @@
   выражает симметрию, записанную в цели проекта.
   <span class="cost">Платит двумя главными кнопками вместо одной: у Duolingo, донора этой дороги,
   главная кнопка ровно одна, и одна кнопка решительнее двух. На 390 половины идут друг под другом,
-  английская уходит под сгиб, и порядок половин становится решением — кто стоит первым.</span></p>
+  английская уходит под сгиб, и порядок половин становится решением — кто стоит первым. При этом
+  русская кнопка встаёт выше всех четырёх вариантов — 506 px от начала двери.</span></p>
 
   <p><b>V4 «Витрина».</b> Состояние Пространства поднято наверх и стоит панелью сразу под строкой:
   четыре живых числа — объекты, оценки, люди, связи — раньше кнопки. Это донор 16personalities в
   чистом виде: у них первым экраном стоит число-довод. Робот получает страницу с содержанием,
   человек — повод войти до того, как его о чём-то попросили.
-  <span class="cost">Платит контрактом свежести: числа берутся снимком перед выкатом
-  (<code>tools/snapshot-landing-metric.mjs</code>, <code>bugs/81</code>), дата снимка стоит на
-  странице открыто, и выкат обязан снимок обновлять. И объяснение «как это устроено» сдвинуто под
-  кнопку: человек, дочитавший до объяснения, уже прошёл мимо дороги внутрь.</span></p>
+  <span class="cost">Платит дважды, и обе цены замерены. Первая — контракт свежести: числа
+  берутся снимком перед выкатом (<code>tools/snapshot-landing-metric.mjs</code>,
+  <code>bugs/81</code>), дата снимка стоит на странице открыто, и выкат обязан снимок обновлять.
+  Вторая — положение дороги внутрь: витрина и каталог стоят ДО кнопки, и на 390 её верх оказывается
+  на 1749 px от начала двери — вдвое ниже сгиба телефона (≈ 844 px), тогда как у остальных трёх
+  вариантов кнопка выше сгиба (506 · 716 · 727 px). Человек с телефона доходит до дороги внутрь
+  только прокруткой, и это самая дорогая цена в наборе.</span></p>
 </div>
 
 <div class="tech">
@@ -567,6 +765,21 @@
       режим не заводится.</li>
     <li><b>Лендинги <code>/ru</code> и <code>/en</code> не тронуты</b>: решение «у каждого языка
       свой адрес» (№010 Р5) остаётся в силе, автонимы ведут на них.</li>
+    <li>🔴 <b>Полоса каталога — это ещё и внутренние ссылки с лица хоста прямо на карточки.</b>
+      Ссылка с главной — самый сильный внутренний сигнал важности, какой есть у сайта
+      (<code>researches/34</code> §6.3), а органика идёт именно на карточки: 10 из 14 кликов за две
+      недели (<code>bugs/200</code>), и с корня на них до сих пор не вело ничего. У каждого объекта
+      ДВЕ ссылки — <code>/ru/dimension/…</code> и <code>/en/dimension/…</code>: дверь языка не
+      угадывает, и сигнал получают обе языковые версии карточки.</li>
+    <li>⚠️ <b>Оценок в полосе нет намеренно.</b> В срезе поле <code>rating</code> — простое среднее
+      (10,0 при одном голосе), а <b>NDim Space Rating по «Словарю продукта» — фирменная величина, а
+      не «средняя оценка»</b>. Показать это среднее под именем NDSR значило бы поставить на лицо
+      продукта неверную величину.</li>
+    <li>⚠️ <b>Границы данных, обе названы на самой странице:</b> названия объектов взяты из среза
+      каталога от <b>2 августа 2026</b> (<code>src/lib/content/dims-slice.json</code>, коммит
+      <code>70b925c</code>), числа витрины — из снимка от <b>23 августа 2026</b>. Для макета это
+      законно; <b>к выкату оба пересматриваются</b>, и подписи дат на странице сделаны видимыми
+      именно затем, чтобы возраст данных читался, а не угадывался.</li>
     <li><b>Счётчиков и куки-баннера на странице нет</b> — первый экран занят содержанием целиком.
       Куки-баннер первым экраном взят у LinkedIn в раздел «худшие решения» и не берётся.</li>
   </ul>
