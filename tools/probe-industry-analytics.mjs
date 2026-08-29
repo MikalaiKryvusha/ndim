@@ -26,7 +26,10 @@
  * Распознавание живёт в `tools/lib/industry-analytics-core.mjs` и стережётся юнитами
  * (`tools/industry-analytics.test.mjs`) — здесь только браузер, обход и печать.
  *
- * ЗАПУСК:  node tools/probe-industry-analytics.mjs [--only <ключ,ключ>] [--headed] [--wait 9000]
+ * Запуск:  node tools/probe-industry-analytics.mjs [--only <ключ,ключ>] [--headed] [--wait 9000]
+ * Ворота:  нет — прибор разведки: поднимает браузер и ходит на ЧУЖИЕ сайты. Ворота обязаны
+ *          стоить секунды и не зависеть от сети (`tools/guards.mjs`), а этот зависит целиком:
+ *          чужая страница может измениться, лечь или ответить иначе. Зовётся руками.
  * ВЫХОД:   test-results/industry-analytics/<дата>.json + таблица в консоль.
  */
 
