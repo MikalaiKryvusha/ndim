@@ -31,6 +31,8 @@
  *      прогон можно прервать и продолжить.
  *
  * ПЕРЕД ЗАПУСКОМ владелец открывает Chrome с портом отладки (см. `homeworks/08`).
+ *
+ * Запуск: node tools/wordstat-harvest.mjs
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';

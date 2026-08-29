@@ -1,6 +1,8 @@
 /**
  * РАЗВЕДКА Bing Webmaster и Яндекс.Вебмастера (только чтение) — слепки для пиннинга извлечения
  * в `tools/console-coverage.mjs` (plans/41, шаг 2). Навигация по прямым адресам, ни одного клика.
+ *
+ * Запуск: node tools/discover-bing-yandex.mjs
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';

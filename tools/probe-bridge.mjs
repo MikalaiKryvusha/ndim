@@ -23,6 +23,8 @@
  *
  * Стенд обязан быть поднят (`npm run stand`), замок доски — взят.
  *   node tools/probe-bridge.mjs [--base http://localhost:5173] [--headed]
+ *
+ * Запуск: node tools/probe-bridge.mjs
  */
 
 import { chromium } from 'playwright';

@@ -11,6 +11,8 @@
 // при уже поднятых эмуляторах: `node tools/seed-dev.mjs`.
 //
 // Данные вымышленные, проект demo-* — боевого Firestore этот скрипт не касается никогда.
+//
+// Запуск: node tools/seed-dev.mjs
 
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
 // Timestamp нужен, чтобы сеять БОЕВУЮ форму возраста измерения — `time.created` (bugs/109).

@@ -2,6 +2,8 @@
  * РАЗВЕДКА СТРАНИЦ GSC (только чтение) — слепок того, что отдаёт консоль, для пиннинга
  * извлечения в `tools/console-coverage.mjs` (plans/41, шаг 2). Ни одного клика: навигация по
  * прямым адресам отчётов + чтение DOM и сетевых ответов. Слепки — в test-results/console-coverage/.
+ *
+ * Запуск: node tools/discover-gsc.mjs
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';

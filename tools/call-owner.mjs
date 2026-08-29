@@ -12,6 +12,8 @@
  *
  * Текст едет ФАЙЛОМ или аргументом: кириллица в argv на Windows портится, поэтому по умолчанию
  * читается `--file`, а строка аргументом оставлена только для ASCII.
+ *
+ * Запуск: node tools/call-owner.mjs
  */
 import { readFileSync } from 'node:fs';
 import { signal } from './review.mjs';

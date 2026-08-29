@@ -13,6 +13,8 @@
 //
 // Коды возврата: 0 — локальная копия актуальна (или обновлена); 3 — origin новее (нужен --update);
 // 4 — сеть недоступна (работаем с локальной копией); 1 — ошибка.
+//
+// Запуск: node tools/02-kaif-fetch.mjs
 
 import { readFileSync, writeFileSync, existsSync, copyFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';

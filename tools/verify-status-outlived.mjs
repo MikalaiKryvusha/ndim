@@ -22,6 +22,8 @@
  *   node tools/verify-status-outlived.mjs            # красное = ненулевой код
  *   node tools/verify-status-outlived.mjs --quiet    # только итог
  *   node tools/verify-status-outlived.mjs --selftest # проверить сам прибор, без git и файлов
+ *
+ * Ворота: npm run guards
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';

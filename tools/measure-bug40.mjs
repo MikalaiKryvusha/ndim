@@ -20,6 +20,8 @@
  * поэтому числа «до» и «после» сравнимы.
  *
  * Что считается кадром приложения: адрес уже /profile.
+ *
+ * Запуск: node tools/measure-bug40.mjs
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';

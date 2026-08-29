@@ -19,6 +19,8 @@
  *
  * Запуск: node tools/verify-sync-server-name.mjs
  * Выход: 0 — чисто; 1 — найдено запрещённое имя.
+ *
+ * Ворота: npm run guards
  */
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';

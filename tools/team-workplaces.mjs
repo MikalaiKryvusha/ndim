@@ -21,6 +21,8 @@
  * предполагает.
  *
  * Ветка при remove НЕ удаляется: коммиты роли — ценность, к ним вернётся новая сессия.
+ *
+ * Запуск: node tools/team-workplaces.mjs · самотест: --selftest
  */
 import { existsSync, lstatSync, readdirSync, writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
