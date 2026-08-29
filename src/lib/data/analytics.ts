@@ -147,6 +147,53 @@ export const ANALYTICS_PROPERTIES = ['lang', 'is_guest', 'entry', 'has_matches']
 export type AnalyticsProperty = (typeof ANALYTICS_PROPERTIES)[number];
 
 /**
+ * МЕСТА ВХОДА — закрытый союз, а не свободная строка. Дефект Д4 вердикта QA №14.
+ *
+ * 🔴 ПОЧЕМУ ЗАКРЫТЫЙ. Инвариант был закрыт по КЛЮЧАМ и открыт по ЗНАЧЕНИЯМ: `capture()`
+ * фильтровал `Object.entries(props)` по имени ключа и клал значение как есть. Шапка списка
+ * при этом обещала больше, чем делала: «свойства с идентификатором или названием измерения
+ * запрещены». Закрыт был список КЛЮЧЕЙ; предмет оценки уехал бы в ЗНАЧЕНИИ. Судья назвала и
+ * место: `entry` объявлено и не используется ни разу — «ровно то имя, в которое первый же
+ * будущий вызов положит слаг».
+ *
+ * Состав выведен из того, что продукт знает СЕГОДНЯ, а не из воображения: лендинг и дверь
+ * карточки каталога — два живых входа воронки (`funnel.ts`: `landing_view`, `door_click`,
+ * второй вход заведён `plans/74` по аудиту `bugs/202`), плюс прямой заход.
+ * ⛔ Новое место входа добавляется СЮДА, а не приходит строкой из вызова.
+ */
+export const ANALYTICS_ENTRIES = ['landing', 'catalog_card', 'direct'] as const;
+
+export type AnalyticsEntry = (typeof ANALYTICS_ENTRIES)[number];
+
+/** Значения свойств — узкие по построению: тип не даёт написать, проверка не даёт отправить. */
+export type AnalyticsProps = {
+  lang?: 'ru' | 'en';
+  is_guest?: boolean;
+  has_matches?: boolean;
+  entry?: AnalyticsEntry;
+};
+
+/**
+ * Значение свойства безопасно?
+ *
+ * 🔑 ЗАЧЕМ ПРОВЕРКА, ЕСЛИ ЕСТЬ ТИП. Тип исчезает при сборке, а `capture()` зовут и из мест,
+ * где типы обойдены (`as never`, `any`, чужой вызов из JS). Судья требовала «уронить прогон
+ * на значении вне союза» — уронить можно только тем, что доживает до прогона. Тип стережёт
+ * автора, проверка — продукт.
+ */
+export function propertyValueIsSafe(key: AnalyticsProperty, value: unknown): boolean {
+  switch (key) {
+    case 'is_guest':
+    case 'has_matches':
+      return typeof value === 'boolean';
+    case 'lang':
+      return value === 'ru' || value === 'en';
+    case 'entry':
+      return (ANALYTICS_ENTRIES as readonly unknown[]).includes(value);
+  }
+}
+
+/**
  * Слова, выдающие предмет оценки.
  *
  * ⚠️ Сверка идёт ПО СЛОВАМ имени (`имя.split('_')`), а не по подстроке, и это не
@@ -256,7 +303,7 @@ export function setAnalyticsClientForTests(fake: AnalyticsClient | null): void {
  * Молчит: на стенде и стейдже · под меткой прибора (`ndim-probe` — иначе наши смоуки снова
  * считались бы людьми, `bugs/202`) · на имени вне белого списка · на свойстве вне списка.
  */
-export async function capture(event: AnalyticsEvent, props: Partial<Record<AnalyticsProperty, string | boolean>> = {}): Promise<void> {
+export async function capture(event: AnalyticsEvent, props: AnalyticsProps = {}): Promise<void> {
   if (typeof location === 'undefined' || !analyticsHostAllowed(location.hostname)) return;
   if (probeMarked()) return;
   if (!eventNameIsSafe(event)) return;
@@ -264,7 +311,11 @@ export async function capture(event: AnalyticsEvent, props: Partial<Record<Analy
   const safeProps: Record<string, string | boolean> = {};
   for (const [key, value] of Object.entries(props)) {
     if (!(ANALYTICS_PROPERTIES as readonly string[]).includes(key)) continue;
-    if (value !== undefined) safeProps[key] = value;
+    if (value === undefined) continue;
+    // Ключ разрешён — но это половина. Вторая: значение обязано быть из своего союза,
+    // иначе предмет оценки уедет в значении при закрытом списке ключей (Д4 вердикта №14).
+    if (!propertyValueIsSafe(key as AnalyticsProperty, value)) continue;
+    safeProps[key] = value as string | boolean;
   }
 
   try {

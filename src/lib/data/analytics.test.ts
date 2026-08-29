@@ -27,6 +27,7 @@ import { readFileSync } from 'node:fs';
 
 import { FUNNEL_STEPS } from './funnel.ts';
 import {
+  ANALYTICS_ENTRIES,
   ANALYTICS_EVENTS,
   ANALYTICS_PROPERTIES,
   POSTHOG_HOST,
@@ -36,6 +37,7 @@ import {
   eventNameIsSafe,
   nameSmellsOfSubject,
   posthogConfig,
+  propertyValueIsSafe,
   setAnalyticsClientForTests,
   whitelistLooksSafe,
 } from './analytics.ts';
@@ -312,6 +314,60 @@ describe('capture() — блюдо, а не ингредиенты (Д2 верд
       await capture('landing_view');
     } finally {
       убрать();
+    }
+  });
+});
+
+/**
+ * 🔴 ИНВАРИАНТ ПО ЗНАЧЕНИЯМ, А НЕ ТОЛЬКО ПО КЛЮЧАМ — дефект Д4 вердикта QA №14.
+ *
+ * Список ключей был закрыт, значения клались как есть. Шапка обещала больше, чем делала:
+ * «свойства с идентификатором или названием измерения запрещены» — а запрещены были ИМЕНА
+ * свойств. Судья назвала и место, где дыра откроется: `entry` объявлено, не используется ни
+ * разу и есть «ровно то имя, в которое первый же будущий вызов положит слаг».
+ *
+ * ⚠️ Тип здесь не защита, а удобство автора: он исчезает при сборке. Поэтому все случаи ниже
+ * идут через `as never` — то есть ровно так, как в продукт и попадёт обход типов.
+ */
+describe('значения свойств — закрытые союзы (Д4 вердикта №14)', () => {
+  test('🔴 СЛАГ В entry НЕ УЕЗЖАЕТ — тот самый случай, который назвала судья', () => {
+    assert.equal(propertyValueIsSafe('entry', 'matrix-1999-a1b2'), false);
+    assert.equal(propertyValueIsSafe('entry', 'catalog_card'), true);
+  });
+
+  test('lang — только два языка продукта', () => {
+    assert.equal(propertyValueIsSafe('lang', 'ru'), true);
+    assert.equal(propertyValueIsSafe('lang', 'en'), true);
+    assert.equal(propertyValueIsSafe('lang', 'Матрица'), false);
+    assert.equal(propertyValueIsSafe('lang', 'de'), false, 'третий язык добавляется в союз, а не приезжает строкой');
+  });
+
+  test('булевы — именно булевы, а не «правдоподобная строка»', () => {
+    assert.equal(propertyValueIsSafe('is_guest', true), true);
+    assert.equal(propertyValueIsSafe('has_matches', false), true);
+    assert.equal(propertyValueIsSafe('is_guest', 'true'), false);
+    assert.equal(propertyValueIsSafe('has_matches', 1), false);
+  });
+
+  test('🔑 каждое место входа союза признаётся — иначе союз молча сузился бы', () => {
+    for (const место of ANALYTICS_ENTRIES) {
+      assert.equal(propertyValueIsSafe('entry', место), true, `место входа «${место}» отбито своим же союзом`);
+    }
+  });
+
+  test('🔴 БЛЮДО: capture() выбрасывает значение вне союза и оставляет честное рядом', async () => {
+    const звонки: { event: string; props?: Record<string, unknown> | undefined }[] = [];
+    (globalThis as Record<string, unknown>).location = { hostname: 'ndimspace.app' };
+    (globalThis as Record<string, unknown>).sessionStorage = { getItem: () => null };
+    setAnalyticsClientForTests({ capture: (event, props) => звонки.push({ event, props }) });
+    try {
+      await capture('rating_saved', { entry: 'matrix-1999-a1b2', is_guest: true } as never);
+      assert.deepEqual(звонки, [{ event: 'rating_saved', props: { is_guest: true } }],
+        'слаг уехал в значении свойства — инвариант №002 В4 нарушен');
+    } finally {
+      setAnalyticsClientForTests(null);
+      delete (globalThis as Record<string, unknown>).location;
+      delete (globalThis as Record<string, unknown>).sessionStorage;
     }
   });
 });
