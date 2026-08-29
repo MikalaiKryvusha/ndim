@@ -33,7 +33,7 @@
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 
 import {
   CONSENT_VENDORS,
@@ -191,7 +191,18 @@ async function main() {
   console.log(`\n📄 ${outFile}`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+/**
+ * 🔴 ПРЕДОХРАНИТЕЛЬ «ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН» (`ideas/43`; страж класса — `verify-import-safety.mjs`).
+ * Прибор экспортирует таблицу дверей, а работой ходит в сеть. Импорт ради таблицы поднимал
+ * живой обход — и это мой собственный прибор смены 10: класс достался мне же.
+ */
+const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+async function выполнить() {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
+
+if (ЗАПУЩЕН_НАПРЯМУЮ) await выполнить();
