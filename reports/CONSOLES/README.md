@@ -44,7 +44,8 @@ node tools/console-snapshot.mjs --months 3     # окно короче (быст
 # из своей рабочей копии: одна переменная, без остального файла
 grep '^NDIM_CONSOLE_SA_B64=' D:/work/ai_sandbox/ndim/.env >> .env      # Google
 grep '^NDIM_YANDEX_WEBMASTER_TOKEN=' D:/work/ai_sandbox/ndim/.env >> .env  # Яндекс
-node tools/verify-role-env.mjs   # граница цела? он же стоит в `npm run guards`
+node tools/verify-role-env-scope.mjs   # граница цела? он же стоит в `npm run guards`
+# (узкий verify-role-env.mjs снят и удалён 2026-08-29: широкий поглощает его — решение смены 10)
 ```
 
 ## Где в снимке Яндекса лежит ПОЛНЫЙ поимённый список
