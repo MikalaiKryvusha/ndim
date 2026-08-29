@@ -451,6 +451,13 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         }
       },
       {
+        "type": "p",
+        "text": {
+          "ru": "2.6. Система Пространство NDim использует сервис продуктовой аналитики PostHog для понимания того, как люди пользуются Системой. Данные хранятся на серверах в Европейском союзе, во Франкфурте. Условия обработки данных этим сервисом описаны в его собственных документах: https://posthog.com/privacy. Система Пространство NDim не несёт ответственности за приватность и сохранность данных в сервисе PostHog: эта ответственность лежит на самом сервисе PostHog.",
+          "en": "2.6. The NDim Space System uses the product analytics service PostHog to understand how people use the System. The data is stored on servers in the European Union, in Frankfurt. The terms on which this service processes data are set out in its own documents: https://posthog.com/privacy. The NDim Space System is not responsible for the privacy and safety of data in the PostHog service: that responsibility lies with the PostHog service itself."
+        }
+      },
+      {
         "type": "h2",
         "text": {
           "ru": "3. Права и обязанности Пользователя в отношении личных данных",
@@ -627,6 +634,28 @@ export const DOCS: Readonly<Record<string, Doc>> = {
         "text": {
           "ru": "История версий",
           "en": "Version history"
+        }
+      },
+      {
+        "type": "h3",
+        "text": {
+          "ru": "Версия 2.2 от 29.08.2026",
+          "en": "Version 2.2 from 08/29/2026"
+        }
+      },
+      {
+        "type": "ul",
+        "items": {
+          "ru": [
+            "Оценки измерений прямо в каталоге и на лендинге.",
+            "Пополнение базы данных измерениями.",
+            "Оптимизация и исправление дефектов."
+          ],
+          "en": [
+            "Dimension ratings right in the catalog and on the landing page.",
+            "Filling the database with dimensions.",
+            "Optimization and bug fixing."
+          ]
         }
       },
       {
