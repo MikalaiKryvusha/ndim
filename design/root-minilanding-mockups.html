@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — мини-лендинг корня: 4 макета (интервью №058 В1 = А, супер-микс researches/60)</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     ЧЕТЫРЕ МАКЕТА МИНИ-ЛЕНДИНГА КОРНЯ `ndimspace.app/`.
+
+     РЕШЕНИЕ ВЛАДЕЛЬЦА — интервью №058, В1 = А (2026-08-28): корень становится
+     ГЛАВНОЙ С СОДЕРЖАНИЕМ, одной ступенью. Тонкой двери не будет; прежний набор
+     `design/root-door-mockups.html` — история решения №052 и не трогается.
+
+     🔴 РАМКА СМЕНЫ 9 — слово владельца 2026-08-29, дословно: «мы думаем не
+     "нужно вылечить яндекс, поэтому срочно на коленке соберём заглушку фикс".
+     Мы думаем: "вот так делают топы, линкедин, тикток, инстаграм — мы у них
+     учимся, понимаем КАКИЕ их решения приводят их к успеху — мы сделаем так
+     же, но ещё лучше, возьмём лучшее от всех топов, но не берём их неудачные
+     решения"». Отсюда: эта дверь строится по планке топов, а возвращение
+     индексации Яндексом — следствие правильной двери, а не её цель.
+
+     ЧТО СОБРАНО (супер-микс `researches/60`, донор у каждого куска):
+       · телосложение — 16personalities: роботу и человеку ОДНО содержание;
+       · дорога в дело до аккаунта — Duolingo: главная кнопка ведёт внутрь,
+         вход для своих стоит второй, тихой строкой;
+       · видимый подписанный ярлык языка — Duolingo;
+       · автонимы «Русский» · «English» прямыми ссылками — Instagram
+         (форма списка) + `researches/59` (порог W3C: select оправдан после ~20);
+       · hreflang + x-default — Tinder (самая широкая машинная разметка набора);
+       · «продукт виден до входа» — YouTube/TikTok/Spotify, БЕЗ их модели
+         «корень = приложение»: у нас это несёт гостевой режим.
+
+     ⛔ ЧЕГО НЕТ НИ В ОДНОМ ВАРИАНТЕ (раздел «Худшие решения» той же разведки):
+     стены входа с полем пароля (Instagram) · куки-баннера первым экраном
+     (LinkedIn) · молчаливого гео-детекта (YouTube · TikTok · Spotify) ·
+     «get the app» (Tinder) · пустого для робота корня (восемь дверей из десяти).
+
+     🔴 ТЕКСТЫ — ГОТОВЫЕ КАНДИДАТЫ ИЗ ПРИНЯТЫХ СЛОВ, не сочинённые заново:
+     строка о Пространстве — №055 В2 (выведена из строки лендинга, принятой
+     владельцем 2026-08-02); большая кнопка — его слово из №050; тихий вход —
+     боевой `landing-copy.ts`; числа — форма V4 «Витрина» из прошлого набора.
+     Плашек «на вычитку» здесь нет: владелец судит макет вместе со словами.
+     Правило текста — `AGENT_GUIDE.md` → «ЛИЦО ПРОДУКТА»: констатация факта и
+     мягкое пояснение, ноль обещаний и ноль оправданий.
+
+     ЗНАК. N-сеть 1.x — 4 узла, 3 ребра, геометрия NDim_LOGO_v11, вариант V3
+     «Диагональ» (утверждён владельцем 2026-07-11). Форма не тронута.
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* Светлая «Бумага» (утверждена 2026-07-11) и тёмная — те же токены, что у прошлых наборов. */
+  :root {
+    --bg: #f5f7fb; --panel: #ffffff; --edge: #e3e9f3; --edge-soft: #eef2f9;
+    --heading: #0f1b2d; --text: #4a5a70; --muted: #8a97ab;
+    --accent: #1667d6; --accent-soft: #e8f0fd;
+    --primary: #1667d6; --primary-ink: #ffffff;
+    --card-shadow: 0 1px 2px rgba(16,32,64,.05), 0 8px 24px rgba(16,32,64,.06);
+    --mark-a: #1467d6; --mark-b: #1fa8c9; --plate: #0b1420;
+  }
+  :root[data-theme="dark"] {
+    --bg: #070c16; --panel: #0e1626; --edge: #1c2942; --edge-soft: #131e33;
+    --heading: #eaf1ff; --text: #9fb1cb; --muted: #6c7f9c;
+    --accent: #2f86ff; --accent-soft: #10233f;
+    --primary: #2f86ff; --primary-ink: #06101f;
+    --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    --mark-a: #4d9fff; --mark-b: #3fd9ff; --plate: #060b14;
+  }
+
+  body {
+    font: 15px/1.55 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); padding: 150px 16px 60px;
+  }
+  @media (min-width: 900px) { body { padding-top: 96px; } }
+
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel);
+    border-bottom: 1px solid var(--edge); box-shadow: var(--card-shadow); font-size: 13px;
+  }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--edge); background: var(--bg); color: var(--text);
+  }
+  .picker button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: var(--muted); font-size: 12px; }
+
+  .note {
+    max-width: 940px; margin: 0 auto 18px; padding: 11px 15px;
+    background: var(--accent-soft); border: 1px solid var(--edge);
+    border-radius: 12px; font-size: 13px; line-height: 1.5; color: var(--heading);
+  }
+  .note b { color: var(--accent); }
+  .note code, .why code, .tech code {
+    font-family: ui-monospace, 'Cascadia Mono', monospace; font-size: 12.5px;
+    background: var(--edge-soft); padding: 1px 5px; border-radius: 5px; color: var(--heading);
+  }
+
+  .caption {
+    max-width: 940px; margin: 26px auto 8px; font-size: 12px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+  }
+  .why { max-width: 940px; margin: 0 auto 14px; font-size: 13px; line-height: 1.6; }
+  .why p { margin-bottom: 10px; }
+  .why b { color: var(--heading); }
+  .cost { color: var(--muted); }
+
+  #stage { margin: 0 auto; transition: max-width .2s; }
+  #stage[data-w="390"]  { max-width: 390px; }
+  #stage[data-w="1024"] { max-width: 900px; }
+  #stage[data-w="1440"] { max-width: 1180px; }
+
+  .variant { display: none; }
+  .variant.active { display: block; }
+
+  /* ── Рамка браузера: у корня адрес и есть половина смысла ─────────────────── */
+  .browser {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    box-shadow: var(--card-shadow); overflow: hidden; margin: 0 auto 10px;
+  }
+  .urlbar {
+    display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+    background: var(--edge-soft); border-bottom: 1px solid var(--edge);
+    font-size: 12px; color: var(--muted);
+  }
+  .urlbar .dots { display: flex; gap: 5px; }
+  .urlbar .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--edge); display: block; }
+  .urlbar .addr {
+    flex: 1; background: var(--panel); border: 1px solid var(--edge); border-radius: 7px;
+    padding: 4px 10px; color: var(--heading); font-family: ui-monospace, 'Cascadia Mono', monospace;
+  }
+
+  /* Сама страница. Фон её собственный — она не в приложении. */
+  .door { background: var(--bg); padding: 22px 20px 40px; }
+  #stage[data-w="1440"] .door { padding: 26px 40px 64px; }
+
+  /* ── Ярлык языка: донор Duolingo (подписанный контрол), форма списка — автонимы ──
+     Ярлык подписан НА ОБОИХ языках, потому что язык гостя корня ещё не выбран:
+     подпись на одном языке была бы выбором, сделанным за человека. */
+  .langbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding-bottom: 13px; border-bottom: 1px solid var(--edge);
+  }
+  .langbar .lb {
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 700; color: var(--muted);
+  }
+  .langbar a {
+    font-size: 14.5px; font-weight: 700; color: var(--accent); text-decoration: none;
+    padding: 3px 9px; border: 1px solid var(--edge); border-radius: 8px; background: var(--panel);
+  }
+  /* 🔴 Автонимы держатся своей обёрткой, иначе на 390 перенос рвёт контрол посередине:
+     «Русский» повисает в строке подписи, «English» уходит вниз одиноким огрызком — ярлык
+     перестаёт читаться как ОДИН выбор из двух. Поймано кадрами V1-390 и V4-390; глазами по
+     HTML не видно, потому что на 1440 переноса нет вовсе. */
+  .langbar .autos { display: flex; gap: 8px; flex-wrap: wrap; }
+  #stage[data-w="390"] .langbar { flex-direction: column; align-items: flex-start; gap: 9px; }
+
+  .mark { display: block; margin: 0 auto; }
+  .word {
+    text-align: center; color: var(--heading); font-weight: 800; letter-spacing: -.02em;
+    font-size: 30px; line-height: 1.15; margin-top: 14px;
+  }
+  #stage[data-w="1440"] .word { font-size: 40px; }
+  .line {
+    text-align: center; max-width: 30em; margin: 12px auto 0; font-size: 15.5px; line-height: 1.6;
+  }
+  #stage[data-w="1440"] .line { font-size: 17px; }
+  .line.en { color: var(--muted); margin-top: 7px; }
+
+  /* ── Мягкое пояснение «как это устроено» — три констатации на каждом языке ──
+     Это содержание двери, а не украшение: разведка (`researches/60`, вывод 2)
+     показала, что ни одна дверь индустрии не отдаёт человеку меньше 2 000 знаков. */
+  .how { display: flex; gap: 22px; margin-top: 22px; }
+  #stage[data-w="390"] .how { flex-direction: column; gap: 14px; }
+  .hcol { flex: 1; font-size: 13.5px; line-height: 1.6; }
+  .hcol.en { color: var(--muted); }
+  .hcol p { margin-bottom: 7px; }
+  .hcol b { color: var(--heading); font-weight: 700; }
+  .hcol.en b { color: var(--muted); }
+
+  /* ── Дорога в дело: донор Duolingo. Подпись двуязычная — на корне язык не выбран. ── */
+  .cta {
+    display: block; text-align: center; text-decoration: none; margin-top: 24px;
+    padding: 15px 22px; border-radius: 14px;
+    background: var(--primary); color: var(--primary-ink); border: 1px solid var(--primary);
+  }
+  .cta .r { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+  .cta .e { display: block; font-size: 13.5px; font-weight: 600; opacity: .82; margin-top: 2px; }
+
+  /* Тихий вход для своих — вторая строка, как «I already have an account» у Duolingo. */
+  .quiet { text-align: center; margin-top: 13px; font-size: 14px; }
+  .quiet a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+  /* ── Живые числа: форма V4 «Витрина» ──────────────────────────────────────── */
+  .facts {
+    display: flex; gap: 12px; margin-top: 28px; padding-top: 22px;
+    border-top: 1px solid var(--edge); flex-wrap: wrap;
+  }
+  .fact { flex: 1 1 150px; text-align: center; }
+  /* 🔴 На 390 базис `150px` в колонке становится ВЫСОТОЙ и между числами повисают
+     пустые полосы — класс ошибки, пойманный кадрами прошлого набора дважды. */
+  #stage[data-w="390"] .facts { flex-direction: column; gap: 16px; }
+  #stage[data-w="390"] .fact { flex: 0 0 auto; }
+  .fact .n { color: var(--heading); font-weight: 800; font-size: 24px; letter-spacing: -.01em; }
+  .fact .l { font-size: 13px; line-height: 1.45; margin-top: 4px; }
+  .fact .l .en { display: block; color: var(--muted); font-size: 12px; }
+  .taken { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 14px; }
+
+  /* ── V2 «Разворот»: речь слева, действие справа ───────────────────────────── */
+  .spread { display: flex; gap: 26px; align-items: flex-start; margin-top: 22px; }
+  #stage[data-w="390"] .spread { flex-direction: column; gap: 20px; }
+  .spread .say { flex: 1 1 auto; min-width: 0; }
+  .spread .say .word, .spread .say .line { text-align: left; margin-left: 0; }
+  .spread .say .mark { margin: 0; }
+  .spread .act {
+    flex: 0 0 330px; background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 18px; padding: 22px 20px; box-shadow: var(--card-shadow);
+  }
+  /* Тот же класс ошибки, что у чисел: в колонке 390 базис 330px стал бы ВЫСОТОЙ панели. */
+  #stage[data-w="390"] .spread .act { flex: 0 0 auto; width: 100%; }
+  .spread .act .langbar { border-bottom: 0; padding-bottom: 0; margin-bottom: 16px; }
+  .spread .act .cta { margin-top: 0; }
+  .spread .act .under {
+    display: block; text-align: center; font-size: 12px; color: var(--muted);
+    margin-top: 14px; line-height: 1.5;
+  }
+
+  /* ── V3 «Две речи»: язык и дорога слиты, по половине на язык ──────────────── */
+  .speeches { display: flex; gap: 16px; margin-top: 20px; align-items: stretch; }
+  #stage[data-w="390"] .speeches { flex-direction: column; }
+  .speech {
+    flex: 1; display: flex; flex-direction: column;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 18px;
+    padding: 22px 20px; box-shadow: var(--card-shadow);
+  }
+  .speech .h { color: var(--heading); font-weight: 800; font-size: 20px; text-align: center; }
+  .speech .auto {
+    display: block; text-align: center; margin-top: 5px; font-size: 13px;
+    color: var(--accent); font-weight: 700; text-decoration: none;
+  }
+  .speech .t { margin: 14px 0 0; font-size: 14.5px; line-height: 1.6; }
+  .speech .steps { margin-top: 12px; font-size: 13px; line-height: 1.6; }
+  .speech .steps p { margin-bottom: 6px; }
+  .speech .steps b { color: var(--heading); }
+  /* Кнопка прибита к низу половины: `auto` съедает разницу высот двух текстов —
+     русская строка переносится на строку больше английской, и без этого половины
+     встают на разной высоте, рассыпаясь ровно в том, ради чего сделаны (урок кадра
+     V2-1440-light прошлого набора). */
+  .speech .cta { margin-top: auto; }
+  #stage[data-w="390"] .speech .cta { margin-top: 18px; }
+  .speech .cta .r { font-size: 17px; }
+
+  /* ── V4 «Витрина»: состояние Пространства первым содержанием ──────────────── */
+  .showcase {
+    margin-top: 22px; background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 18px; padding: 22px 18px 18px; box-shadow: var(--card-shadow);
+  }
+  .showcase .facts { margin-top: 0; padding-top: 0; border-top: 0; }
+  .showcase .fact .n { font-size: 30px; }
+  #stage[data-w="1440"] .showcase .fact .n { font-size: 36px; }
+  .showcase .sl {
+    text-align: center; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 700; color: var(--muted); margin-bottom: 16px;
+  }
+  .v4how { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--edge); }
+
+  .tech {
+    max-width: 940px; margin: 26px auto 0; padding: 15px 18px;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    font-size: 13px; line-height: 1.65;
+  }
+  .tech h3 { color: var(--heading); font-size: 14px; margin-bottom: 8px; }
+  .tech li { margin-left: 18px; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<!-- Канонический знак: 4 узла, 3 ребра. Форма не тронута — только размер и краска. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gMark" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70">
+      <stop offset="0" stop-color="#4d9fff"/><stop offset="1" stop-color="#3fd9ff"/>
+    </linearGradient>
+    <symbol id="nmark" viewBox="0 0 96 96">
+      <rect width="96" height="96" rx="22" fill="var(--plate)"/>
+      <g stroke="url(#gMark)" stroke-width="6.7" fill="none">
+        <line x1="36.5" y1="29" x2="30" y2="66"/>
+        <line x1="36.5" y1="29" x2="59.5" y2="66"/>
+        <line x1="59.5" y1="66" x2="66" y2="29"/>
+      </g>
+      <g fill="url(#gMark)">
+        <circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/>
+        <circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="picker">
+  <b>Мини-лендинг корня — 4 макета:</b>
+  <button data-v="1" class="active">V1 Ступень</button>
+  <button data-v="2">V2 Разворот</button>
+  <button data-v="3">V3 Две речи</button>
+  <button data-v="4">V4 Витрина</button>
+  <span class="sp"></span>
+  <button id="width-mid">1024</button>
+  <button id="width">390 ↔ 1440</button>
+  <button id="theme">тема</button>
+  <span class="hint">интервью №058 В1 = А · супер-микс researches/60</span>
+</div>
+
+<div class="note">
+  <b>Что выбирается.</b> Форма главной страницы <code>ndimspace.app/</code>. Решение принято
+  владельцем (интервью №058, В1 = А): корень становится главной с содержанием — мини-лендингом
+  по супер-миксу <code>researches/60</code>, одной ступенью. Состав у всех четырёх вариантов
+  один: знак · строка о Пространстве на обоих языках · пояснение «как это устроено» · большая
+  кнопка в дело · тихий вход для своих · подписанный ярлык языка с автонимами · живые числа.
+  Различаются варианты <b>формой и композицией</b> — тем, что человек видит первым и что стоит
+  рядом с чем. <b>Язык гостя корня ещё не выбран</b>, поэтому дверь говорит на обоих языках сразу
+  и ни один из них за человека не угадывает.
+</div>
+
+<div id="stage" data-w="390">
+
+  <!-- ═══════════════════ V1 — СТУПЕНЬ ═══════════════════ -->
+  <div class="variant active" id="1">
+    <div class="caption">V1 «Ступень» — одна колонка, читается сверху вниз одним движением</div>
+    <div class="browser">
+      <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
+      <div class="door">
+        <div class="langbar">
+          <span class="lb">Язык страницы · Site language</span>
+          <span class="autos"><a href="/ru">Русский</a><a href="/en">English</a></span>
+        </div>
+        <svg class="mark" width="72" height="72" style="margin-top:24px"><use href="#nmark"/></svg>
+        <div class="word">NDim Space</div>
+        <p class="line">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
+        <p class="line en">In the NDim Space you will find people who are genuinely like you.</p>
+        <div class="how">
+          <div class="hcol">
+            <p><b>1.</b> Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры.</p>
+            <p><b>2.</b> Пространство NDim считает Похожесть между людьми по их оценкам.</p>
+            <p><b>3.</b> В Связях Вы видите людей с наибольшей Похожестью на Вас.</p>
+          </div>
+          <div class="hcol en">
+            <p><b>1.</b> People rate objects of human culture — films, series, books, games.</p>
+            <p><b>2.</b> The NDim Space computes Similarity between people from their ratings.</p>
+            <p><b>3.</b> In Relations you see the people with the highest Similarity to you.</p>
+          </div>
+        </div>
+        <a class="cta" href="/profile?guest=1">
+          <span class="r">Войти в Пространство</span>
+          <span class="e">Enter the Space</span>
+        </a>
+        <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+        <div class="facts">
+          <div class="fact"><div class="n">5&#160;137</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
+          <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
+          <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ V2 — РАЗВОРОТ ═══════════════════ -->
+  <div class="variant" id="2">
+    <div class="caption">V2 «Разворот» — речь слева, действие справа отдельной панелью</div>
+    <div class="browser">
+      <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
+      <div class="door">
+        <div class="spread">
+          <div class="say">
+            <svg class="mark" width="64" height="64"><use href="#nmark"/></svg>
+            <div class="word">NDim Space</div>
+            <p class="line">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
+            <p class="line en">In the NDim Space you will find people who are genuinely like you.</p>
+            <div class="how">
+              <div class="hcol">
+                <p><b>1.</b> Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры.</p>
+                <p><b>2.</b> Пространство NDim считает Похожесть между людьми по их оценкам.</p>
+                <p><b>3.</b> В Связях Вы видите людей с наибольшей Похожестью на Вас.</p>
+              </div>
+              <div class="hcol en">
+                <p><b>1.</b> People rate objects of human culture — films, series, books, games.</p>
+                <p><b>2.</b> The NDim Space computes Similarity between people from their ratings.</p>
+                <p><b>3.</b> In Relations you see the people with the highest Similarity to you.</p>
+              </div>
+            </div>
+          </div>
+          <div class="act">
+            <div class="langbar">
+              <span class="lb">Язык страницы · Site language</span>
+              <span class="autos"><a href="/ru">Русский</a><a href="/en">English</a></span>
+            </div>
+            <a class="cta" href="/profile?guest=1">
+              <span class="r">Войти в Пространство</span>
+              <span class="e">Enter the Space</span>
+            </a>
+            <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+            <span class="under">Пространство открывается сразу<br>The Space opens right away</span>
+          </div>
+        </div>
+        <div class="facts">
+          <div class="fact"><div class="n">5&#160;137</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
+          <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
+          <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ V3 — ДВЕ РЕЧИ ═══════════════════ -->
+  <div class="variant" id="3">
+    <div class="caption">V3 «Две речи» — язык и дорога слиты: по половине на язык</div>
+    <div class="browser">
+      <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
+      <div class="door">
+        <svg class="mark" width="64" height="64" style="margin-top:8px"><use href="#nmark"/></svg>
+        <div class="word">NDim Space</div>
+        <div class="langbar" style="justify-content:center;border-bottom:0;padding-bottom:0;margin-top:14px">
+          <span class="lb">Язык страницы · Site language</span>
+        </div>
+        <div class="speeches">
+          <div class="speech">
+            <div class="h">Пространство NDim</div>
+            <a class="auto" href="/ru">Русский</a>
+            <p class="t">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
+            <div class="steps">
+              <p><b>1.</b> Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры.</p>
+              <p><b>2.</b> Пространство NDim считает Похожесть между людьми по их оценкам.</p>
+              <p><b>3.</b> В Связях Вы видите людей с наибольшей Похожестью на Вас.</p>
+            </div>
+            <a class="cta" href="/ru"><span class="r">Войти в Пространство</span></a>
+          </div>
+          <div class="speech">
+            <div class="h">NDim Space</div>
+            <a class="auto" href="/en">English</a>
+            <p class="t">In the NDim Space you will find people who are genuinely like you.</p>
+            <div class="steps">
+              <p><b>1.</b> People rate objects of human culture — films, series, books, games.</p>
+              <p><b>2.</b> The NDim Space computes Similarity between people from their ratings.</p>
+              <p><b>3.</b> In Relations you see the people with the highest Similarity to you.</p>
+            </div>
+            <a class="cta" href="/en"><span class="r">Enter the Space</span></a>
+          </div>
+        </div>
+        <p class="quiet" style="margin-top:18px"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+        <div class="facts">
+          <div class="fact"><div class="n">5&#160;137</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
+          <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
+          <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ V4 — ВИТРИНА ═══════════════════ -->
+  <div class="variant" id="4">
+    <div class="caption">V4 «Витрина» — состояние Пространства первым содержанием, четырьмя числами</div>
+    <div class="browser">
+      <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
+      <div class="door">
+        <div class="langbar">
+          <span class="lb">Язык страницы · Site language</span>
+          <span class="autos"><a href="/ru">Русский</a><a href="/en">English</a></span>
+        </div>
+        <svg class="mark" width="60" height="60" style="margin-top:20px"><use href="#nmark"/></svg>
+        <div class="word">NDim Space</div>
+        <p class="line">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
+        <p class="line en">In the NDim Space you will find people who are genuinely like you.</p>
+        <div class="showcase">
+          <div class="sl">Пространство NDim сейчас · The NDim Space right now</div>
+          <div class="facts">
+            <div class="fact"><div class="n">5&#160;137</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
+            <div class="fact"><div class="n">4&#160;071</div><div class="l">оценок поставлено<span class="en">ratings cast</span></div></div>
+            <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
+            <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
+          </div>
+          <p class="taken">Снимок 23 августа 2026 года · snapshot of 23 August 2026</p>
+        </div>
+        <a class="cta" href="/profile?guest=1">
+          <span class="r">Войти в Пространство</span>
+          <span class="e">Enter the Space</span>
+        </a>
+        <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+        <div class="how v4how">
+          <div class="hcol">
+            <p><b>1.</b> Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры.</p>
+            <p><b>2.</b> Пространство NDim считает Похожесть между людьми по их оценкам.</p>
+            <p><b>3.</b> В Связях Вы видите людей с наибольшей Похожестью на Вас.</p>
+          </div>
+          <div class="hcol en">
+            <p><b>1.</b> People rate objects of human culture — films, series, books, games.</p>
+            <p><b>2.</b> The NDim Space computes Similarity between people from their ratings.</p>
+            <p><b>3.</b> In Relations you see the people with the highest Similarity to you.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="caption">Чем варианты отличаются и чем каждый платит</div>
+<div class="why">
+  <p><b>V1 «Ступень».</b> Одна колонка, порядок чтения жёсткий: ярлык языка → знак → строка о
+  Пространстве → как это устроено → большая кнопка → тихий вход → числа. Это телосложение
+  16personalities, единственной двери набора, живущей на органическом трафике, как наш вход:
+  человек без предзнания получает предложение, объяснение и дорогу в одном движении сверху вниз.
+  <span class="cost">Платит воздухом на широком экране: колонка держит меру строки, и на 1440 по
+  бокам остаются поля. И числа стоят последними — человек, ушедший внутрь на кнопке, их не
+  увидит.</span></p>
+
+  <p><b>V2 «Разворот».</b> Речь и действие разведены по сторонам: слева знак, строка и объяснение,
+  справа — панель, в которой ярлык языка стоит вплотную над большой кнопкой. Человек видит выбор
+  языка и дорогу внутрь одним взглядом, без прокрутки. Форма лучше всех четырёх использует ширину
+  десктопа.
+  <span class="cost">Платит порядком складывания: на 390 панель действия уезжает под объяснение,
+  и до большой кнопки человек добирается прокруткой. На 1024 панель забирает треть ширины у
+  текста, и строка о Пространстве переносится раньше.</span></p>
+
+  <p><b>V3 «Две речи».</b> Выбор языка и дорога внутрь — одно действие: две равные половины, каждая
+  говорит на своём языке целиком и несёт свою большую кнопку. Русский гость и английский гость
+  получают одинаковое обращение, и каждый читает страницу целиком на своём языке. Форма прямо
+  выражает симметрию, записанную в цели проекта.
+  <span class="cost">Платит двумя главными кнопками вместо одной: у Duolingo, донора этой дороги,
+  главная кнопка ровно одна, и одна кнопка решительнее двух. На 390 половины идут друг под другом,
+  английская уходит под сгиб, и порядок половин становится решением — кто стоит первым.</span></p>
+
+  <p><b>V4 «Витрина».</b> Состояние Пространства поднято наверх и стоит панелью сразу под строкой:
+  четыре живых числа — объекты, оценки, люди, связи — раньше кнопки. Это донор 16personalities в
+  чистом виде: у них первым экраном стоит число-довод. Робот получает страницу с содержанием,
+  человек — повод войти до того, как его о чём-то попросили.
+  <span class="cost">Платит контрактом свежести: числа берутся снимком перед выкатом
+  (<code>tools/snapshot-landing-metric.mjs</code>, <code>bugs/81</code>), дата снимка стоит на
+  странице открыто, и выкат обязан снимок обновлять. И объяснение «как это устроено» сдвинуто под
+  кнопку: человек, дочитавший до объяснения, уже прошёл мимо дороги внутрь.</span></p>
+</div>
+
+<div class="tech">
+  <h3>Что на этой странице есть, но глазом не видно</h3>
+  <ul>
+    <li><code>hreflang</code> тремя строками: <code>ru</code>, <code>en</code> и
+      <code>x-default</code> — донор Tinder (59 языков + x-default, самая широкая машинная
+      разметка набора). Наша тройка по форме уже такая; вывод разведки — держать её на корне
+      обязательно.</li>
+    <li><b>Мета <code>noindex</code> снята.</b> Именно её Вебмастер Яндекса назвал причиной:
+      «URL запрещён к индексированию тегом noindex» (<code>bugs/203</code>).</li>
+    <li>🔴 <b>Языковой увод распознавателя снимается</b> — иначе человек с включённым JS этой
+      страницы не увидит ни кадра, и мини-лендинг существовал бы только для роботов. Это прямое
+      следствие решения №058 («корень — главная с содержанием, одной ступенью»), и оно отменяет
+      прежнее устройство корня из <code>plans/39</code> шаг 2.</li>
+    <li>🔴 <b>Контракт ссылок из писем остаётся первой проверкой:</b> <code>mode=signIn</code> +
+      <code>oobCode</code> уезжает в <code>/profile</code> с нетронутым query. Он вшит в Action URL
+      писем Firebase (наследие 1.x), и его потеря ломает вход по письму — поймано боевым выкатом
+      2026-07-12.</li>
+    <li><b>Числа приезжают пререндером, а не «на горячую»</b> (<code>bugs/81</code>): снимок
+      <code>space/public_metrics</code> берётся перед выкатом и попадает в первый кадр. Множителя
+      витрины нет — показывается ровно столько, сколько есть (интервью №010, Р7).</li>
+    <li><b>Дорога в гостя — тот же вход, что у моста лендинга</b> (<code>plans/67</code>) и у двери
+      карточки (<code>plans/75</code>). Адрес в макетах показан условно: третьего входа в гостевой
+      режим не заводится.</li>
+    <li><b>Лендинги <code>/ru</code> и <code>/en</code> не тронуты</b>: решение «у каждого языка
+      свой адрес» (№010 Р5) остаётся в силе, автонимы ведут на них.</li>
+    <li><b>Счётчиков и куки-баннера на странице нет</b> — первый экран занят содержанием целиком.
+      Куки-баннер первым экраном взят у LinkedIn в раздел «худшие решения» и не берётся.</li>
+  </ul>
+</div>
+
+<script>
+  // Переключатели дома стиля: вариант · ширина · тема. Съёмщик tools/shoot-mockups.mjs
+  // жмёт ровно эти кнопки и читает #stage[data-w], поэтому имена и роли менять нельзя.
+  const stage = document.getElementById('stage');
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === b.dataset.v));
+  }));
+  document.getElementById('width').addEventListener('click', () => {
+    stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390';
+  });
+  document.getElementById('width-mid').addEventListener('click', () => { stage.dataset.w = '1024'; });
+  document.getElementById('theme').addEventListener('click', () => {
+    const el = document.documentElement;
+    el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+  });
+</script>
+</body>
+</html>
