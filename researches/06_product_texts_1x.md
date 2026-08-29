@@ -507,9 +507,9 @@
 ⚠️ Номер пункта — 2.6, а не 2.5: на странице вычитки агент назвал 2.5, не сверив с документом,
 где 2.5 уже занят Firebase. Правка механическая, текст принятого абзаца не тронут. -->
 
-> **RU:** 2.6. Система Пространство NDim использует сервис продуктовой аналитики PostHog для понимания того, как люди пользуются Системой. Данные хранятся на серверах в Европейском союзе, во Франкфурте. Условия обработки данных этим сервисом описаны в его собственных документах: https://posthog.com/privacy.
+> **RU:** 2.6. Система Пространство NDim использует сервис продуктовой аналитики PostHog для понимания того, как люди пользуются Системой. Данные хранятся на серверах в Европейском союзе, во Франкфурте. Условия обработки данных этим сервисом описаны в его собственных документах: https://posthog.com/privacy. Система Пространство NDim не несёт ответственности за приватность и сохранность данных в сервисе PostHog: эта ответственность лежит на самом сервисе.
 >
-> **EN:** 2.6. The NDim Space System uses the product analytics service PostHog to understand how people use the System. The data is stored on servers in the European Union, in Frankfurt. The terms on which this service processes data are set out in its own documents: https://posthog.com/privacy.
+> **EN:** 2.6. The NDim Space System uses the product analytics service PostHog to understand how people use the System. The data is stored on servers in the European Union, in Frankfurt. The terms on which this service processes data are set out in its own documents: https://posthog.com/privacy. The NDim Space System is not responsible for the privacy and safety of data in the PostHog service: that responsibility lies with the service itself.
 
 
 ### 3. Права и обязанности Пользователя в отношении личных данных / User rights and obligations in relation to personal data
