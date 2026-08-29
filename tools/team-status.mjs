@@ -40,6 +40,8 @@
  * Гонки записи: доска правится под файловым замком `<доска>.lock` (create-exclusive с
  * ретраями; замок старше 30 с считается брошенным и снимается). Запись атомарна:
  * временный файл + rename.
+ *
+ * Запуск: node tools/team-status.mjs · самотест: --selftest
  */
 import { readFileSync, writeFileSync, renameSync, openSync, closeSync, unlinkSync, statSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';

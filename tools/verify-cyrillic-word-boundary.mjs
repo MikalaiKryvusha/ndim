@@ -39,6 +39,8 @@
  * Запуск:
  *   node tools/verify-cyrillic-word-boundary.mjs
  *   node tools/verify-cyrillic-word-boundary.mjs --selftest    # без файловой системы
+ *
+ * Ворота: npm run guards
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';

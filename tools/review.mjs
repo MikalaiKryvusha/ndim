@@ -17,6 +17,8 @@
  *   node tools/review.mjs --selftest            самотест ядра и стражей контура
  *
  * Флаги: --by "Имя" · --voice "Имя голоса" · --no-signal · --no-open · --timeout МИН · --port N
+ *
+ * Запуск: node tools/review.mjs · самотест: --selftest
  */
 
 import { createServer } from 'node:http';

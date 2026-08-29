@@ -19,6 +19,8 @@
  * Запуск (сначала подними собранный сайт):
  *   npx vite preview --port 4173 --strictPort   # в отдельном окне
  *   node tools/shoot-catalog-hubs.mjs
+ *
+ * Запуск: node tools/shoot-catalog-hubs.mjs
  */
 import { chromium } from '@playwright/test';
 import { mkdir, rm } from 'node:fs/promises';

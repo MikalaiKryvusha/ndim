@@ -36,6 +36,10 @@ import {
 	indicatorsToRows,
 	EVENT_REMOVED,
 	EVENT_APPEARED,
+	shouldWriteSnapshot,
+	snapshotExitCode,
+	snapshotComplete,
+	incompleteReason,
 } from './lib/yandex-snapshot-core.mjs';
 
 /** Строка выборки в форме первоисточника. Коды — из ЖИВОЙ консоли, см. шапку. */
@@ -220,4 +224,120 @@ test('имена показателей НЕ зашиты: новый показ
 test('пустой и кривой ответ не роняют развёртку', () => {
 	assert.deepEqual(indicatorsToRows({}), []);
 	assert.deepEqual(indicatorsToRows({ indicators: { TOTAL_SHOWS: [{ value: 1 }] } }), []);
+});
+
+// ── bugs/215: ХУДШИЙ СНИМОК НЕ ЗАТИРАЕТ ЛУЧШИЙ ─────────────────────────────────────────────
+//
+// Дефект нашёл суд QA: половины снимка переживали отказ API несимметрично — события бросали,
+// статистика тихо давала пустой массив, и файл дня перезаписывался пустотой с кодом 0.
+// Инвариант лечения: частичный снимок НИКОГДА не затирает существующий, полный — затирает всегда.
+
+test('🔴 неполный снимок НЕ затирает уже лежащий файл дня', () => {
+	const v = shouldWriteSnapshot({ complete: false, fileExists: true });
+	assert.equal(v.write, false, 'иначе худший снимок молча затрёт лучший — ровно дефект bugs/215');
+	assert.match(v.why, /худший не затирает лучший/);
+});
+
+test('неполный снимок ПИШЕТСЯ, когда файла дня ещё нет — день без файла хуже', () => {
+	const v = shouldWriteSnapshot({ complete: false, fileExists: false });
+	assert.equal(v.write, true, 'ряд копится, и пропущенный день невосстановим');
+});
+
+test('полный снимок перезаписывает день — идемпотентность НЕ сломана', () => {
+	// ⛔ Отменять перезапись дня было бы лечением не того: консоль пересматривает свежие дни
+	// задним числом, и поздний ПОЛНЫЙ прогон несёт строго лучшие данные.
+	const v = shouldWriteSnapshot({ complete: true, fileExists: true });
+	assert.equal(v.write, true);
+	assert.match(v.why, /перезапись дня полным снимком/);
+});
+
+test('полный снимок пишется и первым за день', () => {
+	assert.equal(shouldWriteSnapshot({ complete: true, fileExists: false }).write, true);
+});
+
+test('🔴 неполный снимок СЛЫШЕН вызывающему кодом возврата', () => {
+	assert.equal(snapshotExitCode({ complete: false }), 1, 'тихий ноль — это и был дефект');
+	assert.equal(snapshotExitCode({ complete: true }), 0);
+});
+
+test('таблица решений покрыта целиком: четыре сочетания полноты и наличия файла', () => {
+	const cases = [
+		[true, true, true],
+		[true, false, true],
+		[false, false, true],
+		[false, true, false],
+	];
+	for (const [complete, fileExists, expected] of cases) {
+		assert.equal(
+			shouldWriteSnapshot({ complete, fileExists }).write,
+			expected,
+			`полный=${complete} файл=${fileExists}`,
+		);
+	}
+});
+
+// ── 🔴 ПОЛНОТА СЧИТАЕТСЯ ПО ОБЕИМ МОЛЧАЩИМ ЧАСТЯМ (дефект 2 вердикта №10 QA) ─────────────────
+//
+// Инвариант `shouldWriteSnapshot` был верен и раньше — врал ВХОД: прибор подавал ему
+// `complete = history.ok`, полноту одной половины под именем, обещающим всеобщность.
+// Наблюдение судьи подменённым fetch: квота 503 + статистика ОК + файл дня есть → файл
+// ПЕРЕЗАПИСАН, код 0, хеш сменился, живая квота заменена на `{error: 503}`.
+// Решение Менеджера 2026-08-29: «не затирает, пока не полны ОБЕ половины».
+
+test('🔴 отказ КВОТЫ при живой статистике делает снимок НЕПОЛНЫМ', () => {
+	// Ровно случай судьи. Прежний вход (`history.ok`) дал бы здесь true — и затёр день.
+	assert.equal(snapshotComplete({ historyOk: true, quotaOk: false }), false);
+});
+
+test('🔴 отказ СТАТИСТИКИ при живой квоте — тоже неполный (симметрия половин)', () => {
+	assert.equal(snapshotComplete({ historyOk: false, quotaOk: true }), false);
+});
+
+test('полон только тогда, когда приехали ОБЕ половины', () => {
+	assert.equal(snapshotComplete({ historyOk: true, quotaOk: true }), true);
+	assert.equal(snapshotComplete({ historyOk: false, quotaOk: false }), false);
+});
+
+test('🔴 СКВОЗНОЙ случай судьи: квота 503 + файл дня есть → день НЕ затирается, код 1', () => {
+	// Связка целиком, от входа до последствия: именно её судья снимет подменённым fetch.
+	const complete = snapshotComplete({ historyOk: true, quotaOk: false });
+	assert.equal(shouldWriteSnapshot({ complete, fileExists: true }).write, false);
+	assert.equal(snapshotExitCode({ complete }), 1);
+});
+
+test('🔴 совет судьи соблюдён: день БЕЗ файла пишется даже при отказе квоты', () => {
+	// «Делать отказ квоты поводом не писать день я НЕ советую — это выбросит события ради
+	// второстепенного счётчика». Запрещена ПЕРЕЗАПИСЬ, а не запись: события не теряются.
+	const complete = snapshotComplete({ historyOk: true, quotaOk: false });
+	assert.equal(shouldWriteSnapshot({ complete, fileExists: false }).write, true);
+});
+
+// ── 🔴 ТЕКСТ ОТКАЗА — ТОЖЕ НАБЛЮДАЕМОЕ ПОВЕДЕНИЕ (замечание 1 вердикта №12 QA) ───────────────
+//
+// Класс назвала судья, и он сильнее своего случая: **правильность текста отказа НЕ следует из
+// правильности кода возврата.** Мутация ловит код и молчит про смысл, поэтому текст собирается
+// функцией и стережётся юнитом, а не пишется строкой на месте вызова.
+// Наблюдение, оплатившее класс: при отказе КВОТЫ прибор говорил «поле queryHistory.error несёт
+// код отказа», а этого поля не было вовсе — статистика пришла целой, код лежал в recrawlQuota.error.
+
+test('🔴 отказ КВОТЫ показывает на recrawlQuota, а НЕ на queryHistory', () => {
+	const текст = incompleteReason({ historyOk: true, quotaOk: false });
+	assert.match(текст, /recrawlQuota\.error/);
+	assert.doesNotMatch(текст, /queryHistory\.error/, 'палец показывал на исправную половину');
+});
+
+test('отказ СТАТИСТИКИ показывает на queryHistory, а не на квоту', () => {
+	const текст = incompleteReason({ historyOk: false, quotaOk: true });
+	assert.match(текст, /queryHistory\.error/);
+	assert.doesNotMatch(текст, /recrawlQuota\.error/);
+});
+
+test('отказали ОБЕ — названы обе, ни одна не проглочена', () => {
+	const текст = incompleteReason({ historyOk: false, quotaOk: false });
+	assert.match(текст, /queryHistory\.error/);
+	assert.match(текст, /recrawlQuota\.error/);
+});
+
+test('полный снимок причины НЕ выдумывает', () => {
+	assert.equal(incompleteReason({ historyOk: true, quotaOk: true }), null);
 });

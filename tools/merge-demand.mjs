@@ -3,6 +3,8 @@
  * Жнецы пишут по языкам (`34_demand_tN_ru.json` — Вордстат, `34_demand_tN_en.json` — Bing:
  * разные контракты, общий файл они бы затирали); план называет сырьё `34_demand_tN.json` —
  * этот скрипт склеивает пары в них. Повторный прогон = байт-в-байт тот же результат.
+ *
+ * Запуск: node tools/merge-demand.mjs
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 

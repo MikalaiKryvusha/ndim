@@ -13,6 +13,8 @@
  * каталоге.
  *
  *   node tools/measure-hub-snippets.mjs [--lang en]
+ *
+ * Запуск: node tools/measure-hub-snippets.mjs
  */
 
 import { existsSync, readFileSync } from 'node:fs';
