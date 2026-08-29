@@ -22,6 +22,8 @@
  * Запуск (свой проект эмулятора — чтобы не зависеть от данных стенда и не мешать им):
  *   npx firebase emulators:exec --only firestore --project demo-ndim-loop \
  *     "node tools/verify-candidate-return-loop.mjs"
+ *
+ * Запуск: node tools/verify-candidate-return-loop.mjs
  */
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';

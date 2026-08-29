@@ -8,6 +8,8 @@
 //
 // Использование:  node tools/03-kaif-verify.mjs
 // Коды возврата:  0 — всё чисто; 1 — есть ошибки (перечислены в выводе).
+//
+// Запуск: node tools/03-kaif-verify.mjs
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';

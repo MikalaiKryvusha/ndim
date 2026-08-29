@@ -30,6 +30,8 @@
  *
  * ⛔ Ключ — только из `.env` (канон-правило владельца 2026-08-15). Прибор ЧИТАЮЩИЙ: область
  * доступа `webmasters.readonly`, ни одной пишущей операции в коде нет.
+ *
+ * Ворота: npm run guards (запись «возраст ряда консолей», аргументы --check-age 8)
  */
 import { mkdirSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';

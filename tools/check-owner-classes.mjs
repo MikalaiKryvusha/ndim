@@ -17,6 +17,8 @@
 // что закрыт в check-candidate-descriptions.mjs.
 // 🔴 ГРАНИЦА СЛОВА: рядом с кириллицей `\b` и `\w` определены через ASCII и молча не
 // срабатывают, поэтому здесь всюду (?<!\p{L})…(?!\p{L}) и [\p{L}] с флагом u.
+//
+// Запуск: node tools/check-owner-classes.mjs
 
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';

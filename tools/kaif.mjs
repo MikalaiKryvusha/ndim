@@ -5,6 +5,8 @@
 //   version / check  — чистая механика, выполняется здесь.
 //   update / fork / switch-origin / remove — требуют трёхстороннего мёрджа, подтверждений
 //   и решений владельца. Скрипт не имитирует эту работу, а направляет к нужному скиллу KAIF.
+//
+// Запуск: node tools/kaif.mjs
 
 import { readFileSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';

@@ -24,6 +24,7 @@
  *   node tools/measure-catalog-tags.mjs --json             # только машиночитаемый вывод
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 const SNAPSHOT = 'src/lib/content/dims-build.json';
 /*
@@ -53,77 +54,88 @@ const rows = Array.isArray(raw) ? raw : (raw.dims ?? Object.values(raw));
 const byKind = new Map();
 let withTags = 0;
 let tagValues = 0;
-for (const d of rows) {
-  const kind = String(d?.type?.ru ?? '').trim().toLowerCase();
-  if (kind === '') continue;
-  const tags = Array.isArray(d?.tags) ? d.tags.map((t) => String(t).trim()).filter(Boolean) : [];
-  if (tags.length > 0) withTags += 1;
-  tagValues += tags.length;
-  if (!byKind.has(kind)) byKind.set(kind, { count: 0, tags: new Map(), sample: d?.type?.en ?? '' });
-  const bucket = byKind.get(kind);
-  bucket.count += 1;
-  // Один тег считается один раз на запись: повтор внутри записи не повышает его долю.
-  for (const t of new Set(tags.map((t) => t.toLowerCase()))) {
-    bucket.tags.set(t, (bucket.tags.get(t) ?? 0) + 1);
-  }
-}
-
-const conventions = {};
-const report = [];
-for (const [kind, bucket] of [...byKind.entries()].sort((a, b) => b[1].count - a[1].count)) {
-  if (bucket.count < MIN_KIND) continue;
-  const mandatory = [...bucket.tags.entries()]
-    .filter(([, n]) => n / bucket.count >= MANDATORY_SHARE)
-    .sort((a, b) => b[1] - a[1])
-    .map(([tag, n]) => ({ tag, n, share: n / bucket.count }));
-  report.push({ kind, typeEn: bucket.sample, count: bucket.count, mandatory });
-  if (mandatory.length > 0) {
-    conventions[kind] = mandatory.map((m) => m.tag);
-  }
-}
-
-/*
- * Обратная сторона замера: сколько записей САМОГО каталога соглашение нарушают. Без этого числа
- * соглашение читалось бы как «так у всех», а «99,1 %» означает, что у кого-то — нет.
+/**
+ * 🔴 ПРЕДОХРАНИТЕЛЬ «ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН» (`ideas/43`; страж класса — `verify-import-safety.mjs`).
+ * Измеритель экспортирует свой порог, и порог просится в чужие проверки — а импорт ради него
+ * прогонял весь замер по каталогу и звал `process.exit`, убивая чужой процесс.
  */
-const violations = [];
-for (const d of rows) {
-  const kind = String(d?.type?.ru ?? '').trim().toLowerCase();
-  const need = conventions[kind];
-  if (!need) continue;
-  const have = new Set((Array.isArray(d?.tags) ? d.tags : []).map((t) => String(t).trim().toLowerCase()));
-  const missing = need.filter((t) => !have.has(t));
-  if (missing.length > 0) {
-    violations.push({ id: d.id, slug: d.slug, kind, title: d?.title?.ru ?? '', missing });
+const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+function выполнить() {
+  for (const d of rows) {
+    const kind = String(d?.type?.ru ?? '').trim().toLowerCase();
+    if (kind === '') continue;
+    const tags = Array.isArray(d?.tags) ? d.tags.map((t) => String(t).trim()).filter(Boolean) : [];
+    if (tags.length > 0) withTags += 1;
+    tagValues += tags.length;
+    if (!byKind.has(kind)) byKind.set(kind, { count: 0, tags: new Map(), sample: d?.type?.en ?? '' });
+    const bucket = byKind.get(kind);
+    bucket.count += 1;
+    // Один тег считается один раз на запись: повтор внутри записи не повышает его долю.
+    for (const t of new Set(tags.map((t) => t.toLowerCase()))) {
+      bucket.tags.set(t, (bucket.tags.get(t) ?? 0) + 1);
+    }
   }
+
+  const conventions = {};
+  const report = [];
+  for (const [kind, bucket] of [...byKind.entries()].sort((a, b) => b[1].count - a[1].count)) {
+    if (bucket.count < MIN_KIND) continue;
+    const mandatory = [...bucket.tags.entries()]
+      .filter(([, n]) => n / bucket.count >= MANDATORY_SHARE)
+      .sort((a, b) => b[1] - a[1])
+      .map(([tag, n]) => ({ tag, n, share: n / bucket.count }));
+    report.push({ kind, typeEn: bucket.sample, count: bucket.count, mandatory });
+    if (mandatory.length > 0) {
+      conventions[kind] = mandatory.map((m) => m.tag);
+    }
+  }
+
+  /*
+   * Обратная сторона замера: сколько записей САМОГО каталога соглашение нарушают. Без этого числа
+   * соглашение читалось бы как «так у всех», а «99,1 %» означает, что у кого-то — нет.
+   */
+  const violations = [];
+  for (const d of rows) {
+    const kind = String(d?.type?.ru ?? '').trim().toLowerCase();
+    const need = conventions[kind];
+    if (!need) continue;
+    const have = new Set((Array.isArray(d?.tags) ? d.tags : []).map((t) => String(t).trim().toLowerCase()));
+    const missing = need.filter((t) => !have.has(t));
+    if (missing.length > 0) {
+      violations.push({ id: d.id, slug: d.slug, kind, title: d?.title?.ru ?? '', missing });
+    }
+  }
+
+  if (!JSON_ONLY) {
+    console.log('\n═══ СОГЛАШЕНИЯ О ТЕГАХ КАТАЛОГА ═══');
+    console.log(`  снимок: ${SNAPSHOT} · записей ${rows.length} · с тегами ${withTags} · значений ${tagValues}`);
+    console.log(`  вид берётся в замер от ${MIN_KIND} записей · порог обязательности ${(MANDATORY_SHARE * 100).toFixed(0)} %\n`);
+    for (const r of report) {
+      const list = r.mandatory.length === 0
+        ? '— обязательных нет'
+        : r.mandatory.map((m) => `«${m.tag}» ${(m.share * 100).toFixed(1)} %`).join(' · ');
+      console.log(`  ${r.kind} (${r.count})  →  ${list}`);
+    }
+    console.log('\n⚠️ «Обязательных нет» — это факт о виде, а не отсутствие соглашения у каталога:');
+    console.log('   у редких видов записей мало, и доля 90 % на них ничего не означает.');
+
+    console.log(`\n📉 ЗАПИСЕЙ САМОГО КАТАЛОГА, НАРУШАЮЩИХ СОГЛАШЕНИЕ: ${violations.length}`);
+    console.log('   («99,1 %» значит, что у кого-то тега НЕТ, и это число обязано быть названо)');
+    const byKind = new Map();
+    for (const v of violations) byKind.set(v.kind, (byKind.get(v.kind) ?? 0) + 1);
+    for (const [k, n] of [...byKind.entries()].sort((a, b) => b[1] - a[1])) {
+      console.log(`   · ${k}: ${n}`);
+    }
+    for (const v of violations.slice(0, 8)) {
+      console.log(`     — «${v.title}» не хватает: ${v.missing.join(', ')}`);
+    }
+    if (violations.length > 8) console.log(`     … и ещё ${violations.length - 8}`);
+  }
+
+  mkdirSync('src/lib/content', { recursive: true });
+  writeFileSync(OUT_JSON, `${JSON.stringify(conventions, null, 2)}\n`, 'utf8');
+  if (!JSON_ONLY) console.log(`\n📄 Машиночитаемое соглашение: ${OUT_JSON}`);
 }
 
-if (!JSON_ONLY) {
-  console.log('\n═══ СОГЛАШЕНИЯ О ТЕГАХ КАТАЛОГА ═══');
-  console.log(`  снимок: ${SNAPSHOT} · записей ${rows.length} · с тегами ${withTags} · значений ${tagValues}`);
-  console.log(`  вид берётся в замер от ${MIN_KIND} записей · порог обязательности ${(MANDATORY_SHARE * 100).toFixed(0)} %\n`);
-  for (const r of report) {
-    const list = r.mandatory.length === 0
-      ? '— обязательных нет'
-      : r.mandatory.map((m) => `«${m.tag}» ${(m.share * 100).toFixed(1)} %`).join(' · ');
-    console.log(`  ${r.kind} (${r.count})  →  ${list}`);
-  }
-  console.log('\n⚠️ «Обязательных нет» — это факт о виде, а не отсутствие соглашения у каталога:');
-  console.log('   у редких видов записей мало, и доля 90 % на них ничего не означает.');
-
-  console.log(`\n📉 ЗАПИСЕЙ САМОГО КАТАЛОГА, НАРУШАЮЩИХ СОГЛАШЕНИЕ: ${violations.length}`);
-  console.log('   («99,1 %» значит, что у кого-то тега НЕТ, и это число обязано быть названо)');
-  const byKind = new Map();
-  for (const v of violations) byKind.set(v.kind, (byKind.get(v.kind) ?? 0) + 1);
-  for (const [k, n] of [...byKind.entries()].sort((a, b) => b[1] - a[1])) {
-    console.log(`   · ${k}: ${n}`);
-  }
-  for (const v of violations.slice(0, 8)) {
-    console.log(`     — «${v.title}» не хватает: ${v.missing.join(', ')}`);
-  }
-  if (violations.length > 8) console.log(`     … и ещё ${violations.length - 8}`);
-}
-
-mkdirSync('src/lib/content', { recursive: true });
-writeFileSync(OUT_JSON, `${JSON.stringify(conventions, null, 2)}\n`, 'utf8');
-if (!JSON_ONLY) console.log(`\n📄 Машиночитаемое соглашение: ${OUT_JSON}`);
+if (ЗАПУЩЕН_НАПРЯМУЮ) выполнить();

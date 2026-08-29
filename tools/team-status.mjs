@@ -35,17 +35,22 @@
  * Умолчания: `lock-stand` без флага берёт первое СВОБОДНОЕ место, `unlock-stand` — своё
  * ЗАНЯТОЕ. Флага `--slot` больше нет, и отказ на него громкий.
  *   node tools/team-status.mjs show
- *   node tools/team-status.mjs --selftest   # доказательства на чистых функциях, git не нужен
+ *   node tools/team-status.mjs --selftest   # доказательства на чистых функциях; git не нужен
+ *                                           # (два случая предохранителя зовут дочерний node)
  *
  * Гонки записи: доска правится под файловым замком `<доска>.lock` (create-exclusive с
  * ретраями; замок старше 30 с считается брошенным и снимается). Запись атомарна:
  * временный файл + rename.
+ *
+ * Запуск: node tools/team-status.mjs · самотест: --selftest
  */
 import { readFileSync, writeFileSync, renameSync, openSync, closeSync, unlinkSync, statSync, existsSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import { dirname, basename, join, resolve } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 
 import { ROLES, portsFor, roleFromDirName, slotOfRole } from './lib/stand-slot.mjs';
+import { stampNow } from './lib/team-stamp.mjs';
 
 const BOARD_NAME = 'NDIM_WORKTREE_DEV_TEAM_STATUS.md';
 const TEAM_DIR_NAME = 'ndim-team'; // сиблинг главной копии: D:\work\ai_sandbox\ndim-team\<роль>
@@ -103,14 +108,13 @@ const placeRow = (place, holder, stamp) => `| ${placeLabel(place)} | ${holder} |
 
 /* ── Чистые функции (их доказывает --selftest) ─────────────────────────────────────────── */
 
-/** Локальная метка момента по канону проекта: YYYY-MM-DD HH:MM ±HH:MM. */
-export function stampNow(d = new Date()) {
-  const p = (n) => String(n).padStart(2, '0');
-  const off = -d.getTimezoneOffset();
-  const sign = off >= 0 ? '+' : '-';
-  const abs = Math.abs(off);
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())} ${sign}${p(Math.floor(abs / 60))}:${p(abs % 60)}`;
-}
+/*
+ * 🔑 `stampNow` ЖИВЁТ В `lib/team-stamp.mjs`, а не здесь — и это тот же довод, по которому туда
+ * же уехал разбор имён рабочих мест (`lib/stand-slot.mjs`): у метки времени не должно быть
+ * второй редакции. Пока формула стояла в этом файле, взять её мог только тот, кто импортирует
+ * прибор ЦЕЛИКОМ, — а импорт до предохранителя ниже убивал чужой процесс. Значит, второй
+ * потребитель неизбежно писал бы копию.
+ */
 
 /**
  * Кто кому какую строку вправе править.
@@ -324,8 +328,8 @@ function selftest() {
   const board = [
     '| Роль | Состояние | Что делаю | Жду | Обновлено |',
     '|---|---|---|---|---|',
-    '| manager | 🔲 не в сети | — | — | — |',
-    '| qa | 🔲 не в сети | — | — | — |',
+    '| manager | 🔴 оффлайн | — | — | — |',
+    '| qa | 🔴 оффлайн | — | — | — |',
     '| Ресурс | Держатель | Взят |',
     '| стенд/e2e/порты (8181·9099·9199·4173) | — свободен — | — |',
   ].join('\n');
@@ -338,7 +342,7 @@ function selftest() {
     ['менеджер чинит чужую', () => authorize('manager', 'qa').ok],
     ['перезапись меняет ровно свою строку', () => {
       const r = replaceRoleRow(board, 'qa', { state: '🟢 свободен', doing: 'жду задач', waiting: '—', stamp: 'T' });
-      return !r.error && r.text.includes('| qa | 🟢 свободен | жду задач | — | T |') && r.text.includes('| manager | 🔲 не в сети |');
+      return !r.error && r.text.includes('| qa | 🟢 свободен | жду задач | — | T |') && r.text.includes('| manager | 🔴 оффлайн |');
     }],
     ['неизвестная роль — отказ', () => !!replaceRoleRow(board, 'ghost', { state: 'x' }).error],
     ['вертикальная черта в тексте не рвёт таблицу', () => {
@@ -451,6 +455,34 @@ function selftest() {
         && !/НЕ ПОСТРОЕН/.test(r.text)
         && !/слот 0 ·/.test(r.text);
     }],
+
+    /*
+     * 🔴 ПРЕДОХРАНИТЕЛЬ «ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН» — ДВА СЛУЧАЯ, И ОДНОГО МАЛО.
+     *
+     * Половины стерегут ПРОТИВОПОЛОЖНЫЕ отказы, и каждая из них — молчаливая:
+     *   · предохранителя нет → импорт исполняет CLI и убивает чужой процесс кодом 0;
+     *   · предохранитель ошибся в другую сторону (разъехались формы пути) → доска НЕ работает
+     *     ни у кого из пяти ролей, и тоже без единого слова.
+     * Случай «запущен» здесь не тавтология «раз самотест идёт, значит запуск работает»: самотест
+     * зовут из этого же процесса, а роли зовут прибор ДРУГОЙ формой строки — абсолютным путём с
+     * обратными слэшами. Проверяется именно она, дочерним процессом.
+     *
+     * Дочерний node — единственный честный способ: предохранитель судит `process.argv[1]`, и
+     * внутри одного процесса его нельзя ни подделать, ни спросить второй раз.
+     */
+    ['🔑 ПОДКЛЮЧЁН: импорт не исполняет CLI и НЕ убивает чужой процесс', () => {
+      const r = spawnSync(process.execPath, [
+        '--input-type=module',
+        '-e', `await import(${JSON.stringify(import.meta.url)}); console.log('ЖИВ-ПОСЛЕ-ИМПОРТА');`,
+      ], { encoding: 'utf8' });
+      return r.status === 0
+        && r.stdout.includes('ЖИВ-ПОСЛЕ-ИМПОРТА')
+        && !r.stdout.includes('команды:');
+    }],
+    ['🔑 ЗАПУЩЕН: абсолютным путём, как зовут роли, — CLI отвечает', () => {
+      const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url)], { encoding: 'utf8' });
+      return r.stdout.includes('команды:');
+    }],
   ];
   let fail = 0;
   for (const [name, fn] of cases) {
@@ -464,62 +496,92 @@ function selftest() {
 
 /* ── Точка входа ───────────────────────────────────────────────────────────────────────── */
 
-const cmd = process.argv[2];
-if (process.argv.includes('--selftest')) selftest();
-else if (cmd === 'show') {
-  console.log(readFileSync(join(mainRepoRoot(), BOARD_NAME), 'utf8'));
-} else if (cmd === 'set' || cmd === 'lock-stand' || cmd === 'unlock-stand') {
-  const caller = callerRole();
-  const target = arg('--role') ?? caller;
-  const auth = authorize(caller, target);
-  if (!auth.ok) { console.error(`⛔ ${auth.reason}`); process.exit(1); }
-  const stamp = stampNow();
-  if (cmd === 'set') {
-    const state = process.argv.includes('--busy') ? '🔴 занят'
-      : process.argv.includes('--free') ? '🟢 свободен'
-      : process.argv.includes('--offline') ? '🔲 не в сети' : '🟢 свободен';
-    editBoard((t) => replaceRoleRow(t, target, { state, doing: arg('--doing') ?? '—', waiting: arg('--waiting') ?? '—', stamp }));
-    console.log(`✅ строка «${target}»: ${state} · ${stamp}`);
-  } else {
-    /*
-     * 🔴 `--slot` здесь БОЛЬШЕ НЕ ПРИНИМАЕТСЯ, и отказ громкий (переименование 2026-08-22).
-     * Флаг полдня означал строку замка, а теперь слот — это адрес портов роли, который никто не
-     * выбирает руками. Молча истолковать старый флаг как место значило бы исполнить не то, что
-     * человек сказал; отказ с объяснением стоит одной строки и никого не обманывает.
-     */
-    if (process.argv.includes('--slot')) {
-      console.error('⛔ флага --slot больше нет: слот — это АДРЕС портов роли, он выводится из каталога.');
-      console.error('   Строка замка теперь МЕСТО («стенд N из 3»), и берётся оно флагом --place N');
-      console.error('   либо без флага — тогда занимается первое свободное.');
-      process.exit(1);
+/**
+ * 🔴 ПРЕДОХРАНИТЕЛЬ «ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН» — и он куплен замером, а не осторожностью.
+ *
+ * Без него КАЖДЫЙ вызов `import` этого файла исполнял CLI. Импортирующий не передаёт команду,
+ * поэтому чейн уходил в последнюю ветку, печатал подсказку и звал `process.exit(0)` — то есть
+ * УБИВАЛ ЧУЖОЙ ПРОЦЕСС ПОСРЕДИ РАБОТЫ, отчитавшись успехом. Замер 2026-08-29:
+ *
+ *   node --input-type=module -e "await import(URL); console.log(String.raw`жив`)"
+ *   → печаталась подсказка команд, строка «жив» — НИКОГДА, код возврата 0.
+ *
+ * 🔑 Хуже того, во что это превращалось в воротах. Юнит доски, импортирующий её ради чистых
+ * функций, умирал ДО первого утверждения, а `node --test` засчитывал файл пройденным:
+ * замерено — тест с ЗАВЕДОМО ЛОЖНЫМ утверждением отчитался «✔ pass 1, fail 0». Это не
+ * «прибор молчит», это фабрика ложнозелёного: доску нельзя было покрыть юнитом ВООБЩЕ, любой
+ * такой юнит был бы зелён независимо от того, что в нём написано.
+ *
+ * Форма выражения проверена на всех трёх способах вызова доски (Windows, node 24): абсолютный
+ * путь с обратными слэшами (так её зовут роли), относительный (так зовёт npm) и со СТРОЧНОЙ
+ * буквой диска — `import.meta.url` и `pathToFileURL(argv[1]).href` совпали во всех трёх.
+ * Проверять это было обязательно: разъедься они регистром диска, предохранитель отключил бы
+ * доску у всех пяти ролей — и тоже молча.
+ */
+const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+function main() {
+  const cmd = process.argv[2];
+  if (process.argv.includes('--selftest')) selftest();
+  else if (cmd === 'show') {
+    console.log(readFileSync(join(mainRepoRoot(), BOARD_NAME), 'utf8'));
+  } else if (cmd === 'set' || cmd === 'lock-stand' || cmd === 'unlock-stand') {
+    const caller = callerRole();
+    const target = arg('--role') ?? caller;
+    const auth = authorize(caller, target);
+    if (!auth.ok) { console.error(`⛔ ${auth.reason}`); process.exit(1); }
+    const stamp = stampNow();
+    if (cmd === 'set') {
+      // Словарь состояний — слово владельца 2026-08-29: рабочий статус «🔵 в работе»
+      // (прежнее «🔴 занят»), прощальный при закрытии смены «🔴 оффлайн».
+      const state = process.argv.includes('--busy') ? '🔵 в работе'
+        : process.argv.includes('--free') ? '🟢 свободен'
+        : process.argv.includes('--offline') ? '🔴 оффлайн' : '🟢 свободен';
+      editBoard((t) => replaceRoleRow(t, target, { state, doing: arg('--doing') ?? '—', waiting: arg('--waiting') ?? '—', stamp }));
+      console.log(`✅ строка «${target}»: ${state} · ${stamp}`);
+    } else {
+      /*
+       * 🔴 `--slot` здесь БОЛЬШЕ НЕ ПРИНИМАЕТСЯ, и отказ громкий (переименование 2026-08-22).
+       * Флаг полдня означал строку замка, а теперь слот — это адрес портов роли, который никто не
+       * выбирает руками. Молча истолковать старый флаг как место значило бы исполнить не то, что
+       * человек сказал; отказ с объяснением стоит одной строки и никого не обманывает.
+       */
+      if (process.argv.includes('--slot')) {
+        console.error('⛔ флага --slot больше нет: слот — это АДРЕС портов роли, он выводится из каталога.');
+        console.error('   Строка замка теперь МЕСТО («стенд N из 3»), и берётся оно флагом --place N');
+        console.error('   либо без флага — тогда занимается первое свободное.');
+        process.exit(1);
+      }
+      /*
+       * Умолчания РАЗНЫЕ у взятия и у отдачи, и это не симметрия ради симметрии: беря, роль хочет
+       * любое свободное место; отдавая — своё занятое. Общее умолчание отдавало бы чужую пустую
+       * строку и рапортовало об успехе, оставив стенд роли занятым до конца смены.
+       */
+      const wanted = arg('--place');
+      const lock = cmd === 'lock-stand';
+      editBoard((t) => {
+        // ⚠️ Место ищется в ТЕКСТЕ ДОСКИ, но до миграции строк там может ещё не быть формы мест.
+        // Поэтому сперва приводим форму, а уже потом ищем: иначе первое взятие после переименования
+        // не нашло бы ни одного места и отказало бы на исправной доске.
+        const migrated = (() => { const l = t.split(/\r?\n/); ensurePlaceRows(l); return l.join('\n'); })();
+        const place = wanted !== undefined ? Number(wanted)
+          : lock ? firstFreePlace(migrated) : placeHeldBy(migrated, target);
+        if (place === null) return {
+          error: lock
+            ? 'все три места заняты — посмотри доску (show) и договорись с держателем'
+            : `место за «${target}» не числится: отдавать нечего (посмотри доску: show)`,
+        };
+        const out = replaceStandLock(t, target, lock, stamp, place);
+        if (!out.error) console.log(lock
+          ? `✅ стенд ${place} из 3 у «${holderWithSlot(target)}» · ${stamp}`
+          : `✅ стенд ${place} из 3 свободен`);
+        return out;
+      });
     }
-    /*
-     * Умолчания РАЗНЫЕ у взятия и у отдачи, и это не симметрия ради симметрии: беря, роль хочет
-     * любое свободное место; отдавая — своё занятое. Общее умолчание отдавало бы чужую пустую
-     * строку и рапортовало об успехе, оставив стенд роли занятым до конца смены.
-     */
-    const wanted = arg('--place');
-    const lock = cmd === 'lock-stand';
-    editBoard((t) => {
-      // ⚠️ Место ищется в ТЕКСТЕ ДОСКИ, но до миграции строк там может ещё не быть формы мест.
-      // Поэтому сперва приводим форму, а уже потом ищем: иначе первое взятие после переименования
-      // не нашло бы ни одного места и отказало бы на исправной доске.
-      const migrated = (() => { const l = t.split(/\r?\n/); ensurePlaceRows(l); return l.join('\n'); })();
-      const place = wanted !== undefined ? Number(wanted)
-        : lock ? firstFreePlace(migrated) : placeHeldBy(migrated, target);
-      if (place === null) return {
-        error: lock
-          ? 'все три места заняты — посмотри доску (show) и договорись с держателем'
-          : `место за «${target}» не числится: отдавать нечего (посмотри доску: show)`,
-      };
-      const out = replaceStandLock(t, target, lock, stamp, place);
-      if (!out.error) console.log(lock
-        ? `✅ стенд ${place} из 3 у «${holderWithSlot(target)}» · ${stamp}`
-        : `✅ стенд ${place} из 3 свободен`);
-      return out;
-    });
+  } else {
+    console.log('команды: set [--busy|--free|--offline] [--doing "…"] [--waiting "…"] [--role <р>] · lock-stand · unlock-stand · show · --selftest');
+    process.exit(cmd ? 1 : 0);
   }
-} else {
-  console.log('команды: set [--busy|--free|--offline] [--doing "…"] [--waiting "…"] [--role <р>] · lock-stand · unlock-stand · show · --selftest');
-  process.exit(cmd ? 1 : 0);
 }
+
+if (ЗАПУЩЕН_НАПРЯМУЮ) main();

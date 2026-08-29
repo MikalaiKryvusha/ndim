@@ -61,6 +61,17 @@ function подключитьВДочернем(лишниеАргументы =
     "  authorityNo: m.externalAuthority('According to legend, the First Watch was established here.').length,",
     "  artifactYes: m.punctuationArtifacts('Она пишет для крупных постановок. ; продюсерами выступили другие.').length,",
     "  artifactNo: m.punctuationArtifacts('Игра вышла 19 июля 2022 года; издание — 28 мая 2026 года.').length,",
+    /*
+     * 🔴 bugs/183 — тождество статьи. Образцы РУССКИЕ (`AGENT_GUIDE.md` → «САМОТЕСТ РУССКОЙ
+     * ПРОВЕРКИ ИДЁТ НА РУССКОМ ОБРАЗЦЕ»): все семь живых промахов были на русской половине.
+     * Форма ответа — настоящая форма Wikidata (`entities.<Q>.sitelinks.<lang>wiki.title`).
+     */
+    "  sitelinkRu: m.sitelinkTitle({ Q125878994: { sitelinks: { ruwiki: { title: 'Звёздный путь (фильм, 2026)' }, enwiki: { title: 'Star Trek (2026 film)' } } } }, 'Q125878994', 'ru'),",
+    "  sitelinkEn: m.sitelinkTitle({ Q125878994: { sitelinks: { ruwiki: { title: 'Звёздный путь (фильм, 2026)' }, enwiki: { title: 'Star Trek (2026 film)' } } } }, 'Q125878994', 'en'),",
+    "  sitelinkНетЯзыка: m.sitelinkTitle({ Q1: { sitelinks: { enwiki: { title: 'Voicemails for Isabelle' } } } }, 'Q1', 'ru'),",
+    "  sitelinkПусто: m.sitelinkTitle({ Q1: { sitelinks: {} } }, 'Q1', 'ru'),",
+    "  sitelinkНетОбъекта: m.sitelinkTitle({}, 'Q1', 'ru'),",
+    "  sitelinkНеОтвет: m.sitelinkTitle(undefined, 'Q1', 'ru'),",
     "};",
     "console.log('RESULT ' + JSON.stringify(out));",
   ].join('\n');
@@ -375,4 +386,26 @@ test('здоровый текст не даёт ни отказа, ни заме
   const r = результат(наборПроверокВДочернем());
   assert.deepEqual(r.здоровый.отказы, [], 'ложных отказов на здоровом тексте быть не должно');
   assert.deepEqual(r.здоровый.замечания, []);
+});
+
+/**
+ * 🔴 bugs/183 — С КАКОЙ СТАТЬЁЙ СВЕРЯЕМСЯ.
+ *
+ * Прежде статья бралась первым попаданием полнотекстового поиска, и «Star Fox» сверялся с
+ * «Sweetie Fox». Замер на живом корпусе партий (260 половин, ветка `ndim_dev3`): неверных 34.
+ * Тождество теперь берётся у Wikidata — не признаком, а объявлением источника.
+ *
+ * 🔑 Главный случай здесь НЕ «статья нашлась», а **«языкового раздела НЕТ → null»**: проверка
+ * «нашлась» одна была бы зелёной и на старом поиске, который находил ВСЕГДА хоть что-нибудь.
+ * Именно эта половина дефекта дороже: канон спрашивает «статьи нет?», а прибор отвечал на
+ * «поиск вернул пустоту?» — два разных вопроса, совпадавшие случайно.
+ */
+test('bugs/183: статья об объекте берётся из sitelinks Wikidata, а не из поиска', () => {
+  const r = результат(подключитьВДочернем());
+  assert.equal(r.sitelinkRu, 'Звёздный путь (фильм, 2026)', 'русский раздел берётся с различителем, а не заголовком-тёзкой');
+  assert.equal(r.sitelinkEn, 'Star Trek (2026 film)', 'английский раздел — свой, а не перевод русского');
+  assert.equal(r.sitelinkНетЯзыка, null, '🔑 статьи в этом языке НЕТ — честное «не проверено», хотя в другом языке она есть');
+  assert.equal(r.sitelinkПусто, null, 'ни одного раздела — null');
+  assert.equal(r.sitelinkНетОбъекта, null, 'объекта в ответе нет — null, а не падение');
+  assert.equal(r.sitelinkНеОтвет, null, 'ответа нет вовсе — null, а не падение');
 });

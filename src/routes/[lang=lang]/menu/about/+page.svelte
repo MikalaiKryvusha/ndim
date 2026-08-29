@@ -59,7 +59,6 @@
       ru: 'Проект «Пространство NDim» (англ. «NDim Space») создан 05.05.2025 в г. Минск, Беларусь. Сделано для всего Человечества с Любовью ❤️ с использованием большого количества кваса в процессе разработки.',
       en: 'The «NDim Space» project (rus. «Пространство NDim») was created on 05.05.2025 in Minsk, Belarus. Made for all of Humanity with Love ❤️ and with a great deal of kvass consumed along the way.',
     },
-    versions: { ru: 'Версии', en: 'Versions' },
     history: { ru: 'История версий', en: 'Version history' },
   } as const;
 </script>

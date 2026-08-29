@@ -19,6 +19,8 @@
  *
  * 🔴 Капкан, стоивший 21 ложного падения (`STATUS.md`): без `--strictPort` preview уезжает на
  * 4174, а прибор судит ЧУЖОЙ сервер — чаще всего старую сборку.
+ *
+ * Запуск: node tools/shoot-landing-copy.mjs
  */
 import { chromium } from '@playwright/test';
 import { mkdir, rm } from 'node:fs/promises';

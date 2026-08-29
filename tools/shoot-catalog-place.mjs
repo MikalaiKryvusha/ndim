@@ -10,6 +10,8 @@
  * ровно так этот класс проверки уже ловил меня на графике веса голосов.
  *
  * Кадры — `test-results/catalog-place/` (вне git).
+ *
+ * Запуск: node tools/shoot-catalog-place.mjs
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';

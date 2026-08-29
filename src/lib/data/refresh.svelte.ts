@@ -36,11 +36,6 @@ let refreshedAt = $state<number | null>(null);
 /** Идёт ли обновление прямо сейчас — чтобы два жеста подряд не завели два круга чтений. */
 let running = $state(false);
 
-/** Момент последнего обновления (мс эпохи) или `null`, если данных не читали вовсе. */
-export function lastRefreshAt(): number | null {
-  return refreshedAt;
-}
-
 /**
  * Отметить ПЕРВОЕ за сеанс чтение данных из базы.
  *

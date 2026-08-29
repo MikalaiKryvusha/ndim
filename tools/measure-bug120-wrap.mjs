@@ -21,6 +21,8 @@
  *
  * Печатает числа и кладёт кадры в `test-results/bug120-wrap/`. Вердикта не выносит — судит
  * человек глазами, для того кадры и снимаются (`EXP-0082`: контрольный кадр обязателен).
+ *
+ * Запуск: node tools/measure-bug120-wrap.mjs
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';

@@ -22,6 +22,8 @@
  *   npx vite preview --port 4173 --strictPort
  *   node tools/shoot-rating-stars.mjs before
  *   node tools/shoot-rating-stars.mjs after
+ *
+ * Запуск: node tools/shoot-rating-stars.mjs
  */
 import { chromium } from '@playwright/test';
 import { mkdir, rm } from 'node:fs/promises';

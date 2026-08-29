@@ -22,6 +22,8 @@
  * Запуск (стенд уже поднят, замок доски у тебя):
  *   node tools/measure-stand-memory.mjs --steps build,build,smoke,build
  *   node tools/measure-stand-memory.mjs --steps smoke,smoke,smoke,smoke,smoke,smoke   (повтор замера 2026-08-16)
+ *
+ * Запуск: node tools/measure-stand-memory.mjs
  */
 
 import { spawnSync } from 'node:child_process';

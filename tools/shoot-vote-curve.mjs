@@ -8,6 +8,8 @@
  * которую я отправляю владельцу, ДЕЙСТВИТЕЛЬНО отрисовалась, а не открылась пустой. Правило
  * канона: проверять ПУБЛИКАЦИЮ, а не источник (`AGENT_GUIDE.md` → «Гигиена документов», п. 10).
  * Кадры кладутся в `test-results/vote-curve/` (вне git).
+ *
+ * Запуск: node tools/shoot-vote-curve.mjs
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';

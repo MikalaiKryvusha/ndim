@@ -63,20 +63,32 @@ if (runAsScript && !ФАЙЛЫ.length) {
 }
 
 /* Разбиение на предложения берётся у ворот, своего мы не заводим. Модуль живёт в `main`;
- * пока ветка отстала, подставляется простое правило, и об этом говорится в отчёте вслух. */
+ * пока ветка отстала, подставляется простое правило, и об этом говорится в отчёте вслух.
+ *
+ * 🔴 ОБА ПОДГРУЖЕНИЯ ЗАКРЫТЫ `runAsScript` (`ideas/43`, страж `verify-import-safety.mjs`).
+ * Предохранитель в файле стоял, но эти два блока оставались СНАРУЖИ него — и импорт модуля
+ * ради экспортов (`языкТекста`, `parseJournal`) тянул за собой две чужие библиотеки и щупал
+ * диск. Наличие предохранителя ничего не доказывает; доказывает только то, что ПОД НИМ вся
+ * работа.
+ * Безопасно, потому что замерено чтением: обе экспортируемые функции чисты и ни
+ * `splitSentences`, ни `metaShare`, ни `classifySentence` не используют — те живут только в
+ * замерной части (строки ~103, ~161–183, ~222–257), которая идёт под тем же `runAsScript`. */
 let splitSentences = null;
 let разбивательСвой = false;
-try {
-  ({ splitSentences } = await import('./lib/prose-gates.mjs'));
-} catch {
-  разбивательСвой = true;
-  splitSentences = (t) => String(t ?? '').split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
-}
-
 let metaShare = null;
 let classifySentence = null;
-if (existsSync(new URL('./lib/meta-share.mjs', import.meta.url))) {
-  ({ metaShare, classifySentence } = await import('./lib/meta-share.mjs'));
+
+if (runAsScript) {
+  try {
+    ({ splitSentences } = await import('./lib/prose-gates.mjs'));
+  } catch {
+    разбивательСвой = true;
+    splitSentences = (t) => String(t ?? '').split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+  }
+
+  if (existsSync(new URL('./lib/meta-share.mjs', import.meta.url))) {
+    ({ metaShare, classifySentence } = await import('./lib/meta-share.mjs'));
+  }
 }
 
 /**
