@@ -125,14 +125,26 @@ function run(title, command) {
 	}
 }
 
-/** Выкат Firebase в НАЗВАННЫЙ контур: команда собирается из реестра и проверяется стоп-правилом. */
-function firebase(title, only) {
+/**
+ * Выкат Firebase в НАЗВАННЫЙ контур: команда собирается из реестра и проверяется стоп-правилом.
+ *
+ * 🔴 КОНТУР ПРИХОДИТ ПАРАМЕТРОМ, А НЕ ИЗ ОБЛАСТИ ВИДИМОСТИ, и это оплачено боем 2026-08-29:
+ * порция `plans/79` перенесла 32 верхнеуровневых оператора под `main()`, и `CONTOUR` стал её
+ * локальной константой — а эта функция осталась на верхнем уровне и читала его по-старому.
+ * Первый же живой прогон двери упал с `ReferenceError: CONTOUR is not defined` ПОСЛЕ сборки,
+ * в шаге выката. Ни самотест (8/0), ни `--gate-only`, ни построчная сверка переезда этого не
+ * поймали: все они честно проверяли то, что ИСПОЛНЯЕТСЯ, а сюда исполнение доходит только на
+ * настоящем выкате. Класс: **функция верхнего уровня, читающая состояние вызывающего, немая до
+ * первого вызова** — лечится не проверкой, а устройством: всё, что функции нужно, она получает
+ * аргументом.
+ */
+function firebase(contour, title, only) {
 	const parts = ['firebase', 'deploy'];
-	if (CONTOUR.config !== null) parts.push('--config', CONTOUR.config);
-	parts.push('--project', CONTOUR.project, '--only', only);
+	if (contour.config !== null) parts.push('--config', contour.config);
+	parts.push('--project', contour.project, '--only', only);
 	const command = parts.join(' ');
-	if (!targetFits(CONTOUR, command)) {
-		console.error(`\n🔴 СТОП-ПРАВИЛО КОНТУРА (П8): команда не целится в «${CONTOUR.title}».\n   ${command}`);
+	if (!targetFits(contour, command)) {
+		console.error(`\n🔴 СТОП-ПРАВИЛО КОНТУРА (П8): команда не целится в «${contour.title}».\n   ${command}`);
 		process.exit(1);
 	}
 	run(title, command);
@@ -549,7 +561,7 @@ async function main() {
 	 * команда `--only firestore:rules` завершается УСПЕХОМ и не катит НИЧЕГО (firebase-tools#10447) —
 	 * самый неприятный вид отказа: зелёный.
 	 */
-	firebase('правила и индексы Firestore', 'firestore');
+	firebase(CONTOUR, 'правила и индексы Firestore', 'firestore');
 
 	if (!skipBuild) {
 		/*
@@ -569,7 +581,7 @@ async function main() {
 	// сломанная сборка до контура не доезжает вовсе.
 	await smokeGate(builtHash);
 
-	firebase(`выкат в ${CONTOUR.title}`, 'hosting');
+	firebase(CONTOUR, `выкат в ${CONTOUR.title}`, 'hosting');
 
 	/*
 	 * 🔑 ЗАМЕР ПОПАДАНИЯ (П8) — «контур цели совпал с заявленным» перестаёт быть намерением и
