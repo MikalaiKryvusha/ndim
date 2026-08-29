@@ -108,6 +108,18 @@ export function indexedIdents(text) {
 	return out;
 }
 
+/**
+ * Приговор по ОДНОМУ доводу опт-аута. `null` — довод годен и освобождает.
+ * Отдельная чистая функция: судья ломала именно её, и ломать её должно быть удобно.
+ */
+export function judgeReason(reason) {
+	if (reason.length < MIN_REASON) return 'довод короче двенадцати знаков — это отписка, а не причина';
+	if (!ANCHOR.test(reason)) {
+		return 'довод не называет НИ документа, НИ урока, НИ файла, НИ решения — его нечем проверить';
+	}
+	return null;
+}
+
 /** Сколько раз идентификатор встречается в тексте. */
 export function countIdent(text, name) {
 	let n = 0;
@@ -136,6 +148,22 @@ export function countIdent(text, name) {
  */
 const OPT_OUT = 'СПЯЩЕЕ НАМЕРЕННО:';
 const MIN_REASON = 12;
+
+/**
+ * ДОВОД ОБЯЗАН НА ЧТО-ТО УКАЗЫВАТЬ — якорь, а не длина.
+ *
+ * Третья дверь, найденная судьёй (вердикт №23): длины мало. Причина из ВОСЕМНАДЦАТИ ТОЧЕК
+ * проходила порог `MIN_REASON` и освобождала мёртвый текст. Класс тот же, что судья нашла у
+ * реестра стража импорта dev-1, — там довод «так надо» тоже был засчитан: **обязательность
+ * довода механизирована, а весомость — нет**. Лечение то же, что Менеджер уже принял для dev-1.
+ *
+ * Якорь — ссылка на документ, урок, файл или решение: то, что следующий читатель может ОТКРЫТЬ
+ * и проверить. «Так надо» и «..................» открыть нельзя, поэтому они не доводы.
+ * Замер перед объявлением признака (замер судьи, повторён мной): опт-аутов в `src/` сегодня
+ * НОЛЬ, значит ложных красных признак даёт 0 — он вводится в пустую комнату и никого не ломает.
+ */
+const ANCHOR =
+	/(bugs|plans|ideas|researches|interviews|homeworks|reports|qa|tools|src)[/]|EXP-[0-9]|интервью|вердикт|решени|слов[а-я]* владельц|[.](ts|mjs|js|svelte|json|md)\b/i;
 
 /**
  * Причина опт-аута для объявления в строке `i`: ищется в самой строке и в сплошном блоке
@@ -255,9 +283,10 @@ export function judgeCorpus(corpus) {
 				// карту или её ветку читают вычисленным ключом — доказать смерть нельзя
 				if (indexed.has(owner) || ancestors.some((a) => indexed.has(a))) continue;
 				if (countIdent(text, name) > 1) continue;
-				if (optOut !== null && optOut.length >= MIN_REASON) continue; // намерение объявлено с доводом
 				if (optOut !== null) {
-					rows.push({ path, line, name, rule: 'П0', why: 'маркер «СПЯЩЕЕ НАМЕРЕННО» без внятной причины — довод обязателен' });
+					const bad = judgeReason(optOut);
+					if (bad === null) continue; // намерение объявлено с проверяемым доводом
+					rows.push({ path, line, name, rule: 'П0', why: `маркер «СПЯЩЕЕ НАМЕРЕННО»: ${bad}` });
 					continue;
 				}
 				rows.push({ path, line, name, rule: 'П1', why: 'текст объявлен в местной карте и не читается даже своим файлом' });
@@ -268,9 +297,10 @@ export function judgeCorpus(corpus) {
 			if (countIdent(text, name) > 1 || usedInOtherCode(name, path)) continue;
 			const planned = namedInLiveDoc(name);
 			if (planned.length > 0) continue; // код под живой план — не мертвечина
-			if (optOut !== null && optOut.length >= MIN_REASON) continue;
 			if (optOut !== null) {
-				rows.push({ path, line, name, rule: 'П0', why: 'маркер «СПЯЩЕЕ НАМЕРЕННО» без внятной причины — довод обязателен' });
+				const bad = judgeReason(optOut);
+				if (bad === null) continue;
+				rows.push({ path, line, name, rule: 'П0', why: `маркер «СПЯЩЕЕ НАМЕРЕННО»: ${bad}` });
 				continue;
 			}
 			rows.push({ path, line, name, rule: 'П2', why: 'экспорт не читается кодом и не назван ни одним живым документом' });
@@ -353,8 +383,21 @@ function selftest() {
 			const r = judgeCorpus(c);
 			return r.length === 1 && r[0].rule === 'П0' && r[0].name === 'kept';
 		}],
+		/*
+		 * ТРЕТЬЯ ДВЕРЬ, найденная судьёй (вердикт №23): порог проверял ДЛИНУ, а не содержание, и
+		 * восемнадцать точек освобождали мёртвый текст. Теперь довод обязан НАЗЫВАТЬ проверяемое.
+		 */
+		['🔴 ТРЕТЬЯ ДВЕРЬ: восемнадцать точек больше не довод', () =>
+			judgeReason('..................') !== null],
+		['«так надо» не довод — тот же класс, что у соседа (вердикт №18)', () =>
+			judgeReason('так надо, потом разберёмся') !== null],
+		['довод со ссылкой на документ годен', () => judgeReason('ждёт решения по bugs/211') === null],
+		['довод со ссылкой на урок годен', () => judgeReason('подключается по EXP-0227') === null],
+		['довод со словом владельца годен', () => judgeReason('оставлено по слову владельца, интервью №007') === null],
+		['короткий довод отбивается ДРУГИМ сообщением, чем беспредметный', () =>
+			judgeReason('bugs/1').includes('короче') && judgeReason('совершенно непонятная отписка').includes('не называет')],
 		['опт-аут работает и на экспорте (П2)', () => {
-			const c = new Map([['src/lib/x.ts', '// СПЯЩЕЕ НАМЕРЕННО: подключается фазой 2 эпика, читателя ещё нет\nexport function later() {}']]);
+			const c = new Map([['src/lib/x.ts', '// СПЯЩЕЕ НАМЕРЕННО: подключается фазой 2 эпика plans/74, читателя ещё нет\nexport function later() {}']]);
 			return judgeCorpus(c).length === 0;
 		}],
 		['опт-аут виден и в хвосте самой строки', () =>
