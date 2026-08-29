@@ -70,6 +70,10 @@ const HTTP_CONSOLE_LIBS = [
  */
 const NOT_NETWORK = new Map([
 	['indexnow-key.mjs', 'генерирует и кладёт файл ключа на диск; в сеть не ходит (0 вызовов fetch)'],
+	[
+		'verify-role-env-scope.mjs',
+		'страж границы ключей: читает имена переменных из .env рабочих копий ролей; в сеть не ходит (0 вызовов fetch) и значений не печатает',
+	],
 ]);
 
 const read = (file) => readFileSync(join(TOOLS, file), 'utf8');
