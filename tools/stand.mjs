@@ -12,6 +12,8 @@
 // правки видно почти сразу, а не через минуту.
 //
 // Запускается внутри `npm run stand` (уже под эмуляторами и после сида).
+//
+// Запуск: node tools/stand.mjs
 
 import { execSync } from 'node:child_process';
 import { spawn } from 'node:child_process';

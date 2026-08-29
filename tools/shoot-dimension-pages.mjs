@@ -10,6 +10,8 @@
  * Запуск (сначала подними собранный сайт):
  *   npx vite preview --port 4173 --strictPort   # в отдельном окне
  *   node tools/shoot-dimension-pages.mjs
+ *
+ * Запуск: node tools/shoot-dimension-pages.mjs
  */
 import { chromium } from '@playwright/test';
 import { mkdir, rm } from 'node:fs/promises';

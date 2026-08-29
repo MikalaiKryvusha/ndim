@@ -53,6 +53,7 @@ const HTTP_CONSOLE_TOOLS = [
 	'yandex-snapshot.mjs', // снимок Яндекс.Вебмастера
 	'bing-snapshot.mjs', // снимок Bing Webmaster
 	'indexnow-submit.mjs', // подача адресов в IndexNow (здесь класс и пойман прогоном)
+	'yandex-recrawl.mjs', // машинная подача переобхода — ПОЙМАН ЭТИМ СТРАЖЕМ в день своего рождения
 ];
 
 /** Библиотеки, через которые эти приборы ходят в сеть. По ним же ловится дрейф. */
@@ -96,7 +97,7 @@ function stripComments(source) {
 // ── 1. ПОЛ КОРПУСА ───────────────────────────────────────────────────────────────────────────
 
 test('корпус не пуст и каждое имя списка лежит на диске', () => {
-	assert.ok(HTTP_CONSOLE_TOOLS.length >= 5, 'корпус усох — приборы консолей не могли исчезнуть');
+	assert.ok(HTTP_CONSOLE_TOOLS.length >= 6, 'корпус усох — приборы консолей не могли исчезнуть');
 	for (const file of HTTP_CONSOLE_TOOLS) {
 		assert.ok(
 			existsSync(join(TOOLS, file)),

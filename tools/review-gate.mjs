@@ -19,6 +19,8 @@
  *   node tools/review-gate.mjs list  <документ.md>
  *
  * Выход: 0 — можно отправлять; 1 — ОТКАЗ (с причиной); 2 — ошибка вызова.
+ *
+ * Запуск: node tools/review-gate.mjs
  */
 
 import { existsSync } from 'node:fs';

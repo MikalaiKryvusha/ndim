@@ -15,7 +15,10 @@
  *
  * Код возврата: 0 — снято · 1 — токена нет либо Вебмастер не ответил.
  *
- * ✅ [TESTED: 2026-08-28 · живой прогон на боевом токене владельца, dev-3] — прибор написан был
+ * ✅ [TESTED: 2026-08-29 · набор `qa/suites/yandex-webmaster.md`, случаи Я-01…Я-18: 43 случая набора, 25 сняты живым прогоном
+ * на боевом токене владельца] — маркер ФИЧИ законен только вместе с написанным набором случаев
+ * (`TESTING_FRAMEWORK.md`, правило маркеров 7); одно наблюдение переворачивает маркер СЛУЧАЯ.
+ * Первая редакция этого маркера стояла на одном прогоне — исправлено в тот же день. Прибор написан был
  * вперёд токена намеренно (постановка Менеджера), и первый настоящий прогон состоялся в тот же
  * день. **Что живой прогон подтвердил поимённо:** права хоста (`ndimspace.app` подтверждён,
  * пользователь 130280754) · квота переобхода (суточная 150, остаток 0) и вердикт пула · ряд
@@ -31,11 +34,20 @@
  * ради чего в ядре стоит правило «коды складываются как пришли, без перевода»: прибор, который
  * «нормализовал» бы одно в другое, вписал бы в данные выдумку. Разбор — `bugs/203`.
  *
+ * ── ГДЕ В СНИМКЕ ПОЛНЫЙ ПОИМЁННЫЙ СПИСОК ───────────────────────────────────────────────────
+ * `searchEvents.samples` — ВСЕ события целиком, по записи на адрес (url · event · event_date ·
+ * excluded_url_status · …). Это ДАННЫЕ: поимённый список выпавших с причинами лежит здесь.
+ * `searchEvents.byReason` — сводка с ДО 20 образцов адресов на причину; это витрина для глаз,
+ * НЕ данные. Правило: считать по `samples`, показывать по `byReason`.
+ * ⚠️ Цена правила уплачена недоразумением: агент посмотрел на срезанный вывод ключей объекта,
+ * не увидел `samples` (седьмой ключ) и объявил полный список отсутствующим — «нет строки» было
+ * утверждением о поиске, а не о мире (`EXP-0165`).
+ *
  * ⛔ ПРИБОР ЧИТАЮЩИЙ. Переобход (`recrawl/queue`) отсюда НЕ вызывается: это действие, меняющее
  * поведение наших страниц в чужом индексе, и оно требует слова владельца. Читается только КВОТА —
  * это вопрос «сколько можно», а не действие.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
@@ -56,6 +68,12 @@ import {
 	indicatorsToRows,
 } from './lib/yandex-snapshot-core.mjs';
 import { isoDate, snapshotFileName } from './lib/console-snapshot-core.mjs';
+import {
+	shouldWriteSnapshot,
+	snapshotExitCode,
+	snapshotComplete,
+	incompleteReason,
+} from './lib/yandex-snapshot-core.mjs';
 import { settleExit } from './lib/exit-code.mjs';
 
 const DEFAULT_OUT = join('reports', 'CONSOLES');
@@ -131,7 +149,9 @@ async function main(argv) {
 	}
 	console.log(`  пул с интерфейсом: ${verdict.pool} — ${verdict.reason}\n`);
 
-	if (args.quota) return 0;
+	// Режим квоты — тот же класс, что дефект 2: код 0 при неотданной квоте был бы отказом,
+	// выданным за успех. Пул-вердикт печатается в обоих случаях, но слышен вызывающему — только так.
+	if (args.quota) return quota.ok ? 0 : 1;
 
 	// ── Статистика поиска ──────────────────────────────────────────────────────────────────
 	const from = new Date(now.getTime() - args.days * 86_400_000);
@@ -140,8 +160,31 @@ async function main(argv) {
 		date_from: isoDate(from),
 		date_to: todayIso,
 	});
+	// 🔴 bugs/215: половина статистики МОЛЧАЛА при отказе — пустой массив неотличим от честного
+	// нуля («тихий ноль», класс bugs/202). Теперь отказ называется и делает снимок НЕПОЛНЫМ.
 	const queryHistory = history.ok ? indicatorsToRows(history.body) : [];
-	console.log(`СТАТИСТИКА ПОИСКА за ${args.days} сут. — строк ${queryHistory.length}`);
+	// 🔴 Дефект 2 вердикта №10 QA: `complete` означал полноту ОДНОЙ половины (`history.ok`), а
+	// обещал всеобщность. Наблюдение судьи на стенде с подменённым fetch: квота 503 + статистика
+	// ОК + файл дня есть → «ПЕРЕЗАПИСАН», код 0, хеш сменился, живая квота заменена на
+	// `{error: 503}`. Инвариант bugs/215 («худший не затирает лучший») держал одну сторону.
+	//
+	// Развилка судьи решена в пользу ПОЛНОТЫ, а не переименования в `statsComplete`: имя обещало
+	// всеобщность, и дешевле сделать обещание правдой, чем сузить его. Совет судьи «не делать
+	// отказ квоты поводом НЕ ПИСАТЬ день» при этом соблюдён механикой `shouldWriteSnapshot`:
+	// день БЕЗ файла пишется всегда, неполным в том числе («день без файла хуже»), — запрещена
+	// только ПЕРЕЗАПИСЬ уже лежащего снимка неполным. События ради счётчика не выбрасываются.
+	//
+	// Третья половина, события (`pagedSamples`), сюда не входит намеренно: она БРОСАЕТ исключение
+	// и до записи не доходит вовсе. Молчащих частей ровно две, обе теперь названы.
+	const complete = snapshotComplete({ historyOk: history.ok, quotaOk: quota.ok });
+	if (history.ok) {
+		console.log(`СТАТИСТИКА ПОИСКА за ${args.days} сут. — строк ${queryHistory.length}`);
+	} else {
+		console.error(
+			`🔴 СТАТИСТИКА ПОИСКА НЕ ОТДАНА (${history.status}) — снимок НЕПОЛОН. ` +
+				'Ноль строк здесь означал бы замер; это не замер, а отказ.',
+		);
+	}
 
 	// ── События поиска: что появилось и что выпало, с причинами ────────────────────────────
 	const samples = await pagedSamples(token, `${base}/search-urls/events/samples`);
@@ -172,11 +215,13 @@ async function main(argv) {
 			hostId: host.host_id,
 			verified: host.verified ?? null,
 		},
-		trust: '[TESTED: 2026-08-28 · живой прогон на боевом токене] — ветка ошибок API остаётся на юнитах',
+		trust: '[TESTED: 2026-08-29 · qa/suites/yandex-webmaster.md — 43 случая, 25 живых] — ветка отказов API на юнитах',
 		recrawlQuota: quotaBody
 			? { ...quotaBody, sentByHand: args.sentByHand, poolVerdict: verdict }
 			: { error: quota.status, poolVerdict: verdict },
-		queryHistory: { days: args.days, rows: queryHistory },
+		queryHistory: history.ok
+			? { days: args.days, rows: queryHistory }
+			: { days: args.days, rows: [], error: history.status },
 		searchEvents: {
 			total: samples.length,
 			removed: removed.length,
@@ -200,9 +245,28 @@ async function main(argv) {
 
 	mkdirSync(args.out, { recursive: true });
 	const file = join(args.out, snapshotFileName(todayIso, 'yandex_webmaster'));
-	writeFileSync(file, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
-	console.log(`✅ ЗАПИСАН: ${file}`);
-	return 0;
+	const existed = existsSync(file);
+	const writeVerdict = shouldWriteSnapshot({ complete, fileExists: existed });
+
+	if (!writeVerdict.write) {
+		console.error(`
+⛔ ФАЙЛ ДНЯ НЕ ТРОНУТ: ${writeVerdict.why}`);
+		// Тот же класс, что замечание 1 №12: отказ обязан назвать, КАКАЯ половина не приехала,
+		// иначе читающий пойдёт чинить исправную.
+		console.error(`   ${incompleteReason({ historyOk: history.ok, quotaOk: quota.ok })}`);
+		console.error(`   ${file} остался прежним — перезапустите, когда API ответит целиком.`);
+		return snapshotExitCode({ complete });
+	}
+
+	writeFileSync(file, `${JSON.stringify(snapshot, null, 2)}
+`, 'utf8');
+	// Я-10 набора `qa/suites/yandex-webmaster.md`: перезапись НАЗЫВАЕТСЯ. Прежняя редакция писала
+	// «ЗАПИСАН» и тогда, когда затирала сегодняшний файл, — оператор не видел, что затёр.
+	console.log(`✅ ${existed ? 'ПЕРЕЗАПИСАН' : 'ЗАПИСАН'}: ${file}`);
+	if (existed) console.log('   (повтор дня — прежнее содержимое осталось в истории git)');
+	// Текст называет ИМЕННО ту половину, что не приехала, и поле с её кодом (замечание 1 №12).
+	if (!complete) console.error(`   ⚠️ ${incompleteReason({ historyOk: history.ok, quotaOk: quota.ok })}`);
+	return snapshotExitCode({ complete });
 }
 
 settleExit(main(process.argv.slice(2)));

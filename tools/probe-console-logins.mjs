@@ -1,6 +1,8 @@
 /**
  * ЗОНД ЛОГИНОВ КОНСОЛЕЙ (только чтение): подключается к chrome-debug по CDP 9222, открывает
  * каждую консоль и докладывает конечный URL + заголовок. НИ ОДНОГО клика, ни одной отправки.
+ *
+ * Запуск: node tools/probe-console-logins.mjs
  */
 import { chromium } from '@playwright/test';
 

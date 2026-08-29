@@ -1,6 +1,8 @@
 // ПРИЁМОЧНЫЙ ПРИБОР шага 2 `plans/39` — живой Chromium: человек, память, адрес, мост.
 // Гонится против СОБРАННОГО сайта (vite preview --strictPort --port 4173, поднять заранее).
 // Кадры: --out <каталог> (обязателен для секции кадров; без него кадры пропускаются).
+//
+// Запуск: node tools/accept-lang-addresses.mjs
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';

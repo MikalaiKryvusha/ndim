@@ -34,6 +34,8 @@
  *
  * Стенд обязан быть поднят (`npm run stand`), замок доски — взят.
  *   node tools/probe-catalog-door.mjs [--base http://localhost:4203] [--headed]
+ *
+ * Запуск: node tools/probe-catalog-door.mjs
  */
 
 import { chromium } from 'playwright';

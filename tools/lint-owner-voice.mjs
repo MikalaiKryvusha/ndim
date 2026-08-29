@@ -238,8 +238,22 @@ export function lint(text, { genre = 'document' } = {}) {
   return { hard, warn, числа: { колонов: cols.length, медианаКолона: med, предложений: sents.length } };
 }
 
+/**
+ * 🔴 ПРЕДОХРАНИТЕЛЬ «ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН» ОБЪЯВЛЕН ЗДЕСЬ, А НЕ НИЖЕ, И ЭТО ИСПРАВЛЕНИЕ.
+ *
+ * Он в файле БЫЛ — но стоял только на основной работе, а самотест и калибровка оставались
+ * снаружи. Это в точности первый полевой случай `ideas/43`: у `rewrite-catalog-descriptions`
+ * предохранитель тоже был, а самотест снаружи — и `gate-rewrites --selftest` печатал зелёный,
+ * ни разу не отработав. Спросивший «здоров ли прибор?» получал ответ ДРУГОГО прибора.
+ *
+ * Отсюда правило, которое стоит помнить при чтении: наличие предохранителя в файле ничего не
+ * доказывает — доказывает только то, что ПОД НИМ вся работа. Страж класса
+ * (`tools/verify-import-safety.mjs`) судит именно так, оператор за оператором.
+ */
+const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
 // ── Самотест ────────────────────────────────────────────────────────────────────────────────
-if (process.argv.includes('--selftest')) {
+if (ЗАПУЩЕН_НАПРЯМУЮ && process.argv.includes('--selftest')) {
   const машинный = 'Важно отметить, что данный аспект является ключевым фактором. Более того, ' +
     'во-первых, необходимо учитывать когнитивные критерии. Безусловно, это фундаментальный концепт.';
   const авторский = 'Человек приходит из поиска, смотрит на строку — и уходит. Он не читает формул, ' +
@@ -268,7 +282,7 @@ if (process.argv.includes('--selftest')) {
 
 
 // ── Калибровка базы владельца ───────────────────────────────────────────────────────────────
-if (process.argv.includes('--calibrate')) {
+if (ЗАПУЩЕН_НАПРЯМУЮ && process.argv.includes('--calibrate')) {
   const { readdirSync } = await import('node:fs');
   const { writeFileSync } = await import('node:fs');
   let corpus = readFileSync('GOAL.md', 'utf8');
@@ -309,7 +323,7 @@ if (process.argv.includes('--calibrate')) {
  * `import { lint }` печатал «нужен файл» и падал кодом 1 прямо посреди чужого прогона.
  * Второй случай одного класса за час — значит это правило, а не случайность.
  */
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (ЗАПУЩЕН_НАПРЯМУЮ) {
 
 const genreIdx = process.argv.indexOf('--genre');
 const genre = genreIdx > 0 ? process.argv[genreIdx + 1] : 'document';

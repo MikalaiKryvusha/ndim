@@ -33,6 +33,8 @@
  *      не значит.
  *   5. Число не ноль и не пустое: страж, которому «строки нет» сошло бы за успех, охранял бы
  *      потерю контента.
+ *
+ * Запуск: node tools/verify-bug81.mjs
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';

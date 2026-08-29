@@ -37,6 +37,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 /** Расширения, которые мы считаем текстом проекта. */
 const TEXT = /\.(md|ts|mjs|js|svelte|json|html|rules|txt|yml|yaml|css)$/i;
@@ -148,4 +149,19 @@ function main(argv) {
 	return 0;
 }
 
-process.exitCode = main(process.argv.slice(2));
+/**
+ * 🔴 ПРЕДОХРАНИТЕЛЬ «ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН» (`ideas/43`; страж класса — `verify-import-safety.mjs`).
+ *
+ * Без него импорт этого файла ради экспортов молча СТИРАЛ ЧУЖОЙ КОД ВОЗВРАТА. Замер 2026-08-29:
+ * скрипт, уже решивший падать кодом 3, после `await import()` выходил кодом 0 — плюс обход 1474
+ * отслеживаемых файлов и строка «✅ маркеров конфликта нет» в чужом выводе.
+ *
+ * 🔑 ГРАНИЦА КЛАССА, СНЯТАЯ ТЕМ ЖЕ ЗАМЕРОМ И ВАЖНАЯ ДЛЯ СУДЬИ: `process.exitCode = …` и
+ * `process.exit(…)` РАЗНЫЕ по вреду. Здесь стоял первый — он портит код возврата, но цикл
+ * событий не обрывает, поэтому под `node --test` красный тест оставался красным (проверено:
+ * заведомо ложное утверждение дало fail 1). Второй убивает процесс и отменяет проверяемость
+ * файла целиком. Ворота этот страж слепыми НЕ делал; чинится он как молчаливый отказ.
+ */
+const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (ЗАПУЩЕН_НАПРЯМУЮ) process.exitCode = main(process.argv.slice(2));

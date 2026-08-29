@@ -30,6 +30,8 @@
  * и хеш считается по ним же. Копипаста была бы второй истиной и ломала бы I3.
  *
  * Формат тела `github-issue`: первая строка — заголовок тикета, дальше пустая строка и тело.
+ *
+ * Запуск: node tools/send-outbound.mjs
  */
 
 import { readFileSync, existsSync } from 'node:fs';

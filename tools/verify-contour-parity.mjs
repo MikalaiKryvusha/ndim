@@ -27,6 +27,7 @@
  * Выход:  0 — контуры совпадают там, где обязаны; 1 — расхождение.
  */
 import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 /** Тройка переадресации в сравнимом виде. Порядок правил значения не имеет — сравниваем множества. */
 const redirectKey = (r) => `${r.source} → ${r.destination} (${r.type})`;
@@ -44,82 +45,93 @@ export function diff(prod, stage) {
 	return { onlyProd: inProd, onlyStage: inStage };
 }
 
-if (process.argv.includes('--selftest')) {
-	const cases = [
-		['одинаковые наборы — расхождений нет', diff(['a', 'b'], ['b', 'a']).onlyProd.length === 0 && diff(['a', 'b'], ['b', 'a']).onlyStage.length === 0],
-		['правило есть в бою и нет на стейдже — РАСХОЖДЕНИЕ', diff(['a', 'b'], ['a']).onlyProd.join() === 'b'],
-		['правило есть на стейдже и нет в бою — РАСХОЖДЕНИЕ', diff(['a'], ['a', 'z']).onlyStage.join() === 'z'],
-		['цель переадресации изменена — РАСХОЖДЕНИЕ с обеих сторон',
-			diff(['/x → /ru/x (301)'], ['/x → /en/x (301)']).onlyProd.length === 1 &&
-				diff(['/x → /ru/x (301)'], ['/x → /en/x (301)']).onlyStage.length === 1],
-		['тип 301 подменён на 302 — РАСХОЖДЕНИЕ', diff(['/x → /ru/x (301)'], ['/x → /ru/x (302)']).onlyProd.length === 1],
-	];
-	let bad = 0;
-	for (const [label, ok] of cases) {
-		if (!ok) bad += 1;
-		console.log(`  ${ok ? '✅' : '❌'} ${label}`);
+/**
+ * 🔴 ПРЕДОХРАНИТЕЛЬ «ЗАПУЩЕН ИЛИ ПОДКЛЮЧЁН» (`ideas/43`; страж класса — `verify-import-safety.mjs`).
+ * Без него импорт ради экспортируемой `diff` читал `firebase.json` и `firebase.stage.json` и
+ * звал `process.exit` — то есть убивал чужой процесс, ничего у него не спросив.
+ */
+const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+function выполнить() {
+	if (process.argv.includes('--selftest')) {
+		const cases = [
+			['одинаковые наборы — расхождений нет', diff(['a', 'b'], ['b', 'a']).onlyProd.length === 0 && diff(['a', 'b'], ['b', 'a']).onlyStage.length === 0],
+			['правило есть в бою и нет на стейдже — РАСХОЖДЕНИЕ', diff(['a', 'b'], ['a']).onlyProd.join() === 'b'],
+			['правило есть на стейдже и нет в бою — РАСХОЖДЕНИЕ', diff(['a'], ['a', 'z']).onlyStage.join() === 'z'],
+			['цель переадресации изменена — РАСХОЖДЕНИЕ с обеих сторон',
+				diff(['/x → /ru/x (301)'], ['/x → /en/x (301)']).onlyProd.length === 1 &&
+					diff(['/x → /ru/x (301)'], ['/x → /en/x (301)']).onlyStage.length === 1],
+			['тип 301 подменён на 302 — РАСХОЖДЕНИЕ', diff(['/x → /ru/x (301)'], ['/x → /ru/x (302)']).onlyProd.length === 1],
+		];
+		let bad = 0;
+		for (const [label, ok] of cases) {
+			if (!ok) bad += 1;
+			console.log(`  ${ok ? '✅' : '❌'} ${label}`);
+		}
+		console.log(`\nпроверок ${cases.length} · провалов ${bad}`);
+		process.exit(bad === 0 ? 0 : 1);
 	}
-	console.log(`\nпроверок ${cases.length} · провалов ${bad}`);
-	process.exit(bad === 0 ? 0 : 1);
+
+	const prodConfig = JSON.parse(readFileSync('firebase.json', 'utf8'));
+	const stageConfig = JSON.parse(readFileSync('firebase.stage.json', 'utf8'));
+
+	const prodSite = prodConfig.hosting.find((h) => h.target === 'landing');
+	const stageSite = stageConfig.hosting.find((h) => h.site === 'ndim-stage');
+
+	let passed = 0;
+	const fails = [];
+	const check = (ok, name, detail = '') => {
+		if (ok) {
+			passed += 1;
+			console.log(`  ✅ ${name}${detail ? ` — ${detail}` : ''}`);
+		} else {
+			fails.push(`${name}${detail ? ` — ${detail}` : ''}`);
+			console.log(`  ❌ ${name}${detail ? ` — ${detail}` : ''}`);
+		}
+	};
+
+	console.log('\n═══ КОНТУРЫ СОВПАДАЮТ ТАМ, ГДЕ ОБЯЗАНЫ (bugs/133) ═══\n');
+
+	// 🔑 Контроль прибора ПЕРВЫМ: сравнивать было ЧТО. Пустые наборы дали бы «расхождений 0» на
+	// конфигурации, которую страж не нашёл вовсе (`EXP-0070`).
+	check(Boolean(prodSite), 'боевой таргет landing найден');
+	check(Boolean(stageSite), 'таргет стейджа найден');
+	if (!prodSite || !stageSite) {
+		console.log('\n🔴 сравнивать нечем — дальше идти нельзя.');
+		process.exit(1);
+	}
+
+	const prodRedirects = (prodSite.redirects ?? []).map(redirectKey);
+	const stageRedirects = (stageSite.redirects ?? []).map(redirectKey);
+	check(prodRedirects.length > 0, 'в бою есть переадресации (иначе сверка пуста)', `${prodRedirects.length}`);
+
+	const redirects = diff(prodRedirects, stageRedirects);
+	check(
+		redirects.onlyProd.length === 0,
+		'🔑 ни одной боевой переадресации не потеряно на стейдже',
+		redirects.onlyProd.length === 0 ? `${stageRedirects.length} шт.` : redirects.onlyProd.join(' · '),
+	);
+	check(
+		redirects.onlyStage.length === 0,
+		'на стейдже нет переадресаций, которых нет в бою',
+		redirects.onlyStage.join(' · '),
+	);
+
+	check(prodSite.cleanUrls === stageSite.cleanUrls, 'cleanUrls одинаков', `бой ${prodSite.cleanUrls} · стейдж ${stageSite.cleanUrls}`);
+
+	const prodCache = (prodSite.headers ?? []).map(cacheKey).filter(Boolean);
+	const stageCache = (stageSite.headers ?? []).map(cacheKey).filter(Boolean);
+	check(prodCache.length > 0, 'в бою есть правила кеширования (иначе сверка пуста)', `${prodCache.length}`);
+	const cache = diff(prodCache, stageCache);
+	check(
+		cache.onlyProd.length === 0 && cache.onlyStage.length === 0,
+		'🔑 правила кеширования совпадают (bugs/124 действует в обоих контурах)',
+		[...cache.onlyProd.map((x) => `только бой: ${x}`), ...cache.onlyStage.map((x) => `только стейдж: ${x}`)].join(' · '),
+	);
+
+	console.log(`\n${'─'.repeat(56)}`);
+	console.log(`${fails.length === 0 ? '✅ ЧИСТО' : '🔴 РАСХОЖДЕНИЕ'}: проверок ${passed + fails.length} · провалов ${fails.length}`);
+	process.exit(fails.length === 0 ? 0 : 1);
 }
 
-const prodConfig = JSON.parse(readFileSync('firebase.json', 'utf8'));
-const stageConfig = JSON.parse(readFileSync('firebase.stage.json', 'utf8'));
-
-const prodSite = prodConfig.hosting.find((h) => h.target === 'landing');
-const stageSite = stageConfig.hosting.find((h) => h.site === 'ndim-stage');
-
-let passed = 0;
-const fails = [];
-const check = (ok, name, detail = '') => {
-	if (ok) {
-		passed += 1;
-		console.log(`  ✅ ${name}${detail ? ` — ${detail}` : ''}`);
-	} else {
-		fails.push(`${name}${detail ? ` — ${detail}` : ''}`);
-		console.log(`  ❌ ${name}${detail ? ` — ${detail}` : ''}`);
-	}
-};
-
-console.log('\n═══ КОНТУРЫ СОВПАДАЮТ ТАМ, ГДЕ ОБЯЗАНЫ (bugs/133) ═══\n');
-
-// 🔑 Контроль прибора ПЕРВЫМ: сравнивать было ЧТО. Пустые наборы дали бы «расхождений 0» на
-// конфигурации, которую страж не нашёл вовсе (`EXP-0070`).
-check(Boolean(prodSite), 'боевой таргет landing найден');
-check(Boolean(stageSite), 'таргет стейджа найден');
-if (!prodSite || !stageSite) {
-	console.log('\n🔴 сравнивать нечем — дальше идти нельзя.');
-	process.exit(1);
-}
-
-const prodRedirects = (prodSite.redirects ?? []).map(redirectKey);
-const stageRedirects = (stageSite.redirects ?? []).map(redirectKey);
-check(prodRedirects.length > 0, 'в бою есть переадресации (иначе сверка пуста)', `${prodRedirects.length}`);
-
-const redirects = diff(prodRedirects, stageRedirects);
-check(
-	redirects.onlyProd.length === 0,
-	'🔑 ни одной боевой переадресации не потеряно на стейдже',
-	redirects.onlyProd.length === 0 ? `${stageRedirects.length} шт.` : redirects.onlyProd.join(' · '),
-);
-check(
-	redirects.onlyStage.length === 0,
-	'на стейдже нет переадресаций, которых нет в бою',
-	redirects.onlyStage.join(' · '),
-);
-
-check(prodSite.cleanUrls === stageSite.cleanUrls, 'cleanUrls одинаков', `бой ${prodSite.cleanUrls} · стейдж ${stageSite.cleanUrls}`);
-
-const prodCache = (prodSite.headers ?? []).map(cacheKey).filter(Boolean);
-const stageCache = (stageSite.headers ?? []).map(cacheKey).filter(Boolean);
-check(prodCache.length > 0, 'в бою есть правила кеширования (иначе сверка пуста)', `${prodCache.length}`);
-const cache = diff(prodCache, stageCache);
-check(
-	cache.onlyProd.length === 0 && cache.onlyStage.length === 0,
-	'🔑 правила кеширования совпадают (bugs/124 действует в обоих контурах)',
-	[...cache.onlyProd.map((x) => `только бой: ${x}`), ...cache.onlyStage.map((x) => `только стейдж: ${x}`)].join(' · '),
-);
-
-console.log(`\n${'─'.repeat(56)}`);
-console.log(`${fails.length === 0 ? '✅ ЧИСТО' : '🔴 РАСХОЖДЕНИЕ'}: проверок ${passed + fails.length} · провалов ${fails.length}`);
-process.exit(fails.length === 0 ? 0 : 1);
+if (ЗАПУЩЕН_НАПРЯМУЮ) выполнить();

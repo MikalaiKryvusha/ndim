@@ -2,6 +2,8 @@
  * ЧИТАТЕЛЬ TXT-СПИСКОВ СПРОСА (`tools/demand-*.txt`, plans/41 шаг 0) — общий для обоих жнецов:
  * `wordstat-harvest.mjs --file` (секция [ru]) и `bing-keywords.mjs --file` (секция [en]).
  * Формат: `#` — комментарий, `[ru]`/`[en]` — секции, строка = запрос. Текст едет файлом, не argv.
+ *
+ * Запуск: node tools/demand-lists.mjs
  */
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
