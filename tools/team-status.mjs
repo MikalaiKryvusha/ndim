@@ -532,7 +532,9 @@ function main() {
     if (!auth.ok) { console.error(`⛔ ${auth.reason}`); process.exit(1); }
     const stamp = stampNow();
     if (cmd === 'set') {
-      const state = process.argv.includes('--busy') ? '🔴 занят'
+      // Словарь состояний — слово владельца 2026-08-29: рабочий статус «🔵 в работе»
+      // (прежнее «🔴 занят»), прощальный при закрытии смены «🔴 оффлайн».
+      const state = process.argv.includes('--busy') ? '🔵 в работе'
         : process.argv.includes('--free') ? '🟢 свободен'
         : process.argv.includes('--offline') ? '🔴 оффлайн' : '🟢 свободен';
       editBoard((t) => replaceRoleRow(t, target, { state, doing: arg('--doing') ?? '—', waiting: arg('--waiting') ?? '—', stamp }));
