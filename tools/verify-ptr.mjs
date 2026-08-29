@@ -38,6 +38,8 @@
  *
  * Счёт чтений — путями документов в теле запроса, а не HTTP-запросами: у Firestore
  * большинство запросов это служебные кадры WebChannel (EXP-0073).
+ *
+ * Запуск: node tools/verify-ptr.mjs
  */
 
 import { chromium } from '@playwright/test';

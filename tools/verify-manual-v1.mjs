@@ -8,6 +8,8 @@
  * Гоняется по СОБРАННОМУ сайту (страница пререндерится): `npm run build` +
  * `npx vite preview --port 4173`, затем `node tools/verify-manual-v1.mjs`.
  * Скриншоты — test-results/manual-v1/. Канон процесса — plans/06 (обе темы × 390/1440).
+ *
+ * Запуск: node tools/verify-manual-v1.mjs
  */
 
 import { mkdir } from 'node:fs/promises';

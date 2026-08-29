@@ -105,10 +105,6 @@
     invite: { ru: 'Пригласить друзей', en: 'Invite friends' },
     copyLink: { ru: 'Скопировать ссылку', en: 'Copy the link' },
     copiedLabel: { ru: 'скопировано', en: 'copied' },
-    inviteText: {
-      ru: 'Пространство NDim ищет людей, похожих на Вас, — по тому, как Вы сами оцениваете важные для себя вещи.',
-      en: 'NDim Space finds people similar to you — by how you rate the things that matter to you.',
-    },
 
     documents: { ru: 'Документы', en: 'Documents' },
     manual: { ru: 'Руководство пользователя', en: 'User Manual' },
@@ -129,7 +125,6 @@
     // 2026-07-27: «об этом сказано на самой странице пожертвования». Текст живёт там
     // (src/routes/menu/donate) — в списке разделов он дублировал сам себя.
 
-    versions: { ru: 'Версии', en: 'Versions' },
     // Тексты состояний «Вы не вошли…»/«данные не поднялись» уехали вместе с карточкой
     // «Аккаунт» (ideas/19): о входе и состоянии данных теперь говорит «Профиль».
   } as const;

@@ -26,6 +26,8 @@
  * боевая база разработчику не принадлежит. Поэтому калибровка требует `--catalog` явным путём,
  * а по умолчанию прибор работает с тем, что в репозитории: партии `candidates/batches/` и срез
  * `src/lib/content/dims-slice.json`.
+ *
+ * Запуск: node tools/measure-meta-share.mjs · самотест: --selftest
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';

@@ -20,6 +20,8 @@
  * Запуск (эмулятор поднимается на время прогона и гасится сам):
  *   firebase emulators:exec --only firestore,auth,storage --project demo-ndim-dev
  *     "node tools/seed-dev.mjs && node tools/verify-tag-dims-approval.mjs"
+ *
+ * Запуск: node tools/verify-tag-dims-approval.mjs
  */
 import { spawnSync } from 'node:child_process';
 import { initializeApp } from 'firebase-admin/app';

@@ -30,6 +30,8 @@
  *
  * Запуск (нужен `npm run stand`):  node tools/verify-bug105.mjs [--quick]
  *   --quick — одна тема × 1440, для проверки стража мутациями.
+ *
+ * Запуск: node tools/verify-bug105.mjs
  */
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';

@@ -1,4 +1,8 @@
-/** Разовый осмотр: какие кнопки есть в панели «Измерений» и что открывает ящик поиска. */
+/**
+ * Разовый осмотр: какие кнопки есть в панели «Измерений» и что открывает ящик поиска.
+ *
+ * Запуск: node tools/probe-bug72-open.mjs
+ */
 import { chromium } from 'playwright';
 
 const BASE = process.env.PROBE_BASE ?? 'http://localhost:5173';

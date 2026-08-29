@@ -269,11 +269,6 @@ export async function loadRelationsSummary(uid: Uid): Promise<RelationsSummary |
   return cached(KEYS.relationsSummary, freshMs, () => fetchRelationsSummary(uid));
 }
 
-/** Сводка из памяти — синхронно, для первого кадра профиля. */
-export function peekRelationsSummary(): RelationsSummary | null | undefined {
-  return peek<RelationsSummary | null>(KEYS.relationsSummary);
-}
-
 async function fetchRelationsSummary(uid: Uid): Promise<RelationsSummary | null> {
   const store = db();
   /*

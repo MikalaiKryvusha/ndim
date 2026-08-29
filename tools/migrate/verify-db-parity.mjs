@@ -28,6 +28,8 @@
  * сессию — он в самих ИМЕНАХ нашей модели, а не во внимательности.
  *
  * Выход: 0 — расхождений нет; 1 — есть (и они перечислены).
+ *
+ * Запуск: node tools/migrate/verify-db-parity.mjs
  */
 import { readFileSync } from 'node:fs';
 

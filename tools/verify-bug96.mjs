@@ -15,6 +15,8 @@
  *  4. Консоль чиста (узкий фильтр отказов правил, канон verify-bug84/87).
  *
  * Требует поднятый `npm run stand`. Запуск: node tools/verify-bug96.mjs
+ *
+ * Запуск: node tools/verify-bug96.mjs
  */
 
 import { chromium } from '@playwright/test';

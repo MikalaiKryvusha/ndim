@@ -21,6 +21,8 @@
  *
  * Не через `npm run e2e` намеренно: тот прогон выжигает `test-results/` целиком (EXP-0062),
  * а там лежат кадры выката. Зонд ходит по уже собранному build/ через vite preview.
+ *
+ * Запуск: node tools/probe-bug67.mjs
  */
 import { chromium } from 'playwright';
 

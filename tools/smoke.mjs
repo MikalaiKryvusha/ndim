@@ -3,6 +3,8 @@
 // @covers NDIM-AUTH-005, NDIM-AUTH-006, NDIM-SHELL-003, NDIM-MENU-011, NDIM-PROFILE-001,
 // @covers NDIM-PROFILE-002, NDIM-DIMS-001, NDIM-DIMS-002, NDIM-DIMS-003, NDIM-REL-001,
 // @covers NDIM-REL-003, NDIM-SYSTEM-001
+//
+// Запуск: node tools/smoke.mjs
 /**
  * НАБОР SMOKE — «сборка жива и продукт делает своё дело» (`qa/suites/smoke.md`, фаза 2 `plans/54`).
  *

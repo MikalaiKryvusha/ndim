@@ -66,6 +66,18 @@
   let expanded = $state<string | null>(null);
 
   /**
+   * Раскрытие карточки похожего человека. Отдельной функцией ради шага пути `person_opened`
+   * (`plans/78` Ш4): показ топа и ВНИМАНИЕ к конкретному человеку — два разных факта, и
+   * второй ценнее. ⛔ Чужой uid наружу не уезжает: свойства события — закрытый список.
+   */
+  function openPerson(uid: string): void {
+    expanded = uid;
+    void import('$lib/data/analytics')
+      .then(({ capture }) => capture('person_opened'))
+      .catch(() => {});
+  }
+
+  /**
    * Подсказки метрик (bugs/24) — как в 1.x: у каждой метрики иконка ⓘ, тап раскрывает
    * объяснение. Тексты — ДОСЛОВНО из 1.x (сняты в researches/12; те же определения — в
    * руководстве, researches/07 §3). Открыта одна подсказка за раз; повторный тап закрывает.
@@ -198,6 +210,23 @@
       }
       await loadScreen(uid);
       stand = 'ready';
+
+      /*
+       * 🔑 ЧИСЛО ЦЕННОСТИ (`plans/78` Ш4). Ценность NDim человеку — увидеть похожих на себя, и
+       * это единственное место, где он её получает. Своя воронка кончалась на
+       * `account_created`, то есть на НАШЕЙ выгоде: человек, создавший аккаунт и не увидевший
+       * ни одной связи, считался успехом. Теперь считается то, что обещано.
+       *
+       * `has_matches` отвечает на второй вопрос — не «дошёл ли до экрана», а «сработал ли
+       * продукт». Это НЕ предмет оценки: свойство не называет ни одного измерения и ни одной
+       * оценки, только был ли топ непустым (решение принято без владельца, названо в разведке).
+       *
+       * Дедупликации нет намеренно: сколько РАЗНЫХ людей дошло — считает сам инструмент по
+       * уникальным отправителям; наша дедупликация тут только испортила бы его арифметику.
+       */
+      void import('$lib/data/analytics')
+        .then(({ capture }) => capture('relations_view', { has_matches: (data?.cards.length ?? 0) > 0 }))
+        .catch(() => {});
     } catch (error) {
       standError = technicalDetail(error);
       stand = 'down';
@@ -410,7 +439,7 @@
                 <b>{guestTitle(card)}</b>
               </button>
             {:else}
-              <button type="button" class="who whole" aria-expanded="false" onclick={() => (expanded = entry.guestUid)}>
+              <button type="button" class="who whole" aria-expanded="false" onclick={() => openPerson(entry.guestUid)}>
                 <Avatar
                   uid={entry.guestUid}
                   name={guestTitle(card)}
