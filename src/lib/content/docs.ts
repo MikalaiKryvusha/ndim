@@ -632,6 +632,28 @@ export const DOCS: Readonly<Record<string, Doc>> = {
       {
         "type": "h3",
         "text": {
+          "ru": "Версия 2.2 от 29.08.2026",
+          "en": "Version 2.2 from 08/29/2026"
+        }
+      },
+      {
+        "type": "ul",
+        "items": {
+          "ru": [
+            "Оценки измерений прямо в каталоге и на лендинге.",
+            "Пополнение базы данных измерениями.",
+            "Оптимизация и исправление дефектов."
+          ],
+          "en": [
+            "Dimension ratings right in the catalog and on the landing page.",
+            "Filling the database with dimensions.",
+            "Optimization and bug fixing."
+          ]
+        }
+      },
+      {
+        "type": "h3",
+        "text": {
           "ru": "Версия 2.1 от 14.08.2026",
           "en": "Version 2.1 from 08/14/2026"
         }
