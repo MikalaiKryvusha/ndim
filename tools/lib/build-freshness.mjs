@@ -40,7 +40,8 @@
  * несвежему артефакту. Лишняя пересборка стоит минуту; ложная находка стоит захода.
  */
 
-import { readdirSync, statSync, existsSync } from 'node:fs';
+import { execSync } from 'node:child_process';
+import { readdirSync, statSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** Что в `src/` не считается исходником сборки: сюда сборка не смотрит. */
@@ -124,6 +125,74 @@ export function buildFreshness({ src = 'src', build = 'build' } = {}) {
     srcFile: s.file, buildFile: b.file,
     srcCount: s.count, buildCount: b.count,
   };
+}
+
+/**
+ * ВТОРОЙ ВОПРОС: собрана ли она из ЭТОГО дерева.
+ *
+ * 🔴 Время отвечает на «не устарела ли», и этого мало — граница названа в шапке этого модуля с
+ * первого дня и НЕ выдавалась за закрытую. Переключили ветку, откатили правку, сделали
+ * `git commit --amend` — сборка МОЛОЖЕ исходников и при этом чужая. Здесь на это отвечает метка
+ * `build/build-stamp.json`, которую кладёт `tools/stamp-build.mjs` шагом `postbuild`.
+ *
+ * ⛔ Отсутствие метки НЕ красится ни зелёным, ни красным: это `null`. Сборка могла приехать из
+ * контура без git (архив, CI без истории), и объявлять её чужой было бы ложным обвинением, а
+ * объявлять своей — ложным зелёным. Третий ответ честнее обоих.
+ * ⚠️ И метка описывает дерево, а не только коммит: `dirty: true` значит, что в сборке был код,
+ * которого нет ни в одном коммите, — тогда `sha` совпасть может, а сборка всё равно не описана.
+ *
+ * @returns {{ статус: 'своя'|'чужая'|'грязная'|'нет метки'|'git молчит', why: string,
+ *             sha: string|null, head: string|null, dirty: boolean|null }}
+ */
+export function buildProvenance({ build = 'build', head = null } = {}) {
+  const путь = join(build, 'build-stamp.json');
+  if (!existsSync(путь)) {
+    return { статус: 'нет метки', why: `нет ${путь} — из какого дерева собрано, сказать НЕЧЕМ`,
+      sha: null, head, dirty: null };
+  }
+  let m;
+  try {
+    m = JSON.parse(readFileSync(путь, 'utf8'));
+  } catch (e) {
+    return { статус: 'нет метки', why: `метка ${путь} не читается: ${e.message}`,
+      sha: null, head, dirty: null };
+  }
+  /*
+   * 🔴 МЕТКА БЕЗ ГОДНОГО sha — ЭТО «НЕТ МЕТКИ», А НЕ «ЧУЖАЯ». Наивная сверка `m.sha === HEAD`
+   * дала бы на такой метке ЛОЖНОЕ ОБВИНЕНИЕ: undefined никогда не равен HEAD. Найдено падением
+   * собственного юнита — фикстура «битой метки» оказалась валидным json, и вместе с ошибкой
+   * фикстуры вскрылась ошибка реализации.
+   */
+  if (typeof m?.sha !== 'string' || m.sha.length < 7) {
+    return { статус: 'нет метки', why: `метка ${путь} без годного sha — сказать НЕЧЕМ`,
+      sha: null, head, dirty: m?.dirty ?? null };
+  }
+  const HEAD = head ?? спроситьHead();
+  if (!HEAD) {
+    return { статус: 'git молчит', why: 'git недоступен — сверять метку не с чем',
+      sha: m.sha ?? null, head: null, dirty: m.dirty ?? null };
+  }
+  if (m.dirty === true) {
+    return { статус: 'грязная', head: HEAD, sha: m.sha ?? null, dirty: true,
+      why: `собрана из ГРЯЗНОГО дерева: в артефакте код, которого нет ни в одном коммите (метка ${(m.sha ?? '?').slice(0, 7)})` };
+  }
+  const своя = m.sha === HEAD;
+  return {
+    статус: своя ? 'своя' : 'чужая',
+    head: HEAD, sha: m.sha ?? null, dirty: m.dirty ?? null,
+    why: своя
+      ? `собрана из этого дерева: ${HEAD.slice(0, 7)}`
+      : `СОБРАНА ИЗ ДРУГОГО ДЕРЕВА: метка ${(m.sha ?? '—').slice(0, 7)} против HEAD ${HEAD.slice(0, 7)}`,
+  };
+}
+
+/** HEAD текущего дерева; git недоступен — честный `null`, а не выдуманное значение. */
+function спроситьHead() {
+  try {
+    return execSync('git rev-parse HEAD', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  } catch {
+    return null;
+  }
 }
 
 /**

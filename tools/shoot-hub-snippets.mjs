@@ -42,7 +42,7 @@ import { existsSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { buildFreshness, freshnessLine } from './lib/build-freshness.mjs';
+import { buildFreshness, buildProvenance, freshnessLine } from './lib/build-freshness.mjs';
 import { portsFor, slotOf } from './lib/stand-slot.mjs';
 
 const KEEP = process.argv.includes('--keep');
@@ -134,6 +134,21 @@ async function main() {
   if (!fresh.fresh) {
     console.error('\n⛔ СНИМАТЬ НЕЧЕГО: кадры несвежей сборки — улика о вчерашнем продукте.');
     console.error(`   ${fresh.why}`);
+    console.error('   Лечение одной командой: npm run build');
+    process.exit(1);
+  }
+
+  /*
+   * И ВТОРОЙ ВОПРОС — из ЭТОГО ли дерева. Кадр чужой сборки так же неотличим от кадра своей, как
+   * кадр вчерашней от кадра сегодняшней, и опаснее: время у него в порядке.
+   * ⛔ Отказ только на ДОКАЗАННОМ расхождении и на грязном дереве. «Метки нет» — предупреждение:
+   * прибор не вправе обвинять сборку, происхождение которой нечем установить.
+   */
+  const откуда = buildProvenance();
+  console.log(`   ${откуда.статус === 'своя' ? '✅' : '⚠️'} происхождение: ${откуда.why}`);
+  if (откуда.статус === 'чужая' || откуда.статус === 'грязная') {
+    console.error('\n⛔ СНИМАТЬ НЕЧЕГО: кадры описывали бы не то дерево, из которого собраны.');
+    console.error(`   ${откуда.why}`);
     console.error('   Лечение одной командой: npm run build');
     process.exit(1);
   }
