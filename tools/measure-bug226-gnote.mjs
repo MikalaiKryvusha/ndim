@@ -34,6 +34,8 @@
  * Запуск: стенд своего слота поднят (`npm run stand`) → node tools/measure-bug226-gnote.mjs
  *   --width 1440         замерить одну ширину окна (по умолчанию 1024, 1440, 1560)
  *   --no-shots           не снимать кадры
+ *   --slot N             ЯВНЫЙ слот (или переменная STAND_SLOT) — для прогона из ЧУЖОГО дерева:
+ *                        судья работает временным деревом, а его имя даёт слот 0 (главную копию)
  */
 
 import { mkdirSync } from 'node:fs';
@@ -42,7 +44,7 @@ import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
-import { portsFor, slotOf } from './lib/stand-slot.mjs';
+import { portsFor, slotFromRequest } from './lib/stand-slot.mjs';
 import { readGuestSession, removeGuest } from './lib/guest-session.mjs';
 
 /* ── Адрес стенда — из СЛОТА рабочего места, а не литералом ──────────────────────────────────
@@ -51,7 +53,11 @@ import { readGuestSession, removeGuest } from './lib/guest-session.mjs';
  * верен, ПРЕДМЕТ другой» (класс дня смены 11, прибор кадров `bugs/187`).
  */
 const root = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
-const { slot, role } = slotOf(basename(root));
+const { slot, role, источник } = slotFromRequest({
+  argv: process.argv.slice(2),
+  env: process.env,
+  dirName: basename(root),
+});
 const ports = portsFor(slot);
 const BASE = `http://localhost:${ports.dev}`;
 
@@ -115,7 +121,7 @@ function measure(page) {
 }
 
 console.log('═══ ЗАМЕР ШИРИНЫ ПЛАШКИ ГОСТЯ (bugs/226) ═══');
-console.log(`  стенд: слот ${slot} · роль ${role ?? '—'} · ${BASE}\n`);
+console.log(`  стенд: слот ${slot} · роль ${role ?? '—'} · источник слота: ${источник} · ${BASE}\n`);
 
 const browser = await chromium.launch();
 let guestUid = null;

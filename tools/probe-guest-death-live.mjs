@@ -21,7 +21,9 @@
  * на стенде это гигиена, а не потеря; прибор печатает счёт.
  *
  * Запуск: стенд обязан быть поднят (`npm run stand`).
- *   node tools/probe-guest-death-live.mjs [--base http://localhost:5173]
+ *   node tools/probe-guest-death-live.mjs [--base http://localhost:5173] [--slot N]
+ * ⚠️ `--slot` (или переменная `STAND_SLOT`) — для прогона из ЧУЖОГО дерева: судья работает
+ * временным деревом, а его имя даёт слот 0, то есть слот главной копии.
  */
 
 import { mkdirSync } from 'node:fs';
@@ -30,7 +32,7 @@ import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
 import { readGuestSession, removeGuest } from './lib/guest-session.mjs';
-import { portsFor, slotOf } from './lib/stand-slot.mjs';
+import { portsFor, slotFromRequest } from './lib/stand-slot.mjs';
 
 /*
  * 🔴 АДРЕС СТЕНДА — ИЗ СЛОТА РАБОЧЕГО МЕСТА (2026-08-30). Здесь стояли `localhost:5173` и
@@ -40,7 +42,11 @@ import { portsFor, slotOf } from './lib/stand-slot.mjs';
  * ⚠️ Поведение слота 0 остаётся байт-в-байт прежним: `portsFor(0)` возвращает ровно
  * `5173/8181/9099/9199` (тот же довод, на котором стоит `tools/stand-launch.mjs`).
  */
-const { slot } = slotOf(basename(execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim()));
+const { slot, источник } = slotFromRequest({
+  argv: process.argv.slice(2),
+  env: process.env,
+  dirName: basename(execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim()),
+});
 const ports = portsFor(slot);
 
 const argv = process.argv.slice(2);
@@ -122,7 +128,10 @@ async function bornGuest(browser, name) {
 
 const exists = async (path) => (await db.doc(path).get()).exists;
 
-console.log('═══ ЖИВАЯ ПРОБА «ЧЕСТНАЯ СМЕРТЬ ГОСТЯ» (plans/63 шаг 7) ═══\n');
+console.log('═══ ЖИВАЯ ПРОБА «ЧЕСТНАЯ СМЕРТЬ ГОСТЯ» (plans/63 шаг 7) ═══');
+// Источник слота печатается намеренно: прибор УБИВАЕТ гостей, и «в каком стенде» обязано
+// стоять в выводе, а не выводиться читателем из имени каталога.
+console.log(`  стенд: слот ${slot} · источник слота: ${источник} · ${BASE}\n`);
 const browser = await chromium.launch();
 
 try {

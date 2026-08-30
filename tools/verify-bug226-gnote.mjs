@@ -55,6 +55,8 @@
  *
  * Запуск: стенд своего слота поднят (`npm run stand`) → node tools/verify-bug226-gnote.mjs
  *   --quick   только 1440 и один язык — для проверки самого стража мутациями
+ *   --slot N  ЯВНЫЙ слот (или переменная STAND_SLOT) — для прогона из ЧУЖОГО дерева: судья
+ *             работает временным деревом, а его имя даёт слот 0 (слот главной копии)
  */
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
@@ -63,11 +65,15 @@ import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
-import { portsFor, slotOf } from './lib/stand-slot.mjs';
+import { portsFor, slotFromRequest } from './lib/stand-slot.mjs';
 import { readGuestSession, removeGuest } from './lib/guest-session.mjs';
 
 const root = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
-const { slot, role } = slotOf(basename(root));
+const { slot, role, источник } = slotFromRequest({
+  argv: process.argv.slice(2),
+  env: process.env,
+  dirName: basename(root),
+});
 const ports = portsFor(slot);
 const BASE = `http://localhost:${ports.dev}`;
 
@@ -134,7 +140,7 @@ function geometry(page) {
 
 const SCREENS = screensFromSource();
 console.log('═══ СТРАЖ ШИРИНЫ ПЛАШКИ ГОСТЯ (bugs/226) ═══');
-console.log(`  стенд: слот ${slot} · роль ${role ?? '—'} · ${BASE}`);
+console.log(`  стенд: слот ${slot} · роль ${role ?? '—'} · источник слота: ${источник} · ${BASE}`);
 console.log(`  корпус выведен из исходника: ${SCREENS.length ? SCREENS.join(' · ') : '— ПУСТО —'}\n`);
 
 /* Контроль корпуса ПЕРВЫМ: пустой корпус зелёным быть не смеет. */

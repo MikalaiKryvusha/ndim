@@ -17,7 +17,9 @@
  * Уборка: гость рождается дверью продукта (ensureSpaceExists создаёт документы) — зонд
  * убирает и документы, и учётку, и ПРОВЕРЯЕТ, что следов не осталось.
  *
- * Запуск: стенд поднят (`npm run stand`) → node tools/probe-guest-card.mjs
+ * Запуск: стенд поднят (`npm run stand`) → node tools/probe-guest-card.mjs [--slot N]
+ * ⚠️ `--slot` (или переменная `STAND_SLOT`) — для прогона из ЧУЖОГО дерева: судья работает
+ * временным деревом, а его имя даёт слот 0, то есть слот главной копии.
  */
 
 import { mkdirSync } from 'node:fs';
@@ -27,7 +29,7 @@ import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
 import { readGuestSession, removeGuest } from './lib/guest-session.mjs';
-import { portsFor, slotOf } from './lib/stand-slot.mjs';
+import { portsFor, slotFromRequest } from './lib/stand-slot.mjs';
 
 /*
  * 🔴 АДРЕС СТЕНДА — ИЗ СЛОТА РАБОЧЕГО МЕСТА, А НЕ ЛИТЕРАЛОМ (2026-08-30).
@@ -41,7 +43,11 @@ import { portsFor, slotOf } from './lib/stand-slot.mjs';
  * ⚠️ ПОВЕДЕНИЕ СЛОТА 0 ОСТАЁТСЯ БАЙТ-В-БАЙТ ПРЕЖНИМ: `portsFor(0)` возвращает ровно
  * `5173/8181/9099/9199` (тот же довод, на котором стоит `tools/stand-launch.mjs`).
  */
-const { slot } = slotOf(basename(execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim()));
+const { slot, источник } = slotFromRequest({
+  argv: process.argv.slice(2),
+  env: process.env,
+  dirName: basename(execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim()),
+});
 const ports = portsFor(slot);
 
 const BASE = `http://localhost:${ports.dev}`;
@@ -77,7 +83,10 @@ const check = (ok, label) => {
  */
 
 const SCREENS = ['/relations', '/space', '/dims', '/menu', '/account'];
-console.log('═══ ЗОНД КАРТОЧКИ ГОСТЯ (plans/22 фаза 5, выбор A) ═══\n');
+console.log('═══ ЗОНД КАРТОЧКИ ГОСТЯ (plans/22 фаза 5, выбор A) ═══');
+// Источник слота печатается намеренно: молчаливый выбор адреса — тот самый класс, из-за
+// которого прибор однажды снёс dev-пользователя чужого стенда.
+console.log(`  стенд: слот ${slot} · источник слота: ${источник} · ${BASE}\n`);
 const browser = await chromium.launch();
 let guestUid = null;
 
