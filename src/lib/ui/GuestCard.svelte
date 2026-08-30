@@ -50,11 +50,32 @@
   /* Форма V2: карточка над содержимым; на узком экране кнопка уходит под текст. */
   .gnote {
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    /* Кнопка прижата к дальнему краю строки: плашка стоит во всю ширину контента, и
+       кнопка, повисшая посреди полосы, читалась бы как незаконченный ряд (bugs/226). */
+    justify-content: space-between;
     margin: 0 0 12px; padding: 11px 13px; border-radius: 12px;
     background: color-mix(in srgb, var(--primary) 8%, var(--panel));
     border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--edge));
   }
-  .gnote p { margin: 0; flex: 1 1 220px; font-size: 13px; line-height: 1.45; color: var(--text); }
+  /*
+   * 🔴 ЧИТАЕМАЯ МЕРА СТРОКИ — 700px, И ЭТО ЗАМЕР, А НЕ ВКУС (`bugs/226`).
+   *
+   * Плашка едет во всю ширину контента, а полоса контента на десктопе доходит до 1228px.
+   * Замер Дизайнера живым Chromium по настоящей строке этого компонента: на 1228px русский
+   * текст даёт 172 знака в строке при типографском потолке ≈90 — вдвое сверх — и роняет на
+   * вторую строку сироту в 36px (слово «NDim.» висит одно).
+   *
+   * ⚠️ ЧИСЛО СНЯТО НА ДВУХ ЯЗЫКАХ СРАЗУ, И ИМЕННО ПОЭТОМУ ОНО ЧИСЛО, А НЕ ШИРИНА. RU и EN
+   * ломаются на РАЗНЫХ ширинах: 1024 чист для RU и даёт сироту у EN, 607 чист для RU и даёт
+   * сироту у EN, 640 наоборот. Ограничение шириной родителя чинило бы один язык и ломало
+   * второй МОЛЧА; 700px чисты в обоих с запасом.
+   * ⛔ Не «улучшать» это число замером на одном языке — второй сломается и не покраснеет.
+   * Стережёт `tools/verify-bug226-gnote.mjs` (проверка меры строки на обоих языках).
+   */
+  .gnote p {
+    margin: 0; flex: 1 1 220px; max-width: 700px;
+    font-size: 13px; line-height: 1.45; color: var(--text);
+  }
   .gnote a {
     flex: none; padding: 9px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 600;
     background: var(--primary); color: var(--primary-ink); text-decoration: none;

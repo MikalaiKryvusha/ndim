@@ -28,7 +28,7 @@ import { readFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { portsFor, slotOf } from './lib/stand-slot.mjs';
+import { portsFor, slotOf, slotFromRequest } from './lib/stand-slot.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SLOT = slotOf(basename(ROOT)).slot;
@@ -177,4 +177,58 @@ test('адреса: каталог вне рабочих мест ролей —
     assert.match(строка, /слот 0, умолчание/, 'умолчание обязано быть названо');
     assert.doesNotMatch(строка, /ВНИМАНИЕ/, 'посторонний каталог не повод кричать');
   });
+});
+
+/*
+ * ── СЛОТ ПО ЗАПРОСУ: флаг · переменная · каталог (эскалация судьи, вердикт №41) ─────────────
+ *
+ * 🔴 ЗАЧЕМ. Стендовые приборы выводили слот ТОЛЬКО из имени рабочего каталога. Судья по
+ * чек-листу обязан гонять чужой код ВРЕМЕННЫМ деревом, а любое такое имя даёт `slotOf` → слот
+ * 0, слот ГЛАВНОЙ КОПИИ, где стоит дверь выката. Итог: роль, чья работа — перепрогонять чужие
+ * проверки, СТРУКТУРНО не могла перепрогнать зависящие от стенда, и половина доказательств
+ * принималась заявкой. Это тот же класс «прибор целится в чужой слот», только в него упирался
+ * судья.
+ *
+ * 🔑 Случай «дерево суда без флага по-прежнему даёт слот 0» стоит здесь НЕ как курьёз: он и
+ * есть доказательство, что поведение по умолчанию не изменилось ни на бит, а флаг — надстройка.
+ */
+test('слот по запросу: дерево суда без флага по-прежнему даёт слот 0 — умолчание не тронуто', () => {
+  const r = slotFromRequest({ dirName: '_court_qa_47' });
+  assert.equal(r.slot, 0);
+  assert.equal(r.источник, 'каталог');
+  assert.ok(r.note, 'посторонний каталог обязан получить ПРИЧИНУ строкой, а не молча слот 0');
+});
+
+test('🔴 флаг --slot даёт судье СВОЙ слот из ЛЮБОГО дерева', () => {
+  const r = slotFromRequest({ argv: ['--slot', '2'], dirName: '_court_qa_47' });
+  assert.equal(r.slot, 2);
+  assert.equal(r.role, 'qa');
+  assert.equal(r.источник, 'флаг');
+});
+
+test('переменная STAND_SLOT работает так же — для прогонов, где argv занят', () => {
+  const r = slotFromRequest({ env: { STAND_SLOT: '2' }, dirName: '_court_qa_47' });
+  assert.equal(r.slot, 2);
+  assert.equal(r.источник, 'переменная');
+});
+
+test('🔒 флаг СИЛЬНЕЕ переменной, а переменная — каталога: порядок явный', () => {
+  const r = slotFromRequest({ argv: ['--slot', '1'], env: { STAND_SLOT: '2' }, dirName: 'ndim_dev3' });
+  assert.equal(r.slot, 1, 'явно названное человеком сильнее унаследованного окружения');
+  assert.equal(slotFromRequest({ env: { STAND_SLOT: '2' }, dirName: 'ndim_dev3' }).slot, 2);
+  assert.equal(slotFromRequest({ dirName: 'ndim_dev3' }).slot, 5);
+});
+
+test('🔒 несуществующий слот ОТКАЗЫВАЕТ громко, а не падает на слот 0', () => {
+  // Молчаливый откат к слоту 0 при опечатке отправил бы прибор в главную копию — ровно та
+  // беда, ради которой флаг и заводится.
+  assert.throws(() => slotFromRequest({ argv: ['--slot', '9'], dirName: 'ndim_dev3' }), /слота нет/u);
+  assert.throws(() => slotFromRequest({ env: { STAND_SLOT: 'нет' }, dirName: 'ndim_dev3' }), /слота нет/u);
+});
+
+test('🔒 пустая STAND_SLOT — это «не задана», а не ноль', () => {
+  // Наследие compose-подстановки `${VAR:-}`: пустая строка приезжает как заданная переменная.
+  const r = slotFromRequest({ env: { STAND_SLOT: '' }, dirName: 'ndim_dev3' });
+  assert.equal(r.slot, 5);
+  assert.equal(r.источник, 'каталог');
 });

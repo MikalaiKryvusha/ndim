@@ -1,0 +1,31 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_069_guest_visibility_fork.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-30T12:54:37.309Z",
+	"comment": "",
+	"answers": {
+		"В2": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В4": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В5": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		}
+	},
+	"artifacts": {},
+	"история": [
+		{
+			"by": "Николай Кривуша",
+			"at": "2026-08-30T12:50:21.231Z"
+		}
+	]
+}

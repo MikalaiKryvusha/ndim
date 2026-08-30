@@ -21,18 +21,40 @@
  * на стенде это гигиена, а не потеря; прибор печатает счёт.
  *
  * Запуск: стенд обязан быть поднят (`npm run stand`).
- *   node tools/probe-guest-death-live.mjs [--base http://localhost:5173]
+ *   node tools/probe-guest-death-live.mjs [--base http://localhost:5173] [--slot N]
+ * ⚠️ `--slot` (или переменная `STAND_SLOT`) — для прогона из ЧУЖОГО дерева: судья работает
+ * временным деревом, а его имя даёт слот 0, то есть слот главной копии.
  */
 
 import { mkdirSync } from 'node:fs';
+import { basename } from 'node:path';
+import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
+
+import { readGuestSession, removeGuest } from './lib/guest-session.mjs';
+import { portsFor, slotFromRequest } from './lib/stand-slot.mjs';
+
+/*
+ * 🔴 АДРЕС СТЕНДА — ИЗ СЛОТА РАБОЧЕГО МЕСТА (2026-08-30). Здесь стояли `localhost:5173` и
+ * порты `8181/9099/9199` — адрес СЛОТА 0, главной копии. Прибор, запущенный ролью из её
+ * worktree, заводил и УБИВАЛ гостей в ЧУЖОМ стенде. Правка сделана потому, что без неё
+ * доказательства прибора нельзя перепрогнать из рабочего места роли вовсе.
+ * ⚠️ Поведение слота 0 остаётся байт-в-байт прежним: `portsFor(0)` возвращает ровно
+ * `5173/8181/9099/9199` (тот же довод, на котором стоит `tools/stand-launch.mjs`).
+ */
+const { slot, источник } = slotFromRequest({
+  argv: process.argv.slice(2),
+  env: process.env,
+  dirName: basename(execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim()),
+});
+const ports = portsFor(slot);
 
 const argv = process.argv.slice(2);
 const opt = (name, fallback) => {
   const i = argv.indexOf(name);
   return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback;
 };
-const BASE = opt('--base', 'http://localhost:5173').replace(/\/$/, '');
+const BASE = opt('--base', `http://localhost:${ports.dev}`).replace(/\/$/, '');
 const OUT = 'test-results/probe-guest-death';
 mkdirSync(OUT, { recursive: true });
 
@@ -42,9 +64,9 @@ if (!/localhost|127\.0\.0\.1/.test(BASE)) {
 }
 
 // Админский вход в эмуляторы — ДО импорта сервера синхронизации (он читает env при импорте).
-process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8181';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
-process.env.FIREBASE_STORAGE_EMULATOR_HOST = '127.0.0.1:9199';
+process.env.FIRESTORE_EMULATOR_HOST = `127.0.0.1:${ports.firestore}`;
+process.env.FIREBASE_AUTH_EMULATOR_HOST = `127.0.0.1:${ports.auth}`;
+process.env.FIREBASE_STORAGE_EMULATOR_HOST = `127.0.0.1:${ports.storage}`;
 process.env.FIREBASE_PROJECT_ID = 'demo-ndim-dev';
 
 const { cleanupStaleGuests } = await import('../sync-server/index.mjs');
@@ -70,47 +92,46 @@ const check = (ok, label) => {
   if (!ok) failures += 1;
 };
 
-/** Сессия гостя — из IndexedDB, где её держит Firebase (приём tools/probe-guest-screen.mjs). */
-function sessionOf(page) {
-  return page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        const req = indexedDB.open('firebaseLocalStorageDb');
-        req.onerror = () => resolve(null);
-        req.onsuccess = () => {
-          try {
-            const store = req.result
-              .transaction('firebaseLocalStorage', 'readonly')
-              .objectStore('firebaseLocalStorage');
-            const all = store.getAll();
-            all.onerror = () => resolve(null);
-            all.onsuccess = () => {
-              const rec = all.result.find((r) => String(r.fbase_key).startsWith('firebase:authUser:'));
-              resolve(rec?.value?.uid ?? null);
-            };
-          } catch {
-            resolve(null);
-          }
-        };
-      }),
-  );
-}
+/*
+ * 🔴 ЧТЕНИЕ СЕССИИ ПЕРЕЕХАЛО В `lib/guest-session.mjs` (2026-08-30). Здесь стоял локальный
+ * `sessionOf()`, бравший ПЕРВУЮ попавшуюся запись `firebase:authUser:*`. Записей в базе
+ * браузера бывает несколько, и выбор по порядку однажды отдал uid dev-пользователя стенда —
+ * уборка снесла его целиком (`bugs/NEW_probe_ubiraet_ne_gostya.md`). Теперь запись выбирается
+ * по СВОЙСТВУ `isAnonymous`, а удаление спрашивает разрешения у самой учётки.
+ */
 
-/** Рождение гостя настоящей дверью продукта; возвращает { context, page, uid }. */
+/**
+ * Рождение гостя настоящей дверью продукта; возвращает { context, page, uid }.
+ *
+ * 🔴 ДВА ШАГА, И ОБА НУЖНЫ. Один заход на `/profile?guest=1` недетерминирован ГОНКОЙ: ветка
+ * `?guest` на профиле (`+page.svelte:363`) заводит гостя, а соседние компоненты той же
+ * страницы в тот же миг зовут `currentSession()`, которая без параметра `?as` автовходит
+ * dev-пользователем (`data/profile.ts:127`). Кто успел, тот и в сессии.
+ *   шаг 1 `?as=guest` — сессия становится анонимной настоящим `signInAnonymously`;
+ *   шаг 2 `/profile?as=guest&guest=1` — ветка `?guest` видит живую анонимную сессию,
+ *          переиспользует её и делает `ensureSpaceExists`, то есть заводит документы.
+ */
 async function bornGuest(browser, name) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
   const page = await context.newPage();
-  await page.goto(`${BASE}/profile?guest=1`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(2500); // сессия и ensureSpaceExists асинхронны
-  const uid = await sessionOf(page);
-  if (!uid) throw new Error(`${name}: гостевая сессия не завелась`);
-  console.log(`  ${name} рождён дверью продукта: ${uid}`);
-  return { context, page, uid };
+  await page.goto(`${BASE}/dims?as=guest`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2500);
+  const session = await readGuestSession(page);
+  if (!session.uid) throw new Error(`${name}: гостевая сессия не опознана — ${session.reason}`);
+  await page.goto(`${BASE}/profile?as=guest&guest=1`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2500); // ensureSpaceExists асинхронен
+  console.log(
+    `  ${name} рождён дверью продукта: ${session.uid} · записей аутентификации ${session.authRecords}, гостевых ${session.anonymous}`,
+  );
+  return { context, page, uid: session.uid };
 }
 
 const exists = async (path) => (await db.doc(path).get()).exists;
 
-console.log('═══ ЖИВАЯ ПРОБА «ЧЕСТНАЯ СМЕРТЬ ГОСТЯ» (plans/63 шаг 7) ═══\n');
+console.log('═══ ЖИВАЯ ПРОБА «ЧЕСТНАЯ СМЕРТЬ ГОСТЯ» (plans/63 шаг 7) ═══');
+// Источник слота печатается намеренно: прибор УБИВАЕТ гостей, и «в каком стенде» обязано
+// стоять в выводе, а не выводиться читателем из имени каталога.
+console.log(`  стенд: слот ${slot} · источник слота: ${источник} · ${BASE}\n`);
 const browser = await chromium.launch();
 
 try {
@@ -221,9 +242,14 @@ try {
   // Контроль прибора: БЕЗ подмены часов тот же гость без документов — СВЕЖИЙ, не истёкший.
   const fresh = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
   const freshPage = await fresh.newPage();
-  await freshPage.goto(`${BASE}/profile?guest=1`, { waitUntil: 'domcontentloaded' });
+  // Тот же двухшаговый порядок, что в `bornGuest`: сначала гостевая сессия, потом документы.
+  await freshPage.goto(`${BASE}/dims?as=guest`, { waitUntil: 'domcontentloaded' });
   await freshPage.waitForTimeout(2500);
-  const freshUid = await sessionOf(freshPage);
+  const freshSession = await readGuestSession(freshPage);
+  if (!freshSession.uid) throw new Error(`контроль: гостевая сессия не опознана — ${freshSession.reason}`);
+  const freshUid = freshSession.uid;
+  await freshPage.goto(`${BASE}/profile?as=guest&guest=1`, { waitUntil: 'domcontentloaded' });
+  await freshPage.waitForTimeout(2500);
   await db.recursiveDelete(db.doc(`points/${freshUid}`)).catch(() => {});
   await db.doc(`relations/${freshUid}`).delete().catch(() => {});
   await db.recursiveDelete(db.doc(`users/${freshUid}`)).catch(() => {});
@@ -235,10 +261,12 @@ try {
   /* ── Уборка следов пробы (канон: «убрал» без проверки не считается) ─────── */
   console.log('\n── Уборка следов пробы ──');
   await db.doc('suggestions/probe-guest-death').delete();
+  // Разрешение на удаление спрашивается у САМОЙ учётки, а не предполагается по намерению:
+  // прибор заводил этих гостей сам, но «завёл» и «этот uid — гость» разделяет вычисление.
   for (const uid of [b.uid, freshUid]) {
     if (!uid) continue;
-    await getAuth().deleteUser(uid).catch(() => {});
-    await db.recursiveDelete(db.doc(`users/${uid}`)).catch(() => {});
+    const done = await removeGuest({ db, auth: getAuth() }, uid);
+    check(done.removed, `${uid}: уборка разрешена свойством учётки — ${done.why}`);
   }
   const traces = [];
   if ((await db.doc('suggestions/probe-guest-death').get()).exists) traces.push('suggestions/probe-guest-death');
