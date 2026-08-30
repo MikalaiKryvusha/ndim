@@ -16,11 +16,12 @@
  */
 
 import { DIMS, DIMS_SOURCE, type DimPage } from './dims-source';
-import { KIND_KEYS, kindTitle, type KindKey } from './dim-kind';
+import { KIND_KEYS, kindTitle, kindTitleLower, type KindKey } from './dim-kind';
 import {
   catalogPath,
   dimensionPath,
   groupByKind,
+  hubPageFacts,
   hubPath,
   pageCount,
   PER_PAGE,
@@ -40,7 +41,7 @@ import {
   type NeighbourItem,
   type NeighbourLink,
 } from './catalog-neighbours';
-import { CATALOG_COPY, hubMetaDesc, hubMetaTitle } from './catalog-copy';
+import { CATALOG_COPY, hubLede, hubMetaDesc, hubMetaTitle } from './catalog-copy';
 import { LANGS, X_DEFAULT, pick, type Lang } from './langs';
 import { SITE_ORIGIN } from '$lib/site';
 import type { Alternate, CatalogIndexView, HubPageView, SiblingLink } from './catalog-view';
@@ -191,6 +192,12 @@ export function hubView(kind: KindKey, page: number, lang: Lang): HubPageView | 
   const summary = hubSummary(kind);
   const path = (l: Lang) => hubPath(l, kind, page);
   const other = otherOf(lang);
+  const title = kindTitle(kind, lang);
+
+  // Карточки считаются РАНЬШЕ текстов: заголовок, описание и строка смысла говорят о составе
+  // ЭТОЙ страницы, а состав живёт в её же карточках (`plans/56` шаг 7).
+  const cards = hubItemsPage(kind, page).map((d) => toCard(d, lang));
+  const facts = hubPageFacts(cards, page, pages);
 
   return {
     lang,
@@ -198,16 +205,19 @@ export function hubView(kind: KindKey, page: number, lang: Lang): HubPageView | 
     otherHref: path(other),
     canonical: `${SITE_ORIGIN}${path(lang)}`,
     alternates: alternatesFor(path),
-    metaTitle: hubMetaTitle(kindTitle(kind, lang), lang, page, pages),
-    metaDesc: hubMetaDesc(kindTitle(kind, lang), lang),
+    metaTitle: hubMetaTitle(title, lang, facts),
+    metaDesc: hubMetaDesc(title, lang, facts),
+    // Строчная форма вида нужна вводной строке в середине предложения («Эти фильмы пока ждут
+    // первой оценки»); берётся таблицей, а не понижением регистра заголовка (`kindTitleLower`).
+    lede: hubLede(kindTitleLower(kind, lang), lang, facts),
     kind,
-    title: kindTitle(kind, lang),
+    title,
     page,
     pages,
     total: summary.count,
     rated: summary.rated,
     firstRank: (page - 1) * PER_PAGE + 1,
-    cards: hubItemsPage(kind, page).map((d) => toCard(d, lang)),
+    cards,
     siblings: siblingsFor(lang, kind),
     pageLinks: Array.from({ length: pages }, (_, i) => ({
       page: i + 1,
