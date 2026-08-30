@@ -44,7 +44,9 @@
 <article class="hub">
   <p class="up"><a href={data.upHref}>← {t.up}</a></p>
   <h1>{data.title}</h1>
-  <p class="lede">{t.hubLede}</p>
+  <!-- Строка смысла приходит из вида, а не из словаря: на странице без единой оценки «топ по
+       версии NDim Space» был бы неправдой, и её видит человек, а не только робот. -->
+  <p class="lede">{data.lede}</p>
   <p class="counts">
     <span><b>{num(data.total, data.lang)}</b> {t.ofTotal}</span>
     <span><b>{num(data.rated, data.lang)}</b> {t.ofRated}</span>

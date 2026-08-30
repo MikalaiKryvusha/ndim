@@ -171,34 +171,45 @@ export function isKnownWithoutHub(type: { ru?: string; en?: string } | undefined
  * («Фильмы»). Русские формы взяты из самого каталога, то есть из языка, которым владелец уже
  * описал 5111 объектов; английские — из его же английских значений.
  */
-const LABELS: Record<KindKey, { one: Record<Lang, string>; many: Record<Lang, string> }> = {
+const LABELS: Record<
+  KindKey,
+  { one: Record<Lang, string>; many: Record<Lang, string>; manyLower: Record<Lang, string> }
+> = {
   movie: {
     one: { ru: 'Фильм', en: 'Movie' },
     many: { ru: 'Фильмы', en: 'Movies' },
+    manyLower: { ru: 'фильмы', en: 'movies' },
   },
   'video-game': {
     one: { ru: 'Видеоигра', en: 'Video game' },
     many: { ru: 'Видеоигры', en: 'Video games' },
+    manyLower: { ru: 'видеоигры', en: 'video games' },
   },
   'tv-series': {
     one: { ru: 'Телесериал', en: 'TV series' },
     many: { ru: 'Телесериалы', en: 'TV series' },
+    // 🔴 ВОТ РАДИ ЭТОЙ СТРОКИ ФОРМА ЖИВЁТ ТАБЛИЦЕЙ: `toLowerCase()` дал бы «tv series».
+    manyLower: { ru: 'телесериалы', en: 'TV series' },
   },
   novel: {
     one: { ru: 'Роман', en: 'Novel' },
     many: { ru: 'Романы', en: 'Novels' },
+    manyLower: { ru: 'романы', en: 'novels' },
   },
   practice: {
     one: { ru: 'Практика', en: 'Practice' },
     many: { ru: 'Практики', en: 'Practices' },
+    manyLower: { ru: 'практики', en: 'practices' },
   },
   'music-artist': {
     one: { ru: 'Музыкальный исполнитель', en: 'Music artist' },
     many: { ru: 'Музыкальные исполнители', en: 'Music artists' },
+    manyLower: { ru: 'музыкальные исполнители', en: 'music artists' },
   },
   book: {
     one: { ru: 'Книга', en: 'Book' },
     many: { ru: 'Книги', en: 'Books' },
+    manyLower: { ru: 'книги', en: 'books' },
   },
 };
 
@@ -207,6 +218,16 @@ export const kindLabel = (key: KindKey, lang: Lang): string => LABELS[key].one[l
 
 /** Заголовок хаба — множественное число. */
 export const kindTitle = (key: KindKey, lang: Lang): string => LABELS[key].many[lang];
+
+/**
+ * Вид СТРОЧНОЙ буквы — для середины предложения («Эти фильмы пока ждут первой оценки»).
+ *
+ * 🔴 Форма взята ТАБЛИЦЕЙ, а не `toLowerCase()` от заголовка, и это требование принятых
+ * владельцем текстов (`design/hub-texts-approved.md` §7 п.4). Разделяющий случай — `tv-series`:
+ * «TV series» начинается с АББРЕВИАТУРЫ, и механическое понижение регистра дало бы «tv series»
+ * на публичной странице. Один вид из семи ломает правило — значит правила нет, есть таблица.
+ */
+export const kindTitleLower = (key: KindKey, lang: Lang): string => LABELS[key].manyLower[lang];
 
 /** Проверка «это наш ключ вида» — для ограничителя параметра маршрута и стражей. */
 export const isKindKey = (v: unknown): v is KindKey =>
