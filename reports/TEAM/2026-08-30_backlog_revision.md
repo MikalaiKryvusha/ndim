@@ -155,7 +155,7 @@
 | `bugs/NEW_utverzhdenie_o_pare_perezhivaet_svoyu_pravdu_bez_strazha` | 🔴 ОТКРЫТ |
 | `bugs/NEW_visyachie_perekrestnye_ssylki_v_zhurnale_urokov` | 🔴 ОТКРЫТ |
 | `bugs/06_dims_not_dashboard_style` | 🔧 фикс сделан и выкачен (f657668), проверен на стенде (11/11), ждёт слова владельца |
-| `bugs/165_wiki_cache_poisoned_by_nul_bytes` | 🔧 ФИКС СДЕЛАН, ждёт вердикта QA — все три половины закрыты, каждая доказана мутацией В ОБЕ С… |
+| `bugs/165_DONE_wiki_cache_poisoned_by_nul_bytes` | ✅ **ЗАКРЫТ 2026-08-30 (dev-1)** — все три половины проверены в стволе ПООТДЕЛЬНОСТИ: атомарная запись кэша · словарь `LIVE_CONTROLS` · `runAsScript` ВЫШЕ самотеста. База шапки `64ee6bf` была восьмидневной давности |
 | `bugs/17_icons_not_canonical` | 🔧 набор одобрен владельцем («Да, супер. Одобрено. Делаем») и **внедрён по всему |
 | `bugs/194_shchit_podnimaetsya_pozdno_v_boyu` | 🔧 ОТКРЫТ — замер снят, лечение |
 | `bugs/145_admin_panel_has_faint_grey_text` | 🟡 **ПОЧИНЕН В КОДЕ 2026-08-17, в бой не выкачен.** `[NOT-TESTED]` — визуальная |
@@ -169,8 +169,8 @@
 | `bugs/80_rating_scale_stars_emoji_and_fluid_size` | 🟡 **(б) ЗАКРЫТ 2026-07-30** |
 | `bugs/83_email_link_opens_browser_not_pwa` | 🟡 ОБЗОР ИНДУСТРИИ СДЕЛАН (2026-07-30), ждёт владельца |
 | `bugs/201_kartochka_gostya_obeschaet_30_dney_pri_ttl_7` | 🟢 ПОЧИНЕН В ВЕТКЕ `ndim_dev1` 2026-08-28 (dev-1, коммит `c3a860e`), ждёт вердикта QA |
-| `bugs/216_exit_posle_fetch_ronyaet_process_kod_musorny` | 🟢 ПРИЧИНА НАЙДЕНА, ФИКС В ВЕТКЕ |
-| `bugs/219_ostatok-kvoty-v-stroke-zhurnala-otstayot-na-edinicu` | 🟢 ПРИЧИНА НАЙДЕНА ЧТЕНИЕМ, ФИКС НЕ НАЧАТ (кандидат в |
+| `bugs/216_DONE_exit_posle_fetch_ronyaet_process_kod_musorny` | ✅ **ЗАКРЫТ 2026-08-30 (dev-1)** — строка «фикс в ветке» пережила свою правду: `87b5953` оказался предком ствола, проверено `git merge-base --is-ancestor`. Обход снят |
+| `bugs/219_ostatok-kvoty-v-stroke-zhurnala-otstayot-na-edinicu` | 🔧 **СВЕРЕНО 2026-08-30 (dev-1)** — «ФИКС НЕ НАЧАТ» неверно: `settleQuotaLeft` и юнит 43/43 уже в стволе. **DONE НЕ ставится**: приёмка требует живого прогона `--apply`, а подача заперта предохранителем и необратима |
 | `bugs/84_cannot_sign_in_to_own_account_guest_trap` | 🟢 **КАПКАН СНЯТ 2026-07-30, остался один текстовый хвост** |
 | `bugs/113_rating_deanonymization_by_diff` | 🔬 **РАЗОБРАН, НЕ ЗАКРЫТ** — направление защиты выбрано владельцем, работа впереди |
 | `bugs/135_catalog_tags_show_both_languages` | 🔬 воспроизведён замером, не чинен. Лечение выбрано владельцем — |
