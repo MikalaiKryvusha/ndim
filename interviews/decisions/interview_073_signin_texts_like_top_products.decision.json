@@ -1,0 +1,24 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_073_signin_texts_like_top_products.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-30T15:18:33.737Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "В",
+			"text": "Переписать текста",
+			"comment": ""
+		},
+		"В3": {
+			"choice": "Б",
+			"text": "",
+			"comment": "переписать текста в макетах"
+		}
+	}
+}
