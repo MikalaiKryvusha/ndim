@@ -1,0 +1,24 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_062_three_counter_answers.md",
+	"by": "Николай Кривуша",
+	"at": "2026-08-30T08:44:26.746Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "Г",
+			"text": "Тепловые карты и мёртвые клики берём.",
+			"comment": ""
+		},
+		"В3": {
+			"choice": "Д",
+			"text": "",
+			"comment": "чуть чуть замертее ореол, чуточку"
+		}
+	}
+}
