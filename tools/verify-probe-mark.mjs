@@ -1,5 +1,6 @@
 /**
- * СТРАЖ ВОРОНКИ V2 — три пары, каждая из которых разъезжается МОЛЧА (`plans/74` фаза 1 Ш5).
+ * СТРАЖ ВОРОНКИ V2 — четыре пары, каждая из которых разъезжается МОЛЧА (`plans/74` фаза 1 Ш5;
+ * четвёртая — `plans/78` Ш4, добавлена 2026-08-29 Интегратором).
  *
  * ═══ ПОЧЕМУ ЭТОТ СТРАЖ ВООБЩЕ НУЖЕН ═══
  *
@@ -9,7 +10,7 @@
  * «в этот день никто не приходил». Читающий не узнает ничего, и узнает он это не сразу, а через
  * недели — когда ряд уже потерян, потому что задним числом его не восстановить.
  *
- * Поэтому здесь стерегутся ровно те три пары, чей разъезд даёт ТИХИЙ НОЛЬ:
+ * Поэтому здесь стерегутся ровно те четыре пары, чей разъезд даёт ТИХИЙ НОЛЬ:
  *
  *   1. **шаги ↔ правила.** `FUNNEL_STEPS` в `src/lib/data/funnel.ts` и `funnelCounters()` в
  *      `firestore.rules`. Шаг, забытый в правилах, продукт запишет, база отобьёт, `track()`
@@ -20,6 +21,16 @@
  *   3. **прибор ↔ метка.** Каждый прибор, ходящий браузером в живой контур, обязан метить
  *      КАЖДЫЙ заведённый контекст. Один непомеченный контекст — и `guest_start` снова считает
  *      нас самих (`bugs/202`, дефект 2: 77 гостей за 25 дней, четыре всплеска = четыре выката).
+ *   4. 🆕 **белый список событий ↔ настоящие места вызова** (`ANALYTICS_EVENTS` в
+ *      `src/lib/data/analytics.ts` против `capture('имя')` и `track('имя')` в продукте).
+ *      Разъезд тише всех трёх предыдущих, потому что тих С ОБЕИХ СТОРОН, и `capture()` глотает
+ *      по контракту: имя, выброшенное из экрана правкой вёрстки, оставит список ОБЕЩАЮЩИМ
+ *      событие при вечном нуле ряда; имя, дописанное в список и никем не позванное, даст ровно
+ *      тот же ноль. Ни один из двух не закричит сам.
+ *      🔑 Пара сверяет ИМЯ события со списком и НИКОГДА место вызова с экраном: события
+ *      `rating_saved` и `profile_filled` стоят в СЛОЕ ДАННЫХ намеренно (в `saveRating`
+ *      приходят обе дороги — лента «Измерения» и дверь карточки каталога), и проверка,
+ *      привязанная к экрану, дала бы ложный красный на первой же правке вёрстки.
  *
  * ═══ ГРАНИЦЫ, НАЗВАННЫЕ ЧЕСТНО ═══
  *
@@ -33,17 +44,52 @@
  *   нарушение, рост — нет. Без неё прибор, потерявший членство целиком, уходил из-под суда молча.
  * · Он НЕ судит `e2e/` (Playwright ходит по локальному preview) и не судит порядок вызова
  *   внутри файла — «метка до первого goto» держится формой помощника, а не грепом.
+ * · Пара 4 видит только ЛИТЕРАЛЬНОЕ имя в вызове. Имя, собранное переменной, ей не по зубам —
+ *   и это не пробел, а устройство: единственная такая пересылка в проекте (`capture(step)`
+ *   внутри `track()`) проверяется отдельным, ТРЕТЬИМ условием пары, потому что её исчезновение
+ *   не убирает ни одного литерала и потому невидимо для обеих сторон сверки.
+ * · Пара 4 доказывает, что вызов СТОИТ В КОДЕ, и не доказывает, что событие ДОЕХАЛО до
+ *   PostHog. Живой приём — работа выката (`ingested_event`), и она честно помечена
+ *   невыполненной в `plans/78`, а не засчитана этим зелёным.
  *
  * Запуск: `node tools/verify-probe-mark.mjs` · самотест: `--selftest`
  * Ворота: `npm run guards` (страж дешёвый — ни стенда, ни сети, ни сборки).
  */
 
 import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const ROOT = process.cwd();
 const TOOLS = join(ROOT, 'tools');
+const SRC = join(ROOT, 'src');
+
+/**
+ * Корпус пары 4 — файлы продукта, в которых МОЖЕТ стоять место вызова.
+ *
+ * Два файла исключены ИМЕННО и с причиной, молчаливого списка тут не будет:
+ *   · `analytics.ts` — дом самой `capture()`. Её объявление и разбор в шапке местом вызова
+ *     не являются;
+ *   · `funnel.ts` — ТРАНСПОРТ, а не место вызова: он пересылает шаг переменной
+ *     (`capture(step)`), и эта пересылка проверяется отдельным, третьим условием пары.
+ * Тесты исключены как класс: они зовут события заведомо негодными именами — это их работа.
+ */
+function srcFilesWithCalls(dir = SRC) {
+  const ИСКЛЮЧЕНЫ = new Set(['analytics.ts', 'funnel.ts']);
+  const out = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...srcFilesWithCalls(full));
+      continue;
+    }
+    if (!/\.(ts|svelte)$/.test(entry.name)) continue;
+    if (entry.name.endsWith('.test.ts')) continue;
+    if (ИСКЛЮЧЕНЫ.has(entry.name)) continue;
+    out.push(full);
+  }
+  return out;
+}
 
 /* ── ЧИСТЫЕ ФУНКЦИИ ВЕРДИКТА ───────────────────────────────────────────────────
  *
@@ -237,6 +283,124 @@ export function markName(source) {
   return hit === null ? null : hit[1];
 }
 
+/* ── ПАРА 4 — БЕЛЫЙ СПИСОК СОБЫТИЙ ↔ НАСТОЯЩИЕ МЕСТА ВЫЗОВА ──────────────────────
+ *
+ * Разбор — почему пара нужна и почему её разъезд тише остальных — в шапке файла.
+ */
+
+/**
+ * Снимает комментарии ПЕРЕД поиском мест вызова.
+ *
+ * 🔴 БЕЗ ЭТОГО ПРИЗНАК ЛОЖЕН, и это не гипотеза — замер на живом дереве: в шапке
+ * `src/lib/door/engine.ts:46` разбирается прежняя редакция словами «*Первая редакция звала
+ * `track('door_click')` ПЕРВОЙ строкой*». Упоминание в РАЗБОРЕ читалось бы как место вызова,
+ * и удалённый настоящий вызов остался бы прикрытым собственным некрологом.
+ *
+ * ⚠️ Граница названа: это снятие комментариев, а не разбор языка. Строковый литерал, внутри
+ * которого лежит `/*`, обманет его — такой строки в дереве нет, а появится, поймает её чтение
+ * диффа, не этот прибор. Зато `//` внутри `https://` НЕ съедает строку: перед ним стоит `:`,
+ * которого нет в наборе предшественников (случай в самотесте).
+ *
+ * @param {string} source
+ * @returns {string}
+ */
+export function stripComments(source) {
+  const noBlocks = source.replace(/\/\*[\s\S]*?\*\//g, ' ');
+  return noBlocks
+    .split('\n')
+    .map((line) => line.replace(/(^|[\s;{(])\/\/.*$/, '$1'))
+    .join('\n');
+}
+
+/**
+ * Собственные события белого списка — те, что объявлены ЛИТЕРАЛАМИ в `ANALYTICS_EVENTS`.
+ * Шесть шагов воронки приезжают туда спредом `...FUNNEL_STEPS` и разбираются отдельно
+ * (`stepsFromProduct`): у них другой транспорт и другое место вызова.
+ */
+export function ownEventsFromWhitelist(source) {
+  const block = source.match(/ANALYTICS_EVENTS\s*=\s*\[([\s\S]*?)\]/);
+  if (block === null) return [];
+  return [...block[1].matchAll(/'([a-z0-9_]+)'/g)].map((hit) => hit[1]);
+}
+
+/**
+ * Места вызова: имя-литерал, поданное в `capture()` или `track()`.
+ * @returns {{fn: string, name: string, where: string}[]}
+ */
+export function callSites(source, where = '') {
+  return [...stripComments(source).matchAll(/\b(capture|track)\(\s*'([a-z0-9_]+)'/g)].map((hit) => ({
+    fn: hit[1],
+    name: hit[2],
+    where,
+  }));
+}
+
+/**
+ * Доезжает ли шаг воронки до ВТОРОГО прибора. `track()` пересылает шаг в `capture()`
+ * ПЕРЕМЕННОЙ (`capture(step)`), поэтому литеральных мест вызова у шести шагов нет вовсе —
+ * и без этой проверки их отсутствие читалось бы как норма.
+ */
+export function forwardsStepsToAnalytics(funnelSource) {
+  return /capture\(\s*step\s*\)/.test(stripComments(funnelSource));
+}
+
+/**
+ * Пара 4, обе стороны. Контроли прибора живут ЗДЕСЬ, а не в `run()`, намеренно: в чистой
+ * функции их достаёт самотест, и «судит пустоту» становится доказанным случаем, а не
+ * строкой, написанной из добрых побуждений.
+ *
+ * @param {string[]} ownEvents события белого списка, объявленные литералами
+ * @param {string[]} steps шаги воронки
+ * @param {{fn: string, name: string, where: string}[]} sites найденные места вызова
+ * @param {boolean} forwards есть ли переброска `capture(step)` внутри `track()`
+ */
+export function eventCallSiteFaults(ownEvents, steps, sites, forwards) {
+  const faults = [];
+
+  if (ownEvents.length === 0) {
+    faults.push('НЕ НАЙДЕН белый список ANALYTICS_EVENTS в src/lib/data/analytics.ts — прибор судит пустоту');
+    return faults;
+  }
+  if (sites.length === 0) {
+    faults.push(
+      'НИ ОДНОГО литерального места вызова capture()/track() в src/ — это диагноз ПРИЗНАКУ, ' +
+        'а не продукту: пустой корпус даёт «расхождений 0» бессодержательно',
+    );
+    return faults;
+  }
+
+  const declared = new Set([...ownEvents, ...steps]);
+
+  for (const event of ownEvents) {
+    if (!sites.some((site) => site.fn === 'capture' && site.name === event)) {
+      faults.push(
+        `событие «${event}» объявлено белым списком и НЕ ЗОВЁТСЯ ни из одного места продукта — ` +
+          'ряд будет вечным нулём, а ноль неотличим от честного «никто этого не делал»',
+      );
+    }
+  }
+  for (const step of steps) {
+    if (!sites.some((site) => site.fn === 'track' && site.name === step)) {
+      faults.push(`шаг «${step}» объявлен воронкой и НЕ ЗОВЁТСЯ ни из одного места продукта — тот же тихий ноль`);
+    }
+  }
+  for (const site of sites) {
+    if (!declared.has(site.name)) {
+      faults.push(
+        `«${site.name}» зовётся в ${site.where} и НЕ ОБЪЯВЛЕН — белый список отбросит его молча, ` +
+          'вызов будет выглядеть работающим',
+      );
+    }
+  }
+  if (!forwards) {
+    faults.push(
+      'переброска шага во второй прибор (capture(step) внутри track()) НЕ НАЙДЕНА — ' +
+        'шаги воронки перестанут доезжать до PostHog ЦЕЛИКОМ, и ни один литерал этого не покажет',
+    );
+  }
+  return faults;
+}
+
 /** Расхождение двух списков — обе стороны, потому что забыть можно в любой. */
 export function pairFaults(product, rules) {
   const faults = [];
@@ -375,6 +539,123 @@ const SELFTEST_CASES = [
       markName("export const PROBE_MARK = 'ndim-probe';") === 'ndim-probe' &&
       markName("export const PROBE_MARK: string = 'ndim-probe';") === 'ndim-probe',
   },
+  /*
+   * ── ПАРА 4: БЕЛЫЙ СПИСОК ↔ МЕСТА ВЫЗОВА ──────────────────────────────────────────
+   * Обе стороны обязательны. Прибор, видящий только исчезнувший вызов, слеп ровно наполовину:
+   * имя, дописанное в список и никем не позванное, даёт тот же вечный ноль.
+   * Ниже: сначала оба разъезда, потом третье условие (пересылка), потом контроли признака —
+   * включая тот, на котором признак был бы ЛОЖЕН без снятия комментариев.
+   */
+  {
+    name: '🔴 ПАРА 4, сторона 1: событие объявлено и НЕ зовётся — красный',
+    run: () => {
+      const faults = eventCallSiteFaults(['rating_saved'], [], [{ fn: 'capture', name: 'profile_filled', where: 'a.ts' }], true);
+      return faults.length === 2 && /rating_saved.*НЕ ЗОВЁТСЯ/.test(faults[0]);
+    },
+  },
+  {
+    name: '🔴 ПАРА 4, сторона 2: имя зовётся и НЕ объявлено — красный, с названным местом',
+    run: () => {
+      const faults = eventCallSiteFaults(['rating_saved'], [], [
+        { fn: 'capture', name: 'rating_saved', where: 'a.ts' },
+        { fn: 'capture', name: 'vydumannoe', where: 'src/routes/x/+page.svelte' },
+      ], true);
+      return faults.length === 1 && /vydumannoe.*src\/routes\/x/.test(faults[0]);
+    },
+  },
+  {
+    name: '🔴 ПАРА 4: шаг воронки объявлен и не зовётся — красный (у шага транспорт свой)',
+    run: () =>
+      eventCallSiteFaults(['rating_saved'], ['landing_view'], [{ fn: 'capture', name: 'rating_saved', where: 'a.ts' }], true)
+        .length === 1,
+  },
+  {
+    name: '🔴 ПАРА 4: пересылка capture(step) снята — красный, хотя ни один литерал не исчез',
+    run: () => {
+      const sites = [
+        { fn: 'capture', name: 'rating_saved', where: 'a.ts' },
+        { fn: 'track', name: 'landing_view', where: 'b.svelte' },
+      ];
+      const faults = eventCallSiteFaults(['rating_saved'], ['landing_view'], sites, false);
+      return faults.length === 1 && /пересылка|пересылк|переброска/.test(faults[0]);
+    },
+  },
+  {
+    name: 'КОНТРОЛЬ: список и вызовы сошлись — чисто',
+    run: () =>
+      eventCallSiteFaults(['rating_saved'], ['landing_view'], [
+        { fn: 'capture', name: 'rating_saved', where: 'a.ts' },
+        { fn: 'track', name: 'landing_view', where: 'b.svelte' },
+      ], true).length === 0,
+  },
+  {
+    name: 'КОНТРОЛЬ признака: пустой белый список — свой диагноз «судит пустоту», а не «не зовётся»',
+    run: () => {
+      const faults = eventCallSiteFaults([], ['landing_view'], [], true);
+      return faults.length === 1 && /судит пустоту/.test(faults[0]);
+    },
+  },
+  {
+    name: 'КОНТРОЛЬ признака: ноль мест вызова — диагноз ПРИЗНАКУ, а не продукту',
+    run: () => {
+      const faults = eventCallSiteFaults(['rating_saved'], [], [], true);
+      return faults.length === 1 && /диагноз ПРИЗНАКУ/.test(faults[0]);
+    },
+  },
+  {
+    name: '🔑 УПОМИНАНИЕ В КОММЕНТАРИИ местом вызова НЕ считается — иначе некролог прикрыл бы удалённый вызов',
+    run: () => {
+      const source = "/**\n * Первая редакция звала track('door_click') первой строкой.\n */\nexport function f() {}\n";
+      return callSites(source, 'x.ts').length === 0;
+    },
+  },
+  {
+    name: '🔑 КОНТРОЛЬ обратной стороны: тот же вызов ВНЕ комментария признак видит',
+    run: () => callSites("export function f() {\n  void track('door_click');\n}\n", 'x.ts').length === 1,
+  },
+  {
+    name: '🔑 `//` внутри https:// НЕ съедает настоящий вызов на той же строке',
+    run: () => {
+      const source = "const u = 'https://ndimspace.app'; void capture('rating_saved');\n";
+      return callSites(source, 'x.ts').length === 1;
+    },
+  },
+  {
+    name: 'КОНТРОЛЬ: строчный комментарий после кода снимает ТОЛЬКО хвост',
+    run: () => {
+      const source = "void track('landing_view'); // раньше здесь звали capture('vydumannoe')\n";
+      const sites = callSites(source, 'x.ts');
+      return sites.length === 1 && sites[0].name === 'landing_view';
+    },
+  },
+  {
+    name: 'разбор белого списка: литералы берутся, спред ...FUNNEL_STEPS — нет',
+    run: () => {
+      const own = ownEventsFromWhitelist("export const ANALYTICS_EVENTS = [\n  ...FUNNEL_STEPS,\n  'rating_saved',\n  'person_opened',\n] as const;");
+      return own.length === 2 && own[0] === 'rating_saved' && own[1] === 'person_opened';
+    },
+  },
+  {
+    name: 'разбор пересылки: переменная — да, литерал соседнего вызова — не в счёт',
+    run: () =>
+      forwardsStepsToAnalytics('.then(({ capture }) => capture(step))') === true &&
+      forwardsStepsToAnalytics(".then(({ capture }) => capture('landing_view'))") === false,
+  },
+  {
+    /*
+     * 🔴 СЛУЧАЙ НАЙДЕН СОБСТВЕННОЙ МУТАЦИЕЙ, а не придуман. Первая редакция признака брала
+     * `'([a-z_]+)'` — и живая мутация `capture('profile_filled')` → `capture('profile_filled_v2')`
+     * дала ОДНО нарушение вместо двух: имя с цифрой признак не видел вовсе, поэтому сторона
+     * «зовётся и не объявлено» промолчала ровно там, где обязана была кричать. То есть половина
+     * пары была слепа на целом классе имён, и обнаружилось это только потому, что мутация
+     * ставилась на живом дереве, а не на синтетике.
+     */
+    name: '🔴 имя с цифрой признак ВИДИТ — иначе половина пары слепа (найдено живой мутацией)',
+    run: () => {
+      const sites = callSites("void capture('profile_filled_v2');\n", 'x.ts');
+      return sites.length === 1 && sites[0].name === 'profile_filled_v2';
+    },
+  },
 ];
 
 function selftest() {
@@ -472,14 +753,34 @@ function run() {
   // Размер корпуса против объявленной границы: усыхание — нарушение, рост — нет (`bugs/209`, критерий 2).
   faults.push(...corpusFloorFaults(judged));
 
-  // 🔑 Границу печатаем РЯДОМ с числом: без неё «осмотрено 14» читалось как норма — не с чем сравнить.
+  /*
+   * Пара 4 — белый список событий против настоящих мест вызова.
+   *
+   * Транспорта два, и путать их нельзя: собственные события зовутся `capture('имя')` прямо из
+   * продукта, шаги воронки — `track('имя')`, а до второго прибора едут ПЕРЕМЕННОЙ внутри
+   * `track()`. Поэтому у шагов литеральных `capture()` нет по построению, и проверять их
+   * доезд надо третьим условием, а не отсутствием строки.
+   */
+  const analytics = readFileSync(join(ROOT, 'src/lib/data/analytics.ts'), 'utf8');
+  const ownEvents = ownEventsFromWhitelist(analytics);
+  const sites = [];
+  for (const file of srcFilesWithCalls()) {
+    sites.push(...callSites(readFileSync(file, 'utf8'), relative(ROOT, file).replace(/\\/g, '/')));
+  }
+  faults.push(...eventCallSiteFaults(ownEvents, steps, sites, forwardsStepsToAnalytics(product)));
+
+  // 🔑 Границу и ОХВАТ печатаем РЯДОМ с числами: без них «осмотрено 14» и «мест вызова 12»
+  // читаются как норма — не с чем сравнить (`EXP-0226`: число без охвата говорит о другом).
   console.log(
     `Шаги воронки: ${steps.length} · счётчики правил: ${counters.length} · ` +
+      `события белого списка: ${ownEvents.length} собственных + ${steps.length} шагов · ` +
+      `мест вызова найдено: ${sites.length} (охват: src/**/*.{ts,svelte}, кроме тестов, ` +
+      `analytics.ts и funnel.ts) · ` +
       `живых приборов осмотрено: ${judged} (объявленная нижняя граница ${CORPUS_FLOOR})`,
   );
 
   if (faults.length === 0) {
-    console.log(`✅ ВОРОНКА СОГЛАСОВАНА: три пары сходятся, все ${judged} живых приборов метят свои сессии.`);
+    console.log(`✅ ВОРОНКА СОГЛАСОВАНА: четыре пары сходятся, все ${judged} живых приборов метят свои сессии.`);
     process.exit(0);
   }
   console.log(`\n❌ НАРУШЕНИЙ: ${faults.length}`);
