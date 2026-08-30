@@ -65,6 +65,15 @@
   .picker .hint { color: #8fa9c0; font-size: 11px; }
 
   /* ── Токены тем — 1:1 с продом ── */
+  /* ── РАМКА ДОМА СТИЛЯ (добавлена 2026-08-30, дверь А `bugs/NEW_shooter_sees_13_of_23`) ──
+     Съёмщик `tools/shoot-mockups.mjs` читает ширину по `#stage[data-w]` и без этого элемента
+     падал: набор не снимался ВООБЩЕ, то есть кадры лендинга и входа нельзя было перевыпустить.
+     ⚠️ Не путать с классом `.stage` ниже — это ХОЛСТ макета и он существовал раньше. Здесь
+     `#stage` — обёртка ШИРИНЫ, и она ничего в макетах не меняет, кроме доступного им места. */
+  #stage { margin: 0 auto; }
+  #stage[data-w="390"]  { max-width: 390px; }
+  #stage[data-w="1440"] { max-width: 1180px; }
+
   .stage {
     --bg: #f6f8fb; --panel: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
     --primary: #1467d6; --primary-ink: #fff; --accent: #1f7fc9; --star: #e8a516;
@@ -100,7 +109,14 @@
   .plus { color: #7fe0b0; } .minus { color: #ffab8f; }
 
   .states { max-width: 1100px; margin: 0 auto; display: grid; gap: 16px; grid-template-columns: 1fr; }
-  @media (min-width: 900px) { .states { grid-template-columns: repeat(3, 1fr); } }
+  /* 🔴 БРЕЙКПОЙНТ ПЕРЕВЕДЁН С ОКНА НА КОНТЕЙНЕР `#stage[data-w]` — иначе кадр 390 ЛЖЁТ.
+     Было: `@media (min-width: 900px)`. Съёмщик держит окно 1500 px ВСЕГДА и сужает только
+     обёртку `#stage`, поэтому оконный медиазапрос при «ширине 390» продолжал совпадать: три
+     колонки состояний ужимались в 390 px, текст ломался по одному слову в строку, края
+     обрезались. Кадр выглядел бы поломкой утверждённого макета — а макет цел.
+     🔑 Общее для двери А: старые наборы отзывчивы ПО ОКНУ, дом стиля — ПО КОНТЕЙНЕРУ. Поднимая
+     набор, переводи его медиазапросы на `#stage[data-w]`, иначе узкие кадры врут. */
+  #stage[data-w="1440"] .states { grid-template-columns: repeat(3, 1fr); }
   .state-t {
     font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #8fb2d4;
     margin: 18px 0 8px;
@@ -204,8 +220,11 @@
   <button data-v="v4">V4 · Врезка</button>
   <span class="sp"></span>
   <span class="hint">V4 утверждён · тексты по правкам владельца · «навсегда» не пишем</span>
+  <button id="width">390 ↔ 1440</button>
   <button id="theme">☾ тёмная</button>
 </div>
+
+<div id="stage" data-w="1440">
 
 <!-- ══════════════════════════════ V1 · МОДАЛ ══════════════════════════════ -->
 <section class="variant show" id="v1">
@@ -535,6 +554,8 @@
   </div>
 </section>
 
+</div><!-- /#stage -->
+
 <script>
   const btns = document.querySelectorAll('.picker button[data-v]');
   const show = (id) => {
@@ -545,6 +566,12 @@
   const fromHash = () => { if (['#v1','#v2','#v3','#v4'].includes(location.hash)) show(location.hash.slice(1)); };
   window.addEventListener('hashchange', fromHash);
   fromHash();
+
+  // Тумблер ширины дома стиля: съёмщик жмёт его и СВЕРЯЕТ результат по `#stage[data-w]`.
+  const stage = document.getElementById('stage');
+  document.getElementById('width').addEventListener('click', () => {
+    stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390';
+  });
 
   const tbtn = document.getElementById('theme');
   tbtn.addEventListener('click', () => {

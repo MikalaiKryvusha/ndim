@@ -72,13 +72,14 @@ const КОРЕНЬ = new URL('../', import.meta.url);
  *   · добавляешь набор — он обязан быть снимаемым; дописывать сюда новые имена НЕЛЬЗЯ, кроме
  *     случая, когда это осознанное решение с разбором в коммите.
  */
+// 2026-08-30, дверь А: `login-mockups.html` поднят до дома стиля и УБРАН отсюда тем же
+// коммитом — так велит правило обращения ниже. Кадры входа снова перевыпускаются.
 const ХРАПОВИК = [
   'catalog-door-mockups.html',
   'desktop-layout-mockups.html',
   'guest-flow-mockups.html',
   'landing-mockups.html',
   'light-theme-mockups.html',
-  'login-mockups.html',
   'menu-mockups.html',
   'onboarding-demo-mockups.html',
   'space-mockups.html',
