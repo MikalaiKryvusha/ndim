@@ -16,7 +16,7 @@
  */
 
 import { DIMS, DIMS_SOURCE, type DimPage } from './dims-source';
-import { KIND_KEYS, kindTitle, type KindKey } from './dim-kind';
+import { KIND_KEYS, kindTitle, kindTitleLower, type KindKey } from './dim-kind';
 import {
   catalogPath,
   dimensionPath,
@@ -207,7 +207,9 @@ export function hubView(kind: KindKey, page: number, lang: Lang): HubPageView | 
     alternates: alternatesFor(path),
     metaTitle: hubMetaTitle(title, lang, facts),
     metaDesc: hubMetaDesc(title, lang, facts),
-    lede: hubLede(lang, facts),
+    // Строчная форма вида нужна вводной строке в середине предложения («Эти фильмы пока ждут
+    // первой оценки»); берётся таблицей, а не понижением регистра заголовка (`kindTitleLower`).
+    lede: hubLede(kindTitleLower(kind, lang), lang, facts),
     kind,
     title,
     page,
