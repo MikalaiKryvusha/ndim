@@ -66,7 +66,10 @@
     --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
     min-height: 100vh; margin-top: 106px; padding: 28px 16px 60px;
-    background: var(--bg); color: var(--text); transition: background .3s, color .3s;
+    background: var(--bg); color: var(--text);
+    /* Переход на тема-зависимых свойствах убран: съёмщик снимает через 120 мс после клика
+       по `#theme`, и 300-миллисекундная перекраска попадала в кадр недокрашенной
+       (текст rgb(164,182,201) вместо rgb(220,233,247)). Воспроизводилось 8 из 8. */
   }
   @media (min-width: 900px) { .screen { margin-top: 52px; } }
   .screen[data-theme="dark"] {
