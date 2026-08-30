@@ -1568,7 +1568,10 @@
               {#if audFor === property}
                 <div class="aud-panel" transition:slide={{ duration: MOTION.base }}>
                   {#if guest}
-                    <!-- Гость невидим (В3): правила отвергнут публикацию — честно говорим об этом -->
+                    <!-- Правила отвергнут публикацию гостя — честно говорим об этом.
+                         ⚠️ Довод «В3: гость невидим» ОТМЕНЁН (№004 В3 → №009 В5, 2026-08-01),
+                         сам запрет в `firestore.rules` жив и ждёт слова владельца о поведении.
+                         Текст строки тоже ждёт его слова — `bugs/227`, помечено 2026-08-30. -->
                     <p class="hint" style="margin-top:0">◌ {t.guest.audienceLocked[lang]}</p>
                   {:else}
                     <p class="hint" style="margin-top:0">{t.whoSees[lang]}</p>
