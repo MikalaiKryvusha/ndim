@@ -42,6 +42,7 @@ import { existsSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { buildFreshness, freshnessLine } from './lib/build-freshness.mjs';
 import { portsFor, slotOf } from './lib/stand-slot.mjs';
 
 const KEEP = process.argv.includes('--keep');
@@ -109,12 +110,33 @@ async function raisePreview() {
 }
 
 async function main() {
-  if (!existsSync('build')) {
-    console.error('⛔ нет каталога build/ — сначала `npm run build`');
-    process.exit(1);
-  }
   console.log(`🎯 слот ${SLOT} · preview ${BASE} · сборка build/`);
   if (SLOT_NOTE) console.log(`   ⚠️ ${SLOT_NOTE}`);
+
+  /*
+   * 🔴 КОНТРОЛЬ СВЕЖЕСТИ — ПЕРВЫМ, И ОН ОТКАЗЫВАЕТ, А НЕ ПРЕДУПРЕЖДАЕТ.
+   *
+   * Прибор производит УЛИКУ: кадры и тексты, которые судья читает как «вот что отдаёт продукт».
+   * Кадр несвежей сборки ничем не отличается от кадра свежей — и именно поэтому он опаснее
+   * молчания: судья получил бы наблюдение, которое нельзя отличить от настоящего.
+   * Предупреждением тут не отделаться: предупреждение читают ПОСЛЕ того, как посмотрели кадры.
+   *
+   * ⚠️ Это меняет прежний контракт прибора «всегда выходит нулём» — и меняет сознательно.
+   * Ноль означал «я ничего не сужу»; он и не судит. Отказ здесь — не суждение о ПРОДУКТЕ, а
+   * отказ произвести улику, за которую нельзя отвечать. Разные вещи.
+   *
+   * 📌 Долг взят при сдаче порции №36 и подорожал в тот же день: тот же каталог `build/` дал
+   * ЛОЖНОЕ КРАСНОЕ стражу хабов на мерже (97/4 на позавчерашней сборке против 101/0 на свежей),
+   * и провалы выглядели предметными находками про порцию.
+   */
+  const fresh = buildFreshness();
+  console.log(`   ${freshnessLine(fresh)}`);
+  if (!fresh.fresh) {
+    console.error('\n⛔ СНИМАТЬ НЕЧЕГО: кадры несвежей сборки — улика о вчерашнем продукте.');
+    console.error(`   ${fresh.why}`);
+    console.error('   Лечение одной командой: npm run build');
+    process.exit(1);
+  }
 
   const server = OWN ? await raisePreview() : null;
   await rm(OUT, { recursive: true, force: true });

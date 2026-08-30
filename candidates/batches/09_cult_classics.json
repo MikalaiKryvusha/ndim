@@ -1,0 +1,1145 @@
+{
+ "_": [
+  "КАНДИДАТЫ НА ВЫЧИТКУ ВЛАДЕЛЬЦУ — культовая классика, 2026-08-29/30.",
+  "",
+  "ЧТО ЭТО: вторая половина заказа владельца «напишите мне ещё 60 измерений на вычитку».",
+  "Первые 27 карточек сданы партией 6 (06_2026_films_series_games.json, порции 1–5); здесь",
+  "остальные 33. Отбор и его метод — candidates/scouts/2026-08-29_selection_batch6_variantA.md.",
+  "",
+  "🔑 ПОЧЕМУ ОТДЕЛЬНЫМ ФАЙЛОМ, А НЕ ДОПИСКОЙ В ПАРТИЮ 6: у файла партии 6 тема названа именем —",
+  "«2026_films_series_games», — и тридцать три древних и классических объекта в файле с таким",
+  "именем сделали бы имя неправдой. Партия 6 к тому же закрыта воротами приёмки на 27 карточках.",
+  "Имя файла — тоже утверждение; счёт заказа при этом сходится: 27 + 33 = 60.",
+  "",
+  "ОТБОР: пул культовой классики (scouts/2026-08-23_cult_classics.md), порядок по числу языковых",
+  "разделов Википедии. Дедупликация по идентификатору реестра против всех партий и по",
+  "нормализованному названию против всех 5125 записей каталога.",
+  "",
+  "🔴 РЕШЕНИЕ ВЛАДЕЛЬЦА №067, В1 = А (2026-08-29): священные тексты, древние эпосы, античная",
+  "классика и политические трактаты в каталог ИДУТ; отклонены только «Моя борьба» и справочник",
+  "Гиннесса, и оба не по вере. Правило живёт в приборе — tools/lib/scout-core.mjs,",
+  "ОТКАЗ_ВЛАДЕЛЬЦА, — а не во внимательности агента. Восемнадцать возвращённых им объектов",
+  "идут ОТДЕЛЬНОЙ следующей порцией: класс одобрен по списку названий, и первая встреча",
+  "владельца с его воплощением обязана быть заметной, а не растворённой в общей партии.",
+  "",
+  "КАЖДАЯ КАРТОЧКА НАПИСАНА ПО ИСТОЧНИКУ, ПРОЧИТАННОМУ ПРИ НАПИСАНИИ: поля по QID из реестра",
+  "(wbgetentities), содержание — из прочитанной статьи, изложение своё. Написанного по памяти",
+  "модели здесь нет ни одной строки."
+ ],
+ "candidates": [
+  {
+   "wikidata": "Q8258",
+   "sitelinks": 159,
+   "title": {
+    "ru": "Тысяча и одна ночь",
+    "en": "One Thousand and One Nights"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "",
+    "en": ""
+   },
+   "year": "IX в.",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "сказка",
+    "fairy tale",
+    "эпос",
+    "epic",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Свод арабских, персидских и индийских сказок, скреплённый одной рамочной историей. Царь Шахрияр, преданный женой, берёт каждый вечер новую жену и казнит её наутро, пока дочь визиря Шахразада не начинает рассказывать ему сказку и не обрывает её на рассвете, у самого занятного места. Царь откладывает казнь, чтобы дослушать, и так повторяется тысячу и одну ночь. Внутрь этой рамки веками вставляли новые истории, а иные из них обрамляли следующие: так в своде выросли «Сказка о горбуне», «Носильщик и три девушки», семь путешествий Синдбада, Аладдин и Али-Баба. Сказки здесь разной крови — волшебные, плутовские, любовные, назидательные, местами грубые до неприличия, — и держатся вместе не темой, а тем, что рассказывание в них буквально отменяет казнь. Отсюда и главная мысль книги: слово оказывается сильнее меча не в переносном смысле, а в прямом. Многие сказки жили сами по себе задолго до того, как попали под общий переплёт, и часто в более пространном виде. Арабский текст вырос из перевода персидского сборника «Хезар эфсане», «Тысяча сказок», сделанного в VIII веке; багдадские писатели X века упоминают свод как давно и хорошо известный. Первыми его редакторами были уличные рассказчики, с чьих слов книготорговцы записывали сказки почти дословно и без литературной отделки; древнейшие сохранившиеся списки относятся к XI—XII векам. Единого автора у памятника нет вовсе, окончательный вид он принял к XVI—XVII векам. Европа узнала книгу по французскому переложению начала XVIII века, а полное арабское издание вышло в Каире в 1835 году.",
+    "en": "A body of Arabic, Persian and Indian tales held together by a single framing story. King Shahriyar, betrayed by his wife, takes a new wife each evening and has her put to death in the morning, until the vizier’s daughter Scheherazade begins telling him a tale and breaks it off at dawn at the most gripping point. The king postpones the execution to hear the end, and so it goes for a thousand and one nights. New stories were fitted inside that frame for centuries, and some of them framed further ones: the Tale of the Hunchback, the Porter and the Three Ladies, the seven voyages of Sinbad, Aladdin and Ali Baba all grew there. The tales are of every kind, magical, roguish, amorous, admonitory and at times frankly coarse, and what binds them is not a theme but the fact that inside them storytelling literally cancels an execution. Hence the book’s central idea: the word proves stronger than the sword in the plainest possible sense. Many of the tales lived on their own long before they came under a common cover, and often in fuller versions. The Arabic text grew out of a translation of the Persian collection Hezar Afsan, A Thousand Tales, made in the eighth century; Baghdad writers of the tenth century mention the compilation as long and well known. Its first editors were street storytellers, from whose speech booksellers took the tales down almost verbatim and without polish; the oldest surviving copies date from the eleventh and twelfth centuries. The monument has no single author, and it reached its final shape by the sixteenth and seventeenth centuries. Europe met the book through a French retelling of the early eighteenth century, and the full Arabic edition appeared in Cairo in 1835."
+   },
+   "agentNote": "🔴 ГОД И АВТОР — ОБА ПРОШУ ВАШЕГО ВЗГЛЯДА. (1) Формы «IX в.» в каноне пока нет: ваше слово 2026-08-23 задало «VIII в. до н. э.» для древних памятников, и я перенёс ту же форму на век нашей эры, убрав «до н. э.». Скажете иначе — форма ляжет разом на все средневековые записи. Опора числа: арабский текст стоит на переводе персидского сборника VIII века, а багдадские писатели X века пишут о своде как о давно известном, значит он бытовал уже в IX веке. Свод рос до XVI—XVII веков, первое полное печатное издание — Каир, 1835. (2) АВТОР ОСТАВЛЕН ПУСТЫМ намеренно: единого автора у памятника нет, реестр даёт заглушку «различные авторы», выдумывать я не стал. ⚠️ Подбор ровесников по году такую запись не увидит — он берёт только четыре цифры, как и у «Илиады»."
+  },
+  {
+   "wikidata": "Q480",
+   "sitelinks": 147,
+   "title": {
+    "ru": "Дон Кихот",
+    "en": "Don Quixote"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Мигель де Сервантес",
+    "en": "Miguel de Cervantes"
+   },
+   "year": "1605",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "приключения",
+    "adventure",
+    "сатира",
+    "satire",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Пародия на рыцарские романы, из которой вырос первый европейский роман нового времени. Обедневший ламанчский идальго Алонсо Кехана начитывается книг о странствующих рыцарях, теряет от них рассудок и решает сделаться рыцарем сам: берёт имя Дон Кихот, чинит дедовские доспехи, приделывает к шлему картонное забрало и садится на тощую клячу Росинанта. В оруженосцы он нанимает соседа-крестьянина Санчо Пансу, пообещав ему в награду губернаторство над островом, а все будущие подвиги посвящает крестьянке Дульсинее Тобосской, которую видел мельком и вообразил прекрасной дамой. Дальше идут ветряные мельницы, принятые за великанов, стадо баранов, принятое за вражеское войско, медный тазик цирюльника вместо золотого шлема и освобождённые каторжники, которые в благодарность грабят освободителя. Санчо трезв, приземлён и говорит пословицами; его хозяин видит мир не таким, каков он есть, а таким, каким он должен быть, — и книга держится на том, что смешон в итоге не безумец, а мир, который его бьёт. Во второй части герои узнают, что о них уже напечатана книга, и живут внутри собственной славы: герцог зовёт рыцаря в замок, чтобы потешаться над ним всем двором. Вернувшись домой после поражения от рыцаря Белой Луны, Алонсо Кехана приходит в разум, отрекается от рыцарских книг и умирает, и это отрезвление горше всех побоев. Первый том вышел в 1605 году, второй — в 1615-м. Норвежский книжный клуб поставил роман первым в списке важнейших книг мировой литературы, назвав его лучшей книгой всех времён и народов; с него же принято отсчитывать историю современного романа.",
+    "en": "A parody of chivalric romances out of which the first modern European novel grew. Alonso Quixano, an impoverished gentleman of La Mancha, reads himself out of his wits on books about knights errant and resolves to become one himself: he takes the name Don Quixote, mends his great-grandfather’s armour, fits the helmet with a pasteboard visor and mounts a bony nag called Rocinante. He hires his neighbour, the peasant Sancho Panza, as squire on the promise of the governorship of an island, and dedicates every future deed to Dulcinea del Toboso, a country girl he glimpsed once and imagined into a great lady. Then come the windmills taken for giants, the flock of sheep taken for an enemy army, a barber’s brass basin worn as a golden helmet, and freed galley slaves who rob their liberator by way of thanks. Sancho is sober, earthbound and speaks in proverbs; his master sees the world not as it is but as it ought to be, and the book rests on the discovery that the laughable party is not the madman but the world that beats him. In the second part the heroes learn that a book about them is already in print and live inside their own fame: a duke invites the knight to his castle so the whole court can make sport of him. Home again after his defeat by the Knight of the White Moon, Quixano recovers his reason, renounces the books of chivalry and dies, and that sobering is bitterer than any beating. The first volume appeared in 1605, the second in 1615. The Norwegian Book Club placed the novel first among the most significant works of world literature, calling it the finest book ever written, and the history of the modern novel is commonly counted from it."
+   },
+   "agentNote": ""
+  },
+  {
+   "wikidata": "Q8172269",
+   "sitelinks": 118,
+   "title": {
+    "ru": "Лив и Мэдди",
+    "en": "Liv and Maddie"
+   },
+   "type": {
+    "ru": "Телесериал",
+    "en": "TV Series"
+   },
+   "author": {
+    "ru": "Энди Фикмен",
+    "en": "Andy Fickman"
+   },
+   "year": "2013",
+   "tags": [
+    "кино",
+    "movie",
+    "фильм",
+    "film",
+    "комедия",
+    "comedy",
+    "семья",
+    "family",
+    "подростки",
+    "teen"
+   ],
+   "description": {
+    "ru": "Подростковый ситком о сёстрах-близнецах, которых природа сделала одинаковыми, а жизнь — противоположными. Лив уехала подростком сниматься и вернулась домой готовой голливудской звездой; Мэдди осталась и играет за баскетбольную команду школы Риджвуд, которую тренирует их отец. Сначала Мэдди рада возвращению сестры, а потом обнаруживает, что дом, школа и отцовское внимание теперь делятся надвое, — и на этом стоит весь сериал. Вокруг близнецов живёт остальная семья Руни: младшие братья Джоуи и Паркер, мать Карен и отец Пит. Поводы для серий берутся не из выдуманных бед, а из обычных: экзамен, соперничество, первая работа, чужая слава рядом с твоей. Вопрос, который сериал задаёт раз за разом, тоже домашний — как остаться собой рядом с человеком, на которого ты похож лицом и не похож ничем больше. Обеих сестёр играет одна актриса, Дав Камерон, и сцены, где они разговаривают друг с другом, собраны из двух отдельно снятых половин кадра. Замысел менялся на ходу: пробы прошли весной 2012 года для сериала под названием Bits and Pieces, после съёмок пилота идею переделали в историю о близнецах и сняли новый пилот, оставив прежних актёров на ролях родителей и братьев. Показ начался 19 июля 2013 года на Disney Channel и продолжался четыре сезона; в России сериал пошёл с 12 мая 2014 года. Common Sense Media поставила сериалу три звезды из пяти и назвала его весёлым семейным ситкомом для зрителей старше семи лет; The New York Times сравнила его с «Шоу Патти Дьюк» и отметила работу Дав Камерон в двойной роли.",
+    "en": "A teenage sitcom about twin sisters made identical by nature and opposite by life. Liv left as a girl to act and has come home a finished Hollywood star; Maddie stayed and plays for the Ridgewood school basketball team, which their father coaches. Maddie is glad of the return at first, and then finds that the house, the school and her father’s attention are now split in two, and the whole series stands on that. Around the twins lives the rest of the Rooney family: the younger brothers Joey and Parker, their mother Karen and their father Pete. Episodes take their occasions not from invented disasters but from ordinary ones: an exam, a rivalry, a first job, somebody else’s fame standing next to your own. The question the series keeps asking is domestic too, namely how to stay yourself beside a person you match in face and match in nothing else. Both sisters are played by one actress, Dove Cameron, and the scenes where they speak to each other are assembled from two separately filmed halves of the frame. The premise changed while the show was being made: casting ran in the spring of 2012 for a series called Bits and Pieces, and after the pilot was shot the idea was rebuilt around twins and a new pilot filmed, keeping the same actors as the parents and brothers. It began on Disney Channel on 19 July 2013 and ran for four seasons; Russian broadcast started on 12 May 2014. Common Sense Media gave the series three stars out of five and called it a cheerful family sitcom for viewers over seven; The New York Times compared it to The Patty Duke Show and singled out Dove Cameron’s work in the double role."
+   },
+   "agentNote": "Год — по первому показу людям: 19 июля 2013 года, Disney Channel. Реестр даты первого показа не даёт вовсе, число взято из статьи. Вид — Телесериал по вашему правилу формы постановки (№048, В3): поставлено по сценарию и режиссёрами, обрамлено в сезоны, их четыре."
+  },
+  {
+   "wikidata": "Q8265",
+   "sitelinks": 117,
+   "title": {
+    "ru": "Сон в красном тереме",
+    "en": "Dream of the Red Chamber"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Цао Сюэцинь",
+    "en": "Cao Xueqin"
+   },
+   "year": "1763",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "драма",
+    "drama",
+    "семья",
+    "family",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Самый читаемый из четырёх классических китайских романов — семейная сага об упадке богатого рода, рассказанная через три поколения, три десятка главных лиц и четыре сотни второстепенных. Две ветви семейства Цзя, дома Жунго и Нинго, живут в столичных имениях на широкую ногу: предки были вельможами с титулом гуна, сестра главного героя стала императорской наложницей, и к её приезду разбивают роскошный сад. Дальше идёт медленное падение — немилость, конфискация имений, беспечность нового поколения, предпочитающего делам негу и наслаждения. Главный герой Цзя Баоюй родился с кусочком яшмы во рту и связан особыми узами с болезненной кузиной Линь Дайюй: они оба живут музыкой и стихами. Родня прочит ему в жёны другую кузину — учёную красавицу Сюэ Баочай, — чьи ум и грация его восхищают, оставляя сердце незанятым. Воспользовавшись его болезнью, родственники обманом устраивают свадьбу с Баочай — до самой церемонии Баоюй думает, что женится на Дайюй. Дайюй узнаёт правду раньше и умирает в час венчания. Баоюй смиряется, берётся было за чиновничью карьеру, а затем проникается буддийскими идеалами, видит тщету жизни в страстях и уходит из столицы с бродячим монахом. Роман первым в китайской словесности выписывает переживания героев подробно, смешивая бытовую точность с вещими снами и прямой фантастикой. Первые восемьдесят глав вышли под названием «Записки о камне» незадолго до смерти автора в 1763 году; ещё сорок, завершивших сюжет, издал в 1791 году Гао Э. Книгу не раз запрещали за неблагопристойность, а её изучение выросло в отдельную науку — «красноведение», с собственным институтом в Пекине.",
+    "en": "The most widely read of the four classic Chinese novels, a family saga about the decline of a wealthy house told through three generations, some thirty principal figures and four hundred lesser ones. The two branches of the Jia family, the Rongguo and Ningguo houses, live grandly on their capital estates: the ancestors held ducal rank, the hero’s sister has become an imperial consort, and a magnificent garden is laid out for her visit. What follows is a slow fall through disgrace, the confiscation of the estates, and the idleness of a new generation that prefers ease and pleasure to duty. The hero Jia Baoyu was born with a piece of jade in his mouth and is bound by a particular tie to his frail cousin Lin Daiyu: both live for music and verse. His family intends him for another cousin, the learned beauty Xue Baochai, whose grace and mind delight him while leaving his heart unengaged. Taking advantage of his illness, the relatives arrange his marriage to Baochai by deceit, and until the ceremony itself Baoyu believes he is marrying Daiyu. Daiyu learns the truth first and dies at the hour of the wedding. Baoyu submits, turns for a while towards an official career, and then takes up Buddhist ideals, sees the emptiness of a life of passions and leaves the capital with a wandering monk. The novel is the first in Chinese letters to render its characters’ feelings in detail, mixing exact domestic observation with prophetic dreams and outright fantasy. The first eighty chapters appeared as The Story of the Stone shortly before the author’s death in 1763; a further forty, completing the plot, were published by Gao E in 1791. The book was repeatedly banned as indecent, and its study has grown into a discipline of its own, Redology, with an institute in Beijing."
+   },
+   "agentNote": "🔴 ГОД — РАСХОЖДЕНИЕ ИСТОЧНИКОВ, называю его, а не сглаживаю. Взят 1763 по вашему правилу «дата первого выхода в мир»: первые 80 глав вышли под названием «Записки о камне» незадолго до смерти Цао Сюэциня в 1763 году. Реестр даёт 1792, многие каталоги — 1791: это год ПОЛНОГО издания из 120 глав, которое доделал Гао Э через тридцать лет после смерти автора. Скажете считать годом выход законченной книги — поправлю на 1791."
+  },
+  {
+   "wikidata": "Q8269",
+   "sitelinks": 116,
+   "title": {
+    "ru": "Повесть о Гэндзи",
+    "en": "The Tale of Genji"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Мурасаки Сикибу",
+    "en": "Murasaki Shikibu"
+   },
+   "year": "XI в.",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "отношения",
+    "relationships",
+    "драма",
+    "drama",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Придворный роман эпохи Хэйан, который часто называют первым романом в истории литературы. Пятьдесят четыре главы рассказывают жизнь принца Гэндзи, побочного сына императора: рождённый от невысокой по званию наложницы, он не может наследовать трон и живёт частным человеком редкой красоты и обаяния. Роман строится как цепь новелл, и в каждой Гэндзи покоряет очередную женщину — наложницу собственного отца, юную фрейлину, знатную старуху, — так что сквозь его любовные истории проходит целая галерея женских характеров хэйанского двора. Автор держится позы невозмутимого биографа и не морализирует ни разу; осуждение или оправдание героя остаётся читателю, и в этом главная трудность книги для всякого, кто ищет в ней урок. Первые тридцать три главы доводят Гэндзи от детства до вершины могущества, следующие восемь — до старости и смерти, а последние тринадцать говорят уже о его наследниках, и главной там становится Укифунэ. Книга написана жеманным церемонным языком придворных дам, действие движется медленно, и подробность быта здесь такова, что роман читают как свидетельство о хэйанской жизни. Мурасаки Сикибу служила при дворе императрицы Сёси на рубеже X и XI веков. Название придумала не она: древнейшее известное — «Повесть о Мурасаки», по имени одной из героинь. Ни одного списка того времени не сохранилось, все нынешние тексты сняты с поздних копий, и порядок глав до сих пор спорен — разница в слоге между частями даже заставляла сомневаться, один ли у романа автор. Норвежский книжный клуб включил его в список важнейших книг мировой литературы.",
+    "en": "A court novel of the Heian era, often called the first novel in the history of literature. Fifty-four chapters tell the life of Prince Genji, a natural son of the emperor: born of a concubine of low rank, he cannot inherit the throne and lives as a private man of rare beauty and charm. The book is built as a chain of separate episodes, and in each Genji wins another woman, his own father’s concubine, a young lady-in-waiting, a great lady of fifty-eight, so that a whole gallery of women of the Heian court passes through his love affairs. The author keeps the pose of an unruffled biographer and never once moralises; condemning or excusing the hero is left to the reader, and that is the book’s chief difficulty for anyone who looks in it for a lesson. The first thirty-three chapters carry Genji from childhood to the height of his power, the next eight to old age and death, and the last thirteen speak of his heirs, with Ukifune as their central figure. The book is written in the mannered ceremonious language of court ladies, the action moves slowly, and its detail of daily life is such that the novel is read as testimony about Heian existence. Murasaki Shikibu served at the court of the Empress Shoshi at the turn of the tenth and eleventh centuries. The title is not hers: the oldest one known is The Tale of Murasaki, after one of the heroines. No manuscript of the period survives, every present text descends from later copies, and the order of the chapters is disputed to this day, the difference of style between the parts having even raised doubts whether the novel had a single author. The Norwegian Book Club included it among the most significant works of world literature."
+   },
+   "agentNote": "Год записан веком: роман сложился в начале XI века при дворе императрицы Сёси, точной даты выхода у него нет и быть не может — рукопись расходилась списками. Форма «XI в.» — перенос вашего правила про «VIII в. до н. э.» на нашу эру; та же оговорка, что у «Тысячи и одной ночи»."
+  },
+  {
+   "wikidata": "Q11859",
+   "sitelinks": 108,
+   "title": {
+    "ru": "Русалочка",
+    "en": "The Little Mermaid"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "Ханс Кристиан Андерсен",
+    "en": "Hans Christian Andersen"
+   },
+   "year": "1837",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "сказка",
+    "fairy tale",
+    "отношения",
+    "relationships",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Литературная сказка о морской деве, которая отдала голос за возможность любить и не получила взамен ничего. Младшая дочь морского царя живёт с отцом, бабушкой и пятью сёстрами; по заведённому порядку русалке разрешают всплыть и посмотреть на верхний мир в пятнадцать лет. Дождавшись очереди, она видит корабль, влюбляется в принца и спасает его во время шторма, а на берег выносит без сознания — и он принимает за спасительницу девушку из храма, нашедшую его на песке. От бабушки героиня узнаёт главное: русалки живут триста лет и обращаются в морскую пену, у людей же есть бессмертная душа. Морская ведьма даёт ей ноги в обмен на язык, предупредив, что каждый шаг будет как по остриям мечей, вернуться в море нельзя, а душу она обретёт лишь в том случае, если принц женится на ней. Немую и прекрасную, принц берёт её к себе и любит смотреть, как она танцует; женится он всё-таки на девушке из храма. Сёстры выменивают у ведьмы нож ценой своих волос: убей принца, и станешь прежней. Она выбирает смерть вместо чужой крови и становится дочерью воздуха, которой обещана душа за триста лет добрых дел. Сказка спорит сама с собой честнее всех своих пересказов: любовь здесь ничего не гарантирует, а жертва не покупает ответа. В первом издании Андерсен обрывал историю гибелью героини и лишь потом дописал дочерей воздуха, уверяя, что таков и был замысел; критики с тех пор спорят, спасает этот финал сказку или превращает её в назидание для детей. Впервые напечатана 7 апреля 1837 года; на неё опираются десятки переложений, включая рисованный фильм 1989 года и советский мультфильм 1968-го.",
+    "en": "A literary fairy tale about a sea maiden who gave up her voice for the chance to love and received nothing in return. The youngest daughter of the sea king lives with her father, her grandmother and five sisters; by long custom a mermaid is allowed to rise and look at the upper world at fifteen. When her turn comes she sees a ship, falls in love with a prince and saves him in a storm, carrying him ashore unconscious, and he takes for his rescuer the girl from the temple who finds him on the sand. From her grandmother she learns the essential thing: mermaids live three hundred years and turn to sea foam, while human beings have an immortal soul. The sea witch gives her legs in exchange for her tongue, warning that every step will be as on sword blades, that she can never return to the sea, and that she will gain a soul only if the prince marries her. Mute and lovely, she is taken into his household and he loves to watch her dance; the woman he marries is the girl from the temple. Her sisters trade their hair to the witch for a knife: kill the prince and you will be a mermaid again. She chooses death over another’s blood and becomes a daughter of the air, promised a soul after three hundred years of good deeds. The tale argues with itself more honestly than any of its retellings: love guarantees nothing here, and sacrifice buys no answer. In the first edition Andersen ended the story with the heroine’s death and only later added the daughters of the air, insisting that this had been his intention all along; critics have argued ever since whether that ending saves the tale or turns it into a lesson for children. It was first printed on 7 April 1837, and dozens of retellings rest on it, among them the animated film of 1989 and the Soviet cartoon of 1968."
+   },
+   "agentNote": "Вид — Книга, а не Роман: это отдельная литературная сказка, впервые напечатанная в 1837 году. Год по первой публикации, 7 апреля 1837 года — дата есть и в реестре, и в статье, сходятся."
+  },
+  {
+   "wikidata": "Q41403",
+   "sitelinks": 107,
+   "title": {
+    "ru": "Телепузики",
+    "en": "Teletubbies"
+   },
+   "type": {
+    "ru": "Телесериал",
+    "en": "TV Series"
+   },
+   "author": {
+    "ru": "Энн Вуд, Энди Дэвенпорт",
+    "en": "Anne Wood, Andrew Davenport"
+   },
+   "year": "1997",
+   "tags": [
+    "кино",
+    "movie",
+    "фильм",
+    "film",
+    "детство",
+    "childhood",
+    "семья",
+    "family",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Детский сериал Би-би-си, сделанный для зрителей, которые ещё не умеют говорить. В зелёной холмистой стране под куполом подземного дома живут четыре плюшевых существа с антеннами на головах и телеэкранами на животах: рослый сине-фиолетовый Тинки-Винки с красной сумкой, зелёный Дипси в чёрно-белой шляпе, жёлтая Ла-Ла с мячом и маленькая красная По на самокате. Им помогает по хозяйству ворчливый пылесос Ну-Ну, а распорядок дня задаёт голос свыше, звучащий из репродукторов посреди луга. Событий в привычном смысле почти нет: герои играют, едят пузи-блинчики и кастарды, спорят, мирятся, а на экранах у них на животах показывают короткие сюжеты про настоящих детей — и эти сюжеты по просьбе телепузиков повторяют ещё раз. Повтор здесь приём, а не небрежность: сериал построен на том, как маленький ребёнок узнаёт мир — медленно, кругами, через одно и то же. Отсюда и весь его облик: понятные действия, отчётливая речь, замедленный темп. Отсюда же и спор вокруг него: психологи отмечали неподвижные лица героев, отсутствие у них родителей и характеров и подчинение голосу, которого не видно. Премьера прошла 31 марта 1997 года, показ завершился 5 января 2001-го, всего вышло 365 серий; сериал 58 раз переиздавали на видео, а в 2015 году он вернулся новыми выпусками.",
+    "en": "A BBC children’s series made for viewers who cannot yet speak. In a green hilly country, under the dome of an underground house, live four plush creatures with aerials on their heads and television screens on their stomachs: the tall blue-violet Tinky Winky with his red bag, the green Dipsy in his black and white hat, the yellow Laa-Laa with her ball and the small red Po on her scooter. A grumbling vacuum cleaner called Noo-Noo keeps house for them, and the order of the day is set by a voice from above that sounds out of loudspeakers standing in the meadow. Events in the usual sense are almost absent: the characters play, eat tubby toast and tubby custard, quarrel, make up, and on the screens on their stomachs short films about real children are shown, and at the characters’ request those films are shown again. The repetition is a method rather than carelessness: the series is built on the way a small child learns the world, slowly, in circles, through the same thing twice. Hence its whole manner: plain actions, distinct speech, a slowed pace. Hence too the argument around it: psychologists have remarked on the motionless faces, the absence of parents or characters, and the obedience to a voice that is never seen. It premiered on 31 March 1997 and ended on 5 January 2001 after 365 episodes; it was reissued on video fifty-eight times and returned with new episodes in 2015."
+   },
+   "agentNote": "Год по первому показу — 31 марта 1997 года. Вид — Телесериал: поставлено по сценарию, снималось сезонами. ⚠️ Спор психологов вокруг сериала описан в источнике отдельным разделом; я взял его как ПРОБЛЕМАТИКУ, назвав претензии, но не присоединяясь к ним — если это лишнее на карточке детской передачи, скажите, уберу одной строкой."
+  },
+  {
+   "wikidata": "Q34316",
+   "sitelinks": 99,
+   "title": {
+    "ru": "Доктор Кто",
+    "en": "Doctor Who"
+   },
+   "type": {
+    "ru": "Телесериал",
+    "en": "TV Series"
+   },
+   "author": {
+    "ru": "Сидни Ньюман",
+    "en": "Sydney Newman"
+   },
+   "year": "1963",
+   "tags": [
+    "кино",
+    "movie",
+    "фильм",
+    "film",
+    "научная фантастика",
+    "science fiction",
+    "приключения",
+    "adventure",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Британская фантастика о путешественнике во времени, самый долгоживущий научно-фантастический сериал в мире. Герой известен только как Доктор — инопланетянин, летающий сквозь время и пространство со спутниками-людьми, чтобы спасать целые цивилизации, отдельных людей, а иногда и просто ради собственного удовольствия. Спутник здесь не украшение, а устройство рассказа: он задаёт вопросы, которые задал бы зритель, и держит героя человечным. Сериал придумал канадский продюсер Сидни Ньюман, и первый выпуск вышел на Би-би-си 23 ноября 1963 года как семейное зрелище. Двадцать шесть сезонов шли до 1989 года, пока падение интереса и неудобное время показа не остановили съёмки: двадцать седьмой сезон просто не сняли, хотя канал годами обещал вернуть героя. Попытка возрождения телефильмом 1996 года удалась в Британии, где его посмотрели 9,1 миллиона человек, и провалилась в Америке, так что продолжения не вышло. Настоящее возвращение случилось 26 марта 2005 года эпизодом «Роза»; нумерацию сезонов начали заново, и рядом выросли сериалы-ответвления. Зрителей сериала зовут whovians, его хвалят за выдумку историй, изобретательные спецэффекты на малые деньги и раннюю электронную музыку мастерской Би-би-си, а Книга рекордов Гиннесса записала его самым продолжительным и успешным в своём роде.",
+    "en": "British science fiction about a traveller in time, the longest-running series of its kind in the world. The hero is known only as the Doctor, an alien who moves through time and space with human companions in order to save whole civilisations, single people, and sometimes simply for his own pleasure. The companion is not decoration but a device of the storytelling: he or she asks the questions a viewer would ask and keeps the hero human. The series was devised by the Canadian producer Sydney Newman, and the first instalment went out on the BBC on 23 November 1963 as family viewing. Twenty-six seasons ran until 1989, when falling interest and an awkward broadcast slot stopped production: the twenty-seventh season was simply never filmed, though the channel promised for years to bring the hero back. An attempted revival as a television film in 1996 succeeded in Britain, where 9.1 million people watched it, and failed in America, so no continuation followed. The real return came on 26 March 2005 with the episode Rose; the seasons were numbered afresh and spin-off series grew up beside it. The programme’s viewers are called whovians, it is praised for the invention of its stories, its resourceful effects made on small money and the early electronic music of the BBC workshop, and Guinness World Records has entered it as the longest-running and most successful series of its kind."
+   },
+   "agentNote": "Год — по первому показу людям: 23 ноября 1963 года, BBC. Ваше правило «год сериала всегда по году первого сезона или первой серии» здесь особенно важно: сериал возрождён в 2005-м с нумерацией сезонов ЗАНОВО, и год возрождения напрашивался бы сам. Автором назван Сидни Ньюман — придумавший героя продюсер; режиссёров и сценаристов за шестьдесят лет сотни, одного назвать нельзя."
+  },
+  {
+   "wikidata": "Q11831",
+   "sitelinks": 97,
+   "title": {
+    "ru": "Белоснежка",
+    "en": "Snow White"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "Братья Гримм",
+    "en": "Brothers Grimm"
+   },
+   "year": "1812",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "сказка",
+    "fairy tale",
+    "семья",
+    "family",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Сказка братьев Гримм о зависти, которая не умеет остановиться. Королева шьёт у окна с рамой чёрного дерева, колет палец, роняет три капли крови на снег и загадывает дочь — белую как снег, румяную как кровь, черноволосую как эта рама. Желание сбывается, мать умирает, король женится вновь, и у мачехи есть зеркальце, которое говорит правду. Когда Белоснежке исполняется семь лет, зеркальце называет самой красивой её, и королева велит псарю увести падчерицу в лес и убить, а в доказательство принести лёгкое и печень. Псарь жалеет девочку и приносит потроха оленя, которые королева съедает. В лесу Белоснежка находит хижину с накрытым столом на семь персон и засыпает; хозяевами оказываются семь гномов-рудокопов, они оставляют её вести хозяйство и предупреждают не открывать чужим. Зеркальце выдаёт мачеху трижды: она приходит переодетой с удушающим шнурком, ядовитым гребнем и отравленным яблоком. Дважды гномы успевают, на третий раз нет. Мёртвая девушка не теряет красоты, и гномы кладут её в хрустальный гроб на вершине горы. Проезжий королевич влюбляется в спящую, слуги несут гроб, спотыкаются — и кусок яблока выскакивает у неё из горла. На свадьбу зовут и мачеху: за содеянное её заставляют плясать в раскалённых железных башмаках, пока она не падает замертво. Сказка напечатана в 1812 году и дополнена в 1854-м.",
+    "en": "A tale of the Brothers Grimm about an envy that does not know how to stop. A queen sits sewing at a window framed in ebony, pricks her finger, lets three drops fall on the snow outside and wishes for a child whose skin would match that snow, whose cheeks would match the blood and whose hair would match the black wood of the frame. The wish is granted, the mother dies, the king marries again, and the stepmother owns a looking-glass that tells the truth. When Snow White turns seven the glass names her the fairest, and the queen orders a huntsman to take her stepdaughter into the forest and kill her, bringing back the lungs and liver as proof. The huntsman spares the child and brings the offal of a deer, which the queen eats. In the forest Snow White finds a cottage with a table laid for seven and falls asleep; the owners prove to be seven mining dwarfs, who let her keep house and warn her to open to no stranger. The glass betrays the stepmother three times: she comes in disguise with a strangling lace, a poisoned comb and a poisoned apple. Twice the dwarfs are in time; the third time they are not. The dead girl loses none of her beauty, and the dwarfs lay her in a crystal coffin on a mountain top. A passing prince falls in love with the sleeper, his servants carry the coffin, stumble, and the piece of apple springs from her throat. The stepmother is invited to the wedding, and for what she did she is made to dance in red-hot iron shoes until she falls dead. The tale was printed in 1812 and enlarged in 1854."
+   },
+   "agentNote": "Год по первой публикации — 1812, сборник братьев Гримм; дополненная редакция 1854 года названа в описании отдельно. Вид — Книга: отдельная сказка, не роман. ⚠️ Финал с раскалёнными башмаками стоит в подлиннике Гримм и в источнике; я его не смягчал, потому что он и есть развязка. Скажете, что для каталога это слишком — уберу."
+  },
+  {
+   "wikidata": "Q155629",
+   "sitelinks": 92,
+   "title": {
+    "ru": "Улица Сезам",
+    "en": "Sesame Street"
+   },
+   "type": {
+    "ru": "Телесериал",
+    "en": "TV Series"
+   },
+   "author": {
+    "ru": "Джоан Ганц Куни",
+    "en": "Joan Ganz Cooney"
+   },
+   "year": "1969",
+   "tags": [
+    "кино",
+    "movie",
+    "фильм",
+    "film",
+    "детство",
+    "childhood",
+    "семья",
+    "family",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Детская образовательная передача, соединившая кукол, живых актёров, скетчи, мультипликацию и документальные сюжеты в одном получасе. Замысел был социальным, а не развлекательным: дать детям из неблагополучных семей то же дошкольное образование, какое дома получают дети среднего класса, — и сделать это через телевизор, потому что телевизор есть у всех. Отсюда устройство передачи: буква и цифра дня, короткие номера вместо длинного сюжета, повтор и песня как способ запомнить. Название придумали не сразу: «Сезам» — из сказки про Али-Бабу, открывавшего пещеру словами «Сезам, откройся», и оно подошло ещё и потому, что многие эпизоды снимали прямо на нью-йоркских улицах. Мир передачи населяют куклы Маппет-мастерской, живущие бок о бок с людьми и ведущие себя как дети: спрашивают, ошибаются, обижаются, учатся. Первый выпуск вышел на некоммерческой сети PBS 10 ноября 1969 года; с января 2016-го передачу показывает HBO, с 2019-го она есть и на стриминге. Местные версии сделаны в Германии, Мексике, Нидерландах, Израиле, Индии, Иордании, Бразилии, Южной Африке, России и десятках других стран, а смотрели её более чем в ста сорока странах. Это самая долгая детская передача в истории телевидения из выходящих ежегодно.",
+    "en": "A children’s educational programme that joined puppets, live actors, sketches, animation and documentary films inside a single half hour. The idea was social rather than entertaining: to give children from poor households the same preschool education that middle-class children get at home, and to do it through television because everyone has a television. Hence the design: a letter and a number of the day, short numbers instead of a long story, repetition and song as the way to remember. The name did not come at once: Sesame is from the tale of Ali Baba, who opened the cave with the words open sesame, and it suited all the better because many episodes were filmed on the streets of New York. The world of the programme is peopled by Muppet workshop puppets who live side by side with human beings and behave like children: they ask, they get things wrong, they take offence, they learn. The first instalment went out on the non-commercial network PBS on 10 November 1969; since January 2016 the programme has been shown by HBO, and since 2019 on streaming as well. Local versions have been made in Germany, Mexico, the Netherlands, Israel, India, Jordan, Brazil, South Africa, Russia and dozens of other countries, and it has been watched in more than a hundred and forty. It is the longest-running annually produced children’s programme in the history of television."
+   },
+   "agentNote": "🔴 ВИД — РАЗВИЛКА, решаю по вашему правилу №048 В3 и называю решение. Поставлено по сценарию, срежиссировано и спродюсировано, выходит сезонами — значит Телесериал, а не Телешоу: свободы участников, по которой узнаётся телешоу, здесь нет. Год — по первому эфиру, 10 ноября 1969 года, PBS. ⚠️ Автором названа Джоан Ганц Куни, основательница передачи; реестр даёт режиссёрами Джона Дилворта и Стэна Лэтэна — это режиссёры отдельных выпусков, а не авторы замысла."
+  },
+  {
+   "wikidata": "Q46887",
+   "sitelinks": 90,
+   "title": {
+    "ru": "Гарри Поттер и Принц-полукровка",
+    "en": "Harry Potter and the Half-Blood Prince"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Джоан Роулинг",
+    "en": "J. K. Rowling"
+   },
+   "year": "2005",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "фэнтези",
+    "fantasy",
+    "приключения",
+    "adventure",
+    "подростки",
+    "teen"
+   ],
+   "description": {
+    "ru": "Шестая книга о школьнике-волшебнике, самая тёмная в ряду: война уже идёт, и школа перестала быть убежищем. Вторая волшебная война началась, министр магии предупреждает о ней британского премьера, а лавка близнецов Уизли торгует защитными амулетами. Шестой год обучения Гарри Поттера начинается со старого учебника зельеварения, исписанного пометками неизвестного «Принца-полукровки». Посредственный ученик вдруг делается лучшим на курсе чужим умом, и книжка эта нравится ему больше, чем следовало бы. Дамблдор тем временем показывает ему чужие воспоминания о детстве и юности Тома Реддла. Из них складывается разгадка бессмертия врага: тот разделил душу на части и спрятал их в предметах, и убить его можно, только отыскав все. Драко Малфой весь год выполняет тайное поручение и не справляется с ним. Северус Снегг даёт нерушимый обет помочь ему, если тот не сумеет сам. Два покушения на директора проходят мимо цели и калечат случайных людей. Взрослея, герои влюбляются некстати и невпопад, и это единственное светлое, что в книге есть. Развязка держится на выборе, и каждый делает его по-своему. Дамблдор выпивает отраву до дна, чтобы добраться до спрятанной части чужой души. Драко не решается убить. Снегг решается — по просьбе самого директора, и книга обрывается на этом, не объяснив ничего. Роман вышел на английском 16 июля 2005 года, по-русски — 3 декабря того же года; экранизация появилась в 2009-м.",
+    "en": "The sixth book about the schoolboy wizard, and the darkest of the row: the war is already on, and school has stopped being a refuge. The second wizarding war has begun, the Minister of Magic warns the British prime minister about it, and the Weasley twins' shop is selling protective charms. Harry Potter's sixth year opens with an old potions textbook covered in the notes of an unknown Half-Blood Prince. A middling pupil suddenly becomes the best of his year by another man's wit, and he likes that little book rather more than he ought to. Dumbledore meanwhile shows him other people's memories of the childhood and youth of Tom Riddle. Out of them the riddle of his enemy's immortality takes shape: the man has divided his soul into parts and hidden them in objects, and he can be killed only when every part is found. Draco Malfoy spends the year on a secret errand and cannot manage it. Severus Snape swears an unbreakable oath to help him if he fails. Two attempts on the headmaster's life go wide and maim bystanders instead. Growing up, the characters fall in love at the wrong moments and with the wrong timing, and that is the one bright thing the book has. The ending rests on a choice, and each of them makes it in his own way. Dumbledore drains the poison to reach a hidden part of another man's soul. Draco cannot bring himself to kill. Snape can, at the headmaster's own request, and the book breaks off there and explains nothing. The novel appeared in English on 16 July 2005 and in Russian on 3 December of the same year; the film followed in 2009."
+   },
+   "agentNote": "Год по первому выходу в мир — 16 июля 2005 года, английское издание; реестр даёт ту же дату. ⚠️ В отборе рядом стоит одноимённая ЭКРАНИЗАЦИЯ 2009 года (Q161687) — это отдельный объект другого вида, и обе карточки идут в партию. Спутать их легко, поэтому называю здесь прямо: это КНИГА."
+  },
+  {
+   "wikidata": "Q183157",
+   "sitelinks": 90,
+   "title": {
+    "ru": "Братья Карамазовы",
+    "en": "The Brothers Karamazov"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Фёдор Достоевский",
+    "en": "Fyodor Dostoevsky"
+   },
+   "year": "1879",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "драма",
+    "drama",
+    "криминал",
+    "crime",
+    "семья",
+    "family",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Последний роман Достоевского — история отцеубийства, в которой виновны все и осуждён не тот. Мелкий помещик Фёдор Карамазов, шут и сладострастник, разбросал детей по чужим рукам и вспомнил о них, когда они выросли. Старший, Дмитрий, вспыльчив и разорён, судится с отцом за наследство и соперничает с ним из-за Грушеньки. Средний, Иван, умён, холоден и не верит в бессмертие души, а из этого выводит, что тогда всё позволено. Младший, Алексей, послушник у старца Зосимы, и отправлен старцем жить в миру. Четвёртый — лакей Смердяков — слушает рассуждения Ивана внимательнее всех. Фёдора Павловича находят убитым, деньги пропали, подозрение падает на Дмитрия, у которого в ту ночь были и мотив, и кровь на руках, и внезапные деньги. Смердяков сам признаётся Ивану, что убил, — и вешается в ночь перед судом, оставив брата с догадкой, что настоящий заказ был сделан его словами. Присяжные признают Дмитрия виновным и дают двадцать лет каторги. Роман задаёт свой главный вопрос прямо и не даёт на него утешительного ответа: если Бога нет, кто отвечает за сделанное. Печатался он частями в «Русском вестнике» с 1879 года и был окончен в ноябре 1880-го; через два месяца после публикации автор умер. Цензура позже запрещала печатать для народного чтения отдельные его главы.",
+    "en": "Dostoevsky’s last novel, a story of parricide in which everyone is guilty and the wrong man is convicted. Fyodor Karamazov, a petty landowner, buffoon and sensualist, scattered his children into other people’s hands and remembered them once they were grown. The eldest, Dmitry, is hot-tempered and ruined, at law with his father over an inheritance and his rival over Grushenka. The middle son, Ivan, is clever, cold and does not believe in the immortality of the soul, concluding from that that everything is therefore permitted. The youngest, Alexei, is a novice under the elder Zosima, who sends him out to live in the world. A fourth, the lackey Smerdyakov, listens to Ivan’s reasoning more attentively than anyone. Fyodor Pavlovich is found murdered, the money is gone, and suspicion falls on Dmitry, who that night had the motive, the blood on his hands and a sudden sum of money. Smerdyakov confesses to Ivan that he did it, and hangs himself on the night before the trial, leaving his brother with the surmise that the true order was given in his own words. The jury finds Dmitry guilty and he is sentenced to twenty years of hard labour. The novel’s central question is put plainly and left without a comforting answer: if there is no God, who answers for what has been done. It was printed in parts in The Russian Messenger from 1879 and finished in November 1880; the author died two months after publication. Censors later forbade the printing of separate chapters for popular reading."
+   },
+   "agentNote": "🔴 ГОД — 1879, и это РАСХОЖДЕНИЕ с реестром, называю его. Реестр даёт 1880-01-01 — год окончания романа. По вашему правилу «дата первого выхода в мир» считается первая публикация: роман печатался ЧАСТЯМИ в журнале «Русский вестник» начиная с 1879 года, то есть читатели встретили его тогда. Скажете считать по году завершения — поправлю на 1880."
+  },
+  {
+   "wikidata": "Q161687",
+   "sitelinks": 89,
+   "title": {
+    "ru": "Гарри Поттер и Принц-полукровка",
+    "en": "Harry Potter and the Half-Blood Prince"
+   },
+   "type": {
+    "ru": "Фильм",
+    "en": "Film"
+   },
+   "author": {
+    "ru": "Дэвид Йейтс",
+    "en": "David Yates"
+   },
+   "year": "2009",
+   "tags": [
+    "фильм",
+    "movie",
+    "кино",
+    "film",
+    "фэнтези",
+    "fantasy",
+    "приключения",
+    "adventure",
+    "экранизация",
+    "adaptation"
+   ],
+   "description": {
+    "ru": "Шестая картина о Гарри Поттере, поставленная Дэвидом Йейтсом по одноимённому роману. Война выплеснулась за пределы волшебного мира: Пожиратели Смерти обрушивают мост в Лондоне и разоряют Косой переулок, так что беда перестала быть чужой и для маглов. В Хогвартс по просьбе Дамблдора возвращается зельевар Гораций Слизнорт, а Северус Снегг получает наконец должность преподавателя защиты от тёмных искусств. Гарри берётся за углублённое зельеварение, потому что без него не стать мракоборцем, и находит старый учебник, весь исписанный поправками к рецептам. Учебник помечен именем Принца-полукровки, рецепты в нём безошибочны, и Гарри пользуется ими, не слушая предостережений Гермионы. Драко Малфой занимает место арестованного отца среди Пожирателей и получает задание убить Дамблдора. Снегг приносит Нарциссе Малфой нерушимый обет помочь её сыну. Дамблдор тем временем ведёт Гарри через чужие воспоминания к разгадке того, почему Волан-де-Морта до сих пор нельзя убить. Гарри следит за Драко и видит его плачущим в туалете от того, что поручение не выходит; дуэль между ними кончается тяжёлой раной, которую наносит заклинание из того самого учебника. Картина держится не на битвах, а на взрослении и на том, как выбор загоняет каждого в угол поодиночке. Взрослые здесь впервые перестают быть защитой: один связан обетом, другой ведёт мальчика к правде, которую тот не готов услышать. Йейтс снимал в намеренно тусклых, обесцвеченных тонах, и это первая лента ряда, где школа выглядит опасным местом.",
+    "en": "The sixth Harry Potter picture, directed by David Yates from the novel of the same name. The war has spilled beyond the wizarding world: Death Eaters bring down a bridge in London and wreck Diagon Alley, so that the trouble has stopped being somebody else’s for Muggles too. At Dumbledore’s request the potions master Horace Slughorn returns to Hogwarts, and Severus Snape at last receives the post of teacher of defence against the dark arts. Harry takes up advanced potions because without it he cannot become an Auror, and finds an old textbook covered in corrections to the recipes. The book is marked with the name of the Half-Blood Prince, its recipes are faultless, and Harry uses them without listening to Hermione’s warnings. Draco Malfoy takes his arrested father’s place among the Death Eaters and receives the task of killing Dumbledore. Snape swears an unbreakable oath to Narcissa Malfoy to help her son. Dumbledore meanwhile leads Harry through other people’s memories towards the reason why Voldemort still cannot be killed. The film rests not on battles but on growing up, and on the way a choice drives each of them into a corner alone. Yates shot it in deliberately dim, drained colours, and it is the first of the row in which the school looks like a dangerous place."
+   },
+   "agentNote": "Год — по первому показу людям, 2009. ⚠️ В этой же партии есть одноимённый РОМАН 2005 года (Q46887): это два разных объекта, и путать их легко. Реестр даёт четыре даты подряд (6, 15, 15 и 16 июля 2009) — премьера и прокатные даты по территориям; годом взят 2009 по самой ранней."
+  },
+  {
+   "wikidata": "Q147235",
+   "sitelinks": 89,
+   "title": {
+    "ru": "Как я встретил вашу маму",
+    "en": "How I Met Your Mother"
+   },
+   "type": {
+    "ru": "Телесериал",
+    "en": "TV Series"
+   },
+   "author": {
+    "ru": "Картер Бейз, Крейг Томас",
+    "en": "Carter Bays, Craig Thomas"
+   },
+   "year": "2005",
+   "tags": [
+    "кино",
+    "movie",
+    "фильм",
+    "film",
+    "комедия",
+    "comedy",
+    "отношения",
+    "relationships",
+    "романтика",
+    "romance"
+   ],
+   "description": {
+    "ru": "Комедия о поисках любви, рассказанная как одна очень длинная история отца детям. В 2030 году Тед Мосби усаживает дочь и сына и берётся объяснить, при каких обстоятельствах он познакомился с их матерью, — а вместо этого девять сезонов рассказывает о своей молодости в Нью-Йорке двухтысячных и о четверых друзьях, без которых той молодости не было. Робин Щербатски — телерепортёрка из Канады, в которую Тед влюбляется первой. Маршалл и Лили — пара со студенческих лет, живущая ровно тем, чем живут все долгие пары. Барни Стинсон работает неизвестно кем, носит костюм как доспех и обращает знакомство с женщинами в свод правил. Собираются они всегда в одном баре, и бар этот делает сериал не про свидания, а про дружбу, которая держится дольше свиданий. Форма рассказа и есть главный приём: время скачет вперёд и назад, одну и ту же сцену показывают с другой точки, а рассказчик путается, привирает и поправляет сам себя, как всякий человек, вспоминающий вслух. Обещание, вынесенное в заглавие, работает как двигатель: зритель девять лет ждёт женщину, которой почти нет на экране, и за это время успевает прожить чужую жизнь целиком. Отсюда сериал и задаёт свой главный вопрос: что человек на самом деле ищет, когда говорит, что ищет любовь. Премьера прошла 19 сентября 2005 года на CBS, финал — 31 марта 2014-го, всего девять сезонов. Сериал взял шесть премий «Эмми», а также награды Teen Choice, «Выбор народа» и «Выбор телевизионных критиков».",
+    "en": "A comedy about looking for love, told as one very long story a father tells his children. In 2030 Ted Mosby sits his daughter and son down and undertakes to explain the circumstances in which he met their mother, and instead spends nine seasons telling them about his youth in the New York of the two thousands and about the four friends without whom that youth would not have existed. Robin Scherbatsky is a Canadian television reporter, the first woman Ted falls in love with. Marshall and Lily are a couple since their student years, living on exactly what all long couples live on. Barney Stinson works at something nobody can name, wears a suit like armour and turns meeting women into a code of rules. They always gather in the same bar, and that bar makes the series a story about friendship rather than about dating, because friendship lasts longer than dates. The form of the telling is the chief device: time jumps forward and back, the same scene is shown from another vantage point, and the narrator muddles things, embroiders and corrects himself, as anyone does who remembers out loud. It premiered on CBS on 19 September 2005 and ended on 31 March 2014. The series took six Emmy awards, along with Teen Choice, People’s Choice and Critics’ Choice honours."
+   },
+   "agentNote": "Год — по первому показу, 19 сентября 2005 года, CBS; реестр даты не даёт, число из статьи. Вид — Телесериал по вашему правилу: сценарий, режиссура, девять сезонов."
+  },
+  {
+   "wikidata": "Q46758",
+   "sitelinks": 89,
+   "title": {
+    "ru": "Гарри Поттер и Дары Смерти",
+    "en": "Harry Potter and the Deathly Hallows"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Джоан Роулинг",
+    "en": "J. K. Rowling"
+   },
+   "year": "2007",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "фэнтези",
+    "fantasy",
+    "приключения",
+    "adventure",
+    "война",
+    "war"
+   ],
+   "description": {
+    "ru": "Седьмая и последняя книга ряда, в которой школы почти нет, а есть война. Лето 1997 года: Волан-де-Морт собирает Пожирателей в особняке Малфоев и берёт чужую палочку, потому что своей не может причинить Гарри вреда. Орден Феникса вывозит Гарри из дома Дурслей, и, чтобы сбить погоню с толку, шестеро его друзей выпивают оборотное зелье и разлетаются в разные стороны семью одинаковыми Поттерами. Уходят не все: гибнут Аластор Грюм и сова Букля, Джорджу срывает ухо. Министерство магии переходит под власть врага изнутри, и троим друзьям приходится бросить всё и уйти в бега. Задание, оставленное Дамблдором, состоит в том, чтобы найти и уничтожить предметы, в которых спрятаны части чужой души. Книга долго держится на голоде, холоде и ссорах втроём — и это её главная честность: последний год героев похож не на приключение, а на изматывающую работу. Параллельно всплывает вторая тайна — три предмета, дающие власть над смертью, и выбор между ними и охотой за душой. Роулинг дописала роман 11 января 2007 года в эдинбургском отеле, выход назначили на 21 июля. За пять дней до срока в сеть утекли отсканированные страницы американского издания: интернет-магазин нарушил запрет и разослал около 1200 экземпляров раньше времени. В первый день продали 12 миллионов копий, из них 8,3 миллиона в США — больше сотни в секунду.",
+    "en": "The seventh and last book of the row, in which there is almost no school and there is a war. Summer 1997: Voldemort gathers the Death Eaters at the Malfoy house and takes another man’s wand, because with his own he cannot harm Harry. The Order of the Phoenix moves Harry out of the Dursleys’ house, and to throw the pursuit off six of his friends drink Polyjuice Potion and scatter in different directions as seven identical Potters. Not everyone gets away: Alastor Moody and Harry’s owl Hedwig are killed, and George loses an ear. The Ministry of Magic passes into the enemy’s hands from within, and the three friends have to drop everything and go into hiding. The task Dumbledore left them is to find and destroy the objects in which parts of another man’s soul are hidden. The book lives for a long stretch on hunger, cold and quarrels among three people, and that is its chief honesty: the heroes’ last year resembles not an adventure but exhausting work. A second secret surfaces alongside it, three objects that give power over death, and a choice between them and the hunt for the soul. Rowling finished the novel on 11 January 2007 in an Edinburgh hotel, and publication was set for 21 July. Five days before the date scanned pages of the American edition leaked online: an internet shop broke the embargo and posted about 1200 copies early. Twelve million copies sold on the first day, 8.3 million of them in the United States, more than a hundred a second."
+   },
+   "agentNote": "Год по первому выходу в мир — 21 июля 2007 года. ⚠️ Утечка сканов случилась за пять дней до этой даты, то есть текст попал к людям раньше официального выхода; годом это не меняет ничего (тот же 2007), но случай назван в описании, потому что он часть истории книги."
+  },
+  {
+   "wikidata": "Q181488",
+   "sitelinks": 85,
+   "title": {
+    "ru": "Путешествия Гулливера",
+    "en": "Gulliver's Travels"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Джонатан Свифт",
+    "en": "Jonathan Swift"
+   },
+   "year": "1726",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "сатира",
+    "satire",
+    "приключения",
+    "adventure",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Сатирический роман о четырёх плаваниях судового врача, каждое из которых меняет мерку человека. В Лилипутии Гулливер — великан среди человечков в двенадцать раз меньше себя, и вся их важность выглядит смешной: император величает себя монархом над монархами и опорой вселенной, партии различаются высотой каблуков, а две страны воюют из-за того, с какого конца разбивать варёное яйцо. Гулливер приносит присягу, выигрывает войну, уведя вражеский флот, и отказывается достраивать победу до порабощения соседей — за что немедленно оказывается неугоден. Во второй части точка зрения переворачивается: в стране великанов смешным становится он сам, а вместе с ним и вся европейская цивилизация, о которой он с гордостью рассказывает. Третья часть высмеивает учёную спесь, четвёртая доводит счёт до предела: там живут разумные лошади и мерзкие еху — люди, с которых снято всё, кроме природы. Свифт не морализирует ни разу и не подсказывает вывод: выбирать между еху и их лошадиным антиподом читателю приходится самому. Первое издание вышло в Лондоне в 1726 году, сатира на короля Георга I была вычеркнута редактором. Книга стала классикой нравственно-политической сатиры, а известна больше всего сокращёнными детскими переделками — из которых вся сатира и вычтена.",
+    "en": "A satirical novel about four voyages of a ship’s surgeon, each of which changes the measure of a man. In Lilliput Gulliver is a giant among people twelve times smaller than himself, and all their self-importance looks ridiculous: the emperor styles himself monarch over monarchs and the prop of the universe, the parties differ by the height of their heels, and two countries make war over which end of a boiled egg to break. Gulliver swears allegiance, wins the war by towing away the enemy fleet, and refuses to complete the victory by enslaving the neighbours, for which he is instantly out of favour. In the second part the vantage point turns over: in the land of giants he himself becomes the ridiculous one, and with him the whole European civilisation he describes so proudly. The third part mocks learned conceit, and the fourth carries the reckoning to its limit: there live rational horses and loathsome Yahoos, human beings stripped of everything but their nature. Swift never moralises and never suggests the conclusion: the reader must choose between the Yahoos and their equine opposite unaided. The first edition appeared in London in 1726, with the satire on King George I struck out by the editor. The book became a classic of moral and political satire, and is best known through shortened versions for children, from which all the satire has been subtracted."
+   },
+   "agentNote": "Год по первому изданию — 1726, Лондон; реестр даёт точную дату 28 октября 1726 года, сходится."
+  },
+  {
+   "wikidata": "Q163297",
+   "sitelinks": 84,
+   "title": {
+    "ru": "Посторонний",
+    "en": "The Stranger"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Альбер Камю",
+    "en": "Albert Camus"
+   },
+   "year": "1942",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "драма",
+    "drama",
+    "криминал",
+    "crime",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Дебютная книга Камю и самая известная иллюстрация экзистенциализма в художественной прозе. Рассказчик — тридцатилетний француз из колониального Алжира, имя которого так и не названо, фамилия мелькает вскользь: Мерсо. Событий в его жизни описано три: смерть матери, убийство местного жителя и суд, а между ними — короткая связь с девушкой. Мерсо не притворяется и не объясняет себя. На похоронах матери он не плачет, потому что не плачется; на суде он честно говорит, что нажал на спуск из-за солнца, и зал смеётся. Судят его в итоге не за выстрел. Наибольшее впечатление на присяжных производит показание о сухих глазах на похоронах: человек, не заплакавший о матери, признаётся жестокосердным и недостойным жить. В последней главе к приговорённому приходит священник — пробудить веру, — и здесь равнодушный ко всему рассказчик впервые выходит из полусна и приходит в бешенство, отказываясь от утешений загробной жизнью. Существование показано цепочкой случайностей, к которым человек только приспосабливается; преступление Мерсо не имеет причины и остаётся набором несвязанных событий. Книга вышла в 1942 году и с тех пор читается как проповедь абсолютной свободы и как приговор обществу, которое судит не поступок, а несоответствие ожиданиям.",
+    "en": "Camus’s first book and the best-known illustration of existentialism in fiction. The narrator is a thirty-year-old Frenchman in colonial Algeria whose given name is never stated and whose surname slips by in passing: Meursault. Three events of his life are described, his mother’s death, the killing of a local man and the trial, and between them a brief affair with a young woman. Meursault neither pretends nor explains himself. At his mother’s funeral he does not weep, because weeping does not come; at his trial he says honestly that he pulled the trigger because of the sun, and the courtroom laughs. In the end he is not tried for the shot. What impresses the jury most is the evidence of his dry eyes at the funeral: a man who did not weep for his mother is judged hard-hearted and unfit to live. In the last chapter a priest comes to the condemned man to awaken faith in him, and here the narrator, indifferent to everything, comes out of his half-sleep for the first time and flies into a rage, refusing the consolations of a life beyond. Existence is shown as a chain of accidents to which a man merely adapts; Meursault’s crime has no cause and remains a set of unconnected events. The book appeared in 1942 and has been read ever since both as a sermon on absolute freedom and as a verdict on a society that judges not the deed but the failure to meet expectations."
+   },
+   "agentNote": "Год по первому изданию — 1942, сходится с реестром. ⚠️ Источник называет вещь и романом, и повестью; вид взят Роман, как в реестре и в большинстве изданий."
+  },
+  {
+   "wikidata": "Q29478",
+   "sitelinks": 85,
+   "title": {
+    "ru": "Фауст",
+    "en": "Faust"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "Иоганн Вольфганг фон Гёте",
+    "en": "Johann Wolfgang von Goethe"
+   },
+   "year": "1808",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "драма",
+    "drama",
+    "мистика",
+    "supernatural",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Философская трагедия для чтения, главный труд Гёте и самая известная версия легенды о докторе Фаусте. Начинается всё на небе: Мефистофель заключает с Господом пари, что сумеет погубить душу Фауста. Сам Фауст — учёный, много сделавший для окрестных жителей и не удовлетворённый ничем из добытого книгами; поняв, что главные тайны мироздания разуму недоступны, он подносит к губам яд, и только внезапный колокольный звон останавливает руку. Мефистофель является ему сперва собакой, затем человеком и уговаривает изведать заново жизнь, которая давно опостылела. Плата — душа, договор скреплён кровью. Дальше идёт история Маргариты: Фауст добивается её, снотворное для матери оказывается смертельным, брат девушки гибнет в поединке, а сама она сходит с ума в темнице, ожидая казни за то, что утопила их дочь. Фауст приходит спасти её, и она отказывается от помощи нечистой силы; вопреки расчёту Мефистофеля Господь объявляет её спасённой. Вторая часть уводит в античность, ко браку с Еленой, ко двору императора и к попыткам устроить чужое благополучие. Гёте работал над замыслом пятьдесят семь лет: первая часть вышла в 1808 году, вторая напечатана после его смерти, в 1832-м. За прихотливость ритма «Фауста» числят одной из вершин немецкой поэзии.",
+    "en": "A philosophical tragedy written to be read, Goethe’s chief work and the best-known version of the legend of Doctor Faust. It all begins in heaven: Mephistopheles makes a wager with the Lord that he can bring Faust’s soul to ruin. Faust himself is a scholar who has done much for the people of the district and is satisfied by nothing his books have won him; realising that the deepest secrets of creation are closed to reason, he raises poison to his lips, and only a sudden peal of bells stays his hand. Mephistopheles appears to him first as a dog and then as a man, and persuades him to taste again a life long grown wearisome. The price is his soul, and the bargain is sealed in blood. Then comes the story of Margarete: Faust wins her, the sleeping draught meant for her mother proves fatal, her brother dies in a duel, and she loses her reason in prison awaiting execution for drowning their daughter. Faust comes to save her, and she refuses help from the powers of evil; against Mephistopheles’s reckoning the Lord declares her saved. The second part leads away into antiquity, to a marriage with Helen, to an emperor’s court and to attempts at arranging other people’s welfare. Goethe worked at the design for fifty-seven years: the first part appeared in 1808, the second was printed after his death in 1832. For the waywardness of its rhythms Faust is counted among the summits of German poetry."
+   },
+   "agentNote": "Год — 1808, по выходу первой части: вторая напечатана посмертно в 1832 году, и обе даты названы в описании. Реестр даёт 1808 и 1832, взята ранняя по вашему правилу первого выхода в мир. ⚠️ Текст «Прафауста», написанный Гёте в молодости (1772—1775), обнаружен лишь в 1886 году — выходом в мир он не был и годом не взят."
+  },
+  {
+   "wikidata": "Q184222",
+   "sitelinks": 84,
+   "title": {
+    "ru": "Превращение",
+    "en": "The Metamorphosis"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "Франц Кафка",
+    "en": "Franz Kafka"
+   },
+   "year": "1915",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "драма",
+    "drama",
+    "семья",
+    "family",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Повесть о человеке, который однажды утром проснулся насекомым, и о его семье, которая этого не вынесла. Коммивояжёр Грегор Замза обнаруживает себя огромным мерзким насекомым — и причина не объясняется ни ему, ни читателю. Кафка ставит обоих перед свершившимся фактом и дальше пишет о последствиях с полной бытовой точностью. Разум и память Грегора при этом целы: он всё понимает, слышит родных за дверью и не может даже открыть им, хотя его настойчиво просят. Семья, увидев его, приходит в ужас. Отец загоняет сына в комнату и однажды ранит его брошенным яблоком; кормить приходит только сестра Грета. Сперва она вызывается сама, потом тяготится, оставляет комнату в беспорядке от злости и под конец не может войти, не открыв окна. Отдельная жестокость книги в том, что Грегор был единственным серьёзным источником дохода: теперь работать идут все, и семья затягивает пояса, пока он гниёт за дверью. Умирает он от раны, оставленной застрявшим яблоком, и прислуга выметает его вместе с мусором. Заканчивается повесть жизнерадостной прогулкой родных, уже предавших его забвению. Отдельная точность Кафки в том, что чудовищного здесь нет нигде, кроме первой фразы: дальше всё идёт обыкновенно, и обыкновенность страшнее превращения. Написана вещь в 1912 году, напечатана в 1915-м; предназначалась для сборника «Кары», который при жизни автора не вышел.",
+    "en": "A novella about a man who woke up one morning as an insect, and about the family that could not bear it. The travelling salesman Gregor Samsa finds himself an enormous loathsome insect, and the cause is explained neither to him nor to the reader. Kafka places both before an accomplished fact and then writes about the consequences with complete domestic exactness. Gregor’s mind and memory are unimpaired: he understands everything, hears his family behind the door, and cannot even open it to them, though they insistently ask. The family, when they see him, are horrified. His father drives him into his room and one day wounds him with a thrown apple; only his sister Grete comes to feed him. At first she volunteers, then the burden wearies her, she leaves the room in disorder out of anger, and at last cannot enter without first opening a window. A separate cruelty of the book is that Gregor was the family’s only serious income: now all of them go out to work and tighten their belts while he rots behind the door. He dies of the wound left by the lodged apple, and the charwoman sweeps him out with the rubbish. The novella ends with a cheerful outing by relatives who have already consigned him to oblivion. A further exactness of Kafka’s is that nothing monstrous occurs anywhere except in the first sentence: after it everything proceeds ordinarily, and the ordinariness is more frightening than the transformation. It was written in 1912 and printed in 1915; it was intended for a collection called Punishments, which never appeared in the author’s lifetime."
+   },
+   "agentNote": "Год — 1915, по первой публикации; написана в 1912-м, обе даты названы в описании. Реестр даёт 1915 с уточнением до октября — сходится. Вид — Книга: это повесть, не роман."
+  },
+  {
+   "wikidata": "Q8065468",
+   "sitelinks": 84,
+   "title": {
+    "ru": "Приключения Пиноккио. История деревянной куклы",
+    "en": "The Adventures of Pinocchio"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "Карло Коллоди",
+    "en": "Carlo Collodi"
+   },
+   "year": "1881",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "сказка",
+    "fairy tale",
+    "детство",
+    "childhood",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Сказка о деревянном мальчике, у которого нос вырастает от каждой лжи, и о том, как тяжело даётся человеку человеческое. Старому столяру попадается полено, которое жалуется на боль и щекотку; ошеломлённый мастер падает в обморок и дарит находку другу Джеппетто, задумавшему выстругать человечка, умеющего плясать, фехтовать и кувыркаться. Имя Пиноккио выбрано на счастье. Кукла начинает безобразничать прямо на верстаке: показывает мастеру язык, стаскивает с него парик, бьёт ногой по носу — а научившись ходить, тут же убегает из дому. На улице беглеца ловит полицейский, но прохожие возмущаются жестокостью Джеппетто, и арестовывают в итоге его самого. Это первая беда, которую Пиноккио приносит любящему. Дома его встречает Говорящий Сверчок, живущий тут больше ста лет, и советует учиться или работать; Пиноккио выгоняет его, объявив, что будет лазить по деревьям и разорять птичьи гнёзда. Сверчок успевает сказать главное: этой дорогой из мальчика выходит осёл, которого никто ни во что не ставит. Дальше идёт цепь наказаний, каждое из которых вытекает из собственного решения куклы. У Джеппетто вдобавок получился длинный нос, а уши он сделать забыл вовсе. Книга печаталась главами в римской «Газете для детей» начиная с 7 июля 1881 года, отдельным изданием вышла в 1883-м и переведена на 88 языков. Во Флоренции ей поставлен памятник с надписью от благодарных читателей в возрасте от четырёх до семидесяти лет.",
+    "en": "A tale about a wooden boy whose nose grows with every lie, and about how hard the human thing comes to a human being. An old carpenter comes upon a log that complains of pain and of being tickled; astounded, he faints, and gives the find to his friend Geppetto, who has taken it into his head to carve a little man able to dance, to fence and to turn somersaults. The name Pinocchio is chosen for luck. The puppet begins misbehaving on the workbench itself: it puts out its tongue at the carver, pulls off his wig and kicks him on the nose, and having quickly learned to walk it runs straight out of the house. In the street a policeman catches the runaway, but passers-by are indignant at Geppetto’s cruelty, and it is he who is arrested instead. That is the first trouble Pinocchio brings on someone who loves him. At home he meets the Talking Cricket, resident there for more than a hundred years, who advises him to study or to work; Pinocchio drives him out, announcing that he means to climb trees and rob birds’ nests. The cricket manages to say the essential thing: that way you will turn into a real donkey and nobody will value you at a farthing. Then follows a chain of punishments, each of which proceeds from the puppet’s own decision. Geppetto, besides, gave him a long nose and forgot to make him ears at all. The book was printed in chapters in a Roman children’s paper from 7 July 1881, appeared as a separate edition in 1883 and has been translated into eighty-eight languages. Florence has raised a monument to it inscribed from grateful readers between the ages of four and seventy."
+   },
+   "agentNote": "🔴 ГОД — 1881, и это РАСХОЖДЕНИЕ с реестром, называю его. Реестр даёт 1883 — год отдельного издания. По вашему правилу «дата первого выхода в мир» считается первая публикация: книга печаталась главами в «Газете для детей» с 7 июля 1881 года, то есть читатели встретили её тогда. Скажете считать по отдельному изданию — поправлю на 1883."
+  },
+  {
+   "wikidata": "Q38497",
+   "sitelinks": 82,
+   "title": {
+    "ru": "Зена — королева воинов",
+    "en": "Xena: Warrior Princess"
+   },
+   "type": {
+    "ru": "Телесериал",
+    "en": "TV Series"
+   },
+   "author": {
+    "ru": "Роб Таперт, Сэм Рэйми",
+    "en": "Rob Tapert, Sam Raimi"
+   },
+   "year": "1995",
+   "tags": [
+    "кино",
+    "movie",
+    "фильм",
+    "film",
+    "фэнтези",
+    "fantasy",
+    "приключения",
+    "adventure",
+    "мифология",
+    "mythology"
+   ],
+   "description": {
+    "ru": "Фэнтези о воительнице, искупающей собственное прошлое, и редкий случай, когда искупление держит сериал шесть сезонов. В прошлом Зена водила армию, жёгшую и грабившую деревни; впервые она появилась злодейкой в «Удивительных странствиях Геракла» и лишь в третьем своём эпизоде перешла на его сторону, чтобы вместе одолеть военачальника Дарфуса. Собственный сериал строится на том, что каждое приключение — новая попытка отработать старую вину боевым умением, обращённым теперь на защиту людей. Фирменное оружие Зены — метательный шакрам, но меч она берёт не реже. В одной из спасённых ею деревень к ней прибивается Габриель, начитанная и романтичная девушка накануне свадьбы: восхитившись храбростью и силой Зены, она бросает деревню, родных и жениха, получает категорический отказ и всё равно идёт следом, пока не навязывается в попутчицы. За шесть сезонов Габриель превращается из деревенской девочки в талантливого барда и в конце концов в искусного воина, и отношения двух подруг оказываются важнейшей частью сюжета. Действие помещено в Древнюю Грецию, но свободно берёт азиатскую, египетскую, библейскую и средневековую мифологию, а тон гуляет от мелодрамы до фарса и от мюзикла до экшна. Вопросы при этом ставятся вполне сегодняшние: отвечает ли человек за грехи прошлого, чего стоит чужая жизнь, уместен ли пацифизм. Готовых ответов сериал не даёт ни на один. Снимали в Новой Зеландии с 1995 по 2001 год, 134 серии.",
+    "en": "A fantasy about a warrior woman redeeming her own past, and a rare case of redemption holding a series together for six seasons. Xena once led an army that burned and plundered villages; she first appeared as a villain in Hercules: The Legendary Journeys and only in her third episode came over to his side to help defeat the warlord Darphus. Her own series is built on the idea that every adventure is a fresh attempt to work off an old guilt by fighting skill now turned to the protection of people. Xena’s signature weapon is a thrown chakram, though she takes up a sword no less often. In one of the villages she saves, Gabrielle attaches herself to her, a well-read and romantic girl on the eve of her wedding: struck by Xena’s courage and strength, she leaves her village, her family and her betrothed, is flatly refused and follows her all the same until she forces herself in as a travelling companion. Over six seasons Gabrielle turns from a village girl into a gifted bard and finally into a skilled warrior, and the bond between the two women proves the most important part of the story. The action is set in ancient Greece but borrows freely from Asian, Egyptian, biblical and medieval mythology, and the tone ranges from melodrama to farce and from musical to action. The questions raised are thoroughly contemporary, responsibility for the sins of the past, the worth of a human life, whether pacifism will serve, and the series offers no ready answers. It was filmed in New Zealand from 1995 to 2001, 134 episodes."
+   },
+   "agentNote": "Год — 1995, по первому показу и первому сезону, как требует ваше правило. Реестр даты не даёт вовсе. ⚠️ Сериал — спин-офф «Удивительных странствий Геракла», и героиня появилась там раньше; годом взят выход СОБСТВЕННОГО сериала, потому что объект каталога — он."
+  },
+  {
+   "wikidata": "Q199774",
+   "sitelinks": 79,
+   "title": {
+    "ru": "Так говорил Заратустра",
+    "en": "Thus Spoke Zarathustra"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "Фридрих Ницше",
+    "en": "Friedrich Nietzsche"
+   },
+   "year": "1883",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Философский роман с подзаголовком «Книга для всех и ни для кого», написанный как поэма и построенный как проповедь. Заратустра тридцати лет уходит из дому в горы и десять лет постигает мудрость в полном одиночестве; спутники его — орёл и змея. Затем он спускается к людям, чтобы отдать накопленное. Первым встречным оказывается старик из лесной хижины, говорящий о своей любви к Богу, и после этой встречи Заратустра понимает: Бог умер. На рыночной площади ближайшего города он возглашает учение о сверхчеловеке — как человек превосходит обезьяну, так сверхчеловек превзойдёт человека, а сам человек есть канат, натянутый между зверем и сверхчеловеком. Образ подсказан тут же: площадь смотрит не на проповедника, а на канатоходца. Тот срывается и разбивается, Заратустра утешает умирающего, отрицая и дьявола, и ад, и бессмертие души, а потом уносит тело и хоронит его в дупле. Из провала проповеди он выводит, что нужна не публика, а последователи, и для этого придётся разбить скрижали ценностей. Дальше идёт учение о трёх превращениях духа: верблюд нагружается знанием, лев бросает вызов, ребёнок начинает заново. Имя персидского пророка взято намеренно: в «Ecce homo» Ницше объясняет, что Заратустра первым создал мораль, а значит ему же первому её и распознать. Первая часть написана в феврале 1883 года; всего частей четыре, и вместе они вышли одним томом уже после смерти автора.",
+    "en": "A philosophical novel subtitled A Book for All and None, written as a poem and built as a sermon. At thirty Zarathustra leaves his home for the mountains and spends ten years gaining wisdom in complete solitude; his companions are an eagle and a serpent. Then he comes down to people in order to give away what he has gathered. The first man he meets is an old hermit from a forest hut who speaks of his love of God, and after that meeting Zarathustra understands: God is dead. In the market square of the nearest town he proclaims the teaching of the overman, that as a human being surpasses the ape, so the overman will surpass the human being, and that a person is himself a rope stretched between beast and overman. The image is supplied on the spot: the square is watching not the preacher but a tightrope walker. The walker falls and is broken, Zarathustra comforts the dying man, denying devil, hell and the immortality of the soul alike, then carries the body away and buries it in the hollow of a tree. From the failure of his sermon he concludes that he needs not an audience but followers, and that for this the tablets of values will have to be broken. Then comes the teaching of the three metamorphoses of the spirit: the camel loads itself with knowledge, the lion issues a challenge, the child begins anew. The name of the Persian prophet is taken deliberately: in Ecce Homo Nietzsche explains that Zarathustra was the first to create morality, and therefore must be the first to see through it. The first part was written in February 1883; there are four parts in all, and together they appeared in one volume only after the author’s death."
+   },
+   "agentNote": "🔴 ГОД — 1883, по выходу ПЕРВОЙ части; реестр даёт 1885, то есть год, когда книга сложилась целиком. Взято по вашему правилу первого выхода в мир. ⚠️ Тегов у карточки шесть, а не десять: пары «философия»/«philosophy» в словаре каталога нет ни разу за все девять партий, а своего термина я не изобретаю — шесть честных тегов лучше седьмого выдуманного. Если пару стоит завести, это ваше слово."
+  },
+  {
+   "wikidata": "Q1219561",
+   "sitelinks": 79,
+   "title": {
+    "ru": "Вокруг света за восемьдесят дней",
+    "en": "Around the World in Eighty Days"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Жюль Верн",
+    "en": "Jules Verne"
+   },
+   "year": "1872",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "приключения",
+    "adventure",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Приключенческий роман, весь сюжет которого держится на пари и на расписании. Лондон 1872 года: богатый и до жути размеренный джентльмен Филеас Фогг живёт затворником и каждый день ходит в Реформ-клуб. Там обсуждают кражу пятидесяти пяти тысяч фунтов из Английского банка и сходятся на том, что планета сделалась мала: восьмидесяти дней теперь довольно, чтобы обогнуть её кругом. Фогг тут же спорит на половину состояния — двадцать тысяч фунтов — и выезжает в тот же вечер с новым слугой, бывшим пожарным и циркачом Жаном Паспарту. В Суэце к ним прибивается сыщик Фикс, принявший Фогга за того самого вора. Индийская железная дорога оказывается недостроенной, и Фогг покупает слона. По дороге через джунгли герои отбивают у фанатиков богини Кали молодую вдову Ауду, обречённую сгореть заживо на погребальном костре мужа; оставаться в Индии ей опасно, и дальше она едет с ними. Потом идут Гонконг, где Фикс спаивает Паспарту, цирк в Иокогаме, где слуга находится, поезд через Дикий Запад со стадом бизонов, рухнувшим мостом и нападением на состав, сани под парусом и колёсный пароход, деревянные части которого Фогг скупает и сжигает в топке, когда кончается уголь. В Британии его арестовывают, вора к тому времени уже поймали, и в Лондон он приезжает, как ему кажется, с опозданием на пять минут. Разгадка приходит от священника: завтра воскресенье. Двигаясь навстречу солнцу, Фогг выиграл сутки и прошёл путь за семьдесят девять дней.",
+    "en": "An adventure novel whose entire plot rests on a wager and on a timetable. London, 1872: Phileas Fogg, a rich gentleman of frightening regularity, lives as a recluse and goes every day to the Reform Club. There the members are discussing the theft of fifty-five thousand pounds from the Bank of England and conclude that the globe has shrunk, since it can be gone round in eighty days. Fogg promptly stakes half his fortune, twenty thousand pounds, and sets out the same evening with a new servant, the former fireman and circus performer Jean Passepartout. At Suez the detective Fix attaches himself to them, having taken Fogg for that very thief. The Indian railway proves unfinished and Fogg buys an elephant; in one village the travellers save a young widow, Aouda, who was to be burned alive with her husband’s body, and she goes on with them. Then come Hong Kong, where Fix gets Passepartout drunk, a circus in Yokohama where the servant is found, a train across the Wild West with a herd of bison, a collapsed bridge and an attack on the cars, a wind-driven sledge, and a paddle steamer whose timbers Fogg buys up and burns in the furnace when the coal runs out. In Britain he is arrested, the thief having by then been caught, and he reaches London, as he believes, five minutes late. The solution comes from a clergyman: tomorrow is Sunday. Travelling towards the sun, Fogg has gained a day and made the journey in seventy-nine."
+   },
+   "agentNote": "Год — 1872: первые главы напечатаны в газете «Le Temps» 6 ноября того года, роман тогда же и написан. Реестр даёт тот же год."
+  },
+  {
+   "wikidata": "Q70784",
+   "sitelinks": 79,
+   "title": {
+    "ru": "Путешествие на Запад",
+    "en": "Journey to the West"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "У Чэнъэнь",
+    "en": "Wu Cheng'en"
+   },
+   "year": "1592",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "фэнтези",
+    "fantasy",
+    "приключения",
+    "adventure",
+    "мифология",
+    "mythology"
+   ],
+   "description": {
+    "ru": "Один из четырёх классических китайских романов — фантастико-сатирическое странствие в ста главах, выросшее из подлинного путешествия монаха за буддийскими книгами. Сюаньцзан идёт Шёлковым путём в Индию за сутрами, но главным действующим лицом оказывается не он: монах играет роль весьма пассивную, а держит повествование его спутник, царь обезьян Сунь Укун. Рядом идут комический получеловек-полусвинья Чжу Бацзе, монах Ша Сэн и белый конь-дракон, прежде бывший принцем. Книга устроена цепью занимательных эпизодов, где прозрачная буддийская аллегория ложится на канву плутовского романа: путешественникам встречаются и противостоят разные существа, чаще всего оборотни. Сунь Укун владеет семьюдесятью двумя превращениями и носит волшебный посох, однако и с этим, и с помощью спутников он часто не в силах одолеть очередного оборотня — тогда на выручку приходят бодхисаттвы. Стилистически роман сложен намеренно: историческая основа обрастает самыми фантастическими приключениями, фольклорное начало соседствует с авторским, народные речения — с высоким слогом, а проза то и дело прерывается стихами. Опубликована книга в 1590-е годы без указания автора; авторство книжника У Чэнъэня утвердилось лишь в XX веке. Тридцать картин галереи Чанлан в пекинском Летнем дворце написаны по её эпизодам.",
+    "en": "One of the four classic Chinese novels, a fantastic and satirical journey in a hundred chapters, grown out of a real monk’s travels in search of Buddhist books. Xuanzang goes along the Silk Road to India after the sutras, but the principal figure is not he: the monk plays a decidedly passive part, and the narrative is carried by his companion, the Monkey King Sun Wukong. Beside them go the comic half-man, half-pig Zhu Bajie, the monk Sha Seng, and a white dragon horse who was formerly a prince. The book is made as a chain of entertaining episodes in which a transparent Buddhist allegory is laid over the frame of a picaresque novel: the travellers meet and are opposed by various beings, most often shape-shifters. Sun Wukong commands seventy-two transformations and carries a magic staff, yet even with these and with his companions’ help he is often unable to overcome the shape-shifter of the moment, and then bodhisattvas come to the rescue. The novel is deliberately complex in style: a historical basis overgrown with the most fantastic adventures, a folk narrative manner beside an authorial one, popular sayings beside high literary diction, and prose broken again and again by verse. The book was published in the 1590s without an author’s name; the view that the scholar Wu Cheng’en wrote it became established only in the twentieth century. Thirty paintings in the Changlang gallery of the Summer Palace in Beijing are taken from its episodes."
+   },
+   "agentNote": "🔴 АВТОРСТВО НЕ ДОКАЗАНО, и это стоит вашего взгляда. Роман опубликован в 1590-е годы БЕЗ указания автора; имя У Чэнъэня утвердилось только в XX веке, а реестр называет вторым именем Ли Чуньфана. В поле автора поставлено принятое имя, спор назван в описании и здесь. Год 1592 — из реестра; источник говорит осторожнее, «1590-е годы»."
+  },
+  {
+   "wikidata": "Q438406",
+   "sitelinks": 77,
+   "title": {
+    "ru": "Анатомия страсти",
+    "en": "Grey's Anatomy"
+   },
+   "type": {
+    "ru": "Телесериал",
+    "en": "TV Series"
+   },
+   "author": {
+    "ru": "Шонда Раймс",
+    "en": "Shonda Rhimes"
+   },
+   "year": "2005",
+   "tags": [
+    "кино",
+    "movie",
+    "фильм",
+    "film",
+    "драма",
+    "drama",
+    "отношения",
+    "relationships",
+    "романтика",
+    "romance"
+   ],
+   "description": {
+    "ru": "Медицинская драма о том, как из интернов делаются врачи, и о цене, которую за это платят. Действие идёт в сиэтлской больнице «Сиэтл Грейс», где новички проходят первый год ординатуры: дежурства без сна, чужая смерть как ежедневная работа, соперничество за операции и старшие, у которых учатся и от которых достаётся. Название держит двойное дно — это и учебник анатомии, и фамилия героини, глазами которой всё показано. Сериал с самого начала мешает две материи в равных долях: у постели больного решается, выживет ли человек, а в ординаторской и лифте — кто с кем и почему. Именно эта смесь и сделала его тем, чем он стал: болезнь недели даёт сюжету твёрдое дно, а отношения дают повод возвращаться годами. Успех был мгновенным и измеримым. Пилот посмотрели 16,25 миллиона зрителей, финал первого сезона — 22,22 миллиона, а второй и третий сезоны держали средние больше 19 миллионов. С четвёртого рейтинги немного просели, оставив сериал среди самых популярных драм телевидения. В 2006 году он взял «Золотой глобус» как лучший драматический сериал и был выдвинут на «Эмми» в 2006 и 2007 годах; наград за годы показа набралось несколько десятков. Популярность породила спин-офф «Частная практика», вышедший 27 сентября 2007 года. Премьера самого сериала прошла 27 марта 2005 года на ABC; снимают его при этом в Лос-Анджелесе.",
+    "en": "A medical drama about how interns are made into doctors, and about the price paid for it. The action runs in the Seattle Grace hospital, where newcomers work through their first year of residency: shifts without sleep, other people’s deaths as daily labour, competition for surgeries, and seniors from whom they learn and from whom they catch it. The title carries a double bottom, being at once a textbook of anatomy and the surname of the heroine through whose eyes everything is shown. From the first the series mixes two materials in equal measure: at the bedside it is decided whether a person will live, and in the residents’ room and the lift, who is with whom and why. That mixture is what made it what it became: the illness of the week gives the plot firm ground, and the relationships give a reason to come back for years. Success was immediate and measurable. The pilot drew 16.25 million viewers, the first-season finale 22.22 million, and the second and third seasons held averages above 19 million. From the fourth the ratings dipped a little, leaving the series among the most popular dramas on television. In 2006 it took the Golden Globe for best dramatic series and was nominated for Emmys in 2006 and 2007; several dozen awards accumulated over the years of broadcast. Its popularity produced the spin-off Private Practice, which began on 27 September 2007. The series itself premiered on 27 March 2005 on ABC; it is filmed, however, in Los Angeles."
+   },
+   "agentNote": "Год — по первому показу, 27 марта 2005 года, ABC; реестр даты не даёт, число из статьи. Вид — Телесериал по вашему правилу: сценарий, режиссура, сезоны."
+  },
+  {
+   "wikidata": "Q19871",
+   "sitelinks": 77,
+   "title": {
+    "ru": "В ожидании Годо",
+    "en": "Waiting for Godot"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "Сэмюэл Беккет",
+    "en": "Samuel Beckett"
+   },
+   "year": "1952",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "драма",
+    "drama",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Трагикомедия в двух действиях, где ничего не происходит дважды. Владимир и Эстрагон, они же Диди и Гого, застряли на одном месте и ждут некоего Годо: встреча с ним, по их убеждению, внесёт смысл в бессмысленное существование и заслонит от враждебного мира. Кто такой Годо, пьеса не говорит ни разу, и всякий волен подставить своё — человека, Бога, сильную личность, смерть. Ожидание прерывают двое прохожих: Поццо и его безмолвный раб на верёвке Лакки, который, по намёкам, прежде был его учителем. Поццо велит Лакки подумать вслух, и монолог раба выходит пародией на учёные диссертации. Потом они уходят, а прибежавший мальчик-посыльный сообщает, что Годо придёт завтра. Второе действие повторяет первое со сдвигом: Гого возвращается побитым, находит чужие ботинки, Диди примеряет шляпу Лакки, и они коротают время, меняясь шляпами. Поццо возвращается слепым, Лакки — немым, и оба героев не узнают, потому что времени для них не существует. Мальчик приходит снова, не помнит Владимира и говорит то же самое. Герои решают завтра повеситься, если Годо не придёт, — и пьеса кончается ремаркой, что они не двигаются с места. Написана вещь по-французски между октябрём 1948-го и январём 1949 года, напечатана в сентябре 1952-го тиражом 2500 экземпляров; премьера прошла 5 января 1953 года в парижском Театре Вавилона.",
+    "en": "A tragicomedy in two acts in which nothing happens twice. Vladimir and Estragon, Didi and Gogo, are stuck in one place waiting for a certain Godot: meeting him, they are convinced, will bring sense into a senseless existence and screen them from a hostile world. Who Godot is the play never says, and anyone is free to supply his own answer, a man, God, a strong personality, death. The waiting is interrupted by two passers-by, Pozzo and his silent slave on a rope, Lucky, who by hints was once his teacher. Pozzo orders Lucky to think aloud, and the slave’s monologue comes out as a parody of learned dissertations. Then they go, and a boy messenger runs up to say that Godot will come tomorrow. The second act repeats the first with a shift: Gogo comes back beaten, finds somebody else’s boots, Didi tries on Lucky’s hat, and they pass the time exchanging hats. Pozzo returns blind and Lucky dumb, and neither recognises the heroes, because time does not exist for them. The boy comes again, does not remember Vladimir and says the same thing. The heroes decide to hang themselves tomorrow if Godot does not come, and the play ends with the stage direction that they do not move. It was written in French between October 1948 and January 1949 and printed in September 1952 in an edition of 2500 copies; the premiere took place on 5 January 1953 at the Théâtre de Babylone in Paris."
+   },
+   "agentNote": "🔴 ГОД — 1952, по первой публикации; реестр даёт тот же год. Премьера на сцене состоялась позже, 5 января 1953 года, и обе даты названы в описании: у пьесы «выход в мир» двусмыслен, и я выбрал более раннее — печать. Скажете считать по премьере — поправлю на 1953. ⚠️ Вид — Книга: пьеса, отдельного вида для драматургии в каталоге нет. По опросу Королевского национального театра (800 драматургов, актёров и режиссёров) пьеса признана самым влиятельным англоязычным драматическим произведением XX века — в описание это не взял, потому что оно про опрос, а не про пьесу; скажете, добавлю."
+  },
+  {
+   "wikidata": "Q183565",
+   "sitelinks": 77,
+   "title": {
+    "ru": "Двадцать тысяч льё под водой",
+    "en": "Twenty Thousand Leagues Under the Sea"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Жюль Верн",
+    "en": "Jules Verne"
+   },
+   "year": "1869",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "научная фантастика",
+    "science fiction",
+    "приключения",
+    "adventure",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Научно-фантастический роман о подводной лодке и о человеке, который ушёл в океан, чтобы не иметь дела с людьми. В 1866 году мореплавателям начинает попадаться нечто, превосходящее кита размерами и скоростью; после долгих споров учёные соглашаются считать это неизвестным науке животным, вероятно гигантским нарвалом. Академический интерес становится практическим, когда несколько судов получают пробоины, и в 1867 году снаряжают экспедицию. Столкнувшись с «животным», фрегат повреждён, а за бортом оказываются профессор Аронакс, его слуга Консель и канадский гарпунёр Нед Ленд. Подбирает их то самое животное — подводный корабль «Наутилус». Хозяин называет себя капитаном Немо, что по-латыни значит «никто»: он порвал все связи с человеческим обществом, тайно построил лодку на необитаемом острове и ушёл в океан навсегда. Ради сохранения тайны он оставляет спасённых у себя на неопределённый срок, предлагая профессору взамен участие в исследованиях глубин, недоступных науке. Выбор у героев стоит между пленом и смертью, и Нед Ленд, униженный больше всех, семь месяцев подбивает спутников на побег. За это время «Наутилус» обходит все океаны, кроме Северного Ледовитого: жемчужные отмели и акулы, руины Атлантиды, кашалоты и спруты, льды Антарктиды и открытие Полюса. Печатался роман с 20 марта 1869 года по 20 июня 1870-го в парижском журнале, отдельным изданием вышел в 1870 году.",
+    "en": "A science fiction novel about a submarine and about a man who went into the ocean in order to have nothing to do with people. In 1866 seafarers begin to encounter something exceeding a whale in size and speed; after long argument the learned world agrees to consider it an animal unknown to science, probably a giant narwhal. Academic interest turns practical when several ships are holed, and in 1867 an expedition is fitted out. Colliding with the animal, the frigate is damaged, and Professor Aronnax, his servant Conseil and the Canadian harpooner Ned Land go over the side. They are picked up by the animal itself, which proves to be the submarine Nautilus. Her master calls himself Captain Nemo, which in Latin means nobody: he has broken every tie with human society, built the vessel in secret on a desert island and gone into the ocean for good. To keep the secret he holds the rescued men aboard indefinitely, offering the professor in exchange a share in research into depths closed to science. The choice before them stands between captivity and death, and Ned Land, humiliated more than anyone, spends seven months urging his companions to escape. In that time the Nautilus crosses every ocean but the Arctic: pearl banks and sharks, the ruins of Atlantis, sperm whales and giant squid, the ice of Antarctica and the discovery of the Pole. The novel was serialised from 20 March 1869 to 20 June 1870 in a Paris magazine and appeared as a separate edition in 1870."
+   },
+   "agentNote": "Год — 1869, по началу журнальной публикации 20 марта; реестр даёт ту же дату. Отдельное издание вышло в 1870-м, обе даты в описании."
+  },
+  {
+   "wikidata": "Q16438",
+   "sitelinks": 76,
+   "title": {
+    "ru": "Декамерон",
+    "en": "The Decameron"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "Джованни Боккаччо",
+    "en": "Giovanni Boccaccio"
+   },
+   "year": "1353",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "отношения",
+    "relationships",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Сто новелл, рассказанных за десять дней людьми, сбежавшими от чумы. Обрамление точное и датированное: 1348 год, Флоренция в моровое поветрие; трое благородных юношей и семь дам встречаются в церкви Санта-Мария-Новелла и уезжают на загородную виллу в двух милях от города. Там они проводят время, рассказывая друг другу истории, — по десять на каждый день, и каждый день начинается описанием того, как живёт эта маленькая община: образованная, чувствующая красоту природы, верная правилам благородства. Отсюда и главный парадокс книги: обрамление её — первая ренессансная утопия, а стоит эта утопия на пиру во время чумы, и страсть к жизни у самого порога смерти схвачена здесь точнее, чем где бы то ни было. Большинство новелл о любви — от откровенно эротической до трагической, — и многие Боккаччо не сочинил, а переработал: городские анекдоты, французские фаблио, восточные сказки, назидательные примеры из проповедей, мотивы из «Метаморфоз» Апулея, устные рассказы флорентийцев. Само название сложено по греческому образцу как «Десятиднев» и отсылает к «Шестодневам», книгам о сотворении мира Богом за шесть дней. Мир здесь тоже творится, но не Богом, а человеческим обществом, и не за шесть дней, а за десять. Написана книга приблизительно в 1352—1354 годах.",
+    "en": "A hundred tales told over ten days by people who have fled the plague. The frame is exact and dated: 1348, Florence in the pestilence; three young gentlemen and seven ladies meet in the church of Santa Maria Novella and withdraw to a country villa two miles from the city. There they pass the time telling one another stories, ten to each day, and every day opens with a description of how this small community lives: educated, alive to the beauty of the countryside, faithful to the rules of good breeding. Hence the book’s chief paradox: its frame is the first Renaissance utopia, and that utopia stands on a feast in time of plague, and the appetite for life at the very threshold of death is caught here more exactly than anywhere else. Most of the tales are about love, from the frankly erotic to the tragic, and many Boccaccio did not invent but reworked: town anecdotes, French fabliaux, eastern tales, admonitory examples from sermons, motifs from the Metamorphoses of Apuleius, stories told aloud by Florentines. The title itself is built on a Greek model to mean Ten Days and points back at the Hexaemerons, books about the creation of the world by God in six days. Here too a world is created, but by human society rather than by God, and in ten days rather than six. The book was written in about 1352 to 1354."
+   },
+   "agentNote": "Год — 1353, из реестра; источник говорит осторожнее, «приблизительно 1352—1354 годы», и в описании стоит именно так. Скажете, что для таких случаев год лучше записывать веком или диапазоном, — правило ляжет на весь класс средневековых книг."
+  },
+  {
+   "wikidata": "Q191380",
+   "sitelinks": 76,
+   "title": {
+    "ru": "Собор Парижской Богоматери",
+    "en": "The Hunchback of Notre-Dame"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Виктор Гюго",
+    "en": "Victor Hugo"
+   },
+   "year": "1831",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "драма",
+    "drama",
+    "исторический",
+    "historical",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Первый исторический роман на французском языке и главная книга французского романтизма. Париж, 6 января 1482 года, гуляния, соединившие Крещение с языческим праздником шутов: во Дворце правосудия проваливается мистерия поэта Пьера Гренгуара, а шутовским папой толпа избирает горбатого звонаря собора Квазимодо. Цыганка Эсмеральда танцует на площади с козочкой Джали; архидиакон Клод Фролло, наставник горбуна, бранит её и уводит своего воспитанника. Ночью Квазимодо по приказу Фролло пытается похитить девушку, её спасает капитан королевских стрелков Феб — и она влюбляется в спасителя намертво. Дальше всё движется одной силой: ревностью священника. Фролло ранит Феба на свидании, обвиняют Эсмеральду, пытками из неё выбивают признание и приговаривают к виселице. Квазимодо выхватывает её с площади и прячет в соборе, где действует право убежища. Двор чудес идёт штурмом выручать свою, горбун обороняет собор, не понимая, что защищает её от друзей. Фролло выводит девушку обманом и ставит выбор: он или петля. Она выбирает петлю. Горбун, поняв, чьих это рук дело, сбрасывает приёмного отца с башни и исчезает. В склепе Монфокона потом нашли два скелета, из которых один обнимал другой. Роман вышел в марте 1831 года и спас настоящий собор: его собирались снести, а после книги стали беречь.",
+    "en": "The first historical novel in French and the central book of French romanticism. Paris, 6 January 1482, festivities joining Epiphany to the old pagan feast of fools: in the Palace of Justice the poet Pierre Gringoire’s mystery play fails, and the crowd elects the cathedral’s hunchbacked bell-ringer Quasimodo as pope of fools. The gypsy Esmeralda dances in the square with her goat Djali; the archdeacon Claude Frollo, the hunchback’s guardian, rails at her and leads his ward away. That night Quasimodo, on Frollo’s orders, tries to carry the girl off, and she is saved by Phoebus, captain of the king’s archers, with whom she falls fatally in love. From there everything is moved by one force, the priest’s jealousy. Frollo wounds Phoebus at their meeting, Esmeralda is accused, torture wrings a confession from her and she is sentenced to hang. Quasimodo snatches her from the square and hides her in the cathedral, where the right of sanctuary holds. The Court of Miracles storms the place to rescue one of their own, and the hunchback defends the cathedral without understanding that he is defending her from her friends. Frollo lures the girl out and offers her a choice: himself or the rope. She chooses the rope. The hunchback, seeing whose work this was, throws his foster father from the tower and disappears. In the vault at Montfaucon two skeletons were later found, one of them holding the other. The novel appeared in March 1831 and saved the real cathedral: it was to have been pulled down, and after the book it was cared for instead."
+   },
+   "agentNote": "Год — март 1831 года, по первой публикации; реестр даёт 1831. ⚠️ Русское и английское названия расходятся по смыслу: у нас «Собор Парижской Богоматери», по-английски устоялось «The Hunchback of Notre-Dame», «Горбун из Нотр-Дама». Оба взяты из реестра, ни одно не переведено мной."
+  },
+  {
+   "wikidata": "Q326914",
+   "sitelinks": 76,
+   "title": {
+    "ru": "Приключения Тома Сойера",
+    "en": "The Adventures of Tom Sawyer"
+   },
+   "type": {
+    "ru": "Роман",
+    "en": "Novel"
+   },
+   "author": {
+    "ru": "Марк Твен",
+    "en": "Mark Twain"
+   },
+   "year": "1876",
+   "tags": [
+    "книга",
+    "book",
+    "роман",
+    "novel",
+    "приключения",
+    "adventure",
+    "детство",
+    "childhood",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Роман о мальчишеском детстве на Миссисипи, написанный как насмешка над книжками для послушных детей. Том Сойер живёт под опекой тёти Полли в городке Сент-Питерсберг, шалит, врёт, увиливает от школы и придумывает больше, чем успевает натворить. Рядом Бекки Тэтчер, в которую он впервые влюблён, и Гекльберри Финн, живущий вовсе вне правил общины. Беззаботность кончается ночью на кладбище: мальчики видят убийство, которое совершает Индеец Джо, и он сваливает вину на другого. Том молчит из страха мести долго и мучительно, а на суде всё-таки решается дать показания. Между этим он с приятелями сбегает на остров, город хоронит их как утонувших, и мальчишки являются на собственные похороны. Потом Том и Бекки теряются в пещере, встречают там Индейца Джо и спасаются, а преступник остаётся в ней запертым и погибает. В финале мальчики находят его клад, и это делает их независимыми. Твен строит книгу на противопоставлении мест: город — надзор и правила, река — свобода, пещера — испытание и страх, кладбище — та черта, за которой детство узнаёт о смерти. Написан роман как сатирический ответ назидательным воскресным книжкам с наградами послушным и карами непослушным. Вышел 9 июня 1876 года, поначалу продавался плохо и в итоге стал самой продаваемой книгой автора.",
+    "en": "A novel about a boyhood on the Mississippi, written as a mockery of books for well-behaved children. Tom Sawyer lives under the care of his Aunt Polly in the town of St Petersburg, gets into mischief, lies, dodges school and invents more than he manages to do. Beside him are Becky Thatcher, his first love, and Huckleberry Finn, who lives outside the community’s rules altogether. The carelessness ends one night in the graveyard: the boys witness a murder committed by Injun Joe, who lays the blame on another man. Tom keeps silent for a long and painful while, in fear of revenge, and at the trial brings himself to give evidence after all. In between he runs off with his friends to an island, the town buries them as drowned, and the boys turn up at their own funeral. Later Tom and Becky are lost in a cave, meet Injun Joe there and escape, while the criminal is shut in and dies. At the end the boys find his hoard, and it makes them independent. Twain builds the book on a contrast of places: the town is supervision and rules, the river is freedom, the cave is ordeal and fear, the graveyard is the line beyond which childhood learns about death. The novel was written as a satirical answer to admonitory Sunday-school books with rewards for the obedient and punishments for the disobedient. It appeared on 9 June 1876, sold poorly at first and became in the end the author’s best-selling book."
+   },
+   "agentNote": "Год — 9 июня 1876 года, по первой публикации; реестр даёт 1876."
+  },
+  {
+   "wikidata": "Q270470",
+   "sitelinks": 75,
+   "title": {
+    "ru": "Питер Пэн",
+    "en": "Peter Pan"
+   },
+   "type": {
+    "ru": "Фильм",
+    "en": "Film"
+   },
+   "author": {
+    "ru": "Клайд Джероними",
+    "en": "Clyde Geronimi"
+   },
+   "year": "1953",
+   "tags": [
+    "фильм",
+    "movie",
+    "кино",
+    "film",
+    "анимация",
+    "animation",
+    "фэнтези",
+    "fantasy",
+    "экранизация",
+    "adaptation"
+   ],
+   "description": {
+    "ru": "Рисованный мюзикл по пьесе Джеймса Барри о мальчике, который не хотел расти. Лондон начала XX века: старшая из детей Дарлингов, Венди, рассказывает братьям Джону и Майклу истории о Питере Пэне, а родители считают героя выдумкой. Вечером, когда взрослые уходят на приём, Питер прилетает с феей Динь-Динь за собственной тенью, потерянной в прошлый раз. Венди пришивает тень и узнаёт, что он давно слушает под окном рассказы о себе; заодно она сообщает, что это её последняя ночь в детской — отец решил, что пора взрослеть. Не желая лишаться историй, Питер зовёт всех в Нетландию, где дети не растут, и вдобавок надеется, что Венди станет мамой ему и Пропащим Мальчишкам. Волшебная пыльца поднимает троих в воздух. В Нетландии их встречают пираты капитана Крюка, которому Питер когда-то отрубил руку и скормил крокодилу; с тех пор крокодил ходит за капитаном, а приближение его выдаёт проглоченный будильник. Ревнивая Динь подговаривает Мальчишек сбить Венди и оказывается изгнана. Крюк похищает Тигровую Лилию, чтобы выведать убежище Пэна, но Питер спасает её хитростью. Мультфильм вышел в 1953 году; замысел появился ещё в 1935-м, во время работы над «Белоснежкой», а взялись за него не раньше 1939 года. Это последняя работа, где все девять диснеевских стариков трудились вместе.",
+    "en": "A hand-drawn musical after James Barrie’s play about the boy who would not grow up. London in the early twentieth century: Wendy, the eldest of the Darling children, tells her brothers John and Michael stories about Peter Pan, while their parents take the hero for an invention. One evening, when the grown-ups have gone out, Peter flies in with the fairy Tinker Bell after his own shadow, lost on his last visit. Wendy sews the shadow back on and learns that he has long been listening under the window to stories about himself; she also tells him that this is her last night in the nursery, her father having decided it is time she grew up. Unwilling to lose the stories, Peter invites them all to Never Land, where children do not grow, and hopes besides that Wendy will be a mother to him and the Lost Boys. Fairy dust lifts the three into the air. In Never Land they are met by the pirates of Captain Hook, whose hand Peter once cut off and fed to a crocodile; the crocodile has followed the captain ever since, and a swallowed alarm clock announces its approach. The jealous Tinker Bell puts the Lost Boys up to shooting Wendy down and is banished for it. Hook carries off Tiger Lily to learn where Pan is hidden, but Peter saves her by a trick. The film appeared in 1953; the idea arose as early as 1935, during work on Snow White, and was not taken up before 1939. It is the last picture on which all nine of Disney’s old men worked together."
+   },
+   "agentNote": "🔴 ЭТО МУЛЬТФИЛЬМ 1953 ГОДА, А НЕ ПЬЕСА. Легко спутать: пьеса Барри «Питер Пэн, или Мальчик, который не хотел расти» вышла в 1904 году и в каталог как объект НЕ входит — здесь экранизация. Реестр даёт четыре даты 1953 года (премьера и прокат по территориям), годом взята самая ранняя. Вид — Фильм; реестр называет его и анимационным фильмом, отдельного вида для анимации в каталоге нет, поэтому она ушла в теги."
+  },
+  {
+   "wikidata": "Q13255497",
+   "sitelinks": 74,
+   "title": {
+    "ru": "Бёрдмен",
+    "en": "Birdman"
+   },
+   "type": {
+    "ru": "Фильм",
+    "en": "Film"
+   },
+   "author": {
+    "ru": "Алехандро Гонсалес Иньярриту",
+    "en": "Alejandro González Iñárritu"
+   },
+   "year": "2014",
+   "tags": [
+    "фильм",
+    "movie",
+    "кино",
+    "film",
+    "драма",
+    "drama",
+    "комедия",
+    "comedy",
+    "психологический",
+    "psychological"
+   ],
+   "description": {
+    "ru": "Чёрная комедия о забытом актёре, который ставит на кон всё, чтобы его перестали считать человеком-птицей. Ригган Томсон когда-то играл супергероя Бёрдмена в трилогии девяностых и с тех пор не сыграл ничего; голос этого супергероя звучит у него в голове, издевается над ним и подбивает вернуться к прежнему. Чтобы доказать, что он серьёзный актёр, Ригган сам написал, поставил и играет бродвейскую инсценировку рассказа Раймонда Карвера — и его персонаж в финале стреляет в себя. Пьесу продюсирует его друг и адвокат Джейк, играют подруга Риггана Лора и дебютантка Лесли, а помощницей работает дочь Сэм, только что вышедшая из реабилитации. За день до первого просмотра прибор падает на голову одному из актёров, и его заменяет Майк Шайнер — блестящий, невыносимый и работающий по системе. Дальше всё рушится в прямом эфире: Майк срывает просмотры, требует настоящий джин и настоящий пистолет, тянет одеяло на себя и уводит у Риггана даже его личный довод сыграть Карвера. Сэм говорит отцу, что вся затея — тщеславие. Ригган закладывает дом, купленный для дочери. В финальный просмотр он оказывается заперт на улице, теряет халат в дверях и проходит Таймс-сквер в трусах, чтобы войти в зал и доиграть сцену, — и публика ликует именно этому. Картина вышла в 2014 году и взяла четыре «Оскара»: за фильм, режиссуру, оригинальный сценарий и операторскую работу.",
+    "en": "A black comedy about a forgotten actor who stakes everything on no longer being taken for a birdman. Riggan Thomson once played the superhero Birdman in a nineties trilogy and has played nothing since; that superhero’s voice sounds inside his head, jeers at him and urges him back to what he was. To prove himself a serious actor, Riggan has written, directed and starred in a Broadway adaptation of a Raymond Carver story, in which his character shoots himself at the end. The play is produced by his friend and lawyer Jake, acted by Riggan’s girlfriend Laura and the newcomer Lesley, and assisted by his daughter Sam, just out of rehabilitation. The day before the first preview a lamp falls on one of the actors, and he is replaced by Mike Shiner, brilliant, insufferable and working by the method. After that everything collapses in front of an audience: Mike wrecks the previews, demands real gin and a real pistol, pulls the blanket to his own side and takes from Riggan even his private reason for staging Carver. Sam tells her father the whole thing is vanity. Riggan mortgages the house he bought for her. At the final preview he is locked out in the street, loses his robe in the fire door and crosses Times Square in his underwear to enter through the house and finish the scene, and it is precisely this that the audience cheers. The film appeared in 2014 and took four Academy Awards, for best picture, direction, original screenplay and cinematography."
+   },
+   "agentNote": "Год — 2014, по самой ранней дате реестра (27 августа, фестивальная премьера); прокатные даты октября и ноября того же года взяты не были, по вашему правилу первого показа людям. У фильма 193 награды и 297 номинаций, названы только четыре «Оскара» — перечислять остальное значило бы занять описание наградами вместо содержания."
+  },
+  {
+   "wikidata": "Q185427",
+   "sitelinks": 74,
+   "title": {
+    "ru": "Песнь о Роланде",
+    "en": "The Song of Roland"
+   },
+   "type": {
+    "ru": "Книга",
+    "en": "Book"
+   },
+   "author": {
+    "ru": "Турольд",
+    "en": "Turold"
+   },
+   "year": "XII в.",
+   "tags": [
+    "книга",
+    "book",
+    "литература",
+    "literature",
+    "эпос",
+    "epic",
+    "война",
+    "war",
+    "классика",
+    "classic"
+   ],
+   "description": {
+    "ru": "Древнейшее крупное произведение французской литературы — героическая поэма о гибели арьергарда Карла Великого в Ронсевальском ущелье. После семилетнего похода император франков завоевал в мавританской Испании все города, кроме Сарагосы, и её царь Марсилий шлёт послов с притворной покорностью. Роланд — племянник Карла — предложение отвергает, а его недруг граф Гвенелон настаивает на переговорах и едет послом сам, задумав погубить Роланда. У Марсилия он советует напасть на арьергард, а вернувшись, докладывает, что царь готов креститься и стать вассалом. Начальником арьергарда назначают Роланда, и он берёт двадцать тысяч человек. Отрезанный предательством отряд попадает в засаду и принимает бой с превосходящим войском. Роланд несколько раз отказывается трубить в рог и звать подмогу, чтобы не подвергнуть опасности Карла и не запятнать его чести, — и в этом отказе вся поэма: доблесть здесь неотделима от гордыни, которая губит. Он и его соратники, граф Оливье, Готье де л’Ом и архиепископ Турпин, отбивают атаку за атакой и погибают все. Карл возвращается слишком поздно, разбивает врага и обвиняет Гвенелона в измене; спор решается судебным поединком, где друг Роланда Тьерри побеждает родича изменника, и Гвенелон гибнет со всей роднёй. Дошло девять рукописей; канонической считается Оксфордская, записанная между 1129 и 1165 годами.",
+    "en": "The oldest major work of French literature, a heroic poem about the destruction of Charlemagne’s rearguard in the pass of Roncesvalles. After a seven-year campaign the emperor of the Franks has taken every city in Moorish Spain except Saragossa, and its king Marsile sends envoys offering a feigned submission. Roland, the emperor’s nephew, rejects the offer, while his enemy Count Ganelon presses for negotiation and goes as envoy himself, intending Roland’s ruin. At Marsile’s court he advises an attack on the rearguard, and on his return reports that the king is ready to be baptised and become a vassal. Roland is appointed to command the rearguard and takes twenty thousand men. Cut off by the betrayal, the detachment is ambushed and gives battle to a far greater force. Several times Roland refuses to sound his horn and call for help, so as not to endanger Charlemagne or stain his honour, and in that refusal lies the whole poem: valour here cannot be separated from the pride that destroys it. He and his companions, Count Oliver, Gautier de l’Hum and Archbishop Turpin, beat off attack after attack and all of them die. Charlemagne returns too late, breaks the enemy and charges Ganelon with treason; the case is settled by judicial combat, in which Roland’s friend Thierry defeats the traitor’s kinsman, and Ganelon perishes with all his family. Nine manuscripts survive; the Oxford one, written between 1129 and 1165, is held canonical."
+   },
+   "agentNote": "🔴 ТРИ ОГОВОРКИ, И ВСЕ ТРИ ВАШЕГО ВЗГЛЯДА. (1) ГОД: реестр даёт 1100, но источник даты сложения не знает — канонической считается Оксфордская рукопись, записанная между 1129 и 1165 годами. Поставил «XII в.» той же формой, что у «Тысячи и одной ночи»; скажете иначе — поправлю. (2) АВТОР: имя Турольда даёт одна из двух теорий происхождения; по второй у поэмы нет автора вовсе, эпос сложили сказители. Поставил принятое имя из реестра, спор называю здесь. (3) Поэма зовёт противниками франков сарацин, тогда как исторически отряд Роланда погиб в бою с БАСКАМИ; в описании я держусь поэмы, а не истории, и говорю это прямо."
+  }
+ ]
+}
