@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — отдельный экран входа: 4 макета (bugs/19)</title>
+<!-- ─────────────────────────────────────────────────────────────────────────
+     ЧЕТЫРЕ МАКЕТА ОТДЕЛЬНОГО ЭКРАНА ВХОДА.
+
+     ПОВОД — `bugs/19`, слово владельца (волна 09), дословно: «Войдите в
+     Пространство — должно быть отдельным экраном в рамках ОБ-флоу, а не
+     показываться внутри приложения; должно быть в стиле лендинга, с
+     возможностью переключать язык и тему глобально для всего приложения».
+
+     ЧТО НЕ ТАК СЕГОДНЯ. Вход — карточка ВНУТРИ оболочки `/profile`: у человека,
+     который ещё не вошёл, над карточкой стоит шапка приложения, слева рельс,
+     снизу панель. Переключателя темы там нет вовсе; язык — локальный
+     переключатель шапки.
+
+     ЧТО ВЫБИРАЕТСЯ ЗДЕСЬ. Только ФОРМА экрана. Не выбираются и не трогаются:
+     способы входа (Google · ссылка на почту · гость — они названы в самом
+     `bugs/19`), тексты кнопок (утверждены), маршрут, лендинги `/ru` и `/en`.
+
+     🔴 ВАРИАНТЫ РАЗЛИЧАЮТСЯ МЕХАНИЗМОМ, А НЕ ОТТЕНКОМ — иначе это не четыре
+     варианта, а один и три примечания к нему (`tools/shoot-mockups.mjs`, шапка):
+       V1 «Колонна»        — ИЕРАРХИЯ: одна колонна, три двери по старшинству.
+       V2 «Две двери»      — СИММЕТРИЯ: вход и гость равновелики, две панели.
+       V3 «Сначала внутрь» — ИНВЕРСИЯ: гость главный, вход раскрывается врезкой.
+       V4 «Витрина»        — МОТИВАЦИЯ: рядом с дверью видно, что за ней.
+
+     ЗНАК нарисован КАК СЕГОДНЯ (плашка `#060b14`, в тёмной теме сливается с
+     фоном). Правка «Ореол» — отдельное решение владельца, №062 В3 = Д, и на
+     выбор формы экрана она не влияет. Мешать два решения в одном кадре нельзя:
+     владелец не должен гадать, что именно он утверждает.
+
+     ЦВЕТА — ЧИСЛА БОЯ, а не макетов (класс `EXP-0226`): все токены сверены с
+     `src/routes/+layout.svelte`. Хронометраж движения — с `--motion-*` оттуда же.
+
+     ДВИЖЕНИЕ. Планка названа владельцем и она высокая — лендинг; анимации
+     обязательны. Здесь их пять и они настоящие: поле «пространства» дышит, знак
+     пульсирует, двери въезжают лесенкой, врезка V3 раскрывается, по графу витрины
+     бежит огонёк.
+
+     🔴 ПРАВИЛО, ОПЛАЧЕННОЕ ДВУМЯ ИСПОРЧЕННЫМИ КАДРАМИ ЭТОГО ЖЕ НАБОРА: анимация в
+     наборе макетов обязана быть ЛИБО управляемой, ЛИБО осмысленной в любом кадре.
+     Съёмщик не ждёт, пока красиво: он ждёт 120 мс и снимает.
+       · Лесенка дверей — УПРАВЛЯЕМАЯ: идёт только по кнопке «проиграть»
+         (`#stage.play`). На загрузке она не идёт нарочно. В первом заходе шла — и
+         первые кадры (V1) вышли с полупрозрачными «или», гостевой дверью и нижней
+         строкой: съёмка начинается раньше, чем лесенка заканчивается на 660 мс.
+         Кадр был неотличим от замысла, если не знать, что смотришь на полёт.
+       · Поле, пульс знака и огонёк витрины — БЕСКОНЕЧНЫЕ, улечься им негде, поэтому
+         они осмысленны в любой момент: меняются только яркость и положение огонька, а
+         граф и узлы нарисованы целиком. В первом заходе связи витрины прочерчивались
+         с нуля — кадр V4-1440-dark поймал середину и показал два висящих отрезка.
+     ⚠️ По той же причине здесь НЕТ переходов на свойствах, зависящих от темы:
+     переход в 300 мс попал бы в кадр недокрашенным.
+     ⚠️ И по ней же варианты переключаются ВИДИМОСТЬЮ, а не `display`: `display:none`
+     перезапускал бы всё движение на каждом клике съёмщика.
+
+     ДОМ СТИЛЯ: `.picker button[data-v]` · `#width` · `#width-mid` · `#theme` ·
+     `#stage[data-w]` — имена и роли менять нельзя, съёмщик жмёт ровно их.
+     Съёмка: node tools/shoot-mockups.mjs design/signin-screen-mockups.html
+───────────────────────────────────────────────────────────────────────── -->
+<style>
+  /* ── Токены боя. Светлая «Бумага» — дефолт (src/routes/+layout.svelte). ── */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --panel-solid: #ffffff;
+    --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1f7fc9;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --ghost-brd: rgba(20,103,214,.35); --ghost-ink: #1a63c4; --ghost-bg-hover: rgba(20,103,214,.06);
+    --link-stroke: rgba(52,130,214,.24); --node-fill: rgba(52,130,214,.38);
+    --accent-node: rgba(48,150,205,.5); --vig: rgba(150,185,220,.12);
+    --panel-blur: 0px; --card-shadow: 0 16px 40px rgba(29,50,71,.08);
+    --toggle-bg: rgba(255,255,255,.9); --toggle-brd: #dbe7f3;
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --motion-base: 240ms; --motion-slow: 320ms;
+    --motion-ease: cubic-bezier(.33,1,.68,1);
+    /* Служебные — только для этой страницы разбора, в продукт не едут. */
+    --sheet: #ffffff; --sheet-edge: #e3e9f3; --muted: #8a97ab; --warn: #b4531f;
+  }
+  :root[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.78); --panel-solid: #091322;
+    --edge: rgba(77,159,255,.22); --edge-soft: rgba(77,159,255,.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #3fd9ff;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --ghost-brd: rgba(63,217,255,.45); --ghost-ink: #a8e2ff; --ghost-bg-hover: rgba(63,217,255,.08);
+    --link-stroke: rgba(77,159,255,.16); --node-fill: rgba(99,176,255,.4);
+    --accent-node: rgba(63,217,255,.55); --vig: rgba(8,28,58,.55);
+    --panel-blur: 10px;
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
+    --toggle-bg: rgba(13,26,45,.8); --toggle-brd: rgba(63,217,255,.3);
+    --sheet: #0e1626; --sheet-edge: #1c2942; --muted: #6c7f9c; --warn: #ffab6b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font: 15px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--text); padding: 132px 16px 60px;
+  }
+  @media (min-width: 900px) { body { padding-top: 92px; } }
+
+  /* ── Панель разбора (не часть продукта) ────────────────────────────────── */
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--sheet);
+    border-bottom: 1px solid var(--sheet-edge); font-size: 13px; color: var(--text);
+  }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--sheet-edge); background: var(--bg); color: var(--text);
+  }
+  .picker button.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .picker .hint { color: var(--muted); font-size: 12px; }
+
+  .note, .why, .tech, .caption { max-width: 980px; margin-left: auto; margin-right: auto; }
+  .note {
+    margin-bottom: 18px; padding: 12px 15px; border-radius: 12px;
+    background: var(--sheet); border: 1px solid var(--sheet-edge);
+    font-size: 13px; line-height: 1.55; color: var(--text);
+  }
+  .note b { color: var(--heading); }
+  .warn { color: var(--warn); font-weight: 600; }
+  .caption {
+    margin: 26px auto 8px; font-size: 12px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+  }
+  .why { margin-top: 30px; font-size: 13.5px; line-height: 1.62; }
+  .why p { margin-bottom: 12px; }
+  .why b { color: var(--heading); }
+  .cost { color: var(--muted); }
+  .tech { margin-top: 26px; font-size: 13px; line-height: 1.6; }
+  .tech h3 { color: var(--heading); font-size: 15px; margin-bottom: 8px; }
+  .tech li { margin: 0 0 7px 20px; }
+  code { font-family: var(--mono); font-size: .92em; }
+
+  /* ── Сцена ─────────────────────────────────────────────────────────────── */
+  #stage { margin: 0 auto; }
+  #stage[data-w="390"]  { max-width: 390px; }
+  #stage[data-w="1024"] { max-width: 1000px; }
+  #stage[data-w="1440"] { max-width: 1280px; }
+
+  /*
+   * Варианты переключаются ВИДИМОСТЬЮ, а не `display` — разбор в шапке файла:
+   * при `display:none` анимация входа перезапускалась бы на каждом клике съёмщика,
+   * и в кадр попадал бы полёт вместо экрана.
+   */
+  .variant { visibility: hidden; height: 0; overflow: hidden; }
+  .variant.active { visibility: visible; height: auto; overflow: visible; }
+
+  /* Сам экран занимает окно целиком — здесь это прямоугольник окна. */
+  .screen {
+    position: relative; overflow: hidden;
+    border-radius: 16px; border: 1px solid var(--edge);
+    background: var(--bg); box-shadow: var(--card-shadow);
+  }
+  #stage[data-w="390"]  .screen { height: 760px; }
+  #stage[data-w="1024"] .screen { height: 640px; }
+  #stage[data-w="1440"] .screen { height: 740px; }
+
+  /* ── Открытое пространство: то же поле, что на лендинге ────────────────── */
+  .field { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .field svg { width: 100%; height: 100%; }
+  .field .links line { stroke: var(--link-stroke); stroke-width: 1; }
+  .field .nodes circle { fill: var(--node-fill); }
+  .field .accents circle { fill: var(--accent-node); }
+  /* ДВИЖЕНИЕ 1 — поле дышит: узлы медленно проступают и гаснут вразнобой. */
+  .field .nodes circle, .field .accents circle { animation: breathe 7s ease-in-out infinite; }
+  .field .nodes circle:nth-child(3n)   { animation-duration: 9s;  animation-delay: -2s; }
+  .field .nodes circle:nth-child(3n+1) { animation-duration: 11s; animation-delay: -5s; }
+  .field .accents circle { animation-duration: 5.5s; }
+  @keyframes breathe { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  /* ДВИЖЕНИЕ 2 — очень медленный дрейф всего поля: пространство не стоит. */
+  .field .drift { animation: drift 40s ease-in-out infinite; transform-origin: 50% 50%; }
+  @keyframes drift {
+    0%,100% { transform: translate(0,0); }
+    50%     { transform: translate(-14px,9px); }
+  }
+
+  .vig {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(120% 105% at 50% 42%, transparent 52%, var(--vig) 100%);
+  }
+
+  /* ── Глобальные переключатели языка и темы ─────────────────────────────
+       🔴 Это и есть половина заказа владельца: они стоят НА ЭКРАНЕ ВХОДА и
+       пишут те же ключи, что лендинг (`ndim-lang`, `ndim-theme`), то есть
+       выбор действует во всём приложении, а не только здесь. */
+  .ctl { position: absolute; top: 16px; right: 16px; z-index: 5; display: inline-flex; gap: 8px; }
+  .ctl .lang {
+    display: inline-flex; border-radius: 999px; overflow: hidden;
+    background: var(--toggle-bg); border: 1px solid var(--toggle-brd);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  .ctl .lang span {
+    font-size: 12px; font-weight: 600; letter-spacing: .02em;
+    color: var(--dim); padding: 7px 11px;
+  }
+  .ctl .lang span.on { background: var(--primary); color: var(--primary-ink); }
+  .ctl .th {
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px;
+    border-radius: 999px; background: var(--toggle-bg); border: 1px solid var(--toggle-brd);
+    color: var(--accent); font-size: 12px; font-weight: 600;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  .ctl .th i { font-style: normal; font-size: 14px; line-height: 1; }
+  .ctl .th u { text-decoration: none; color: var(--dim); }
+  :root[data-theme="light"] .ctl .th .d-dark { display: none; }
+  :root[data-theme="dark"]  .ctl .th .d-light { display: none; }
+
+  /* ── Общая типографика экрана ──────────────────────────────────────────── */
+  .eyebrow {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .h1 {
+    font-size: 27px; line-height: 1.22; font-weight: 800;
+    letter-spacing: -.015em; color: var(--heading);
+  }
+  #stage[data-w="1440"] .h1 { font-size: 31px; }
+  .lede { font-size: 14.5px; line-height: 1.62; color: var(--dim); }
+  .fine { font-size: 12px; line-height: 1.5; color: var(--faint); }
+
+  /* Знак: пульсирующее кольцо — родня точке-пульсу лендинга. */
+  .mark { position: relative; display: inline-flex; }
+  .mark svg { display: block; }
+  .mark::after {
+    content: ''; position: absolute; inset: -7px; border-radius: 26px;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 26%, transparent);
+    animation: markpulse 2.8s ease-in-out infinite; pointer-events: none;
+  }
+  @keyframes markpulse {
+    0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 26%, transparent); }
+    50%     { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 0%, transparent); }
+  }
+
+  /* ── Двери ─────────────────────────────────────────────────────────────── */
+  .doors { display: grid; gap: 10px; }
+  .d {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 14px 18px; border-radius: 10px; font: inherit; font-size: 15.5px;
+    font-weight: 600; cursor: pointer; border: 1px solid transparent; text-align: center;
+  }
+  .d .gi { width: 18px; height: 18px; flex: none; display: block; }
+  .d.primary { background: var(--primary); color: var(--primary-ink); }
+  .d.ghost { background: transparent; border-color: var(--ghost-brd); color: var(--ghost-ink); }
+  .d.quiet {
+    background: transparent; border-color: var(--edge); color: var(--text);
+    flex-direction: column; gap: 3px; padding: 12px 18px;
+  }
+  .d.quiet small { font-size: 12px; font-weight: 500; color: var(--faint); }
+  .d:hover { filter: brightness(1.06); }
+  .d.ghost:hover, .d.quiet:hover { background: var(--ghost-bg-hover); }
+
+  .sep { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: 12px; }
+  .sep::before, .sep::after { content: ''; height: 1px; flex: 1; background: var(--edge); }
+
+  /* ДВИЖЕНИЕ 3 — двери въезжают лесенкой.
+     🔴 ИДЁТ ТОЛЬКО ПО КНОПКЕ «проиграть» (`#stage.play`), и это не лень, а следствие
+     устройства съёмщика. Он начинает снимать примерно через полсекунды после загрузки
+     страницы, а лесенка с задержками заканчивается на 660 мс — первые кадры выходили
+     С НЕДОПРОЯВЛЕННЫМИ ДВЕРЯМИ. Поймано глазами на V1-390-light: «или», гостевая дверь
+     и нижняя строка стояли полупрозрачными, и владелец прочитал бы это как решение о
+     цвете. Класс ровно тот, ради которого прибор и требует смотреть кадры: НЕОТЛИЧИМО
+     ОТ ЗАМЫСЛА, если не знать, что смотришь на середину полёта.
+     Отвязка от загрузки делает состояние кадра ДЕТЕРМИНИРОВАННЫМ: экран всегда снят
+     улёгшимся, а движение показывается нажатием. */
+  #stage.play .rise { animation: rise var(--motion-slow) var(--motion-ease) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .s1 { animation-delay: 60ms; } .s2 { animation-delay: 130ms; }
+  .s3 { animation-delay: 200ms; } .s4 { animation-delay: 270ms; }
+  .s5 { animation-delay: 340ms; } .s6 { animation-delay: 410ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .field .nodes circle, .field .accents circle, .field .drift,
+    .mark::after, #stage.play .rise { animation: none; }
+  }
+
+  /* ── V1 «Колонна» ──────────────────────────────────────────────────────── */
+  .col {
+    position: relative; z-index: 2; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 64px 20px 28px;
+  }
+  .col .inner { width: 100%; max-width: 400px; }
+  .col .mark { margin-bottom: 18px; }
+  .col .h1 { margin-top: 12px; }
+  .col .lede { margin-top: 12px; }
+  .col .doors { margin-top: 24px; }
+  .col .fine { margin-top: 16px; }
+
+  /* ── V2 «Две двери» ────────────────────────────────────────────────────── */
+  .v2wrap {
+    position: relative; z-index: 2; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 20px 26px; gap: 22px;
+  }
+  .v2head { text-align: center; max-width: 560px; }
+  .v2head .mark { margin-bottom: 14px; }
+  .v2head .lede { margin-top: 10px; }
+  .halves { display: grid; gap: 14px; width: 100%; max-width: 860px; }
+  #stage[data-w="1024"] .halves, #stage[data-w="1440"] .halves { grid-template-columns: 1fr 1fr; }
+  .half {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 16px;
+    padding: 20px 18px; box-shadow: var(--card-shadow);
+    backdrop-filter: blur(var(--panel-blur)); -webkit-backdrop-filter: blur(var(--panel-blur));
+    display: flex; flex-direction: column;
+  }
+  .half h3 { font-size: 16px; color: var(--heading); font-weight: 700; }
+  .half .who { margin-top: 5px; font-size: 13px; color: var(--dim); }
+  .half .doors { margin-top: 15px; }
+  .half.guest { border-color: var(--ghost-brd); }
+  .facts { margin-top: 13px; display: grid; gap: 7px; list-style: none; }
+  .facts li { display: flex; gap: 8px; font-size: 12.7px; line-height: 1.45; color: var(--text); }
+  .facts li i { font-style: normal; flex: none; }
+
+  /* ── V3 «Сначала внутрь» ───────────────────────────────────────────────── */
+  .v3 {
+    position: relative; z-index: 2; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 60px 20px 26px;
+  }
+  .v3 .inner { width: 100%; max-width: 430px; }
+  .v3 .mark { margin-bottom: 16px; }
+  .v3 .h1 { margin-top: 12px; }
+  .v3 .lede { margin-top: 11px; }
+  .big {
+    width: 100%; margin-top: 22px; padding: 17px 20px; border-radius: 12px;
+    background: var(--primary); color: var(--primary-ink); border: none; cursor: pointer;
+    font: inherit; font-size: 17px; font-weight: 700; display: grid; gap: 4px;
+  }
+  .big small { font-size: 12.5px; font-weight: 500; opacity: .88; }
+  .big:hover { filter: brightness(1.06); }
+  .fold {
+    width: 100%; margin-top: 16px; text-align: left;
+    border: 1px solid var(--edge); border-radius: 12px; background: var(--panel);
+    backdrop-filter: blur(var(--panel-blur)); -webkit-backdrop-filter: blur(var(--panel-blur));
+  }
+  .fold summary {
+    list-style: none; cursor: pointer; padding: 13px 16px;
+    font-size: 14.5px; font-weight: 600; color: var(--ghost-ink);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .fold summary::-webkit-details-marker { display: none; }
+  .fold summary .chev { transition: transform var(--motion-base) var(--motion-ease); }
+  .fold[open] summary .chev { transform: rotate(180deg); }
+  .fold .body { padding: 0 16px 16px; }
+  .fold .body .why-line { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--dim); }
+  /* ДВИЖЕНИЕ 4 — врезка раскрывается, а не появляется рывком. */
+  .fold[open] .body { animation: unfold var(--motion-base) var(--motion-ease) both; }
+  @keyframes unfold { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .fold[open] .body { animation: none; } }
+
+  /* ── V4 «Витрина» ──────────────────────────────────────────────────────── */
+  .v4 {
+    position: relative; z-index: 2; height: 100%;
+    display: flex; align-items: center; justify-content: center; padding: 60px 20px 26px;
+  }
+  .two { display: grid; gap: 22px; width: 100%; max-width: 900px; align-items: center; }
+  #stage[data-w="1024"] .two, #stage[data-w="1440"] .two { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .v4 .left { max-width: 400px; }
+  .v4 .mark { margin-bottom: 14px; }
+  .v4 .h1 { margin-top: 10px; }
+  .v4 .lede { margin-top: 10px; }
+  .v4 .doors { margin-top: 20px; }
+  .behind h3 {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  .nums { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; list-style: none; }
+  .nums li {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; padding: 13px 14px;
+    backdrop-filter: blur(var(--panel-blur)); -webkit-backdrop-filter: blur(var(--panel-blur));
+  }
+  .nums b { display: block; font-size: 21px; font-weight: 800; color: var(--heading); letter-spacing: -.01em; }
+  .nums span { display: block; margin-top: 2px; font-size: 12px; color: var(--dim); }
+  .taken { margin-top: 10px; font-size: 11.5px; color: var(--faint); }
+  /* ДВИЖЕНИЕ 5 — живая связь: по готовому графу бежит светлый огонёк.
+     🔴 БЕСКОНЕЧНАЯ АНИМАЦИЯ ОБЯЗАНА БЫТЬ ОСМЫСЛЕННОЙ В ЛЮБОМ КАДРЕ, и это оплачено
+     первым заходом. Там линии ПРОЧЕРЧИВАЛИСЬ с нуля и гасли: кадр V4-1440-dark поймал
+     середину цикла, и владельцу поехали бы два висящих в воздухе отрезка — граф,
+     похожий на поломку. Кнопкой «проиграть» это не лечится: цикл бесконечный, а
+     улечься ему негде.
+     Поэтому граф нарисован ЦЕЛИКОМ и неподвижен, а движется только яркий штрих поверх
+     него. В любой момент времени кадр показывает целый граф плюс огонёк где-то на нём. */
+  .weave { margin-top: 14px; width: 100%; height: 78px; display: block; }
+  .weave .base line { stroke: var(--accent-node); stroke-width: 1.6; }
+  .weave .hi line { stroke: var(--accent); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 20 300; }
+  .weave .hi line.a { animation: travel 4.2s linear infinite; }
+  .weave .hi line.b { animation: travel 4.2s linear infinite 1.4s; }
+  .weave .hi line.c { animation: travel 4.2s linear infinite 2.8s; }
+  .weave circle { fill: var(--node-fill); }
+  @keyframes travel { from { stroke-dashoffset: 320; } to { stroke-dashoffset: 0; } }
+  @media (prefers-reduced-motion: reduce) { .weave .hi { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- Знак — один на весь документ. `<symbol>` + `<use>` вместо четырёх копий:
+     форма знака канонична (лого V3 «Диагональ», утверждено 2026-07-11), и
+     вторая её копия в файле стала бы второй правдой о бренде. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="mg" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70">
+    <stop offset="0" stop-color="#4d9fff"/><stop offset="1" stop-color="#3fd9ff"/>
+  </linearGradient>
+  <symbol id="mark" viewBox="0 0 96 96">
+    <rect width="96" height="96" rx="22" fill="#060b14"/>
+    <g stroke="url(#mg)" stroke-width="6.7" fill="none">
+      <line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/>
+    </g>
+    <g fill="url(#mg)">
+      <circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/>
+    </g>
+  </symbol>
+  <symbol id="gicon" viewBox="0 0 48 48">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/>
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  </symbol>
+  <symbol id="env" viewBox="0 0 24 24">
+    <rect x="2.4" y="4.6" width="19.2" height="14.8" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M3.4 6.6 12 12.8l8.6-6.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </symbol>
+</defs></svg>
+
+<div class="picker">
+  <b>Экран входа — 4 макета:</b>
+  <button data-v="1" class="active">V1 Колонна</button>
+  <button data-v="2">V2 Две двери</button>
+  <button data-v="3">V3 Сначала внутрь</button>
+  <button data-v="4">V4 Витрина</button>
+  <span class="sp"></span>
+  <button id="replay">проиграть</button>
+  <button id="width-mid">1024</button>
+  <button id="width">390 ↔ 1440</button>
+  <button id="theme">тема</button>
+  <span class="hint">bugs/19 · слово владельца, волна 09</span>
+</div>
+
+<div class="note">
+  <b>Что выбирается.</b> Только <b>форма отдельного экрана входа</b>. Решение принято Вами в
+  <code>bugs/19</code>: «Войдите в Пространство» перестаёт быть карточкой внутри <code>/profile</code>
+  (сегодня она стоит под шапкой, рельсом и нижней панелью приложения, в которое человек ещё не вошёл)
+  и становится своим экраном в стиле лендинга, с переключателями языка и темы, действующими
+  <b>глобально</b>. Способы входа заданы там же и не выбираются: Google · ссылка на почту · гость.
+  <br><br>
+  <b>Тексты — утверждённые</b>, взяты дословно из продукта (<code>profile/+page.svelte</code>,
+  <code>t.signedOut</code> и <code>t.guest</code>). Строки, которых в продукте нет, помечены
+  <span class="warn">кандидат</span> и каноном не являются до Вашего слова.
+  <br><br>
+  <span class="warn">⚠️ ШОВ, КОТОРЫЙ АГЕНТ НЕ РАЗВОДИТ САМ.</span> Ваше решение №009 В3
+  (2026-08-01) гласит: «Вход анонимом НЕ называется кнопкой… слов „Попробовать“ и „Осмотреться
+  гостем“ <b>на лендинге</b> быть не должно». Оно сказано о ЛЕНДИНГЕ, а этот экран — не лендинг, а
+  станция ОБ-флоу «в стиле лендинга», и сам <code>bugs/19</code> Вашей же рукой перечисляет гостя
+  среди способов входа. Формально противоречия нет. Но <b>V3 делает гостя главной кнопкой экрана</b>,
+  и если «в стиле лендинга» читать как «это и есть лендинг» — V3 идёт против №009 В3, а V1, V2 и V4
+  держат гостя дверью, но не заголовком. Это ось выбора, и она Ваша, не наша.
+  <br><br>
+  <span class="warn">⚠️ Третий гостевой факт намеренно НЕ показан.</span> В продукте он звучит
+  «Вас никто не видит: в Пространстве Вы невидимы», и сейчас он под разбором в <code>bugs/227</code>.
+  Ставить в макет строку, судьба которой решается, значило бы просить Вас утвердить её заодно.
+</div>
+
+<div id="stage" data-w="1440">
+
+  <!-- ══════════════ V1 «КОЛОННА» ══════════════ -->
+  <div class="variant active" id="1">
+    <div class="screen">
+      <div class="field" aria-hidden="true">
+        <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+          <g class="drift">
+            <g class="links">
+              <line x1="120" y1="180" x2="320" y2="120"/><line x1="320" y1="120" x2="470" y2="260"/>
+              <line x1="1180" y1="140" x2="1330" y2="240"/><line x1="1040" y1="90" x2="1180" y2="140"/>
+              <line x1="180" y1="640" x2="360" y2="740"/><line x1="1240" y1="660" x2="1100" y2="780"/>
+              <line x1="90" y1="420" x2="230" y2="470"/><line x1="1350" y1="430" x2="1230" y2="500"/>
+              <line x1="700" y1="60" x2="850" y2="110"/><line x1="620" y1="820" x2="780" y2="850"/>
+            </g>
+            <g class="nodes">
+              <circle cx="120" cy="180" r="3.5"/><circle cx="320" cy="120" r="5"/>
+              <circle cx="470" cy="260" r="3"/><circle cx="1180" cy="140" r="4.5"/>
+              <circle cx="1330" cy="240" r="3"/><circle cx="1040" cy="90" r="2.5"/>
+              <circle cx="180" cy="640" r="4"/><circle cx="360" cy="740" r="3"/>
+              <circle cx="1240" cy="660" r="4.5"/><circle cx="1100" cy="780" r="3"/>
+              <circle cx="90" cy="420" r="3"/><circle cx="230" cy="470" r="4"/>
+              <circle cx="1350" cy="430" r="3.5"/><circle cx="1230" cy="500" r="2.5"/>
+              <circle cx="700" cy="60" r="3"/><circle cx="850" cy="110" r="3.5"/>
+              <circle cx="620" cy="820" r="3.5"/><circle cx="780" cy="850" r="2.5"/>
+            </g>
+            <g class="accents">
+              <circle cx="540" cy="150" r="2.5"/><circle cx="930" cy="700" r="3"/>
+              <circle cx="1300" cy="90" r="2"/><circle cx="70" cy="760" r="2.5"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="vig" aria-hidden="true"></div>
+      <div class="ctl">
+        <div class="lang"><span class="on">RU</span><span>EN</span></div>
+        <div class="th"><i class="d-light">☾</i><i class="d-dark">☀</i><u class="d-light">Тёмная</u><u class="d-dark">Светлая</u></div>
+      </div>
+
+      <div class="col">
+        <div class="inner">
+          <span class="mark rise"><svg width="46" height="46"><use href="#mark"/></svg></span>
+          <p class="eyebrow rise s1">Вход в Пространство</p>
+          <h1 class="h1 rise s1">Войдите в Пространство</h1>
+          <p class="lede rise s2">Пароль не нужен. Если Вы уже были в Пространстве NDim — войдите той же почтой, и все Ваши измерения и связи будут на месте.</p>
+          <div class="doors">
+            <button class="d primary rise s3"><svg class="gi" viewBox="0 0 48 48"><use href="#gicon"/></svg>Войти через Google</button>
+            <button class="d ghost rise s4"><svg class="gi" viewBox="0 0 24 24"><use href="#env"/></svg>Войти по ссылке на почту</button>
+            <div class="sep rise s5">или</div>
+            <button class="d quiet rise s5">Осмотреться гостем<small>без аккаунта · гостевой профиль живёт 7 дней</small></button>
+          </div>
+          <p class="fine rise s6">Пароля нет ни у одного из способов.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ V2 «ДВЕ ДВЕРИ» ══════════════ -->
+  <div class="variant" id="2">
+    <div class="screen">
+      <div class="field" aria-hidden="true">
+        <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+          <g class="drift">
+            <g class="links">
+              <line x1="120" y1="180" x2="320" y2="120"/><line x1="320" y1="120" x2="470" y2="260"/>
+              <line x1="1180" y1="140" x2="1330" y2="240"/><line x1="1040" y1="90" x2="1180" y2="140"/>
+              <line x1="180" y1="640" x2="360" y2="740"/><line x1="1240" y1="660" x2="1100" y2="780"/>
+              <line x1="90" y1="420" x2="230" y2="470"/><line x1="1350" y1="430" x2="1230" y2="500"/>
+            </g>
+            <g class="nodes">
+              <circle cx="120" cy="180" r="3.5"/><circle cx="320" cy="120" r="5"/>
+              <circle cx="470" cy="260" r="3"/><circle cx="1180" cy="140" r="4.5"/>
+              <circle cx="1330" cy="240" r="3"/><circle cx="1040" cy="90" r="2.5"/>
+              <circle cx="180" cy="640" r="4"/><circle cx="360" cy="740" r="3"/>
+              <circle cx="1240" cy="660" r="4.5"/><circle cx="1100" cy="780" r="3"/>
+              <circle cx="90" cy="420" r="3"/><circle cx="230" cy="470" r="4"/>
+              <circle cx="1350" cy="430" r="3.5"/><circle cx="1230" cy="500" r="2.5"/>
+            </g>
+            <g class="accents">
+              <circle cx="540" cy="150" r="2.5"/><circle cx="930" cy="700" r="3"/>
+              <circle cx="1300" cy="90" r="2"/><circle cx="70" cy="760" r="2.5"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="vig" aria-hidden="true"></div>
+      <div class="ctl">
+        <div class="lang"><span class="on">RU</span><span>EN</span></div>
+        <div class="th"><i class="d-light">☾</i><i class="d-dark">☀</i><u class="d-light">Тёмная</u><u class="d-dark">Светлая</u></div>
+      </div>
+
+      <div class="v2wrap">
+        <div class="v2head">
+          <span class="mark rise"><svg width="44" height="44"><use href="#mark"/></svg></span>
+          <h1 class="h1 rise s1">Войдите в Пространство</h1>
+          <p class="lede rise s2">Пароля нет ни у одного из путей.</p>
+        </div>
+        <div class="halves">
+          <section class="half rise s3">
+            <h3>Вы здесь уже были</h3>
+            <p class="who">Войдите той же почтой — все Ваши измерения и связи будут на месте.</p>
+            <div class="doors">
+              <button class="d primary"><svg class="gi" viewBox="0 0 48 48"><use href="#gicon"/></svg>Войти через Google</button>
+              <button class="d ghost"><svg class="gi" viewBox="0 0 24 24"><use href="#env"/></svg>Войти по ссылке на почту</button>
+            </div>
+          </section>
+          <section class="half guest rise s4">
+            <h3>Вы здесь впервые</h3>
+            <p class="who">Войдите и посмотрите изнутри — аккаунт можно создать потом.</p>
+            <!-- Кнопка ЗАЛИВНАЯ, как и в левой панели, и это не украшение, а сам механизм V2.
+                 В первом заходе она была контурной — и панели, равные по размеру и рамке,
+                 всё равно читались как «главная и запасная»: вес кнопки победил вес панели.
+                 Симметрия объявлена — значит у каждой панели свой главный ход. -->
+            <div class="doors">
+              <button class="d primary">Осмотреться гостем</button>
+            </div>
+            <ul class="facts">
+              <li><i>💾</i>Всё, что Вы заполните, останется Вашим: при создании аккаунта сохранится как есть.</li>
+              <li><i>🍂</i>Если Вы не вернётесь в течение 7 дней, мы удалим эти данные без следа.</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ V3 «СНАЧАЛА ВНУТРЬ» ══════════════ -->
+  <div class="variant" id="3">
+    <div class="screen">
+      <div class="field" aria-hidden="true">
+        <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+          <g class="drift">
+            <g class="links">
+              <line x1="120" y1="180" x2="320" y2="120"/><line x1="1180" y1="140" x2="1330" y2="240"/>
+              <line x1="180" y1="640" x2="360" y2="740"/><line x1="1240" y1="660" x2="1100" y2="780"/>
+              <line x1="90" y1="420" x2="230" y2="470"/><line x1="700" y1="60" x2="850" y2="110"/>
+            </g>
+            <g class="nodes">
+              <circle cx="120" cy="180" r="3.5"/><circle cx="320" cy="120" r="5"/>
+              <circle cx="470" cy="260" r="3"/><circle cx="1180" cy="140" r="4.5"/>
+              <circle cx="1330" cy="240" r="3"/><circle cx="1040" cy="90" r="2.5"/>
+              <circle cx="180" cy="640" r="4"/><circle cx="360" cy="740" r="3"/>
+              <circle cx="1240" cy="660" r="4.5"/><circle cx="1100" cy="780" r="3"/>
+              <circle cx="90" cy="420" r="3"/><circle cx="230" cy="470" r="4"/>
+              <circle cx="1350" cy="430" r="3.5"/><circle cx="1230" cy="500" r="2.5"/>
+              <circle cx="700" cy="60" r="3"/><circle cx="850" cy="110" r="3.5"/>
+            </g>
+            <g class="accents">
+              <circle cx="540" cy="150" r="2.5"/><circle cx="930" cy="700" r="3"/>
+              <circle cx="1300" cy="90" r="2"/><circle cx="70" cy="760" r="2.5"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="vig" aria-hidden="true"></div>
+      <div class="ctl">
+        <div class="lang"><span class="on">RU</span><span>EN</span></div>
+        <div class="th"><i class="d-light">☾</i><i class="d-dark">☀</i><u class="d-light">Тёмная</u><u class="d-dark">Светлая</u></div>
+      </div>
+
+      <div class="v3">
+        <div class="inner">
+          <span class="mark rise"><svg width="46" height="46"><use href="#mark"/></svg></span>
+          <p class="eyebrow rise s1">Вход в Пространство</p>
+          <h1 class="h1 rise s1">Войдите в Пространство</h1>
+          <p class="lede rise s2">Пароль не нужен, и аккаунт тоже — его можно создать потом, и всё заполненное сохранится как есть.</p>
+          <button class="big rise s3">Войти и осмотреться<small>без аккаунта · гостевой профиль живёт 7 дней</small></button>
+          <details class="fold rise s4" open>
+            <summary>У меня уже есть аккаунт<span class="chev">⌄</span></summary>
+            <div class="body">
+              <p class="why-line">Войдите той же почтой, что и раньше, — все Ваши измерения и связи будут на месте.</p>
+              <div class="doors">
+                <button class="d primary"><svg class="gi" viewBox="0 0 48 48"><use href="#gicon"/></svg>Войти через Google</button>
+                <button class="d ghost"><svg class="gi" viewBox="0 0 24 24"><use href="#env"/></svg>Войти по ссылке на почту</button>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ V4 «ВИТРИНА» ══════════════ -->
+  <div class="variant" id="4">
+    <div class="screen">
+      <div class="field" aria-hidden="true">
+        <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+          <g class="drift">
+            <g class="links">
+              <line x1="120" y1="180" x2="320" y2="120"/><line x1="320" y1="120" x2="470" y2="260"/>
+              <line x1="180" y1="640" x2="360" y2="740"/><line x1="90" y1="420" x2="230" y2="470"/>
+              <line x1="1240" y1="660" x2="1100" y2="780"/><line x1="620" y1="820" x2="780" y2="850"/>
+            </g>
+            <g class="nodes">
+              <circle cx="120" cy="180" r="3.5"/><circle cx="320" cy="120" r="5"/>
+              <circle cx="470" cy="260" r="3"/><circle cx="180" cy="640" r="4"/>
+              <circle cx="360" cy="740" r="3"/><circle cx="1240" cy="660" r="4.5"/>
+              <circle cx="1100" cy="780" r="3"/><circle cx="90" cy="420" r="3"/>
+              <circle cx="230" cy="470" r="4"/><circle cx="620" cy="820" r="3.5"/>
+              <circle cx="780" cy="850" r="2.5"/><circle cx="1350" cy="430" r="3.5"/>
+            </g>
+            <g class="accents">
+              <circle cx="540" cy="150" r="2.5"/><circle cx="930" cy="700" r="3"/>
+              <circle cx="70" cy="760" r="2.5"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="vig" aria-hidden="true"></div>
+      <div class="ctl">
+        <div class="lang"><span class="on">RU</span><span>EN</span></div>
+        <div class="th"><i class="d-light">☾</i><i class="d-dark">☀</i><u class="d-light">Тёмная</u><u class="d-dark">Светлая</u></div>
+      </div>
+
+      <div class="v4">
+        <div class="two">
+          <div class="left">
+            <span class="mark rise"><svg width="44" height="44"><use href="#mark"/></svg></span>
+            <p class="eyebrow rise s1">Вход в Пространство</p>
+            <h1 class="h1 rise s1">Войдите в Пространство</h1>
+            <p class="lede rise s2">Пароль не нужен. Если Вы уже были в Пространстве NDim — войдите той же почтой, и все Ваши измерения и связи будут на месте.</p>
+            <div class="doors">
+              <button class="d primary rise s3"><svg class="gi" viewBox="0 0 48 48"><use href="#gicon"/></svg>Войти через Google</button>
+              <button class="d ghost rise s4"><svg class="gi" viewBox="0 0 24 24"><use href="#env"/></svg>Войти по ссылке на почту</button>
+              <button class="d quiet rise s5">Осмотреться гостем<small>без аккаунта · гостевой профиль живёт 7 дней</small></button>
+            </div>
+          </div>
+          <div class="behind rise s4">
+            <h3>Что за этой дверью</h3>
+            <ul class="nums">
+              <li><b>5 144</b><span>измерений</span></li>
+              <li><b>4 071</b><span>оценок</span></li>
+              <li><b>2 368</b><span>связей рассчитано</span></li>
+              <li><b>95</b><span>человек</span></li>
+            </ul>
+            <svg class="weave" viewBox="0 0 320 78" aria-hidden="true">
+              <g class="base">
+                <line x1="26" y1="58" x2="128" y2="20"/>
+                <line x1="128" y1="20" x2="216" y2="62"/>
+                <line x1="216" y1="62" x2="296" y2="26"/>
+              </g>
+              <g class="hi">
+                <line class="a" x1="26" y1="58" x2="128" y2="20"/>
+                <line class="b" x1="128" y1="20" x2="216" y2="62"/>
+                <line class="c" x1="216" y1="62" x2="296" y2="26"/>
+              </g>
+              <circle cx="26" cy="58" r="5"/><circle cx="128" cy="20" r="6.5"/>
+              <circle cx="216" cy="62" r="5.5"/><circle cx="296" cy="26" r="4.5"/>
+            </svg>
+            <p class="taken">Снимок Пространства от 29 августа 2026 года.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="caption">Чем варианты различаются — и чем каждый платит</p>
+<div class="why">
+  <p><b>V1 «Колонна» — иерархия.</b> Прямое продолжение лендинга: та же колонна на том же поле,
+  три двери одна под другой по старшинству. Человек, пришедший с лендинга, не чувствует перехода —
+  экран выглядит следующим шагом той же страницы, а не другим приложением.
+  <span class="cost">Платит тем, что гость стоит третьим и под разделителем «или»: форма честно
+  говорит «это запасной путь». Для 331 человека из 1.x это верно; для новичка на пике интереса —
+  ровно тот порог, об который спотыкается воронка.</span></p>
+
+  <p><b>V2 «Две двери» — симметрия.</b> Экран сначала спрашивает не «чем войти», а «кто Вы»:
+  были здесь или впервые. Обе панели одного размера и веса, и гостевая несёт честные условия
+  прямо на себе — их не надо открывать. Способ входа выбирается ВНУТРИ уже выбранного намерения,
+  и человек ни разу не читает списка, который не про него.
+  <span class="cost">Платит высотой и лишним решением: на 390 панели встают друг под друга, и
+  вторая уходит под сгиб — то есть на телефоне симметрия, ради которой всё затевалось, глазом
+  не видна. И выбрать «кто я» человеку труднее, чем нажать знакомую кнопку Google.</span></p>
+
+  <p><b>V3 «Сначала внутрь» — инверсия.</b> Главная кнопка экрана — войти без аккаунта; способы
+  входа лежат ниже, во врезке «У меня уже есть аккаунт» (на кадре она раскрыта, в жизни
+  раскрывается нажатием). Стены входа для новичка нет вовсе: он внутри за одно нажатие.
+  <span class="cost">Платит дважды. Люди из 1.x — а это все 331 — приходят ИМЕННО входить, и их
+  дверь оказывается второстепенной. И это единственный вариант, который может спорить с Вашим
+  решением №009 В3, если экран считать лендингом (разбор — в рамке наверху).</span></p>
+
+  <p><b>V4 «Витрина» — мотивация.</b> Рядом с дверью видно, что за ней: живые числа Пространства и
+  связь, которая прочерчивается на глазах. Человек решает входить не на доверии к кнопке, а
+  посмотрев на то, куда идёт. Двери те же три и в том же порядке, что в V1, — меняется не список,
+  а повод им воспользоваться.
+  <span class="cost">Платит контрактом свежести: числа берутся снимком на сборке, как витрина
+  лендинга, и устаревают молча, если снимок забыть обновить. И это самый тяжёлый из четырёх
+  экранов: на 390 вторая колонна встаёт под двери и удлиняет страницу.</span></p>
+</div>
+
+<div class="tech">
+  <h3>Что на этом экране есть, но глазом не видно</h3>
+  <ul>
+    <li><b>Переключатели языка и темы — ГЛОБАЛЬНЫЕ.</b> Пишут те же ключи, что лендинг:
+      <code>ndim-lang</code> и <code>ndim-theme</code>. Выбранное здесь действует во всём
+      приложении после входа — это половина заказа <code>bugs/19</code>, и сегодня её нет:
+      переключателя темы на входе не существует вовсе.</li>
+    <li><b>Оболочки приложения на экране нет.</b> Ни шапки, ни бокового рельса, ни нижней панели —
+      это и есть «отдельный экран, а не карточка внутри приложения» из Вашего слова.</li>
+    <li><b>Возврат <code>?next=</code>.</b> Аноним, ткнувший внутренний адрес, попадает сюда, а
+      после входа возвращается ровно туда, куда шёл, — экран не теряет его намерения.</li>
+    <li><b>Знак — как сегодня.</b> Плашка <code>#060b14</code>; в тёмной теме она совпадает с
+      фоном, и знак лежит прямо на нём. Правка «Ореол» (Ваш ответ №062 В3 = Д) приедет отдельно и
+      отразится здесь сама — эти макеты её намеренно не показывают.</li>
+    <li><b>Движение уважает просьбу его выключить.</b> При системной настройке «меньше движения»
+      гаснут все пять анимаций экрана — поле, пульс знака, лесенка дверей, врезка и связь витрины.</li>
+    <li><b>Экран закрыт от поиска</b> (<code>noindex</code>), как и всё за стеной входа;
+      индексируются лендинги <code>/ru</code>, <code>/en</code> и каталог.</li>
+  </ul>
+</div>
+
+<script>
+  // Переключатели дома стиля: вариант · ширина · тема. Съёмщик tools/shoot-mockups.mjs
+  // жмёт ровно эти кнопки и читает #stage[data-w], поэтому имена и роли менять нельзя.
+  const stage = document.getElementById('stage');
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === b.dataset.v));
+  }));
+  document.getElementById('width').addEventListener('click', () => {
+    stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390';
+  });
+  document.getElementById('width-mid').addEventListener('click', () => { stage.dataset.w = '1024'; });
+  document.getElementById('theme').addEventListener('click', () => {
+    const el = document.documentElement;
+    el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+  });
+  // «Проиграть» — ЕДИНСТВЕННЫЙ запуск лесенки дверей. Разбор — в CSS у `#stage.play`:
+  // на загрузке она не идёт нарочно, иначе съёмщик ловит её середину и кадр врёт о цвете.
+  // Съёмщик эту кнопку не жмёт — у неё нет `data-v`.
+  document.getElementById('replay').addEventListener('click', () => {
+    stage.classList.remove('play');
+    void stage.offsetWidth; // принудительный пересчёт — иначе браузер склеит снятие и возврат
+    stage.classList.add('play');
+  });
+</script>
+</body>
+</html>
