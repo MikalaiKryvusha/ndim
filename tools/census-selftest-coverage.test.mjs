@@ -18,16 +18,23 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { перепись, судХраповика, несётСамотест, безКомментариев, selftest } from './census-selftest-coverage.mjs';
+import { перепись, судХраповика, несётСамотест, безКомментариев, составВорот, selftest } from './census-selftest-coverage.mjs';
 
 /** Поддельное дерево: tools/, tools/lib/, src/ — три места, где перепись ищет пары. */
-function песочница({ приборы = {}, тесты = {}, srcТесты = {} }) {
+function песочница({ приборы = {}, тесты = {}, srcТесты = {}, ворота = [] }) {
   const корень = mkdtempSync(join(tmpdir(), 'census-selftest-'));
   mkdirSync(join(корень, 'tools', 'lib'), { recursive: true });
   mkdirSync(join(корень, 'src', 'lib'), { recursive: true });
   for (const [имя, текст] of Object.entries(приборы)) writeFileSync(join(корень, 'tools', имя), текст, 'utf8');
   for (const [имя, текст] of Object.entries(тесты)) writeFileSync(join(корень, 'tools', имя), текст, 'utf8');
   for (const [имя, текст] of Object.entries(srcТесты)) writeFileSync(join(корень, 'src', 'lib', имя), текст, 'utf8');
+  // Поддельный guards.mjs: первая запись — прогон юнитов, как в настоящем.
+  const записи = [
+    "  { argv: ['--test', 'tools/*.test.mjs'] },",
+    ...ворота.map((и) => `  { argv: ['tools/${и}'] },`),
+  ];
+  const текстВорот = ['const GUARDS = [', ...записи, '];', ''].join('\n');
+  writeFileSync(join(корень, 'tools', 'guards.mjs'), текстВорот, 'utf8');
   return корень;
 }
 
@@ -42,7 +49,7 @@ test('перепись считает ЧУЖОЕ дерево: два носит
   try {
     const и = перепись(к);
     assert.equal(и.носителей, 2, 'c.mjs самотеста не несёт и в знаменатель не идёт');
-    assert.equal(и.спарой, 1);
+    assert.deepEqual(и.группаА, ['b.mjs'], 'у a.mjs пара есть, у b.mjs нет');
     assert.deepEqual(и.долг, ['b.mjs']);
   } finally {
     rmSync(к, { recursive: true, force: true });
@@ -75,6 +82,50 @@ test('носитель опознаётся и по строчному, и по 
   assert.ok(несётСамотест("argv.includes('--selftest')"));
   assert.ok(!несётСамотест("// --selftest\nmain();"));
   assert.ok(!несётСамотест("/* --selftest */\nmain();"));
+});
+
+// ── Группа Б: приборы В ВОРОТАХ без пары (слепая зона группы А) ───────────────────────────
+
+test('🔴 прибор в воротах БЕЗ --selftest и без пары попадает в долг — группа А его не видит', () => {
+  const к = песочница({ приборы: { 'g.mjs': НЕ_НЕСЁТ }, ворота: ['g.mjs'] });
+  try {
+    const и = перепись(к);
+    assert.equal(и.группаА.length, 0, 'самотеста не несёт — в группу А не попадает');
+    assert.deepEqual(и.группаБ, ['g.mjs'], 'но стоит в воротах без пары — это долг');
+    assert.deepEqual(и.долг, ['g.mjs'], 'долг — ОБЪЕДИНЕНИЕ групп');
+  } finally {
+    rmSync(к, { recursive: true, force: true });
+  }
+});
+
+test('прибор в воротах с парой в долг не идёт', () => {
+  const к = песочница({ приборы: { 'g.mjs': НЕ_НЕСЁТ }, тесты: { 'g.test.mjs': 'x' }, ворота: ['g.mjs'] });
+  try {
+    assert.deepEqual(перепись(к).долг, []);
+  } finally {
+    rmSync(к, { recursive: true, force: true });
+  }
+});
+
+test('состав ворот НЕ считает прогон юнитов прибором', () => {
+  const к = песочница({ приборы: { 'g.mjs': НЕ_НЕСЁТ }, ворота: ['g.mjs'] });
+  try {
+    assert.equal(составВорот(к).length, 1, 'первая запись `--test tools/*.test.mjs` — не прибор');
+  } finally {
+    rmSync(к, { recursive: true, force: true });
+  }
+});
+
+test('долг не двоится, если прибор попал в ОБЕ группы', () => {
+  const к = песочница({ приборы: { 'g.mjs': НЕСЁТ }, ворота: ['g.mjs'] });
+  try {
+    const и = перепись(к);
+    assert.deepEqual(и.группаА, ['g.mjs']);
+    assert.deepEqual(и.группаБ, ['g.mjs']);
+    assert.deepEqual(и.долг, ['g.mjs'], 'объединение, а не сумма');
+  } finally {
+    rmSync(к, { recursive: true, force: true });
+  }
 });
 
 // ── Храповик ───────────────────────────────────────────────────────────────────────────────
