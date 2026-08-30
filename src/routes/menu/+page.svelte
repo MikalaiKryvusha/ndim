@@ -361,5 +361,8 @@
     /* Колонна — большой виджет, два шага. */
     .body > .col { grid-column: span 2; }
     .screen-title { grid-column: 1 / -1; }
+    /* Плашка гостя — во всю строку (`bugs/226`). `:global` — элемент чужой, из
+       `$lib/ui/GuestCard.svelte`; разбор класса стоит в `account/+page.svelte`. */
+    .body > :global(.gnote) { grid-column: 1 / -1; }
   }
 </style>
