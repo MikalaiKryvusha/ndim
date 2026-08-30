@@ -21,16 +21,36 @@
  */
 
 import { mkdirSync } from 'node:fs';
+import { basename } from 'node:path';
 import { createRequire } from 'node:module';
+import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
-const BASE = 'http://localhost:5173';
+import { readGuestSession, removeGuest } from './lib/guest-session.mjs';
+import { portsFor, slotOf } from './lib/stand-slot.mjs';
+
+/*
+ * 🔴 АДРЕС СТЕНДА — ИЗ СЛОТА РАБОЧЕГО МЕСТА, А НЕ ЛИТЕРАЛОМ (2026-08-30).
+ *
+ * Здесь стояли `localhost:5173` и порты `8181/9099` — адрес СЛОТА 0, то есть главной копии.
+ * Прибор, запущенный ролью из её worktree, заводил и УДАЛЯЛ гостей в чужом стенде — классу
+ * это родня «прибор молча мерит ЧУЖОЕ дерево» (`bugs/187`), но с записью, а не чтением.
+ * Правка сделана потому, что без неё доказательства прибора нельзя перепрогнать из рабочего
+ * места роли вовсе — а перепрогон был условием постановки.
+ *
+ * ⚠️ ПОВЕДЕНИЕ СЛОТА 0 ОСТАЁТСЯ БАЙТ-В-БАЙТ ПРЕЖНИМ: `portsFor(0)` возвращает ровно
+ * `5173/8181/9099/9199` (тот же довод, на котором стоит `tools/stand-launch.mjs`).
+ */
+const { slot } = slotOf(basename(execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim()));
+const ports = portsFor(slot);
+
+const BASE = `http://localhost:${ports.dev}`;
 const OUT = 'test-results/probe-guest-card';
 mkdirSync(OUT, { recursive: true });
 
 // Admin SDK — из экземпляра sync-server (капкан plans/63: у него СВОЙ node_modules).
-process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8181';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
+process.env.FIRESTORE_EMULATOR_HOST = `127.0.0.1:${ports.firestore}`;
+process.env.FIREBASE_AUTH_EMULATOR_HOST = `127.0.0.1:${ports.auth}`;
 process.env.FIREBASE_PROJECT_ID = 'demo-ndim-dev';
 const requireSync = createRequire(new URL('../sync-server/', import.meta.url));
 const { initializeApp, getApps } = requireSync('firebase-admin/app');
@@ -45,31 +65,16 @@ const check = (ok, label) => {
   if (!ok) failures += 1;
 };
 
-/** uid гостевой сессии — из IndexedDB (приём tools/probe-guest-screen.mjs). */
-function sessionOf(page) {
-  return page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        const req = indexedDB.open('firebaseLocalStorageDb');
-        req.onerror = () => resolve(null);
-        req.onsuccess = () => {
-          try {
-            const store = req.result
-              .transaction('firebaseLocalStorage', 'readonly')
-              .objectStore('firebaseLocalStorage');
-            const all = store.getAll();
-            all.onerror = () => resolve(null);
-            all.onsuccess = () => {
-              const rec = all.result.find((r) => String(r.fbase_key).startsWith('firebase:authUser:'));
-              resolve(rec?.value?.uid ?? null);
-            };
-          } catch {
-            resolve(null);
-          }
-        };
-      }),
-  );
-}
+/*
+ * 🔴 ЧТЕНИЕ ГОСТЕВОЙ СЕССИИ И УБОРКА ЗА СОБОЙ ПЕРЕЕХАЛИ В `lib/guest-session.mjs` (2026-08-30).
+ *
+ * Здесь стоял локальный `sessionOf()`, бравший ПЕРВУЮ попавшуюся запись
+ * `firebase:authUser:*`. Приём из этого файла скопировали в другие приборы, и в одном из них
+ * он снёс dev-пользователя стенда целиком: uid прочитался чужой, а уборка исполнила своё
+ * обещание. Разбор класса и обе половины лечения — `bugs/NEW_probe_ubiraet_ne_gostya.md` и
+ * шапка модуля. Здесь оригинал приёма, поэтому лечится он первым: копия чинится, а оригинал
+ * иначе продолжал бы сеять.
+ */
 
 const SCREENS = ['/relations', '/space', '/dims', '/menu', '/account'];
 console.log('═══ ЗОНД КАРТОЧКИ ГОСТЯ (plans/22 фаза 5, выбор A) ═══\n');
@@ -80,11 +85,33 @@ try {
   /* ── Гость: карточка на пяти экранах, профиль — исключение ── */
   const g = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
   const page = await g.newPage();
-  await page.goto(`${BASE}/profile?guest=1`, { waitUntil: 'domcontentloaded' });
+  /*
+   * 🔴 ГОСТЬ ЗАВОДИТСЯ В ДВА ШАГА, И ОБА НУЖНЫ — ЭТО НЕ ЦЕРЕМОНИЯ.
+   *
+   * Здесь стоял ОДИН заход на `/profile?guest=1`, и он недетерминирован ГОНКОЙ. Ветка
+   * `?guest` на профиле (`+page.svelte:363`) честно заводит гостя, но соседние компоненты
+   * той же страницы в тот же миг зовут `currentSession()`, а она без параметра `?as`
+   * автовходит dev-пользователем (`data/profile.ts:127`). Кто успел, тот и в сессии.
+   * Прогон читал то гостя, то `dev@ndim.space` — и уборка сносила прочитанное.
+   *
+   * Шаг 1 — `?as=guest` на любом экране: `currentSession()` уходит в ветку гостя и зовёт
+   * настоящий `signInAnonymously` (`profile.ts:103`). Сессия анонимная, гонки нет.
+   * Шаг 2 — `/profile?as=guest&guest=1`: ветка `?guest` видит ЖИВУЮ анонимную сессию,
+   * переиспользует её (нового гостя не заводит) и делает `ensureSpaceExists` — документы
+   * появляются. Параметр `?as` при этом держит соседние компоненты в гостевой ветке.
+   * ⚠️ Документ гостю НУЖЕН: без него профиль рисует ветку «гость без документа», где
+   * расширенной карточки нет вовсе, и проверка ниже честно краснеет.
+   */
+  await page.goto(`${BASE}${SCREENS[0]}?as=guest`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2500);
-  guestUid = await sessionOf(page);
-  if (!guestUid) throw new Error('гостевая сессия не завелась');
-  console.log(`  гость рождён дверью продукта: ${guestUid}`);
+  const session = await readGuestSession(page);
+  if (!session.uid) throw new Error(`гостевая сессия не опознана: ${session.reason}`);
+  guestUid = session.uid;
+  await page.goto(`${BASE}/profile?as=guest&guest=1`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2500);
+  console.log(
+    `  гость рождён дверью продукта: ${guestUid} · записей аутентификации ${session.authRecords}, гостевых ${session.anonymous}`,
+  );
 
   for (const path of SCREENS) {
     await page.goto(`${BASE}${path}?as=guest`, { waitUntil: 'domcontentloaded' });
@@ -133,16 +160,13 @@ try {
 /* ── Уборка следов зонда с проверкой ── */
 console.log('\n── Уборка следов зонда ──');
 if (guestUid) {
-  await db.recursiveDelete(db.doc(`points/${guestUid}`));
-  await db.doc(`relations/${guestUid}`).delete();
-  await db.recursiveDelete(db.doc(`users/${guestUid}`));
-  await getAuth().deleteUser(guestUid).catch(() => {});
-  const traces = [];
-  if ((await db.doc(`points/${guestUid}`).get()).exists) traces.push('points');
-  if ((await db.doc(`users/${guestUid}`).get()).exists) traces.push('users');
-  const authGone = await getAuth().getUser(guestUid).then(() => false, (e) => e.code === 'auth/user-not-found');
-  if (!authGone) traces.push('auth');
-  check(traces.length === 0, `следов зонда не осталось${traces.length ? ` (остались: ${traces.join(', ')})` : ''}`);
+  // Разрешение на удаление спрашивается у САМОЙ учётки, а не предполагается по намерению.
+  const done = await removeGuest({ db, auth: getAuth() }, guestUid);
+  check(done.removed, `уборка разрешена свойством учётки: ${done.why}`);
+  check(
+    done.traces.length === 0,
+    `следов зонда не осталось${done.traces.length ? ` (остались: ${done.traces.join(', ')})` : ''}`,
+  );
 }
 
 console.log(`\nИтог: ${failures === 0 ? '✅ зонд пройден целиком' : `❌ провалов: ${failures}`}`);
