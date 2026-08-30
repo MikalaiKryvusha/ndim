@@ -13,8 +13,9 @@
  *   2. **Белый список имён** — новое имя, похожее на предмет оценки, роняет прогон;
  *   3. **Паритет со своей воронкой** — все шесть её шагов обязаны быть в списке, иначе ряды
  *      нечем сверять, и эталон превращается во второе мнение;
- *   4. **Контур** — стенд и стейдж не считаются: один проект PostHog на всех, и наши прогоны
- *      легли бы в боевой ряд (болезнь `bugs/202`, вылеченная своей воронке метками);
+ *   4. **Контур** — считаются бой И стейдж, а стенд молчит; каждое событие несёт `env`, и по
+ *      нему ряд различается внутри одного проекта PostHog (слово владельца 2026-08-29). Стенд
+ *      остаётся ОТРИЦАТЕЛЬНЫМ КОНТРОЛЕМ: на нём не уходит ни одного события;
  *   5. **Зеркало хостов стейджа** — читается ИЗ `firebase.ts`, а не набирается тут руками:
  *      копия, которую никто не сверяет, расходится на первой же правке.
  *
@@ -27,9 +28,11 @@ import { readFileSync } from 'node:fs';
 
 import { FUNNEL_STEPS } from './funnel.ts';
 import {
+  ANALYTICS_CONTOURS,
   ANALYTICS_ENTRIES,
   ANALYTICS_EVENTS,
   ANALYTICS_PROPERTIES,
+  contourOf,
   POSTHOG_HOST,
   POSTHOG_TOKEN,
   analyticsHostAllowed,
@@ -118,19 +121,64 @@ describe('Ш4 — список событий белый, а не «что пр�
   });
 
   test('свойства — закрытый список, и ни одно не знает предмета оценки', () => {
-    assert.deepEqual([...ANALYTICS_PROPERTIES], ['lang', 'is_guest', 'entry', 'has_matches']);
+    // 🆕 `env` добавлен словом владельца 2026-08-29 («даём юзеру свойство — на каком он
+    // окружении»). Список ОСТАЁТСЯ закрытым: расширение законно, открытость — нет.
+    assert.deepEqual([...ANALYTICS_PROPERTIES], ['lang', 'is_guest', 'entry', 'has_matches', 'env']);
     for (const property of ANALYTICS_PROPERTIES) {
       assert.equal(/dim|slug|title|rating|score/.test(property), false, `свойство «${property}» пахнет предметом оценки`);
     }
   });
 });
 
-describe('контур — считает только бой', () => {
-  test('🔴 стенд и стейдж молчат: проект PostHog один, их события легли бы в боевой ряд', () => {
+describe('контур — считает бой И стейдж, различая их свойством', () => {
+  /*
+   * 🔄 ЭТОТ СЛУЧАЙ ПЕРЕПИСАН 2026-08-29 ПО СЛОВУ ВЛАДЕЛЬЦА, и старое ожидание названо, а не
+   * стёрто. Он требовал `analyticsHostAllowed('ndim-stage.web.app') === false` с доводом «ряд
+   * один, события стейджа легли бы к боевым». Слово владельца: «*и стейдж и прод — всё шлём в
+   * прод один проект постхога. юзеру даём свойство — на каком он окружении*».
+   * Ряд остался один; события стали РАЗЛИЧИМЫ. Стенд — по-прежнему `false`, и это единственный
+   * отрицательный контроль фичи: он проверяет, что белый список вообще что-то отсекает.
+   */
+  test('🔴 СТЕНД молчит — единственный отрицательный контроль фичи', () => {
     assert.equal(analyticsHostAllowed('localhost'), false);
     assert.equal(analyticsHostAllowed('127.0.0.1'), false);
-    assert.equal(analyticsHostAllowed('ndim-stage.web.app'), false);
-    assert.equal(analyticsHostAllowed('ndim-stage.firebaseapp.com'), false);
+    assert.equal(contourOf('localhost'), null);
+  });
+
+  test('🆕 СТЕЙДЖ считается и опознаётся как `stage`', () => {
+    assert.equal(analyticsHostAllowed('ndim-stage.web.app'), true);
+    assert.equal(contourOf('ndim-stage.web.app'), 'stage');
+    assert.equal(contourOf('ndim-stage.firebaseapp.com'), 'stage');
+  });
+
+  test('бой опознаётся как `prod`, чужой адрес — никак', () => {
+    assert.equal(contourOf('ndimspace.app'), 'prod');
+    assert.equal(contourOf('ndimspace.app.evil.example'), null);
+    assert.equal(contourOf(''), null);
+  });
+
+  /**
+   * 🔒 ПАРА «СОЮЗ ПРОДУКТА ↔ `CONTOURS`» — имена не выдуманы здесь.
+   *
+   * Направление пары то же, что у всей семьи контуров: истина — продукт, зеркало — `tools/`
+   * (`contours.mjs` сам читает `firebase.ts` и падает при расхождении). Поэтому сверяет ТЕСТ, а
+   * не импорт продукта: `contours.mjs` тянет `node:fs`, и импорт из `analytics.ts` увёз бы
+   * Node-код в браузерный бандл. Форма согласована с QA перед кодом.
+   */
+  test('🔒 ПАРА: союз контуров равен именам из `tools/lib/contours.mjs`', () => {
+    /*
+     * 🔴 ЧИТАЕМ ИСХОДНЫМ ТЕКСТОМ, А НЕ ИМПОРТОМ — и это поймано на себе, а не предположено.
+     * Первая редакция делала `await import('../../../tools/lib/contours.mjs')`. Юниты позеленели,
+     * а `npm run typecheck` СТАЛ КРАСНЫМ: импорт втягивает `.mjs` в TS-программу, и она честно
+     * жалуется на пятерых неявных `any` внутри чужого модуля (`TS7006`, `TS7053`). То есть я
+     * чинил бы чужой файл ради своей проверки. Чтение текстом — тот же приём, каким этот набор
+     * уже сверяет `site.ts`, `.firebaserc` и `firebase.ts`; направление пары прежнее:
+     * истина — продукт, зеркало — `tools/`.
+     */
+    const source = readFileSync(new URL('../../../tools/lib/contours.mjs', import.meta.url), 'utf8');
+    const fromTools = [...source.matchAll(/^\t\tname: '([a-z]+)',$/gmu)].map((hit) => hit[1]).sort();
+    assert.ok(fromTools.length > 0, 'в contours.mjs не найдено ни одного имени контура — сверять не с чем');
+    assert.deepEqual([...ANALYTICS_CONTOURS].sort(), fromTools, 'союз контуров разъехался с contours.mjs');
   });
 
   /**
@@ -189,6 +237,12 @@ describe('контур — считает только бой', () => {
     assert.equal(analyticsHostAllowed(''), false);
   });
 
+  /*
+   * 🔄 ЗЕРКАЛО ОСТАЛОСЬ, ОЖИДАНИЕ ПЕРЕВЕРНУЛОСЬ. Прежде оно требовало, чтобы хосты стейджа из
+   * `firebase.ts` аналитикой ГЛУШИЛИСЬ; теперь — чтобы они считались и опознавались как `stage`.
+   * Сверяемая пара та же и по тому же источнику: копия в `analytics.ts` живёт потому, что импорт
+   * `firebase.ts` увёз бы SDK Firebase в чанк аналитики (`EXP-0028`), а не потому, что так проще.
+   */
   test('🔑 ЗЕРКАЛО: список хостов стейджа сходится с `firebase.ts` — копия под стражем, а не на веру', () => {
     const source = readFileSync(new URL('../firebase.ts', import.meta.url), 'utf8');
     const match = source.match(/const STAGE_HOSTS = \[([^\]]+)\]/u);
@@ -197,11 +251,91 @@ describe('контур — считает только бой', () => {
     assert.ok(fromFirebase.length > 0, 'список хостов стейджа в firebase.ts пуст');
     for (const host of fromFirebase) {
       assert.equal(
-        analyticsHostAllowed(host),
-        false,
-        `хост стейджа «${host}» из firebase.ts не глушится аналитикой — зеркала разъехались`,
+        contourOf(host),
+        'stage',
+        `хост стейджа «${host}» из firebase.ts не опознан аналитикой как stage — зеркала разъехались`,
       );
     }
+  });
+
+  /**
+   * 🔴🔴 ЗЕРКАЛО ДВУСТОРОННЕЕ — дефект Д1 вердикта QA №38 (условие 1 к мержу).
+   *
+   * ЧЕМ БОЛЕЛО. Все зеркала выше проверяют ОДНУ сторону: что хост ИЗ источника аналитикой
+   * опознан. Ни одно не спрашивает обратного — **нет ли в копии ЛИШНЕГО**. Замер судьи,
+   * приведённый дословно, потому что он и есть предмет:
+   *   `'ndim-preview.web.app'` дописан в `STAGE_HOSTS` → 38/38 ЗЕЛЁНЫХ
+   *   `'ndim-preview.web.app'` дописан в `PROD_HOSTS`  → 38/38 ЗЕЛЁНЫХ
+   *   хост стейджа УБРАН из `analytics.ts`             → fail 2
+   * Отрицательная сторона держалась ПЕРЕЧНЕМ шести поимённых примеров (`localhost`,
+   * `192.168.1.50`, `ndim-stage-2.web.app`, …). `localhost` заперт по имени — а канал
+   * предпросмотра Firebase вида `ndim-space--pr123-….web.app` рождается сам, регулярно, и в
+   * перечне его нет.
+   *
+   * 🔑 КЛАСС, И ОН НЕ НОВЫЙ: **перечень примет закрывает те входы, которые автор вспомнил;
+   * инвариант закрывает все** (`TESTING_FRAMEWORK.md`, правило 9 — там же оплачено дверью
+   * выката). Третий экземпляр за смену 14, и на этот раз — в самом стороже.
+   *
+   * ⚠️ ПОЧЕМУ ДЕФЕКТ ИМЕННО ЗДЕСЬ, А НЕ ДАВНИЙ: до этой порции список был ЗАКРЫТ боем, и
+   * дописать в него было нечего. Порция ОТКРЫВАЕТ его стейджем — и ровно этот риск назван
+   * шапкой `contourOf` её же словами: «появись `stand` в союзе, кто-нибудь однажды впишет
+   * `localhost`». Инвариант ниже делает это невозможным по построению, а не по внимательности.
+   *
+   * ЧТО СТЕРЕЖЁТ: множество считаемых хостов РАВНО выводимому из трёх первоисточников —
+   * `site.ts` (дом продукта) + `.firebaserc` (служебные адреса всех сайтов хостинга) +
+   * `firebase.ts` (стейдж). Не «включает», а именно РАВНО: лишнее краснеет так же, как
+   * недостающее.
+   */
+  test('🔴 ИНВАРИАНТ: белый список РАВЕН выводимому из источников — лишнее краснеет так же, как недостающее', () => {
+    // Списки читаются ИСХОДНЫМ ТЕКСТОМ — тем же приёмом, каким набор уже сверяет firebase.ts.
+    // Экспортировать их из продукта ради теста нельзя: это расширило бы поверхность модуля.
+    const analytics = readFileSync(new URL('./analytics.ts', import.meta.url), 'utf8');
+    const списком = (имя: string): string[] => {
+      const блок = analytics.match(new RegExp(`const ${имя} = \\[([^\\]]+)\\]`, 'u'));
+      assert.notEqual(блок, null, `в analytics.ts не найден ${имя} — сверять не с чем`);
+      return [...(блок?.[1] ?? '').matchAll(/'([^']+)'/gu)].map((hit) => hit[1]);
+    };
+    const объявлено = [...списком('PROD_HOSTS'), ...списком('STAGE_HOSTS')];
+    // 🔑 Контроль вакуума: без него сломанный разбор дал бы ПУСТО == ПУСТО и тихий зелёный
+    // (мутация М6 судьи по этому же классу — вакуумность regexp).
+    assert.ok(объявлено.length > 0, 'разбор списков analytics.ts дал пусто — сверка вакуумна');
+
+    // Ожидаемое выводится из первоисточников, а не набирается здесь руками.
+    const site = readFileSync(new URL('../site.ts', import.meta.url), 'utf8');
+    const origin = site.match(/SITE_ORIGIN = '([^']+)'/u)?.[1];
+    assert.notEqual(origin, undefined, 'в site.ts не найден SITE_ORIGIN');
+    const дом = new URL(origin as string).hostname;
+
+    type Проект = { hosting?: Record<string, string[]> };
+    const rc = JSON.parse(readFileSync(new URL('../../../.firebaserc', import.meta.url), 'utf8')) as {
+      targets?: Record<string, Проект>;
+    };
+    const сайты = Object.values(rc.targets ?? {})
+      .flatMap((проект) => Object.values(проект.hosting ?? {}))
+      .flat();
+    assert.ok(сайты.length > 0, 'в .firebaserc не нашлось ни одного сайта хостинга');
+
+    const firebase = readFileSync(new URL('../firebase.ts', import.meta.url), 'utf8');
+    const стейджБлок = firebase.match(/const STAGE_HOSTS = \[([^\]]+)\]/u);
+    assert.notEqual(стейджБлок, null, 'в firebase.ts не найден STAGE_HOSTS');
+    const стейдж = [...(стейджБлок?.[1] ?? '').matchAll(/'([^']+)'/gu)].map((hit) => hit[1]);
+    assert.ok(стейдж.length > 0, 'список хостов стейджа в firebase.ts пуст');
+
+    const ожидаемо = [
+      дом,
+      ...сайты.flatMap((сайт) => [`${сайт}.web.app`, `${сайт}.firebaseapp.com`]),
+      ...стейдж,
+    ];
+
+    const норма = (список: string[]): string[] => [...new Set(список)].sort();
+    assert.deepEqual(
+      норма(объявлено),
+      норма(ожидаемо),
+      'белый список аналитики РАЗОШЁЛСЯ с первоисточниками.'
+        + ' Лишний хост здесь так же красен, как недостающий: считаемый контур — это'
+        + ' решение `site.ts`/`.firebaserc`/`firebase.ts`, а не запись в копии.'
+        + ' Появился новый настоящий адрес — заведи его в ИСТОЧНИКЕ, копия подтянется сама.',
+    );
   });
 });
 
@@ -251,7 +385,51 @@ describe('capture() — блюдо, а не ингредиенты (Д2 верд
     const звонки = постановка();
     try {
       await capture('relations_view', { has_matches: true });
-      assert.deepEqual(звонки, [{ event: 'relations_view', props: { has_matches: true } }]);
+      assert.deepEqual(звонки, [{ event: 'relations_view', props: { has_matches: true, env: 'prod' } }]);
+    } finally {
+      убрать();
+    }
+  });
+
+  /*
+   * 🔴 САМАЯ ЦЕННАЯ ПОЛОВИНА ЧИСЛА ЦЕННОСТИ — ЭТО `false`, И У НЕЁ НЕ БЫЛО НИ ОДНОГО ЮНИТА.
+   *
+   * `relations_view` заведён ради вопроса «сработал ли продукт для человека», и интересен в нём
+   * прежде всего тот, кому НЕ показали никого: `has_matches: true` меряет успех, `false` —
+   * ровно ту неудачу, ради поиска которой событие и существует.
+   *
+   * Случай выше проверял только `true`. Между тем `capture()` отсеивает свойства строкой
+   * `value === undefined`, и правка её на соблазнительное `if (!value) continue` прошла бы ВСЕ
+   * прежние проверки: `has_matches: false` молча исчезал бы из события, ряд показывал бы одни
+   * успехи, и объяснить это можно было бы «людям всегда кого-то находило». Ноль здесь
+   * неотличим от честного нуля — тот же класс, ради которого написан весь страж воронки.
+   *
+   * Проверка доказана мутацией: `value === undefined` → `!value` роняет ровно этот случай
+   * (и только его), а `is_guest: false` в соседнем случае ловит ту же правку со второй стороны.
+   */
+  test('🔴 has_matches: false ДОЕЗЖАЕТ — «никого не показали» это факт, а не пустота', async () => {
+    const звонки = постановка();
+    try {
+      await capture('relations_view', { has_matches: false });
+      assert.deepEqual(
+        звонки,
+        [{ event: 'relations_view', props: { has_matches: false, env: 'prod' } }],
+        'ложное значение отсеялось вместе с отсутствующим — половина числа ценности потеряна',
+      );
+    } finally {
+      убрать();
+    }
+  });
+
+  test('🔴 два оставшихся события белого списка доходят так же — уравнение проверено, а не предположено', async () => {
+    const звонки = постановка();
+    try {
+      await capture('person_opened');
+      await capture('profile_filled', { is_guest: false });
+      assert.deepEqual(звонки, [
+        { event: 'person_opened', props: { env: 'prod' } },
+        { event: 'profile_filled', props: { is_guest: false, env: 'prod' } },
+      ]);
     } finally {
       убрать();
     }
@@ -267,11 +445,57 @@ describe('capture() — блюдо, а не ингредиенты (Д2 верд
     }
   });
 
-  test('🔴 стейдж НЕ шлёт — проект PostHog у нас ОДИН, ряд был бы общий', async () => {
+  /*
+   * 🔄 ПЕРЕВЁРНУТ 2026-08-29 СЛОВОМ ВЛАДЕЛЬЦА, старое ожидание названо: случай требовал
+   * «со стейджа НЕ уходит ничего». Теперь уходит — и обязано уходить ПОМЕЧЕННЫМ.
+   * 🔑 Именно этот случай делает фичу проверяемой до выката: раньше единственный контур, где
+   * событие вообще могло родиться, был боевым, и «зелёное» на стейдже было зелёным от того,
+   * что проверка не способна покраснеть (`TESTING_FRAMEWORK.md`, ворота выката).
+   */
+  test('🆕 стейдж ШЛЁТ — и событие помечено `env: stage`, иначе ряды неразличимы', async () => {
     const звонки = постановка({ hostname: 'ndim-stage.web.app' });
     try {
       await capture('landing_view');
-      assert.deepEqual(звонки, [], 'со стейджа событие дошло до клиента');
+      assert.deepEqual(звонки, [{ event: 'landing_view', props: { env: 'stage' } }]);
+    } finally {
+      убрать();
+    }
+  });
+
+  /*
+   * 🔴 ГАРАНТИЯ «КОНТУР ЕСТЬ ВСЕГДА» — проверяется на КАЖДОМ имени белого списка, а не на том,
+   * где о ней вспомнили. Событие без контура в общем ряду хуже отсутствующего: ряд один на оба
+   * окружения, и неразличимое событие портит обе выборки сразу.
+   * Мутация, ради которой случай и написан (её же обещала поставить судья): убрать строку
+   * `safeProps.env = contour` — этот случай обязан покраснеть, и покраснеть на всех десяти.
+   */
+  test('🔴 `env` приходит на КАЖДОМ событии белого списка — все десять, а не выборочно', async () => {
+    const звонки = постановка();
+    try {
+      for (const event of ANALYTICS_EVENTS) await capture(event);
+      assert.equal(звонки.length, ANALYTICS_EVENTS.length, 'дошли не все события');
+      const без = звонки.filter((з) => (з.props as Record<string, unknown> | undefined)?.env !== 'prod');
+      assert.deepEqual(
+        без.map((з) => з.event),
+        [],
+        'эти события ушли БЕЗ контура — в общем ряду они неразличимы',
+      );
+    } finally {
+      убрать();
+    }
+  });
+
+  /*
+   * Контур — факт о мире, а не мнение места вызова. Вызов из JS мимо типов может прислать `env`;
+   * отправка обязана его перезаписать, а не поверить. Без этого случая «всегда» означало бы
+   * «всегда какое-нибудь», и стейдж мог бы объявить себя боем одной строкой.
+   */
+  test('🔴 присланный `env` ПЕРЕЗАПИСЫВАЕТСЯ настоящим контуром, а не принимается на веру', async () => {
+    const звонки = постановка({ hostname: 'ndim-stage.web.app' });
+    try {
+      await capture('landing_view', { env: 'prod' } as never);
+      assert.deepEqual(звонки, [{ event: 'landing_view', props: { env: 'stage' } }],
+        'стейдж объявил себя боем — контур взят у вызывающего, а не у location');
     } finally {
       убрать();
     }
@@ -301,7 +525,7 @@ describe('capture() — блюдо, а не ингредиенты (Д2 верд
     const звонки = постановка();
     try {
       await capture('rating_saved', { dim_title: 'Матрица', is_guest: true } as never);
-      assert.deepEqual(звонки, [{ event: 'rating_saved', props: { is_guest: true } }]);
+      assert.deepEqual(звонки, [{ event: 'rating_saved', props: { is_guest: true, env: 'prod' } }]);
     } finally {
       убрать();
     }
@@ -342,6 +566,26 @@ describe('значения свойств — закрытые союзы (Д4 �
     assert.equal(propertyValueIsSafe('lang', 'de'), false, 'третий язык добавляется в союз, а не приезжает строкой');
   });
 
+  /*
+   * 🆕 КОНТУР судится на ЗНАЧЕНИИ, а не только на ключе (Д4 вердикта №14 — тот же класс).
+   *
+   * 🔴 `'stand'` отбивается НАРОЧНО: стенд обязан молчать, он единственный отрицательный
+   * контроль фичи. Значения, которого нет в союзе, — это и есть замок на «впишем localhost для
+   * симметрии»: сломать придётся ОБА места, список хостов и союз значений, а не одно.
+   *
+   * 🔑 Случай стоит ОТДЕЛЬНЫМ тестом, а не строками в соседнем: мутация «снять ветку `env` из
+   * `propertyValueIsSafe`» сперва роняла случай с именем «булевы — именно булевы», и красная
+   * строка называла не тот предмет. Красный обязан говорить, ЧТО сломано, — иначе следующая
+   * сессия чинит соседа.
+   */
+  test('🆕 контур — закрытый союз, и `stand` в него не входит', () => {
+    assert.equal(propertyValueIsSafe('env', 'prod'), true);
+    assert.equal(propertyValueIsSafe('env', 'stage'), true);
+    assert.equal(propertyValueIsSafe('env', 'stand'), false, 'стенд не имеет права оказаться в ряду');
+    assert.equal(propertyValueIsSafe('env', 'localhost'), false);
+    assert.equal(propertyValueIsSafe('env', true), false);
+  });
+
   test('булевы — именно булевы, а не «правдоподобная строка»', () => {
     assert.equal(propertyValueIsSafe('is_guest', true), true);
     assert.equal(propertyValueIsSafe('has_matches', false), true);
@@ -362,7 +606,7 @@ describe('значения свойств — закрытые союзы (Д4 �
     setAnalyticsClientForTests({ capture: (event, props) => звонки.push({ event, props }) });
     try {
       await capture('rating_saved', { entry: 'matrix-1999-a1b2', is_guest: true } as never);
-      assert.deepEqual(звонки, [{ event: 'rating_saved', props: { is_guest: true } }],
+      assert.deepEqual(звонки, [{ event: 'rating_saved', props: { is_guest: true, env: 'prod' } }],
         'слаг уехал в значении свойства — инвариант №002 В4 нарушен');
     } finally {
       setAnalyticsClientForTests(null);
