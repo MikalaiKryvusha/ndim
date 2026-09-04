@@ -144,7 +144,13 @@ const STYLE = `
 body{margin:0;background:var(--bg);color:var(--ink);
 	font:16px/1.6 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
 .wrap{max-width:920px;margin:0 auto;padding:24px 18px 120px}
-header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+/* Шапка НЕ липкая — уезжает со всем содержимым (слово владельца 2026-09-04: «верхняя шапка
+   интерактивного контура должна быть не стики, а скролиться вместе со всем контентом»).
+   Была position:sticky;top:0;z-index:5 — на длинном интервью она съедала верх экрана и
+   отвлекала от вопроса, который читают.
+   ВНИМАНИЕ: этот CSS живёт внутри шаблонной строки JS — обратных кавычек здесь быть не может,
+   они обрывают литерал (поймано на этой же правке: SyntaxError на строке 149). */
+header.top{background:var(--bg);border-bottom:1px solid var(--line);
 	padding:14px 0;margin-bottom:18px}
 h1{font-size:1.45rem;line-height:1.3;margin:0 0 6px}
 h2{font-size:1.2rem;margin:1.6em 0 .5em}
