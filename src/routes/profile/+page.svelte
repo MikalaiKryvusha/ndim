@@ -19,6 +19,10 @@
   import AppBar from '$lib/ui/AppBar.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
+  // Экран входа — СВОЙ экран, а не карточка внутри оболочки (`bugs/19`, `plans/80`, макет V1
+  // выбран владельцем 2026-09-04). Рендерится ВМЕСТО `.screen`, поэтому ни рельса, ни нижней
+  // панели, ни табов на нём нет по построению, а не по стилям.
+  import SigninScreen from '$lib/ui/SigninScreen.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import type { IconName } from '$lib/ui/icons';
   import Loading from '$lib/ui/Loading.svelte';
@@ -696,16 +700,10 @@
         en: 'If you have already created an account in NDim Space',
       },
     },
-    signedOut: {
-      title: { ru: 'Войдите в Пространство', en: 'Sign in to the Space' },
-      lede: {
-        ru: 'Пароль не нужен. Если Вы уже были в Пространстве NDim — войдите той же почтой, и все Ваши измерения и связи будут на месте.',
-        en: 'No password needed. If you have been in NDim Space before — sign in with the same email, and all your dimensions and relations will be there.',
-      },
-      google: { ru: 'Войти через Google', en: 'Continue with Google' },
-      email: { ru: 'Войти по ссылке на почту', en: 'Sign in with an email link' },
-      guest: { ru: 'Осмотреться гостем', en: 'Look around as a guest' },
-    },
+    // ⛔ БЛОК `signedOut` УДАЛЁН 2026-09-04 вместе со стеной входа. Его тексты переехали в
+    // `$lib/ui/SigninScreen.svelte` — у экрана входа теперь свои строки, утверждённые владельцем
+    // (интервью №073 В1 = А) и поправленные его словом того же дня. Строка «Осмотреться
+    // гостем», которую он же запретил решением №009 В3, ушла отсюда вместе с блоком.
     // Гость: тексты утверждённого макета V1 «Тихий бейдж».
     // Правила текста (владелец, 2026-07-12): обращение — «Вы» во всём продукте;
     // слово «навсегда» не используем (человек может удалить свои данные);
@@ -1174,6 +1172,24 @@
   }}
 />
 
+{#if stand === 'signedout'}
+  <!-- ⛔ ОБОЛОЧКА ПРИЛОЖЕНИЯ СЮДА НЕ ЗАХОДИТ. Человек не вошёл — значит он не внутри продукта,
+       и показывать ему табы, рельс и нижнюю панель приложения было ровно тем, на что владелец
+       жаловался в `bugs/19`. Экран занимает окно целиком и несёт собственные переключатели
+       языка и темы. -->
+  <SigninScreen
+    {lang}
+    step={signupStep === 'choose' || signupStep === 'sending' || signupStep === 'sent'
+      ? signupStep
+      : 'doors'}
+    bind:email={signupEmail}
+    error={signupError}
+    onGoogle={() => signIn('google')}
+    onEmailDoor={() => signIn('email')}
+    onGuest={continueAsGuest}
+    onSendLink={requestLink}
+  />
+{:else}
 <div class="screen">
   <SideRail active="profile" {lang} />
 
@@ -1295,40 +1311,6 @@
     {:else if stand === 'connecting'}
       <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
       <div class="state"><Loading {lang} /></div>
-    {:else if stand === 'signedout'}
-      <!-- Человек не вошёл. Три двери, и ни одной с паролем: Google · ссылка на почту ·
-           гостем. Люди из 1.x входят той же почтой — их UID, оценки и связи на месте. -->
-      <div class="card signin">
-        <h2>{t.signedOut.title[lang]}</h2>
-        <p class="state">{t.signedOut.lede[lang]}</p>
-
-        {#if signupStep === 'choose' || signupStep === 'sending' || signupStep === 'sent'}
-          <!-- Форма почты — та же, что у гостя (макет V4 «Врезка»). -->
-          {#if signupStep === 'sent'}
-            <p class="sent"><Icon name="envelope" size={15} /> {t.account.sentTitle[lang]}</p>
-            <p class="hint">{t.account.sentNote[lang]}</p>
-          {:else}
-            <input
-              class="inp acc-email"
-              type="email"
-              inputmode="email"
-              autocomplete="email"
-              placeholder={t.account.emailPlaceholder[lang]}
-              bind:value={signupEmail}
-              disabled={signupStep === 'sending'}
-            />
-            <button type="button" class="btn" disabled={signupStep === 'sending'} onclick={requestLink}>
-              {signupStep === 'sending' ? t.account.sending[lang] : t.account.sendLink[lang]}
-            </button>
-          {/if}
-        {:else}
-          <button type="button" class="btn" onclick={() => signIn('google')}>{t.signedOut.google[lang]}</button>
-          <button type="button" class="btn ghost" onclick={() => signIn('email')}>{t.signedOut.email[lang]}</button>
-          <button type="button" class="linkish" onclick={continueAsGuest}>{t.signedOut.guest[lang]}</button>
-        {/if}
-
-        {#if signupError}<p class="err">{signupError}</p>{/if}
-      </div>
     {:else if stand === 'expired'}
       <!-- Гостевая сессия истекла — финальная форма по выбору владельца (plans/22 фаза 5,
            2026-08-21): C = V1 «Спокойная карточка» + двери из V4. Данные унесла уборка
@@ -1697,6 +1679,7 @@
 
   <BottomNav active="profile" {lang} />
 </div>
+{/if}
 
 <style>
   /* Токены — из корневого лейаута (:root / [data-theme='dark']); здесь только раскладка. */

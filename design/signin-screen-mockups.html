@@ -248,16 +248,29 @@
   .d .gi { width: 18px; height: 18px; flex: none; display: block; }
   .d.primary { background: var(--primary); color: var(--primary-ink); }
   .d.ghost { background: transparent; border-color: var(--ghost-brd); color: var(--ghost-ink); }
+  /* ГОСТЕВАЯ ДВЕРЬ — ВТОРАЯ ОСНОВНАЯ, слово владельца 2026-09-04: «кнопку гостя делаем яркой
+     синей, как ещё одна основная». Была тихой рамкой (background: transparent), то есть третьей
+     по весу после Google и почты. Стала того же синего, что и главная дверь; отличается ТОЛЬКО
+     тем, что стоит под разделителем «или» — вес одинаковый, роль разная. */
   .d.quiet {
-    background: transparent; border-color: var(--edge); color: var(--text);
+    background: var(--primary); color: var(--primary-ink); border-color: transparent;
     flex-direction: column; gap: 3px; padding: 12px 18px;
   }
-  .d.quiet small { font-size: 12px; font-weight: 500; color: var(--faint); }
+  .d.quiet small { font-size: 12px; font-weight: 500; color: var(--primary-ink); opacity: .8; }
   .d:hover { filter: brightness(1.06); }
-  .d.ghost:hover, .d.quiet:hover { background: var(--ghost-bg-hover); }
+  .d.ghost:hover { background: var(--ghost-bg-hover); }
 
-  .sep { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: 12px; }
-  .sep::before, .sep::after { content: ''; height: 1px; flex: 1; background: var(--edge); }
+  /* «ИЛИ» ЗАМЕТНЕЕ — слово владельца 2026-09-04. Было 12 px цветом --faint на волосяной линии:
+     разделитель читался как технический шов. Стало: крупнее, темнее, с межбуквенным разрядом и
+     заглавными — теперь это ОБЪЯВЛЕНИЕ развилки, а не шов. Линии по бокам тоже плотнее. */
+  .sep {
+    display: flex; align-items: center; gap: 14px; color: var(--text); font-size: 14px;
+    font-weight: 700; letter-spacing: .14em; text-transform: uppercase; opacity: .92;
+    margin: 2px 0;
+  }
+  .sep::before, .sep::after {
+    content: ''; height: 2px; flex: 1; border-radius: 2px; background: var(--edge); opacity: .9;
+  }
 
   /* ДВИЖЕНИЕ 3 — двери въезжают лесенкой.
      🔴 ИДЁТ ТОЛЬКО ПО КНОПКЕ «проиграть» (`#stage.play`), и это не лень, а следствие
