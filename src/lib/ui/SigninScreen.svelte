@@ -161,7 +161,12 @@
           <!-- ГОСТЕВАЯ ДВЕРЬ — ВТОРАЯ ОСНОВНАЯ. Тот же класс `primary`, что и Google: по его
                слову вес одинаковый, разная только роль. Раньше это была `linkish` — ссылка
                третьим планом. -->
-          <button type="button" class="d primary guest" onclick={onGuest}>{t.guest[lang]}</button>
+          <!-- `data-door="guest"` — УСТОЙЧИВЫЙ КРЮЧОК ДЛЯ ПРИБОРОВ, а не стиль. Смоук двери
+               выката раньше искал эту кнопку ПО ТЕКСТУ («Осмотреться гостем») и упал в тот же
+               час, когда владелец текст переименовал: выкат в стейдж покраснел не на дефекте
+               продукта, а на копирайте. Текст остаётся под стражем побайтово
+               (`tools/verify-signin-screen.mjs`, К4), а нажимают кнопку по крючку. -->
+          <button type="button" class="d primary guest" data-door="guest" onclick={onGuest}>{t.guest[lang]}</button>
         {:else if step === 'sent'}
           <p class="sent"><Icon name="envelope" size={16} /> {t.sentTitle[lang]}</p>
           <p class="note">{t.sentNote[lang]}</p>

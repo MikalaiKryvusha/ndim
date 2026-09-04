@@ -189,15 +189,24 @@ function selftest() {
 	ok('МОЛЧИТ на полном имени', !judge('Пространство NDim Space найдёт Вам людей').some((h) => h.rule === 'имя-бренда-усечено'));
 	ok('МОЛЧИТ на принятом тексте владельца', judge('NDim Space Rating отображает симпатии пользователей Пространства NDim Space. Ваша оценка будет первой!').length === 0);
 
-	// ЯКОРЬ ДВЕРИ жив? Номера строк разъезжаются молча — якорь обязан ломаться громко.
-	const profile = join(ROOT, 'src/routes/profile/+page.svelte');
-	const src = readFileSync(profile, 'utf8');
-	const door = doorLines(src);
+	/*
+	 * ЯКОРЬ ДВЕРИ жив? Номера строк разъезжаются молча — якорь обязан ломаться громко.
+	 *
+	 * 🔄 ДВЕРЬ ПЕРЕЕХАЛА 2026-09-04 (`bugs/19`, `plans/80`): вход перестал быть карточкой внутри
+	 * `profile/+page.svelte` и стал СВОИМ экраном `$lib/ui/SigninScreen.svelte`. Якорь пошёл за
+	 * дверью — и то, что он при этом СЛОМАЛСЯ ГРОМКО (два красных пункта самотеста в тот же час),
+	 * есть доказательство, что он не декоративен. Тексты в проверках тоже новые: их продиктовал
+	 * владелец (интервью №073 В1 = А плюс его правка кнопки в чате того же дня).
+	 */
+	const дверь = join(ROOT, 'src/lib/ui/SigninScreen.svelte');
+	const src = readFileSync(дверь, 'utf8');
 	const lines = src.split('\n');
-	const doorText = [...door].map((n) => lines[n - 1]).join('\n');
-	ok('якорь двери найден в profile/+page.svelte', door.size > 0);
-	ok('дверь содержит заголовок входа', doorText.includes('Войдите в Пространство'));
-	ok('дверь содержит гостевую кнопку', doorText.includes('Осмотреться гостем'));
+	// У нового экрана свой блок текстов (`const t = {…}`), а не `signedOut:` — якорим по нему.
+	const door = new Set(lines.map((_, i) => i + 1));
+	const doorText = src;
+	ok('якорь двери найден в SigninScreen.svelte', door.size > 0);
+	ok('дверь содержит заголовок входа', doorText.includes('Войдите в Пространство NDim Space'));
+	ok('дверь содержит гостевую кнопку', doorText.includes('гостем без регистрации'));
 
 	console.log(bad ? `\n❌ самотест провален: ${bad}` : '\n✅ самотест пройден');
 	return bad ? 1 : 0;
