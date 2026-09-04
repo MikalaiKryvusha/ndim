@@ -104,7 +104,7 @@ const EXPECTED_SKILLS = [
   'plan-task', 'plan-epic', 'guarded-loop', 'code-revision', 'owner-voice', 'owner-reviews',
   // Приехал с KAIF 2.2: пинок «продолжай» одной командой.
   'kaif-go',
-  // Приехали с KAIF 2.4: /end-chat расщеплён на пару, развёртывание команды агентов.
+  // Приехали с KAIF 2.4: /end-chat расщеплён на пару, развёртывание команды агентов. KAIF-VERSION-OK: версия прибытия, история.
   'end-chat-soft', 'end-chat-force', 'team-deployment',
 ];
 const hasCyrillic = (s) => /[а-яёА-ЯЁ]/.test(s);

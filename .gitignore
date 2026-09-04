@@ -90,3 +90,5 @@ firebase.slot*.json
 # закоммиченный, он разъехался бы с исходником при первой же правке движка. Правило канона:
 # сначала ignore, потом инструмент.
 static/door/
+.kaif/guarded-loop.json
+.kaif/update-rehearsal.json

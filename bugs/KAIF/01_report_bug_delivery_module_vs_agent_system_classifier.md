@@ -64,3 +64,13 @@ open proposal from this ticket — move delivery into machinery (`kaif-core repo
 the skill text only says "run it" — is now the smallest change left standing. Local state: the
 deployed skill keeps the stricter delivery rule with the 2.3-era divergence note; 15 of 16
 modules of the 2.4 interval merged, this module again the only loss.
+
+## +1 observation — KAIF 2.5 closes the class (2026-09-04, NDim Space, Claude Code auto mode)
+
+The 2.5 rewrite of `/report-bug` step 4 — *"run `node .kaif/kaif-core.mjs report <ticket>`"*, the
+delivery procedure moved into machinery exactly as this ticket proposed — transferred into the
+localized `.claude/skills/report-bug/SKILL.md` on the FIRST attempt, together with the
+authorization-gate carve-out paragraph in `AGENT_GUIDE.md`: no classifier refusal on either edit
+(two intervals in a row, 2.3 and 2.4, the same module was refused twice). The deployed skill now
+equals the canon; the 2.3-era divergence note is retired in place. Verified in the same session by
+delivering ticket `bugs/KAIF/05` through the new command. **Status: closed by 2.5.**
