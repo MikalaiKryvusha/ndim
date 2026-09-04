@@ -2,7 +2,7 @@
 	"kind": "interview",
 	"document": "interviews/interview_065_policy_analytics_paragraph.md",
 	"by": "Николай Кривуша",
-	"at": "2026-08-29T18:03:05.389Z",
+	"at": "2026-09-04T18:44:48.472Z",
 	"comment": "",
 	"answers": {
 		"В1": {
@@ -24,6 +24,11 @@
 			"choice": "А",
 			"text": "",
 			"comment": ""
+		},
+		"В3": {
+			"choice": "Б",
+			"text": "",
+			"comment": ""
 		}
 	},
 	"artifacts": {},
@@ -39,6 +44,10 @@
 		{
 			"by": "Николай Кривуша",
 			"at": "2026-08-29T17:59:12.356Z"
+		},
+		{
+			"by": "Николай Кривуша",
+			"at": "2026-08-29T18:03:05.389Z"
 		}
 	]
 }
