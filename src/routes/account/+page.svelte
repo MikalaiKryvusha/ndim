@@ -23,6 +23,7 @@
   import { fade } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import GuestCard from '$lib/ui/GuestCard.svelte';
+  import { GUEST_TTL_DAYS } from '$lib/model/schema'; // срок гостя в тексте берётся из кода (№061 В2)
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import Loading from '$lib/ui/Loading.svelte';
@@ -276,8 +277,10 @@
     },
     guestTitle: { ru: 'Вы смотрите Пространство гостем', en: 'You are exploring as a guest' },
     guestBody: {
-      ru: 'У гостя нет почты, поэтому управлять пока нечем. Сохраните свои результаты — и этот экран станет Вашим.',
-      en: 'A guest has no email address, so there is nothing to manage yet. Save your results and this screen becomes yours.',
+      // ДОСЛОВНО слово владельца, интервью №061 В2. Срок — из GUEST_TTL_DAYS (текст и код пара).
+      // Приведено к его правилу «везде «Вы»». EN — рабочий перевод агента.
+      ru: `Сейчас Вы пользуетесь временным гостевым аккаунтом, срок жизни которого составляет ${GUEST_TTL_DAYS} дней от момента его создания. Анонимный аккаунт не привязан ни к какому Email адресу. Привяжите аккаунт к Вашему Email адресу, чтобы превратить Ваш Анонимный аккаунт в Полноценный для сохранения Ваших личных данных надолго.`,
+      en: `You are using a temporary guest account with a lifetime of ${GUEST_TTL_DAYS} days from the moment it was created. An anonymous account is not linked to any email address. Link the account to your email address to turn your anonymous account into a full one and keep your personal data for the long term.`,
     },
     guestCta: { ru: 'Сохранить результаты', en: 'Save my results' },
     signedOut: { ru: 'Войдите, чтобы управлять аккаунтом.', en: 'Sign in to manage your account.' },

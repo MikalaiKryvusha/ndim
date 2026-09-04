@@ -713,8 +713,11 @@
     guest: {
       pill: { ru: 'гость', en: 'guest' },
       title: {
-        ru: 'Сейчас Вы гость — Ваши результаты не сохранены',
-        en: 'You are a guest for now — your results are not saved',
+        // Слово владельца, интервью №061 В1 = А с его правкой: «"во временном гостевом" — так
+        // пишем». Прежняя строка пугала («результаты не сохранены») и противоречила числам его
+        // же профиля ниже на том же экране.
+        ru: 'Сейчас Вы гость — Ваши результаты хранятся во временном гостевом профиле',
+        en: 'You are a guest for now — your results live in a temporary guest profile',
       },
       fact1: {
         ru: 'Вас никто не видит: в Пространстве Вы невидимы.',
@@ -770,8 +773,11 @@
     // без внутреннего жаргона. Менять их — только вместе с макетом.
     account: {
       lead: {
-        ru: 'Ваши результаты пока не сохранены. Создайте аккаунт — оценки и найденные связи останутся с Вами, ничего не придётся начинать заново.',
-        en: 'Your results are not saved yet. Create an account and your ratings and relations stay with you — nothing has to be started over.',
+        // Вторая фраза — ДОСЛОВНО слово владельца, интервью №061 В1 (он переписал кандидата сам).
+        // Приведено к его же правилу «везде «Вы»» (`AGENT_GUIDE` → правила текста продукта):
+        // в ответе он написал «вашему/ваши» строчными. EN — рабочий перевод агента.
+        ru: 'Ваши результаты хранятся во временном гостевом профиле. Создайте полноценный аккаунт с привязкой к Вашему Email адресу, чтобы сохранить Ваши оценки и найденные связи, и чтобы Пространство NDim могло искать похожих на Вас людей, даже когда Вы не пользуетесь Пространством NDim.',
+        en: 'Your results live in a temporary guest profile. Create a full account linked to your email address to keep your ratings and relations, and so that NDim Space can look for people similar to you even when you are not using NDim Space.',
       },
       google: { ru: 'Продолжить с Google', en: 'Continue with Google' },
       emailPlaceholder: { ru: 'Ваш адрес электронной почты', en: 'Your email address' },

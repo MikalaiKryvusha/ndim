@@ -23,6 +23,7 @@
   import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import DeleteAccount from '$lib/ui/DeleteAccount.svelte';
+  import { GUEST_TTL_DAYS } from '$lib/model/schema'; // срок гостя в тексте берётся из кода (№061 В2)
   import Icon from '$lib/ui/Icon.svelte';
   import Loading from '$lib/ui/Loading.svelte';
   import {
@@ -227,8 +228,12 @@
     },
     guestTitle: { ru: 'У гостя нет учётной записи', en: 'A guest has no account' },
     guestBody: {
-      ru: 'Вы смотрите Пространство гостем — удалять нечего. Ваши результаты не сохранены и исчезнут сами, если Вы их не сохраните.',
-      en: 'You are exploring as a guest — there is nothing to delete. Your results are not saved and will disappear on their own.',
+      // ДОСЛОВНО слово владельца, интервью №061 В2 (он переписал обоих кандидатов сам). Срок
+      // берётся из GUEST_TTL_DAYS, а не цифрой в тексте: текст и код — пара, которая обязана
+      // держаться одной правкой. Приведено к его правилу «везде «Вы»»; в его ответе одна
+      // опечатка («удал\н») исправлена на «удалён» — единственный правленый знак.
+      ru: `Сейчас Вы пользуетесь временным гостевым аккаунтом, срок жизни которого составляет ${GUEST_TTL_DAYS} дней от момента его создания. Данный аккаунт будет автоматически удалён со всеми его данными, удаление вручную не требуется.`,
+      en: `You are using a temporary guest account with a lifetime of ${GUEST_TTL_DAYS} days from the moment it was created. This account will be deleted automatically together with all its data — manual deletion is not required.`,
     },
     toApp: { ru: 'В Пространство', en: 'To NDim Space' },
     standDown: {
