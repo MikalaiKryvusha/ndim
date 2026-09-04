@@ -46,7 +46,11 @@ const commands = {
   check() {
     // Валидатор — отдельный скрипт, чтобы его можно было гонять и вне npm.
     const r = spawnSync(process.execPath, ['tools/03-kaif-verify.mjs'], { stdio: 'inherit' });
-    process.exit(r.status ?? 1);
+    // Страж пары «маркер ↔ витрина README» (заведён 2026-09-04 закрытием чата, которое нашло
+    // дрейф на ТРИ интервала: en-половина и бейдж стояли на 2.2 при маркере 2.5). Живёт здесь,
+    // потому что ворота `kaif:check` — тот самый путь, что канон требует перед КАЖДЫМ push.
+    const p = spawnSync(process.execPath, ['tools/verify-readme-kaif-version.mjs'], { stdio: 'inherit' });
+    process.exit((r.status ?? 1) || (p.status ?? 1));
   },
 
   update: () => delegateToSkill('kaif-update',

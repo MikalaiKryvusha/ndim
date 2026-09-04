@@ -19,7 +19,7 @@
 
 [![Live](https://img.shields.io/badge/Сервис-ndimspace.app-1467D6.svg)](https://ndimspace.app)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Framework](https://img.shields.io/badge/Framework-KAIF%202.2-7F52FF.svg)](https://github.com/MikalaiKryvusha/KAIF)
+[![Framework](https://img.shields.io/badge/Framework-KAIF%202.5-7F52FF.svg)](https://github.com/MikalaiKryvusha/KAIF)
 [![Stack](https://img.shields.io/badge/Stack-SvelteKit%20%2B%20TypeScript-FF3E00.svg)](#7-самостоятельный-запуск-и-разработка)
 [![Tests](https://img.shields.io/badge/Tests-404%20green-00C853.svg)](#7-самостоятельный-запуск-и-разработка)
 
@@ -505,7 +505,7 @@ Development documents: live status — [`STATUS.md`](STATUS.md) · the project c
 the author's vision — [`GOAL.md`](GOAL.md) · the agent canon — [`AGENT_GUIDE.md`](AGENT_GUIDE.md).
 Development runs as a human-visionary + AI-agent tandem on the
 [KAIF](https://github.com/MikalaiKryvusha/KAIF) framework — the version deployed here is
-**2.2 "Yolden KAIF"** (since 2026-08-14; the version and update history live in the
+**2.5 "Experienced KAIF"** (since 2026-09-04; the version and update history live in the
 `.kaif/kaif.json` marker, checked with `npm run kaif:version`).
 
 ## 8. Limitations of the current version

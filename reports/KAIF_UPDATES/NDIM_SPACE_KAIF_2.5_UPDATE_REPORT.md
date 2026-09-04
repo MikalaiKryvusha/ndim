@@ -104,6 +104,21 @@ and the new `AGENT_GUIDE` authorization carve-out transferred with no refusal. T
 confirmed effective on Claude Code auto mode. `+1 observation` appended to `bugs/KAIF/01` and to
 origin issue #24.
 
+**R6 — `stale-claims` scans only the version being replaced, so an older lie is invisible forever
+(S2; found by the CLOSING ritual, after this report's first draft. Ticket: `bugs/KAIF/06` → issue
+#44).** The item listed five lines containing `2.4`, they were fixed, and the checkpoint re-ran its
+own scan clean. The project's truth-mirror pairs registry, run by hand at closing, then found two
+more: the README badge (`Framework-KAIF%202.2`) and the whole English half (`**2.2 "Yolden KAIF"**
+(since 2026-08-14`) — three intervals behind, in the repository's storefront. The filter is one
+version wide (`if (!line.includes(fromVersion) || line.includes(toVersion)) continue;`), so a claim
+that fell behind earlier can never match again. **The longer a line has been wrong, the more
+reliably it is invisible.** Local remediation applied and proven: the bilingual-README row of our
+pairs registry was the only row with no executable check; it now has
+`node tools/verify-readme-kaif-version.mjs`, carrying a `@guard` declaration block, proven red on
+the real pre-fix README from `HEAD` (rc=1, naming both drifted spots) and wired into
+`npm run kaif:check` — the gate this project requires before every push, which now also exits 1 on
+that drift. This also retires the "`@guard` blocks unexercised" line of §3 the same day it arrived.
+
 **R5 — two canon documents are only partly translated, and the update widened the English part
 (S3, pre-existing debt, no ticket).** `TESTING_FRAMEWORK.md` and `REQUIREMENTS_FRAMEWORK.md` are
 the two "translated" files whose bodies are in fact mixed: at HEAD before this update, lines
@@ -138,10 +153,14 @@ check) · the new `report` machinery command (`--dry-run` and a live delivery) �
 **NOT exercised:** `--channel main` · anonymous mode · fork tracking · `--rehearsal` on the
 `update` route (unreachable here — R1) · `project-name --name-file` · `verdict-mismatch` (no
 mismatch occurred) · the unpaired-anchor red of `check` (this tree has no unpaired block) · the
-`@guard` blocks in anger (that linter SKIPs: nothing declared yet) ·
+`@guard` blocks — see R6: unexercised when this section was first written, exercised by the end of
+the same day (`kaif-guard-lint check` went from `SKIPPED … exit 3` to `✅ 1 declared block(s)`,
+exit 0, the block being the new README guard) ·
 `/team-deployment` adopt path and `team-ci-template.md` (queued to the owner, §5) ·
-`update-verify` at the time of writing (§5). The `@guard` block is genuinely unexercised; the
-SCENARIO form is not — `bugs/KAIF/05` carries one and `kaif-scenario-lint check` linted it green.
+`update-verify` at the time of writing (§5). Both new forms ended the day exercised, neither by
+plan: the SCENARIO form because `bugs/KAIF/05` needed an acceptance criterion
+(`kaif-scenario-lint check` → `1 scenario(s), 0 findings`), the `@guard` block because the closing
+ritual found a defect that needed a guard (R6; `kaif-guard-lint check` → `1 declared block(s)`).
 
 ## 4. Wishes for the next version (by cost, descending)
 
@@ -241,4 +260,7 @@ Judge verdict, quoted verbatim:
 2. `bugs/KAIF/01` **+1 observation: closed by 2.5** — the machinery-delivery fix works on Claude
    Code auto mode, where two consecutive prose rewrites had failed. Comment delivered to origin
    issue #24.
-3. This report.
+3. `bugs/KAIF/06` — R6 (bug, template A shape), delivered by the same machinery command as
+   issue #44. Filed during the closing ritual, hours after this report's first draft; the ritual's
+   pairs-registry pass is what found it.
+4. This report.
