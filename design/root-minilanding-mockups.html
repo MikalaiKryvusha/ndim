@@ -261,7 +261,6 @@
   .cat-list .cm a { color: var(--muted); }
   .cat-all { text-align: center; margin-top: 14px; font-size: 14px; font-weight: 600; }
   .cat-all a { color: var(--accent); text-decoration: none; }
-  .cat-note { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 10px; }
 
   /* ── V2 «Разворот»: речь слева, действие справа ───────────────────────────── */
   .spread { display: flex; gap: 26px; align-items: flex-start; margin-top: 22px; }
@@ -307,6 +306,16 @@
   #stage[data-w="390"] .speech .cta { margin-top: 18px; }
   .speech .cta .r { font-size: 17px; }
 
+  /* ── V5: карточка из V3, сведённая в одну мультиязычную ─────────────────────── */
+  .pitch {
+    margin-top: 18px; background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 18px; padding: 20px; box-shadow: var(--card-shadow); text-align: center;
+  }
+  .pitch .h { color: var(--heading); font-weight: 800; font-size: 20px; }
+  .pitch .t { margin: 12px 0 0; font-size: 15px; line-height: 1.6; }
+  .pitch .t.en { color: var(--muted); font-size: 14px; margin-top: 7px; }
+  #stage[data-w="1440"] .pitch .h { font-size: 23px; }
+  #stage[data-w="1440"] .pitch .t { font-size: 16.5px; }
   /* ── V4 «Витрина»: состояние Пространства первым содержанием ──────────────── */
   .showcase {
     margin-top: 22px; background: var(--panel); border: 1px solid var(--edge);
@@ -354,11 +363,12 @@
 </svg>
 
 <div class="picker">
-  <b>Мини-лендинг корня — 4 макета:</b>
-  <button data-v="1" class="active">V1 Ступень</button>
+  <b>Мини-лендинг корня — 5 макетов:</b>
+  <button data-v="1">V1 Ступень</button>
   <button data-v="2">V2 Разворот</button>
   <button data-v="3">V3 Две речи</button>
   <button data-v="4">V4 Витрина</button>
+  <button data-v="5" class="active">V5 по слову владельца</button>
   <span class="sp"></span>
   <button id="width-mid">1024</button>
   <button id="width">390 ↔ 1440</button>
@@ -382,7 +392,7 @@
 <div id="stage" data-w="390">
 
   <!-- ═══════════════════ V1 — СТУПЕНЬ ═══════════════════ -->
-  <div class="variant active" id="1">
+  <div class="variant" id="1">
     <div class="caption">V1 «Ступень» — одна колонка, читается сверху вниз одним движением</div>
     <div class="browser">
       <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
@@ -419,7 +429,7 @@
         </div>
         <div class="cat">
           <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
-          <p class="cat-l">Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.<span class="en">Ratings built from what people voted. You can look without an account.</span></p>
+          <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
           <ul class="cat-list">
             <li>
               <a class="ct" href="/ru/dimension/donnie-darko-1hqyrh7o">Донни Дарко</a>
@@ -452,7 +462,6 @@
             </li>
           </ul>
           <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
-          <p class="cat-note">Названия взяты из среза каталога от 2 августа 2026 года · catalogue slice of 2 August 2026</p>
         </div>
       </div>
     </div>
@@ -503,7 +512,7 @@
         </div>
         <div class="cat">
           <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
-          <p class="cat-l">Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.<span class="en">Ratings built from what people voted. You can look without an account.</span></p>
+          <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
           <ul class="cat-list">
             <li>
               <a class="ct" href="/ru/dimension/donnie-darko-1hqyrh7o">Донни Дарко</a>
@@ -536,7 +545,6 @@
             </li>
           </ul>
           <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
-          <p class="cat-note">Названия взяты из среза каталога от 2 августа 2026 года · catalogue slice of 2 August 2026</p>
         </div>
       </div>
     </div>
@@ -585,7 +593,7 @@
         </div>
         <div class="cat">
           <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
-          <p class="cat-l">Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.<span class="en">Ratings built from what people voted. You can look without an account.</span></p>
+          <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
           <ul class="cat-list">
             <li>
               <a class="ct" href="/ru/dimension/donnie-darko-1hqyrh7o">Донни Дарко</a>
@@ -618,7 +626,6 @@
             </li>
           </ul>
           <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
-          <p class="cat-note">Названия взяты из среза каталога от 2 августа 2026 года · catalogue slice of 2 August 2026</p>
         </div>
       </div>
     </div>
@@ -650,7 +657,7 @@
         </div>
         <div class="cat">
           <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
-          <p class="cat-l">Рейтинги, собранные из оценок людей. Смотреть можно без аккаунта.<span class="en">Ratings built from what people voted. You can look without an account.</span></p>
+          <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
           <ul class="cat-list">
             <li>
               <a class="ct" href="/ru/dimension/donnie-darko-1hqyrh7o">Донни Дарко</a>
@@ -683,11 +690,102 @@
             </li>
           </ul>
           <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
-          <p class="cat-note">Названия взяты из среза каталога от 2 августа 2026 года · catalogue slice of 2 August 2026</p>
         </div>
         <a class="cta" href="/profile?guest=1">
           <span class="r">Войти в Пространство</span>
           <span class="e">Enter the Space</span>
+        </a>
+        <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+        <div class="how v4how">
+          <div class="hcol">
+            <p><b>1.</b> Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры.</p>
+            <p><b>2.</b> Пространство NDim считает Похожесть между людьми по их оценкам.</p>
+            <p><b>3.</b> В Связях Вы видите людей с наибольшей Похожестью на Вас.</p>
+          </div>
+          <div class="hcol en">
+            <p><b>1.</b> People rate objects of human culture — films, series, books, games.</p>
+            <p><b>2.</b> The NDim Space computes Similarity between people from their ratings.</p>
+            <p><b>3.</b> In Relations you see the people with the highest Similarity to you.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ V5 — ВИТРИНА ПО СЛОВУ ВЛАДЕЛЬЦА ═══════════════════ -->
+  <div class="variant active" id="5">
+    <div class="caption">V5 «Витрина по слову владельца» — верх и низ от V4, карточка из V3 (интервью №060, ответ 2026-09-05)</div>
+    <div class="browser">
+      <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
+      <div class="door">
+        <div class="langbar">
+          <span class="lb">Язык страницы · Site language</span>
+          <span class="autos"><a href="/ru">Русский</a><a href="/en">English</a></span>
+        </div>
+        <svg class="mark" width="60" height="60" style="margin-top:20px"><use href="#nmark"/></svg>
+        <div class="word">NDim Space</div>
+        <div class="showcase">
+          <div class="sl">Пространство NDim сейчас · The NDim Space right now</div>
+          <div class="facts">
+            <div class="fact"><div class="n">5&#160;144</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
+            <div class="fact"><div class="n">4&#160;071</div><div class="l">оценок поставлено<span class="en">ratings cast</span></div></div>
+            <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
+            <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
+          </div>
+          <p class="taken">Снимок 29 августа 2026 года · snapshot of 29 August 2026</p>
+        </div>
+        <!-- КАРТОЧКА ИЗ V3, СВЕДЁННАЯ В ОДНУ МУЛЬТИЯЗЫЧНУЮ — слово владельца (№060, 2026-09-05):
+             «под карточкой "Пространство NDim сейчас · The NDim Space right now" помещаем одну
+             мультиязычную карточку из v3». В V3 таких карточек было две, по одной на язык;
+             здесь она одна и говорит на обоих — как и вся эта дверь, которая язык за человека
+             не выбирает. Строка о Пространстве переехала сюда из шапки: дважды её не пишем. -->
+        <div class="pitch">
+          <div class="h">Пространство NDim · NDim Space</div>
+          <p class="t">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
+          <p class="t en">In the NDim Space you will find people who are genuinely like you.</p>
+        </div>
+        <div class="cat">
+          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
+          <ul class="cat-list">
+            <li>
+              <a class="ct" href="/ru/dimension/donnie-darko-1hqyrh7o">Донни Дарко</a>
+              <a class="ce" href="/en/dimension/donnie-darko-1hqyrh7o">Donnie Darko</a>
+              <span class="cm">Фильм · Movie · 2001</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/house-of-the-dragon-0q43wuaq">Дом Дракона</a>
+              <a class="ce" href="/en/dimension/house-of-the-dragon-0q43wuaq">House of the Dragon</a>
+              <span class="cm">Телесериал · TV Series · 2022</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">Warcraft III: Reign of Chaos</a>
+              <span class="cm">Видеоигра · Video game · 2002 · <a href="/en/dimension/warcraft-iii-reign-of-chaos-2vvdn7dc">English</a></span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/oliver-twist-3dhodx22">Приключения Оливера Твиста</a>
+              <a class="ce" href="/en/dimension/oliver-twist-3dhodx22">Oliver Twist</a>
+              <span class="cm">Роман · Novel · 1838</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/skiing-11mnoskt">Катание на лыжах</a>
+              <a class="ce" href="/en/dimension/skiing-11mnoskt">Skiing</a>
+              <span class="cm">Практика · Practice</span>
+            </li>
+            <li>
+              <a class="ct" href="/ru/dimension/minority-report-3iqeqetl">Особое мнение</a>
+              <a class="ce" href="/en/dimension/minority-report-3iqeqetl">Minority Report</a>
+              <span class="cm">Фильм · Movie · 2002</span>
+            </li>
+          </ul>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+        </div>
+        <a class="cta" href="/profile?guest=1">
+          <!-- Его слово дословно: «Войти в Пространство NDim Space гостем /n без регистрации».
+               `/n` — принудительный перенос, тем же жестом, что на экране входа. Английская
+               половина — рабочий перевод агента до его вычитки. -->
+          <span class="r">Войти в Пространство NDim Space гостем<br>без регистрации</span>
+          <span class="e">Enter NDim Space as a guest<br>without signing up</span>
         </a>
         <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
         <div class="how v4how">
