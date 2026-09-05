@@ -51,7 +51,7 @@
       "//7a": "🔴 Список НЕ пишется руками: его выводит из дерева src/routes и языков страж",
       "//7b": "tools/verify-old-host-redirects.mjs (--fix переписывает). До 2026-09-05 здесь стояли семь",
       "//7c": "путей 1.x, а /ru/**, /en/** и весь каталог старый хост отдавал сам — вторая копия сайта,",
-      "//7d": "и дверь карточки на ней теряла гостя (bugs/NEW_old_host_serves_site_without_redirect).",
+      "//7d": "и дверь карточки на ней теряла гостя (bugs/232_DONE_old_host_serves_site_without_redirect).",
       "target": "app",
       "public": "build",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
