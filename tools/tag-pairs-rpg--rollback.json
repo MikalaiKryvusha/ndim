@@ -1,0 +1,5816 @@
+{
+  "at": "2026-09-05T13:45:40.749Z",
+  "contour": "prod",
+  "group": "rpg",
+  "authOwner": "нужно писать role-playing game и RPG одновременно, во все такие игры (№061 В7, 2026-09-05 16:20) · ролевая игра и РПГ — ничего не ломает (чат 2026-09-05)",
+  "records": [
+    {
+      "id": "0h98C7V0ziCaGpY6xxPu",
+      "title": "Disco Elysium",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "детектив",
+        "detective",
+        "интерактивная история",
+        "interactive story"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "детектив",
+        "detective",
+        "интерактивная история",
+        "interactive story"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "0wGT6KZbDnC8to5FeY8L",
+      "title": "Borderlands 2",
+      "before": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "RPG",
+        "ролевая игра",
+        "лутер-шутер",
+        "looter shooter",
+        "кооператив",
+        "co-op",
+        "sci-fi",
+        "научная фантастика",
+        "юмор",
+        "humor"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "лутер-шутер",
+        "looter shooter",
+        "кооператив",
+        "co-op",
+        "sci-fi",
+        "научная фантастика",
+        "юмор",
+        "humor"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "1o14tBLndn2RXXFUXsns",
+      "title": "The Outer Worlds",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "научная фантастика",
+        "sci-fi",
+        "открытый мир",
+        "open world",
+        "моральный выбор",
+        "moral choices",
+        "тактический шутер",
+        "tactical shooter"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "научная фантастика",
+        "sci-fi",
+        "открытый мир",
+        "open world",
+        "моральный выбор",
+        "moral choices",
+        "тактический шутер",
+        "tactical shooter"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "1oN9g00vY17U6FT0Yvzj",
+      "title": "Serious Sam: The Random Encounter",
+      "before": [
+        "видеоигра",
+        "RPG",
+        "video game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "1rYZJLEnQPtFPnKXSd8x",
+      "title": "Borderlands: The Pre-Sequel",
+      "before": [
+        "видеоигра",
+        "video game",
+        "шутер от первого лица",
+        "first-person shooter",
+        "ролевая игра",
+        "role-playing game",
+        "научная фантастика",
+        "science fiction",
+        "лутер-шутер",
+        "looter shooter"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "шутер от первого лица",
+        "first-person shooter",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "научная фантастика",
+        "science fiction",
+        "лутер-шутер",
+        "looter shooter"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "2xhOV8y7d47h1VKVR75D",
+      "title": "Mass Effect 2",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "sci-fi",
+        "научная фантастика",
+        "action",
+        "экшен"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "sci-fi",
+        "научная фантастика",
+        "action",
+        "экшен"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "3PaPIsxXiULzlEysAHwL",
+      "title": "Kingdom Come: Deliverance II",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "средневековье",
+        "medieval",
+        "открытый мир",
+        "open world",
+        "историческая игра",
+        "historical game",
+        "приключение",
+        "adventure",
+        "реализм",
+        "realism"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "средневековье",
+        "medieval",
+        "открытый мир",
+        "open world",
+        "историческая игра",
+        "historical game",
+        "приключение",
+        "adventure",
+        "реализм",
+        "realism"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "3VcIYQJBxphm6ymygwzy",
+      "title": "Drakensang: The Dark Eye",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра",
+        "фэнтези",
+        "fantasy",
+        "тактическая боевая система",
+        "tactical combat"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "тактическая боевая система",
+        "tactical combat"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "3ddIorGC1qsLRebbNNs0",
+      "title": "Star Wars: The Old Republic",
+      "before": [
+        "видеоигра",
+        "video game",
+        "MMORPG",
+        "ролевая игра"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "MMORPG",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "4AtBE94NgcP8tvDxT40F",
+      "title": "Механоиды 2: Война кланов",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "simulation",
+        "RPG",
+        "симулятор",
+        "ролевая игра"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "simulation",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "симулятор"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "4QhzO2k7JDevSxLDg1ii",
+      "title": "Пираты Карибского моря",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "role-playing game",
+        "action",
+        "RPG",
+        "экшн",
+        "ролевая игра"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action",
+        "экшн"
+      ],
+      "added": [
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "4QrpCl8tN2KGtYe1DP7T",
+      "title": "BioShock",
+      "before": [
+        "video game",
+        "видеоигра",
+        "FPS",
+        "шутер",
+        "RPG",
+        "хоррор",
+        "sci-fi",
+        "научная фантастика"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "FPS",
+        "шутер",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "хоррор",
+        "sci-fi",
+        "научная фантастика"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "4aTExb2zfsSZXZUOa5MF",
+      "title": "Годвилль",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "текстовая игра",
+        "text-based",
+        "пассивная игра",
+        "idle game"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "текстовая игра",
+        "text-based",
+        "пассивная игра",
+        "idle game"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "57wxGR7bbLgMs4YpTUYz",
+      "title": "Fallout 3",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "post-apocalyptic",
+        "постапокалипсис",
+        "open world",
+        "открытый мир",
+        "action RPG",
+        "экшен-RPG",
+        "V.A.T.S.",
+        "wasteland",
+        "пустоши",
+        "Vault",
+        "Убежище",
+        "Enclave",
+        "Анклав",
+        "Brotherhood of Steel",
+        "Братство Стали",
+        "mutants",
+        "мутанты",
+        "karma system",
+        "система кармы"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "post-apocalyptic",
+        "постапокалипсис",
+        "open world",
+        "открытый мир",
+        "action RPG",
+        "экшен-RPG",
+        "V.A.T.S.",
+        "wasteland",
+        "пустоши",
+        "Vault",
+        "Убежище",
+        "Enclave",
+        "Анклав",
+        "Brotherhood of Steel",
+        "Братство Стали",
+        "mutants",
+        "мутанты",
+        "karma system",
+        "система кармы"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "6M26lTXo4yflx3WtYIBf",
+      "title": "Star Wars: Knights of the Old Republic",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "6Nqiz4xQsLvO9xI6Hwen",
+      "title": "Final Fantasy VII Rebirth",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "role-playing game",
+        "ролевая игра",
+        "action RPG",
+        "экшен-рпг",
+        "open world",
+        "открытый мир"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "экшен-рпг",
+        "open world",
+        "открытый мир"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "6ULk6R9K7UVs92EttMij",
+      "title": "Limbus Company",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "dystopia",
+        "антиутопия",
+        "turn-based",
+        "пошаговая стратегия",
+        "visual novel",
+        "визуальная новелла"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "dystopia",
+        "антиутопия",
+        "turn-based",
+        "пошаговая стратегия",
+        "visual novel",
+        "визуальная новелла"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "6qKXwBDuLrxavUuOTIyk",
+      "title": "Orcs & Elves",
+      "before": [
+        "видеоигра",
+        "RPG",
+        "video game",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "6xbhwSZN67qajt3zy8Mr",
+      "title": "Omikron: The Nomad Soul",
+      "before": [
+        "видеоигра",
+        "video game",
+        "приключение",
+        "adventure",
+        "ролевая игра",
+        "role-playing game",
+        "киберпанк",
+        "cyberpunk",
+        "перерождение",
+        "reincarnation"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "приключение",
+        "adventure",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "киберпанк",
+        "cyberpunk",
+        "перерождение",
+        "reincarnation"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "70msIQ3zJ4IwQO7amUmD",
+      "title": "Persona 5",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "adventure",
+        "приключение"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "adventure",
+        "приключение"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "77NauCUd9kdRA52b9MC9",
+      "title": "Tiny Tina's Wonderlands",
+      "before": [
+        "видеоигра",
+        "video game",
+        "шутер от первого лица",
+        "first-person shooter",
+        "ролевая игра",
+        "role-playing game",
+        "фэнтези",
+        "fantasy",
+        "лутер-шутер",
+        "looter shooter",
+        "кооперативная игра",
+        "cooperative game"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "шутер от первого лица",
+        "first-person shooter",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "лутер-шутер",
+        "looter shooter",
+        "кооперативная игра",
+        "cooperative game"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "7W1FYfMbHMuOORObpIjH",
+      "title": "Готика 4: Аркания",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "7iVG5MGzM80WLq0QAxlU",
+      "title": "The Legend of Heroes: Trails Through Daybreak II",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "RPG",
+        "приключение",
+        "adventure",
+        "фэнтези",
+        "fantasy",
+        "пошаговая стратегия",
+        "turn-based strategy",
+        "JRPG"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "приключение",
+        "adventure",
+        "фэнтези",
+        "fantasy",
+        "пошаговая стратегия",
+        "turn-based strategy",
+        "JRPG"
+      ],
+      "added": [
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "7xkRr21a7R2n5GfJiNSV",
+      "title": "ELEX II",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "sci-fi",
+        "фантастика"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "sci-fi",
+        "фантастика"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "82GpC9mTkLmtpPzF5YeN",
+      "title": "Корсары III",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "role-playing game",
+        "simulation",
+        "RPG",
+        "симулятор",
+        "ролевая игра"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "simulation",
+        "симулятор"
+      ],
+      "added": [
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "8iS7BF2wnJnYLl9IQaXe",
+      "title": "Mount & Blade II: Bannerlord",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "экшен",
+        "action",
+        "стратегия",
+        "strategy",
+        "средневековье",
+        "medieval",
+        "песочница",
+        "sandbox",
+        "тактика",
+        "tactics"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшен",
+        "action",
+        "стратегия",
+        "strategy",
+        "средневековье",
+        "medieval",
+        "песочница",
+        "sandbox",
+        "тактика",
+        "tactics"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "99otRMN5vnNJyS2s7c85",
+      "title": "Black Myth: Wukong",
+      "before": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "RPG",
+        "Soulslike",
+        "трансформации",
+        "transformations",
+        "сложные бои",
+        "challenging combat"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "Soulslike",
+        "трансформации",
+        "transformations",
+        "сложные бои",
+        "challenging combat"
+      ],
+      "added": [
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Asr8uQTxKGb1SLPlJsxi",
+      "title": "Dead or Alive 5 Infinite",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "BhXlT2JkMsi5NRS8AU7w",
+      "title": "Warframe",
+      "before": [
+        "video game",
+        "видеоигра",
+        "shooter",
+        "шутер",
+        "RPG",
+        "ролевая игра",
+        "sci-fi",
+        "научная фантастика",
+        "cooperative",
+        "кооператив",
+        "action",
+        "экшен"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "shooter",
+        "шутер",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "sci-fi",
+        "научная фантастика",
+        "cooperative",
+        "кооператив",
+        "action",
+        "экшен"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "BqlFDHqfui7FATZ3ekmm",
+      "title": "Kenshi",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "выживание",
+        "survival",
+        "открытый мир",
+        "open world",
+        "стратегия",
+        "strategy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "выживание",
+        "survival",
+        "открытый мир",
+        "open world",
+        "стратегия",
+        "strategy"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Br66a8vyY4RLb7CioMIz",
+      "title": "South Park: The Stick of Truth",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "пошаговые бои",
+        "turn-based combat",
+        "комедия",
+        "comedy",
+        "пародия",
+        "parody",
+        "открытый мир",
+        "open world"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "пошаговые бои",
+        "turn-based combat",
+        "комедия",
+        "comedy",
+        "пародия",
+        "parody",
+        "открытый мир",
+        "open world"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "C4dgvpzOyvgeV2XzlAEY",
+      "title": "World of Warcraft",
+      "before": [
+        "video game",
+        "видеоигра",
+        "MMORPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "online",
+        "онлайн"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "MMORPG",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "online",
+        "онлайн"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "CJWgVVdpp66VrCBgbzoS",
+      "title": "Fire Emblem: Three Houses",
+      "before": [
+        "видеоигра",
+        "ролевая игра",
+        "video game",
+        "role-playing game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "CYUHFMoAyqHOMPDdpoME",
+      "title": "Battle Brothers",
+      "before": [
+        "видеоигра",
+        "video game",
+        "стратегия",
+        "strategy",
+        "тактика",
+        "tactics",
+        "ролевая игра",
+        "RPG",
+        "roguelike",
+        "roguelike",
+        "средневековье",
+        "medieval",
+        "перманентная смерть",
+        "permadeath"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "стратегия",
+        "strategy",
+        "тактика",
+        "tactics",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "roguelike",
+        "roguelike",
+        "средневековье",
+        "medieval",
+        "перманентная смерть",
+        "permadeath"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "CaitKeWkmARmcwSeSJM1",
+      "title": "Neverwinter Nights: Kingmaker",
+      "before": [
+        "видеоигра",
+        "RPG",
+        "video game",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Ccr5tbH9wLc23wD3hI50",
+      "title": "Star Valor",
+      "before": [
+        "видеоигра",
+        "video game",
+        "космос",
+        "space",
+        "RPG",
+        "RPG",
+        "песочница",
+        "sandbox",
+        "исследование",
+        "exploration",
+        "бои в реальном времени",
+        "real-time combat"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "космос",
+        "space",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "песочница",
+        "sandbox",
+        "исследование",
+        "exploration",
+        "бои в реальном времени",
+        "real-time combat"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "CjZBIN1QPRlxSaBh8DR3",
+      "title": "Mass Effect",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "sci-fi",
+        "научная фантастика",
+        "action",
+        "экшен"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "sci-fi",
+        "научная фантастика",
+        "action",
+        "экшен"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "D03vtwTgrwjvURkr1KbD",
+      "title": "Cyberpunk 2077",
+      "before": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "киберпанк",
+        "cyberpunk",
+        "фантастика",
+        "sci-fi"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "киберпанк",
+        "cyberpunk",
+        "фантастика",
+        "sci-fi"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "DQSK6c3zeLQ2a4xNyZsw",
+      "title": "Neverwinter Nights 2: Storm of Zehir",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "Dungeons & Dragons"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "Dungeons & Dragons"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "DVM1WWRPNhaEdHpf3TMy",
+      "title": "The Elder Scrolls II: Daggerfall",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "role-playing game",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "action RPG",
+        "экшен-рпг"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "action RPG",
+        "экшен-рпг"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "DZasd644bSbg9tTGAclC",
+      "title": "Dark Souls II",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "экшн",
+        "action",
+        "фэнтези",
+        "fantasy",
+        "хардкор",
+        "hardcore"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшн",
+        "action",
+        "фэнтези",
+        "fantasy",
+        "хардкор",
+        "hardcore"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "ELmBRqRVJAYaSUCDoxGk",
+      "title": "Final Fantasy IX",
+      "before": [
+        "видеоигра",
+        "video game",
+        "JRPG",
+        "ролевая игра",
+        "RPG",
+        "фэнтези",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "JRPG",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "EV2NugpTTPc5dRr4rIBb",
+      "title": "Dark and Darker",
+      "before": [
+        "видеоигра",
+        "video game",
+        "фэнтези",
+        "fantasy",
+        "ролевая игра",
+        "RPG",
+        "PvPvE",
+        "подземелья",
+        "dungeons",
+        "выживание",
+        "survival"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "фэнтези",
+        "fantasy",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "PvPvE",
+        "подземелья",
+        "dungeons",
+        "выживание",
+        "survival"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "EzXhvaubzIWZD16nnnll",
+      "title": "Icewind Dale: Heart of Winter",
+      "before": [
+        "видеоигра",
+        "ролевая игра",
+        "video game",
+        "role-playing game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "F9mJg2KaU9Bu6pcWX5bC",
+      "title": "Phantasy Star Online 2 New Genesis",
+      "before": [
+        "видеоигра",
+        "RPG",
+        "video game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "FkIks9ULITSwf42dGahB",
+      "title": "Stardew Valley",
+      "before": [
+        "video game",
+        "видеоигра",
+        "farming simulator",
+        "симулятор фермы",
+        "RPG",
+        "ролевая игра",
+        "indie",
+        "инди",
+        "life simulation",
+        "симулятор жизни"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "farming simulator",
+        "симулятор фермы",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "indie",
+        "инди",
+        "life simulation",
+        "симулятор жизни"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Fkg38DLsQxvycG17f3oC",
+      "title": "Mount & Blade. Эпоха Турниров",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "экшен",
+        "action",
+        "стратегия",
+        "strategy",
+        "средневековье",
+        "medieval",
+        "песочница",
+        "sandbox",
+        "тактика",
+        "tactics",
+        "многопользовательская",
+        "multiplayer"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшен",
+        "action",
+        "стратегия",
+        "strategy",
+        "средневековье",
+        "medieval",
+        "песочница",
+        "sandbox",
+        "тактика",
+        "tactics",
+        "многопользовательская",
+        "multiplayer"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "FnfYsww7SkKyk6zlZ1ce",
+      "title": "Minecraft Dungeons",
+      "before": [
+        "видеоигра",
+        "RPG",
+        "video game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "FzZMhQyrR9GgH17XVOpF",
+      "title": "Mount & Blade. Огнём и мечом",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "стратегия",
+        "strategy",
+        "средневековье",
+        "medieval",
+        "историческая",
+        "historical",
+        "тактика",
+        "tactics",
+        "огнестрельное оружие",
+        "firearms",
+        "многопользовательская",
+        "multiplayer"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "стратегия",
+        "strategy",
+        "средневековье",
+        "medieval",
+        "историческая",
+        "historical",
+        "тактика",
+        "tactics",
+        "огнестрельное оружие",
+        "firearms",
+        "многопользовательская",
+        "multiplayer"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "GMYs9AJGA4PE5PQkUpTT",
+      "title": "Dishonored 2",
+      "before": [
+        "video game",
+        "видеоигра",
+        "stealth",
+        "стелс",
+        "action",
+        "экшен",
+        "RPG",
+        "ролевая игра"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "stealth",
+        "стелс",
+        "action",
+        "экшен",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "GOZJvFf8YlVRGYPgOqug",
+      "title": "Wolfenstein RPG",
+      "before": [
+        "видеоигра",
+        "ролевая игра",
+        "video game",
+        "role-playing game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "HCaX7e5zvA0EQ0RQ06k2",
+      "title": "Baldur’s Gate: Dark Alliance",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "hack and slash",
+        "фэнтези",
+        "fantasy",
+        "кооператив",
+        "co-op"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "hack and slash",
+        "фэнтези",
+        "fantasy",
+        "кооператив",
+        "co-op"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "HHak471XktJX9ljmxG6N",
+      "title": "Bloodborne",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action",
+        "экшен",
+        "horror",
+        "хоррор"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action",
+        "экшен",
+        "horror",
+        "хоррор"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "J5EZZv4s5NC0vI5mzIll",
+      "title": "Fallout: New Vegas",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "post-apocalyptic",
+        "постапокалипсис"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "post-apocalyptic",
+        "постапокалипсис"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "JYTztA5OFGSn4Kh89EeX",
+      "title": "The Elder Scrolls III: Morrowind",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "classic game",
+        "классическая игра",
+        "нелинейность",
+        "свобода действий"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "classic game",
+        "классическая игра",
+        "нелинейность",
+        "свобода действий"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "JqYnRcOW9hFZfjY6qFuo",
+      "title": "Enshrouded",
+      "before": [
+        "видеоигра",
+        "video game",
+        "выживание",
+        "survival",
+        "открытый мир",
+        "open world",
+        "ролевой элемент",
+        "RPG",
+        "кооператив",
+        "co-op",
+        "строительство",
+        "building"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "выживание",
+        "survival",
+        "открытый мир",
+        "open world",
+        "ролевой элемент",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "кооператив",
+        "co-op",
+        "строительство",
+        "building"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "K4Iw8s4QSKca8ceee3Z6",
+      "title": "Paper Mario: The Thousand-Year Door",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "KSFFWS0JkjyZqPxIDyqJ",
+      "title": "Аркания: Падение Сетаррифа",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "KY8xmVbtUelEddXSxKql",
+      "title": "Portal Knights",
+      "before": [
+        "видеоигра",
+        "video game",
+        "приключения",
+        "adventure",
+        "ролевая игра",
+        "role-playing game",
+        "песочница",
+        "sandbox",
+        "выживание",
+        "survival"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "приключения",
+        "adventure",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "песочница",
+        "sandbox",
+        "выживание",
+        "survival"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "L0CZ6EQN2Q4Mqiz5UlxR",
+      "title": "Dragon Age: Начало",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра",
+        "фэнтези",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "LCuIC4wMiSNIawuDhWGI",
+      "title": "Planescape: Torment",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "приключение",
+        "adventure",
+        "философия",
+        "philosophy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "приключение",
+        "adventure",
+        "философия",
+        "philosophy"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "LGGT3gy4BvZh5kxAhEKB",
+      "title": "Ведьмак",
+      "before": [
+        "видеоигра",
+        "ролевая игра",
+        "video game",
+        "role-playing game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "LJ33P5IZ1xg2Z7ksOc9V",
+      "title": "Gothic",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "action RPG",
+        "экшен-RPG"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "action RPG",
+        "экшен-RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "M1g5sZHryRsumZDlmFmF",
+      "title": "Cube World",
+      "before": [
+        "видеоигра",
+        "video game",
+        "приключенческая",
+        "adventure",
+        "RPG",
+        "crafting",
+        "исследование",
+        "exploration",
+        "фэнтези",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "приключенческая",
+        "adventure",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "crafting",
+        "исследование",
+        "exploration",
+        "фэнтези",
+        "fantasy"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "MaMYaahf2c9B6SmRnz3W",
+      "title": "Fable II",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "моральный выбор",
+        "morality system",
+        "открытый мир",
+        "open world",
+        "кооператив",
+        "co-op"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "моральный выбор",
+        "morality system",
+        "открытый мир",
+        "open world",
+        "кооператив",
+        "co-op"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "MsMZy03Crvgn6N77Wbyp",
+      "title": "Xenogears",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "JRPG",
+        "sci-fi",
+        "научная фантастика"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "JRPG",
+        "sci-fi",
+        "научная фантастика"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "O2k2FUk65N0hIkmn7Qf3",
+      "title": "Salt and Sanctuary",
+      "before": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевые игры",
+        "role-playing game",
+        "платформер",
+        "platformer",
+        "мрачное фэнтези",
+        "dark fantasy",
+        "сложная",
+        "challenging"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевые игры",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "платформер",
+        "platformer",
+        "мрачное фэнтези",
+        "dark fantasy",
+        "сложная",
+        "challenging"
+      ],
+      "added": [
+        "ролевая игра",
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "ONDfjbl2iQYQkLOfqFkI",
+      "title": "Temtem",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "OjOBGePe8tIJncM1sZRp",
+      "title": "Deltarune",
+      "before": [
+        "видеоигра",
+        "video game",
+        "rpg",
+        "ролевая игра",
+        "приключения",
+        "adventure",
+        "фэнтези",
+        "fantasy",
+        "инди",
+        "indie"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "приключения",
+        "adventure",
+        "фэнтези",
+        "fantasy",
+        "инди",
+        "indie"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": [
+        "rpg → RPG"
+      ]
+    },
+    {
+      "id": "OmhioPIgX3Z4fbTH6qZA",
+      "title": "Diablo III",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action",
+        "экшен",
+        "hack and slash",
+        "фэнтези",
+        "fantasy",
+        "dungeon crawler",
+        "исследование подземелий"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action",
+        "экшен",
+        "hack and slash",
+        "фэнтези",
+        "fantasy",
+        "dungeon crawler",
+        "исследование подземелий"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "P5X4rsvqG8Qtih8o4nZd",
+      "title": "Final Fantasy VII Remake",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "экшен",
+        "action",
+        "ремейк",
+        "remake",
+        "фэнтези",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшен",
+        "action",
+        "ремейк",
+        "remake",
+        "фэнтези",
+        "fantasy"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "PFIpojof4LA7XPypqjy9",
+      "title": "Baldur's Gate 3",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "turn-based combat",
+        "пошаговая боёвка",
+        "open world",
+        "открытый мир"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "turn-based combat",
+        "пошаговая боёвка",
+        "open world",
+        "открытый мир"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Pm7AcW9Sx0PLCoMd8Xia",
+      "title": "Gothic 3: Отвергнутые боги",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "expansion",
+        "дополнение",
+        "fantasy",
+        "фэнтези",
+        "action RPG",
+        "экшен-RPG"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "expansion",
+        "дополнение",
+        "fantasy",
+        "фэнтези",
+        "action RPG",
+        "экшен-RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Q5GFFaVfYX208ZolsTiP",
+      "title": "Ведьмак 3: Дикая Охота",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "action",
+        "экшен",
+        "fantasy",
+        "фэнтези",
+        "adventure",
+        "приключение"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "action",
+        "экшен",
+        "fantasy",
+        "фэнтези",
+        "adventure",
+        "приключение"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "QRINGn29wbIC7RpdtkPc",
+      "title": "Gunfire Reborn",
+      "before": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "roguelite",
+        "roguelite",
+        "кооператив",
+        "cooperative",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "roguelite",
+        "roguelite",
+        "кооператив",
+        "cooperative",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "QUVHGFJqiKJcHSnC6TVX",
+      "title": "SCUM",
+      "before": [
+        "видеоигра",
+        "video game",
+        "выживание",
+        "survival",
+        "многопользовательская",
+        "multiplayer",
+        "экшен",
+        "action",
+        "RPG",
+        "реализм",
+        "realism"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "выживание",
+        "survival",
+        "многопользовательская",
+        "multiplayer",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "реализм",
+        "realism"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "QWHaPCloSebOvPHRbH9C",
+      "title": "Deus Ex: Human Revolution",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "immersive sim",
+        "иммерсивный сим",
+        "cyberpunk",
+        "киберпанк",
+        "stealth",
+        "стелс"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "immersive sim",
+        "иммерсивный сим",
+        "cyberpunk",
+        "киберпанк",
+        "stealth",
+        "стелс"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Qx1y3wjaI3zMDkstTZ2v",
+      "title": "Final Fantasy VII",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "JRPG",
+        "приключение",
+        "adventure",
+        "фантастика",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "JRPG",
+        "приключение",
+        "adventure",
+        "фантастика",
+        "fantasy"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "RY3V4rxL3JXtnPxVUTFX",
+      "title": "Marvel’s Midnight Suns",
+      "before": [
+        "видеоигра",
+        "video game",
+        "стратегия",
+        "strategy",
+        "тактика",
+        "tactics",
+        "ролевая игра",
+        "супергерои",
+        "superheroes",
+        "пошаговая стратегия",
+        "turn-based strategy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "стратегия",
+        "strategy",
+        "тактика",
+        "tactics",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "супергерои",
+        "superheroes",
+        "пошаговая стратегия",
+        "turn-based strategy"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "RaFJwBQDbIT5pH9XjhJ2",
+      "title": "Darkest Dungeon",
+      "before": [
+        "видеоигра",
+        "video game",
+        "тактика",
+        "tactics",
+        "ролевая игра",
+        "RPG",
+        "roguelike",
+        "roguelike",
+        "ужасы",
+        "horror",
+        "готика",
+        "gothic",
+        "сложность",
+        "difficulty"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "тактика",
+        "tactics",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "roguelike",
+        "roguelike",
+        "ужасы",
+        "horror",
+        "готика",
+        "gothic",
+        "сложность",
+        "difficulty"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "SDulZZPBj1axuG5QtIKm",
+      "title": "Warhammer 40,000: Rogue Trader",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "изометрия",
+        "isometric",
+        "научная фантастика",
+        "sci-fi",
+        "пошаговая стратегия",
+        "turn-based strategy",
+        "моральный выбор",
+        "moral choices"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "изометрия",
+        "isometric",
+        "научная фантастика",
+        "sci-fi",
+        "пошаговая стратегия",
+        "turn-based strategy",
+        "моральный выбор",
+        "moral choices"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "SaRohXDTcAjWBKhBrQ62",
+      "title": "Fable: The Lost Chapters",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "моральный выбор",
+        "morality system"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "моральный выбор",
+        "morality system"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "SheQEQxDsRhtmeODJo7Y",
+      "title": "Prime World",
+      "before": [
+        "видеоигра",
+        "video game",
+        "MOBA",
+        "стратегия",
+        "strategy",
+        "RPG",
+        "многопользовательская",
+        "multiplayer"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "MOBA",
+        "стратегия",
+        "strategy",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "многопользовательская",
+        "multiplayer"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "TBNmqMbtFOsWYZIofglz",
+      "title": "Red Dead Redemption 2",
+      "before": [
+        "video game",
+        "видеоигра",
+        "action",
+        "экшен",
+        "adventure",
+        "приключение",
+        "open world",
+        "открытый мир",
+        "western",
+        "вестерн",
+        "RPG",
+        "ролевая игра"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "action",
+        "экшен",
+        "adventure",
+        "приключение",
+        "open world",
+        "открытый мир",
+        "western",
+        "вестерн",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "TRtAECXh9xan608uvYcW",
+      "title": "Above Snakes",
+      "before": [
+        "видеоигра",
+        "video game",
+        "выживание",
+        "survival",
+        "RPG",
+        "RPG",
+        "строительство",
+        "base-building",
+        "исследование",
+        "exploration"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "выживание",
+        "survival",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "строительство",
+        "base-building",
+        "исследование",
+        "exploration"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "TjCg3eMg6TfPgsu8TShn",
+      "title": "Phantasy Star Online",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "U5NCtqZL2jOrOV3WW9Bj",
+      "title": "Baldur’s Gate: Dark Alliance II",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "hack and slash",
+        "фэнтези",
+        "fantasy",
+        "кооператив",
+        "co-op"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "hack and slash",
+        "фэнтези",
+        "fantasy",
+        "кооператив",
+        "co-op"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "UA62CwN4XWruQLMvASWZ",
+      "title": "Dragon Age II",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра",
+        "фэнтези",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "USaX6M8S7Wv6HBapxo3N",
+      "title": "Star Wars: Knights of the Old Republic II – The Sith Lords",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "VpnprMtlYFUL68qYj7Z9",
+      "title": "The Elder Scrolls: Arena",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "role-playing game",
+        "ролевая игра",
+        "action RPG",
+        "экшен-рпг",
+        "open world",
+        "открытый мир"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "экшен-рпг",
+        "open world",
+        "открытый мир"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "VxzQ4Se4ohGoLD21wmej",
+      "title": "Tower of Fantasy",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "action",
+        "открытый мир",
+        "open world",
+        "gacha"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action",
+        "открытый мир",
+        "open world",
+        "gacha"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "WEXGh76NFY1Lz9veoahN",
+      "title": "ELEX",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action RPG",
+        "экшен-RPG",
+        "sci-fi",
+        "научная фантастика",
+        "fantasy",
+        "фэнтези",
+        "open world",
+        "открытый мир",
+        "post-apocalyptic",
+        "постапокалипсис"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "экшен-RPG",
+        "sci-fi",
+        "научная фантастика",
+        "fantasy",
+        "фэнтези",
+        "open world",
+        "открытый мир",
+        "post-apocalyptic",
+        "постапокалипсис"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "WVyJTyk2KXNJbjRly0Ve",
+      "title": "Middle-earth: Shadow of War",
+      "before": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "RPG",
+        "открытый мир",
+        "open world",
+        "фэнтези",
+        "fantasy",
+        "осады",
+        "sieges"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "открытый мир",
+        "open world",
+        "фэнтези",
+        "fantasy",
+        "осады",
+        "sieges"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "WkkTijXl7RolsYEHZxZo",
+      "title": "Dragon Age: На страже Завесы",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра",
+        "фэнтези",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "XFAbLLZIiSvUEJATigWb",
+      "title": "Dragon Age: Inquisition",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра",
+        "фэнтези"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "XYC9gL7KzUgA7cKlPWhi",
+      "title": "Pillars of Eternity II: Deadfire",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "изометрия",
+        "isometric",
+        "фэнтези",
+        "fantasy",
+        "тактические бои",
+        "tactical combat",
+        "открытый мир",
+        "open world",
+        "нелинейный сюжет",
+        "nonlinear story",
+        "морские путешествия",
+        "naval exploration"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "изометрия",
+        "isometric",
+        "фэнтези",
+        "fantasy",
+        "тактические бои",
+        "tactical combat",
+        "открытый мир",
+        "open world",
+        "нелинейный сюжет",
+        "nonlinear story",
+        "морские путешествия",
+        "naval exploration"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "XfPqYj3u5VvjvqTk98dQ",
+      "title": "Risen",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези",
+        "open world",
+        "открытый мир"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези",
+        "open world",
+        "открытый мир"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Xj1ZHNMV7Ks8nAMbtNYV",
+      "title": "Mass Effect: Andromeda",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "sci-fi",
+        "научная фантастика",
+        "action",
+        "экшен",
+        "open world",
+        "открытый мир"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "sci-fi",
+        "научная фантастика",
+        "action",
+        "экшен",
+        "open world",
+        "открытый мир"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Y8XzRo8nBRSwwsHf9CVc",
+      "title": "Baldur’s Gate",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "tactical combat",
+        "тактический бой"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "tactical combat",
+        "тактический бой"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "YBpIAkgK7mzlTNpPFSb9",
+      "title": "Undertale",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "пиксельная графика",
+        "pixel art",
+        "bullet hell",
+        "bullet hell",
+        "моральный выбор",
+        "moral choice",
+        "инди",
+        "indie"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "пиксельная графика",
+        "pixel art",
+        "bullet hell",
+        "bullet hell",
+        "моральный выбор",
+        "moral choice",
+        "инди",
+        "indie"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "YQe4rJOXBkoTTGu0iaJT",
+      "title": "Kingdom Come: Deliverance",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "средневековье",
+        "medieval",
+        "открытый мир",
+        "open world",
+        "историческая игра",
+        "historical game",
+        "реализм",
+        "realism",
+        "приключение",
+        "adventure"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "средневековье",
+        "medieval",
+        "открытый мир",
+        "open world",
+        "историческая игра",
+        "historical game",
+        "реализм",
+        "realism",
+        "приключение",
+        "adventure"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "YehHEoMscKMIYJkyfaoj",
+      "title": "Neverwinter Nights 2",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "adventure",
+        "приключение",
+        "Dungeons & Dragons",
+        "стратегия",
+        "strategy"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "adventure",
+        "приключение",
+        "Dungeons & Dragons",
+        "стратегия",
+        "strategy"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "Yk2n3Llcosdh6jt1fZdI",
+      "title": "Ex Machina: Меридиан 113",
+      "before": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "RPG",
+        "постапокалипсис",
+        "post-apocalypse",
+        "гонки",
+        "racing",
+        "открытый мир",
+        "open world",
+        "дополнение",
+        "expansion"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "постапокалипсис",
+        "post-apocalypse",
+        "гонки",
+        "racing",
+        "открытый мир",
+        "open world",
+        "дополнение",
+        "expansion"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "YlbrcxPu6ueoQkOu7wPO",
+      "title": "Diablo",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action",
+        "экшен",
+        "fantasy",
+        "фэнтези",
+        "dungeon crawler",
+        "исследование подземелий"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action",
+        "экшен",
+        "fantasy",
+        "фэнтези",
+        "dungeon crawler",
+        "исследование подземелий"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "ZFCEU0hDwBjvkiFeIccF",
+      "title": "Darkest Dungeon II",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "стратегия",
+        "strategy",
+        "психологический хоррор",
+        "psychological horror",
+        "постапокалипсис",
+        "post-apocalyptic",
+        "тактика",
+        "tactics"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "стратегия",
+        "strategy",
+        "психологический хоррор",
+        "psychological horror",
+        "постапокалипсис",
+        "post-apocalyptic",
+        "тактика",
+        "tactics"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "aLJxW4vP1HE3b0H8MjML",
+      "title": "Sonic Chronicles: The Dark Brotherhood",
+      "before": [
+        "видеоигра",
+        "ролевая игра",
+        "video game",
+        "role-playing game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "b63OgszHlYJciqU1Agm2",
+      "title": "Корсары: Каждому своё",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "RPG",
+        "ролевая игра"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "bzxRUOmQuuGoz2es4Z0q",
+      "title": "The Legend of Zelda: Tears of the Kingdom",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "action-adventure",
+        "open world"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action-adventure",
+        "open world"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "cLYPiVmaXePvHoAQdZr5",
+      "title": "Neverwinter",
+      "before": [
+        "video game",
+        "видеоигра",
+        "MMORPG",
+        "ролевая игра",
+        "фэнтези",
+        "fantasy",
+        "Dungeons & Dragons"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "MMORPG",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "Dungeons & Dragons"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "cXHR8CokfzYLjAIRMSwf",
+      "title": "Gothic II",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "action RPG",
+        "экшен-RPG"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "action RPG",
+        "экшен-RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "d9DGNMc5IsZ8a9StVmC5",
+      "title": "Diablo IV",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action",
+        "экшен",
+        "hack and slash",
+        "фэнтези",
+        "fantasy",
+        "open world",
+        "открытый мир",
+        "dungeon crawler",
+        "исследование подземелий"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action",
+        "экшен",
+        "hack and slash",
+        "фэнтези",
+        "fantasy",
+        "open world",
+        "открытый мир",
+        "dungeon crawler",
+        "исследование подземелий"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "dCmlDDz53IdBUV2fDgxb",
+      "title": "Fallout 4",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра",
+        "постапокалипсис",
+        "post-apocalypse",
+        "открытый мир",
+        "open world"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "постапокалипсис",
+        "post-apocalypse",
+        "открытый мир",
+        "open world"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "dHjyOxJYCxY236pnwFvn",
+      "title": "Корсары: Проклятье дальних морей",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "role-playing game",
+        "action",
+        "RPG",
+        "экшн",
+        "ролевая игра"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action",
+        "экшн"
+      ],
+      "added": [
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "dmPectpE3mx3twVDemzX",
+      "title": "Механоиды",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "simulation",
+        "RPG",
+        "симулятор",
+        "ролевая игра"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "simulation",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "симулятор"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "dnyRB02Lih9kr7q9ex0A",
+      "title": "Middle-earth: Shadow of Mordor",
+      "before": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "RPG",
+        "открытый мир",
+        "open world",
+        "фэнтези",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "открытый мир",
+        "open world",
+        "фэнтези",
+        "fantasy"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "eWDeQWRZYdeTJ5mHjXgK",
+      "title": "Pentiment",
+      "before": [
+        "видеоигра",
+        "video game",
+        "приключение",
+        "adventure",
+        "ролевая игра",
+        "RPG",
+        "историческая игра",
+        "historical game",
+        "нарративная игра",
+        "narrative game"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "приключение",
+        "adventure",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "историческая игра",
+        "historical game",
+        "нарративная игра",
+        "narrative game"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "f1fkwhIFr4CuCo39L3HO",
+      "title": "Fable Anniversary",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "ремастер",
+        "remaster",
+        "моральный выбор",
+        "morality system"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "ремастер",
+        "remaster",
+        "моральный выбор",
+        "morality system"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "fC52J88xn5XzItx2t0Jj",
+      "title": "Avowed",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "action RPG",
+        "фэнтези",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "фэнтези",
+        "fantasy"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "fE213qkIgLJ0UIMrt9wK",
+      "title": "Deus Ex",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "immersive sim",
+        "иммерсивный сим",
+        "cyberpunk",
+        "киберпанк",
+        "FPS",
+        "шутер от первого лица",
+        "stealth",
+        "стелс",
+        "conspiracy",
+        "заговор",
+        "augmentation",
+        "аугментация"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "immersive sim",
+        "иммерсивный сим",
+        "cyberpunk",
+        "киберпанк",
+        "FPS",
+        "шутер от первого лица",
+        "stealth",
+        "стелс",
+        "conspiracy",
+        "заговор",
+        "augmentation",
+        "аугментация"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "fzNT94OcnxROzrEKN9sB",
+      "title": "Fable III",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "моральный выбор",
+        "morality system",
+        "управление королевством",
+        "kingdom management",
+        "кооператив",
+        "co-op"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "моральный выбор",
+        "morality system",
+        "управление королевством",
+        "kingdom management",
+        "кооператив",
+        "co-op"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "g24s49Zebq4BjrjkOtP1",
+      "title": "Mass Effect 3",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "sci-fi",
+        "научная фантастика",
+        "action",
+        "экшен"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "sci-fi",
+        "научная фантастика",
+        "action",
+        "экшен"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "g3SVmIfPlGICvGcw2dbu",
+      "title": "Jade Empire",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "экшен-RPG",
+        "action RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшен-RPG",
+        "action RPG"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "gHOKJTJ9H4Nw44mpWuya",
+      "title": "Neverwinter Nights 2: Mask of the Betrayer",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "Dungeons & Dragons"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "Dungeons & Dragons"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "hTJ7mOado4L8r4XZ5xo1",
+      "title": "Fallout 2",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "post-apocalyptic",
+        "постапокалипсис",
+        "open world",
+        "открытый мир",
+        "turn-based combat",
+        "пошаговые бои",
+        "Fallout",
+        "wasteland",
+        "пустоши",
+        "S.P.E.C.I.A.L.",
+        "Enclave",
+        "Анклав",
+        "G.E.C.K.",
+        "ГЭКК",
+        "mutants",
+        "мутанты",
+        "выбор",
+        "нелинейный сюжет"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "post-apocalyptic",
+        "постапокалипсис",
+        "open world",
+        "открытый мир",
+        "turn-based combat",
+        "пошаговые бои",
+        "Fallout",
+        "wasteland",
+        "пустоши",
+        "S.P.E.C.I.A.L.",
+        "Enclave",
+        "Анклав",
+        "G.E.C.K.",
+        "ГЭКК",
+        "mutants",
+        "мутанты",
+        "выбор",
+        "нелинейный сюжет"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "hg1jGtormx3O1wDOyP36",
+      "title": "Mass Effect Galaxy",
+      "before": [
+        "видеоигра",
+        "ролевая игра",
+        "video game",
+        "role-playing game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "hjy4cskfbjryKzBL6JVT",
+      "title": "Ведьмак 2: Убийцы королей",
+      "before": [
+        "видеоигра",
+        "ролевая игра",
+        "video game",
+        "role-playing game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "i8GGUG2IvuwXSeojxIyY",
+      "title": "Fallout 76",
+      "before": [
+        "видеоигра",
+        "RPG",
+        "video game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "iAHGBj1kv0GKDP08iyjx",
+      "title": "Dead Frontier 2",
+      "before": [
+        "видеоигра",
+        "survival horror",
+        "video game",
+        "survival horror",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "survival horror",
+        "video game",
+        "survival horror",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "iHIGwislo1tPWK0U4MP3",
+      "title": "The Elder Scrolls V: Skyrim",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "классическая игра",
+        "культовая игра",
+        "драконы",
+        "Dovahkiin",
+        "Skyrim",
+        "моды",
+        "свобода действий"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "классическая игра",
+        "культовая игра",
+        "драконы",
+        "Dovahkiin",
+        "Skyrim",
+        "моды",
+        "свобода действий"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "jZ8DmEIbXXyJLFNQWGGv",
+      "title": "Pirates of the Burning Sea",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "MMORPG",
+        "ММО",
+        "ролевая игра",
+        "RPG"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "MMORPG",
+        "ММО",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "jtYwDEHlU3hiyqvi7SQA",
+      "title": "Mount & Blade: История героя",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "экшен",
+        "action",
+        "стратегия",
+        "strategy",
+        "средневековье",
+        "medieval",
+        "песочница",
+        "sandbox",
+        "тактика",
+        "tactics"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшен",
+        "action",
+        "стратегия",
+        "strategy",
+        "средневековье",
+        "medieval",
+        "песочница",
+        "sandbox",
+        "тактика",
+        "tactics"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "kXQkWTUKqqRmL3WUDTRe",
+      "title": "IdleOn - The Idle RPG",
+      "before": [
+        "видеоигра",
+        "video game",
+        "idle",
+        "RPG",
+        "песочница",
+        "sandbox",
+        "free-to-play"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "idle",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "песочница",
+        "sandbox",
+        "free-to-play"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "lTiTgNEkwn5ihgJOHb9H",
+      "title": "Корсары: Город потерянных кораблей",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "role-playing game",
+        "action",
+        "RPG",
+        "экшн",
+        "ролевая игра"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action",
+        "экшн"
+      ],
+      "added": [
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "lsSVW5YqJs5Cfui3m8gz",
+      "title": "Ex Machina",
+      "before": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "RPG",
+        "постапокалипсис",
+        "post-apocalypse",
+        "гонки",
+        "racing",
+        "открытый мир",
+        "open world"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "постапокалипсис",
+        "post-apocalypse",
+        "гонки",
+        "racing",
+        "открытый мир",
+        "open world"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "n8J3rbXYTRLPOzegDNwf",
+      "title": "Dark Souls",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "экшн",
+        "action",
+        "фэнтези",
+        "fantasy",
+        "хардкор",
+        "hardcore"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшн",
+        "action",
+        "фэнтези",
+        "fantasy",
+        "хардкор",
+        "hardcore"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "nDViURWzNQ5c2Yeuuq7s",
+      "title": "Tyranny",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "изометрия",
+        "isometric",
+        "фэнтези",
+        "fantasy",
+        "тактические бои",
+        "tactical combat",
+        "нелинейный сюжет",
+        "nonlinear story",
+        "моральный выбор",
+        "moral choices"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "изометрия",
+        "isometric",
+        "фэнтези",
+        "fantasy",
+        "тактические бои",
+        "tactical combat",
+        "нелинейный сюжет",
+        "nonlinear story",
+        "моральный выбор",
+        "moral choices"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "nJS36EgAdiOpbKxK8kpR",
+      "title": "The Elder Scrolls IV: Oblivion Remastered",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "action role-playing",
+        "экшен-ролевой",
+        "RPG",
+        "РПГ"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "action role-playing",
+        "экшен-ролевой",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "nPFsQkOWavRO1ih8IIiO",
+      "title": "God of War: Рагнарёк",
+      "before": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "приключение",
+        "adventure",
+        "ролевые элементы",
+        "RPG",
+        "мифология",
+        "mythology"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "приключение",
+        "adventure",
+        "ролевые элементы",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "мифология",
+        "mythology"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "o4qZtjm0crii8O8X2kAd",
+      "title": "Final Fantasy VIII",
+      "before": [
+        "видеоигра",
+        "ролевая игра",
+        "video game",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "oQz0YzZx45Pk8S8f0dYi",
+      "title": "MechWarrior",
+      "before": [
+        "video game",
+        "видеоигра",
+        "экшен",
+        "симулятор",
+        "тактика",
+        "RPG",
+        "мехи"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "экшен",
+        "симулятор",
+        "тактика",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "мехи"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "of0nWruuHKP7QOl6EwR4",
+      "title": "Path of Exile 2",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "action RPG",
+        "кроссплатформенная",
+        "cross-platform"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "кроссплатформенная",
+        "cross-platform"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "ooa9BAKX52y8Rheq6Gyq",
+      "title": "Pillars of Eternity",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "изометрия",
+        "isometric",
+        "тактические бои",
+        "tactical combat",
+        "нелинейный сюжет",
+        "nonlinear story"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "изометрия",
+        "isometric",
+        "тактические бои",
+        "tactical combat",
+        "нелинейный сюжет",
+        "nonlinear story"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "pXzoevQyELj3cqHwTqfc",
+      "title": "Moonlighter",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "roguelike",
+        "экономика",
+        "economy",
+        "пиксельная графика",
+        "pixel art"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "roguelike",
+        "экономика",
+        "economy",
+        "пиксельная графика",
+        "pixel art"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "qigZ1XD5T72qSLZeBFEu",
+      "title": "NieR: Automata",
+      "before": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "RPG",
+        "приключение",
+        "adventure",
+        "слэшер",
+        "hack and slash",
+        "научная фантастика",
+        "sci-fi"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "приключение",
+        "adventure",
+        "слэшер",
+        "hack and slash",
+        "научная фантастика",
+        "sci-fi"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "rFvTr299rBrUM9XnmW5b",
+      "title": "Borderlands",
+      "before": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "RPG",
+        "ролевая игра",
+        "лутер-шутер",
+        "looter shooter",
+        "кооператив",
+        "co-op",
+        "sci-fi",
+        "научная фантастика"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "лутер-шутер",
+        "looter shooter",
+        "кооператив",
+        "co-op",
+        "sci-fi",
+        "научная фантастика"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "s0y2Y7GnKEOMyprikS3m",
+      "title": "Icewind Dale II",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "фэнтези",
+        "fantasy",
+        "Dungeons & Dragons"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "Dungeons & Dragons"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "sHaQeH2SutFakHOCJuMz",
+      "title": "Neverwinter Nights",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "Dungeons & Dragons",
+        "dungeon crawler",
+        "данжен-кроулер",
+        "adventure",
+        "приключение"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "Dungeons & Dragons",
+        "dungeon crawler",
+        "данжен-кроулер",
+        "adventure",
+        "приключение"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "t6MRzj14wk9x1aftfqNY",
+      "title": "Baldur’s Gate II: Shadows of Amn",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "tactical combat",
+        "тактический бой"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "tactical combat",
+        "тактический бой"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "tAPF8Ns1jQn5ZC8YlTHI",
+      "title": "Risen 3: Titan Lords",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези",
+        "open world",
+        "открытый мир",
+        "magic",
+        "магия"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези",
+        "open world",
+        "открытый мир",
+        "magic",
+        "магия"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "teMxRRRxEsFMZfuzIFxt",
+      "title": "Gothic 3",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "action RPG",
+        "экшен-RPG"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "action RPG",
+        "экшен-RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "tvYF2z4GHtKCEKTgltwk",
+      "title": "Phantasy Star Universe",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "u9wOA1FTJ4LeR0XgAsUQ",
+      "title": "Diablo II",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "экшен",
+        "action",
+        "хак-н-слэш",
+        "hack and slash",
+        "фэнтези",
+        "fantasy"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшен",
+        "action",
+        "хак-н-слэш",
+        "hack and slash",
+        "фэнтези",
+        "fantasy"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "uzLS96k4s8BislloNn5e",
+      "title": "Fallout",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра",
+        "постапокалипсис",
+        "post-apocalypse",
+        "изометрическая перспектива",
+        "isometric"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "постапокалипсис",
+        "post-apocalypse",
+        "изометрическая перспектива",
+        "isometric"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "vm8YBWMo19nqiHoLBNa1",
+      "title": "The Lord of the Rings: The Third Age",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "vzOb4id3hyAxrJ7eMU4Y",
+      "title": "Neverwinter Nights: Hordes of the Underdark",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "expansion",
+        "дополнение",
+        "Dungeons & Dragons",
+        "adventure",
+        "приключение"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "expansion",
+        "дополнение",
+        "Dungeons & Dragons",
+        "adventure",
+        "приключение"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "wLJDA7F1FY7DsV7Ci3SS",
+      "title": "Clair Obscur: Expedition 33",
+      "before": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "role-playing game",
+        "ролевая игра",
+        "turn-based",
+        "пошаговая"
+      ],
+      "after": [
+        "PC game",
+        "game",
+        "video game",
+        "видеоигра",
+        "игра",
+        "компьютерная игра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "turn-based",
+        "пошаговая"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "wdOlh3725yNYzSRxHiMy",
+      "title": "Neverwinter Nights: Shadows of Undrentide",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "fantasy",
+        "фэнтези",
+        "expansion",
+        "дополнение",
+        "Dungeons & Dragons",
+        "adventure",
+        "приключение"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "fantasy",
+        "фэнтези",
+        "expansion",
+        "дополнение",
+        "Dungeons & Dragons",
+        "adventure",
+        "приключение"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "wssRDeyie9ZSfrEbcnyN",
+      "title": "Balrum",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "выживание",
+        "survival",
+        "пошаговая стратегия",
+        "turn-based strategy",
+        "крафт",
+        "crafting",
+        "исследование",
+        "exploration"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "выживание",
+        "survival",
+        "пошаговая стратегия",
+        "turn-based strategy",
+        "крафт",
+        "crafting",
+        "исследование",
+        "exploration"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "xH09hwDFI6mAPhNG4vkP",
+      "title": "Genshin Impact",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "экшен",
+        "action",
+        "открытый мир",
+        "open world",
+        "фэнтези",
+        "fantasy",
+        "гача",
+        "gacha",
+        "аниме-стиль",
+        "anime-style"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшен",
+        "action",
+        "открытый мир",
+        "open world",
+        "фэнтези",
+        "fantasy",
+        "гача",
+        "gacha",
+        "аниме-стиль",
+        "anime-style"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "xXYEu3CJS8JGfnJrDBod",
+      "title": "Borderlands 2: Tiny Tina's Assault on Dragon Keep",
+      "before": [
+        "видеоигра",
+        "video game",
+        "дополнение",
+        "DLC",
+        "шутер",
+        "shooter",
+        "RPG",
+        "ролевая игра",
+        "фэнтези",
+        "fantasy",
+        "кооператив",
+        "co-op",
+        "юмор",
+        "humor"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "дополнение",
+        "DLC",
+        "шутер",
+        "shooter",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "кооператив",
+        "co-op",
+        "юмор",
+        "humor"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "xZPzXLs1UDbPtNBZyKsU",
+      "title": "Icewind Dale",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "фэнтези",
+        "fantasy",
+        "Dungeons & Dragons"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "фэнтези",
+        "fantasy",
+        "Dungeons & Dragons"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "xm9kS9tbvz27zSu8bZOw",
+      "title": "Anthem",
+      "before": [
+        "видеоигра",
+        "video game",
+        "RPG",
+        "ролевая игра",
+        "экшен",
+        "action"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшен",
+        "action"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "xmsD89iDwQkGgaUnifjp",
+      "title": "Castlevania: Symphony of the Night",
+      "before": [
+        "video game",
+        "видеоигра",
+        "metroidvania",
+        "метроидвания",
+        "RPG",
+        "ролевая игра",
+        "action",
+        "экшен"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "metroidvania",
+        "метроидвания",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action",
+        "экшен"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "y1BucBaVSbOU9POK7Euv",
+      "title": "The Elder Scrolls IV: Oblivion",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "классическая игра",
+        "культовая игра",
+        "Radiant AI",
+        "свобода действий"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "open world",
+        "открытый мир",
+        "fantasy",
+        "фэнтези",
+        "классическая игра",
+        "культовая игра",
+        "Radiant AI",
+        "свобода действий"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "yOQU1mkCaO8HlhqwIDkN",
+      "title": "Baldur’s Gate II: Throne of Bhaal",
+      "before": [
+        "видеоигра",
+        "ролевая игра",
+        "video game",
+        "role-playing game"
+      ],
+      "after": [
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "video game"
+      ],
+      "added": [
+        "РПГ",
+        "RPG"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "yRpITjERArE6wyvxa534",
+      "title": "Barony",
+      "before": [
+        "видеоигра",
+        "video game",
+        "рогалик",
+        "roguelike",
+        "RPG",
+        "экшен",
+        "action",
+        "подземелья",
+        "dungeons",
+        "ретро-стиль",
+        "retro style",
+        "кооператив",
+        "co-op",
+        "хардкор",
+        "hardcore"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "рогалик",
+        "roguelike",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "экшен",
+        "action",
+        "подземелья",
+        "dungeons",
+        "ретро-стиль",
+        "retro style",
+        "кооператив",
+        "co-op",
+        "хардкор",
+        "hardcore"
+      ],
+      "added": [
+        "ролевая игра",
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "ycGaEJHkF1vLvt44ERE0",
+      "title": "Fallout Tactics: Brotherhood of Steel",
+      "before": [
+        "видеоигра",
+        "video game",
+        "тактическая стратегия",
+        "tactical strategy",
+        "RPG",
+        "ролевая игра",
+        "постапокалипсис",
+        "post-apocalypse"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "тактическая стратегия",
+        "tactical strategy",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "постапокалипсис",
+        "post-apocalypse"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "yw2tyQoLbShmoICptmPv",
+      "title": "Risen 2: Dark Waters",
+      "before": [
+        "video game",
+        "видеоигра",
+        "RPG",
+        "ролевая игра",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези",
+        "pirates",
+        "пираты",
+        "open world",
+        "открытый мир"
+      ],
+      "after": [
+        "video game",
+        "видеоигра",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "action RPG",
+        "экшен-RPG",
+        "fantasy",
+        "фэнтези",
+        "pirates",
+        "пираты",
+        "open world",
+        "открытый мир"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "z0VRlJ25cyAbi04nCTwA",
+      "title": "Смута",
+      "before": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "RPG",
+        "историческая игра",
+        "historical game",
+        "стратегия",
+        "strategy",
+        "моральный выбор",
+        "moral choices"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "историческая игра",
+        "historical game",
+        "стратегия",
+        "strategy",
+        "моральный выбор",
+        "moral choices"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    },
+    {
+      "id": "zzQYlMenrXMpdYFH9AMy",
+      "title": "Borderlands 3",
+      "before": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "RPG",
+        "ролевая игра",
+        "лутер-шутер",
+        "looter shooter",
+        "кооператив",
+        "co-op",
+        "sci-fi",
+        "научная фантастика",
+        "юмор",
+        "humor"
+      ],
+      "after": [
+        "видеоигра",
+        "video game",
+        "шутер",
+        "shooter",
+        "ролевая игра",
+        "role-playing game",
+        "РПГ",
+        "RPG",
+        "лутер-шутер",
+        "looter shooter",
+        "кооператив",
+        "co-op",
+        "sci-fi",
+        "научная фантастика",
+        "юмор",
+        "humor"
+      ],
+      "added": [
+        "role-playing game",
+        "РПГ"
+      ],
+      "normalized": []
+    }
+  ]
+}
