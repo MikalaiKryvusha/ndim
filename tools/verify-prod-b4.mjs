@@ -140,6 +140,39 @@ for (const theme of THEMES) {
   }
 }
 
+/*
+ * КОРЕНЬ С МАРКЕРОМ СЕССИИ (`bugs/NEW_root_boot_shield_never_drops`, 2026-09-05). У каждого, кто
+ * хоть раз входил (гостем тоже), в браузере лежит `ndim-session`, и `app.html` поднимает на корне
+ * загрузочный щит. Первый боевой выкат главной V5 никто не опускал щит — владелец увидел вечную
+ * «Загрузку», а смоук был зелёным, потому что ходил ТОЛЬКО свежими контекстами без маркера.
+ * Отсюда проход с маркером: корень обязан увести внутрь, а не держать щит.
+ */
+{
+  const marked = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await markProbeContext(marked);
+  await grantAppCheckDebug(marked, { required: CONTOUR.name === 'prod', quiet: true });
+  await marked.addInitScript(() => {
+    try {
+      localStorage.setItem('ndim-session', '1');
+    } catch {}
+  });
+  const mp = await marked.newPage();
+  await mp.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  let landed = '/';
+  const t0 = Date.now();
+  while (Date.now() - t0 < 10000) {
+    landed = new URL(mp.url()).pathname;
+    if (landed !== '/') break;
+    await mp.waitForTimeout(200);
+  }
+  const stuck = await mp
+    .evaluate(() => document.documentElement.hasAttribute('data-booting') && !document.getElementById('boot-long')?.hidden)
+    .catch(() => false);
+  ok(landed === '/profile', `корень с маркером сессии уводит внутрь (адрес ${landed})`);
+  ok(!stuck, 'корень с маркером сессии не держит вечный щит «необычно долго»');
+  await marked.close();
+}
+
 // Контракт свежести — в боевом чанке, скачанном браузером.
 const ctx = await browser.newContext();
 await markProbeContext(ctx);
