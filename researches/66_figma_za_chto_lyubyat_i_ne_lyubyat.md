@@ -69,6 +69,29 @@
 5. **Страницы слева — берём.** Это ровно то, за что Фигму не ругают: разделение работы по листам
    (экраны, компоненты, схема) читается всеми и стоит дёшево.
 
+## Компоненты — что это слово значит у дизайнеров (дочитано 2026-09-05 по поручению владельца)
+
+Повод — его поправка к KUIPS: «*это библиотека переиспользуемых UI примитивов, которые много
+где повторяются, а не скриншотов с макета*». Разведка подтверждает его определение дословно.
+
+- **Библиотека компонентов** — собрание переиспользуемых элементов с единым стилем и поведением;
+  её работа — единообразие интерфейса и отсутствие повторов кода/макета.
+- **Atomic Design (Брэд Фрост)** — методология, по которой такие библиотеки строят: интерфейс
+  раскладывается на пять уровней. **Атомы** — неделимые кирпичи: кнопки, поля ввода, иконки,
+  подписи; они задают базовые правила системы (цвет, шрифт, размер). **Молекулы** — атомы,
+  собранные в элемент с общей ролью: поле с подписью и кнопкой, пункт меню. **Организмы** —
+  цельные блоки интерфейса из молекул: шапка, панель навигации. **Шаблоны** и **страницы** —
+  раскладка организмов и её наполнение живыми данными.
+- Следствие для KUIPS: страница «Компоненты» держит атомы, молекулы и организмы — то, что
+  ПОВТОРЯЕТСЯ. Кроп раздела, который есть на одном экране один раз, — это фрагмент СТРАНИЦЫ, ему
+  место на листе развёртки, а не в библиотеке.
+
+Источники: [Atomic Design Methodology — Brad Frost](https://atomicdesign.bradfrost.com/chapter-2/) ·
+[Atomic design components in UI design — LogRocket](https://blog.logrocket.com/ux-design/atomic-design-components-ui-design/) ·
+[Building a Component Library: Atomic Design + Compound Components](https://iamrajatsingh.medium.com/building-a-component-library-integrating-atomic-design-and-the-compound-component-pattern-5ee9b1a1a8df) ·
+[Using libraries and primitives to build a system of buttons](https://medium.com/sketch-app-sources/using-sketch-libraries-and-primitives-to-build-an-even-better-system-of-buttons-ecc8f25486ac) ·
+[Atomic Design: UI Kit Strategy — DEV](https://dev.to/violetadev/atomic-design-ui-kit-strategy-4ogn).
+
 ## Источники
 
 - [The Figma Crisis of 2026: Why Designers Are Quietly Switching Tools](https://medium.com/@srivatsmutalik909/the-figma-crisis-of-2026-why-designers-are-quietly-switching-tools-276644a28cdd)
