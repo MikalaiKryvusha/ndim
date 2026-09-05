@@ -30,6 +30,8 @@ import { basename, extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const MANIFEST = 'design/flow-map/flow-map.json';
+/** Библиотека компонентов и дизайн-схема — пишет `tools/shoot-design-system.mjs`. Необязательна. */
+const БИБЛИОТЕКА = 'design/flow-map/design-system.json';
 const OUT = 'design/flow-map.html';
 
 /** Экран в единицах листа: снимок 390x900 рисуется в своих пикселях один к одному. */
@@ -176,6 +178,34 @@ export function полосы(связи, поId) {
   return трассы;
 }
 
+/**
+ * ЧАСТОТА ТРЕУГОЛЬНИКОВ НАПРАВЛЕНИЯ вдоль трубы. Слово владельца 2026-09-05: «*стрелки
+ * трубопровода должны иметь элемент стрелочки — треугольничек направления в начале, в конце и —
+ * если длинная — то каждые N сантиметров*». Длинная труба без промежуточных указателей читается
+ * как линия, а не как направление: у неё видно два конца и нечего между ними.
+ */
+export const ШАГ_УКАЗАТЕЛЯ = 300;
+
+/**
+ * Подробить длинные отрезки ломаной: SVG рисует `marker-mid` в КАЖДОЙ промежуточной точке, значит
+ * «каждые N» делается точками, а не настройкой маркера.
+ */
+export function подробить(точки, шаг = ШАГ_УКАЗАТЕЛЯ) {
+  const out = [точки[0]];
+  for (let i = 1; i < точки.length; i++) {
+    const [x0, y0] = точки[i - 1], [x1, y1] = точки[i];
+    const длина = Math.hypot(x1 - x0, y1 - y0);
+    const n = Math.floor(длина / шаг);
+    for (let k = 1; k <= n; k++) {
+      const t = (k * шаг) / длина;
+      if (t > 0.92) break; // у самого угла указатель не ставим: он слился бы с поворотом
+      out.push([x0 + (x1 - x0) * t, y0 + (y1 - y0) * t]);
+    }
+    out.push([x1, y1]);
+  }
+  return out;
+}
+
 /** Ломаная → путь SVG со скруглёнными поворотами. */
 export function труба(точки) {
   const R = 22; // радиус закругления на повороте
@@ -224,7 +254,81 @@ export function проверить(m) {
   return беды;
 }
 
-function собрать(m) {
+/**
+ * СТРАНИЦА «КОМПОНЕНТЫ» — библиотека, снятая с живого продукта.
+ *
+ * Заказ владельца 2026-09-05: «*В нашем инструменте ты сделал раздел "Компоненты" и раздел
+ * "Дизайн-схема" — по аналогии с Figma?*» — не сделал; «*если не сделал — делай*».
+ *
+ * 🔑 Отличие от Фигмы названо в `researches/66`: там библиотека — источник, из которого потом
+ * пишут код, и она расходится с продуктом молча. Здесь компонент — КРОП живого элемента живого
+ * экрана. Разойтись с кодом такая библиотека не может: пересняли — увидели правду.
+ */
+function страницаКомпонентов(бд) {
+  if (!бд) return '<p class="пусто">Библиотека ещё не снята: <code>node tools/shoot-design-system.mjs</code></p>';
+  const слои = new Map();
+  for (const к of бд['компоненты'] ?? []) {
+    if (!слои.has(к['слой'])) слои.set(к['слой'], []);
+    слои.get(к['слой']).push(к);
+  }
+  const блоки = [...слои].map(([слой, список]) => `
+      <section class="слой">
+        <h2>${esc(слой)}</h2>
+        <div class="сетка">${список.map((к) => `
+          <figure class="комп">
+            <img src="${dataURI(к['файл'])}" alt="${esc(к['имя'])}" draggable="false">
+            <figcaption>
+              <b>${esc(к['имя'])}</b>
+              <span>${esc(к['селектор'])}</span>
+              <span>${к['мера']?.['ширина']}×${к['мера']?.['высота']} · радиус ${esc(к['мера']?.['радиус'] ?? '—')}</span>
+            </figcaption>
+          </figure>`).join('')}</div>
+      </section>`).join('');
+  const пропало = (бд['пропало'] ?? []).length
+    ? `<section class="слой"><h2>Не найдено прибором</h2><ul class="пропало">${
+        бд['пропало'].map((п) => `<li><b>${esc(п['имя'])}</b> — ${esc(п['почему'])}</li>`).join('')
+      }</ul><p class="пусто">Пропажа названа НАРОЧНО: библиотека, молча потерявшая часть, хуже отсутствующей — по ней делают выводы.</p></section>`
+    : '';
+  return блоки + пропало;
+}
+
+/** СТРАНИЦА «ДИЗАЙН-СХЕМА» — токены и типографика, прочитанные из вычисленных стилей браузера. */
+function страницаСхемы(бд) {
+  if (!бд?.['схема']) return '<p class="пусто">Схема ещё не снята: <code>node tools/shoot-design-system.mjs</code></p>';
+  const светлая = бд['схема']['light']?.['токены'] ?? {};
+  const тёмная = бд['схема']['dark']?.['токены'] ?? {};
+  const цвет = (v) => /^#|^rgb|^hsl/i.test(String(v).trim());
+  const имена = Object.keys(светлая).sort();
+  const цвета = имена.filter((n) => цвет(светлая[n]));
+  const прочие = имена.filter((n) => !цвет(светлая[n]));
+  const строка = (n) => `
+        <tr>
+          <td class="имя"><code>${esc(n)}</code></td>
+          <td class="обр"><i style="background:${esc(светлая[n])}"></i><code>${esc(светлая[n])}</code></td>
+          <td class="обр"><i style="background:${esc(тёмная[n] ?? светлая[n])}"></i><code>${esc(тёмная[n] ?? '—')}</code></td>
+        </tr>`;
+  const тип = бд['схема']['light']?.['типографика'] ?? {};
+  const типСтроки = Object.entries(тип).filter(([, v]) => v).map(([k, v]) => `
+        <tr><td class="имя"><code>${esc(k)}</code></td>
+          <td colspan="2">${esc(v['гарнитура'])} · ${esc(v['кегль'])} · вес ${esc(v['вес'])} · интерлиньяж ${esc(v['интерлиньяж'])}</td></tr>`).join('');
+  return `
+      <section class="слой">
+        <h2>Цвет — ${цвета.length} токенов, обе темы</h2>
+        <table class="токены"><thead><tr><th>Токен</th><th>Светлая</th><th>Тёмная</th></tr></thead>
+        <tbody>${цвета.map(строка).join('')}</tbody></table>
+      </section>
+      <section class="слой">
+        <h2>Прочие токены — ${прочие.length}</h2>
+        <table class="токены"><tbody>${прочие.map(строка).join('')}</tbody></table>
+      </section>
+      <section class="слой">
+        <h2>Типографика — с живых заголовков</h2>
+        <table class="токены"><tbody>${типСтроки}</tbody></table>
+      </section>
+      <p class="пусто">Значения прочитаны из вычисленных стилей браузера ${esc(бд['снято'] ?? '')}, а не переписаны руками.</p>`;
+}
+
+function собрать(m, бд) {
   const экраны = m['экраны'];
   const поId = Object.fromEntries(экраны.map((э) => [э.id, э]));
   const Ш = m['лист']?.['ширина'] ?? 2600;
@@ -247,8 +351,9 @@ function собрать(m) {
    */
   const источники = [...new Set((m['связи'] || []).map((с) => с['от']))];
   const стрелки = полосы(m['связи'] || [], поId).map(({ с, точки, i }) => {
+    const н = источники.indexOf(с['от']) % ЦВЕТА.length;
     const цвет = цветТрубы(источники.indexOf(с['от']));
-    const d = труба(точки);
+    const d = труба(подробить(точки));
     // Подпись садится на середину САМОГО ДЛИННОГО отрезка трубы — там она читается и не залезает
     // на карточку. На повороте подпись висела бы в углу и путалась с соседней.
     let лучший = 0, длина = -1;
@@ -256,21 +361,71 @@ function собрать(m) {
       const l = Math.hypot(точки[k + 1][0] - точки[k][0], точки[k + 1][1] - точки[k][1]);
       if (l > длина) { длина = l; лучший = k; }
     }
-    const mx = (точки[лучший][0] + точки[лучший + 1][0]) / 2;
-    const my = (точки[лучший][1] + точки[лучший + 1][1]) / 2;
+    const [ax, ay] = точки[лучший], [bx, by] = точки[лучший + 1];
+    const mx = Math.round((ax + bx) / 2), my = Math.round((ay + by) / 2);
+    const горизонт = Math.abs(bx - ax) >= Math.abs(by - ay);
+
+    /*
+     * ПОДПИСЬ НЕ ЛОЖИТСЯ НА ТРУБУ. Слово владельца 2026-09-05: «подписи стрелок словом нужно так
+     * писать, чтобы они не перекрывались трубопроводом. Например, выше стрелки горизонтальной…
+     * И выноской в сторону как на чертежах — для вертикальных стрелок».
+     *   · горизонтальная труба — подпись НАД ней;
+     *   · вертикальная — ВЫНОСКА: короткая полка вбок и подпись на её конце, как размерная
+     *     надпись на чертеже. Класть текст поперёк вертикальной трубы нельзя: труба толщиной
+     *     6 px перечёркивает его ровно посередине.
+     */
+    const подпись = !с['подпись'] ? `<!-- ${i} -->` : (горизонт
+      ? `<text x="${mx}" y="${my - 18}" text-anchor="middle" fill="${цвет}">${esc(с['подпись'])}</text>`
+      : `<polyline class="выноска" points="${mx},${my} ${mx + 54},${my}" stroke="${цвет}"/>
+        <text x="${mx + 62}" y="${my + 5}" text-anchor="start" fill="${цвет}">${esc(с['подпись'])}</text>`);
+
     return `
-        <path d="${d}" stroke="${цвет}" marker-end="url(#tip${источники.indexOf(с['от']) % ЦВЕТА.length})"/>
-        ${с['подпись'] ? `<text x="${mx}" y="${my - 14}" text-anchor="middle" fill="${цвет}">${esc(с['подпись'])}</text>` : `<!-- ${i} -->`}`;
+        <path d="${d}" stroke="${цвет}" marker-start="url(#dir${н})" marker-mid="url(#dir${н})" marker-end="url(#tip${н})"/>
+        ${подпись}`;
   }).join('');
 
-  /* Имя ряда стоит слева от него: ряд — это ПРОЦЕСС, и без подписи лист снова становится
-     россыпью карточек. Слово владельца: «новый ряд — если это логически другой процесс». */
-  const ряды = (m['полосы'] || []).map((п) => `
-        <text class="band" x="20" y="${п.y + 40}">${esc(п['имя'])}</text>
-        <line class="band" x1="20" y1="${п.y + 60}" x2="${Ш - 20}" y2="${п.y + 60}"/>`).join('');
+  /*
+   * КОНТЕЙНЕР ГРУППЫ — как фрейм в Фигме. Слово владельца 2026-09-05: «*границы блоков, разделов,
+   * ты сделал какими-то невнятными. В фигме их делают в виде контейнера, прямоугольника с
+   * заголовком, и всю группу рисуют внутри этого контейнера. Границы контейнера яркие, заметные*».
+   *
+   * Было: тонкая серая черта и подпись сбоку — граница, которую не видно, то есть границы нет.
+   * Стало: прямоугольник вокруг ВСЕЙ группы, яркий, своего цвета, с заголовком-плашкой сверху.
+   * Рамка считается по фактическим границам карточек ряда, а не по номинальной высоте полосы:
+   * номинальная разъехалась бы с содержимым при первой же правке раскладки.
+   */
+  const ПОЛЯ = 46;
+  const ЗАГОЛОВОК = 58;
+  const ряды = (m['полосы'] || []).map((п, i) => {
+    const свои = экраны.filter((э) => э.y >= п.y - 1 && э.y < п.y + п['высота'] + 1);
+    if (!свои.length) return '';
+    const x0 = Math.min(...свои.map((э) => э.x)) - ПОЛЯ;
+    const y0 = Math.min(...свои.map((э) => э.y)) - ПОЛЯ;
+    const x1 = Math.max(...свои.map((э) => э.x)) + ЭКРАН_Ш + ПОЛЯ;
+    const y1 = Math.max(...свои.map((э) => э.y)) + КАРТА_В + ПОЛЯ + 70; // +70 — место под заметку
+    const цвет = цветТрубы(i);
+    const ширинаПлашки = String(п['имя']).length * 15 + 44;
+    return `
+        <g class="frame">
+          <rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="26" stroke="${цвет}"/>
+          <rect class="tag" x="${x0}" y="${y0 - ЗАГОЛОВОК}" width="${ширинаПлашки}" height="${ЗАГОЛОВОК}" rx="14" fill="${цвет}"/>
+          <text class="frame-title" x="${x0 + 22}" y="${y0 - ЗАГОЛОВОК / 2 + 11}">${esc(п['имя'])}</text>
+        </g>`;
+  }).join('');
 
+  /*
+   * ДВА НАБОРА МАРКЕРОВ, и разница между ними не косметическая.
+   *  · `tip` — конец трубы: `auto-start-reverse` разворачивает его правильно на финише;
+   *  · `dir` — начало и промежуточные указатели: строго `auto`, потому что на старте
+   *    `auto-start-reverse` развернул бы треугольник ПРОТИВ хода, и труба «показывала» бы назад.
+   * Промежуточные указатели ставятся в точках, которые подрезала `подробить()` — то есть «каждые
+   * N», как и просил владелец.
+   */
   const наконечники = ЦВЕТА.map((c, i) => `
-      <marker id="tip${i}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <marker id="tip${i}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="${c}"/>
+      </marker>
+      <marker id="dir${i}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto">
         <path d="M 0 0 L 10 5 L 0 10 z" fill="${c}"/>
       </marker>`).join('');
 
@@ -350,17 +505,88 @@ function собрать(m) {
   #bar{flex-wrap:wrap;max-width:calc(100vw - 40px)}
   #bar button:hover{border-color:var(--accent);color:var(--accent)}
   #zoom{min-width:56px;text-align:center;color:var(--dim);font-variant-numeric:tabular-nums}
+
+  /* Выноска подписи у вертикальной трубы — тонкая полка вбок, как на чертеже. */
+  svg.links polyline.выноска{fill:none;stroke-width:2;opacity:.9}
+
+  /* Панель страниц слева. Плавает, как заголовок и панель, и так же сворачивается. */
+  #pages{position:fixed;left:16px;top:50%;transform:translateY(-50%);z-index:10;min-width:150px;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px;
+    box-shadow:0 6px 24px rgba(0,0,0,.12);padding-right:44px}
+  #pages .body{display:flex;flex-direction:column;gap:6px}
+  #pages .body > b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  #pages button.page{font:inherit;text-align:left;color:var(--ink);background:transparent;border:1px solid transparent;
+    border-radius:8px;padding:7px 10px;cursor:pointer}
+  #pages button.page:hover{border-color:var(--line)}
+  #pages button.page.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  #pages.folded .body{display:none}
+  #pages.folded{padding:10px 44px 10px 14px;min-width:0}
+
+  /* Страницы-документы: прокручиваются, живут поверх листа и полностью его закрывают. */
+  /* Отступ сверху — под плавающий заголовок листа: без него он накрывал заголовок самой
+     страницы. Поймано кадром первой сборки страниц. */
+  .page-doc{position:fixed;inset:0;overflow:auto;z-index:5;background:var(--bg);color:var(--ink);
+    padding:140px 40px 120px 220px}
+  .page-doc h1{margin:0 0 6px;font-size:26px}
+  .page-doc .lede{margin:0 0 28px;color:var(--dim);max-width:820px}
+  .page-doc .слой{margin:0 0 34px}
+  .page-doc .слой h2{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);
+    margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .page-doc .сетка{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+  .page-doc figure.комп{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px;max-width:440px;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+  .page-doc figure.комп img{display:block;max-width:400px;max-height:420px;width:auto;height:auto;border-radius:8px;
+    background:repeating-conic-gradient(var(--grid) 0 25%,transparent 0 50%) 0 0/16px 16px}
+  .page-doc figure.комп figcaption{display:flex;flex-direction:column;gap:2px;margin-top:10px;font-size:12.5px;color:var(--dim)}
+  .page-doc figure.комп figcaption b{color:var(--ink);font-size:14px}
+  .page-doc table.токены{border-collapse:collapse;font-size:13.5px;min-width:620px}
+  .page-doc table.токены th{text-align:left;color:var(--dim);font-weight:600;padding:6px 14px 6px 0;border-bottom:1px solid var(--line)}
+  .page-doc table.токены td{padding:6px 14px 6px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+  .page-doc table.токены td.обр i{display:inline-block;width:22px;height:22px;border-radius:6px;border:1px solid var(--line);
+    vertical-align:middle;margin-right:10px}
+  .page-doc code{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:12.5px}
+  .page-doc ul.пропало{margin:0 0 10px;padding-left:20px;color:var(--ink)}
+  .page-doc .пусто{color:var(--dim);font-size:13px}
   #title{position:fixed;left:16px;top:16px;z-index:10;max-width:min(560px,60vw);
     background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;
     box-shadow:0 6px 24px rgba(0,0,0,.12)}
   #title h1{margin:0 0 4px;font-size:17px}
   #title p{margin:0;color:var(--dim);font-size:13px}
+
+  /* Контейнер группы — фрейм: яркая рамка вокруг ВСЕЙ группы и плашка-заголовок сверху. */
+  svg.links g.frame rect{fill:none;stroke-width:4;opacity:.9}
+  svg.links g.frame rect.tag{stroke:none;opacity:1}
+  svg.links text.frame-title{fill:#fff;font:800 30px/1 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;stroke:none}
+
+  /* Сворачивание виджетов. Кнопка остаётся на месте — свёрнутое должно быть возвращаемо. */
+  #title .fold, #bar .fold{position:absolute;top:8px;right:8px;width:26px;height:26px;line-height:1;
+    border:1px solid var(--line);background:var(--card);color:var(--dim);border-radius:8px;
+    cursor:pointer;font-size:15px;padding:0;min-width:26px}
+  #title{position:fixed;padding-right:44px}
+  #title.folded .body{display:none}
+  #title.folded{padding:10px 44px 10px 14px;min-width:0}
+  /* ⚠️ НЕ ПИСАТЬ ЗДЕСЬ position:relative. Панель плавает (position:fixed выше), и фиксированный
+     элемент сам служит опорой для своей кнопки сворачивания. Одна такая строка вернула панель в
+     поток документа: она растянулась на всю ширину и накрыла заголовок — кнопка заголовка стала
+     некликабельной. Поймано прибором, а не глазами.
+     И второе, что стоило прогона: в этом файле стили живут ВНУТРИ шаблонной строки, поэтому
+     обратные кавычки в комментарии закрывают её и роняют сборку молча. Кавычек здесь нет. */
+  #bar{padding-right:40px}
+  #bar.folded > *:not(.fold){display:none}
+  #bar.folded{padding:10px 40px 10px 14px}
+  #bar .fold{top:6px;right:6px}
 </style>
 </head>
 <body>
+<!-- Оба виджета сворачиваются: слово владельца 2026-09-05 — «нужно иметь возможность сворачивать
+     (минимизировать) и разворачивать, чтобы место не занимали». Свёрнутый виджет остаётся
+     видимым кнопкой: спрятанный НАСОВСЕМ виджет человек потом ищет, и это хуже занятого места. -->
 <div id="title">
-  <h1>${esc(m['название'])}</h1>
-  <p>${esc(m['подпись'] ?? '')}</p>
+  <button class="fold" id="fold-title" title="Свернуть заголовок" aria-expanded="true">−</button>
+  <div class="body">
+    <h1>${esc(m['название'])}</h1>
+    <p>${esc(m['подпись'] ?? '')}</p>
+  </div>
 </div>
 
 <div id="viewport">
@@ -374,7 +600,34 @@ function собрать(m) {
   </div>
 </div>
 
+<!-- СТРАНИЦЫ — как в Фигме: слева список листов, на каждом свой функционал. Слово владельца
+     2026-09-05: «у Фигмы есть понятие отдельных страниц, между которыми в левой панели можно
+     переключаться… Туда же компоненты выносят». Развёртка — лист с панорамой; Компоненты и
+     Дизайн-схема — документы, они прокручиваются, а не таскаются. -->
+<nav id="pages">
+  <button class="fold" id="fold-pages" title="Свернуть страницы" aria-expanded="true">−</button>
+  <div class="body">
+    <b>Страницы</b>
+    <button class="page active" data-page="map">Развёртка</button>
+    <button class="page" data-page="components">Компоненты</button>
+    <button class="page" data-page="scheme">Дизайн-схема</button>
+  </div>
+</nav>
+
+<section id="page-components" class="page-doc" hidden>
+  <h1>Компоненты</h1>
+  <p class="lede">Библиотека снята с ЖИВОГО продукта: каждый компонент — кроп настоящего элемента на настоящем экране. Пересняли — увидели правду.</p>
+  ${страницаКомпонентов(бд)}
+</section>
+
+<section id="page-scheme" class="page-doc" hidden>
+  <h1>Дизайн-схема</h1>
+  <p class="lede">Токены и типографика, прочитанные из вычисленных стилей браузера в обеих темах. Руками ничего не переписано.</p>
+  ${страницаСхемы(бд)}
+</section>
+
 <div id="bar">
+  <button class="fold" id="fold-bar" title="Свернуть панель" aria-expanded="true">−</button>
   <button id="out" title="Отдалить">−</button>
   <span id="zoom">100%</span>
   <button id="in" title="Приблизить">+</button>
@@ -480,6 +733,38 @@ function собрать(m) {
     b.onclick = () => кРяду(Number(b.dataset.y), Number(b.dataset.h));
   }
 
+  /* Сворачивание виджетов: кнопка меняет только знак и класс — состояние хранит DOM, а не
+     переменная, поэтому рассинхронизироваться нечему. */
+  for (const [кнопка, узел, имя] of [['fold-title', 'title', 'заголовок'], ['fold-bar', 'bar', 'панель']]) {
+    const b = document.getElementById(кнопка), el = document.getElementById(узел);
+    b.onclick = () => {
+      const свёрнут = el.classList.toggle('folded');
+      b.textContent = свёрнут ? '+' : '−';
+      b.title = (свёрнут ? 'Развернуть ' : 'Свернуть ') + имя;
+      b.setAttribute('aria-expanded', String(!свёрнут));
+    };
+  }
+
+  /* Переключение страниц: одна активна, остальные скрыты атрибутом hidden. Лист развёртки при
+     этом не разрушается — он просто закрыт документом сверху, и возврат на него мгновенный. */
+  const страницы = { map: null, components: document.getElementById('page-components'), scheme: document.getElementById('page-scheme') };
+  for (const b of document.querySelectorAll('#pages button.page')) {
+    b.onclick = () => {
+      document.querySelectorAll('#pages button.page').forEach((x) => x.classList.toggle('active', x === b));
+      for (const [имя, узел] of Object.entries(страницы)) if (узел) узел.hidden = (имя !== b.dataset.page);
+      document.getElementById('bar').style.visibility = b.dataset.page === 'map' ? '' : 'hidden';
+    };
+  }
+  {
+    const b = document.getElementById('fold-pages'), el = document.getElementById('pages');
+    b.onclick = () => {
+      const свёрнут = el.classList.toggle('folded');
+      b.textContent = свёрнут ? '+' : '−';
+      b.title = (свёрнут ? 'Развернуть ' : 'Свернуть ') + 'страницы';
+      b.setAttribute('aria-expanded', String(!свёрнут));
+    };
+  }
+
   document.getElementById('fit').onclick = вписать;
   document.getElementById('one').onclick = () => зумВТочку(1, ...центр());
   document.getElementById('theme').onclick = () => {
@@ -556,8 +841,12 @@ if (ЗАПУЩЕН_НАПРЯМУЮ) {
     process.exit(1);
   }
 
+  // Библиотека необязательна: лист собирается и без неё, страницы просто скажут, чем их наполнить.
+  let бд = null;
+  try { бд = JSON.parse(readFileSync(БИБЛИОТЕКА, 'utf8')); } catch { бд = null; }
+
   let html;
-  try { html = собрать(м); }
+  try { html = собрать(м, бд); }
   catch (err) { console.error(`✖ ${err.message}`); process.exit(1); }
 
   writeFileSync(OUT, html, 'utf8');
