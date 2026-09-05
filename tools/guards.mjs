@@ -102,6 +102,11 @@ const GUARDS = [
     argv: ['tools/guard-product-copy.mjs'],
   },
   {
+    name: 'старый хост уводит на домен каждый маршрут дерева 2.0',
+    why: 'цель `app` (ndim-space.web.app) переадресовывала на домен семь путей 1.x, а /ru/**, /en/** и каталог отдавала сама: вторая копия сайта, дверь карточки на ней теряла гостя (bugs/NEW_old_host_serves_site_without_redirect). Список выводится из дерева src/routes и языков; глобальное «**» запрещено обработчиком входа в /__/auth/**',
+    argv: ['tools/verify-old-host-redirects.mjs'],
+  },
+  {
     name: 'бренд-имя «сервер синхронизации»',
     why: 'строгое имя владельца; иное название компонента — запрет, баг, срочное исправление',
     argv: ['tools/verify-sync-server-name.mjs'],
