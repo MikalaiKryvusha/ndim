@@ -65,7 +65,10 @@ export function load(): { strip: StripCard[]; dims: number; ratings: number; peo
       hrefEn: dimensionPath('en', best.slug),
       kindRu: kindLabel(kind, 'ru'),
       kindEn: kindLabel(kind, 'en'),
-      year: best.year ? String(best.year) : '',
+      // ⚠️ ПУСТОЙ ГОД В КАТАЛОГЕ ЗАПИСАН НЕ ПУСТОТОЙ, А ПРОЧЕРКОМ. Проверка «если год есть»
+      // пропускала «-», и на живом стейдже под «Сексом» встало «Практика · Practice · -».
+      // Годом считается только год: четыре цифры, ничего другого.
+      year: /^\d{3,4}$/u.test(String(best.year ?? '').trim()) ? String(best.year).trim() : '',
     });
   }
 
