@@ -1,0 +1,170 @@
+{
+  "_": [
+    "ВОЗВРАТ ИСПРАВЛЕННЫХ КАРТОЧЕК В ОЧЕРЕДЬ ВЫЧИТКИ, ПОРЦИЯ 3 — собрано 2026-09-05.",
+    "",
+    "🔴 ЭТО НЕ НОВАЯ ПАРТИЯ. Здесь только четыре карточки, которые владелец ВЕРНУЛ на доработку",
+    "(живая выгрузка node tools/read-returned-candidates.mjs --contour prod от 2026-09-05) и которые",
+    "переписаны по его дословным замечаниям. Три из четырёх — класс 13 (не нативный русский):",
+    "«Русские так не пишут. Переделать», «Ты на русском пишешь плохо. Словно ты думаешь на английском,",
+    "но пишешь русскими словами». Четвёртая — «Вот это драма!» — класс 1б: фильм вышел 3 апреля 2026,",
+    "а текст говорил о нём как о будущем; сюжет и приём теперь известны и вписаны.",
+    "",
+    "ПОЧЕМУ ОТДЕЛЬНЫМ ФАЙЛОМ — тот же довод, что у порций 1 и 2 (07/08): дверь выгрузки отказывает",
+    "ВСЕЙ партии, если в ней есть объект, уже заведённый в каталоге; в партиях 02 и 06 такие есть.",
+    "Правка живёт в исходной партии, здесь — её копия для доставки.",
+    "",
+    "ЧЕМ ПРОВЕРЕНО: node tools/check-candidate-descriptions.mjs candidates/batches/09_returned_fixed_3.json",
+    "⚠️ Граница прибора: класс 13 он ловит списком оборотов, а не слухом — прежние тексты этих",
+    "карточек он пропускал зелёными. Зелёный прогон значит «машина не нашла», а не «нативно».",
+    "",
+    "ОТКУДА ВЗЯТА КАЖДАЯ КАРТОЧКА:",
+    "  · Q102290641 — 007 First Light  ←  06_2026_films_series_games.json",
+    "  · Q120277524 — Рыцарь Семи Королевств  ←  06_2026_films_series_games.json",
+    "  · Q201293 — Римские каникулы  ←  06_2026_films_series_games.json",
+    "  · Q130590402 — Вот это драма!  ←  02_2026_films_and_games.json"
+  ],
+  "candidates": [
+    {
+      "wikidata": "Q102290641",
+      "sitelinks": 22,
+      "title": {
+        "ru": "007 First Light",
+        "en": "007 First Light"
+      },
+      "type": {
+        "ru": "Видеоигра",
+        "en": "Video game"
+      },
+      "author": {
+        "ru": "IO Interactive",
+        "en": "IO Interactive"
+      },
+      "year": "2026",
+      "tags": [
+        "видеоигра",
+        "video game",
+        "экшен",
+        "action",
+        "стелс",
+        "stealth",
+        "шпионский",
+        "spy",
+        "приключения",
+        "adventure"
+      ],
+      "description": {
+        "ru": "Приключенческий боевик с элементами стелса от студии IO Interactive по мотивам романов Яна Флеминга и фильмов о Джеймсе Бонде. Игра рассказывает собственную историю о молодом Бонде: ему двадцать шесть лет, статуса агента с двумя нулями у него ещё нет, и всё действие посвящено заданию, за которое этот номер присваивают. Сюжет начинается в Исландии, где отряд британского спецназа попадает в засаду и в живых остаётся один Бонд. Вопреки приказу он освобождает захваченных учёных и взрывает лагерь наёмников, после чего попадает в обновлённую программу «00» под начало Джона Гринвея, которому новичок поначалу не по душе. Первое задание группы заканчивается взрывом в словацком отеле и гибелью товарищей, а след ведёт к заговору вокруг квантового суперкомпьютера, который умеет предсказывать теракты. Игра идёт от третьего лица и позволяет проходить задания двумя путями: в открытом бою, с ударами и захватами, либо хитростью — заговорить охранника, использовать обстановку и пройти незамеченным. Убивать герою разрешается только тогда, когда противник сам покушается на его жизнь, и это ограничение встроено в правила игры. Главный гаджет Бонда — часы, собранные в лаборатории Кью: с их помощью он взламывает электронику. Роль Бонда исполнил Патрик Гибсон, его наставника Гринвея сыграл Ленни Джеймс. Игра вышла 27 мая 2026 года на Windows, PlayStation 5 и Xbox Series. Критики встретили её положительно и особенно отмечали боевую систему, сценарий и игру Гибсона, а к августу 2026 года было продано более четырёх миллионов копий — рекорд для студии.",
+        "en": "An action-adventure game with stealth elements from IO Interactive, based on the Ian Fleming novels and the James Bond films. The game tells an original story about a young Bond: he is twenty-six, does not yet hold double-o status, and the whole plot follows the mission that earns him the number. The story opens in Iceland, where a British special forces unit is ambushed and Bond is the only survivor. Against orders he frees the captured scientists and blows up the mercenary camp, and that act gets him into the renewed 00 programme under John Greenway, who is not thrilled about the newcomer. The team's first assignment ends with an explosion in a Slovak hotel and the deaths of his comrades, and the trail leads to a conspiracy around a quantum supercomputer that can predict terrorist attacks. The game is played in third person and offers two ways through each mission: open combat, with strikes and takedowns, or cunning — talking a guard round, using the surroundings and slipping past unseen. Bond is only allowed to kill when an enemy makes an attempt on his life, and this limit is built into the rules of the game. His main gadget is a watch built in Q's lab, which lets him hack electronics. Patrick Gibson plays Bond and Lennie James plays his mentor Greenway. The game was released on 27 May 2026 for Windows, PlayStation 5 and Xbox Series. Critics received it well and singled out the combat, the writing and Gibson's performance, and by August 2026 it had sold more than four million copies — a record for the studio."
+      },
+      "agentNote": "Переписано после Вашего возврата «Русские так не пишут» — заново, обычными русскими оборотами, без калек с английского. Дата выхода 27 мая 2026 года и продажи четыре миллиона к августу проверены по сообщениям студии. Версия для Nintendo Switch 2 перенесена и в описание не вошла."
+    },
+    {
+      "wikidata": "Q120277524",
+      "sitelinks": 35,
+      "title": {
+        "ru": "Рыцарь Семи Королевств",
+        "en": "A Knight of the Seven Kingdoms"
+      },
+      "type": {
+        "ru": "Телесериал",
+        "en": "TV Series"
+      },
+      "author": {
+        "ru": "Айра Паркер",
+        "en": "Ira Parker"
+      },
+      "year": "2026",
+      "tags": [
+        "кино",
+        "movie",
+        "фильм",
+        "film",
+        "телесериал",
+        "TV series",
+        "фэнтези",
+        "fantasy",
+        "драма",
+        "drama",
+        "приключения",
+        "adventure",
+        "средневековье",
+        "medieval"
+      ],
+      "description": {
+        "ru": "Фэнтезийный сериал канала HBO по повестям Джорджа Мартина о Дунке и Эгге — приквел «Игры престолов» и третья экранизация его книг. Первый сезон снят по повести «Межевой рыцарь», действие которой происходит в Вестеросе примерно за девяносто лет до событий основной саги. Дункан Высокий — рослый оруженосец бедного странствующего рыцаря — хоронит своего наставника, забирает его доспехи и меч и отправляется на турнир в Эшфорд, чтобы участвовать в нём уже как рыцарь. По дороге к нему прибивается девятилетний бритоголовый мальчишка по имени Эгг и упорно напрашивается в оруженосцы. В Эшфорде простолюдина в чужих доспехах отказываются допускать к турниру, пока за него не поручится кто-нибудь из знати, и Дунку приходится доказывать своё право на рыцарские шпоры храбростью. Мальчик оказывается принцем из дома Таргариенов, а ссора на турнире перерастает в судебный поединок, в котором сходятся самые известные рыцари королевства и наследник престола. Гибель наследника меняет и судьбу Дунка, и порядок наследования в Семи Королевствах. Сериал рассказывает о дружбе и чести на большой дороге, а не о войне великих домов, и потому снят камерно: в первом сезоне шесть получасовых серий — вдвое короче привычного для этой вселенной формата. Дунка играет Питер Клэффи, Эгга — Декстер Сол Анселл; в сериале также снимались Берти Карвел, Сэм Спруэлл, Финн Беннетт и Дэниэл Ингс. Шоураннером выступил Айра Паркер, Мартин участвовал в работе как сценарист и исполнительный продюсер, музыку написал Дэн Ромер. Первый сезон вышел на HBO 18 января 2026 года. Критики приняли сериал тепло и называли его самой человечной экранизацией Мартина; сезон получил девять номинаций на премию «Эмми», в том числе за лучший драматический сериал, а второй сезон канал заказал ещё до премьеры первого.",
+        "en": "An HBO fantasy series based on George R. R. Martin's Dunk and Egg novellas — a prequel to Game of Thrones and the third adaptation of his books. The first season follows the novella The Hedge Knight, set in Westeros roughly ninety years before the events of the main saga. Duncan the Tall — the towering squire of a poor wandering knight — buries his mentor, takes his armour and sword and rides to the tourney at Ashford to compete there as a knight in his own right. On the road a nine-year-old shaven-headed boy called Egg attaches himself to him and stubbornly begs to become his squire. At Ashford a commoner in another man's armour is refused entry to the tourney until someone of noble birth vouches for him, and Dunk has to prove his right to his spurs through courage. The boy turns out to be a prince of House Targaryen, and a quarrel at the tourney escalates into a trial by combat that brings together the most famous knights of the realm and the heir to the throne. The heir's death changes both Dunk's fate and the line of succession in the Seven Kingdoms. The series is a story of friendship and honour on the open road rather than a war between great houses, and it is shot on a small scale: the first season has six half-hour episodes, half the usual length for this world. Peter Claffey plays Dunk and Dexter Sol Ansell plays Egg; Bertie Carvel, Sam Spruell, Finn Bennett and Daniel Ings also star. Ira Parker served as showrunner, Martin worked on the show as writer and executive producer, and Dan Romer composed the score. The first season premiered on HBO on 18 January 2026. Critics received it warmly and called it the most humane adaptation of Martin's work; the season earned nine Emmy nominations, including Outstanding Drama Series, and the network ordered a second season before the first had premiered."
+      },
+      "agentNote": "Переписано после Вашего возврата «Русские так не пишут» — заново, обычными русскими оборотами. Год — по первому сезону, по Вашему правилу. Девять номинаций на «Эмми» подтверждены на сайте Телеакадемии; церемония 14 сентября 2026 года ещё впереди, поэтому о победах в описании ничего нет. Второй сезон выйдет в 2027 году и в описание не вошёл."
+    },
+    {
+      "wikidata": "Q201293",
+      "sitelinks": 70,
+      "title": {
+        "ru": "Римские каникулы",
+        "en": "Roman Holiday"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Уильям Уайлер",
+        "en": "William Wyler"
+      },
+      "year": "1953",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "комедия",
+        "comedy",
+        "драма",
+        "drama",
+        "классика",
+        "classic"
+      ],
+      "description": {
+        "ru": "Романтическая комедия Уильяма Уайлера, снятая в Риме, с Одри Хепбёрн в первой главной роли. Анна — юная принцесса небольшого европейского государства, приехавшая в Рим с официальным визитом, где каждая минута расписана по протоколу. Вечером у неё сдают нервы, придворный врач делает ей укол снотворного, и принцесса тайком сбегает из посольства в город. Уснувшую на скамейке девушку находит американский журналист Джо Брэдли и, не зная, кто она, отвозит к себе домой. Утром он видит её портрет в газете и понимает, что ему в руки попала сенсация. Весь день он сопровождает Анну по Риму, делая вид, что их встречи случайны, а его приятель-фотограф тайком снимает её. Один день свободы даёт принцессе всё, чего не давал титул: короткую стрижку, мороженое на Испанской лестнице, первую сигарету, поездку на мотороллере и драку на танцплощадке. Репортаж об этом дне обеспечил бы Брэдли карьеру, и он отказывается его печатать. Фильм рассказывает о любви, которой не суждено продолжиться, и о выборе между чувством и долгом. Грегори Пек — к тому времени уже звезда — настоял, чтобы имя дебютантки Хепбёрн стояло в титрах наравне с его собственным. Сценарий написал Далтон Трамбо, находившийся в голливудском чёрном списке: в титрах его имя заменили чужим, «Оскар» за лучший сюжет получил подставной автор, и только в 1993 году награду передали вдове Трамбо. Премьера фильма состоялась 27 августа 1953 года. Хепбёрн была удостоена премии «Оскар» за лучшую женскую роль, картина получила ещё две награды Академии, а в 1999 году Библиотека Конгресса США отобрала её для вечного хранения как имеющую особое культурное значение.",
+        "en": "A romantic comedy by William Wyler, shot in Rome, with Audrey Hepburn in her first leading role. Ann is the young princess of a small European state on an official visit to Rome, where every minute is governed by protocol. One evening she breaks down, the court physician gives her a sedative injection, and the princess secretly slips out of the embassy into the city. The American journalist Joe Bradley finds the girl asleep on a bench and, not knowing who she is, takes her home. In the morning he sees her portrait in the newspaper and realises he has a scoop on his hands. All day he escorts Ann around Rome, pretending their meetings are accidental, while his photographer friend secretly takes pictures of her. One day of freedom gives the princess everything her title never did: a short haircut, ice cream on the Spanish Steps, a first cigarette, a ride on a scooter and a brawl at a dance. A story about that day would have made Bradley's career, and he refuses to print it. The film is about a love that cannot go on and about the choice between feeling and duty. Gregory Peck — already a star by then — insisted that the newcomer Hepburn be billed alongside him in the credits. Dalton Trumbo wrote the screenplay while on the Hollywood blacklist: another name replaced his in the credits, a front received the Academy Award for the story, and only in 1993 was the award handed to Trumbo's widow. The film premiered on 27 August 1953. Hepburn won the Academy Award for Best Actress, the picture took two more Oscars, and in 1999 the Library of Congress selected it for preservation as a film of special cultural significance."
+      },
+      "agentNote": "Переписано после Вашего замечания «словно ты думаешь на английском, но пишешь русскими словами» — текст написан заново обычными русскими оборотами, а не поправлен по строкам. Год — по премьере 27 августа 1953 года. История со сценаристом в чёрном списке оставлена: она часть самой картины, имя Трамбо вернули в титры только в 2011 году."
+    },
+    {
+      "wikidata": "Q130590402",
+      "sitelinks": 29,
+      "title": {
+        "ru": "Вот это драма!",
+        "en": "The Drama"
+      },
+      "type": {
+        "ru": "Фильм",
+        "en": "Film"
+      },
+      "author": {
+        "ru": "Кристоффер Боргли",
+        "en": "Kristoffer Borgli"
+      },
+      "year": "2026",
+      "tags": [
+        "фильм",
+        "movie",
+        "кино",
+        "film",
+        "драма",
+        "drama",
+        "комедия",
+        "comedy",
+        "романтика",
+        "romance",
+        "сатира",
+        "satire"
+      ],
+      "description": {
+        "ru": "Романтическая чёрная комедия норвежского режиссёра Кристоффера Боргли о паре, чья свадьба оказывается под угрозой из-за одного признания. Чарли — британский куратор музея — знакомится в бостонском кафе с редактором Эммой, и через два года они готовятся к свадьбе. За неделю до торжества, на пьяном ужине с друзьями, компания затевает игру: каждый рассказывает о самом плохом поступке в своей жизни. Шафер признаётся, что при нападении собаки прикрылся бывшей девушкой, подруга невесты — что в детстве заперла соседского мальчика на ночь в заброшенном трейлере, Чарли — что травил одноклассника в интернете. Эмма рассказывает, что в школьные годы готовила стрельбу в школе, а на одно ухо оглохла после тренировок с винтовкой; от замысла она отказалась, увидев, что стрельба делает с людьми, и с тех пор выступает за ограничение оружия. Чарли больше не понимает, кто перед ним, и неделя до свадьбы превращается в череду подозрений и ночных кошмаров Эммы, а сам Чарли целует коллегу на работе и тут же останавливается. На свадьбе всё вскрывается разом: подруга произносит ядовитый тост, Эмма узнаёт о поцелуе, Чарли в своей речи публично кается в измене. Заканчивается фильм в любимой закусочной героев, где они знакомятся заново — так, будто видят друг друга впервые. Картина ставит вопрос, можно ли по-настоящему знать другого человека и что важнее — его прошлое или тот, кем он стал. Главные роли исполнили Зендея и Роберт Паттинсон, в фильме также снимались Алана Хаим, Мамуду Ати и Хейли Гейтс. Сценарий написал сам Боргли, продюсерами выступили Ари Астер и Ларс Кнудсен, прокатом занималась компания A24. Премьера состоялась 17 марта 2026 года в Лос-Анджелесе, в прокат в США фильм вышел 3 апреля 2026 года. Критики назвали работу Паттинсона и Зендеи одной из лучших в их карьере и разошлись во мнениях о самом замысле, а тема стрельбы в школе вызвала протесты общественных организаций. При бюджете в 28 миллионов долларов картина собрала более 132 миллионов по всему миру.",
+        "en": "A romantic black comedy by the Norwegian director Kristoffer Borgli about a couple whose wedding is put at risk by a single confession. Charlie — a British museum curator — meets the editor Emma in a Boston café, and two years later they are preparing to marry. A week before the wedding, over a drunken dinner with friends, everyone tells the worst thing they have ever done. The best man admits he used an ex-girlfriend as a shield during a dog attack, the maid of honour confesses that as a child she locked a neighbour's boy in an abandoned trailer overnight, and Charlie admits he cyberbullied a classmate. Emma reveals that as a teenager she planned a school shooting and that her deafness in one ear came from practising with a rifle; she abandoned the plan after seeing what a shooting does to people and has campaigned for gun control ever since. Charlie no longer knows who is in front of him, and the week before the wedding turns into suspicions, Emma's nightmares and his own kiss with a colleague, which he breaks off himself. At the wedding everything comes out at once: the maid of honour gives a poisonous toast, Emma learns about the kiss, and Charlie publicly confesses his infidelity in his speech. The film ends in the couple's favourite diner, where they introduce themselves to each other again as if meeting for the first time. The picture asks whether one person can truly know another and what matters more — the past or the person someone has become. Zendaya and Robert Pattinson play the leads; Alana Haim, Mamoudou Athie and Hailey Gates also star. Borgli wrote the screenplay himself, Ari Aster and Lars Knudsen produced, and A24 handled distribution. The film premiered on 17 March 2026 in Los Angeles and opened in US cinemas on 3 April 2026. Critics praised Pattinson and Zendaya and were divided on the premise itself, and the school-shooting theme drew protests from advocacy groups. On a 28-million-dollar budget the film grossed more than 132 million worldwide."
+      },
+      "agentNote": "Вы вернули карточку, потому что текст говорил о фильме как о будущем. Фильм вышел 3 апреля 2026 года, прошёл прокат и с 31 июля доступен на HBO Max — люди его уже видели. Описание переписано целиком: теперь в нём сюжет, герои и тема, а не история создания. Русский текст переписан обычными русскими оборотами."
+    }
+  ]
+}
