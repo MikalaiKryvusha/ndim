@@ -235,7 +235,7 @@ npm run stand      # живой стенд: эмуляторы + тестовы�
 npm test           # 192 юнит-теста: ядро похожести, модель данных, статистика, кэш
 npm run test:rules # 97 тестов правил Firestore и Storage (проверяют ОТКАЗЫ)
 npm run test:sync  # 77 тестов сервера синхронизации, включая устойчивость к сбоям
-npm run e2e        # 72 браузерные проверки (Playwright, продакшен-сборка)
+npm run e2e        # 106 браузерных проверок + 4 пропуска (Playwright, продакшен-сборка; замер 2026-09-05)
 npm run build      # статическая сборка: весь сайт пререндерится
 ```
 
@@ -493,7 +493,7 @@ npm run stand      # live stand: emulators + seed data + the sync server
 npm test           # 192 unit tests: similarity core, data model, statistics, cache
 npm run test:rules # 97 Firestore and Storage rules tests (asserting DENIALS)
 npm run test:sync  # 77 sync-server tests, including failure resilience
-npm run e2e        # 72 browser checks (Playwright, production build)
+npm run e2e        # 106 browser checks + 4 skipped (Playwright, production build; measured 2026-09-05)
 npm run build      # static build: the whole site is prerendered
 ```
 

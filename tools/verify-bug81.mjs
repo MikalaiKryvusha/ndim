@@ -10,6 +10,8 @@
  *
  * ⚠️ ГОНЯЕТСЯ ПО СОБРАННОМУ САЙТУ, а не по стенду:
  *   `npm run build`, затем `npx vite preview --port 4173 --strictPort`, затем этот страж.
+ *   ⚠️ Витрина живёт на ЛЕНДИНГЕ `/ru` (языковые адреса, plans/39); с 2026-09-05 корень `/` — главная V5
+ *   без витрины, и страж, ходивший на корень, краснел ложно (тот же класс, что спеки e2e — EXP-0282).
  * Причина принципиальная: чинили мы именно ПРЕРЕНДЕР, и проверять надо тот артефакт, который
  * уезжает в бой. ⚠️ После пересборки `build/` preview надо ПЕРЕЗАПУСТИТЬ — он кеширует список
  * файлов при старте.
@@ -116,7 +118,7 @@ try {
     await ctx.addInitScript((v) => localStorage.setItem('ndim-theme', v), theme);
 
     // 1 · СЫРОЙ HTML — до всякого JavaScript.
-    const raw = await ctx.request.get(`${BASE}/`);
+    const raw = await ctx.request.get(`${BASE}/ru`);
     const html = await raw.text();
     // Полоса чисел целиком обязана лежать в пререндере: ищем её по КЛАССУ, а не по фразе —
     // фраза меняется вместе с маркетингом, инвариант «числа в сыром HTML» не меняется никогда.
@@ -157,7 +159,7 @@ try {
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 
     // 2+3 · Трасса по кадрам с самого начала загрузки (`commit` — не ждём ничего лишнего).
-    await page.goto(`${BASE}/`, { waitUntil: 'commit' });
+    await page.goto(`${BASE}/ru`, { waitUntil: 'commit' });
     const { seen, endFeats } = await page.evaluate(traceScript(FRAMES, 0));
     console.log('       трасса: ' + JSON.stringify(seen));
     check(seen.length === 1, 'строка не менялась ни разу за 240 кадров', JSON.stringify(seen));
@@ -185,7 +187,7 @@ try {
 
     // 4 · КОНТРОЛЬ ПРИБОРА: трасса обязана УМЕТЬ увидеть изменение.
     const control = await ctx.newPage();
-    await control.goto(`${BASE}/`, { waitUntil: 'commit' });
+    await control.goto(`${BASE}/ru`, { waitUntil: 'commit' });
     const { seen: controlSeen } = await control.evaluate(traceScript(120, 30));
     check(
       controlSeen.length >= 2 && controlSeen.some((s) => s.v === 'КОНТРОЛЬ ПРИБОРА'),
