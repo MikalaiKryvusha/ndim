@@ -18,17 +18,38 @@
    * четыре узла во второй файл значило бы завести вторую правду о бренде, и она разошлась бы с
    * первой при первой же правке. Знак остаётся один, у него лишь снимается плашка.
    */
+  /*
+   * ОРЕОЛ — решение владельца по знаку в ТЁМНОЙ теме (интервью №062 В3 = Д «Ореол», 2026-08-30;
+   * ступень — №070 В2: «*самый яркий*», то есть А0 лестницы `design/sign-halo-tuning.html`:
+   * акцент `#3fd9ff` при 0.30, размытие 5). Повод, найденный съёмкой: в тёмной теме плитка
+   * `#060b14` совпадает с фоном страницы до байта, и у знака не было подложки вовсе — плитку
+   * в тёмной теме рисует СВЕТ из-под её краёв. Заказ повторён им 2026-09-05 про экран входа:
+   * «*в тёмной теме вокруг логотипа N нужен ареол, как делали его для другого места*».
+   *
+   * В СВЕТЛОЙ теме ореола нет и не будет: цветное свечение на светлом фоне ТЕМНЕЕ фона и
+   * читается тенью, а не светом (закон дома стиля `--glow: transparent`, `bugs/80`). Поэтому
+   * ореол включается ТЕМОЙ, а не пропом: это одно решение о знаке, а не настройка экрана.
+   * Ореол идёт только вместе с плиткой — на кружке лица (`plate={false}`) подложка своя.
+   */
   let { size = 26, plate = true }: { size?: number; plate?: boolean } = $props();
-  const gradientId = `brand-g-${seq++}`;
+  const instance = seq++;
+  const gradientId = `brand-g-${instance}`;
+  const haloId = `brand-h-${instance}`;
 </script>
 
-<svg width={size} height={size} viewBox="0 0 96 96" aria-hidden="true">
+<svg class="brand" width={size} height={size} viewBox="0 0 96 96" aria-hidden="true">
   <defs>
     <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70">
       <stop offset="0" stop-color="#4d9fff" /><stop offset="1" stop-color="#3fd9ff" />
     </linearGradient>
+    {#if plate}
+      <filter id={haloId} x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5" /></filter>
+    {/if}
   </defs>
-  {#if plate}<rect width="96" height="96" rx="22" fill="#060b14" />{/if}
+  {#if plate}
+    <rect class="halo" width="96" height="96" rx="22" fill="rgba(63, 217, 255, 0.3)" filter="url(#{haloId})" />
+    <rect width="96" height="96" rx="22" fill="#060b14" />
+  {/if}
   <g stroke="url(#{gradientId})" stroke-width="6.7" fill="none">
     <line x1="36.5" y1="29" x2="30" y2="66" /><line x1="36.5" y1="29" x2="59.5" y2="66" /><line x1="59.5" y1="66" x2="66" y2="29" />
   </g>
@@ -36,3 +57,11 @@
     <circle cx="36.5" cy="29" r="9.3" /><circle cx="30" cy="66" r="9.3" /><circle cx="59.5" cy="66" r="9.3" /><circle cx="66" cy="29" r="9.3" />
   </g>
 </svg>
+
+<style>
+  /* Свечение выходит за рамку 96×96 — рамка его не режет. Размер знака в вёрстке не меняется. */
+  .brand { overflow: visible; }
+  /* Ореол существует только в тёмной теме — см. разбор в шапке. */
+  .halo { display: none; }
+  :global([data-theme='dark']) .halo { display: initial; }
+</style>
