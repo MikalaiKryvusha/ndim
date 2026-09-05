@@ -219,7 +219,6 @@
   .fact .n { color: var(--heading); font-weight: 800; font-size: 24px; letter-spacing: -.01em; }
   .fact .l { font-size: 13px; line-height: 1.45; margin-top: 4px; }
   .fact .l .en { display: block; color: var(--muted); font-size: 12px; }
-  .taken { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 14px; }
 
   /* ── Полоса живого каталога — ШЕСТОЙ КУСОК супер-микса «продукт виден до входа» ──
      Доноры YouTube · TikTok · Spotify, взятые БЕЗ их модели «корень = приложение»:
@@ -311,9 +310,27 @@
     margin-top: 18px; background: var(--panel); border: 1px solid var(--edge);
     border-radius: 18px; padding: 20px; box-shadow: var(--card-shadow); text-align: center;
   }
+  /* Одна карточка, внутри две речи: на широком экране рядом, на телефоне друг под другом.
+     Это и есть «одна мультиязычная карточка» — не две панели, как было в V3. */
+  .pitch { display: flex; gap: 26px; text-align: left; }
+  #stage[data-w="390"] .pitch { flex-direction: column; gap: 20px; }
+  .pitch .half { flex: 1; }
+  .pitch .half.en { color: var(--muted); }
+  #stage[data-w="390"] .pitch .half.en {
+    border-top: 1px solid var(--edge); padding-top: 18px;
+  }
+  #stage[data-w="1440"] .pitch .half + .half, #stage[data-w="1024"] .pitch .half + .half {
+    border-left: 1px solid var(--edge); padding-left: 26px;
+  }
   .pitch .h { color: var(--heading); font-weight: 800; font-size: 20px; }
+  .pitch .auto {
+    display: inline-block; margin-top: 5px; font-size: 13px;
+    color: var(--accent); font-weight: 700; text-decoration: none;
+  }
   .pitch .t { margin: 12px 0 0; font-size: 15px; line-height: 1.6; }
-  .pitch .t.en { color: var(--muted); font-size: 14px; margin-top: 7px; }
+  .pitch .steps { margin-top: 12px; font-size: 13.5px; line-height: 1.6; }
+  .pitch .steps p { margin-bottom: 6px; }
+  .pitch .steps b { color: var(--heading); }
   #stage[data-w="1440"] .pitch .h { font-size: 23px; }
   #stage[data-w="1440"] .pitch .t { font-size: 16.5px; }
   /* ── V4 «Витрина»: состояние Пространства первым содержанием ──────────────── */
@@ -653,7 +670,6 @@
             <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
             <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
           </div>
-          <p class="taken">Снимок 29 августа 2026 года · snapshot of 29 August 2026</p>
         </div>
         <div class="cat">
           <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
@@ -732,17 +748,37 @@
             <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
             <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
           </div>
-          <p class="taken">Снимок 29 августа 2026 года · snapshot of 29 August 2026</p>
         </div>
         <!-- КАРТОЧКА ИЗ V3, СВЕДЁННАЯ В ОДНУ МУЛЬТИЯЗЫЧНУЮ — слово владельца (№060, 2026-09-05):
              «под карточкой "Пространство NDim сейчас · The NDim Space right now" помещаем одну
              мультиязычную карточку из v3». В V3 таких карточек было две, по одной на язык;
              здесь она одна и говорит на обоих — как и вся эта дверь, которая язык за человека
-             не выбирает. Строка о Пространстве переехала сюда из шапки: дважды её не пишем. -->
+             не выбирает. Строка о Пространстве переехала сюда из шапки: дважды её не пишем.
+             ⚠️ УТОЧНЕНИЕ ТОГО ЖЕ ДНЯ: «*Вот это нужно было в виджет поднять*» — и дальше он
+             перечислил блок ЦЕЛИКОМ: имя · «Русский» · строка · три шага. Первая редакция
+             подняла только заголовок со строкой. Поэтому шаги теперь ЗДЕСЬ, а из низа V4
+             блок «как это устроено» убран: он был бы их вторым экземпляром на странице. -->
         <div class="pitch">
-          <div class="h">Пространство NDim · NDim Space</div>
-          <p class="t">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
-          <p class="t en">In the NDim Space you will find people who are genuinely like you.</p>
+          <div class="half">
+            <div class="h">Пространство NDim</div>
+            <a class="auto" href="/ru">Русский</a>
+            <p class="t">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
+            <div class="steps">
+              <p><b>1.</b> Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры.</p>
+              <p><b>2.</b> Пространство NDim считает Похожесть между людьми по их оценкам.</p>
+              <p><b>3.</b> В Связях Вы видите людей с наибольшей Похожестью на Вас.</p>
+            </div>
+          </div>
+          <div class="half en">
+            <div class="h">NDim Space</div>
+            <a class="auto" href="/en">English</a>
+            <p class="t">In the NDim Space you will find people who are genuinely like you.</p>
+            <div class="steps">
+              <p><b>1.</b> People rate objects of human culture — films, series, books, games.</p>
+              <p><b>2.</b> The NDim Space computes Similarity between people from their ratings.</p>
+              <p><b>3.</b> In Relations you see the people with the highest Similarity to you.</p>
+            </div>
+          </div>
         </div>
         <div class="cat">
           <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
@@ -788,18 +824,6 @@
           <span class="e">Enter NDim Space as a guest<br>without signing up</span>
         </a>
         <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
-        <div class="how v4how">
-          <div class="hcol">
-            <p><b>1.</b> Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры.</p>
-            <p><b>2.</b> Пространство NDim считает Похожесть между людьми по их оценкам.</p>
-            <p><b>3.</b> В Связях Вы видите людей с наибольшей Похожестью на Вас.</p>
-          </div>
-          <div class="hcol en">
-            <p><b>1.</b> People rate objects of human culture — films, series, books, games.</p>
-            <p><b>2.</b> The NDim Space computes Similarity between people from their ratings.</p>
-            <p><b>3.</b> In Relations you see the people with the highest Similarity to you.</p>
-          </div>
-        </div>
       </div>
     </div>
   </div>
