@@ -44,6 +44,7 @@ import {
 	savedStamp,
 	isQuiet,
 	selftest,
+	batchExitAfterDecision,
 } from './lib/review-core.mjs';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -57,6 +58,12 @@ const opt = (name, dflt = null) => {
 	return i >= 0 && argv[i + 1] ? argv[i + 1] : dflt;
 };
 const positional = argv.filter((a, i) => !a.startsWith('--') && !argv[i - 1]?.startsWith('--'));
+// Файл очереди пачки: общий queue.json либо `--queue <файл>` — флаг ради ЖИВОГО теста пачки
+// (`tools/review-batch.test.mjs`): прогон поднимает пачку из подложных документов, не трогая очередь владельца.
+const QUEUE = opt("--queue") ? resolve(ROOT, opt("--queue")) : QUEUE_FILE;
+// Сколько пачка живёт после ПОСЛЕДНЕГО ответа без единого пульса от вкладок владельца. Живой тест
+// ставит секунду; для человека — полминуты: пока вкладка открыта, страница не имеет права умереть.
+const GRACE_MS = Number(opt('--grace', '30000'));
 
 /** Кто отвечает. Параметр, а не догадка: `by` — это то, что делает архив читаемым месяцы спустя. */
 const BY = opt('--by', process.env.NDIM_OWNER || 'Николай Кривуша');
@@ -608,6 +615,19 @@ setInterval(async () => {
 	} catch (e) {
 		if (pulseLost) return;
 		pulseLost = true;
+		// Сервер ушёл. Это беда ТОЛЬКО если на странице осталось, что записывать. Если все вопросы
+		// страницы уже отвечены (владелец нажал «Сохранить», сервер записал и по своему правилу
+		// завершился), пугать словом «замолчал» нельзя: 2026-09-05 владелец увидел эту плашку над
+		// полностью записанным документом и прочитал её как потерю ответов
+		// (bugs/NEW_review_batch_dies_after_first_answer). Считаем открытые вопросы по разметке.
+		const open = document.querySelectorAll('.q.open').length;
+		if (open === 0) {
+			pulseBanner(
+				'<b>Все ответы этой страницы записаны.</b> Агент их уже разбирает; страницу можно закрыть.',
+				true,
+			);
+			return;
+		}
 		pulseBanner(
 			'<b>Сервер агента замолчал.</b> Продолжайте писать — всё, что Вы уже отметили и написали, ' +
 			'сохранено в этом браузере и не потеряется. Но записать это сейчас нельзя: попросите ' +
@@ -734,6 +754,21 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 	}
 	if (out.ok) {
 		try { localStorage.removeItem(draftKey); } catch (e) {}
+		// РЕЖИМ ПАЧКИ: документ открыт со списка (адрес /doc?p=...), и после записи владельца ждёт
+		// СЛЕДУЮЩИЙ документ, а не закрытие вкладки. Возвращаем к списку — он пересобирается сервером
+		// и уже показывает этот документ отвеченным. Закрывать вкладку здесь было бы той же ошибкой,
+		// что гасить сервер после первого ответа (bugs/NEW_review_batch_dies_after_first_answer).
+		// ВНИМАНИЕ: этот скрипт живёт внутри шаблонной строки — обратных кавычек в комментарии быть
+		// не может (EXP-0279; поймано на этой же правке второй раз).
+		if (location.pathname === '/doc') {
+			document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
+				'<div class="note ok"><b>Записано.</b> Ответ лёг в три места: сам документ, файл решения и архив. ' +
+				'Возвращаю к списку пачки…</div>');
+			document.getElementById('status').textContent = 'готово, возвращаю к списку…';
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+			setTimeout(() => { location.href = '/'; }, 1200);
+			return;
+		}
 		document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
 			'<div class="note ok"><b>Записано.</b> Ответ лёг в три места: сам документ, файл решения и архив. ' +
 			'Вкладка закроется сама.</div>');
@@ -1262,10 +1297,10 @@ function readdirSyncSafe(d) {
 function cmdQueue(docPath) {
 	mkdirSync(DECISIONS_DIR, { recursive: true });
 	const rel = relative(ROOT, docPath).split('\\').join('/');
-	const q = existsSync(QUEUE_FILE) ? JSON.parse(readFileSync(QUEUE_FILE, 'utf8')) : { items: [] };
+	const q = existsSync(QUEUE) ? JSON.parse(readFileSync(QUEUE, 'utf8')) : { items: [] };
 	if (!q.items.some((i) => i.doc === rel)) {
 		q.items.push({ doc: rel, поставлен: new Date().toISOString() });
-		writeFileSync(QUEUE_FILE, JSON.stringify(q, null, '\t') + '\n', 'utf8');
+		writeFileSync(QUEUE, JSON.stringify(q, null, '\t') + '\n', 'utf8');
 		console.log(`В очередь: ${rel} (всего накоплено: ${q.items.length})`);
 	} else {
 		console.log(`Уже в очереди: ${rel} (всего накоплено: ${q.items.length})`);
@@ -1275,7 +1310,7 @@ function cmdQueue(docPath) {
 
 /** Одна страница «накопилось N» — карточка на документ, сигнал ОДИН раз на пачку (I7). */
 async function cmdBatch() {
-	const q = existsSync(QUEUE_FILE) ? JSON.parse(readFileSync(QUEUE_FILE, 'utf8')) : { items: [] };
+	const q = existsSync(QUEUE) ? JSON.parse(readFileSync(QUEUE, 'utf8')) : { items: [] };
 	// Из очереди выпадает всё, на что владелец уже ответил — иначе пачка растёт вечно.
 	const live = q.items.filter((i) => {
 		const p = join(ROOT, i.doc);
@@ -1324,7 +1359,12 @@ a.card-link:hover{border-color:var(--accent)}
 </div>
 <div class="meta">Пока вы были заняты, агент работал и складывал сюда всё, что решать не вправе.
 Нажмите карточку — откроется сам документ.</div>
-</header>${cards}</div></body></html>`;
+</header>${cards}</div>
+<script>
+// Пульс списка: пока эта вкладка открыта, сервер пачки живёт (после последнего ответа он ждёт
+// тишины пульса GRACE_MS, а не уходит по таймеру). Без пульса список умирал бы под открытой вкладкой.
+setInterval(function () { fetch('/alive', { cache: 'no-store' }).catch(function () {}); }, 10000);
+</script></body></html>`;
 	};
 
 	// `--no-serve` — снять пачку в файл и выйти. Нужен не для красоты: без него команда НИКОГДА не
@@ -1347,23 +1387,43 @@ a.card-link:hover{border-color:var(--accent)}
 	 * Значит контур обязан завершиться сразу после записи решения — иначе ответ лежит записанным, а
 	 * за ним никто не приходит (ровно это и случилось: пачка держала сервер три часа).
 	 *
-	 * Отсюда правило, одинаковое для одиночного документа и для пачки: ЛЮБОЕ сохранение закрывает
-	 * контур. Если в очереди осталось неотвеченное — это забота АГЕНТА поднять страницу заново, а
-	 * не владельца держать вкладку открытой.
+	 * 🔴 НО ДЛЯ ПАЧКИ ЭТО ПРАВИЛО БЫЛО ПРОЧИТАНО СЛИШКОМ БУКВАЛЬНО — И СЛОМАЛО КОНТУР У ВЛАДЕЛЬЦА
+	 * (2026-09-05, `bugs/NEW_review_batch_dies_after_first_answer`). Прежняя редакция гасила сервер
+	 * после ЛЮБОГО сохранения — в том числе когда в пачке оставались документы без ответа. Владелец
+	 * ответил на первый документ, перешёл ко второму, третьему — и получил «Сервер агента замолчал»,
+	 * а два вопроса третьего документа так и не записались. Его слова: «*опять сломался твой
+	 * интерактивный контур*».
+	 *
+	 * Правило теперь такое: пачка живёт, пока в ней есть хоть один документ без ответа, и умирает
+	 * по сохранению ПОСЛЕДНЕГО — оно и есть событие «владелец закончил», которое будит агента.
+	 * Промежуточные сохранения пишутся на диск сразу (агент видит их файлами), а страница уводит
+	 * владельца обратно к списку пачки. Решение о выходе — чистая функция `batchExitAfterDecision`
+	 * (`lib/review-core.mjs`), у неё есть юнит.
 	 */
 	const server = startServer({
 		index: batchPage,
 		onDecision: (target, srv) => {
-			const rest = live.filter((i) => {
-				const p = join(ROOT, i.doc);
-				return existsSync(p) && !samePath(p, target) && parseInterview(p, readMd(p)).waiting;
-			});
-			console.log(
-				rest.length
-					? `\n📌 Осталось ждать владельца: ${rest.length} — подними пачку заново.`
-					: '\n✅ Очередь пуста.',
-			);
-			setTimeout(() => srv.close(() => process.exit(0)), 2500);
+			// «Без ответа» судится ПО ВОПРОСАМ, а не по строке статуса: статус «ЖДЁТ ОТВЕТА» переписывает
+			// агент руками уже после ответов, и по нему только что отвеченный документ всё ещё «ждёт» —
+			// с такой мерой пачка не закрылась бы никогда (поймано живым тестом с первого прогона).
+			const rest = live
+				.map((i) => join(ROOT, i.doc))
+				.filter((p) => existsSync(p) && !samePath(p, target) && parseInterview(p, readMd(p)).questions.some((q) => !q.answered))
+				.map((p) => relative(ROOT, p));
+			if (batchExitAfterDecision(rest)) {
+				// Очередь пуста, но вкладки владельца ещё открыты и бьют пульсом: закрыться СЕЙЧАС значит
+				// показать ему «сервер замолчал» над только что записанным (второй кадр владельца
+				// 2026-09-05). Ждём, пока пульс стихнет на GRACE_MS — то есть пока он сам закроет вкладки.
+				console.log(`\n✅ Очередь пуста — пачка закроется, когда вкладки будут закрыты (${GRACE_MS / 1000} с без пульса).`);
+				srv.lastBeat = Date.now();
+				const grace = setInterval(() => {
+					if (Date.now() - srv.lastBeat < GRACE_MS) return;
+					clearInterval(grace);
+					srv.close(() => process.exit(0));
+				}, 1000);
+				return;
+			}
+			console.log(`\n📌 Записано. В пачке ещё без ответа: ${rest.length} — сервер живёт, страница ждёт.`);
 		},
 	});
 	const url = await listen(server);

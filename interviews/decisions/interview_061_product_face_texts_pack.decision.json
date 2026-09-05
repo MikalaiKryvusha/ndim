@@ -2,7 +2,7 @@
 	"kind": "interview",
 	"document": "interviews/interview_061_product_face_texts_pack.md",
 	"by": "Николай Кривуша",
-	"at": "2026-09-04T17:02:48.422Z",
+	"at": "2026-09-05T13:20:32.495Z",
 	"comment": "",
 	"answers": {
 		"В1": {
@@ -29,6 +29,23 @@
 			"choice": "А",
 			"text": "",
 			"comment": ""
+		},
+		"В6": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В7": {
+			"choice": "В",
+			"text": "нужно писать role-playing game и RPG одновременно, во все такие игры",
+			"comment": ""
 		}
-	}
+	},
+	"artifacts": {},
+	"история": [
+		{
+			"by": "Николай Кривуша",
+			"at": "2026-09-04T17:02:48.422Z"
+		}
+	]
 }

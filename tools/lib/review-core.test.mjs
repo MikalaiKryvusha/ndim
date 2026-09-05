@@ -28,7 +28,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseInterview } from './review-core.mjs';
+import { parseInterview, batchExitAfterDecision } from './review-core.mjs';
 
 /** Собирает документ интервью с вариантом заданной длины. */
 function документСВариантом(длина) {
@@ -81,4 +81,13 @@ test('КОНТРОЛЬ 0 — короткий вариант разбирает�
 	assert.ok(б, 'вариант Б не разобран — разбор видит не все варианты');
 	assert.ok(б.label.length < 100, 'короткий вариант неожиданно длинный — варианты слиплись');
 	assert.equal(в1.options.length, 2, 'вариантов должно быть ровно два');
+});
+
+test('пачка: сервер умирает ТОЛЬКО когда неотвеченных документов не осталось (bugs/NEW_review_batch_dies_after_first_answer)', () => {
+	// Владелец 2026-09-05 ответил на первый документ пачки — сервер погас, второй и третий он писал в
+	// мёртвую страницу. Решение о выходе теперь чистое и судится здесь, а не на живом владельце.
+	assert.equal(batchExitAfterDecision([]), true, 'очередь пуста — пора закрываться');
+	assert.equal(batchExitAfterDecision(['interviews/interview_061.md']), false, 'остался документ — жить');
+	assert.equal(batchExitAfterDecision(['a.md', 'b.md']), false, 'осталось два — жить');
+	assert.equal(batchExitAfterDecision(undefined), false, 'нет данных — не гадать, жить');
 });
