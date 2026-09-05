@@ -18,7 +18,9 @@ const LIGHT_BG = 'rgb(246, 248, 251)'; // #f6f8fb — светлая «Бума�
 const DARK_BG = 'rgb(6, 11, 20)'; // #060b14 — тёмный киберпанк
 
 test('пререндер: русские тексты и скрипт темы лежат в сыром HTML', async ({ request }) => {
-	// Лендинг живёт на языковых адресах (`plans/39` шаг 2); корень `/` — распознаватель без текстов.
+	// Лендинг живёт на языковых адресах (`plans/39` шаг 2). Корень `/` с 2026-09-05 — ГЛАВНАЯ
+	// с содержанием (макет V5, `plans/81`), а не распознаватель: у него свой заголовок «NDim Space»
+	// и свои проверки, поэтому все тесты лендинга ходят на `/ru` явно, а не через корень.
 	const res = await request.get('/ru');
 	expect(res.status()).toBe(200);
 	// В текстах лендинга есть неразрывные пробелы (U+00A0, «Пространство NDim» не рвётся
@@ -92,7 +94,7 @@ test('пререндер: витрина людей стоит в HTML и НЕ �
 });
 
 test('дефолт: светлая тема «Бумага», русский язык, три фичи', async ({ page }) => {
-	await page.goto('/');
+	await page.goto('/ru');
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 	await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(RU_TITLE);
@@ -101,7 +103,7 @@ test('дефолт: светлая тема «Бумага», русский я�
 });
 
 test('тема: переключение в тёмную и сохранение после перезагрузки', async ({ page }, testInfo) => {
-	await page.goto('/');
+	await page.goto('/ru');
 	await page.screenshot({ path: testInfo.outputPath('landing-light.png'), fullPage: true });
 	// Кнопка подписана тем, КУДА переключит нажатие (aria-label)
 	await page.getByRole('button', { name: 'Тёмная тема' }).click();
@@ -116,7 +118,7 @@ test('тема: переключение в тёмную и сохранение
 
 test('язык: EN переключается, переживает перезагрузку, RU возвращается', async ({ page }) => {
 	// Переключатель — ССЫЛКИ на языковые адреса (`plans/39` шаг 2): у каждого языка своя страница.
-	await page.goto('/');
+	await page.goto('/ru');
 	await page.getByRole('link', { name: 'EN' }).click();
 	await expect(page).toHaveURL(/\/en$/);
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -137,7 +139,7 @@ test('кнопки ведут в живое приложение 1.x; консо
 	});
 	page.on('pageerror', (err) => errors.push(String(err)));
 
-	await page.goto('/');
+	await page.goto('/ru');
 	await expect(page.getByRole('link', { name: 'Создать Аккаунт' })).toHaveAttribute('href', APP_URL);
 	await expect(page.getByRole('link', { name: 'Войти в Аккаунт' })).toHaveAttribute('href', APP_URL);
 	// Переключатели не должны сыпать ошибками (язык — ссылка на /en, plans/39 шаг 2)

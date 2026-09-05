@@ -12,9 +12,10 @@ test('sitemap.xml: отдаётся и содержит только то, чт�
 	// Лендинг — на ЯЗЫКОВЫХ адресах (`plans/39` шаг 2); абсолютный URL — константа src/lib/site.ts
 	expect(xml).toContain('<loc>https://ndimspace.app/ru</loc>');
 	expect(xml).toContain('<loc>https://ndimspace.app/en</loc>');
-	// 🔴 Корня в карте НЕТ: он распознаватель под noindex и в поиске не участвует
-	// (интервью №010, Р5 = В — цена названа владельцу и принята).
-	expect(xml).not.toContain('<loc>https://ndimspace.app/</loc>');
+	// 🔴 Корень В КАРТЕ ЕСТЬ: с 2026-09-05 он главная с содержанием (макет V5, `plans/81` Ш6,
+	// решение владельца №058 и №060), а не распознаватель под noindex. Прежняя редакция
+	// требовала обратного (интервью №010, Р5 = В) — то решение снято решением №058.
+	expect(xml).toContain('<loc>https://ndimspace.app/</loc>');
 	// Страница удаления аккаунта — ЕДИНСТВЕННЫЙ экран аккаунта, который обязан находиться:
 	// Google Play требует «readily discoverable option to initiate account deletion».
 	// Закрыть её от поиска значило бы выполнить букву требования и убить его смысл.
