@@ -19,6 +19,7 @@ import { contourFromArgv } from './lib/contours.mjs';
 import { watchHttpFailures } from './lib/http-failures.mjs';
 import { grantAppCheckDebug } from './lib/app-check-debug.mjs';
 import { markProbeContext } from './lib/probe-mark.mjs';
+import { isForeignReportOnlyCsp } from './lib/console-noise.mjs';
 
 const CONTOUR = contourFromArgv();
 const BASE = CONTOUR.site;
@@ -76,7 +77,17 @@ for (const theme of THEMES) {
       const noise = [];
       page.removeAllListeners('console');
       page.on('console', (m) => {
-        if (m.type() === 'error' && !EXPECTED.test(m.text())) noise.push(m.text());
+        if (m.type() !== 'error' || EXPECTED.test(m.text())) return;
+        /*
+         * Единственное прощаемое исключение — чужой report-only отчёт CSP рамки reCAPTCHA
+         * (`bugs/179`): 2026-09-05 он остановил дверь боя на шаге 9 из 9 после выпуска хостинга,
+         * повтор дал 81/81. Признак, а не домен; только report-only; проглоченное ПЕЧАТАЕТСЯ.
+         */
+        if (isForeignReportOnlyCsp(m.text())) {
+          console.log(`  ⚪ ${theme}-${size.tag} чужой report-only CSP (не провал, bugs/179): ${m.text().slice(0, 90)}…`);
+          return;
+        }
+        noise.push(m.text());
       });
 
       /*

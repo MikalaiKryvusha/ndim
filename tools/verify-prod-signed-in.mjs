@@ -40,6 +40,7 @@ import { contourFromArgv } from './lib/contours.mjs';
 import { watchHttpFailures } from './lib/http-failures.mjs';
 import { grantAppCheckDebug } from './lib/app-check-debug.mjs';
 import { markProbeContext } from './lib/probe-mark.mjs';
+import { isForeignReportOnlyCsp } from './lib/console-noise.mjs';
 
 /*
  * 🔑 КОНТУР ВЫБИРАЕТСЯ ОДИН РАЗ И ЦЕЛИКОМ (`plans/53` фаза 4).
@@ -138,6 +139,12 @@ for (const cfg of CONFIGS) {
     if (m.type() !== 'error') return;
     // Отказы правил гостю ожидаемы и не являются дефектом; всё остальное — провал.
     if (/permission|insufficient|Missing or insufficient/i.test(m.text())) return;
+    // Чужой report-only отчёт CSP рамки reCAPTCHA (`bugs/179`) — печатается, провалом не считается.
+    // Признак, а не домен; блокирующее нарушение CSP по-прежнему роняет проверку.
+    if (isForeignReportOnlyCsp(m.text())) {
+      console.log(`  ⚪ чужой report-only CSP (не провал, bugs/179): ${m.text().slice(0, 90)}…`);
+      return;
+    }
     /*
      * Качели сети — тоже не дефект продукта: Firestore честно сообщает о переподключении и
      * работает офлайн, пока связь не вернётся. Такое сообщение ПЕЧАТАЕТСЯ (чтобы не потерялось),
