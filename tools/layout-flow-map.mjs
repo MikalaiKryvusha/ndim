@@ -25,7 +25,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { КАРТА_В, ШАГ_X } from './build-flow-map.mjs';
+import { КАРТА_В, ШАГ_X, ЗАЗОР_ЯРУСОВ } from './build-flow-map.mjs';
 
 const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
 const MANIFEST = 'design/flow-map/flow-map.json';
@@ -33,10 +33,12 @@ const MANIFEST = 'design/flow-map/flow-map.json';
 // Шаг колонок — константа СБОРЩИКА: зазор между колонками это коридор для труб между рядами,
 // и его ширина считается от числа полос, а не от вкуса раскладчика.
 export { ШАГ_X };
-export const ШАГ_Я = КАРТА_В + 120 + 90;  // карточка + полка обхода + воздух над следующим ярусом
+export const ШАГ_Я = КАРТА_В + ЗАЗОР_ЯРУСОВ; // карточка + зазор: в нём полка обхода (120) и полка подхода
 export const ЛЕВО = 380;                  // место под плашку имени ряда
 export const ВЕРХ = 260;
-export const МЕЖДУ_РЯДАМИ = 260;
+/* Зазор между рядами держит: рамку нижнего ряда (поле 46 + плашка 58), полку подхода вне рамки
+   (164 от карточки) с полосами (±72) и рамку верхнего ряда (46) — чтобы полка не легла на контур. */
+export const МЕЖДУ_РЯДАМИ = 380;
 
 /** [id, колонка, ярус] — ярус 0 это главная линия ряда, ±1 — альтернативные состояния. */
 export const РЯДЫ = [
