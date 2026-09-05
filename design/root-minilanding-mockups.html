@@ -237,6 +237,17 @@
      🔴 У КАЖДОГО ОБЪЕКТА ДВЕ ССЫЛКИ — русская карточка и английская. Дверь языка не
      угадывает (см. § ярлыка), и внутренний сигнал получают ОБЕ языковые версии сразу. */
   .cat { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--edge); }
+  /* ПРИНУДИТЕЛЬНЫЙ РАЗНОС ДВУЯЗЫЧНЫХ ПАР — слово владельца 2026-09-05: «такие строки
+     мультиязычные принудительно разноси на две строки». Пара, сидевшая на «·», встаёт
+     двумя строками: русская и под ней английская. Разделитель «·» при этом не нужен —
+     его работу делает сама строка. */
+  .cat-h .en, .langbar .lb .en, .quiet .en, .showcase .sl .en, .cat-all .en {
+    display: block; color: var(--muted); font-weight: inherit;
+  }
+  .cat-h .en { font-size: 14px; margin-top: 3px; }
+  .langbar .lb .en { font-size: inherit; margin-top: 2px; }
+  .quiet .en, .cat-all .en { font-size: 13px; margin-top: 3px; }
+  .showcase .sl .en { margin-top: 3px; }
   .cat-h { color: var(--heading); font-weight: 800; font-size: 17px; text-align: center; }
   .cat-l { text-align: center; font-size: 13.5px; line-height: 1.55; margin-top: 6px; }
   .cat-l .en { display: block; color: var(--muted); }
@@ -415,7 +426,7 @@
       <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
       <div class="door">
         <div class="langbar">
-          <span class="lb">Язык страницы · Site language</span>
+          <span class="lb">Язык страницы<span class="en">Site language</span></span>
           <span class="autos"><a href="/ru">Русский</a><a href="/en">English</a></span>
         </div>
         <svg class="mark" width="72" height="72" style="margin-top:24px"><use href="#nmark"/></svg>
@@ -438,14 +449,14 @@
           <span class="r">Войти в Пространство</span>
           <span class="e">Enter the Space</span>
         </a>
-        <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+        <p class="quiet"><a href="/profile">Войти в Аккаунт<span class="en">Log In</span></a></p>
         <div class="facts">
           <div class="fact"><div class="n">5&#160;144</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
           <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
           <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
         </div>
         <div class="cat">
-          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <div class="cat-h">Что оценивают в Пространстве<span class="en">What people rate in the Space</span></div>
           <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
           <ul class="cat-list">
             <li>
@@ -478,7 +489,7 @@
               <span class="cm">Фильм · Movie · 2002</span>
             </li>
           </ul>
-          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a><span class="en"><a href="/en/catalog">The whole catalog</a></span></p>
         </div>
       </div>
     </div>
@@ -511,14 +522,14 @@
           </div>
           <div class="act">
             <div class="langbar">
-              <span class="lb">Язык страницы · Site language</span>
+              <span class="lb">Язык страницы<span class="en">Site language</span></span>
               <span class="autos"><a href="/ru">Русский</a><a href="/en">English</a></span>
             </div>
             <a class="cta" href="/profile?guest=1">
               <span class="r">Войти в Пространство</span>
               <span class="e">Enter the Space</span>
             </a>
-            <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+            <p class="quiet"><a href="/profile">Войти в Аккаунт<span class="en">Log In</span></a></p>
             <span class="under">Пространство открывается сразу<br>The Space opens right away</span>
           </div>
         </div>
@@ -528,7 +539,7 @@
           <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
         </div>
         <div class="cat">
-          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <div class="cat-h">Что оценивают в Пространстве<span class="en">What people rate in the Space</span></div>
           <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
           <ul class="cat-list">
             <li>
@@ -561,7 +572,7 @@
               <span class="cm">Фильм · Movie · 2002</span>
             </li>
           </ul>
-          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a><span class="en"><a href="/en/catalog">The whole catalog</a></span></p>
         </div>
       </div>
     </div>
@@ -576,7 +587,7 @@
         <svg class="mark" width="64" height="64" style="margin-top:8px"><use href="#nmark"/></svg>
         <div class="word">NDim Space</div>
         <div class="langbar" style="justify-content:center;border-bottom:0;padding-bottom:0;margin-top:14px">
-          <span class="lb">Язык страницы · Site language</span>
+          <span class="lb">Язык страницы<span class="en">Site language</span></span>
         </div>
         <div class="speeches">
           <div class="speech">
@@ -602,14 +613,14 @@
             <a class="cta" href="/profile?guest=1"><span class="r">Enter the Space</span></a>
           </div>
         </div>
-        <p class="quiet" style="margin-top:18px"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+        <p class="quiet" style="margin-top:18px"><a href="/profile">Войти в Аккаунт<span class="en">Log In</span></a></p>
         <div class="facts">
           <div class="fact"><div class="n">5&#160;144</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
           <div class="fact"><div class="n">95</div><div class="l">человек в Пространстве<span class="en">people in the Space</span></div></div>
           <div class="fact"><div class="n">2&#160;368</div><div class="l">связей рассчитано<span class="en">relations computed</span></div></div>
         </div>
         <div class="cat">
-          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <div class="cat-h">Что оценивают в Пространстве<span class="en">What people rate in the Space</span></div>
           <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
           <ul class="cat-list">
             <li>
@@ -642,7 +653,7 @@
               <span class="cm">Фильм · Movie · 2002</span>
             </li>
           </ul>
-          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a><span class="en"><a href="/en/catalog">The whole catalog</a></span></p>
         </div>
       </div>
     </div>
@@ -655,7 +666,7 @@
       <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
       <div class="door">
         <div class="langbar">
-          <span class="lb">Язык страницы · Site language</span>
+          <span class="lb">Язык страницы<span class="en">Site language</span></span>
           <span class="autos"><a href="/ru">Русский</a><a href="/en">English</a></span>
         </div>
         <svg class="mark" width="60" height="60" style="margin-top:20px"><use href="#nmark"/></svg>
@@ -663,7 +674,7 @@
         <p class="line">В Пространстве NDim Вы найдёте людей, действительно похожих на Вас.</p>
         <p class="line en">In the NDim Space you will find people who are genuinely like you.</p>
         <div class="showcase">
-          <div class="sl">Пространство NDim сейчас · The NDim Space right now</div>
+          <div class="sl">Пространство NDim сейчас<span class="en">The NDim Space right now</span></div>
           <div class="facts">
             <div class="fact"><div class="n">5&#160;144</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
             <div class="fact"><div class="n">4&#160;071</div><div class="l">оценок поставлено<span class="en">ratings cast</span></div></div>
@@ -672,7 +683,7 @@
           </div>
         </div>
         <div class="cat">
-          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <div class="cat-h">Что оценивают в Пространстве<span class="en">What people rate in the Space</span></div>
           <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
           <ul class="cat-list">
             <li>
@@ -705,13 +716,13 @@
               <span class="cm">Фильм · Movie · 2002</span>
             </li>
           </ul>
-          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a><span class="en"><a href="/en/catalog">The whole catalog</a></span></p>
         </div>
         <a class="cta" href="/profile?guest=1">
           <span class="r">Войти в Пространство</span>
           <span class="e">Enter the Space</span>
         </a>
-        <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+        <p class="quiet"><a href="/profile">Войти в Аккаунт<span class="en">Log In</span></a></p>
         <div class="how v4how">
           <div class="hcol">
             <p><b>1.</b> Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры.</p>
@@ -735,13 +746,13 @@
       <div class="urlbar"><span class="dots"><i></i><i></i><i></i></span><span class="addr">ndimspace.app/</span></div>
       <div class="door">
         <div class="langbar">
-          <span class="lb">Язык страницы · Site language</span>
+          <span class="lb">Язык страницы<span class="en">Site language</span></span>
           <span class="autos"><a href="/ru">Русский</a><a href="/en">English</a></span>
         </div>
         <svg class="mark" width="60" height="60" style="margin-top:20px"><use href="#nmark"/></svg>
         <div class="word">NDim Space</div>
         <div class="showcase">
-          <div class="sl">Пространство NDim сейчас · The NDim Space right now</div>
+          <div class="sl">Пространство NDim сейчас<span class="en">The NDim Space right now</span></div>
           <div class="facts">
             <div class="fact"><div class="n">5&#160;144</div><div class="l">объектов человеческой культуры<span class="en">objects of human culture</span></div></div>
             <div class="fact"><div class="n">4&#160;071</div><div class="l">оценок поставлено<span class="en">ratings cast</span></div></div>
@@ -781,7 +792,7 @@
           </div>
         </div>
         <div class="cat">
-          <div class="cat-h">Что оценивают в Пространстве · What people rate in the Space</div>
+          <div class="cat-h">Что оценивают в Пространстве<span class="en">What people rate in the Space</span></div>
           <p class="cat-l">Рейтинги, собранные из оценок людей.<span class="en">Ratings built from what people voted.</span></p>
           <ul class="cat-list">
             <li>
@@ -814,7 +825,7 @@
               <span class="cm">Фильм · Movie · 2002</span>
             </li>
           </ul>
-          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a> · <a href="/en/catalog">The whole catalog</a></p>
+          <p class="cat-all"><a href="/ru/catalog">Весь каталог</a><span class="en"><a href="/en/catalog">The whole catalog</a></span></p>
         </div>
         <a class="cta" href="/profile?guest=1">
           <!-- Его слово дословно: «Войти в Пространство NDim Space гостем /n без регистрации».
@@ -823,7 +834,7 @@
           <span class="r">Войти в Пространство NDim Space гостем<br>без регистрации</span>
           <span class="e">Enter NDim Space as a guest<br>without signing up</span>
         </a>
-        <p class="quiet"><a href="/profile">Войти в Аккаунт · Log In</a></p>
+        <p class="quiet"><a href="/profile">Войти в Аккаунт<span class="en">Log In</span></a></p>
       </div>
     </div>
   </div>
