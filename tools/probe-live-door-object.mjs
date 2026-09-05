@@ -32,6 +32,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { markProbeContext } from './lib/probe-mark.mjs';
+import { grantAppCheckDebug } from './lib/app-check-debug.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = resolve(ROOT, 'test-results/live-door-object');
@@ -47,7 +48,11 @@ const BASE = opt('--base', 'https://ndim-stage.web.app').replace(/\/$/, '');
  * ⛔ ГРАНИЦА КОНТУРА. Прибор пускается только на стейдж и бой — и на бой лишь по явному
  * флагу. Опечатка в адресе не имеет права увести прогон в чужой продукт.
  */
-const KNOWN = ['https://ndim-stage.web.app', 'https://ndim-space.web.app'];
+// 🔄 2026-09-05: добавлен НАСТОЯЩИЙ боевой домен. Прогон по `ndim-space.web.app` (адрес хостинга)
+// давал ложный красный: карточка там отдаётся с кодом 200, а `/profile` переадресуется на
+// `ndimspace.app` — другой источник, где гостевой сессии нет, и внутрь входил новый гость с нулём
+// измерений. Человек из поиска приходит на `ndimspace.app`; мерить надо его путь.
+const KNOWN = ['https://ndim-stage.web.app', 'https://ndim-space.web.app', 'https://ndimspace.app'];
 if (!KNOWN.includes(BASE)) {
   console.error(`Незнакомый контур: ${BASE}. Разрешены: ${KNOWN.join(' · ')}`);
   process.exit(2);
@@ -69,6 +74,10 @@ async function main() {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
   // 🔴 Метка ДО первой навигации — иначе первый шаг воронки уже сосчитан (см. шапку probe-mark).
   await markProbeContext(context);
+  // 🔄 2026-09-05: пропуск App Check — как у смоуков двери выката (`bugs/169`). Без него на бою
+  // обмен токена reCAPTCHA даёт 403, SDK глушит попытки, и чтение оценок гостя опаздывает: профиль
+  // показывал «0 измерений», а вкладка «Мой NDim ID» висела на «Загрузка» — ложный красный ПРИБОРА.
+  await grantAppCheckDebug(context, { required: argv.includes('--prod'), quiet: true });
   const page = await context.newPage();
 
   const отчёт = { at: new Date().toISOString(), base: BASE, slug: null, title: null, шаги };
