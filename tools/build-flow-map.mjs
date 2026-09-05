@@ -64,14 +64,64 @@ export function стыковка(a, b) {
     return {
       x1: ax + s * (ЭКРАН_Ш / 2), y1: ay,
       x2: bx - s * (ЭКРАН_Ш / 2), y2: by,
+      сторона: 'бок', знак: s,
     };
   }
   const s = dy > 0 ? 1 : -1;
   return {
     x1: ax, y1: ay + s * ((ЭКРАН_В + ПОДПИСЬ_В) / 2),
     x2: bx, y2: by - s * ((ЭКРАН_В + ПОДПИСЬ_В) / 2),
+    сторона: 'верхниз', знак: s,
   };
 }
+
+/**
+ * ТРАССА СТРЕЛКИ — ВОДОПРОВОДОМ, А НЕ ЛУЧОМ.
+ *
+ * Слово владельца 2026-09-05: «*Стрелки нужно рисовать логическими путями, как водопровод,
+ * изгибая, крася в разные цвета, а не прямые лучи*». Прямой луч между центрами читается только
+ * когда карточек десяток; на листе из сорока он пересекает чужие снимки, и клубок из таких лучей
+ * не показывает НИЧЕГО — глазу не за что зацепиться.
+ *
+ * Труба идёт под прямыми углами с закруглениями на поворотах: вышли из борта, отошли на полку,
+ * повернули, дошли по полке, повернули, вошли в борт. `сдвиг` разводит трубы, выходящие из одной
+ * карточки, по разным полкам — иначе они слились бы в одну линию.
+ */
+export function труба(t, сдвиг = 0) {
+  const R = 22; // радиус закругления на повороте
+  const скруглить = (точки) => {
+    let d = `M ${точки[0][0]} ${точки[0][1]}`;
+    for (let i = 1; i < точки.length - 1; i++) {
+      const [px, py] = точки[i - 1], [x, y] = точки[i], [nx, ny] = точки[i + 1];
+      const в1 = Math.hypot(x - px, y - py), в2 = Math.hypot(nx - x, ny - y);
+      const r = Math.min(R, в1 / 2, в2 / 2);
+      const ax = x - ((x - px) / (в1 || 1)) * r, ay = y - ((y - py) / (в1 || 1)) * r;
+      const bx = x + ((nx - x) / (в2 || 1)) * r, by = y + ((ny - y) / (в2 || 1)) * r;
+      d += ` L ${Math.round(ax)} ${Math.round(ay)} Q ${x} ${y} ${Math.round(bx)} ${Math.round(by)}`;
+    }
+    const [lx, ly] = точки[точки.length - 1];
+    return `${d} L ${lx} ${ly}`;
+  };
+
+  if (t.сторона === 'бок') {
+    // Полка между карточками: труба выходит вбок, идёт по вертикали, входит сбоку.
+    const полка = t.x1 + (t.x2 - t.x1) / 2 + сдвиг;
+    if (Math.abs(t.y2 - t.y1) < 2) return скруглить([[t.x1, t.y1], [t.x2, t.y2]]);
+    return скруглить([[t.x1, t.y1], [полка, t.y1], [полка, t.y2], [t.x2, t.y2]]);
+  }
+  // Сверху вниз: вышли снизу, отошли на полку по вертикали, поехали вбок, вошли сверху.
+  const полка = t.y1 + (t.y2 - t.y1) / 2 + сдвиг;
+  if (Math.abs(t.x2 - t.x1) < 2) return скруглить([[t.x1, t.y1], [t.x2, t.y2]]);
+  return скруглить([[t.x1, t.y1], [t.x1, полка], [t.x2, полка], [t.x2, t.y2]]);
+}
+
+/**
+ * ЦВЕТ ТРУБЫ — ПО ТОМУ, ОТКУДА ОНА ВЫХОДИТ. Тогда пучок труб одного происхождения читается как
+ * одна система, а не как случайные линии: «вот всё, что ведёт из публичного лица», «вот всё, что
+ * ведёт из двери». Цвета разведены по тону и различимы в обеих темах.
+ */
+export const ЦВЕТА = ['#1467d6', '#c2410c', '#0f766e', '#7c3aed', '#b91c1c', '#0369a1', '#4d7c0f'];
+export const цветТрубы = (индексИсточника) => ЦВЕТА[индексИсточника % ЦВЕТА.length];
 
 /** Проверка манифеста: связь, ссылающаяся в пустоту, — отказ до сборки, а не кривой лист. */
 export function проверить(m) {
@@ -109,13 +159,29 @@ function собрать(m) {
         ${э['заметка'] ? `<p class="note">${esc(э['заметка'])}</p>` : ''}
       </figure>`).join('');
 
+  /*
+   * Каждому ИСТОЧНИКУ — свой цвет и своя стрелка-наконечник того же цвета: наконечник, крашенный
+   * общим цветом, разрывал бы трубу в самом заметном месте. Трубы из одной карточки разводятся
+   * `сдвиг`ом по разным полкам, чтобы не слипнуться в одну линию.
+   */
+  const источники = [...new Set((m['связи'] || []).map((с) => с['от']))];
+  const счётИсточника = new Map();
   const стрелки = (m['связи'] || []).map((с, i) => {
     const t = стыковка(поId[с['от']], поId[с['к']]);
+    const н = счётИсточника.get(с['от']) ?? 0;
+    счётИсточника.set(с['от'], н + 1);
+    const цвет = цветТрубы(источники.indexOf(с['от']));
+    const d = труба(t, (н - 1) * 26);
     const mx = (t.x1 + t.x2) / 2, my = (t.y1 + t.y2) / 2;
     return `
-        <path d="M ${t.x1} ${t.y1} L ${t.x2} ${t.y2}" marker-end="url(#tip)"/>
-        ${с['подпись'] ? `<text x="${mx}" y="${my - 10}" text-anchor="middle">${esc(с['подпись'])}</text>` : `<!-- ${i} -->`}`;
+        <path d="${d}" stroke="${цвет}" marker-end="url(#tip${источники.indexOf(с['от']) % ЦВЕТА.length})"/>
+        ${с['подпись'] ? `<text x="${mx}" y="${my - 12}" text-anchor="middle" fill="${цвет}">${esc(с['подпись'])}</text>` : `<!-- ${i} -->`}`;
   }).join('');
+
+  const наконечники = ЦВЕТА.map((c, i) => `
+      <marker id="tip${i}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="${c}"/>
+      </marker>`).join('');
 
   return `<!doctype html>
 <html lang="ru">
@@ -145,10 +211,17 @@ function собрать(m) {
   body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
     font:15px/1.5 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
 
-  /* Рама листа: она ловит колесо и перетаскивание. */
+  /* Рама листа: она ловит колесо и перетаскивание.
+
+     🔴 ВЫДЕЛЕНИЕ ЗАПРЕЩЕНО НА ВСЁМ ЛИСТЕ. Слово владельца 2026-09-05: «*когда я кликаю и
+     удерживаю, чтобы перемещаться — это синим выделяет экраны — неудобно*». Перетаскивание и
+     выделение текста — один и тот же жест мышью, и браузер по умолчанию делает второе. На листе,
+     который двигают ЛАДОНЬЮ, выделять нечего: он не документ, а карта. */
   #viewport{position:fixed;inset:0;cursor:grab;touch-action:none;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
     background-image:radial-gradient(var(--grid) 1px, transparent 1px);background-size:32px 32px}
   #viewport.dragging{cursor:grabbing}
+  #viewport *{-webkit-user-drag:none}
 
   /* Сам лист: двигается и масштабируется ОДНИМ transform — поэтому снимки и стрелки едут вместе. */
   #sheet{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
@@ -156,8 +229,11 @@ function собрать(m) {
     background:transparent}
 
   svg.links{position:absolute;left:0;top:0;width:${Ш}px;height:${В}px;overflow:visible;pointer-events:none}
-  svg.links path{fill:none;stroke:var(--accent);stroke-width:2.5;opacity:.85}
-  svg.links text{fill:var(--dim);font:13px/1 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  /* Труба: цвет задаёт разметка (свой на каждый источник), стили — только форму.
+     Скруглённые концы и стыки нужны, чтобы повороты читались как поворот, а не как излом. */
+  svg.links path{fill:none;stroke-width:3;opacity:.9;stroke-linecap:round;stroke-linejoin:round}
+  svg.links text{font:600 13px/1 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    paint-order:stroke;stroke:var(--bg);stroke-width:5px}
 
   figure.scr{position:absolute;margin:0;width:${ЭКРАН_Ш}px;background:var(--card);
     border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.10);overflow:hidden}
@@ -193,10 +269,7 @@ function собрать(m) {
   <div id="sheet">
     <div class="paper">
       <svg class="links" viewBox="0 0 ${Ш} ${В}">
-        <defs>
-          <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"/>
-          </marker>
+        <defs>${наконечники}
         </defs>${стрелки}
       </svg>${карточки}
     </div>
