@@ -65,9 +65,16 @@
     google: { ru: 'Войти через Google', en: 'Continue with Google' },
     emailDoor: { ru: 'Войти по ссылке на почту', en: 'Sign in with an email link' },
     or: { ru: 'или', en: 'or' },
+    /*
+     * ПРИНУДИТЕЛЬНЫЙ ПЕРЕНОС — слово владельца 2026-09-05: «в кнопке входа в анонимный аккаунт
+     * нужно сделать принудительный перенос, чтобы "без регистрации" было на новой строке».
+     * Перенос живёт В САМОЙ СТРОКЕ (\n плюс `white-space: pre-line` на .d.guest), а не в разметке:
+     * иначе он был бы у одного языка и потерялся бы у другого. Слова не тронуты — только место
+     * разрыва. EN — рабочий перевод агента, разрыв поставлен по тому же смыслу.
+     */
     guest: {
-      ru: 'Смотреть Пространство NDim Space гостем без регистрации',
-      en: 'Explore NDim Space as a guest, no sign-up',
+      ru: 'Смотреть Пространство NDim Space гостем\nбез регистрации',
+      en: 'Explore NDim Space as a guest\nwithout signing up',
     },
     emailPlaceholder: { ru: 'Ваш адрес электронной почты', en: 'Your email address' },
     send: { ru: 'Получить ссылку для входа', en: 'Get a sign-in link' },
@@ -301,6 +308,9 @@
     text-align: center;
   }
   .d.primary { background: var(--primary); color: var(--primary-ink); }
+  /* Гостевая дверь несёт перенос ВНУТРИ своей строки (см. `t.guest`) — `pre-line` учит браузер
+     его показывать, оставляя обычный перенос по ширине там, где строка всё равно не влезла. */
+  .d.guest { white-space: pre-line; }
   .d.ghost { background: transparent; border-color: var(--ghost-brd); color: var(--ghost-ink); }
   .d:hover:not(:disabled) { filter: brightness(1.06); }
   .d.ghost:hover:not(:disabled) { background: var(--ghost-bg-hover); }
