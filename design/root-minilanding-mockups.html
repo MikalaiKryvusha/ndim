@@ -201,6 +201,12 @@
   }
   .cta .r { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
   .cta .e { display: block; font-size: 13.5px; font-weight: 600; opacity: .82; margin-top: 2px; }
+  /* ДВЕ СТРОКИ — РОВНО ДВЕ, на любой ширине. Слово владельца 2026-09-05: «русский текст в
+     кнопке нужно уместить в две строки». Каждая строка — своя, и она НЕ переносится (nowrap);
+     на телефоне кегль уступает, чтобы первая строка влезла целиком, а не рассыпалась на три. */
+  .cta .ln { display: block; white-space: nowrap; }
+  #stage[data-w="390"] .cta .r { font-size: 13.5px; }
+  #stage[data-w="390"] .cta .e { font-size: 12px; }
 
   /* Тихий вход для своих — вторая строка, как «I already have an account» у Duolingo. */
   .quiet { text-align: center; margin-top: 13px; font-size: 14px; }
@@ -831,8 +837,8 @@
           <!-- Его слово дословно: «Войти в Пространство NDim Space гостем /n без регистрации».
                `/n` — принудительный перенос, тем же жестом, что на экране входа. Английская
                половина — рабочий перевод агента до его вычитки. -->
-          <span class="r">Войти в Пространство NDim Space гостем<br>без регистрации</span>
-          <span class="e">Enter NDim Space as a guest<br>without signing up</span>
+          <span class="r"><span class="ln">Войти в Пространство NDim Space гостем</span><span class="ln">без регистрации</span></span>
+          <span class="e"><span class="ln">Enter NDim Space as a guest</span><span class="ln">without signing up</span></span>
         </a>
         <p class="quiet"><a href="/profile">Войти в Аккаунт<span class="en">Log In</span></a></p>
       </div>
