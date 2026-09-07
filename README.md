@@ -240,7 +240,9 @@ npm run build      # статическая сборка: весь сайт пр
 ```
 
 Каждый набор тестов проверен мутациями: на намеренно сломанном коде набор падает. Сервер
-синхронизации собирается в Docker (`npm run sync:image`, шапка `sync-server/Dockerfile`).
+синхронизации работает родной службой Node под PM2 (`sync-server/ecosystem.config.cjs`,
+разбор — [`plans/83`](plans/83_sync_server_from_docker_to_pm2.md)); Docker-путь оставлен как
+отката ради, но на машине автора гипервизор выключен.
 
 Документы разработки: живой статус — [`STATUS.md`](STATUS.md) · летопись проекта —
 [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) · дорожная карта — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
@@ -262,7 +264,7 @@ npm run build      # статическая сборка: весь сайт пр
 ## Технологии
 
 SvelteKit + TypeScript (статический пререндер всего сайта) · Firebase Hosting, Auth, Firestore ·
-сервер синхронизации — Node.js в Docker на компьютере автора, только исходящие соединения.
+сервер синхронизации — Node.js службой PM2 на компьютере автора, только исходящие соединения.
 Математическое ядро — сто строк: [`researches/03`](researches/03_similarity_core_1x_source.md).
 Версия 1.x, доказавшая идею, сохранена в приватном архиве; её знание выжато в
 [`researches/02`](researches/02_firestore_data_model_1x.md) и
@@ -498,7 +500,8 @@ npm run build      # static build: the whole site is prerendered
 ```
 
 Every test suite is verified by mutations: on deliberately broken code the suite fails. The sync
-server builds into Docker (`npm run sync:image`, header of `sync-server/Dockerfile`).
+server runs as a native Node service under PM2 (`sync-server/ecosystem.config.cjs`, see
+[`plans/83`](plans/83_sync_server_from_docker_to_pm2.md)); the Docker path is kept for rollback.
 
 Development documents: live status — [`STATUS.md`](STATUS.md) · the project chronicle —
 [`PROJECT_HISTORY.md`](PROJECT_HISTORY.md) · roadmap — [`MASTER_PLAN.md`](MASTER_PLAN.md) ·
@@ -520,7 +523,7 @@ Development runs as a human-visionary + AI-agent tandem on the
 ## Technology
 
 SvelteKit + TypeScript (the whole site statically prerendered) · Firebase Hosting, Auth,
-Firestore · the sync server — Node.js in Docker on the author's machine, outbound connections
+Firestore · the sync server — Node.js as a PM2 service on the author's machine, outbound connections
 only. The mathematical core is a hundred lines:
 [`researches/03`](researches/03_similarity_core_1x_source.md). Version 1.x, which proved the idea,
 is preserved in a private archive; its knowledge is distilled into
