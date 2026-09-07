@@ -1,0 +1,1514 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — первый экран гостя показывает то, что он оценил: 4 макета (plans/82 Ш1)</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     ШАГ 1 ПЛАНА plans/82 — ЧЕТЫРЕ МАКЕТА БЛОКА «ВЫ ОЦЕНИЛИ».
+
+     Что выбирается: ГДЕ на первом экране гостя стоит подтверждение его жеста и
+     что оно несёт. Человек пришёл из поиска на карточку, поставил звёзды, дверь
+     внесла его внутрь гостем — и сегодня объекта, с которого он пришёл, на первом
+     экране НЕТ (замер прибором probe-live-door-object на бою 2026-09-05).
+
+     Решение владельца, которое уже есть (интервью №053 В1 = А): показать оценённый
+     объект и вести мягко, не пугая. Здесь выбирается только ФОРМА.
+
+     Сцена одна на все четыре: гость только что оценил фильм «Аллея кошмаров» (2021)
+     на 8 из 10.
+
+     🔴 РАЗВЕДКА ПОПРАВИЛА САМ ПЛАН: профиль НЕ держит индекс каталога в кэше сессии
+     (/data/dims он не импортирует вовсе), поэтому критерий 2 плана в нынешней
+     формулировке неверен. Название и год берутся СЛЕДОМ, который дверь кладёт в
+     sessionStorage: на карточке они уже есть в разметке, и это стоит ноль чтений.
+
+     ⛔ Ни одного числа похожести, ни процентов, ни имён других людей.
+     ⛔ Название объекта не обрезается никогда — карточка растёт по высоте (закон
+        владельца 2026-08-14).
+  ───────────────────────────────────────────────────────────────────────── */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:#f6f8fb; --panel:#ffffff; --panel-solid:#ffffff; --edge:#e6eef7; --edge-soft:#eef4fa;
+    --primary:#1467d6; --primary-ink:#ffffff; --accent:#1f7fc9; --star:#e8a516; --star-off:#dbe3ee;
+    --heading:#12263c; --text:#33506e; --dim:#6a819a; --faint:#90a4bb; --muted:#6a819a;
+    --ghost-brd:rgba(20,103,214,.35); --ghost-ink:#1a63c4; --ghost-bg-hover:rgba(20,103,214,.06);
+    --card-shadow:0 16px 40px rgba(29,50,71,.08); --ok:#0a7f5c; --ok-ink:#ffffff; --ok-soft:#e6f6ee;
+    --accent-soft:#e8f0fd; --up:#0ea578; --down:#d6544f;
+  }
+  :root[data-theme="dark"] {
+    --bg:#060b14; --panel:rgba(10,21,38,.78); --panel-solid:#091322; --edge:rgba(77,159,255,.22);
+    --edge-soft:rgba(77,159,255,.14); --primary:#1467d6; --primary-ink:#ffffff; --accent:#3fd9ff;
+    --star:#ffc93d; --star-off:#26344c; --heading:#eef6ff; --text:#dce9f7; --dim:#8299b1;
+    --faint:#6d84a0; --muted:#8299b1; --ghost-brd:rgba(63,217,255,.45); --ghost-ink:#a8e2ff;
+    --ghost-bg-hover:rgba(63,217,255,.08); --ok:#34d399; --ok-ink:#052e22; --ok-soft:#0d2a20;
+    --accent-soft:#10233f; --up:#34d399; --down:#f87171;
+    --card-shadow:0 0 0 1px rgba(63,217,255,.06),0 24px 60px rgba(2,8,20,.6);
+  }
+
+  body {
+    font: 15px/1.55 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); padding: 120px 16px 60px;
+  }
+  @media (min-width: 900px) { body { padding-top: 92px; } }
+
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel-solid);
+    border-bottom: 1px solid var(--edge); box-shadow: 0 2px 12px rgba(16,32,64,.06);
+  }
+  .picker b { color: var(--heading); font-size: 13px; }
+  .picker button {
+    font: inherit; font-size: 13px; padding: 6px 12px; cursor: pointer;
+    border: 1px solid var(--edge); border-radius: 8px;
+    background: transparent; color: var(--text);
+  }
+  .picker button.active { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+  .picker .sp { flex: 1 1 12px; }
+
+  .note, .caption, .after {
+    max-width: 900px; margin: 0 auto 14px; color: var(--dim); font-size: 14px;
+  }
+  .caption { color: var(--heading); font-weight: 600; font-size: 15px; margin-top: 8px; }
+  .after { border-top: 1px dashed var(--edge); padding-top: 10px; }
+  .after b { color: var(--heading); }
+
+  .variant { display: none; }
+  .variant.active { display: block; }
+
+  #stage {
+    margin: 0 auto 18px; background: var(--bg);
+    border: 1px solid var(--edge); border-radius: 14px;
+    /* ⚠️ НЕ hidden: каждый вариант несёт СВОИ сцены на 390 и 1440 внутри себя, и на узкой
+       сцене широкая обязана прокручиваться, а не резаться. Резалась — поймано кадром. */
+    overflow-x: auto; overflow-y: visible;
+    box-shadow: var(--card-shadow);
+  }
+  #stage[data-w="390"] { width: 390px; max-width: 100%; }
+  #stage[data-w="1024"] { width: 1024px; max-width: 100%; }
+  #stage[data-w="1440"] { width: 1440px; max-width: 100%; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Первый экран гостя:</b>
+<button data-v="1" class="active">V1 · Лента сверху</button>
+  <button data-v="2">V2 · Раздел внутри карточки</button>
+  <button data-v="3">V3 · Дальше по пути</button>
+  <button data-v="4">V4 · Вместо счётчика</button>
+  <span class="sp"></span>
+  <button id="width">Телефон 390</button>
+  <button id="width-mid">1024</button>
+  <button id="theme">☀ светлая</button>
+</div>
+
+<div id="stage" data-w="390">
+<p class="note"><b>Что выбирается:</b> где на первом экране гостя стоит подтверждение его жеста
+и что оно несёт. Сцена одна на все четыре: человек только что оценил «Аллею кошмаров» (2021) на
+8 из 10 и вошёл гостем. Ваше решение №053 В1 = А («показать оценённый объект, вести мягко, не
+пугать») уже принято — здесь выбирается форма. Тексты в макетах НОВЫЕ и идут Вам на вычитку
+вместе с выбором.</p>
+
+<section class="variant active" id="v1">
+  <p class="caption">V1 · Лента сверху</p>
+<style>
+  /* ══ V1 «Первое, что видит глаз» — блок «Вы оценили» НАД карточкой гостя ══════════
+     Все цвета — только токены дома стиля макетов. Свои классы с префиксом v1-. */
+  .v1-root {
+    display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text); line-height: 1.5;
+  }
+  .v1-col-scene { display: flex; flex-direction: column; gap: 10px; }
+  .v1-cap { font-size: 12px; color: var(--muted); letter-spacing: .02em; }
+  .v1-cap b { color: var(--heading); font-weight: 700; }
+
+  /* ── Корпуса сцен ─────────────────────────────────────────────────────────────── */
+  .v1-phone, .v1-screen-desk {
+    background: var(--bg); border: 1px solid var(--edge); border-radius: 20px;
+    overflow: hidden; box-shadow: var(--card-shadow);
+  }
+  .v1-phone { width: 390px; }
+  .v1-screen-desk { width: 1040px; max-width: 100%; }
+
+  /* ── Шапка приложения ─────────────────────────────────────────────────────────── */
+  .v1-appbar {
+    display: flex; align-items: center; gap: 9px;
+    padding: 11px 14px; background: var(--panel); border-bottom: 1px solid var(--edge);
+  }
+  .v1-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--heading); font-size: 14px; }
+  .v1-mark { width: 22px; height: 22px; flex: none; color: var(--accent); }
+  .v1-pill {
+    font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    border: 1px dashed var(--accent); color: var(--accent); background: transparent;
+  }
+  .v1-right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .v1-ic {
+    width: 27px; height: 27px; display: grid; place-items: center; border-radius: 9px;
+    border: 1px solid var(--edge); color: var(--muted); font-size: 11px; font-weight: 600;
+  }
+  .v1-ic svg { width: 15px; height: 15px; }
+
+  /* ── Тело экрана ──────────────────────────────────────────────────────────────── */
+  .v1-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+  .v1-screen-desk .v1-body { padding: 22px 26px 26px; gap: 18px; }
+  .v1-cols { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  .v1-screen-desk .v1-cols { grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  .v1-col { display: flex; flex-direction: column; gap: 14px; }
+  .v1-card {
+    background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 14px; padding: 14px; box-shadow: var(--card-shadow);
+  }
+  .v1-card h2 { margin: 0 0 4px; font-size: 16px; line-height: 1.3; color: var(--heading); }
+  .v1-card h3 { margin: 0 0 8px; font-size: 14px; color: var(--heading); }
+
+  /* ══ БЛОК «ВЫ ОЦЕНИЛИ» — первый на экране ═════════════════════════════════════ */
+  .v1-hit {
+    background: var(--accent-soft);
+    border: 1px solid var(--edge); border-left: 3px solid var(--accent);
+    border-radius: 14px; padding: 14px 16px 15px;
+    display: flex; flex-direction: column; gap: 10px;
+    box-shadow: var(--card-shadow);
+  }
+  .v1-hit-kicker {
+    margin: 0; font-size: 12.5px; font-weight: 700;
+    letter-spacing: .02em; color: var(--accent);
+  }
+  /* ЗАКОН «названия не обрезаются»: перенос по словам, рост по высоте, ноль ellipsis. */
+  .v1-hit-name {
+    margin: 0; font-size: 22px; line-height: 1.22; font-weight: 700;
+    color: var(--heading); overflow-wrap: anywhere;
+  }
+  .v1-screen-desk .v1-hit-name { font-size: 26px; }
+  .v1-hit-year { color: var(--muted); font-weight: 600; font-size: .7em; white-space: nowrap; }
+  /* Оценка стоит ПОД названием: рядом с ним она сжималась бы на длинных именах. */
+  .v1-score { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .v1-score-k { font-size: 13px; color: var(--muted); }
+  .v1-bars { display: flex; gap: 3px; align-items: center; }
+  .v1-bars i { display: block; width: 15px; height: 12px; border-radius: 3px; background: var(--star-off); }
+  .v1-bars i.on { background: var(--star); }
+  .v1-score-v { font-size: 14px; font-weight: 700; color: var(--heading); }
+  .v1-hit-foot { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding-top: 2px; }
+  .v1-next { margin: 0; flex: 1 1 300px; font-size: 14px; line-height: 1.5; color: var(--text); }
+
+  /* ── Кнопки ───────────────────────────────────────────────────────────────────── */
+  .v1-b {
+    font: inherit; font-size: 14px; font-weight: 600; padding: 10px 15px;
+    border-radius: 10px; border: 1px solid var(--edge);
+    background: var(--panel); color: var(--heading); white-space: nowrap;
+  }
+  .v1-b.pri { background: var(--primary); color: var(--primary-ink); border-color: transparent; }
+  .v1-b.gh { background: transparent; border-color: var(--accent); color: var(--accent); }
+  .v1-b.wide { width: 100%; text-align: center; }
+  .v1-phone .v1-hit-foot .v1-b { width: 100%; text-align: center; }
+  .v1-later { background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; text-decoration: underline; padding: 6px; }
+
+  /* ── Гостевая карточка ────────────────────────────────────────────────────────── */
+  .v1-guest { border-color: var(--edge); }
+  .v1-ava {
+    width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+    border: 1px solid var(--edge); color: var(--accent); margin-bottom: 8px;
+  }
+  .v1-ava svg { width: 22px; height: 22px; }
+  .v1-facts { margin: 8px 0 12px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; font-size: 13.5px; }
+  .v1-cta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .v1-intro { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  /* ── Виджеты ──────────────────────────────────────────────────────────────────── */
+  .v1-mrow { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px dashed var(--edge-soft); font-size: 13px; }
+  .v1-mrow span:first-child { color: var(--muted); }
+  .v1-mv { color: var(--heading); font-weight: 700; }
+  .v1-mv.sm { font-weight: 600; font-size: 12.5px; }
+  .v1-mv small { font-weight: 600; color: var(--muted); font-size: 12px; }
+  .v1-hint { margin: 10px 0 12px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .v1-who { display: flex; gap: 11px; align-items: center; margin-bottom: 10px; }
+  .v1-who b { color: var(--heading); font-size: 15px; }
+  .v1-arow { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-top: 1px solid var(--edge-soft); font-size: 14px; color: var(--heading); }
+  .v1-arow .v1-chev { margin-left: auto; color: var(--muted); }
+  .v1-duo { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── Нижняя навигация (точки — заглушки вместо иконок владельца) ──────────────── */
+  .v1-bnav { display: flex; background: var(--panel); border-top: 1px solid var(--edge); }
+  .v1-bnav span { flex: 1; text-align: center; padding: 8px 2px 10px; font-size: 10.5px; color: var(--muted); }
+  .v1-bnav span.on { color: var(--accent); }
+  .v1-dot { display: block; width: 17px; height: 17px; border-radius: 50%; border: 2px solid currentColor; margin: 0 auto 4px; opacity: .8; }
+
+  /* ── Метка сгиба на телефоне ──────────────────────────────────────────────────── */
+  .v1-fold { display: flex; align-items: center; gap: 8px; font-size: 10.5px; color: var(--muted); }
+  .v1-fold::before, .v1-fold::after { content: ''; flex: 1; border-top: 1px dashed var(--edge); }
+
+  /* ── Проверка закона о названии ───────────────────────────────────────────────── */
+  .v1-proof { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+  .v1-proof-screen { width: 390px; max-width: 100%; }
+  .v1-proof-screen.wide { width: 640px; }
+</style>
+
+<div class="v1-root">
+
+  <!-- ════════ СЦЕНА 1 · телефон 390: человек пришёл из поиска, значит это его экран ════════ -->
+  <div class="v1-col-scene">
+    <div class="v1-cap"><b>V1 · телефон 390</b> — блок стоит выше карточки гостя и выше дверей аккаунта</div>
+    <div class="v1-phone">
+
+      <div class="v1-appbar">
+        <div class="v1-brand">
+          <svg class="v1-mark" viewBox="0 0 96 96" aria-hidden="true">
+            <g stroke="currentColor" stroke-width="6.7" fill="none">
+              <line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/>
+            </g>
+            <g fill="currentColor"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g>
+          </svg>
+          <span>Пространство NDim</span>
+        </div>
+        <div class="v1-pill">◌ гость</div>
+        <div class="v1-right">
+          <div class="v1-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.9 1.9M17.2 17.2l1.9 1.9M19.1 4.9l-1.9 1.9M6.8 17.2l-1.9 1.9"/></svg></div>
+          <div class="v1-ic">Ru</div>
+        </div>
+      </div>
+
+      <div class="v1-body">
+
+        <!-- ▼▼▼ НОВЫЙ БЛОК — самым верхом ▼▼▼ -->
+        <div class="v1-hit">
+          <div class="v1-hit-kicker">Вы оценили</div>
+          <div class="v1-hit-name">«Аллея кошмаров»<span class="v1-hit-year"> (2021)</span></div>
+          <div class="v1-score">
+            <span class="v1-score-k">Ваша оценка</span>
+            <span class="v1-bars" role="img" aria-label="8 из 10">
+              <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+            </span>
+            <span class="v1-score-v">8 из 10</span>
+          </div>
+          <div class="v1-hit-foot">
+            <div class="v1-next">Оцените ещё несколько вещей, которые Вы любите больше всего, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</div>
+            <button type="button" class="v1-b pri">Оценить ещё →</button>
+          </div>
+        </div>
+        <!-- ▲▲▲ конец нового блока ▲▲▲ -->
+
+        <div class="v1-card v1-guest">
+          <div class="v1-ava"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></div>
+          <h2>Сейчас Вы гость — Ваши результаты хранятся во временном гостевом профиле</h2>
+          <ul class="v1-facts">
+            <li>🫥 Вас никто не видит: в Пространстве Вы невидимы.</li>
+            <li>💾 Всё, что Вы заполните, останется Вашим: при создании аккаунта сохранится как есть.</li>
+            <li>🍂 Если Вы не вернётесь в течение 7 дней, мы удалим эти данные без следа.</li>
+          </ul>
+          <div class="v1-cta">
+            <button type="button" class="v1-b pri">Сохранить мои результаты</button>
+            <button type="button" class="v1-b gh">У меня уже есть аккаунт</button>
+            <button type="button" class="v1-later">позже</button>
+          </div>
+        </div>
+
+        <div class="v1-fold">граница первого экрана</div>
+
+        <div class="v1-intro">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас. Персональная информация необязательна для заполнения. Можете заполнять только те поля, которые Вы хотите показать другим людям в Пространстве NDim.</div>
+
+        <div class="v1-card">
+          <div class="v1-who">
+            <div class="v1-ava" style="margin:0">
+              <svg viewBox="0 0 96 96" aria-hidden="true">
+                <g stroke="currentColor" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g>
+                <g fill="currentColor"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g>
+              </svg>
+            </div>
+            <b>—</b>
+          </div>
+          <div class="v1-arow"><span>Выйти</span><span class="v1-chev">›</span></div>
+        </div>
+
+        <div class="v1-card">
+          <h3>Личная информация</h3>
+          <div class="v1-duo">
+            <button type="button" class="v1-b">Редактировать</button>
+            <button type="button" class="v1-b">Как меня видят</button>
+          </div>
+        </div>
+
+        <div class="v1-card">
+          <h3>Мой NDim ID</h3>
+          <div class="v1-mrow"><span>Количество измерений</span><span class="v1-mv">1 <small>(очень мало 😭)</small></span></div>
+          <div class="v1-mrow"><span>Диаметр моего пространства</span><span class="v1-mv">8 звёзд</span></div>
+          <div class="v1-mrow"><span>Обновлен</span><span class="v1-mv sm">08.09.2026, 14:32</span></div>
+          <div class="v1-hint">Измерений пока слишком мало, чтобы найти похожих на Вас людей. Откройте «Измерения» и поставьте звёзды тому, что про Вас, — чем больше измерений, тем точнее связи.</div>
+          <button type="button" class="v1-b gh wide">К измерениям →</button>
+        </div>
+
+        <div class="v1-card">
+          <h3>Мои связи</h3>
+          <div class="v1-hint">Связи ещё не рассчитывались. Сервер синхронизации посчитает их после Ваших первых оценок.</div>
+          <button type="button" class="v1-b gh wide">К связям →</button>
+        </div>
+
+      </div>
+
+      <div class="v1-bnav">
+        <span class="on"><i class="v1-dot"></i>Профиль</span>
+        <span><i class="v1-dot"></i>Связи</span>
+        <span><i class="v1-dot"></i>Пространство</span>
+        <span><i class="v1-dot"></i>Измерения</span>
+        <span><i class="v1-dot"></i>Меню</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ СЦЕНА 2 · десктоп 1440 (рабочая область 1040) ════════ -->
+  <div class="v1-col-scene">
+    <div class="v1-cap"><b>V1 · десктоп 1440</b> — блок во всю ширину рабочей области, колонны под ним</div>
+    <div class="v1-screen-desk">
+
+      <div class="v1-appbar">
+        <div class="v1-brand">
+          <svg class="v1-mark" viewBox="0 0 96 96" aria-hidden="true">
+            <g stroke="currentColor" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g>
+            <g fill="currentColor"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g>
+          </svg>
+          <span>Пространство NDim</span>
+        </div>
+        <div class="v1-pill">◌ гость</div>
+        <div class="v1-right">
+          <div class="v1-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.9 1.9M17.2 17.2l1.9 1.9M19.1 4.9l-1.9 1.9M6.8 17.2l-1.9 1.9"/></svg></div>
+          <div class="v1-ic">Ru</div>
+        </div>
+      </div>
+
+      <div class="v1-body">
+
+        <div class="v1-hit">
+          <div class="v1-hit-kicker">Вы оценили</div>
+          <div class="v1-hit-name">«Аллея кошмаров»<span class="v1-hit-year"> (2021)</span></div>
+          <div class="v1-score">
+            <span class="v1-score-k">Ваша оценка</span>
+            <span class="v1-bars" role="img" aria-label="8 из 10">
+              <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+            </span>
+            <span class="v1-score-v">8 из 10</span>
+          </div>
+          <div class="v1-hit-foot">
+            <div class="v1-next">Оцените ещё несколько вещей, которые Вы любите больше всего, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</div>
+            <button type="button" class="v1-b pri">Оценить ещё →</button>
+          </div>
+        </div>
+
+        <div class="v1-card v1-guest">
+          <div class="v1-ava"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4"/><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z"/></svg></div>
+          <h2>Сейчас Вы гость — Ваши результаты хранятся во временном гостевом профиле</h2>
+          <ul class="v1-facts">
+            <li>🫥 Вас никто не видит: в Пространстве Вы невидимы.</li>
+            <li>💾 Всё, что Вы заполните, останется Вашим: при создании аккаунта сохранится как есть.</li>
+            <li>🍂 Если Вы не вернётесь в течение 7 дней, мы удалим эти данные без следа.</li>
+          </ul>
+          <div class="v1-cta">
+            <button type="button" class="v1-b pri">Сохранить мои результаты</button>
+            <button type="button" class="v1-b gh">У меня уже есть аккаунт</button>
+            <button type="button" class="v1-later">позже</button>
+          </div>
+        </div>
+
+        <div class="v1-intro">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас. Персональная информация необязательна для заполнения. Можете заполнять только те поля, которые Вы хотите показать другим людям в Пространстве NDim.</div>
+
+        <div class="v1-cols">
+          <div class="v1-col">
+            <div class="v1-card">
+              <div class="v1-who">
+                <div class="v1-ava" style="margin:0">
+                  <svg viewBox="0 0 96 96" aria-hidden="true">
+                    <g stroke="currentColor" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g>
+                    <g fill="currentColor"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g>
+                  </svg>
+                </div>
+                <b>—</b>
+              </div>
+              <div class="v1-arow"><span>Выйти</span><span class="v1-chev">›</span></div>
+            </div>
+            <div class="v1-card">
+              <h3>Личная информация</h3>
+              <div class="v1-duo">
+                <button type="button" class="v1-b">Редактировать</button>
+                <button type="button" class="v1-b">Как меня видят</button>
+              </div>
+            </div>
+          </div>
+          <div class="v1-col">
+            <div class="v1-card">
+              <h3>Мой NDim ID</h3>
+              <div class="v1-mrow"><span>Количество измерений</span><span class="v1-mv">1 <small>(очень мало 😭)</small></span></div>
+              <div class="v1-mrow"><span>Диаметр моего пространства</span><span class="v1-mv">8 звёзд</span></div>
+              <div class="v1-mrow"><span>Обновлен</span><span class="v1-mv sm">08.09.2026, 14:32</span></div>
+              <div class="v1-hint">Измерений пока слишком мало, чтобы найти похожих на Вас людей. Откройте «Измерения» и поставьте звёзды тому, что про Вас, — чем больше измерений, тем точнее связи.</div>
+              <button type="button" class="v1-b gh wide">К измерениям →</button>
+            </div>
+            <div class="v1-card">
+              <h3>Мои связи</h3>
+              <div class="v1-hint">Связи ещё не рассчитывались. Сервер синхронизации посчитает их после Ваших первых оценок.</div>
+              <button type="button" class="v1-b gh wide">К связям →</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="v1-bnav">
+        <span class="on"><i class="v1-dot"></i>Профиль</span>
+        <span><i class="v1-dot"></i>Связи</span>
+        <span><i class="v1-dot"></i>Пространство</span>
+        <span><i class="v1-dot"></i>Измерения</span>
+        <span><i class="v1-dot"></i>Меню</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════ ПРОВЕРКА ЗАКОНА «НАЗВАНИЯ НЕ ОБРЕЗАЮТСЯ» ════════ -->
+  <div class="v1-col-scene">
+    <div class="v1-cap"><b>V1 · длинное название</b> — карточка растёт по высоте, оценка стоит под именем и не сжимается</div>
+    <div class="v1-proof">
+      <div class="v1-proof-screen">
+        <div class="v1-hit">
+          <div class="v1-hit-kicker">Вы оценили</div>
+          <div class="v1-hit-name">«Доктор Стрейнджлав, или Как я перестал бояться и полюбил бомбу»<span class="v1-hit-year"> (1964)</span></div>
+          <div class="v1-score">
+            <span class="v1-score-k">Ваша оценка</span>
+            <span class="v1-bars" role="img" aria-label="10 из 10">
+              <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            </span>
+            <span class="v1-score-v">10 из 10</span>
+          </div>
+          <div class="v1-hit-foot">
+            <div class="v1-next">Оцените ещё несколько вещей, которые Вы любите больше всего, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</div>
+            <button type="button" class="v1-b pri">Оценить ещё →</button>
+          </div>
+        </div>
+      </div>
+      <div class="v1-proof-screen wide">
+        <div class="v1-hit">
+          <div class="v1-hit-kicker">Вы оценили</div>
+          <div class="v1-hit-name">«Доктор Стрейнджлав, или Как я перестал бояться и полюбил бомбу»<span class="v1-hit-year"> (1964)</span></div>
+          <div class="v1-score">
+            <span class="v1-score-k">Ваша оценка</span>
+            <span class="v1-bars" role="img" aria-label="10 из 10">
+              <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            </span>
+            <span class="v1-score-v">10 из 10</span>
+          </div>
+          <div class="v1-hit-foot">
+            <div class="v1-next">Оцените ещё несколько вещей, которые Вы любите больше всего, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</div>
+            <button type="button" class="v1-b pri">Оценить ещё →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+  <p class="after"><b>Довод варианта:</b> Человек только что сделал жест — и подтверждение обязано встретить его раньше объяснений про гостевой профиль, поэтому блок стоит самым верхом, во всю ширину рабочей области и единственным цветным пятном верха экрана: глаз попадает в него без прокрутки и на телефоне, и на десктопе. Название вынесено отдельной крупной строкой, а оценка стоит ПОД ним — так длинное имя переносится и ничего не сжимает (в макете это показано отдельной проверкой на «Докторе Стрейнджлаве»). Бары повторяют золото тех звёзд, которые человек зажигал минуту назад на карточке, поэтому узнавание срабатывает раньше чтения. От вариантов «внутри карточки гостя» этот отличается тем, что подтверждение нельзя случайно спрятать ссылкой «позже», а от вариантов «под карточкой» и «вместо виджета» — тем, что подтверждение не нужно искать прокруткой. Цена честно названа ниже: порядок экрана меняется, и объяснение про гостя уезжает на второе место.</p>
+</section>
+
+<section class="variant" id="v2">
+  <p class="caption">V2 · Раздел внутри карточки</p>
+<style>
+  /* V2 — «Вы оценили» РАЗДЕЛОМ ВНУТРИ карточки гостя. Все цвета — токены дома стиля. */
+  .v2-root { display: flex; flex-direction: column; gap: 16px; }
+  .v2-screen {
+    background: var(--bg); border: 1px solid var(--edge); border-radius: 18px;
+    overflow: hidden; display: flex; flex-direction: column;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text); line-height: 1.5;
+  }
+  .v2-screen * { box-sizing: border-box; }
+
+  /* ── Шапка ───────────────────────────────────────────────────────────── */
+  .v2-top {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    background: var(--panel); border-bottom: 1px solid var(--edge);
+  }
+  .v2-brand { display: flex; align-items: center; gap: 7px; color: var(--heading); font-weight: 650; font-size: 14px; }
+  .v2-brand svg { display: block; }
+  .v2-pill {
+    margin-left: auto; border: 1px dashed var(--accent); color: var(--accent);
+    border-radius: 999px; padding: 3px 10px; font-size: 11.5px; background: transparent;
+  }
+  .v2-mini { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--edge);
+    display: grid; place-items: center; color: var(--muted); font-size: 11px; }
+
+  /* ── Тело ────────────────────────────────────────────────────────────── */
+  .v2-body { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+  .v2-card {
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+    box-shadow: var(--card-shadow); padding: 14px;
+  }
+
+  /* Карточка гостя: ОДИН контур, ДВА этажа. Пунктир и центровка — как в продукте. */
+  .v2-guestcard { padding: 0; border-style: dashed; border-color: var(--accent); overflow: hidden; }
+
+  /* Этаж 1 — раздел «Вы оценили». Отделён надстрочником, линией и заливкой этажа 2. */
+  .v2-deed { padding: 15px 15px 16px; text-align: left; }
+  .v2-kicker {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .v2-tick {
+    width: 20px; height: 20px; border-radius: 50%; flex: none;
+    background: var(--ok-soft); color: var(--ok); display: grid; place-items: center;
+  }
+  /* Название целиком, всегда: переносится по словам, карточка растёт по высоте. */
+  .v2-name {
+    margin: 9px 0 0; font-size: clamp(19px, 4.6vw, 25px); line-height: 1.24;
+    font-weight: 650; color: var(--heading);
+    overflow-wrap: break-word; word-break: normal; hyphens: none;
+  }
+  .v2-year { color: var(--muted); font-weight: 500; }
+  .v2-score { display: flex; align-items: center; gap: 11px; margin-top: 12px; flex-wrap: wrap; }
+  .v2-meter { display: flex; gap: 3px; flex: 1 1 190px; min-width: 160px; }
+  .v2-seg { flex: 1; height: 13px; border-radius: 3px; background: var(--star-off); }
+  .v2-seg.on { background: var(--star); }
+  .v2-num { font-size: 14.5px; font-weight: 650; color: var(--heading); white-space: nowrap; }
+  .v2-lead { margin: 12px 0 0; font-size: 14px; color: var(--text); }
+  .v2-next { margin: 6px 0 0; font-size: 13.5px; color: var(--muted); }
+  .v2-deed-cta { margin-top: 13px; }
+
+  /* Этаж 2 — гостевая часть карточки: линия + своя заливка + свой заголовок. */
+  .v2-guest {
+    border-top: 1px solid var(--edge); background: var(--edge-soft);
+    padding: 14px 15px 16px; text-align: center;
+  }
+  .v2-ava {
+    width: 48px; height: 48px; border-radius: 50%; margin: 0 auto;
+    border: 2px dashed var(--accent); background: var(--panel);
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .v2-ava svg { width: 72%; height: 72%; margin-top: 22%; fill: var(--accent); opacity: .7; }
+  .v2-guest h3 { margin: 9px 0 8px; font-size: 16px; line-height: 1.35; color: var(--heading); font-weight: 650; }
+  .v2-facts { list-style: none; margin: 0; padding: 0; text-align: left; display: grid; gap: 5px; }
+  .v2-facts li { position: relative; padding-left: 15px; font-size: 13.5px; color: var(--text); }
+  .v2-facts li::before {
+    content: ''; position: absolute; left: 2px; top: 8px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  }
+  .v2-guest-cta { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; justify-content: center; margin-top: 12px; }
+
+  /* ── Кнопки ──────────────────────────────────────────────────────────── */
+  .v2-btn {
+    font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    border-radius: 10px; padding: 10px 16px; border: 1px solid var(--edge);
+    background: transparent; color: var(--accent); text-decoration: none; display: inline-block;
+  }
+  .v2-btn.prim { background: var(--primary); border-color: transparent; color: var(--primary-ink); }
+  .v2-btn.wide { width: 100%; }
+  .v2-later { font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0;
+    text-decoration: underline dotted; cursor: pointer; padding: 0; }
+
+  .v2-intro { margin: 0; font-size: 13px; color: var(--muted); }
+
+  /* ── Колонны ─────────────────────────────────────────────────────────── */
+  .v2-cols { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); align-items: start; }
+  .v2-col { display: grid; gap: 12px; align-content: start; }
+  .v2-card h4 { margin: 0 0 9px; font-size: 14px; color: var(--heading); font-weight: 650; }
+  .v2-who { display: flex; align-items: center; gap: 11px; }
+  .v2-who .v2-ava { margin: 0; width: 44px; height: 44px; border-style: solid; border-color: var(--edge); }
+  .v2-who b { display: block; font-size: 15px; color: var(--heading); }
+  .v2-who span { font-size: 12.5px; color: var(--muted); }
+  .v2-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--edge-soft);
+    font-size: 14px; color: var(--accent);
+  }
+  .v2-prop { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--edge-soft); font-size: 13px; }
+  .v2-prop .k { color: var(--muted); flex: 1 1 auto; }
+  .v2-prop .v { color: var(--text); }
+  .v2-chip { border: 1px solid var(--edge); border-radius: 999px; padding: 2px 9px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .v2-duo { display: flex; gap: 9px; margin-top: 11px; }
+  .v2-duo .v2-btn { flex: 1; text-align: center; font-size: 13px; padding: 9px 10px; }
+  .v2-mrow { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 13px; }
+  .v2-mrow .k { color: var(--muted); }
+  .v2-mval { color: var(--heading); font-weight: 600; }
+  .v2-mval.big { font-size: 18px; }
+  .v2-scale { font-size: 12px; font-weight: 400; color: var(--muted); }
+  .v2-hint { margin: 9px 0 0; font-size: 12.5px; color: var(--text); background: var(--accent-soft); border-radius: 10px; padding: 9px 10px; }
+
+  /* ── Нижняя навигация ────────────────────────────────────────────────── */
+  .v2-tabs { display: flex; background: var(--panel); border-top: 1px solid var(--edge); }
+  .v2-tab { flex: 1; display: grid; justify-items: center; gap: 3px; padding: 7px 2px 8px; font-size: 10.5px; color: var(--muted); }
+  .v2-tab.on { color: var(--accent); }
+  .v2-tab svg { display: block; }
+
+  .v2-note { margin: 0; font-size: 12.5px; color: var(--muted); }
+  .v2-note b { color: var(--text); }
+</style>
+
+<div class="v2-root">
+  <!-- ЭКРАН ЦЕЛИКОМ: гость, только что оценивший «Аллею кошмаров» на 8 из 10 -->
+  <div class="v2-screen">
+    <div class="v2-top">
+      <span class="v2-brand">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M6 18V6l12 12V6" />
+          <circle cx="6" cy="6" r="2" fill="currentColor" stroke="none" />
+          <circle cx="18" cy="18" r="2" fill="currentColor" stroke="none" />
+        </svg>
+        NDim Space
+      </span>
+      <span class="v2-pill">гость</span>
+      <span class="v2-mini" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="4.4" /><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.9 1.9M17.2 17.2l1.9 1.9M19.1 4.9l-1.9 1.9M6.8 17.2l-1.9 1.9" />
+        </svg>
+      </span>
+      <span class="v2-mini">Ru</span>
+    </div>
+
+    <div class="v2-body">
+      <!-- КАРТОЧКА ГОСТЯ: этаж «Вы оценили» + линия + этаж гостевого статуса -->
+      <div class="v2-card v2-guestcard">
+        <div class="v2-deed">
+          <p class="v2-kicker">
+            <span class="v2-tick" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.4 6.6 11.5 12.5 4.8" /></svg>
+            </span>
+            Вы оценили
+          </p>
+          <h2 class="v2-name">«Аллея кошмаров»<span class="v2-year"> (2021)</span></h2>
+          <div class="v2-score">
+            <span class="v2-meter" role="img" aria-label="Ваша оценка: 8 из 10">
+              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span>
+              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span>
+              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg"></span><span class="v2-seg"></span>
+            </span>
+            <span class="v2-num">8 из 10</span>
+          </div>
+          <p class="v2-lead">В Вашем Пространстве появилось первое измерение.</p>
+          <p class="v2-next">Оцените ещё несколько вещей, которые Вы любите больше всего, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</p>
+          <div class="v2-deed-cta"><a class="v2-btn prim" href="#dims">Оценить ещё</a></div>
+        </div>
+
+        <div class="v2-guest">
+          <span class="v2-ava">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg>
+          </span>
+          <h3>Сейчас Вы гость — Ваши результаты хранятся во временном гостевом профиле</h3>
+          <ul class="v2-facts">
+            <li>Вас никто не видит: в Пространстве Вы невидимы.</li>
+            <li>Всё, что Вы заполните, останется Вашим: при создании аккаунта сохранится как есть.</li>
+            <li>Если Вы не вернётесь в течение 7 дней, мы удалим эти данные без следа.</li>
+          </ul>
+          <div class="v2-guest-cta">
+            <button type="button" class="v2-btn wide">Сохранить мои результаты</button>
+            <button type="button" class="v2-btn wide">У меня уже есть аккаунт</button>
+            <button type="button" class="v2-later">позже</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="v2-intro">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас. Персональная информация необязательна для заполнения.</p>
+
+      <div class="v2-cols">
+        <div class="v2-col">
+          <div class="v2-card">
+            <div class="v2-who">
+              <span class="v2-ava">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg>
+              </span>
+              <span><b>не заполнено</b><span></span></span>
+            </div>
+            <div class="v2-row"><span>Выйти</span><span aria-hidden="true">›</span></div>
+          </div>
+
+          <div class="v2-card">
+            <h4>Личная информация</h4>
+            <div class="v2-prop"><span class="k">Имя</span><span class="v">не заполнено</span><span class="v2-chip">Никому</span></div>
+            <div class="v2-prop"><span class="k">О себе</span><span class="v">не заполнено</span><span class="v2-chip">Никому</span></div>
+            <div class="v2-prop"><span class="k">Дата рождения</span><span class="v">не заполнено</span><span class="v2-chip">Никому</span></div>
+            <div class="v2-prop"><span class="k">Пол</span><span class="v">не заполнено</span><span class="v2-chip">Никому</span></div>
+            <div class="v2-prop"><span class="k">Фото</span><span class="v">нет фото</span><span class="v2-chip">Никому</span></div>
+            <p class="v2-intro" style="margin-top:9px">Новое свойство скрыто от всех, пока Вы сами его не откроете.</p>
+            <div class="v2-duo">
+              <button type="button" class="v2-btn">Редактировать</button>
+              <button type="button" class="v2-btn">Как меня видят</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="v2-col">
+          <div class="v2-card">
+            <h4>Мой NDim ID</h4>
+            <div class="v2-mrow"><span class="k">Количество измерений</span><span class="v2-mval big">1 <span class="v2-scale">(очень мало)</span></span></div>
+            <div class="v2-mrow"><span class="k">Диаметр моего пространства</span><span class="v2-mval big">10 звёзд</span></div>
+            <div class="v2-mrow"><span class="k">Обновлен</span><span class="v2-mval">8 сентября 2026 г., 14:20</span></div>
+            <p class="v2-hint">Измерений пока слишком мало, чтобы найти похожих на Вас людей. Откройте «Измерения» и поставьте звёзды тому, что про Вас, — чем больше измерений, тем точнее связи.</p>
+            <div class="v2-duo"><a class="v2-btn" href="#dims">К измерениям →</a></div>
+          </div>
+
+          <div class="v2-card">
+            <h4>Мои связи</h4>
+            <p class="v2-intro">Связи ещё не рассчитывались. Сервер синхронизации посчитает их после Ваших первых оценок.</p>
+            <div class="v2-duo"><a class="v2-btn" href="#relations">К связям →</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="v2-tabs">
+      <span class="v2-tab on">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" /></svg>
+        Профиль
+      </span>
+      <span class="v2-tab">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8" cy="9" r="3" /><circle cx="16.5" cy="15" r="3" /><path d="M10.6 10.8 14 13.4" /></svg>
+        Связи
+      </span>
+      <span class="v2-tab">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8" /><path d="M4 12h16M12 4c3 3.6 3 12.4 0 16M12 4c-3 3.6-3 12.4 0 16" /></svg>
+        Пространство
+      </span>
+      <span class="v2-tab">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 4v16M4 12h16M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg>
+        Измерения
+      </span>
+      <span class="v2-tab">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+        Меню
+      </span>
+    </nav>
+  </div>
+
+  <p class="v2-note">
+    <b>Проба того же раздела:</b> длинное название разворачивается целиком, карточка растёт по высоте;
+    гостевой этаж свёрнут ссылкой «позже» — раздел с оценкой остаётся на экране. Это вторая, третья
+    оценка человека, поэтому ведущая строка считает измерения.
+  </p>
+
+  <div class="v2-screen">
+    <div class="v2-body">
+      <div class="v2-card v2-guestcard">
+        <div class="v2-deed">
+          <p class="v2-kicker">
+            <span class="v2-tick" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.4 6.6 11.5 12.5 4.8" /></svg>
+            </span>
+            Вы оценили
+          </p>
+          <h2 class="v2-name">«Три билборда на границе Эббинга, Миссури»<span class="v2-year"> (2017)</span></h2>
+          <div class="v2-score">
+            <span class="v2-meter" role="img" aria-label="Ваша оценка: 9 из 10">
+              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span>
+              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span>
+              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg"></span>
+            </span>
+            <span class="v2-num">9 из 10</span>
+          </div>
+          <p class="v2-lead">Теперь в Вашем Пространстве 3 измерения.</p>
+          <p class="v2-next">Оцените ещё несколько вещей, которые Вы любите больше всего, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</p>
+          <div class="v2-deed-cta"><a class="v2-btn prim" href="#dims">Оценить ещё</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  <p class="after"><b>Довод варианта:</b> Оценка — это уже часть профиля человека, поэтому она встаёт не отдельной плашкой, а верхним этажом той самой карточки, которая рассказывает гостю, где его результаты лежат: сначала «вот что Вы сделали», сразу под линией — «вот где это хранится» и двери аккаунта. Экран не растёт третьей карточкой, и на 390 первым, что человек видит после двери, оказывается название объекта и его собственная оценка, а не служебный статус. Раздел отделён тремя средствами сразу — надстрочником «ВЫ ОЦЕНИЛИ» с галочкой, сплошной линией во всю ширину карточки и заливкой нижнего этажа (--edge-soft): один контур, два этажа, спутать нельзя. В отличие от вариантов «плашка сверху» и «блок под карточкой» здесь ни одна связка не разрывается — карточка гостя перестаёт начинаться с разговора о временном хранении и начинает с того, ради чего человек пришёл; в отличие от варианта «вместо виджета Мой NDim ID» ничего из канона 1.x не выселяется. Громкость кнопок при этом меняется осознанно: главная синяя — «Оценить ещё», а «Сохранить мои результаты» становится рамочной, чтобы первый экран вёл в продукт, а не в третий подряд призыв завести аккаунт.</p>
+</section>
+
+<section class="variant" id="v3">
+  <p class="caption">V3 · Дальше по пути</p>
+<style>
+  /* ВАРИАНТ V3 «Дальше по пути» — блок «Вы оценили» ПОД карточкой гостя.
+     Токены берутся из дома стиля макетов; свои классы — с префиксом v3-. */
+  .v3-hold { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 10px 0 28px; }
+  .v3-hold * { box-sizing: border-box; }
+  .v3-cap { width: 100%; max-width: 1040px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .v3-cap b { color: var(--heading); }
+
+  .v3-screen {
+    width: 100%; max-width: 1040px; background: var(--bg);
+    border: 1px solid var(--edge); border-radius: 20px; box-shadow: var(--card-shadow);
+    overflow: hidden; color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+
+  /* Шапка продукта */
+  .v3-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--edge); }
+  .v3-brand { display: flex; align-items: center; gap: 8px; color: var(--heading); font-weight: 700; font-size: 14px; }
+  .v3-brand svg { color: var(--accent); }
+  .v3-pill { border: 1px dashed var(--edge); color: var(--muted); border-radius: 999px; padding: 2px 10px; font-size: 12px; }
+  .v3-tools { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+
+  /* Рабочая область */
+  .v3-body { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px; align-items: start; }
+  .v3-full { grid-column: 1 / -1; }
+  .v3-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .v3-card { background: var(--panel); border: 1px solid var(--edge); border-radius: 16px; box-shadow: var(--card-shadow); padding: 14px 16px; min-width: 0; }
+  .v3-card h3 { margin: 0 0 10px; font-size: 13px; letter-spacing: .02em; color: var(--heading); }
+  .v3-intro { margin: 0; color: var(--muted); font-size: 13px; }
+
+  /* Карточка гостя */
+  .v3-guest h2 { margin: 0 0 10px; font-size: 16px; line-height: 1.35; color: var(--heading); }
+  .v3-facts { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 7px; font-size: 13px; }
+  .v3-facts li { position: relative; padding-left: 16px; }
+  .v3-facts li::before { content: ''; position: absolute; left: 2px; top: .62em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: .5; }
+  .v3-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+  /* Кнопки */
+  .v3-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1px solid var(--edge); background: var(--panel); color: var(--heading); text-decoration: none; cursor: pointer; }
+  .v3-btn.pri { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+  .v3-btn.ghost { background: transparent; color: var(--accent); }
+  .v3-later { background: none; border: 0; color: var(--muted); font-size: 12px; text-decoration: underline; cursor: pointer; padding: 6px 4px; }
+
+  /* ── НОВЫЙ БЛОК: сделано → дальше ── */
+  .v3-done { padding: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .v3-done-a { padding: 16px 18px 18px; min-width: 0; }
+  .v3-done-b { position: relative; padding: 16px 18px 18px; min-width: 0; background: var(--accent-soft); border-left: 1px solid var(--edge); border-radius: 0 15px 15px 0; display: flex; flex-direction: column; gap: 14px; align-items: flex-start; justify-content: flex-start; }
+  .v3-eyebrow { display: flex; align-items: center; gap: 7px; margin: 0 0 8px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ok); font-weight: 700; }
+  .v3-tick { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--ok-soft); color: var(--ok); flex: none; }
+  .v3-name { margin: 0; font-size: 22px; line-height: 1.25; color: var(--heading); font-weight: 700; overflow-wrap: break-word; }
+  .v3-year { color: var(--muted); font-weight: 600; }
+  .v3-rate { margin-top: 12px; }
+  .v3-rate-k { display: block; font-size: 13px; font-weight: 600; color: var(--heading); }
+  .v3-bars { display: flex; gap: 3px; max-width: 260px; margin-top: 7px; }
+  .v3-bars i { display: block; flex: 1 1 0; height: 10px; border-radius: 3px; background: var(--star-off); }
+  .v3-bars i.on { background: var(--star); }
+  .v3-lead { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text); }
+  .v3-arrow { position: absolute; left: -15px; top: 24px; width: 30px; height: 30px; border-radius: 50%; background: var(--panel); border: 1px solid var(--edge); color: var(--accent); display: flex; align-items: center; justify-content: center; }
+
+  /* Карточка-шапка и «Личная информация» */
+  .v3-who { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; }
+  .v3-ava { width: 48px; height: 48px; border-radius: 50%; background: var(--edge-soft); border: 1px solid var(--edge); color: var(--accent); display: flex; align-items: center; justify-content: center; flex: none; }
+  .v3-who b { display: block; color: var(--heading); font-size: 14px; }
+  .v3-arow { display: flex; align-items: center; gap: 10px; padding: 11px 2px; border-top: 1px solid var(--edge-soft); color: var(--heading); font-size: 13px; }
+  .v3-arow .v3-chev { margin-left: auto; color: var(--muted); }
+  .v3-prop { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--edge-soft); font-size: 13px; }
+  .v3-prop .k { color: var(--muted); }
+  .v3-prop .v { color: var(--heading); }
+  .v3-chip { font-size: 11px; color: var(--muted); border: 1px solid var(--edge); border-radius: 999px; padding: 1px 9px; }
+  .v3-hint { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+  .v3-duo { display: flex; gap: 8px; margin-top: 12px; }
+
+  /* Виджеты */
+  .v3-mrow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--edge-soft); font-size: 13px; }
+  .v3-mrow .k2 { color: var(--muted); }
+  .v3-mrow .val { color: var(--heading); font-weight: 600; text-align: right; }
+  .v3-mrow .val.big { font-size: 19px; }
+  .v3-mrow .val .sc { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .v3-wbtn { margin-top: 12px; }
+
+  /* Нижняя панель */
+  .v3-nav { display: flex; background: var(--panel); border-top: 1px solid var(--edge); }
+  .v3-nav a { flex: 1; display: grid; justify-items: center; gap: 3px; padding: 8px 2px 10px; color: var(--muted); font-size: 11px; text-decoration: none; }
+  .v3-nav a.on { color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .v3-body { grid-template-columns: 1fr; }
+    .v3-full { grid-column: auto; }
+    .v3-done { grid-template-columns: 1fr; }
+    .v3-done-b { border-left: 0; border-top: 1px solid var(--edge); border-radius: 0 0 15px 15px; }
+    .v3-arrow { left: 24px; top: -15px; transform: rotate(90deg); }
+    .v3-name { font-size: 20px; }
+    .v3-nav a { min-width: 0; font-size: 10px; padding: 8px 1px 10px; }
+    .v3-body { padding: 12px; gap: 12px; }
+    .v3-card { padding: 13px 14px; }
+    .v3-prop { gap: 8px; }
+  }
+</style>
+
+<div class="v3-hold">
+  <div class="v3-screen">
+    <!-- Шапка -->
+    <div class="v3-bar">
+      <span class="v3-brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="18" r="2.2"/><circle cx="19" cy="6" r="2.2"/><circle cx="5" cy="18" r="2.2"/><path d="M5 8.2v7.6M6.8 7.4l10.4 9.2M19 8.2v7.6"/></svg>
+        NDim Space
+      </span>
+      <span class="v3-pill">◌ гость</span>
+      <span class="v3-tools">
+        Ru
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.3 8.3 0 1 0 20 14.5z"/></svg>
+      </span>
+    </div>
+
+    <div class="v3-body">
+      <!-- Карточка гостя (сегодняшняя, без правок) -->
+      <div class="v3-card v3-guest v3-full">
+        <h2>Сейчас Вы гость — Ваши результаты хранятся во временном гостевом профиле</h2>
+        <ul class="v3-facts">
+          <li>Вас никто не видит: в Пространстве Вы невидимы.</li>
+          <li>Всё, что Вы заполните, останется Вашим: при создании аккаунта сохранится как есть.</li>
+          <li>Если Вы не вернётесь в течение 7 дней, мы удалим эти данные без следа.</li>
+        </ul>
+        <div class="v3-cta">
+          <button type="button" class="v3-btn pri">Сохранить мои результаты</button>
+          <button type="button" class="v3-btn ghost">У меня уже есть аккаунт</button>
+          <button type="button" class="v3-later">позже</button>
+        </div>
+      </div>
+
+      <!-- ★ НОВЫЙ БЛОК: слева — что сделано, справа — что дальше -->
+      <div class="v3-card v3-done v3-full">
+        <div class="v3-done-a">
+          <p class="v3-eyebrow">
+            <span class="v3-tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.6 9.5 18 20 6.5"/></svg></span>
+            Вы оценили
+          </p>
+          <h2 class="v3-name">«Аллея кошмаров»<span class="v3-year"> (2021)</span></h2>
+          <div class="v3-rate">
+            <span class="v3-rate-k">Ваша оценка: 8 из 10</span>
+            <span class="v3-bars"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+          </div>
+        </div>
+        <div class="v3-done-b">
+          <span class="v3-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+          <p class="v3-lead">Оцените ещё несколько вещей, которые Вы любите, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</p>
+          <div><a class="v3-btn pri" href="/dims">Оценить ещё</a></div>
+        </div>
+      </div>
+
+      <!-- Вводный абзац «Дома» -->
+      <p class="v3-intro v3-full">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас. Персональная информация необязательна для заполнения.</p>
+
+      <!-- Колонна 1 -->
+      <div class="v3-col">
+        <div class="v3-card">
+          <div class="v3-who">
+            <span class="v3-ava"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="18" r="2.2"/><circle cx="19" cy="6" r="2.2"/><circle cx="5" cy="18" r="2.2"/><path d="M5 8.2v7.6M6.8 7.4l10.4 9.2M19 8.2v7.6"/></svg></span>
+            <span><b>не заполнено</b></span>
+          </div>
+          <div class="v3-arow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M15 4h4v16h-4M13 12H4M8 8l-4 4 4 4"/></svg>
+            Выйти
+            <span class="v3-chev"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+
+        <div class="v3-card">
+          <h3>Личная информация</h3>
+          <div class="v3-prop"><span class="k">Имя</span><span class="v">не заполнено</span><span class="v3-chip">скрыто</span></div>
+          <div class="v3-prop"><span class="k">О себе</span><span class="v">не заполнено</span><span class="v3-chip">скрыто</span></div>
+          <div class="v3-prop"><span class="k">Дата рождения</span><span class="v">не заполнено</span><span class="v3-chip">скрыто</span></div>
+          <div class="v3-prop"><span class="k">Пол</span><span class="v">не указан</span><span class="v3-chip">скрыто</span></div>
+          <div class="v3-prop"><span class="k">Фото</span><span class="v">нет фото</span><span class="v3-chip">скрыто</span></div>
+          <p class="v3-hint">Новое свойство скрыто от всех, пока Вы сами его не откроете.</p>
+          <div class="v3-duo">
+            <button type="button" class="v3-btn ghost">Редактировать</button>
+            <button type="button" class="v3-btn ghost">Как меня видят</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Колонна 2 -->
+      <div class="v3-col">
+        <div class="v3-card">
+          <h3>Мой NDim ID</h3>
+          <div class="v3-mrow"><span class="k2">Количество измерений</span><span class="val big">1 <span class="sc">(очень мало)</span></span></div>
+          <div class="v3-mrow"><span class="k2">Диаметр моего пространства</span><span class="val big">10 звёзд</span></div>
+          <div class="v3-mrow"><span class="k2">Обновлен</span><span class="val">8 сентября 2026, 21:14</span></div>
+          <div class="v3-wbtn"><a class="v3-btn ghost" href="/dims">К измерениям →</a></div>
+        </div>
+
+        <div class="v3-card">
+          <h3>Мои связи</h3>
+          <p class="v3-hint" style="margin-top:0">Связи ещё не рассчитывались. Сервер синхронизации посчитает их после Ваших первых оценок.</p>
+          <div class="v3-wbtn"><a class="v3-btn ghost" href="/relations">К связям →</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Нижняя панель -->
+    <div class="v3-nav">
+      <a class="on" href="/profile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 11.2 12 4l9 7.2V20h-6v-5.4h-6V20H3z"/></svg>Профиль</a>
+      <a href="/relations"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="15" r="2.4"/><path d="M3 20c0-2.8 2.2-5 5-5s5 2.2 5 5"/></svg>Связи</a>
+      <a href="/space"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="8" ry="3.4"/></svg>Пространство</a>
+      <a href="/dims"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="4" width="6.4" height="6.4" rx="1.4"/><rect x="13.6" y="4" width="6.4" height="6.4" rx="1.4"/><rect x="4" y="13.6" width="6.4" height="6.4" rx="1.4"/><rect x="13.6" y="13.6" width="6.4" height="6.4" rx="1.4"/></svg>Измерения</a>
+      <a href="/menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Меню</a>
+    </div>
+  </div>
+
+  <p class="v3-cap"><b>Закон длинного названия.</b> Карточка растёт по высоте, оценка держится под именем, правая половина выравнивается по верху.</p>
+
+  <div class="v3-demo v3-screen" style="padding:16px">
+    <div class="v3-card v3-done">
+      <div class="v3-done-a">
+        <p class="v3-eyebrow">
+          <span class="v3-tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.6 9.5 18 20 6.5"/></svg></span>
+          Вы оценили
+        </p>
+        <h2 class="v3-name">«Три билборда на границе Эббинга, Миссури»<span class="v3-year"> (2017)</span></h2>
+        <div class="v3-rate">
+          <span class="v3-rate-k">Ваша оценка: 8 из 10</span>
+          <span class="v3-bars"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+        </div>
+      </div>
+      <div class="v3-done-b">
+        <span class="v3-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+        <p class="v3-lead">Оцените ещё несколько вещей, которые Вы любите, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</p>
+        <div><a class="v3-btn pri" href="/dims">Оценить ещё</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+  <p class="after"><b>Довод варианта:</b> Блок стоит ПОД карточкой гостя и читается как один шаг пути: слева — что человек сделал («Вы оценили», название целиком, «Ваша оценка: 8 из 10» барами), справа, за указателем на шве, — что делать дальше и одна кнопка «Оценить ещё». Сверху он видит, кто он теперь, ниже — свой след и продолжение, поэтому экран перестаёт начинаться с «Количество измерений 1»; строку-продолжение я не сочинял, а перенёс дословную формулу двери («Оцените … и ещё несколько вещей, которые Вы любите, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы»), и подпись оценки — тоже дословный `rateHint` двери, так что человек читает внутри ту же речь, что читал минуту назад снаружи. В отличие от вариантов «над карточкой» и «внутри карточки», этот блок не спорит с гостевой карточкой за первый взгляд и не исчезает по ссылке «позже» (`guestLater` прячет только карточку); в отличие от замены виджета «Мой NDim ID» он ничего из канона 1.x не отнимает — виджет остаётся целиком, у блока забрана лишь длинная инструкция `dimsInstruction`, потому что она повторяет ведущую строку слово в слово. Ведение здесь одно и заканчивается действием, а не четвёртым призывом завести аккаунт.</p>
+</section>
+
+<section class="variant" id="v4">
+  <p class="caption">V4 · Вместо счётчика</p>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   V4 «Вместо счётчика» — первый экран гостя, который только что оценил
+   «Аллею кошмаров» (2021) на 8 из 10.
+
+   УГОЛ ВАРИАНТА: при РОВНО ОДНОЙ оценке виджет «Мой NDim ID» не рисуется
+   вовсе — на его месте, в той же клетке сетки, стоит блок «Вы оценили».
+   Экран не растёт ни на пиксель; слабое место (счётчик «1 (очень мало 😭)»,
+   диаметр пространства из одной точки и строка «Обновлен» с датой рождения
+   гостя, которую оценка не трогает) заменено сильным.
+
+   ЧТО ЕЩЁ МЕНЯЕТСЯ, И ТОЛЬКО ПРИ ОДНОЙ ОЦЕНКЕ: на телефоне колонна виджетов
+   идёт ПЕРВОЙ (CSS order), иначе блок уезжает под карточку профиля и человек
+   до него не доскроллит. На десктопе порядок колонн прежний.
+
+   ⚠️ ДВЕ ЧЕСТНЫЕ ПРАВКИ РИСОВАЛЬЩИКА, НАЗВАННЫЕ ВСЛУХ (они в «рисках»):
+   1) три эмодзи карточки гостя (🫥 💾 🍂) нарисованы нейтральными точками —
+      страж текста лица краснеет на эмодзи внутри макета;
+   2) имя бренда в шапке и во вводном абзаце написано целиком, «Пространство
+      NDim Space», — на живом экране там стоит «Пространство NDim».
+
+   Цвета — только токены дома стиля. Раскладка — контейнерные запросы, чтобы
+   макет одинаково вёл себя и в рамке 390, и в рамке 1440.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.v4-shell,
+.v4-aside {
+  font: 15px/1.55 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+}
+.v4-shell *, .v4-aside * { box-sizing: border-box; }
+.v4-shell p, .v4-shell h2, .v4-shell h3, .v4-shell ul, .v4-aside p { margin: 0; }
+.v4-shell ul { padding: 0; list-style: none; }
+
+.v4-shell {
+  container-type: inline-size;
+  container-name: v4;
+  background: var(--bg);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* ── Шапка продукта ─────────────────────────────────────────────────────── */
+.v4-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--panel); border-bottom: 1px solid var(--edge);
+}
+.v4-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.v4-mark { width: 26px; height: 26px; flex: none; color: var(--accent); }
+.v4-wm { color: var(--heading); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.v4-pill {
+  border: 1px dashed var(--accent); color: var(--accent);
+  border-radius: 999px; padding: 2px 10px; font-size: 12px; white-space: nowrap;
+}
+.v4-sp { flex: 1; }
+.v4-icobtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 28px; padding: 0 7px;
+  border: 1px solid var(--edge); border-radius: 8px;
+  color: var(--muted); font-size: 12px; background: var(--bg);
+}
+.v4-icobtn svg { width: 15px; height: 15px; }
+
+/* ── Каркас рабочей области ─────────────────────────────────────────────── */
+.v4-main { display: block; }
+.v4-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+.v4-rail { display: none; }
+
+.v4-cols { display: flex; flex-direction: column; gap: 14px; }
+.v4-col { display: flex; flex-direction: column; gap: 14px; }
+/* Порядок телефона при ОДНОЙ оценке: то, что человек только что сделал, — выше. */
+.v4-widgets { order: -1; }
+
+/* ── Карточки ───────────────────────────────────────────────────────────── */
+.v4-card {
+  background: var(--panel); border: 1px solid var(--edge);
+  border-radius: 14px; padding: 14px; box-shadow: var(--card-shadow);
+}
+.v4-card h3 {
+  color: var(--heading); font-size: 15px; font-weight: 700;
+  margin: 0 0 10px;
+}
+.v4-hint { color: var(--muted); font-size: 13px; }
+
+/* ── Карточка гостя ─────────────────────────────────────────────────────── */
+.v4-guest { text-align: center; }
+.v4-ava {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); margin-bottom: 10px;
+}
+.v4-ava svg { width: 28px; height: 28px; }
+.v4-guest h2 {
+  color: var(--heading); font-size: 17px; line-height: 1.35; font-weight: 700;
+  margin-bottom: 12px;
+}
+.v4-facts { text-align: left; display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.v4-facts li { display: flex; gap: 9px; font-size: 13.5px; line-height: 1.5; }
+/* Заменители эмодзи 🫥 💾 🍂 — см. шапку и «риски». */
+.v4-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 7px; }
+.v4-cta { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.v4-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid transparent; background: var(--primary); color: var(--primary-ink);
+  font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+}
+.v4-ghost { background: transparent; border-color: var(--edge); color: var(--accent); font-weight: 500; }
+.v4-later { background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }
+
+.v4-intro { color: var(--text); font-size: 13.5px; line-height: 1.6; }
+
+/* ═══ БЛОК ВАРИАНТА: «Вы оценили» на месте виджета «Мой NDim ID» ═══════════ */
+.v4-rated { border-color: var(--accent); }
+.v4-rated-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.v4-rated-head h3 { margin: 0; }
+.v4-tick { display: inline-flex; color: var(--ok); flex: none; }
+.v4-tick svg { width: 20px; height: 20px; }
+
+.v4-object {
+  background: var(--accent-soft); border-radius: 12px; padding: 12px;
+}
+/* ЗАКОН: название не обрезается никогда — ни ellipsis, ни line-clamp.
+   Карточка растёт по высоте, соседи выравниваются по верху. */
+.v4-object-name {
+  color: var(--heading); font-size: 17px; line-height: 1.3; font-weight: 700;
+  overflow-wrap: break-word;
+}
+.v4-year { color: var(--muted); font-weight: 500; }
+
+.v4-score { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.v4-bars { display: flex; gap: 3px; flex: 1; min-width: 0; }
+.v4-bars span {
+  flex: 1; height: 10px; border-radius: 3px; background: var(--star-off);
+}
+.v4-bars span.on { background: var(--star); }
+.v4-score-num { color: var(--heading); font-weight: 700; font-size: 14px; white-space: nowrap; }
+
+.v4-lead { color: var(--text); font-size: 13.5px; line-height: 1.55; margin: 12px 0 12px; }
+.v4-rated .v4-btn { width: auto; align-self: flex-start; }
+
+/* ── Карточка-шапка профиля и «Личная информация» ───────────────────────── */
+.v4-who { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.v4-face {
+  width: 54px; height: 54px; border-radius: 50%; flex: none;
+  background: var(--accent-soft); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+}
+.v4-face svg { width: 32px; height: 32px; }
+.v4-idn b { display: block; color: var(--heading); font-size: 16px; }
+.v4-idn span { color: var(--muted); font-size: 13px; }
+.v4-arow {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 0; border: 0; border-top: 1px solid var(--edge-soft);
+  background: none; color: var(--text); font: inherit; cursor: pointer; text-align: left;
+}
+.v4-arow .v4-chev { margin-left: auto; color: var(--muted); }
+.v4-arow svg { width: 18px; height: 18px; color: var(--muted); }
+
+.v4-prop {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--edge-soft); font-size: 13.5px;
+}
+.v4-prop .v4-k { color: var(--muted); flex: none; width: 108px; }
+.v4-prop .v4-v { color: var(--heading); flex: 1; min-width: 0; }
+.v4-aud {
+  border: 1px solid var(--edge); border-radius: 999px; padding: 2px 9px;
+  color: var(--muted); font-size: 11.5px; background: var(--bg); white-space: nowrap;
+}
+.v4-duo { display: flex; gap: 8px; margin-top: 12px; }
+.v4-duo .v4-btn { flex: 1; }
+
+/* ── Нижняя панель / рельс ──────────────────────────────────────────────── */
+.v4-bnav {
+  display: flex; background: var(--panel); border-top: 1px solid var(--edge);
+}
+.v4-bnav a {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 7px 2px; color: var(--muted); font-size: 10.5px; text-decoration: none;
+}
+.v4-bnav a.on { color: var(--accent); }
+.v4-bnav svg { width: 22px; height: 22px; }
+
+/* ── Десктоп: рельс слева, две колонны, порядок колонн канонический ─────── */
+@container v4 (min-width: 760px) {
+  .v4-main { display: grid; grid-template-columns: 196px 1fr; align-items: start; }
+  .v4-rail {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 14px 10px; border-right: 1px solid var(--edge);
+  }
+  .v4-rail a {
+    display: flex; align-items: center; gap: 10px; padding: 9px 11px;
+    border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 13.5px;
+  }
+  .v4-rail a.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .v4-rail svg { width: 20px; height: 20px; }
+  .v4-body { padding: 20px 24px; }
+  .v4-cols { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+  .v4-me { order: 0; }
+  .v4-widgets { order: 1; }
+  .v4-bnav { display: none; }
+  .v4-guest { text-align: left; }
+  .v4-cta { flex-direction: row; align-items: center; justify-content: flex-start; }
+  .v4-cta .v4-btn { width: auto; }
+}
+</style>
+
+<div class="v4-shell">
+  <header class="v4-bar">
+    <span class="v4-brand">
+      <svg class="v4-mark" viewBox="0 0 96 96" aria-hidden="true">
+        <g stroke="currentColor" stroke-width="6.7" fill="none">
+          <line x1="36.5" y1="29" x2="30" y2="66" />
+          <line x1="36.5" y1="29" x2="59.5" y2="66" />
+          <line x1="59.5" y1="66" x2="66" y2="29" />
+        </g>
+        <g fill="currentColor">
+          <circle cx="36.5" cy="29" r="9.3" /><circle cx="30" cy="66" r="9.3" />
+          <circle cx="59.5" cy="66" r="9.3" /><circle cx="66" cy="29" r="9.3" />
+        </g>
+      </svg>
+      <span class="v4-wm">Пространство NDim Space</span>
+    </span>
+    <span class="v4-pill">◌ гость</span>
+    <span class="v4-sp"></span>
+    <span class="v4-icobtn" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="4.2" />
+        <path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4M5.4 5.4l1.7 1.7M16.9 16.9l1.7 1.7M18.6 5.4l-1.7 1.7M7.1 16.9l-1.7 1.7" stroke-linecap="round" />
+      </svg>
+    </span>
+    <span class="v4-icobtn">Ru</span>
+  </header>
+
+  <div class="v4-main">
+    <!-- Рельс десктопа: глифы схематичны — авторские иконки владельца не перерисовываем. -->
+    <nav class="v4-rail">
+      <a class="on" href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 11l8-6.5 8 6.5v8.5H4z" /></svg>Профиль</a>
+      <a href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="7" cy="8" r="2.6" /><circle cx="17" cy="15" r="2.6" /><path d="M9.2 9.4l5.8 4.2" /></svg>Связи</a>
+      <a href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="7.5" /><path d="M4.5 12h15M12 4.5c3 3.6 3 11.4 0 15" /></svg>Пространство</a>
+      <a href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 18V9M9.3 18V5M14.7 18v-6M20 18v-9" stroke-linecap="round" /></svg>Измерения</a>
+      <a href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4.5 7h15M4.5 12h15M4.5 17h15" stroke-linecap="round" /></svg>Меню</a>
+    </nav>
+
+    <main class="v4-body" id="v4">
+
+      <!-- ── Расширенная карточка гостя (сегодняшняя, без правок) ───────────── -->
+      <section class="v4-card v4-guest">
+        <span class="v4-ava">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <circle cx="12" cy="7.6" r="4.4" />
+            <path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" />
+          </svg>
+        </span>
+        <h2>Сейчас Вы гость — Ваши результаты хранятся во временном гостевом профиле</h2>
+        <ul class="v4-facts">
+          <li><span class="v4-dot"></span>Вас никто не видит: в Пространстве Вы невидимы.</li>
+          <li><span class="v4-dot"></span>Всё, что Вы заполните, останется Вашим: при создании аккаунта сохранится как есть.</li>
+          <li><span class="v4-dot"></span>Если Вы не вернётесь в течение 7 дней, мы удалим эти данные без следа.</li>
+        </ul>
+        <div class="v4-cta">
+          <button type="button" class="v4-btn">Сохранить мои результаты</button>
+          <button type="button" class="v4-btn v4-ghost">У меня уже есть аккаунт</button>
+          <button type="button" class="v4-later">позже</button>
+        </div>
+      </section>
+
+      <p class="v4-intro">Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас. Персональная информация необязательна для заполнения. Можете заполнять только те поля, которые Вы хотите показать другим людям в Пространстве NDim Space.</p>
+
+      <div class="v4-cols">
+
+        <!-- ── КОЛОННА ВИДЖЕТОВ. На телефоне при одной оценке идёт первой. ──── -->
+        <div class="v4-col v4-widgets">
+
+          <!-- ★ БЛОК ВАРИАНТА. Стоит РОВНО в клетке «Мой NDim ID»: пока оценка
+               одна, счётчика, диаметра и строки «Обновлен» здесь нет вовсе. -->
+          <section class="v4-card v4-rated">
+            <div class="v4-rated-head">
+              <span class="v4-tick">
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <circle cx="10" cy="10" r="9" fill="var(--ok-soft)" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M6 10.4l2.6 2.6L14.2 7.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <h3>Вы оценили</h3>
+            </div>
+
+            <div class="v4-object">
+              <p class="v4-object-name">«Аллея кошмаров»<span class="v4-year"> (2021)</span></p>
+              <div class="v4-score">
+                <div class="v4-bars" role="img" aria-label="Ваша оценка: 8 из 10">
+                  <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span>
+                </div>
+                <span class="v4-score-num">8 из 10</span>
+              </div>
+            </div>
+
+            <p class="v4-lead">Это первое измерение Вашего пространства. Оцените ещё несколько вещей, которые Вы любите, — и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</p>
+            <a class="v4-btn v4-ghost" href="#v4">К измерениям →</a>
+          </section>
+
+          <!-- Второй виджет колонны — сегодняшний, без правок. -->
+          <section class="v4-card">
+            <h3>Мои связи</h3>
+            <p class="v4-hint">Связи ещё не рассчитывались. Сервер синхронизации посчитает их после Ваших первых оценок.</p>
+            <a class="v4-btn v4-ghost" href="#v4" style="margin-top:12px;width:auto">К связям →</a>
+          </section>
+        </div>
+
+        <!-- ── КОЛОННА ПРОФИЛЯ — без единой правки ──────────────────────────── -->
+        <div class="v4-col v4-me">
+          <section class="v4-card">
+            <div class="v4-who">
+              <span class="v4-face">
+                <svg viewBox="0 0 96 96" aria-hidden="true">
+                  <g stroke="currentColor" stroke-width="6.7" fill="none">
+                    <line x1="36.5" y1="29" x2="30" y2="66" />
+                    <line x1="36.5" y1="29" x2="59.5" y2="66" />
+                    <line x1="59.5" y1="66" x2="66" y2="29" />
+                  </g>
+                  <g fill="currentColor">
+                    <circle cx="36.5" cy="29" r="9.3" /><circle cx="30" cy="66" r="9.3" />
+                    <circle cx="59.5" cy="66" r="9.3" /><circle cx="66" cy="29" r="9.3" />
+                  </g>
+                </svg>
+              </span>
+              <span class="v4-idn"><b>не заполнено</b><span>&nbsp;</span></span>
+            </div>
+            <button type="button" class="v4-arow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 4.5H6.5v15H14M11 12h9M16.5 8.5L20 12l-3.5 3.5" stroke-linecap="round" /></svg>
+              <span>Выйти</span><span class="v4-chev">›</span>
+            </button>
+          </section>
+
+          <section class="v4-card">
+            <h3>Личная информация</h3>
+            <div class="v4-prop"><span class="v4-k">Имя</span><span class="v4-v">не заполнено</span><span class="v4-aud">скрыто</span></div>
+            <div class="v4-prop"><span class="v4-k">О себе</span><span class="v4-v">не заполнено</span><span class="v4-aud">скрыто</span></div>
+            <div class="v4-prop"><span class="v4-k">Дата рождения</span><span class="v4-v">не заполнено</span><span class="v4-aud">скрыто</span></div>
+            <div class="v4-prop"><span class="v4-k">Пол</span><span class="v4-v">не указан</span><span class="v4-aud">скрыто</span></div>
+            <div class="v4-prop"><span class="v4-k">Фото</span><span class="v4-v">нет фото</span><span class="v4-aud">скрыто</span></div>
+            <p class="v4-hint" style="margin-top:10px">Новое свойство скрыто от всех, пока Вы сами его не откроете.</p>
+            <div class="v4-duo">
+              <button type="button" class="v4-btn v4-ghost">Редактировать</button>
+              <button type="button" class="v4-btn v4-ghost">Как меня видят</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <nav class="v4-bnav">
+    <a class="on" href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 11l8-6.5 8 6.5v8.5H4z" /></svg>Профиль</a>
+    <a href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="7" cy="8" r="2.6" /><circle cx="17" cy="15" r="2.6" /><path d="M9.2 9.4l5.8 4.2" /></svg>Связи</a>
+    <a href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="7.5" /><path d="M4.5 12h15M12 4.5c3 3.6 3 11.4 0 15" /></svg>Пространство</a>
+    <a href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 18V9M9.3 18V5M14.7 18v-6M20 18v-9" stroke-linecap="round" /></svg>Измерения</a>
+    <a href="#v4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4.5 7h15M4.5 12h15M4.5 17h15" stroke-linecap="round" /></svg>Меню</a>
+  </nav>
+</div>
+
+<!-- ═══ Продолжение варианта: что происходит со второй и третьей оценкой ═══ -->
+<style>
+.v4-aside { margin-top: 22px; }
+.v4-aside-cap {
+  color: var(--muted); font-size: 11px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; margin-bottom: 8px;
+}
+.v4-aside-box {
+  border: 1px dashed var(--edge); border-radius: 14px; padding: 14px; background: var(--bg);
+  max-width: 420px;
+}
+.v4-list { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.v4-list-row { display: flex; flex-direction: column; gap: 6px; }
+.v4-list-name { color: var(--heading); font-size: 14.5px; font-weight: 600; line-height: 1.35; overflow-wrap: break-word; }
+.v4-aside .v4-score { margin-top: 0; }
+.v4-aside-note { color: var(--muted); font-size: 12.5px; margin-top: 10px; line-height: 1.5; }
+</style>
+<div class="v4-aside">
+  <p class="v4-aside-cap">Продолжение варианта · вторая и третья оценка</p>
+  <div class="v4-aside-box">
+    <section class="v4-card v4-rated">
+      <div class="v4-rated-head">
+        <span class="v4-tick">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="9" fill="var(--ok-soft)" stroke="currentColor" stroke-width="1.5" />
+            <path d="M6 10.4l2.6 2.6L14.2 7.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <h3>Вы оценили</h3>
+      </div>
+      <div class="v4-list">
+        <div class="v4-list-row">
+          <span class="v4-list-name">«Аллея кошмаров»<span class="v4-year"> (2021)</span></span>
+          <div class="v4-score">
+            <div class="v4-bars" role="img" aria-label="Ваша оценка: 8 из 10">
+              <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span>
+            </div>
+            <span class="v4-score-num">8 из 10</span>
+          </div>
+        </div>
+        <div class="v4-list-row">
+          <span class="v4-list-name">«Три билборда на границе Эббинга, Миссури»<span class="v4-year"> (2017)</span></span>
+          <div class="v4-score">
+            <div class="v4-bars" role="img" aria-label="Ваша оценка: 9 из 10">
+              <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span>
+            </div>
+            <span class="v4-score-num">9 из 10</span>
+          </div>
+        </div>
+        <div class="v4-list-row">
+          <span class="v4-list-name">«Дюна»<span class="v4-year"> (2021)</span></span>
+          <div class="v4-score">
+            <div class="v4-bars" role="img" aria-label="Ваша оценка: 7 из 10">
+              <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span>
+            </div>
+            <span class="v4-score-num">7 из 10</span>
+          </div>
+        </div>
+      </div>
+      <p class="v4-lead">Добавляйте то, что Вы любите больше всего, — чем больше измерений, тем точнее связи.</p>
+      <a class="v4-btn v4-ghost" href="#v4">К измерениям →</a>
+    </section>
+    <p class="v4-aside-note">С четвёртой оценки счётчик снова осмыслен: блок уходит, «Мой NDim ID» возвращается на своё место.</p>
+  </div>
+</div>
+  <p class="after"><b>Довод варианта:</b> Пока оценка одна, виджет «Мой NDim ID» говорит человеку три неправды подряд: «Количество измерений 1 (очень мало 😭)» — упрёк за то, ради чего он и вошёл; «Диаметр моего пространства» из одной точки; «Обновлен» с датой рождения гостя, потому что оценка это поле не трогает вовсе (profile.ts:368-372). Мой вариант ничего не добавляет к экрану — он ставит блок «Вы оценили» РОВНО в клетку слабого виджета, поэтому экран не растёт ни на пиксель, а первое, что человек читает о себе, — его собственное действие: «Аллея кошмаров» (2021), бары 8 из 10 и одна ведущая строка. Три других варианта добавляют экрану новый ярус (над карточкой гостя, внутри неё или под ней) — и все трое ставят блок «Вы оценили» рядом с «(очень мало 😭)», то есть оставляют противоречие, из-за которого и заведено интервью №053; здесь противоречие снимается тем, что упрёка на экране просто нет. Блок живёт временно и честно: на второй-третьей оценке он становится списком того, что человек оценил, с четвёртой уходит и возвращает счётчик — то есть у него есть дверь наружу, и он не превращается в вечное украшение (риск 3 плана). Единственная правка раскладки — на телефоне при одной оценке колонна виджетов идёт первой, иначе блок уезжает под карточку профиля.</p>
+</section>
+</div>
+
+<script>
+  const stage = document.getElementById('stage');
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => {
+    b.onclick = () => {
+      document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+      b.classList.add('active');
+      document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === 'v' + b.dataset.v));
+    };
+  });
+  document.getElementById('theme').onclick = (e) => {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    e.target.textContent = dark ? '☾ тёмная' : '☀ светлая';
+  };
+  document.getElementById('width').onclick = (e) => {
+    const wide = stage.dataset.w === '1440';
+    stage.dataset.w = wide ? '390' : '1440';
+    e.target.textContent = wide ? 'Телефон 390' : 'Десктоп 1440';
+  };
+  document.getElementById('width-mid').onclick = () => {
+    stage.dataset.w = '1024';
+  };
+</script>
+</body>
+</html>
