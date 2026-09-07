@@ -1,4 +1,15 @@
 # Сервер синхронизации связей NDim Space 2.0.
+#
+# 🔴🔴 НА МАШИНЕ ВЛАДЕЛЬЦА ЭТОТ ПУТЬ БОЛЬШЕ НЕ РАБОТАЕТ (2026-09-07). Он выключил гипервизор ради
+# игр — «гипервизор выключен, всл2 выключена, докер выключен», — а Docker Desktop, Podman и
+# Rancher Desktop все стоят на WSL2 либо Hyper-V. Боевая служба переехала в родной процесс Node
+# под PM2: `sync-server/ecosystem.config.cjs` + `tools/run-sync-server.mjs`, разбор — `plans/83`.
+# Файл оставлен НАМЕРЕННО: это честная история и путь отката, если владелец вернёт гипервизор.
+#
+# ⚠️ И ЕСЛИ ВЕРНЁТ — В БОЕВОЙ КОМАНДЕ НИЖЕ НЕ ХВАТАЛО ИМЕНИ БАЗЫ, оно дописано. Замер 2026-09-08:
+# базы `(default)` в боевом проекте НЕТ ВОВСЕ (Firestore отвечает `5 NOT_FOUND`), все данные лежат
+# в `ndim-db-prod`. То есть команда «по документации» отказывала бы, и было непонятно почему.
+#
 # Собирать из КОРНЯ репозитория (контейнеру нужно ядро похожести из src/lib/similarity):
 #   docker build -f sync-server/Dockerfile -t ndim-sync-server .
 #
@@ -12,6 +23,7 @@
 #   docker run -d --restart unless-stopped --name ndim-server-prod \
 #     --env-file .env \
 #     -e FIREBASE_PROJECT_ID=ndim-space \
+#     -e FIRESTORE_DATABASE_ID=ndim-db-prod \
 #     -e NDIM_SA_B64="$NDIM_PROD_SA_B64" ndim-sync-server
 # Стейдж — тот же образ, другой контейнер, другой ключ и своя база:
 #   docker run -d --restart unless-stopped --name ndim-server-stage \

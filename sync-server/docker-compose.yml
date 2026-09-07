@@ -6,10 +6,15 @@
 #   FIRESTORE_EMULATOR_HOST=host.docker.internal:8181 \
 #     docker compose -f sync-server/docker-compose.yml up -d --build
 #
-# Боевой режим: подать ключ ПЕРЕМЕННОЙ NDIM_SA_B64 (значение — из .env, файлов с ключами
-# проект не держит) и запустить БЕЗ переменной эмулятора:
-#   FIREBASE_PROJECT_ID=ndim-space NDIM_SA_B64=<base64 ключа из .env> \
-#     docker compose -f sync-server/docker-compose.yml up -d --build
+# 🔴🔴 НА МАШИНЕ ВЛАДЕЛЬЦА ЭТОТ ФАЙЛ БОЛЬШЕ НЕ ЗАПУСТИТСЯ (2026-09-07): гипервизор выключен ради
+# игр, а Linux-контейнеры без него не живут. Боевая служба — родной процесс Node под PM2:
+# `sync-server/ecosystem.config.cjs`, разбор — `plans/83`. Файл оставлен как путь отката.
+#
+# Боевой режим: ⛔ ЭТИМ ФАЙЛОМ БОЙ НЕ ПОДНИМАТЬ. Замер 2026-09-08: базы `(default)` в боевом
+# проекте НЕТ ВОВСЕ (`5 NOT_FOUND`), все данные в `ndim-db-prod`, а `FIRESTORE_DATABASE_ID` в
+# блоке `environment:` ниже не объявлена — то есть служба пошла бы в несуществующую базу.
+# Пустое значение здесь не спасает: `index.mjs` читает `?? '(default)'`, и пустая строка пройдёт
+# насквозь как имя базы. Боевой путь — `docker run` из шапки `Dockerfile`, там имя базы стоит.
 # Канонический боевой путь — docker run из шапки Dockerfile (так выкатывали cutover,
 # plans/04). Страж в index.mjs остановит запуск, если НЕ-demo проект совмещён с
 # эмулятором, — раньше compose-дефолт отправлял «бой по инструкции» в эмулятор молча.
