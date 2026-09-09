@@ -80,6 +80,18 @@
   .variant { display: none; }
   .variant.active { display: block; }
 
+  /* ✅ ПЛАШКА УТВЕРЖДЕНИЯ. Набор из пяти вариантов без пометки «какой взят» через месяц
+     перестаёт отвечать на главный вопрос, ради которого его открывают. Слова владельца стоят
+     дословно: пересказ утверждения — это уже не утверждение. */
+  .approved {
+    max-width: 900px; margin: 0 auto 14px; padding: 12px 14px;
+    border: 1px solid var(--ok); border-left: 4px solid var(--ok); border-radius: 12px;
+    background: var(--ok-soft); color: var(--text); font-size: 14px; line-height: 1.5;
+  }
+  .approved b { color: var(--heading); }
+  .picker button.taken { border-color: var(--ok); }
+  .picker button.taken::after { content: ' ✅'; }
+
   #stage {
     margin: 0 auto 18px; background: var(--bg);
     border: 1px solid var(--edge); border-radius: 14px;
@@ -140,7 +152,7 @@
 <div class="picker">
   <b>Первый экран гостя:</b>
   <button id="all">Все рядом</button>
-  <button data-v="5" class="active">V5 · Ваша сборка</button>
+  <button data-v="5" class="active taken">V5 · Ваша сборка</button>
 <button data-v="1">V1 · Лента сверху</button>
   <button data-v="2">V2 · Раздел внутри карточки</button>
   <button data-v="3">V3 · Дальше по пути</button>
@@ -1497,6 +1509,14 @@
 </section>
 <section class="variant active" id="v5">
   <p class="caption">V5 · Ваша сборка</p>
+  <p class="approved"><b>✅ УТВЕРЖДЕНО ВЛАДЕЛЬЦЕМ 2026-09-09, взято в работу.</b> Его слово
+  дословно: «<i>вот теперь v5 нравится, утверждено, берём в работу</i>». Это ответ на интервью
+  №079, В1 = Д (собственная сборка). Вариант собран им самим из четырёх предложенных, семью
+  правками подряд: блок формой V2 · тихая «позже» вместо второй кнопки с той же работой ·
+  белый стиль карточки измерения · адекватные отступы гостевой карточки · хелп-виджет с
+  крестиком · тип отдельной жирной строкой над названием · один кегль, один цвет и «Ф» под «А».
+  Тексты в нём — тоже его: третью фразу второго пункта он продиктовал сам.
+  ⛔ Четыре варианта ниже оставлены как история выбора. Менять утверждённый V5 — только его словом.</p>
 <style>
   /* ═══ V5 «ВАША СБОРКА» — вариант СОБРАН ВЛАДЕЛЬЦЕМ 2026-09-09, а не предложен агентом.
      Его порядок и его правки, дословно:
