@@ -139,7 +139,8 @@
 
 <div class="picker">
   <b>Первый экран гостя:</b>
-  <button id="all" class="active">Все четыре рядом</button>
+  <button id="all">Все рядом</button>
+  <button data-v="5" class="active">V5 · Ваша сборка</button>
 <button data-v="1">V1 · Лента сверху</button>
   <button data-v="2">V2 · Раздел внутри карточки</button>
   <button data-v="3">V3 · Дальше по пути</button>
@@ -152,14 +153,14 @@
 
 <!-- Открываемся видом «все четыре рядом» в МОБИЛЬНОЙ ширине: у нас mobile first, и выбор
      делается сравнением четырёх одинаковых по ширине макетов, а не переключением по одному. -->
-<div id="stage" data-view="all" data-w="390">
+<div id="stage" data-view="one" data-w="390">
 <p class="note"><b>Что выбирается:</b> где на первом экране гостя стоит подтверждение его жеста
 и что оно несёт. Сцена одна на все четыре: человек только что оценил «Аллею кошмаров» (2021) на
 8 из 10 и вошёл гостем. Ваше решение №053 В1 = А («показать оценённый объект, вести мягко, не
 пугать») уже принято — здесь выбирается форма. Тексты в макетах НОВЫЕ и идут Вам на вычитку
 вместе с выбором.</p>
 
-<section class="variant active" id="v1">
+<section class="variant" id="v1">
   <p class="caption">V1 · Лента сверху</p>
 <style>
   /* ══ V1 «Первое, что видит глаз» — блок «Вы оценили» НАД карточкой гостя ══════════
@@ -1493,6 +1494,256 @@
   </div>
 </div>
   <p class="after"><b>Довод варианта:</b> Пока оценка одна, виджет «Мой NDim ID» говорит человеку три неправды подряд: «Количество измерений 1 (очень мало 😭)» — упрёк за то, ради чего он и вошёл; «Диаметр моего пространства» из одной точки; «Обновлен» с датой рождения гостя, потому что оценка это поле не трогает вовсе (profile.ts:368-372). Мой вариант ничего не добавляет к экрану — он ставит блок «Вы оценили» РОВНО в клетку слабого виджета, поэтому экран не растёт ни на пиксель, а первое, что человек читает о себе, — его собственное действие: «Аллея кошмаров» (2021), восемь золотых звёзд и одна ведущая строка. Три других варианта добавляют экрану новый ярус (над карточкой гостя, внутри неё или под ней) — и все трое ставят блок «Вы оценили» рядом с «(очень мало 😭)», то есть оставляют противоречие, из-за которого и заведено интервью №053; здесь противоречие снимается тем, что упрёка на экране просто нет. Блок живёт временно и честно: на второй-третьей оценке он становится списком того, что человек оценил, с четвёртой уходит и возвращает счётчик — то есть у него есть дверь наружу, и он не превращается в вечное украшение (риск 3 плана). Единственная правка раскладки — на телефоне при одной оценке колонна виджетов идёт первой, иначе блок уезжает под карточку профиля.</p>
+</section>
+<section class="variant active" id="v5">
+  <p class="caption">V5 · Ваша сборка</p>
+<style>
+  /* ═══ V5 «ВАША СБОРКА» — вариант СОБРАН ВЛАДЕЛЬЦЕМ 2026-09-09, а не предложен агентом.
+     Его порядок и его правки, дословно:
+       1. «вот это» — блок «Вы оценили» формой V2, «+ без обводки простая текстовая кнопка [Скрыть]»;
+       2. «плюс вот это, только с адекватными отступами» — гостевая карточка формой V4
+          (замер показал у неё зазор между фактами и кнопкой РОВНО 0 — кнопка упиралась в текст);
+       3. «этот текст ниже двух первых блоков … в отдельном хелп виджите, который можно
+          крестиком справа скрывать» — «Это Ваша домашняя страница…» уезжает вниз своим виджетом.
+     🔑 И правило шире экрана, его же слово: «все хелп виджеты на всех страницах можно
+     крестиком скрывать».
+     Крестик — форма из продукта (`dims/+page.svelte` → `.clear`): 28×28, зона нажатия не меньше
+     24×24 по WCAG 2.2 SC 2.5.8 AA, без рамки, `--dim` → `--text` на наведении. */
+  .v5-hold { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 10px 0 26px; }
+  .v5-hold * { box-sizing: border-box; }
+  .v5-screen {
+    container-type: inline-size; container-name: v5;
+    width: 100%; max-width: 1040px; background: var(--bg);
+    border: 1px solid var(--edge); border-radius: 20px; box-shadow: var(--card-shadow);
+    overflow: hidden; color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+
+  /* Шапка продукта */
+  .v5-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--edge); }
+  .v5-brand { display: flex; align-items: center; gap: 8px; font-weight: 650; color: var(--heading); }
+  .v5-pill { border: 1px dashed var(--accent); color: var(--accent); border-radius: 999px; padding: 2px 10px; font-size: 11.5px; }
+  .v5-bar-sp { flex: 1; }
+  .v5-chipbtn { border: 1px solid var(--edge); border-radius: 9px; padding: 3px 9px; font-size: 12px; color: var(--muted); background: transparent; }
+
+  .v5-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .v5-card { background: var(--panel-solid, var(--panel)); border: 1px solid var(--edge); border-radius: 16px; padding: 16px; }
+
+  /* ── 1. БЛОК «ВЫ ОЦЕНИЛИ» — форма V2 ──────────────────────────────────────── */
+  .v5-deed { border: 1px dashed var(--accent); background: var(--accent-soft); }
+  .v5-kicker {
+    display: flex; align-items: center; gap: 8px; margin: 0 0 10px;
+    font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+  }
+  .v5-tick {
+    width: 22px; height: 22px; flex: none; border-radius: 50%;
+    display: grid; place-items: center; background: var(--ok-soft); color: var(--ok);
+  }
+  .v5-name { margin: 0 0 12px; font-size: 25px; line-height: 1.2; font-weight: 800; color: var(--heading); overflow-wrap: anywhere; }
+  .v5-year { color: var(--faint); font-weight: 700; }
+  .v5-score { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+  .v5-score .rate { font-size: 1.25rem; }
+  .v5-num { font-size: 16px; font-weight: 800; color: var(--heading); }
+  .v5-lead { margin: 0 0 6px; color: var(--text); }
+  .v5-next { margin: 0 0 16px; color: var(--muted); }
+  /* Ряд действий: главная синяя и рядом ПРОСТАЯ ТЕКСТОВАЯ «Скрыть» без обводки (его правка). */
+  .v5-deed-cta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .v5-btn {
+    border: 0; border-radius: 12px; padding: 11px 20px; font: inherit; font-weight: 650;
+    background: var(--primary); color: var(--primary-ink); cursor: pointer;
+  }
+  .v5-btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--ghost-brd, var(--edge)); }
+  .v5-btn.wide { width: 100%; text-align: center; }
+  /* ⛔ Никакой рамки и никакой заливки — «без обводки простая текстовая кнопка». */
+  .v5-plain {
+    border: 0; background: transparent; color: var(--muted);
+    font: inherit; cursor: pointer; padding: 11px 14px; border-radius: 10px;
+  }
+  @media (hover: hover) { .v5-plain:hover { color: var(--text); background: var(--edge-soft); } }
+
+  /* ── 2. ГОСТЕВАЯ КАРТОЧКА — форма V4, отступы починены ─────────────────────── */
+  .v5-guest { text-align: center; }
+  .v5-ava {
+    width: 48px; height: 48px; border-radius: 50%; margin: 0 auto 12px;
+    display: grid; place-items: center; background: var(--accent-soft); color: var(--accent);
+  }
+  .v5-ava svg { width: 26px; height: 26px; }
+  .v5-guest h2 { margin: 0 0 14px; font-size: 17px; line-height: 1.35; color: var(--heading); }
+  .v5-facts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .v5-facts li { display: flex; gap: 10px; color: var(--text); }
+  .v5-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; margin-top: 8px; }
+  /*
+   * 🔴 ОТСТУП, НАЗВАННЫЙ ВЛАДЕЛЬЦЕМ: «плюс вот это, только с адекватными отступами».
+   * У формы V4 замер дал между последним фактом и кнопкой РОВНО 0 px — синяя кнопка упиралась
+   * в строку «удалим эти данные без следа». Здесь ряд дверей отделён 18 px и линией: список
+   * фактов — это чтение, кнопки — это действие, и слипаться им нельзя.
+   */
+  .v5-cta {
+    margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--edge-soft);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .v5-later { border: 0; background: transparent; color: var(--muted); font: inherit; text-decoration: underline; cursor: pointer; padding: 6px; }
+
+  /* ── 3. ХЕЛП-ВИДЖЕТ — со скрытием крестиком (правило на ВСЕ страницы) ──────── */
+  .v5-help {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--panel); border: 1px solid var(--edge-soft);
+  }
+  .v5-help p { margin: 0; flex: 1; color: var(--muted); font-size: 13.5px; }
+  .v5-help-x {
+    flex: none; width: 28px; height: 28px; margin: -4px -4px 0 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0; border: 0; border-radius: 8px; cursor: pointer;
+    background: transparent; color: var(--dim); font-size: 15px; line-height: 1;
+  }
+  @media (hover: hover) { .v5-help-x:hover { color: var(--text); background: var(--edge-soft); } }
+
+  /* ── Остальной профиль, чтобы сцена была целой ─────────────────────────────── */
+  .v5-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+  .v5-h3 { margin: 0 0 10px; font-size: 15px; color: var(--heading); }
+  .v5-mrow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--edge-soft); font-size: 13px; color: var(--muted); }
+  .v5-mrow:last-of-type { border-bottom: 0; }
+  .v5-mv { font-weight: 800; color: var(--heading); font-size: 17px; }
+  .v5-mv small { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .v5-mv.sm { font-size: 13px; font-weight: 600; }
+  .v5-hint { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+  .v5-prop { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--edge-soft); font-size: 13px; }
+  .v5-prop .k { color: var(--muted); }
+  .v5-prop .v { color: var(--text); }
+  .v5-chip { font-size: 11px; color: var(--muted); border: 1px solid var(--edge); border-radius: 999px; padding: 1px 9px; }
+  .v5-nav { display: flex; background: var(--panel); border-top: 1px solid var(--edge); }
+  .v5-nav span { flex: 1; display: grid; justify-items: center; gap: 3px; padding: 8px 2px 10px; color: var(--muted); font-size: 11px; }
+  .v5-nav span.on { color: var(--accent); }
+
+  @container v5 (max-width: 760px) {
+    .v5-cols { grid-template-columns: 1fr; }
+    .v5-body { padding: 12px; gap: 12px; }
+    .v5-card { padding: 14px; }
+    .v5-name { font-size: 21px; }
+    .v5-btn { width: 100%; text-align: center; }
+    .v5-deed-cta { flex-direction: column; align-items: stretch; }
+  }
+</style>
+
+<div class="v5-hold">
+  <div class="v5-screen">
+
+    <div class="v5-bar">
+      <span class="v5-brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="18" r="2.2"/><circle cx="19" cy="6" r="2.2"/><circle cx="5" cy="18" r="2.2"/><path d="M5 8.2v7.6M6.8 7.4l10.4 9.2M19 8.2v7.6"/></svg>
+        NDim Space
+      </span>
+      <span class="v5-pill">гость</span>
+      <span class="v5-bar-sp"></span>
+      <button type="button" class="v5-chipbtn">Ru</button>
+    </div>
+
+    <div class="v5-body">
+
+      <!-- ═══ 1. БЛОК «ВЫ ОЦЕНИЛИ» + текстовая «Скрыть» ═══ -->
+      <section class="v5-card v5-deed">
+        <p class="v5-kicker">
+          <span class="v5-tick" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.4 6.6 11.5 12.5 4.8" /></svg>
+          </span>
+          Вы оценили
+        </p>
+        <h2 class="v5-name">«Аллея кошмаров»<span class="v5-year"> (2021)</span></h2>
+        <div class="v5-score">
+          <span class="rate" role="img" aria-label="Ваша оценка: 8 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
+          <span class="v5-num">8 из 10</span>
+        </div>
+        <p class="v5-lead">В Вашем Пространстве появилось первое измерение.</p>
+        <p class="v5-next">Оцените ещё несколько вещей, которые Вы любите больше всего, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</p>
+        <div class="v5-deed-cta">
+          <button type="button" class="v5-btn">Оценить ещё</button>
+          <button type="button" class="v5-plain">Скрыть</button>
+        </div>
+      </section>
+
+      <!-- ═══ 2. ГОСТЕВАЯ КАРТОЧКА — отступы починены ═══ -->
+      <section class="v5-card v5-guest">
+        <span class="v5-ava" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg>
+        </span>
+        <h2>Сейчас Вы гость — Ваши результаты хранятся во временном гостевом профиле</h2>
+        <ul class="v5-facts">
+          <li><span class="v5-dot"></span>Всё, что Вы заполните, останется Вашим: при создании аккаунта сохранится как есть.</li>
+          <li><span class="v5-dot"></span>Если Вы не вернётесь в течение 7 дней, мы удалим эти данные без следа.</li>
+        </ul>
+        <div class="v5-cta">
+          <button type="button" class="v5-btn wide">Сохранить мои результаты</button>
+          <button type="button" class="v5-btn ghost wide">У меня уже есть аккаунт</button>
+          <button type="button" class="v5-later">позже</button>
+        </div>
+      </section>
+
+      <!-- ═══ 3. ХЕЛП-ВИДЖЕТ СО СКРЫТИЕМ ═══ -->
+      <section class="v5-card v5-help">
+        <p>Это Ваша домашняя страница. Здесь Вы видите статистику Вашего NDim ID и редактируете персональную информацию о Вас. Персональная информация необязательна для заполнения. Можете заполнять только те поля, которые Вы хотите показать другим людям в Пространстве NDim Space.</p>
+        <button type="button" class="v5-help-x" title="Скрыть подсказку" aria-label="Скрыть подсказку">✕</button>
+      </section>
+
+      <div class="v5-cols">
+        <section class="v5-card">
+          <h3 class="v5-h3">Мой NDim ID</h3>
+          <div class="v5-mrow"><span>Количество измерений</span><span class="v5-mv">1 <small>(очень мало 😭)</small></span></div>
+          <div class="v5-mrow"><span>Диаметр моего пространства</span><span class="v5-mv">10 звёзд</span></div>
+          <div class="v5-mrow"><span>Обновлен</span><span class="v5-mv sm">8 сентября 2026 г. в 14:32</span></div>
+          <p class="v5-hint">Измерений пока слишком мало, чтобы найти похожих на Вас людей. Откройте «Измерения» и поставьте звёзды тому, что про Вас, — чем больше измерений, тем точнее связи.</p>
+        </section>
+
+        <section class="v5-card">
+          <h3 class="v5-h3">Личная информация</h3>
+          <div class="v5-prop"><span class="k">Имя</span><span class="v">не заполнено</span><span class="v5-chip">Никому</span></div>
+          <div class="v5-prop"><span class="k">О себе</span><span class="v">не заполнено</span><span class="v5-chip">Никому</span></div>
+          <div class="v5-prop"><span class="k">Дата рождения</span><span class="v">не заполнено</span><span class="v5-chip">Никому</span></div>
+          <div class="v5-prop"><span class="k">Пол</span><span class="v">не указан</span><span class="v5-chip">Никому</span></div>
+          <div class="v5-prop"><span class="k">Фото</span><span class="v">нет фото</span><span class="v5-chip">Никому</span></div>
+          <p class="v5-hint">Новое свойство скрыто от всех, пока Вы сами его не откроете.</p>
+        </section>
+
+        <section class="v5-card">
+          <h3 class="v5-h3">Мои связи</h3>
+          <p class="v5-hint" style="margin-top:0">Связи ещё не рассчитывались. Сервер синхронизации посчитает их после Ваших первых оценок.</p>
+        </section>
+      </div>
+    </div>
+
+    <div class="v5-nav">
+      <span class="on">Профиль</span><span>Связи</span><span>Пространство</span><span>Измерения</span><span>Меню</span>
+    </div>
+  </div>
+
+  <div class="v5-cap" style="width:100%;max-width:1040px;color:var(--muted);font-size:12px">
+    <b>Проба второй и третьей оценки.</b> Ведущая строка считает измерения, кнопка «Скрыть» на месте.
+  </div>
+
+  <div class="v5-screen" style="max-width:1040px">
+    <div class="v5-body">
+      <section class="v5-card v5-deed">
+        <p class="v5-kicker">
+          <span class="v5-tick" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.4 6.6 11.5 12.5 4.8" /></svg>
+          </span>
+          Вы оценили
+        </p>
+        <h2 class="v5-name">«Три билборда на границе Эббинга, Миссури»<span class="v5-year"> (2017)</span></h2>
+        <div class="v5-score">
+          <span class="rate" role="img" aria-label="Ваша оценка: 9 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
+          <span class="v5-num">9 из 10</span>
+        </div>
+        <p class="v5-lead">Теперь в Вашем Пространстве 3 измерения.</p>
+        <p class="v5-next">Оцените ещё несколько вещей, которые Вы любите больше всего, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.</p>
+        <div class="v5-deed-cta">
+          <button type="button" class="v5-btn">Оценить ещё</button>
+          <button type="button" class="v5-plain">Скрыть</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+  <p class="after"><b>Собрано Вами, 2026-09-09.</b> Три Ваших указания подряд: блок «Вы оценили» формой V2 «+ без обводки простая текстовая кнопка [Скрыть]»; гостевая карточка «только с адекватными отступами» — у формы, которую Вы прислали кадром, замер дал между последним фактом и синей кнопкой РОВНО 0 px, здесь их разделяют 18 px и линия; текст «Это Ваша домашняя страница…» уехал ниже двух первых блоков в отдельный хелп-виджет с крестиком справа. Крестик не выдуман: это форма из продукта (<code>dims</code> → <code>.clear</code>), 28×28, зона нажатия не меньше 24×24 по WCAG 2.2 SC 2.5.8 AA, без рамки, серый до наведения. Ваше правило «все хелп виджеты на всех страницах можно крестиком скрывать» шире этого экрана и записано отдельно — оно превращает подсказку в компонент, а не в украшение одной страницы.</p>
 </section>
 </div>
 
