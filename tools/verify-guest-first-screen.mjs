@@ -31,6 +31,8 @@ import { fileURLToPath } from 'node:url';
 
 import { portsFor, slotOf } from './lib/stand-slot.mjs';
 import { watchHttpFailures } from './lib/http-failures.mjs';
+import { markProbeContext } from './lib/probe-mark.mjs';
+import { grantAppCheckDebug } from './lib/app-check-debug.mjs';
 
 const argv = process.argv.slice(2);
 const opt = (name, fallback) => {
@@ -53,10 +55,26 @@ const OUT = 'test-results/guest-first-screen';
 const TRACE_KEY = 'ndim-rated-just-now';
 mkdirSync(OUT, { recursive: true });
 
-if (!/localhost|127\.0\.0\.1/.test(BASE)) {
-  console.error('Только стенд: набор заводит гостей и пишет оценки — в бою это портило бы данные людей.');
-  process.exit(1);
+/**
+ * ⛔ ГРАНИЦА КОНТУРА. Набор ПИШЕТ: за прогон он заводит гостей и ставит оценки. Поэтому адреса
+ * перечислены поимённо, а бой открывается только явным флагом — опечатка не имеет права увести
+ * прогон в чужой продукт или засеять боевую базу.
+ *
+ * 🔴 НА ЖИВОМ КОНТУРЕ МЕТКА ПРИБОРА ОБЯЗАТЕЛЬНА. Прибор, неотличимый от человека, — это ровно
+ * болезнь `bugs/202`, за которую уже заплачено 77 ложными гостями в ряду воронки. На стенде
+ * метка не ставится: там одна из проверок смотрит на саму воронку.
+ */
+const KNOWN_LIVE = ['https://ndim-stage.web.app', 'https://ndimspace.app'];
+const LIVE = !/localhost|127\.0\.0\.1/.test(BASE);
+if (LIVE && !KNOWN_LIVE.includes(BASE)) {
+  console.error(`Незнакомый контур: ${BASE}. Разрешены: стенд · ${KNOWN_LIVE.join(' · ')}`);
+  process.exit(2);
 }
+if (BASE === 'https://ndimspace.app' && !argv.includes('--prod')) {
+  console.error('Бой открывается только флагом --prod: набор заводит гостей и пишет оценки.');
+  process.exit(2);
+}
+const CONTOUR = LIVE ? (BASE.includes('stage') ? 'stage' : 'prod') : 'stand';
 
 const cases = [];
 let pass = 0;
@@ -72,8 +90,30 @@ const section = (t) => console.log(`\n${t}`);
 const ears = [];
 const listen = (page, tag) => ears.push(watchHttpFailures(page, { label: `[${tag}] ` }));
 
-/** Документы коллекции эмулятора: правила читателю их не отдают, идём REST-ом от владельца. */
+/**
+ * Живая база контура — служебным ключом. Ленивая инициализация: на стенде ключ не нужен вовсе,
+ * и требовать его там значило бы запереть стендовый прогон за секретом.
+ */
+let liveDb = null;
+async function liveFirestore() {
+  if (liveDb !== null) return liveDb;
+  const { cert, initializeApp } = await import('firebase-admin/app');
+  const { getFirestore } = await import('firebase-admin/firestore');
+  const { serviceAccount } = await import('./lib/credentials.mjs');
+  const { CONTOURS } = await import('./lib/contours.mjs');
+  const c = CONTOURS[CONTOUR];
+  initializeApp({ credential: cert(serviceAccount(CONTOUR)), projectId: c.project });
+  liveDb = getFirestore(c.database);
+  return liveDb;
+}
+
+/** Документы коллекции: на живом контуре — служебным ключом, на стенде — REST эмулятора. */
 async function docs(path) {
+  if (LIVE) {
+    const db = await liveFirestore();
+    const snap = await db.collection(path).get();
+    return snap.docs.map((d) => ({ name: `${path}/${d.id}` }));
+  }
   const res = await fetch(
     `${FIRESTORE}/v1/projects/${PROJECT}/databases/(default)/documents/${path}?pageSize=300`,
     { headers: { Authorization: 'Bearer owner' } },
@@ -121,8 +161,26 @@ async function awaitScreen(page) {
  * ⚠️ Тема ставится ключом ДО загрузки (`ndim-theme`): системная тема продукт не переключает,
  * и без этого «обе темы» проверялись бы формально — урок `verify-icons`.
  */
+/**
+ * Свежий контекст с меткой прибора на живом контуре. Заведён потому, что два кейса создавали
+ * контекст ВРУЧНУЮ и на контуре пошли бы неотличимыми от человека — та же болезнь bugs/202,
+ * от которой помощник прохода двери уже защищён.
+ */
+async function freshContext(browser, width) {
+  const context = await browser.newContext({ viewport: { width, height: 900 } });
+  if (LIVE) {
+    await markProbeContext(context);
+    await grantAppCheckDebug(context, { required: CONTOUR === 'prod', quiet: true });
+  }
+  return context;
+}
+
 async function doorPass(browser, { width, theme, lang, tag }) {
   const context = await browser.newContext({ viewport: { width, height: 900 } });
+  if (LIVE) {
+    await markProbeContext(context);
+    await grantAppCheckDebug(context, { required: CONTOUR === 'prod', quiet: true });
+  }
   await context.addInitScript(
     ([t, l]) => {
       try {
@@ -166,8 +224,9 @@ const run = async () => {
   const card = CARD;
   console.log(`Набор «первый экран гостя» · кейсы ГЭ-01…ГЭ-05 (qa/suites/guest-first-screen.md)`);
   console.log(`Карточка: /ru/dimension/${card.slug} · измерение ${card.dimId} · «${card.title}»`);
-  console.log(`Стенд: ${BASE} · Firestore ${FIRESTORE}`);
+  console.log(`Контур: ${CONTOUR} · ${BASE}${LIVE ? '' : ` · Firestore ${FIRESTORE}`}`);
 
+  const startedAt = Date.now();
   const pointsBefore = (await docs('points')).map((d) => d.name);
   console.log(`слепок «до»: точек ${pointsBefore.length}`);
 
@@ -177,7 +236,7 @@ const run = async () => {
   section('ГЭ-01 · объект виден на ПЕРВОМ экране (CP, позитив)');
   let guestUid = '';
   {
-    const context = await browser.newContext({ viewport: { width: 390, height: 900 } });
+    const context = await freshContext(browser, 390);
     const page = await context.newPage();
     listen(page, 'ГЭ-01');
     await page.goto(`${BASE}/ru/dimension/${card.slug}?as=none`, { waitUntil: 'domcontentloaded' });
@@ -185,7 +244,14 @@ const run = async () => {
     await page.waitForTimeout(1500);
     await page.locator('[data-door-enter]').click();
     await page.waitForURL(/\/profile/, { timeout: 30000 }).catch(() => {});
-    await page.waitForTimeout(5000);
+    /*
+     * Готовность экрана, а не фиксированная пауза. Прогон 2026-09-09 23:5x показал цену:
+     * пока рядом шёл выкат на стейдж, стенд отвечал медленнее, пяти секунд не хватило — и
+     * набор объявил ОТСУТСТВИЕ блока, то есть дефект продукта, которого не было. Тот же класс,
+     * что вылечен в ГЭ-04: суждение выносится после того, как экран себя предъявил.
+     */
+    await awaitScreen(page);
+    await page.waitForTimeout(3000);
 
     const block = await ratedBlock(page);
     check('ГЭ-01а', block.shown === true, 'блок «Вы оценили» показан');
@@ -280,7 +346,7 @@ const run = async () => {
   /* ═══ ГЭ-03 · NDIM-AUTH-018 — гость без двери блока не видит ═══ */
   section('ГЭ-03 · гость, пришедший НЕ дверью карточки, блока не видит (CP, негатив)');
   {
-    const context = await browser.newContext({ viewport: { width: 390, height: 900 } });
+    const context = await freshContext(browser, 390);
     const page = await context.newPage();
     listen(page, 'ГЭ-03');
     await page.goto(`${BASE}/profile?guest=1&as=none`, { waitUntil: 'domcontentloaded' });
@@ -344,14 +410,73 @@ const run = async () => {
   const born = pointsAfter.filter((n) => !pointsBefore.includes(n));
   for (const name of born) {
     const uid = name.split('/').pop();
-    for (const dim of await docs(`points/${uid}/dims`)) {
-      await fetch(`${FIRESTORE}/v1/${dim.name}`, { method: 'DELETE', headers: { Authorization: 'Bearer owner' } });
+    if (LIVE) {
+      const db = await liveFirestore();
+      const dims = await db.collection(`points/${uid}/dims`).get();
+      for (const d of dims.docs) await d.ref.delete();
+      await db.doc(`points/${uid}`).delete();
+      // Учётка входа удаляется тем же ключом: гость, оставленный жить, семь дней считается
+      // точкой Пространства и попадает в чужие связи.
+      const { getAuth } = await import('firebase-admin/auth');
+      await getAuth().deleteUser(uid).catch(() => {});
+    } else {
+      for (const dim of await docs(`points/${uid}/dims`)) {
+        await fetch(`${FIRESTORE}/v1/${dim.name}`, { method: 'DELETE', headers: { Authorization: 'Bearer owner' } });
+      }
+      await fetch(`${FIRESTORE}/v1/${name}`, { method: 'DELETE', headers: { Authorization: 'Bearer owner' } });
     }
-    await fetch(`${FIRESTORE}/v1/${name}`, { method: 'DELETE', headers: { Authorization: 'Bearer owner' } });
   }
+  /*
+   * 🔴 ВТОРАЯ ПОЛОВИНА УБОРКИ — УЧЁТКИ ВХОДА, А НЕ ТОЛЬКО ТОЧКИ БАЗЫ.
+   *
+   * Найдено независимой сверкой 2026-09-10: набор доложил «осталось 0», а на стейдже висели три
+   * анонимные учётки этого же прогона. Причина — уборка шла по коллекции точек, а гость,
+   * у которого проход двери оборвался до записи, точки не заводит вовсе и в список «рождённых»
+   * не попадает. Живёт такая учётка семь дней и всё это время считается точкой Пространства.
+   *
+   * Поэтому на живом контуре подметаем ещё и по ВРЕМЕНИ: анонимные учётки, заведённые после
+   * начала прогона. Признак «анонимный провайдер И возраст меньше длительности прогона» узкий
+   * по построению — чужого человека он задеть не может.
+   */
+  let authSwept = 0;
+  if (LIVE) {
+    const { getAuth } = await import('firebase-admin/auth');
+    await liveFirestore();
+    const auth = getAuth();
+    let token;
+    const orphans = [];
+    do {
+      const page = await auth.listUsers(1000, token);
+      for (const u of page.users) {
+        const anonymous = (u.providerData ?? []).length === 0;
+        const born = new Date(u.metadata.creationTime).getTime();
+        if (anonymous && born >= startedAt - 60_000) orphans.push(u.uid);
+      }
+      token = page.pageToken;
+    } while (token);
+    for (const uid of orphans) {
+      await auth.deleteUser(uid).catch(() => {});
+      authSwept += 1;
+    }
+  }
+
   const pointsFinal = (await docs('points')).map((d) => d.name);
   const leftovers = pointsFinal.filter((n) => !pointsBefore.includes(n));
   check('УБ-01', leftovers.length === 0, 'след прогона убран, база вернулась в исходное', `заведено ${born.length}, осталось ${leftovers.length}`);
+  if (LIVE) {
+    const { getAuth } = await import('firebase-admin/auth');
+    let token;
+    let stillThere = 0;
+    do {
+      const page = await getAuth().listUsers(1000, token);
+      for (const u of page.users) {
+        const anonymous = (u.providerData ?? []).length === 0;
+        if (anonymous && new Date(u.metadata.creationTime).getTime() >= startedAt - 60_000) stillThere += 1;
+      }
+      token = page.pageToken;
+    } while (token);
+    check('УБ-02', stillThere === 0, 'учётки входа, заведённые прогоном, удалены', `подметено ${authSwept}, осталось ${stillThere}`);
+  }
 
   const ownHost = new URL(BASE).host;
   const failures = ears.flatMap((n) => n.entries()).filter((e) => e.address.startsWith(ownHost));
