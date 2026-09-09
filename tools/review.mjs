@@ -932,7 +932,26 @@ function openBrowser(url) {
 	];
 	const exe = candidates.find((p) => existsSync(p));
 	if (exe) {
-		spawn(exe, [`--app=${url}`, '--window-size=1100,900'], { detached: true, stdio: 'ignore' }).unref();
+		/*
+		 * 🔴 СВОЙ ПРОФИЛЬ ОБЯЗАТЕЛЕН, И ЭТО НЕ УКРАШЕНИЕ (найдено 2026-09-09).
+		 *
+		 * Без `--user-data-dir` уже запущенный браузер перехватывает команду и открывает её
+		 * СВОИМ окном — режим `--app` при этом теряется, а бывает, что не появляется ничего.
+		 * Процесс завершается кодом 0, агент докладывает «страница открыта», и владелец видит
+		 * пустой экран. Его слова в тот вечер: «*в каком нахуй браузере?*» и «*ТЫ ВРЁШЬ! ТЫ
+		 * ЛЖЕЦ!*» — цена ровно этой строки.
+		 *
+		 * Отдельный профиль делает окно НАШИМ: оно поднимается всегда, живёт своей сессией и
+		 * закрывается по `window.close()` (ради чего режим `--app` и выбран). Тот же приём уже
+		 * применён к макетам (`%TEMP%
+dim-mockups-edge`) — здесь он просто доведён до конца.
+		 */
+		const profile = join(tmpdir(), 'ndim-review-edge');
+		spawn(
+			exe,
+			[`--app=${url}`, `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check', '--window-size=1100,900'],
+			{ detached: true, stdio: 'ignore' },
+		).unref();
 		return 'окно-приложение';
 	}
 	spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' });

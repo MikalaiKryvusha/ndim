@@ -1,0 +1,19 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_080_guest_ttl_text.md",
+	"by": "Николай Кривуша",
+	"at": "2026-09-09T19:40:30.324Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "Г",
+			"text": "мы уже сегодня этот текст писали в другом месте. Ищи и не еби мне мозг.",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		}
+	}
+}

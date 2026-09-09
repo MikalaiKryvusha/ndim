@@ -23,7 +23,7 @@
  *         Зовётся руками и из чек-листа набора; в бой не пускается по построению (localhost).
  * ВЫХОД:  кадры и вердикт в test-results/guest-first-screen/.
  */
-// @covers NDIM-AUTH-016, NDIM-AUTH-017, NDIM-AUTH-018, NDIM-AUTH-019, NDIM-AUTH-020, NDIM-AUTH-021
+// @covers NDIM-AUTH-016, NDIM-AUTH-017, NDIM-AUTH-018, NDIM-AUTH-019, NDIM-AUTH-020, NDIM-AUTH-021, NDIM-AUTH-022, NDIM-AUTH-023
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { basename, dirname } from 'node:path';
@@ -113,6 +113,40 @@ async function awaitScreen(page) {
   await page.waitForSelector('.card', { state: 'visible', timeout: 30000 });
 }
 
+/**
+ * Один проход двери: свежий контекст, заданные тема, язык и ширина → человек внутри гостем.
+ *
+ * Вынесен в помощник ради матрицы ГЭ-07/ГЭ-08: копия этих двадцати строк на каждую клетку
+ * разъехалась бы с оригиналом на первой же правке продукта.
+ * ⚠️ Тема ставится ключом ДО загрузки (`ndim-theme`): системная тема продукт не переключает,
+ * и без этого «обе темы» проверялись бы формально — урок `verify-icons`.
+ */
+async function doorPass(browser, { width, theme, lang, tag }) {
+  const context = await browser.newContext({ viewport: { width, height: 900 } });
+  await context.addInitScript(
+    ([t, l]) => {
+      try {
+        localStorage.setItem('ndim-theme', t);
+        localStorage.setItem('ndim-lang', l);
+      } catch {
+        /* хранилище недоступно — прогон всё равно осмыслен */
+      }
+    },
+    [theme, lang],
+  );
+  const page = await context.newPage();
+  listen(page, tag);
+  const prefix = lang === 'en' ? '/en' : '/ru';
+  await page.goto(`${BASE}${prefix}/dimension/${CARD.slug}?as=none`, { waitUntil: 'domcontentloaded' });
+  await page.locator('[data-star]').nth(8).click();
+  await page.waitForTimeout(1500);
+  await page.locator('[data-door-enter]').click();
+  await page.waitForURL(/\/profile/, { timeout: 30000 }).catch(() => {});
+  await awaitScreen(page);
+  await page.waitForTimeout(2500);
+  return { context, page };
+}
+
 /** Виден ли блок «Вы оценили» и что в нём написано. */
 async function ratedBlock(page) {
   const name = page.locator('.rated-name');
@@ -126,8 +160,10 @@ async function ratedBlock(page) {
   };
 }
 
+const CARD = pickCard();
+
 const run = async () => {
-  const card = pickCard();
+  const card = CARD;
   console.log(`Набор «первый экран гостя» · кейсы ГЭ-01…ГЭ-05 (qa/suites/guest-first-screen.md)`);
   console.log(`Карточка: /ru/dimension/${card.slug} · измерение ${card.dimId} · «${card.title}»`);
   console.log(`Стенд: ${BASE} · Firestore ${FIRESTORE}`);
@@ -255,6 +291,48 @@ const run = async () => {
     const guestPill = await page.locator('text=гость').count();
     check('ГЭ-03б', guestPill > 0, 'человек при этом ВНУТРИ гостем — экран рабочий, а не пустой', `меток «гость»: ${guestPill}`);
     await page.screenshot({ path: `${OUT}/ГЭ-03-гость-без-двери-390.png` }).catch(() => {});
+    await context.close();
+  }
+
+  /* ═══ ГЭ-07 · NDIM-AUTH-022 — обе темы на двух ширинах ═══ */
+  section('ГЭ-07 · блок читается в обеих темах и на двух ширинах (Ext, позитив)');
+  for (const theme of ['light', 'dark']) {
+    for (const width of [390, 1440]) {
+      const { context, page } = await doorPass(browser, { width, theme, lang: 'ru', tag: `ГЭ-07 ${theme} ${width}` });
+      const applied = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+      const block = await ratedBlock(page);
+      const geom = await page.locator('.rated-name').evaluate((el) => ({
+        clipped: el.scrollWidth > el.clientWidth + 1,
+        over: el.scrollWidth - el.clientWidth,
+      })).catch(() => null);
+      check(
+        `ГЭ-07 ${theme}/${width}`,
+        applied === theme && block.shown === true && geom !== null && !geom.clipped,
+        'тема применена, блок показан, название не обрезано',
+        `data-theme=${applied} · блок ${block.shown ? 'есть' : 'нет'} · переполнение ${geom ? geom.over : '—'}px`,
+      );
+      await page.locator('.rated-card').screenshot({ path: `${OUT}/ГЭ-07-${theme}-${width}.png` }).catch(() => {});
+      await context.close();
+    }
+  }
+
+  /* ═══ ГЭ-08 · NDIM-AUTH-023 — английская половина ═══ */
+  section('ГЭ-08 · английская половина говорит то же и не несёт отменённого правила (Ext, позитив)');
+  {
+    const { context, page } = await doorPass(browser, { width: 390, theme: 'light', lang: 'en', tag: 'ГЭ-08 en' });
+    const block = await ratedBlock(page);
+    check('ГЭ-08а', block.shown === true, 'блок показан на английской половине', `«${block.title ?? '—'}»`);
+    const body = (await page.locator('body').innerText().catch(() => '')) || '';
+    check('ГЭ-08б', !/nobody sees you|you are invisible/i.test(body), 'отменённого правила нет и в английской половине');
+    check('ГЭ-08в', !/(?<![\p{L}])forever(?![\p{L}])/iu.test(body), 'слова «forever» на экране нет');
+    /*
+     * ⛔ ЗДЕСЬ СТОЯЛА ПРОВЕРКА-ПУСТЫШКА и снята в тот же час: её условие оканчивалось на
+     * `|| true`, то есть покраснеть она не могла НИ ПРИ КАКОМ состоянии продукта. Такая
+     * строка добавляет единицу к числу «пройдено» и ничего не стережёт — ровно то, за что
+     * этот набор и заведён. Язык НАЗВАНИЯ объекта задаёт каталог, а не интерфейс, поэтому
+     * проверять его здесь нечем и не нужно; интерфейс судят ГЭ-08б и ГЭ-08в.
+     */
+    await page.locator('.rated-card').screenshot({ path: `${OUT}/ГЭ-08-en-390.png` }).catch(() => {});
     await context.close();
   }
 
