@@ -1545,13 +1545,17 @@
     width: 22px; height: 22px; flex: none; border-radius: 50%;
     display: grid; place-items: center; background: var(--ok-soft); color: var(--ok);
   }
-  .v5-name { margin: 0 0 4px; font-size: 25px; line-height: 1.2; font-weight: 800; color: var(--heading); overflow-wrap: anywhere; }
-  /* МЕТА-СТРОКА — ФОРМА НАШЕЙ КАРТОЧКИ КАТАЛОГА, снятая с живого продукта
-     (`test-results/design-system/catalog-card.png`): «2006 · Гор Вербински» — тихо, средней
-     точкой, БЕЗ ПОДПИСЕЙ. Вид измерения встаёт первым в этот же ряд.
-     ⛔ Прежняя редакция писала здесь «Вид: Фильм» — это строка из базы, а не элемент дизайна.
-     Слово вида берётся из `dim-kind.ts` → `kindLabel`. */
-  .v5-meta { margin: 0 0 12px; font-size: 14px; color: var(--faint); }
+  .v5-name { margin: 0 0 12px; font-size: 25px; line-height: 1.2; font-weight: 800; color: var(--heading); overflow-wrap: anywhere; }
+  /* ТИП ИЗМЕРЕНИЯ — ОТДЕЛЬНОЙ ЖИРНОЙ СТРОКОЙ НАД НАЗВАНИЕМ (слово владельца 2026-09-09:
+     «Тип, например "Фильм" — без кавычек пишется вверху отдельной строкой жирно, как и
+     название»). Год вернулся В СКОБКАХ справа от названия — «как и было раньше».
+     Слово типа берётся из продукта (`dim-kind.ts` → `kindLabel`), не выдумывается.
+     ⛔ Здесь побывали две неверные формы: «Вид: Фильм» — строка из базы вместо дизайна;
+     мета-ряд «Фильм · 2021 · режиссёр» — форма карточки КАТАЛОГА, а не этой карточки. */
+  .v5-kindline {
+    margin: 0 0 2px; font-size: 16px; font-weight: 800; line-height: 1.25;
+    color: var(--heading);
+  }
   .v5-year { color: var(--faint); font-weight: 700; }
   .v5-score { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
   .v5-score .rate { font-size: 1.25rem; }
@@ -1656,8 +1660,8 @@
           </span>
           Вы оценили
         </p>
-        <h2 class="v5-name">«Аллея кошмаров»</h2>
-        <p class="v5-meta">Фильм · 2021 · Гильермо дель Торо</p>
+        <p class="v5-kindline">Фильм</p>
+        <h2 class="v5-name">«Аллея кошмаров»<span class="v5-year"> (2021)</span></h2>
         <div class="v5-score">
           <span class="rate" role="img" aria-label="Ваша оценка: 8 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
           <span class="v5-num">8 из 10</span>
@@ -1752,8 +1756,8 @@
           </span>
           Вы оценили
         </p>
-        <h2 class="v5-name">«Три билборда на границе Эббинга, Миссури»</h2>
-        <p class="v5-meta">Фильм · 2017 · Мартин Макдона</p>
+        <p class="v5-kindline">Фильм</p>
+        <h2 class="v5-name">«Три билборда на границе Эббинга, Миссури»<span class="v5-year"> (2017)</span></h2>
         <div class="v5-score">
           <span class="rate" role="img" aria-label="Ваша оценка: 9 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
           <span class="v5-num">9 из 10</span>
