@@ -29,7 +29,7 @@
   import SideRail from '$lib/ui/SideRail.svelte';
   import { technicalDetail } from '$lib/ui/errors';
   // `dateOnly` ушла вместе со строкой «В Пространстве с …» (см. `accountLine`).
-  import { dateTime, num as decimal, localizedText, starsUnit, type Lang } from '$lib/ui/format';
+  import { dateTime, dimsUnit, num as decimal, localizedText, starsUnit, type Lang } from '$lib/ui/format';
   import { lang as currentLang } from '$lib/ui/lang.svelte';
   import { preloadAvatars } from '$lib/data/avatar';
   // Жест «потянуть вниз» (интервью №006, В1=А — все четыре главных экрана).
@@ -38,7 +38,9 @@
   import { loadRelationsSummary, type RelationsSummary } from '$lib/data/relations';
   import { dimsScaleStep, needsDimsInstruction, relationBands } from '$lib/model/ndimid';
   import { roundedSpaceDiameter } from '$lib/similarity/similarity';
+  import { starRow } from '$lib/content/dims-rating';
   import { RELATIONS_TOP_LIMIT } from '$lib/model/schema';
+  import { readRatedTrace, clearRatedTrace, type RatedTrace } from '$lib/door/rated-trace';
   import { MOTION } from '$lib/ui/motion';
   // Память вида экрана: возврат туда, где человек его оставил (plans/08, В11=А).
   import { useViewMemory } from '$lib/ui/view-memory';
@@ -216,6 +218,41 @@
   const GUEST_CARD_KEY = 'ndim-guest-card';
   let guest = $state(false);
   let guestCard = $state(false);
+  /*
+   * СЛЕД ДВЕРИ: «человек только что оценил вот это» (`plans/82` Ш3).
+   * Читается ОДИН раз при входе на экран и тут же гасится — блок про «только что», и второй
+   * показ той же вкладке был бы неправдой. Значение живёт в памяти до ухода со страницы.
+   */
+  let ratedTrace = $state<RatedTrace | null>(null);
+  /*
+   * Показываем блок, только если оценка ДЕЙСТВИТЕЛЬНО легла в базу: дверь молчит при неудачной
+   * записи и уходит в профиль по восьмисекундному потолку, то есть след может быть, а оценки
+   * нет (находка 5 разведки Ш0). Без сверки продукт утверждал бы человеку его же оценку,
+   * которой не существует.
+   */
+  const ratedJustNow = $derived(
+    ratedTrace && data && data.ratings.has(ratedTrace.id) ? ratedTrace : null,
+  );
+
+  /**
+   * Ведущая строка блока. При ПЕРВОМ измерении — «появилось первое измерение»; дальше — счёт
+   * с морфологией проекта (`dimsUnit`, одна на весь продукт, своей здесь быть не должно).
+   */
+  /**
+   * Название начинается с открывающей кавычки?
+   *
+   * 🔴 Найдено ЖИВЫМ ПРОГОНОМ, а не макетом: в макете все названия были в кавычках, и сдвиг
+   * строки вида на их ширину казался безусловным. На стенде первый же объект оказался без
+   * кавычек («Кошки»), и вертикаль разъехалась в другую сторону — ровно тот дефект, который
+   * владелец поймал кадром 2026-09-09, только зеркальный. Каталог названий в кавычки НЕ
+   * оборачивает: `h1` карточки объекта — это `data.title` как есть.
+   */
+  const ratedQuoted = $derived(/^[«"„“]/u.test(ratedJustNow?.title ?? ''));
+
+  const ratedLead = $derived.by(() => {
+    if (ratedCount <= 1) return t.rated.first[lang];
+    return t.rated.more[lang].replace('{n}', `${ratedCount} ${dimsUnit(ratedCount, lang)}`);
+  });
 
   // Аккаунт без пароля (plans/03 этап 3, макет V4 «Врезка»): гостевая карточка
   // разворачивается в вход прямо на месте, ничего не перекрывая.
@@ -350,6 +387,9 @@
   const accountLine = $derived(acctEmail);
 
   onMount(async () => {
+    // Первым делом — след двери: читаем и СРАЗУ гасим, до любых сетевых ожиданий.
+    ratedTrace = readRatedTrace();
+    if (ratedTrace) clearRatedTrace();
     try {
       let uid: string | null;
       // Человек вернулся по ссылке из письма. Если он был гостем — почта привязывается
@@ -885,6 +925,30 @@
     },
     myNdimId: { ru: 'Мой NDim ID', en: 'My NDim ID' },
     toDims: { ru: 'К измерениям →', en: 'To dimensions →' },
+    /*
+     * БЛОК «ВЫ ОЦЕНИЛИ» — первый экран гостя после двери (`plans/82`, макет V5).
+     * 🔴 Тексты УТВЕРЖДЕНЫ владельцем 2026-09-09 вместе с макетом; менять их — только его словом.
+     * Ведущая строка называет NDim ID, а НЕ Пространство: измерения ложатся в профиль человека,
+     * общее Пространство тут ни при чём — его прямая правка того же дня.
+     */
+    rated: {
+      kicker: { ru: 'Вы оценили', en: 'You rated' },
+      of: { ru: 'из', en: 'of' },
+      first: {
+        ru: 'В Вашем уникальном многомерном профиле NDim ID появилось первое измерение.',
+        en: 'Your unique multidimensional NDim ID profile now has its first dimension.',
+      },
+      more: {
+        ru: 'Теперь в Вашем уникальном многомерном профиле NDim ID {n}.',
+        en: 'Your unique multidimensional NDim ID profile now has {n}.',
+      },
+      next: {
+        ru: 'Оцените ещё несколько вещей, которые Вы любите больше всего, и Пространство NDim Space найдёт Вам людей, которые думают так же, как и Вы.',
+        en: 'Rate a few more things you love most, and NDim Space will find you people who think the way you do.',
+      },
+      go: { ru: 'Оценить ещё', en: 'Rate more' },
+      later: { ru: 'позже', en: 'later' },
+    },
 
     // Вводная подсказка «Дома» 1.x (index.html:818) — адаптирована: убрано обещание
     // «управлять учётной записью» (экран появится с bugs/45), остальное дословно.
@@ -1356,6 +1420,52 @@
         {#if standError}<p class="hint mono">{standError}</p>{/if}
       </div>
     {:else if data}
+      <!--
+        ★ БЛОК «ВЫ ОЦЕНИЛИ» — УТВЕРЖДЁННЫЙ МАКЕТ V5 (`plans/82` Ш3, интервью №079 В1 = Д).
+        Стоит ПЕРВЫМ, выше карточки гостя: человек только что сделал жест, и подтверждение
+        обязано встретить его раньше разговора о временном хранении — порядок владельца.
+
+        Условие показа — `ratedJustNow`: след двери ЕСТЬ и оценка ДЕЙСТВИТЕЛЬНО в базе. У
+        вошедшего человека и у гостя без свежего жеста следа нет, значит блока нет тоже: он про
+        «только что оценил», а не украшение экрана (критерий 4 плана).
+      -->
+      {#if ratedJustNow}
+        {@const row = starRow(ratedJustNow.value)}
+        <div class="card rated-card" transition:slide={{ duration: MOTION.base }}>
+          <p class="rated-kicker">
+            <span class="rated-tick" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.4 6.6 11.5 12.5 4.8" /></svg>
+            </span>
+            {t.rated.kicker[lang]}
+          </p>
+          <!-- Вид объекта — отдельной строкой НАД названием, тем же кеглем и цветом, сдвинут
+               вправо на ширину кавычки: «Ф» встаёт под первую букву названия. Прямое указание
+               владельца 2026-09-09; кавычка названия остаётся ВНУТРИ карточки. -->
+          {#if ratedJustNow.kind}<p class="rated-kind" class:hung={ratedQuoted}>{ratedJustNow.kind}</p>{/if}
+          <h2 class="rated-name">
+            <!-- Неразрывный пробел намеренно: обычный Svelte срезает на границе элемента
+                 (поймано живым прогоном — год слипался с названием), а неразрывный ещё и не даёт
+                 году оторваться от последнего слова при переносе длинного названия. -->
+            {ratedJustNow.title}{#if ratedJustNow.year}<span class="rated-year">&nbsp;({ratedJustNow.year})</span>{/if}
+          </h2>
+          <p class="rated-score">
+            <!-- Ряд звёзд считает `starRow` — ОДНА функция на весь проект (правило владельца
+                 №044 В3): золотых столько, сколько показывает оценка, пустых позиций нет вовсе,
+                 ниже единицы — одна тяжёлая серая. -->
+            <span class="rated-stars" aria-hidden="true">
+              {#each Array(row.gold) as _, i (i)}<i>★</i>{/each}
+              {#if row.grey}<i class="low">★</i>{/if}
+            </span>
+            <span class="rated-num">{ratedJustNow.value} {t.rated.of[lang]} 10</span>
+          </p>
+          <p class="rated-lead">{ratedLead}</p>
+          <p class="rated-next">{t.rated.next[lang]}</p>
+          <div class="rated-cta">
+            <a class="btn primary" href="/dims">{t.rated.go[lang]}</a>
+            <button type="button" class="rated-later" onclick={() => (ratedTrace = null)}>{t.rated.later[lang]}</button>
+          </div>
+        </div>
+      {/if}
       {#if guestCard && (guest || signupStep === 'done')}
         <!-- Карточка гостя (утверждённый V1 «Тихий бейдж») разворачивается в вход
              прямо на месте — утверждённый макет V4 «Врезка». Ничего не перекрывается
@@ -1914,6 +2024,69 @@
   /* ── Гостевой режим (утверждённый макет V1 «Тихий бейдж», plans/03 этап 2) ──
      Метафора: гость = пунктирный контур (не сохранён, невидим), аккаунт = сплошной.
      Аватар — силуэт человека, как дефолтные аватарки соцсетей (правка владельца). */
+  /* ─────────────────────────────────────────────────────────────────────────────────────────
+   * БЛОК «ВЫ ОЦЕНИЛИ» — утверждённый макет V5 (`design/guest-first-screen-mockups.html`).
+   * Числа сняты С НЕГО и с живой карточки объекта в бою, а не подобраны на глаз.
+   * ───────────────────────────────────────────────────────────────────────────────────────── */
+  .rated-card { border-style: dashed; border-color: var(--accent); }
+  .rated-kicker {
+    display: flex; align-items: center; gap: 8px; margin: 0 0 10px;
+    font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .rated-tick {
+    width: 22px; height: 22px; flex: none; border-radius: 50%;
+    display: grid; place-items: center; background: var(--ok-soft); color: var(--ok);
+  }
+  .rated-tick svg { width: 12px; height: 12px; }
+  /*
+   * 🔑 ТИП И НАЗВАНИЕ — ОДИН КЕГЛЬ, ОДИН ЦВЕТ, ОДНА ВЕРТИКАЛЬ (прямое указание владельца
+   * 2026-09-09: «все шрифты одинаковые по размеру, одинакового чёрного цвета. Название двигать
+   * вправо от границы карточки и Фильм двигать так, чтобы по первой букве названия вертикально
+   * совпадало»).
+   * ⛔ Кавычку названия НЕ подвешивать в поле: она вылезает за рамку карточки, и он поймал это
+   * первым же кадром. Вправо двигается ТИП — на ширину кавычки, 0,55em в этом кегле.
+   * Кегль и вес — с живой карточки объекта в бою: 24px / 700.
+   */
+  .rated-kind {
+    margin: 0 0 2px;
+    font-size: 24px; font-weight: 700; line-height: 1.2; color: var(--heading);
+  }
+  /* Сдвиг РОВНО НА ШИРИНУ КАВЫЧКИ и только когда название с неё начинается: иначе первая
+     буква вида уезжает вправо от первой буквы названия. Найдено живым прогоном на стенде. */
+  .rated-kind.hung { padding-left: 0.55em; }
+  .rated-name {
+    margin: 0 0 12px; font-size: 24px; font-weight: 700; line-height: 1.2;
+    color: var(--heading);
+    /* Закон «названия не обрезаются» (слово владельца 2026-08-14): длинное имя переносится
+       и растит карточку по высоте, а не режется многоточием. */
+    overflow-wrap: anywhere;
+  }
+  .rated-year { color: var(--faint); }
+  .rated-score { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 12px; }
+  /* Ряд звёзд — форма продукта: те же ★, что на карточке объекта и на экране «Измерения». */
+  .rated-stars { display: inline-flex; gap: 2px; line-height: 1; font-size: 1.25rem; }
+  .rated-stars i { font-style: normal; color: var(--star); }
+  .rated-stars i.low { color: var(--dim); }
+  .rated-num { font-size: 16px; font-weight: 800; color: var(--heading); }
+  .rated-lead { margin: 0 0 6px; color: var(--text); }
+  .rated-next { margin: 0 0 16px; color: var(--muted); }
+  .rated-cta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  /* Тихая «позже» — ТА ЖЕ, что в карточке гостя ниже (его слово: «такая уже есть ниже»).
+     Второй кнопки с той же работой не заводим: пара разъедется. */
+  .rated-later {
+    border: 0; background: transparent; color: var(--muted); font: inherit;
+    text-decoration: underline; cursor: pointer; padding: 9px 12px; border-radius: 10px;
+  }
+  @media (hover: hover) {
+    .rated-later:hover { color: var(--text); }
+  }
+  @media (max-width: 560px) {
+    .rated-kind, .rated-name { font-size: 22px; }
+    .rated-cta { flex-direction: column; align-items: stretch; }
+    .rated-cta .btn { width: 100%; text-align: center; }
+  }
+
   .guest-card { border-style: dashed; border-color: var(--accent); text-align: center; }
   .guest-card h2 { font-size: 18px; color: var(--heading); margin: 10px 0 8px; }
   .guest-ava {

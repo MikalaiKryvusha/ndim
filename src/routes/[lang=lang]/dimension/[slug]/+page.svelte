@@ -51,6 +51,7 @@
    */
   import islandSource from '$lib/door/island.js?raw';
   import { DOOR_JS_MARK, doorIslandScript } from '$lib/door/island-core';
+  import { RATED_TRACE_KEY, ratedTraceTemplate } from '$lib/door/rated-trace';
 
   /** Тело инлайн-скрипта двери. Считается на сборке один раз, в браузере не исполняется. */
   const ISLAND = doorIslandScript(islandSource);
@@ -465,12 +466,21 @@
     🔴 Разметка ЦЕЛИКОМ пререндерена, включая скрытую панель: страница объявлена `csr = false`,
     и рисовать её здесь некому, кроме сборки. Остров ниже только показывает готовое.
   -->
+  <!--
+    СЛЕД ДЛЯ ПЕРВОГО ЭКРАНА (`plans/82` Ш3). Профиль НЕ ЗНАЕТ названий: каталог он не читает
+    намеренно («это 5111 документов на каждое открытие»), а индекс весит 565 911 байт. Поэтому
+    название, год и вид едут отсюда — с той самой страницы, где они уже стоят в разметке и
+    стоят ноль чтений. Ключ хранилища тоже приходит атрибутом: остров — обычный скрипт без
+    `import`, и копия строки ключа в нём была бы парой, которая разъедется молча.
+  -->
   <section
     class="door"
     data-door
     data-lang={data.lang}
     data-dim={data.id}
     data-engine={data.engineUrl}
+    data-trace-key={RATED_TRACE_KEY}
+    data-trace={ratedTraceTemplate(data)}
   >
     <h2>{t.doorTitle}</h2>
     <!-- Состояние берётся из `showStars` — того же решения, что рисует звёзды строкой выше.
