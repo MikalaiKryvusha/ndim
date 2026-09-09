@@ -88,16 +88,59 @@
     overflow-x: auto; overflow-y: visible;
     box-shadow: var(--card-shadow);
   }
+
+  /* * РЯД ОЦЕНКИ — КОМПОНЕНТ ПРОДУКТА, А НЕ ВЫДУМКА МАКЕТА.
+     Снят с живого кода: `.stars` на публичной карточке и хабе, `.rstars` на экране «Измерения».
+     Правило владельца №044 В3: золотых звёзд СТОЛЬКО, сколько показывает округлённая оценка;
+     ПУСТЫХ ПОЗИЦИЙ НЕТ ВОВСЕ — десять пустых убраны его же словом 2026-08-01 (`ideas/26`);
+     ниже единицы — одна тяжёлая серая звезда (токен `--dim`).
+     Прежняя редакция макетов рисовала здесь скруглённые прямоугольники с двумя серыми
+     пустыми — фигура, которой в продукте нет, и позиции, которые владелец велел убрать. */
+  .rate { display: inline-flex; gap: 2px; line-height: 1; font-size: 1.05rem; }
+  .rate i { font-style: normal; color: var(--star); }
+  .rate i.low { color: var(--dim); }
+
   #stage[data-w="390"] { width: 390px; max-width: 100%; }
   #stage[data-w="1024"] { width: 1024px; max-width: 100%; }
   #stage[data-w="1440"] { width: 1440px; max-width: 100%; }
+
+  /* 🔴 СЦЕНА ШИРЕ РАМКИ НЕ ПОКАЗЫВАЕТСЯ ВОВСЕ. Раньше она оставалась и уезжала за край: на
+     рамке 390 сцена десктопа (1040 px) вылезала на 652 px и жила боковой прокруткой, о которой
+     никто не догадывается. Владелец открыл страницу и увидел обрезанный текст — 2026-09-09.
+     Сцены V1 подписаны шириной, поэтому на узкой рамке показываем только узкие. */
+  #stage[data-w="390"] .v1-col-scene[data-scene="wide"],
+  #stage[data-w="390"] .v1-proof-screen.wide,
+  #stage[data-view="all"] .v1-col-scene[data-scene="wide"],
+  #stage[data-view="all"] .v1-proof-screen.wide { display: none; }
+
+  /* ── ВСЕ ЧЕТЫРЕ РЯДОМ, В ОДНОЙ ШИРИНЕ ────────────────────────────────────────────
+     Слово владельца 2026-09-09: «перерисуй адекватно или в десктопе или в мобилке все
+     макеты. Мобилка фирст у нас». Варианты сравнивают ГЛАЗОМ, а не памятью, поэтому вид
+     по умолчанию — четыре мобильных макета в ряд. Доводы прячем: здесь сравнивают картинку,
+     довод читается в отдельном виде варианта. */
+  #stage[data-view="all"] {
+    width: 100%; max-width: 100%;
+    display: flex; flex-wrap: wrap; gap: 20px;
+    align-items: flex-start; justify-content: center;
+  }
+  /* max-width: none обязателен: .note ограничен 900 px, и без снятия он не занимает свою
+     строку целиком — четыре колонки тогда встают рядом с абзацем, а не рядом друг с другом. */
+  #stage[data-view="all"] > .note { flex: 1 1 100%; max-width: none; }
+  #stage[data-view="all"] .variant { display: block; flex: 0 0 390px; max-width: 390px; }
+  #stage[data-view="all"] .variant .after { display: none; }
+  #stage[data-view="all"] .caption {
+    position: sticky; top: 0; z-index: 2; margin: 0 0 10px;
+    padding: 7px 10px; border-radius: 8px;
+    background: var(--primary); color: var(--primary-ink);
+  }
 </style>
 </head>
 <body>
 
 <div class="picker">
   <b>Первый экран гостя:</b>
-<button data-v="1" class="active">V1 · Лента сверху</button>
+  <button id="all" class="active">Все четыре рядом</button>
+<button data-v="1">V1 · Лента сверху</button>
   <button data-v="2">V2 · Раздел внутри карточки</button>
   <button data-v="3">V3 · Дальше по пути</button>
   <button data-v="4">V4 · Вместо счётчика</button>
@@ -107,15 +150,9 @@
   <button id="theme">☀ светлая</button>
 </div>
 
-<div id="stage" data-w="390">
-<p class="note" style="border-left:3px solid var(--star);padding-left:10px"><b>⚠️ Честная оговорка
-к кадрам 390.</b> Варианты <b>V1</b> и <b>V4</b> нарисовали узкую сцену телефона отдельно — их
-можно смотреть на любой ширине. Варианты <b>V2</b> и <b>V3</b> положились на ширину ОКНА, а не
-рамки, поэтому при переключателе «Телефон 390» показывают десктопную раскладку, сжатую в узкую
-рамку: карточки наезжают друг на друга, и это дефект макета, а не замысел. Их сравнивайте на
-<b>1440</b>. Выбранный вариант будет свёрстан по-настоящему и снят кадрами на обеих ширинах до
-сдачи.</p>
-
+<!-- Открываемся видом «все четыре рядом» в МОБИЛЬНОЙ ширине: у нас mobile first, и выбор
+     делается сравнением четырёх одинаковых по ширине макетов, а не переключением по одному. -->
+<div id="stage" data-view="all" data-w="390">
 <p class="note"><b>Что выбирается:</b> где на первом экране гостя стоит подтверждение его жеста
 и что оно несёт. Сцена одна на все четыре: человек только что оценил «Аллею кошмаров» (2021) на
 8 из 10 и вошёл гостем. Ваше решение №053 В1 = А («показать оценённый объект, вести мягко, не
@@ -132,7 +169,9 @@
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     color: var(--text); line-height: 1.5;
   }
-  .v1-col-scene { display: flex; flex-direction: column; gap: 10px; }
+  /* min-width: 0 — флекс-элемент по умолчанию не сжимается ниже своего содержимого, и сцена
+     десктопа (1040 px) вылезала за рамку на узком ОКНЕ вместо того, чтобы ужаться. */
+  .v1-col-scene { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .v1-cap { font-size: 12px; color: var(--muted); letter-spacing: .02em; }
   .v1-cap b { color: var(--heading); font-weight: 700; }
 
@@ -141,7 +180,7 @@
     background: var(--bg); border: 1px solid var(--edge); border-radius: 20px;
     overflow: hidden; box-shadow: var(--card-shadow);
   }
-  .v1-phone { width: 390px; }
+  .v1-phone { width: 390px; max-width: 100%; }
   .v1-screen-desk { width: 1040px; max-width: 100%; }
 
   /* ── Шапка приложения ─────────────────────────────────────────────────────────── */
@@ -197,9 +236,6 @@
   /* Оценка стоит ПОД названием: рядом с ним она сжималась бы на длинных именах. */
   .v1-score { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .v1-score-k { font-size: 13px; color: var(--muted); }
-  .v1-bars { display: flex; gap: 3px; align-items: center; }
-  .v1-bars i { display: block; width: 15px; height: 12px; border-radius: 3px; background: var(--star-off); }
-  .v1-bars i.on { background: var(--star); }
   .v1-score-v { font-size: 14px; font-weight: 700; color: var(--heading); }
   .v1-hit-foot { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding-top: 2px; }
   .v1-next { margin: 0; flex: 1 1 300px; font-size: 14px; line-height: 1.5; color: var(--text); }
@@ -288,9 +324,7 @@
           <div class="v1-hit-name">«Аллея кошмаров»<span class="v1-hit-year"> (2021)</span></div>
           <div class="v1-score">
             <span class="v1-score-k">Ваша оценка</span>
-            <span class="v1-bars" role="img" aria-label="8 из 10">
-              <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
-            </span>
+            <span class="rate" role="img" aria-label="8 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
             <span class="v1-score-v">8 из 10</span>
           </div>
           <div class="v1-hit-foot">
@@ -369,7 +403,7 @@
   </div>
 
   <!-- ════════ СЦЕНА 2 · десктоп 1440 (рабочая область 1040) ════════ -->
-  <div class="v1-col-scene">
+  <div class="v1-col-scene" data-scene="wide">
     <div class="v1-cap"><b>V1 · десктоп 1440</b> — блок во всю ширину рабочей области, колонны под ним</div>
     <div class="v1-screen-desk">
 
@@ -395,9 +429,7 @@
           <div class="v1-hit-name">«Аллея кошмаров»<span class="v1-hit-year"> (2021)</span></div>
           <div class="v1-score">
             <span class="v1-score-k">Ваша оценка</span>
-            <span class="v1-bars" role="img" aria-label="8 из 10">
-              <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
-            </span>
+            <span class="rate" role="img" aria-label="8 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
             <span class="v1-score-v">8 из 10</span>
           </div>
           <div class="v1-hit-foot">
@@ -485,9 +517,7 @@
           <div class="v1-hit-name">«Доктор Стрейнджлав, или Как я перестал бояться и полюбил бомбу»<span class="v1-hit-year"> (1964)</span></div>
           <div class="v1-score">
             <span class="v1-score-k">Ваша оценка</span>
-            <span class="v1-bars" role="img" aria-label="10 из 10">
-              <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
-            </span>
+            <span class="rate" role="img" aria-label="10 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
             <span class="v1-score-v">10 из 10</span>
           </div>
           <div class="v1-hit-foot">
@@ -502,9 +532,7 @@
           <div class="v1-hit-name">«Доктор Стрейнджлав, или Как я перестал бояться и полюбил бомбу»<span class="v1-hit-year"> (1964)</span></div>
           <div class="v1-score">
             <span class="v1-score-k">Ваша оценка</span>
-            <span class="v1-bars" role="img" aria-label="10 из 10">
-              <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
-            </span>
+            <span class="rate" role="img" aria-label="10 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
             <span class="v1-score-v">10 из 10</span>
           </div>
           <div class="v1-hit-foot">
@@ -517,7 +545,7 @@
   </div>
 
 </div>
-  <p class="after"><b>Довод варианта:</b> Человек только что сделал жест — и подтверждение обязано встретить его раньше объяснений про гостевой профиль, поэтому блок стоит самым верхом, во всю ширину рабочей области и единственным цветным пятном верха экрана: глаз попадает в него без прокрутки и на телефоне, и на десктопе. Название вынесено отдельной крупной строкой, а оценка стоит ПОД ним — так длинное имя переносится и ничего не сжимает (в макете это показано отдельной проверкой на «Докторе Стрейнджлаве»). Бары повторяют золото тех звёзд, которые человек зажигал минуту назад на карточке, поэтому узнавание срабатывает раньше чтения. От вариантов «внутри карточки гостя» этот отличается тем, что подтверждение нельзя случайно спрятать ссылкой «позже», а от вариантов «под карточкой» и «вместо виджета» — тем, что подтверждение не нужно искать прокруткой. Цена честно названа ниже: порядок экрана меняется, и объяснение про гостя уезжает на второе место.</p>
+  <p class="after"><b>Довод варианта:</b> Человек только что сделал жест — и подтверждение обязано встретить его раньше объяснений про гостевой профиль, поэтому блок стоит самым верхом, во всю ширину рабочей области и единственным цветным пятном верха экрана: глаз попадает в него без прокрутки и на телефоне, и на десктопе. Название вынесено отдельной крупной строкой, а оценка стоит ПОД ним — так длинное имя переносится и ничего не сжимает (в макете это показано отдельной проверкой на «Докторе Стрейнджлаве»). Оценка показана тем же рядом звёзд, что и в самом продукте, — теми же, которые человек зажигал минуту назад на карточке, поэтому узнавание срабатывает раньше чтения. От вариантов «внутри карточки гостя» этот отличается тем, что подтверждение нельзя случайно спрятать ссылкой «позже», а от вариантов «под карточкой» и «вместо виджета» — тем, что подтверждение не нужно искать прокруткой. Цена честно названа ниже: порядок экрана меняется, и объяснение про гостя уезжает на второе место.</p>
 </section>
 
 <section class="variant" id="v2">
@@ -576,9 +604,6 @@
   }
   .v2-year { color: var(--muted); font-weight: 500; }
   .v2-score { display: flex; align-items: center; gap: 11px; margin-top: 12px; flex-wrap: wrap; }
-  .v2-meter { display: flex; gap: 3px; flex: 1 1 190px; min-width: 160px; }
-  .v2-seg { flex: 1; height: 13px; border-radius: 3px; background: var(--star-off); }
-  .v2-seg.on { background: var(--star); }
   .v2-num { font-size: 14.5px; font-weight: 650; color: var(--heading); white-space: nowrap; }
   .v2-lead { margin: 12px 0 0; font-size: 14px; color: var(--text); }
   .v2-next { margin: 6px 0 0; font-size: 13.5px; color: var(--muted); }
@@ -686,11 +711,7 @@
           </p>
           <h2 class="v2-name">«Аллея кошмаров»<span class="v2-year"> (2021)</span></h2>
           <div class="v2-score">
-            <span class="v2-meter" role="img" aria-label="Ваша оценка: 8 из 10">
-              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span>
-              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span>
-              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg"></span><span class="v2-seg"></span>
-            </span>
+            <span class="rate" role="img" aria-label="Ваша оценка: 8 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
             <span class="v2-num">8 из 10</span>
           </div>
           <p class="v2-lead">В Вашем Пространстве появилось первое измерение.</p>
@@ -806,11 +827,7 @@
           </p>
           <h2 class="v2-name">«Три билборда на границе Эббинга, Миссури»<span class="v2-year"> (2017)</span></h2>
           <div class="v2-score">
-            <span class="v2-meter" role="img" aria-label="Ваша оценка: 9 из 10">
-              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span>
-              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span>
-              <span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg on"></span><span class="v2-seg"></span>
-            </span>
+            <span class="rate" role="img" aria-label="Ваша оценка: 9 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
             <span class="v2-num">9 из 10</span>
           </div>
           <p class="v2-lead">Теперь в Вашем Пространстве 3 измерения.</p>
@@ -835,6 +852,11 @@
   .v3-cap b { color: var(--heading); }
 
   .v3-screen {
+    /* 🔑 Рамка, а не окно. Раскладка обязана слушать ШИРИНУ ЭТОЙ СЦЕНЫ: макет живёт внутри
+       переключаемой рамки, и @media (которое меряет окно) здесь врёт — на рамке 390 в широком
+       окне телефонные правила не срабатывали, и сцена держала десктопную сетку в две колонки.
+       Поймано замером и кадром 2026-09-09. Образец лечения — V4, он так сделан изначально. */
+    container-type: inline-size; container-name: v3;
     width: 100%; max-width: 1040px; background: var(--bg);
     border: 1px solid var(--edge); border-radius: 20px; box-shadow: var(--card-shadow);
     overflow: hidden; color: var(--text);
@@ -879,9 +901,6 @@
   .v3-year { color: var(--muted); font-weight: 600; }
   .v3-rate { margin-top: 12px; }
   .v3-rate-k { display: block; font-size: 13px; font-weight: 600; color: var(--heading); }
-  .v3-bars { display: flex; gap: 3px; max-width: 260px; margin-top: 7px; }
-  .v3-bars i { display: block; flex: 1 1 0; height: 10px; border-radius: 3px; background: var(--star-off); }
-  .v3-bars i.on { background: var(--star); }
   .v3-lead { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text); }
   .v3-arrow { position: absolute; left: -15px; top: 24px; width: 30px; height: 30px; border-radius: 50%; background: var(--panel); border: 1px solid var(--edge); color: var(--accent); display: flex; align-items: center; justify-content: center; }
 
@@ -911,7 +930,7 @@
   .v3-nav a { flex: 1; display: grid; justify-items: center; gap: 3px; padding: 8px 2px 10px; color: var(--muted); font-size: 11px; text-decoration: none; }
   .v3-nav a.on { color: var(--accent); }
 
-  @media (max-width: 760px) {
+  @container v3 (max-width: 760px) {
     .v3-body { grid-template-columns: 1fr; }
     .v3-full { grid-column: auto; }
     .v3-done { grid-template-columns: 1fr; }
@@ -966,7 +985,7 @@
           <h2 class="v3-name">«Аллея кошмаров»<span class="v3-year"> (2021)</span></h2>
           <div class="v3-rate">
             <span class="v3-rate-k">Ваша оценка: 8 из 10</span>
-            <span class="v3-bars"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+            <span class="rate" role="img" aria-label="Ваша оценка: 8 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
           </div>
         </div>
         <div class="v3-done-b">
@@ -1048,7 +1067,7 @@
         <h2 class="v3-name">«Три билборда на границе Эббинга, Миссури»<span class="v3-year"> (2017)</span></h2>
         <div class="v3-rate">
           <span class="v3-rate-k">Ваша оценка: 8 из 10</span>
-          <span class="v3-bars"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+          <span class="rate" role="img" aria-label="Ваша оценка: 8 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
         </div>
       </div>
       <div class="v3-done-b">
@@ -1196,11 +1215,6 @@
 .v4-year { color: var(--muted); font-weight: 500; }
 
 .v4-score { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-.v4-bars { display: flex; gap: 3px; flex: 1; min-width: 0; }
-.v4-bars span {
-  flex: 1; height: 10px; border-radius: 3px; background: var(--star-off);
-}
-.v4-bars span.on { background: var(--star); }
 .v4-score-num { color: var(--heading); font-weight: 700; font-size: 14px; white-space: nowrap; }
 
 .v4-lead { color: var(--text); font-size: 13.5px; line-height: 1.55; margin: 12px 0 12px; }
@@ -1355,9 +1369,7 @@
             <div class="v4-object">
               <p class="v4-object-name">«Аллея кошмаров»<span class="v4-year"> (2021)</span></p>
               <div class="v4-score">
-                <div class="v4-bars" role="img" aria-label="Ваша оценка: 8 из 10">
-                  <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span>
-                </div>
+                <span class="rate" role="img" aria-label="Ваша оценка: 8 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
                 <span class="v4-score-num">8 из 10</span>
               </div>
             </div>
@@ -1460,27 +1472,21 @@
         <div class="v4-list-row">
           <span class="v4-list-name">«Аллея кошмаров»<span class="v4-year"> (2021)</span></span>
           <div class="v4-score">
-            <div class="v4-bars" role="img" aria-label="Ваша оценка: 8 из 10">
-              <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span>
-            </div>
+            <span class="rate" role="img" aria-label="Ваша оценка: 8 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
             <span class="v4-score-num">8 из 10</span>
           </div>
         </div>
         <div class="v4-list-row">
           <span class="v4-list-name">«Три билборда на границе Эббинга, Миссури»<span class="v4-year"> (2017)</span></span>
           <div class="v4-score">
-            <div class="v4-bars" role="img" aria-label="Ваша оценка: 9 из 10">
-              <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span>
-            </div>
+            <span class="rate" role="img" aria-label="Ваша оценка: 9 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
             <span class="v4-score-num">9 из 10</span>
           </div>
         </div>
         <div class="v4-list-row">
           <span class="v4-list-name">«Дюна»<span class="v4-year"> (2021)</span></span>
           <div class="v4-score">
-            <div class="v4-bars" role="img" aria-label="Ваша оценка: 7 из 10">
-              <span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span>
-            </div>
+            <span class="rate" role="img" aria-label="Ваша оценка: 7 из 10"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></span>
             <span class="v4-score-num">7 из 10</span>
           </div>
         </div>
@@ -1491,23 +1497,36 @@
     <p class="v4-aside-note">С четвёртой оценки счётчик снова осмыслен: блок уходит, «Мой NDim ID» возвращается на своё место.</p>
   </div>
 </div>
-  <p class="after"><b>Довод варианта:</b> Пока оценка одна, виджет «Мой NDim ID» говорит человеку три неправды подряд: «Количество измерений 1 (очень мало 😭)» — упрёк за то, ради чего он и вошёл; «Диаметр моего пространства» из одной точки; «Обновлен» с датой рождения гостя, потому что оценка это поле не трогает вовсе (profile.ts:368-372). Мой вариант ничего не добавляет к экрану — он ставит блок «Вы оценили» РОВНО в клетку слабого виджета, поэтому экран не растёт ни на пиксель, а первое, что человек читает о себе, — его собственное действие: «Аллея кошмаров» (2021), бары 8 из 10 и одна ведущая строка. Три других варианта добавляют экрану новый ярус (над карточкой гостя, внутри неё или под ней) — и все трое ставят блок «Вы оценили» рядом с «(очень мало 😭)», то есть оставляют противоречие, из-за которого и заведено интервью №053; здесь противоречие снимается тем, что упрёка на экране просто нет. Блок живёт временно и честно: на второй-третьей оценке он становится списком того, что человек оценил, с четвёртой уходит и возвращает счётчик — то есть у него есть дверь наружу, и он не превращается в вечное украшение (риск 3 плана). Единственная правка раскладки — на телефоне при одной оценке колонна виджетов идёт первой, иначе блок уезжает под карточку профиля.</p>
+  <p class="after"><b>Довод варианта:</b> Пока оценка одна, виджет «Мой NDim ID» говорит человеку три неправды подряд: «Количество измерений 1 (очень мало 😭)» — упрёк за то, ради чего он и вошёл; «Диаметр моего пространства» из одной точки; «Обновлен» с датой рождения гостя, потому что оценка это поле не трогает вовсе (profile.ts:368-372). Мой вариант ничего не добавляет к экрану — он ставит блок «Вы оценили» РОВНО в клетку слабого виджета, поэтому экран не растёт ни на пиксель, а первое, что человек читает о себе, — его собственное действие: «Аллея кошмаров» (2021), восемь золотых звёзд и одна ведущая строка. Три других варианта добавляют экрану новый ярус (над карточкой гостя, внутри неё или под ней) — и все трое ставят блок «Вы оценили» рядом с «(очень мало 😭)», то есть оставляют противоречие, из-за которого и заведено интервью №053; здесь противоречие снимается тем, что упрёка на экране просто нет. Блок живёт временно и честно: на второй-третьей оценке он становится списком того, что человек оценил, с четвёртой уходит и возвращает счётчик — то есть у него есть дверь наружу, и он не превращается в вечное украшение (риск 3 плана). Единственная правка раскладки — на телефоне при одной оценке колонна виджетов идёт первой, иначе блок уезжает под карточку профиля.</p>
 </section>
 </div>
 
 <script>
   const stage = document.getElementById('stage');
+  const снятьПодсветку = () => document.querySelectorAll('.picker button[data-v], #all')
+    .forEach((x) => x.classList.remove('active'));
+
   document.querySelectorAll('.picker button[data-v]').forEach((b) => {
     b.onclick = () => {
-      document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.remove('active'));
+      снятьПодсветку();
       b.classList.add('active');
+      stage.dataset.view = 'one';           // один вариант крупно
       document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === 'v' + b.dataset.v));
     };
   });
+  document.getElementById('all').onclick = (e) => {
+    снятьПодсветку();
+    e.target.classList.add('active');
+    stage.dataset.view = 'all';
+    stage.dataset.w = '390';                // ряд сравнения всегда мобильный: mobile first
+    document.getElementById('width').textContent = 'Телефон 390';
+  };
   document.getElementById('theme').onclick = (e) => {
-    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
-    e.target.textContent = dark ? '☾ тёмная' : '☀ светлая';
+    // Подпись называет ТЕКУЩУЮ тему. Прежняя редакция ставила её от состояния ДО переключения,
+    // и на светлом кадре кнопка говорила «тёмная» — враньё, попадавшее во все снятые кадры.
+    const стало = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', стало);
+    e.target.textContent = стало === 'dark' ? '☾ тёмная' : '☀ светлая';
   };
   document.getElementById('width').onclick = (e) => {
     const wide = stage.dataset.w === '1440';

@@ -1,0 +1,14 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_078_root_visit_counting_price.md",
+	"by": "Николай Кривуша",
+	"at": "2026-09-09T11:42:42.756Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "Г",
+			"text": "только аналитикой постхог, мы свою БД фаерстор не грузим запросами",
+			"comment": ""
+		}
+	}
+}
