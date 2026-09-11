@@ -26,15 +26,21 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { FUNNEL_STEPS } from './funnel.ts';
+import { FUNNEL_STEPS, PROBE_MARK } from './funnel.ts';
 import {
   ANALYTICS_CONTOURS,
   ANALYTICS_ENTRIES,
   ANALYTICS_EVENTS,
   ANALYTICS_PROPERTIES,
+  type AnalyticsProperty,
+  contourHostMap,
   contourOf,
+  POSTHOG_CAPTURE_URL,
   POSTHOG_HOST,
   POSTHOG_TOKEN,
+  ROOT_LANDING_VIEW_LIB,
+  rootLandingViewScript,
+  SESSION_MARK_MIRROR,
   analyticsHostAllowed,
   capture,
   eventNameIsSafe,
@@ -638,5 +644,133 @@ describe('две защиты имени работают в РАЗНОЕ вре
     assert.equal(nameSmellsOfSubject('dimension_rated'), true);
     // А сторож списка сегодня чист — и это его работа, а не работа отправки.
     assert.equal(whitelistLooksSafe().ok, true);
+  });
+});
+
+/*
+ * ═══ СЧЁТ ПРИХОДА НА ГЛАВНУЮ БЕЗ SDK — `rootLandingViewScript()` (№078 В1 = Г) ═══
+ *
+ * Строка живёт в HTML корня и исполняется браузером без единого файла кода. Здесь она
+ * исполняется В СТЕНДЕ-ЗАГЛУШКЕ: `new Function` даёт ей `location`, оба хранилища, `fetch` и
+ * `crypto` параметрами (они затеняют глобальные), и набор судит РЕШЕНИЕ строки по тем же шести
+ * признакам, по которым судится `capture()`: контур · метка прибора · маркер сессии · дверь
+ * письма · имя события · свойства. Мутация «снят возврат по маркеру сессии» красит адресно.
+ */
+type Store = Record<string, string> | 'throws';
+type Sent = { url: string; init: { method: string; keepalive: boolean; headers: Record<string, string>; body: string } };
+
+/** Исполняет строку корня в заглушке и возвращает всё, что она попыталась отправить. */
+function runRootScript(opts: { hostname: string; search?: string; local?: Store; session?: Store }): Sent[] {
+  const sent: Sent[] = [];
+  const storage = (m: Store) =>
+    m === 'throws'
+      ? { getItem(): never { throw new Error('хранилище закрыто'); } }
+      : { getItem: (k: string) => (k in m ? m[k] : null) };
+  const location = {
+    hostname: opts.hostname,
+    origin: `https://${opts.hostname}`,
+    pathname: '/',
+    search: opts.search ?? '',
+  };
+  const fetch = (url: string, init: Sent['init']) => {
+    sent.push({ url, init });
+    return Promise.resolve({});
+  };
+  const run = new Function('location', 'localStorage', 'sessionStorage', 'fetch', 'crypto', rootLandingViewScript());
+  run(location, storage(opts.local ?? {}), storage(opts.session ?? {}), fetch, globalThis.crypto);
+  return sent;
+}
+
+describe('главная считает приход одной строкой без SDK (№078 В1 = Г)', () => {
+  test('🔴 бой: ровно одно событие landing_view уходит в PostHog публичным API', () => {
+    const sent = runRootScript({ hostname: 'ndimspace.app' });
+    assert.equal(sent.length, 1, 'на боевом хосте без сессии и без метки обязана быть ровно одна отправка');
+    const [{ url, init }] = sent;
+    assert.equal(url, POSTHOG_CAPTURE_URL);
+    assert.equal(init.method, 'POST');
+    assert.equal(init.keepalive, true, 'уход со страницы не должен обрывать отправку');
+    assert.equal(init.headers['Content-Type'], 'text/plain', 'простой тип — без преполёта CORS');
+    const body = JSON.parse(init.body) as { api_key: string; event: string; distinct_id: string; properties: Record<string, unknown> };
+    assert.equal(body.api_key, POSTHOG_TOKEN);
+    assert.equal(body.event, 'landing_view');
+    assert.equal(eventNameIsSafe(body.event), true, 'имя обязано быть из белого списка');
+    assert.equal(typeof body.distinct_id, 'string');
+    assert.ok(body.distinct_id.length > 0 && body.distinct_id.length <= 200, 'PostHog принимает distinct_id до 200 знаков');
+    assert.equal(body.properties.env, 'prod');
+    assert.equal(body.properties.$process_person_profile, false, 'личных профилей не заводим — как person_profiles: never у SDK');
+    assert.equal(body.properties.$lib, ROOT_LANDING_VIEW_LIB);
+    assert.equal(body.properties.$current_url, 'https://ndimspace.app/');
+    assert.equal(body.properties.$pathname, '/');
+  });
+
+  test('стейдж считается со своим контуром — env = stage', () => {
+    const sent = runRootScript({ hostname: 'ndim-stage.web.app' });
+    assert.equal(sent.length, 1);
+    assert.equal((JSON.parse(sent[0].init.body) as { properties: { env: string } }).properties.env, 'stage');
+  });
+
+  test('🔴 стенд и чужой хост молчат — отрицательный контроль по построению', () => {
+    assert.equal(runRootScript({ hostname: 'localhost' }).length, 0);
+    assert.equal(runRootScript({ hostname: '127.0.0.1' }).length, 0);
+    assert.equal(runRootScript({ hostname: 'ndimspace.app.evil.example' }).length, 0);
+  });
+
+  test('🔴 маркер сессии: вошедший и гость не считаются — их увела дверь корня', () => {
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', local: { [SESSION_MARK_MIRROR]: '1' } }).length, 0);
+  });
+
+  test('🔴 метка прибора: наш прогон человеком не считается', () => {
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', session: { [PROBE_MARK]: '1' } }).length, 0);
+  });
+
+  test('ссылка из письма — не приход: точный разбор, а не подстрокой', () => {
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', search: '?mode=signIn&oobCode=abc&apiKey=x' }).length, 0);
+    // `mode=signIn` без кода — не письмо, считается; параметры из адреса наружу не едут.
+    const sent = runRootScript({ hostname: 'ndimspace.app', search: '?mode=signIn&utm_source=google' });
+    assert.equal(sent.length, 1);
+    const props = (JSON.parse(sent[0].init.body) as { properties: Record<string, string> }).properties;
+    assert.equal(props.$current_url, 'https://ndimspace.app/', 'query в $current_url не уходит — там бывает oobCode');
+  });
+
+  test('закрытое хранилище не роняет страницу и не даёт отправки', () => {
+    assert.doesNotThrow(() => runRootScript({ hostname: 'ndimspace.app', local: 'throws' }));
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', local: 'throws' }).length, 0);
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', session: 'throws' }).length, 0);
+  });
+
+  test('🔴 свойства — только `env` из союза и служебные `$`-поля PostHog; предмету оценки взяться неоткуда', () => {
+    const [{ init }] = runRootScript({ hostname: 'ndimspace.app' });
+    const props = (JSON.parse(init.body) as { properties: Record<string, unknown> }).properties;
+    const allowedDollar = new Set(['$process_person_profile', '$lib', '$current_url', '$host', '$pathname']);
+    for (const [key, value] of Object.entries(props)) {
+      if (key.startsWith('$')) {
+        assert.ok(allowedDollar.has(key), `служебное поле «${key}» не объявлено`);
+      } else {
+        assert.ok((ANALYTICS_PROPERTIES as readonly string[]).includes(key), `ключ «${key}» вне ANALYTICS_PROPERTIES`);
+        assert.equal(propertyValueIsSafe(key as AnalyticsProperty, value), true, `значение «${String(value)}» ключа «${key}» вне союза`);
+      }
+      if (typeof value === 'string') {
+        assert.equal(nameSmellsOfSubject(value.replace(/[-/.:]/gu, '_')), false, `значение «${value}» пахнет предметом оценки`);
+      }
+    }
+  });
+
+  test('🔒 пары: маркер сессии = SESSION_MARK из session.ts; метка = PROBE_MARK; таблица хостов = contourOf', () => {
+    const session = readFileSync(new URL('./session.ts', import.meta.url), 'utf8');
+    const match = session.match(/export const SESSION_MARK = '([^']+)'/u);
+    assert.notEqual(match, null, 'в session.ts не найден SESSION_MARK — зеркало сверять не с чем');
+    assert.equal(SESSION_MARK_MIRROR, match![1], 'зеркало маркера сессии отстало от session.ts');
+    const script = rootLandingViewScript();
+    assert.ok(script.includes(JSON.stringify(PROBE_MARK)), 'строка обязана читать ту же метку прибора, что track()');
+    const map = contourHostMap();
+    for (const [host, contour] of Object.entries(map)) assert.equal(contourOf(host), contour, `таблица разошлась с contourOf на «${host}»`);
+    assert.equal('localhost' in map, false, 'стенд в таблице считающихся хостов появиться не может');
+    assert.ok(Object.keys(map).length >= 7, 'в таблице пропали хосты — бой (5) и стейдж (2)');
+  });
+
+  test('строка пригодна к инлайну: не закрывает свой тег и ничего не импортирует', () => {
+    const script = rootLandingViewScript();
+    assert.equal(script.includes('</'), false, '«</» внутри инлайн-скрипта закрыл бы тег и оборвал страницу');
+    assert.equal(/\bimport\b/u.test(script), false, 'страница без кода не умеет импортировать');
   });
 });

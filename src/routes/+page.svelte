@@ -34,6 +34,7 @@
   import { num } from '$lib/ui/format';
   import Brand from '$lib/ui/Brand.svelte';
   import Icon from '$lib/ui/Icon.svelte';
+  import { rootLandingViewScript } from '$lib/data/analytics';
   import type { StripCard } from './+page.server';
 
   let { data }: { data: { strip: StripCard[]; dims: number; ratings: number; people: number; relations: number } } = $props();
@@ -126,6 +127,23 @@
 	} catch (e) { /* сломался разбор или закрыто хранилище — человек просто остаётся на главной */ }
 })();
 <\/script>`;
+
+  /*
+   * СЧЁТ ПРИХОДА — ВТОРАЯ ИНЛАЙН-СТРОКА, ОТДЕЛЬНЫМ IIFE ПОСЛЕ ДВЕРИ И СО СВОИМ `try`
+   * (`bugs/NEW_funnel_blind_on_v5_root.md`; форма — правило того же документа: «отдельный IIFE
+   * со своим try, ПОСЛЕ существующего, со своей проверкой маркера»).
+   *
+   * Решение владельца, интервью №078 В1 = Г: «*только аналитикой постхог, мы свою БД фаерстор
+   * не грузим запросами*». Поэтому здесь нет ни `track()`, ни Firestore, ни SDK — одно событие
+   * `landing_view` в PostHog публичным API, и страница остаётся без единого файла кода.
+   * Кто НЕ считается и почему — в шапке `rootLandingViewScript()` (`$lib/data/analytics`):
+   * вошедший и гость (их увела дверь выше), ссылка из письма, наши приборы под меткой, стенд.
+   *
+   * ⚠️ Второй скрипт стоит ПОСЛЕ первого намеренно: `location.replace` исполнение не прерывает
+   * (`bugs/NEW_root_boot_shield_never_drops`), и счёт обязан сам проверить те же признаки, а не
+   * полагаться на то, что дверь «уже увела». Он их проверяет.
+   */
+  const LANDING_VIEW = `<script>${rootLandingViewScript()}<\/script>`;
 </script>
 
 <svelte:head>
@@ -144,6 +162,7 @@
   <meta property="og:url" content={canonicalUrl} />
   {@html `<script type="application/ld+json">${siteLd}</script>`}
   {@html EMAIL_DOOR}
+  {@html LANDING_VIEW}
 </svelte:head>
 
 <!-- Фон-поле: та же сеть узлов, что на лендинге и на экране входа. Декорация целиком. -->

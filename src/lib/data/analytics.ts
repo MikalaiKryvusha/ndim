@@ -42,7 +42,7 @@
  * отдельным чанком `async-analytics-sdk`.
  */
 
-import { type FunnelStep, FUNNEL_STEPS, probeMarked } from './funnel.ts';
+import { type FunnelStep, FUNNEL_STEPS, PROBE_MARK, probeMarked } from './funnel.ts';
 
 /**
  * Публичный ключ проекта — **не секрет по устройству**, ровно как веб-конфиг Firebase
@@ -156,6 +156,97 @@ export function contourOf(hostname: string): AnalyticsContour | null {
  */
 export function analyticsHostAllowed(hostname: string): boolean {
   return contourOf(hostname) !== null;
+}
+
+/**
+ * Та же истина, что `contourOf`, в форме ТАБЛИЦЫ «хост → контур» — для кода, который не может
+ * позвать функцию: инлайн-строка главной живёт в HTML и получает списки ЗНАЧЕНИЕМ на сборке.
+ * Второго списка хостов здесь не рождается: таблица выводится из тех же двух констант.
+ */
+export function contourHostMap(): Record<string, AnalyticsContour> {
+  const map: Record<string, AnalyticsContour> = {};
+  for (const host of PROD_HOSTS) map[host] = 'prod';
+  for (const host of STAGE_HOSTS) map[host] = 'stage';
+  return map;
+}
+
+/**
+ * Имя «библиотеки» в событии главной — так PostHog отличает приход, посчитанный инлайн-строкой
+ * корня, от прихода, посчитанного SDK на языковом лендинге (`$lib` у SDK — `web`).
+ */
+export const ROOT_LANDING_VIEW_LIB = 'ndim-root-inline';
+
+/**
+ * Адрес одиночной отправки события без SDK — публичный HTTP API PostHog
+ * (docs/api/capture: «POST /i/v0/e/», тело — `api_key` · `event` · `distinct_id` · `properties`).
+ * Проверен живьём 2026-09-12: преполёт CORS с `Origin: https://ndimspace.app` отвечает 200 и
+ * разрешает `content-type`; POST с телом `text/plain` принят — `{"status":"Ok"}`. Тип
+ * `text/plain` выбран НАМЕРЕННО: он «простой» для CORS, и браузер не шлёт преполёт вовсе —
+ * одно обращение вместо двух.
+ */
+export const POSTHOG_CAPTURE_URL = `${POSTHOG_HOST}/i/v0/e/`;
+
+/**
+ * Маркер сессии в `localStorage` — тот же, что ставит `data/session.ts` (`SESSION_MARK`) и
+ * читают `app.html` и дверь письма на корне. Литерал, а не импорт: `session.ts` статически
+ * тянет SDK Firebase, а этот модуль едет отдельным лёгким чанком (`EXP-0028`). Пара
+ * «истина ↔ зеркало» стережётся юнитом, который читает `session.ts` исходным текстом.
+ */
+export const SESSION_MARK_MIRROR = 'ndim-session';
+
+/**
+ * СЧЁТ ПРИХОДА НА ГЛАВНУЮ — ОДНА ИНЛАЙН-СТРОКА, БЕЗ SDK И БЕЗ FIRESTORE.
+ *
+ * ЗАЧЕМ. `bugs/NEW_funnel_blind_on_v5_root.md`: после переезда корня на главную V5 (`plans/81`)
+ * пришедший на `ndimspace.app/` не считался никем — увод на `/ru` снят, а счёт жил там. Решение
+ * владельца, интервью **№078 В1 = Г**, дословно: «*только аналитикой постхог, мы свою БД
+ * фаерстор не грузим запросами*». То есть на корне НЕТ шага своей воронки (`track()` и
+ * Firestore не трогаются), а есть ровно одно событие в PostHog.
+ *
+ * ПОЧЕМУ СТРОКА, А НЕ SDK. Главная — единственная страница продукта без единого файла кода
+ * (`csr = false`, замер №078: 5 запросов, 39 КБ, кода 0). SDK PostHog въехал бы на неё чанком
+ * аналитики и потребовал бы гидрации; строка отправляет то же событие тем же публичным API
+ * (`POSTHOG_CAPTURE_URL`) и весит меньше килобайта. Это не «упрощённая копия» — это тот же
+ * контракт, что у `capture()`, только в форме, которую страница без кода может нести:
+ *   · **контур** — по той же таблице хостов (`contourHostMap()`), на стенде молчит;
+ *   · **метка прибора** — тот же ключ `PROBE_MARK`; наши прогоны людьми не считаются;
+ *   · **маркер сессии** — вошедший и гость не считаются (их уводит внутрь дверь корня, а
+ *     `landing_view` на лендинге тоже считается только тем, у кого сессии нет — `bugs/08.1`);
+ *   · **дверь письма** — адрес с `mode=signIn&oobCode` уводится в `/profile` до всего и не
+ *     считается: это не приход, а возврат по ссылке из письма;
+ *   · **имя события** — `landing_view` из белого списка `ANALYTICS_EVENTS`; свойства — `env`
+ *     плюс служебные `$`-поля PostHog, которые SDK ставит сам (`$current_url` без query —
+ *     `oobCode` из адреса письма наружу не уходит, и предмету оценки здесь взяться неоткуда);
+ *   · **личных профилей не заводим** — `$process_person_profile: false`, как `person_profiles:
+ *     'never'` у SDK; `distinct_id` случайный на визит, нигде не хранится и ни с кем не клеится.
+ *
+ * ⚠️ Названная граница: событие корня НЕ ставит метку `claimStep` своей воронки. Человек, ушедший
+ * с главной на `/ru`, даст второе `landing_view` уже от SDK — с другим `$pathname`. Ставить метку
+ * значило бы гасить и Firestore-счёт на `/ru`, а владелец велел главной Firestore не трогать.
+ * Ряды различимы по `$lib` и `$pathname`; сводить их — вопрос аналитики, а не продукта.
+ *
+ * ⚠️ И вторая: блокировщики режут `posthog.com` целиком — так же, как SDK на лендинге. Эталоном
+ * сверки по-прежнему остаётся Search Console (клики на `/` за сутки, критерий `plans/74` Ф1 Ш1).
+ *
+ * Строка собирается ЗДЕСЬ, а не набирается в `+page.svelte`: ключ, адрес, хосты и имя метки
+ * берутся значениями из этого модуля на сборке, поэтому «зеркала» списка хостов в корне нет —
+ * есть подстановка. Юниты гоняют строку в стенде-заглушке (`analytics.test.ts`).
+ */
+export function rootLandingViewScript(): string {
+  const hosts = JSON.stringify(contourHostMap());
+  const body = [
+    '(function(){try{',
+    // Дверь письма — тот же разбор, что у `EMAIL_DOOR` корня: точный, а не подстрокой.
+    "var p=new URLSearchParams(location.search);if(p.get('mode')==='signIn'&&p.has('oobCode'))return;",
+    `if(localStorage.getItem(${JSON.stringify(SESSION_MARK_MIRROR)}))return;`,
+    `if(sessionStorage.getItem(${JSON.stringify(PROBE_MARK)})!==null)return;`,
+    `var env=(${hosts})[location.hostname];if(!env)return;`,
+    "var id=(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(16).slice(2);",
+    `var b={api_key:${JSON.stringify(POSTHOG_TOKEN)},event:'landing_view',distinct_id:id,properties:{env:env,$process_person_profile:false,$lib:${JSON.stringify(ROOT_LANDING_VIEW_LIB)},$current_url:location.origin+location.pathname,$host:location.hostname,$pathname:location.pathname}};`,
+    `fetch(${JSON.stringify(POSTHOG_CAPTURE_URL)},{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)}).catch(function(){});`,
+    '}catch(e){}})();',
+  ];
+  return body.join('\n');
 }
 
 /**
