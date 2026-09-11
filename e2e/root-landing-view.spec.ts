@@ -34,6 +34,26 @@ const PROD = 'ndimspace.app';
 const STAGE = 'ndim-stage.web.app';
 const CAPTURE = /\/i\/v0\/e\/?(\?|$)/u;
 
+/*
+ * 🔴 ПРИБОР ПРИХОДИТ ЧЕЛОВЕКОМ. Строка корня отсеивает роботов тем же признаком, что SDK PostHog
+ * (`navigator.webdriver` · user agent · `userAgentData.brands`), а Playwright по умолчанию — робот
+ * по всем трём («HeadlessChrome» в brands даже при подменённом user agent). Найдено прогулкой по
+ * стейджу 2026-09-12: SDK честно молчал на прибор, и события лендинга «не доезжали». Поэтому
+ * позитивные кейсы снимают все три признака, а робот остаётся ОТДЕЛЬНЫМ негативным кейсом.
+ */
+const HUMAN_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
+test.use({
+	userAgent: HUMAN_UA,
+	launchOptions: { args: ['--disable-blink-features=AutomationControlled'] },
+});
+async function asHuman(page: Page): Promise<void> {
+	await page.addInitScript(() => {
+		try {
+			Object.defineProperty(navigator, 'userAgentData', { get: () => undefined });
+		} catch {}
+	});
+}
+
 /**
  * Герметизирует страницу: наш хост под боевым/стейджевым именем — байты с localhost, PostHog —
  * заглушка с записью, остальное — отказ.
@@ -65,6 +85,7 @@ async function settle(page: Page): Promise<void> {
 
 test('🔴 бой: свежий человек на главной даёт ровно одно landing_view, страница остаётся без файлов кода', async ({ page }) => {
 	const captured = await seal(page);
+	await asHuman(page);
 	await page.goto(`http://${PROD}/`);
 	await settle(page);
 	// Контроль прибора: страница действительно наша и действительно под боевым именем.
@@ -89,6 +110,7 @@ test('🔴 бой: свежий человек на главной даёт ро
 
 test('стейдж: то же событие несёт env = stage', async ({ page }) => {
 	const captured = await seal(page);
+	await asHuman(page);
 	await page.goto(`http://${STAGE}/`);
 	await settle(page);
 	expect(captured).toHaveLength(1);
@@ -97,6 +119,7 @@ test('стейдж: то же событие несёт env = stage', async ({ p
 
 test('🔴 маркер сессии: вошедший и гость не считаются, а уводятся внутрь', async ({ page }) => {
 	const captured = await seal(page);
+	await asHuman(page);
 	await page.addInitScript(() => {
 		try {
 			localStorage.setItem('ndim-session', '1');
@@ -110,6 +133,7 @@ test('🔴 маркер сессии: вошедший и гость не счи
 
 test('🔴 метка прибора: наш прогон человеком не считается', async ({ page }) => {
 	const captured = await seal(page);
+	await asHuman(page);
 	await page.addInitScript(() => {
 		try {
 			sessionStorage.setItem('ndim-probe', '1');
@@ -123,6 +147,7 @@ test('🔴 метка прибора: наш прогон человеком н�
 
 test('ссылка из письма уходит в профиль и приходом не считается', async ({ page }) => {
 	const captured = await seal(page);
+	await asHuman(page);
 	await page.goto(`http://${PROD}/?mode=signIn&oobCode=abc123&apiKey=demo`);
 	await page.waitForURL(/\/profile\?mode=signIn&oobCode=abc123&apiKey=demo/u, { timeout: 10000 });
 	await page.waitForTimeout(400);
@@ -131,8 +156,29 @@ test('ссылка из письма уходит в профиль и прих�
 
 test('контроль: та же сборка под localhost не отправляет ничего', async ({ page }) => {
 	const captured = await seal(page);
+	await asHuman(page);
 	await page.goto(`http://localhost:${PREVIEW}/`);
 	await settle(page);
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('NDim Space');
 	expect(captured).toHaveLength(0);
+});
+
+test('🔴 робот (Playwright как есть: webdriver и HeadlessChrome в brands) не считается — тот же признак, что у SDK', async ({ browser }) => {
+	// Отдельный контекст БЕЗ маскировки: голый headless Chromium несёт «HeadlessChrome» в user agent
+	// (флаг запуска общий на файл, поэтому webdriver здесь снят — хватает и user agent). Считаться
+	// он не должен — тот же признак, что у SDK.
+	// Фикстура `browser` подмешивает user agent из `test.use` даже в ручной контекст — поэтому робот
+	// называется явно тем же user agent, который несёт голый headless Chromium.
+	const context = await browser.newContext({ userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36' });
+	const page = await context.newPage();
+	const captured = await seal(page);
+	const signs = { webdriver: false, brands: '', ua: '' };
+	await page.goto(`http://${PROD}/`);
+	await settle(page);
+	Object.assign(signs, await page.evaluate(() => ({ webdriver: navigator.webdriver, ua: navigator.userAgent, brands: JSON.stringify((navigator as unknown as { userAgentData?: { brands: unknown[] } }).userAgentData?.brands ?? null) })));
+	// Контроль прибора: признаки робота действительно на месте, иначе ноль был бы бессодержательным.
+	expect(signs.webdriver || /headless/iu.test(signs.brands) || /headless/iu.test(signs.ua), `признаков робота нет: ${JSON.stringify(signs)}`).toBe(true);
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('NDim Space');
+	expect(captured, 'робот в приход не попадает').toHaveLength(0);
+	await context.close();
 });

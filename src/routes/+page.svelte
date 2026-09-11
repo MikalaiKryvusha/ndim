@@ -34,7 +34,7 @@
   import { num } from '$lib/ui/format';
   import Brand from '$lib/ui/Brand.svelte';
   import Icon from '$lib/ui/Icon.svelte';
-  import { rootLandingViewScript } from '$lib/data/analytics';
+  import { rootLandingViewScript } from '$lib/data/root-landing-view';
   import type { StripCard } from './+page.server';
 
   let { data }: { data: { strip: StripCard[]; dims: number; ratings: number; people: number; relations: number } } = $props();

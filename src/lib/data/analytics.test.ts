@@ -27,6 +27,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { FUNNEL_STEPS, PROBE_MARK } from './funnel.ts';
+import { BOT_SIGNS, ROOT_LANDING_VIEW_LIB, rootLandingViewScript, SESSION_MARK_MIRROR } from './root-landing-view.ts';
 import {
   ANALYTICS_CONTOURS,
   ANALYTICS_ENTRIES,
@@ -38,9 +39,6 @@ import {
   POSTHOG_CAPTURE_URL,
   POSTHOG_HOST,
   POSTHOG_TOKEN,
-  ROOT_LANDING_VIEW_LIB,
-  rootLandingViewScript,
-  SESSION_MARK_MIRROR,
   analyticsHostAllowed,
   capture,
   eventNameIsSafe,
@@ -658,9 +656,17 @@ describe('две защиты имени работают в РАЗНОЕ вре
  */
 type Store = Record<string, string> | 'throws';
 type Sent = { url: string; init: { method: string; keepalive: boolean; headers: Record<string, string>; body: string } };
+type Nav = { userAgent?: string; webdriver?: boolean; userAgentData?: { brands: Array<{ brand: string }> } };
+
+/** Человек по умолчанию: обычный Chrome, без webdriver, обычные brands. */
+const HUMAN: Nav = {
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+  webdriver: false,
+  userAgentData: { brands: [{ brand: 'Chromium' }, { brand: 'Google Chrome' }] },
+};
 
 /** Исполняет строку корня в заглушке и возвращает всё, что она попыталась отправить. */
-function runRootScript(opts: { hostname: string; search?: string; local?: Store; session?: Store }): Sent[] {
+function runRootScript(opts: { hostname: string; search?: string; local?: Store; session?: Store; navigator?: Nav }): Sent[] {
   const sent: Sent[] = [];
   const storage = (m: Store) =>
     m === 'throws'
@@ -676,8 +682,8 @@ function runRootScript(opts: { hostname: string; search?: string; local?: Store;
     sent.push({ url, init });
     return Promise.resolve({});
   };
-  const run = new Function('location', 'localStorage', 'sessionStorage', 'fetch', 'crypto', rootLandingViewScript());
-  run(location, storage(opts.local ?? {}), storage(opts.session ?? {}), fetch, globalThis.crypto);
+  const run = new Function('location', 'localStorage', 'sessionStorage', 'fetch', 'crypto', 'navigator', rootLandingViewScript());
+  run(location, storage(opts.local ?? {}), storage(opts.session ?? {}), fetch, globalThis.crypto, opts.navigator ?? HUMAN);
   return sent;
 }
 
@@ -766,6 +772,23 @@ describe('главная считает приход одной строкой �
     for (const [host, contour] of Object.entries(map)) assert.equal(contourOf(host), contour, `таблица разошлась с contourOf на «${host}»`);
     assert.equal('localhost' in map, false, 'стенд в таблице считающихся хостов появиться не может');
     assert.ok(Object.keys(map).length >= 7, 'в таблице пропали хосты — бой (5) и стейдж (2)');
+  });
+
+  test('🔴 робот не считается — тем же признаком, что у SDK: webdriver · user agent · brands', () => {
+    // Найдено прогулкой по стейджу 2026-09-12: SDK отбраковал headless-прибор, строка — нет.
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', navigator: { ...HUMAN, webdriver: true } }).length, 0, 'navigator.webdriver');
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', navigator: { ...HUMAN, userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' } }).length, 0, 'Googlebot по user agent');
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', navigator: { ...HUMAN, userAgent: 'Mozilla/5.0 (X11; Linux x86_64) HeadlessChrome/140.0.0.0 Safari/537.36' } }).length, 0, 'HeadlessChrome по user agent');
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', navigator: { ...HUMAN, userAgentData: { brands: [{ brand: 'HeadlessChrome' }] } } }).length, 0, 'HeadlessChrome в brands при обычном user agent');
+    // Контроль прибора: человек без единого признака — считается; без userAgentData (Firefox) — тоже.
+    assert.equal(runRootScript({ hostname: 'ndimspace.app' }).length, 1);
+    assert.equal(runRootScript({ hostname: 'ndimspace.app', navigator: { userAgent: 'Mozilla/5.0 (Windows NT 10.0; rv:140.0) Gecko/20100101 Firefox/140.0' } }).length, 1);
+  });
+
+  test('🔒 список роботов — импорт из @posthog/core, тот же, что у SDK (не копия)', () => {
+    assert.ok(BOT_SIGNS.length >= 70, `в списке ${BOT_SIGNS.length} признаков — список SDK усох или подменён`);
+    assert.ok(BOT_SIGNS.includes('googlebot') && BOT_SIGNS.includes('headlesschrome') && BOT_SIGNS.includes('bingbot'));
+    assert.ok(rootLandingViewScript().includes('"headlesschrome"'), 'список обязан быть подставлен в строку значением');
   });
 
   test('строка пригодна к инлайну: не закрывает свой тег и ничего не импортирует', () => {
