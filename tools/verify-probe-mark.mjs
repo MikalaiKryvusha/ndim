@@ -56,7 +56,7 @@
  * Ворота: `npm run guards` (страж дешёвый — ни стенда, ни сети, ни сборки).
  */
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -134,6 +134,24 @@ const LIVE_BY_NAME = new Map([
   ['smoke.mjs', 'набор SMOKE гоняется дверью выката и принимает --base — в живой контур направляется рукой'],
   ['probe-bridge.mjs', 'зонд моста лендинга: по умолчанию localhost, но --base уводит его в бой'],
   ['verify-funnel-v2.mjs', 'приёмка воронки: ходит по слоту стенда, а пишет РЕАЛЬНЫЕ счётчики'],
+]);
+
+/**
+ * 🆕 ПРИБОРЫ, У КОТОРЫХ МЕТКИ НЕТ НАМЕРЕННО — потому что их смысл в том, чтобы быть человеком.
+ *
+ * Появился 2026-09-12 вместе с пробой слоя С для счёта прихода на главной (`qa/suites/
+ * root-landing-view.md`, ГЛ-13): под меткой строка корня молчит по построению, и единственный
+ * способ доказать, что НАСТОЯЩИЙ приход доезжает до PostHog, — прийти без метки. След прогона
+ * при этом называется в шапке прибора и в отчёте, а не прячется.
+ *
+ * 🔒 ПАРА С ДВУХ СТОРОН, и ослабить её односторонне нельзя: имя здесь + дословная строка
+ * `UNMARKED_DECLARATION` в тексте прибора. Имя без строки — красный (список не даёт пропуск
+ * молча); строка без имени — красный (прибор не объявит себя человеком в одиночку). Причина у
+ * каждой строки обязательна — как у `LIVE_BY_NAME`.
+ */
+export const UNMARKED_DECLARATION = 'МЕТКИ ПРИБОРА ЗДЕСЬ НЕТ НАМЕРЕННО';
+export const UNMARKED_BY_DESIGN = new Map([
+  ['probe-root-landing-view-live.mjs', 'проба слоя С: настоящий приход на главную обязан доехать до PostHog, под меткой строка молчит'],
 ]);
 
 export function isLiveBrowserProbe(source, name = '') {
@@ -250,6 +268,18 @@ export function judgeProbe(name, source) {
   if (sessions === 0) return [];
   const marks = countMarks(source);
   const faults = [];
+  // Прибор-человек: объявлен с двух сторон — чисто; с одной — нарушение, и оно названо.
+  const listedUnmarked = UNMARKED_BY_DESIGN.has(name);
+  const declaresUnmarked = source.includes(UNMARKED_DECLARATION);
+  if (listedUnmarked && declaresUnmarked) return [];
+  if (listedUnmarked && !declaresUnmarked) {
+    faults.push(`${name}: назван в UNMARKED_BY_DESIGN, но в тексте нет строки «${UNMARKED_DECLARATION}» — список не даёт пропуск молча`);
+    return faults;
+  }
+  if (!listedUnmarked && declaresUnmarked) {
+    faults.push(`${name}: объявляет «${UNMARKED_DECLARATION}», но в UNMARKED_BY_DESIGN не назван — прибор не объявляет себя человеком в одиночку`);
+    return faults;
+  }
   if (!/lib\/probe-mark\.mjs/.test(source)) {
     faults.push(`${name}: ходит браузером в живой контур и НЕ ЗНАЕТ метку прогона (нет импорта probe-mark)`);
     return faults;
@@ -474,6 +504,24 @@ const SELFTEST_CASES = [
     name: 'КОНТРОЛЬ: поимённый прибор с меткой нарушением НЕ является',
     run: () =>
       marksWithoutMembership('smoke.mjs', `import { markProbeContext } from './lib/probe-mark.mjs';\nconst BASE='http://localhost:4173';\nawait chromium.launch();\nconst c = await browser.newContext();\nawait markProbeContext(c);\n`) === false,
+  },
+  /*
+   * ── ПРИБОР-ЧЕЛОВЕК: метки нет намеренно, объявлено с двух сторон (2026-09-12) ─────────
+   */
+  {
+    name: '🔑 прибор-человек: назван в UNMARKED_BY_DESIGN И объявляет строку — чисто',
+    run: () =>
+      judgeProbe('probe-root-landing-view-live.mjs', `// ${UNMARKED_DECLARATION}\nimport { chromium } from 'playwright';\nconst BASE='https://ndim-stage.web.app';\nawait chromium.launch();\nconst ctx = await browser.newContext();\n`).length === 0,
+  },
+  {
+    name: '🔴 назван в списке, но строки в тексте нет — красный (список не даёт пропуск молча)',
+    run: () =>
+      judgeProbe('probe-root-landing-view-live.mjs', `import { chromium } from 'playwright';\nconst BASE='https://ndim-stage.web.app';\nawait chromium.launch();\nconst ctx = await browser.newContext();\n`).length === 1,
+  },
+  {
+    name: '🔴 объявляет строку, но в списке не назван — красный (сам себя человеком не объявишь)',
+    run: () =>
+      judgeProbe('probe-samozvanec.mjs', `// ${UNMARKED_DECLARATION}\nimport { chromium } from 'playwright';\nconst BASE='https://ndimspace.app';\nawait chromium.launch();\nconst ctx = await browser.newContext();\n`).length === 1,
   },
   {
     name: 'КОНТРОЛЬ: живой адрес БЕЗ браузера не судится — продукт не исполняется',
@@ -749,6 +797,12 @@ function run() {
       faults.push(`${name}: назван в LIVE_BY_NAME, но в tools/ не найден или браузер не запускает (${why})`);
     }
   }
+  // Тот же пол для приборов-людей: исчезнувший файл унёс бы с собой и свою строку в списке.
+  for (const [name, why] of UNMARKED_BY_DESIGN) {
+    if (!existsSync(join(TOOLS, name))) {
+      faults.push(`${name}: назван в UNMARKED_BY_DESIGN, но в tools/ не найден (${why})`);
+    }
+  }
 
   // Размер корпуса против объявленной границы: усыхание — нарушение, рост — нет (`bugs/209`, критерий 2).
   faults.push(...corpusFloorFaults(judged));
@@ -780,7 +834,11 @@ function run() {
   );
 
   if (faults.length === 0) {
-    console.log(`✅ ВОРОНКА СОГЛАСОВАНА: четыре пары сходятся, все ${judged} живых приборов метят свои сессии.`);
+    const unmarked = [...UNMARKED_BY_DESIGN.keys()].filter((n) => existsSync(join(TOOLS, n))).length;
+    console.log(
+      `✅ ВОРОНКА СОГЛАСОВАНА: четыре пары сходятся, ${judged - unmarked} из ${judged} живых приборов метят свои сессии, ` +
+        `${unmarked} объявлен человеком намеренно (UNMARKED_BY_DESIGN).`,
+    );
     process.exit(0);
   }
   console.log(`\n❌ НАРУШЕНИЙ: ${faults.length}`);
