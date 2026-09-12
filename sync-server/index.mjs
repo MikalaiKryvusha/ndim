@@ -970,6 +970,7 @@ async function eraseGuestTraces(uid, now) {
   await db.recursiveDelete(db.doc(`users/${uid}`));
   await deleteFriendshipsOf(uid);
   await anonymizeSuggestionsOf(uid, now);
+  await anonymizePairHalvesOf(uid, now); // bugs/154: половина гостя в парах теста
   // Путь — тот же, которым фото пишет и читает клиент (`src/lib/data/avatar.ts`,
   // наследие 1.x). deleteFiles по префиксу идемпотентен: нет файлов — нет и работы.
   await getStorage().bucket().deleteFiles({ prefix: `users/${uid}/avatar/` });
@@ -1001,6 +1002,43 @@ async function anonymizeSuggestionsOf(uid, now) {
   for (const suggestion of mine.docs) {
     await suggestion.ref.update({ authorUid: null, anonymizedAt: now });
   }
+}
+
+/**
+ * Обезличивает ПОЛОВИНУ умершего участника в парах теста, где второй жив (`bugs/154`; решение
+ * владельца интервью №041 В2 = A: «часть клиент удаляет сам, всё помечается для сервера
+ * синхронизации — остатки вычищает сервер синхронизации»).
+ *
+ * Оценки человека — самая приватная величина продукта (№002 В4); `testPairs` — исключение по
+ * согласию, а удаление аккаунта есть ОТЗЫВ согласия. Клиент до своих пар не дотягивается
+ * (`allow list: if false`), поэтому плечо здесь: у пары с живым вторым участником половина
+ * умершего становится `aUid: null, aAnswers: null` (или `b…`) — симметрично обезличиванию
+ * `suggestions`: связка с человеком уходит, документ второго цел, он вправе вернуться за
+ * СВОИМИ ответами. Пара, где мертвы оба, — предмет `cleanupStalePairs`, здесь не трогается:
+ * половина без второго участника (`bUid == null`) тоже не обезличивается — такую пару целиком
+ * уберёт `cleanupStalePairs`, а обезличенная пустая пара стала бы «присоединяемой» заново.
+ *
+ * Цена: два запроса по одиночным полям на КАЖДОГО умершего — только по факту смерти, в обычном
+ * цикле не стоит ничего (тот же довод, что у `deleteFriendshipsOf`). Общий кусок обоих
+ * уборщиков — гостя и удалившегося человека. Идемпотентно: повтор ничего не находит.
+ *
+ * ⚠️ Следствие формы «bUid: null»: пара с обезличенным ВТОРЫМ участником по правилам снова
+ * присоединяема (`allow update: if resource.data.bUid == null`) — создатель вправе позвать
+ * другого человека по той же ссылке. Названо, а не спрятано.
+ */
+export async function anonymizePairHalvesOf(uid, now) {
+  let touched = 0;
+  for (const side of ['a', 'b']) {
+    const other = side === 'a' ? 'b' : 'a';
+    const mine = await db.collection('testPairs').where(`${side}Uid`, '==', uid).get();
+    for (const pair of mine.docs) {
+      const otherUid = pair.get(`${other}Uid`);
+      if (typeof otherUid !== 'string' || otherUid.length === 0) continue; // второго нет — пара уйдёт целиком
+      await pair.ref.update({ [`${side}Uid`]: null, [`${side}Answers`]: null, [`${side}AnonymizedAt`]: now });
+      touched += 1;
+    }
+  }
+  return touched;
 }
 
 /**
@@ -1080,9 +1118,14 @@ export async function cleanupDeletedPeople(now = Date.now()) {
     // Заявки — обезличить, не удалить (В11 = А); кусок общий с уборкой гостей.
     await anonymizeSuggestionsOf(uid, now);
 
+    // Половины в парах теста, где второй жив, — обезличить (`bugs/154`, №041 В2 = A):
+    // клиент до своих пар не дотягивается (`allow list: if false`), и без этого его оценки
+    // жили бы в чужом документе, пока жив второй, — потенциально годами.
+    const halves = await anonymizePairHalvesOf(uid, now);
+
     pointsCache?.delete(uid);
     writtenTops?.delete(uid);
-    log(`человек ${uid} удалил аккаунт — следы вычищены`);
+    log(`человек ${uid} удалил аккаунт — следы вычищены${halves ? `, половин в парах теста обезличено: ${halves}` : ''}`);
   }
 
   // Членства и подсказки в чужих деревьях — общий с уборкой гостей обход collectionGroup.
