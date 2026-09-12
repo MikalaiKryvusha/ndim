@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — ссылка входа открыта в другом браузере: 4 макета (bugs/233)</title>
+<!-- ─────────────────────────────────────────────────────────────────────────
+     ЧЕТЫРЕ МАКЕТА ОДНОГО СОСТОЯНИЯ ДВЕРИ ВХОДА: письмо со ссылкой открыто в
+     ДРУГОМ браузере, и этот браузер не знает, на какую почту пришло письмо.
+
+     ПОВОД — `bugs/233`, находка владельца в бою, и его цель дословно: «нужно,
+     чтобы кросс браузерный логин работал и был индемпотентен». Средство взято
+     из первоисточника (`researches/69` §1): Firebase завершает вход по ссылке
+     только вместе с почтой, и на другом устройстве её СПРАШИВАЮТ у человека.
+
+     ЧТО ВЫБИРАЕТСЯ ЗДЕСЬ. Только ФОРМА этого состояния. Не выбираются и не
+     трогаются: сама дверь «Колонна» (утверждена, №074 В1), её заголовок, её
+     подзаголовок и тексты трёх дверей (утверждены, №073 В1 = А), механика
+     входа (разведка `researches/69`).
+
+     СЦЕНА ОДНА НА ВСЕ ЧЕТЫРЕ. Мария начала вход на ноутбуке, а письмо открыла
+     на телефоне. Верхний кадр — то, что она видит, открыв письмо. Нижний — тот
+     же экран, если она ошиблась в адресе: `maria@exmaple.com` вместо
+     `maria@example.com`.
+
+     🔴 ВАРИАНТЫ РАЗЛИЧАЮТСЯ МЕХАНИЗМОМ, А НЕ ОТТЕНКОМ:
+       V1 «Одно поле»           — ФОКУС: только поле и кнопка, других дорог нет.
+       V2 «Поле и двери»        — ДОРОГИ ОСТАЮТСЯ: поле первым, под «или» — двери.
+       V3 «Сначала выбор»       — СИММЕТРИЯ: войти здесь или открыть письмо там.
+       V4 «Там, где начинали»   — ИНВЕРСИЯ: совет открыть письмо там, вход здесь вторым.
+
+     ВЁРСТКА И ЦВЕТА — КОД ПРОДУКТА, а не память агента. Разметка и стили двери
+     сняты с `src/lib/ui/SigninScreen.svelte`, знак — с `Brand.svelte`, иконка
+     темы — с `icons.ts`, токены — с `src/routes/+layout.svelte`. Сверено с
+     живым кадром стенда `test-results/bug233/k1-clean-browser.png` (390, светлая).
+     ⚠️ Прежний набор `design/signin-screen-mockups.html` для этого НЕ годится:
+     продукт ушёл от него (радиус кнопок 14 против 10, надстрочка без моно-шрифта).
+
+     ДОМ СТИЛЯ: `.picker button[data-v]` · `#width` · `#theme` · `#stage[data-w]` —
+     имена и роли менять нельзя, съёмщик жмёт ровно их.
+     Съёмка: node tools/shoot-mockups.mjs design/signin-other-browser-mockups.html
+───────────────────────────────────────────────────────────────────────── -->
+<style>
+  /* ── Токены боя. Светлая «Бумага» — дефолт (src/routes/+layout.svelte). ── */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --panel-solid: #ffffff;
+    --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1f7fc9;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --ghost-brd: rgba(20,103,214,.35); --ghost-ink: #1a63c4; --ghost-bg-hover: rgba(20,103,214,.06);
+    --link-stroke: rgba(52,130,214,.24); --node-fill: rgba(52,130,214,.38);
+    --card-shadow: 0 16px 40px rgba(29,50,71,.08);
+    /* Служебные — только для этой страницы разбора, в продукт не едут. */
+    --sheet: #ffffff; --sheet-edge: #e3e9f3; --muted: #8a97ab;
+  }
+  :root[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.78); --panel-solid: #091322;
+    --edge: rgba(77,159,255,.22); --edge-soft: rgba(77,159,255,.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #3fd9ff;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --ghost-brd: rgba(63,217,255,.45); --ghost-ink: #a8e2ff; --ghost-bg-hover: rgba(63,217,255,.08);
+    --link-stroke: rgba(77,159,255,.16); --node-fill: rgba(99,176,255,.4);
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
+    --sheet: #0e1626; --sheet-edge: #1c2942; --muted: #6c7f9c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-size: 15px; line-height: 1.55;
+    background: var(--bg); color: var(--text); padding: 120px 16px 60px;
+  }
+  @media (min-width: 900px) { body { padding-top: 84px; } }
+
+  /* ── Панель разбора (не часть продукта) ────────────────────────────────── */
+  .picker {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--sheet);
+    border-bottom: 1px solid var(--sheet-edge); font-size: 13px; color: var(--text);
+  }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button {
+    font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--sheet-edge); background: var(--bg); color: var(--text);
+  }
+  .picker button.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+
+  .note, .why, .tech { max-width: 980px; margin-left: auto; margin-right: auto; }
+  .note {
+    margin-bottom: 18px; padding: 12px 15px; border-radius: 12px;
+    background: var(--sheet); border: 1px solid var(--sheet-edge);
+    font-size: 13px; line-height: 1.55;
+  }
+  .note b, .why b { color: var(--heading); }
+  .caption {
+    margin: 22px auto 8px; font-size: 12px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+  }
+  .why { margin-top: 30px; font-size: 13.5px; line-height: 1.62; }
+  .why p { margin-bottom: 12px; }
+  .cost { color: var(--muted); }
+  .tech { margin-top: 24px; font-size: 13px; line-height: 1.6; }
+  .tech h3 { color: var(--heading); font-size: 15px; margin-bottom: 8px; }
+  .tech li { margin: 0 0 7px 20px; }
+  code { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: .92em; }
+
+  /* ── Сцена ─────────────────────────────────────────────────────────────── */
+  #stage { margin: 0 auto; }
+  #stage[data-w="390"]  { max-width: 390px; }
+  #stage[data-w="1440"] { max-width: 1280px; }
+  /* Варианты переключаются ВИДИМОСТЬЮ, а не `display`: иначе дрейф поля перезапускался бы
+     на каждом клике съёмщика. */
+  .variant { visibility: hidden; height: 0; overflow: hidden; }
+  .variant.active { visibility: visible; height: auto; overflow: visible; }
+
+  /* Рамка окна. Внутри — ровно `.signin-screen` продукта: окно целиком, без оболочки. */
+  .screen {
+    position: relative; overflow: hidden;
+    border-radius: 16px; border: 1px solid var(--edge);
+    background: var(--bg); color: var(--text); box-shadow: var(--card-shadow);
+    display: grid; place-items: center; padding: 24px 18px;
+  }
+  #stage[data-w="390"]  .screen { height: 780px; }
+  #stage[data-w="1440"] .screen { height: 740px; }
+
+  /* ── Дверь «Колонна»: стили SigninScreen.svelte один в один ─────────────── */
+  .field { position: absolute; inset: 0; pointer-events: none; opacity: .85; }
+  .field svg { width: 100%; height: 100%; display: block; }
+  .field .links line { stroke: var(--link-stroke); stroke-width: 1; opacity: .55; }
+  .field .nodes circle { fill: var(--node-fill); opacity: .75; }
+  .drift { animation: drift 46s ease-in-out infinite alternate; transform-origin: 50% 50%; }
+  @keyframes drift { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(-14px,10px,0) scale(1.035); } }
+  @media (prefers-reduced-motion: reduce) { .drift { animation: none; } }
+  .vig { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 40%, transparent 40%, var(--bg) 100%); }
+
+  .ctl { position: absolute; top: 14px; right: 16px; display: flex; gap: 8px; align-items: center; z-index: 2; }
+  .ctl .lang { display: flex; border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; }
+  .ctl .lang span { font-size: 13px; padding: 6px 12px; color: var(--dim); }
+  .ctl .lang span.on { background: var(--primary); color: var(--primary-ink); }
+  .ctl .th { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 12px;
+    color: var(--dim); border: 1px solid var(--edge); border-radius: 999px; }
+  .ctl .th svg { width: 15px; height: 15px; fill: currentColor; }
+  .ctl .th span { display: inline-flex; gap: 6px; align-items: center; }
+  :root[data-theme="light"] .ctl .th .to-light { display: none; }
+  :root[data-theme="dark"]  .ctl .th .to-dark { display: none; }
+
+  .col { position: relative; z-index: 1; width: 100%; display: grid; place-items: center; }
+  .inner { width: min(420px, 100%); text-align: center; display: grid; gap: 10px; justify-items: center; }
+  .mark { display: block; margin-bottom: 2px; }
+  .brand { overflow: visible; display: block; }
+  .brand .halo { display: none; }
+  :root[data-theme="dark"] .brand .halo { display: initial; }
+
+  .eyebrow { margin: 0; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+  /* clamp(1.5rem, 5vw, 2rem) продукта, пересчитанный на ширину РАМКИ: 5vw окна 390 даёт 19.5px,
+     значит действует нижняя граница 24px; у окна 1440 — верхняя, 32px. */
+  h1 { margin: 2px 0 0; line-height: 1.18; font-size: 24px; }
+  #stage[data-w="1440"] h1 { font-size: 32px; }
+  .lede { margin: 4px 0 10px; color: var(--dim); font-size: 15px; line-height: 1.5; }
+
+  .doors { display: grid; gap: 10px; width: 100%; }
+  .d {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; min-height: 52px; padding: 13px 18px;
+    font: inherit; font-size: 15px; font-weight: 600;
+    border-radius: 14px; border: 1px solid transparent; text-align: center;
+  }
+  .d.primary { background: var(--primary); color: var(--primary-ink); }
+  .d.guest { white-space: pre-line; }
+  .d.ghost { background: transparent; border-color: var(--ghost-brd); color: var(--ghost-ink); }
+  .gi { width: 18px; height: 18px; flex: none; }
+  .ic { width: 18px; height: 18px; fill: currentColor; flex: none; }
+
+  .sep { display: flex; align-items: center; gap: 14px; margin: 2px 0; font-size: 14px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--text); opacity: .92; }
+  .sep::before, .sep::after { content: ''; height: 2px; flex: 1; border-radius: 2px; background: var(--edge); opacity: .9; }
+
+  .inp { width: 100%; min-height: 52px; padding: 13px 16px; font: inherit; font-size: 15px; color: var(--text);
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; text-align: left; }
+  .inp.empty { color: var(--faint); }
+  .err { margin: 2px 0 0; color: #c0392b; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Ссылка открыта в другом браузере</b>
+  <button data-v="1" class="active">V1 Одно поле</button>
+  <button data-v="2">V2 Поле и двери</button>
+  <button data-v="3">V3 Сначала выбор</button>
+  <button data-v="4">V4 Там, где начинали</button>
+  <span class="sp"></span>
+  <button id="width">390 ↔ 1440</button>
+  <button id="theme">тема</button>
+</div>
+
+<div class="note">
+  <b>Сцена одна на все четыре варианта.</b> Мария начала вход в Пространство NDim Space в
+  одном браузере, а письмо со ссылкой открыла в другом — например, начала на ноутбуке, а письмо открыла на телефоне. Верхний кадр — экран, который она видит,
+  открыв письмо. Нижний кадр — тот же экран, если Мария ошиблась в адресе.
+  Дверь «Колонна», её заголовок и подзаголовок — утверждённые, в этом наборе они не выбираются.
+</div>
+
+<div id="stage" data-w="390">
+
+  <!-- ═══════════════════════ V1 «Одно поле» ═══════════════════════ -->
+  <div class="variant active" id="1">
+    <p class="caption">Мария открыла письмо в другом браузере</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        __HEAD__
+        <p class="lede">Вы открыли письмо в другом браузере. Введите адрес электронной почты, на который пришло письмо, и ссылка откроет Вам вход в Пространство NDim&nbsp;Space.</p>
+        <div class="doors">
+          <div class="inp empty">Ваш адрес электронной почты</div>
+          <div class="d primary">Войти в Пространство NDim&nbsp;Space</div>
+        </div>
+      </div></main>
+    </div>
+    <p class="caption">Мария ошиблась в адресе</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        __HEAD__
+        <p class="lede">Вы открыли письмо в другом браузере. Введите адрес электронной почты, на который пришло письмо, и ссылка откроет Вам вход в Пространство NDim&nbsp;Space.</p>
+        <div class="doors">
+          <div class="inp">maria@exmaple.com</div>
+          <div class="d primary">Войти в Пространство NDim&nbsp;Space</div>
+        </div>
+        <p class="err">Письмо со ссылкой пришло на другой адрес электронной почты. Введите адрес, на который пришло письмо.</p>
+      </div></main>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ V2 «Поле и двери» ═══════════════════════ -->
+  <div class="variant" id="2">
+    <p class="caption">Мария открыла письмо в другом браузере</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        __HEAD__
+        <p class="lede">Вы открыли письмо в другом браузере. Введите адрес электронной почты, на который пришло письмо, и ссылка откроет Вам вход в Пространство NDim&nbsp;Space.</p>
+        <div class="doors">
+          <div class="inp empty">Ваш адрес электронной почты</div>
+          <div class="d primary">Войти в Пространство NDim&nbsp;Space</div>
+          <div class="sep">или</div>
+          <div class="d primary">__GOOGLE__Войти через Google</div>
+          <div class="d primary guest">Смотреть Пространство NDim&nbsp;Space
+гостем без регистрации</div>
+        </div>
+      </div></main>
+    </div>
+    <p class="caption">Мария ошиблась в адресе</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        __HEAD__
+        <p class="lede">Вы открыли письмо в другом браузере. Введите адрес электронной почты, на который пришло письмо, и ссылка откроет Вам вход в Пространство NDim&nbsp;Space.</p>
+        <div class="doors">
+          <div class="inp">maria@exmaple.com</div>
+          <div class="d primary">Войти в Пространство NDim&nbsp;Space</div>
+          <p class="err">Письмо со ссылкой пришло на другой адрес электронной почты. Введите адрес, на который пришло письмо.</p>
+          <div class="sep">или</div>
+          <div class="d primary">__GOOGLE__Войти через Google</div>
+          <div class="d primary guest">Смотреть Пространство NDim&nbsp;Space
+гостем без регистрации</div>
+        </div>
+      </div></main>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ V3 «Сначала выбор» ═══════════════════════ -->
+  <div class="variant" id="3">
+    <p class="caption">Мария открыла письмо в другом браузере</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        __HEAD__
+        <p class="lede">Вы открыли письмо в другом браузере. Войдите в Пространство NDim&nbsp;Space в этом браузере или откройте письмо в браузере, где начинали вход.</p>
+        <div class="doors">
+          <div class="d primary">Войти в этом браузере</div>
+          <div class="d ghost">Открыть письмо там, где начинали вход</div>
+        </div>
+      </div></main>
+    </div>
+    <p class="caption">Мария нажала «Войти в этом браузере» и ошиблась в адресе</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        __HEAD__
+        <p class="lede">Введите адрес электронной почты, на который пришло письмо, и ссылка откроет Вам вход в Пространство NDim&nbsp;Space.</p>
+        <div class="doors">
+          <div class="inp">maria@exmaple.com</div>
+          <div class="d primary">Войти в Пространство NDim&nbsp;Space</div>
+        </div>
+        <p class="err">Письмо со ссылкой пришло на другой адрес электронной почты. Введите адрес, на который пришло письмо.</p>
+      </div></main>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ V4 «Там, где начинали» ═══════════════════════ -->
+  <div class="variant" id="4">
+    <p class="caption">Мария открыла письмо в другом браузере</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        __HEAD__
+        <p class="lede">Вы открыли письмо в другом браузере. Откройте письмо в браузере, где начинали вход, и ссылка сразу откроет Вам вход в Пространство NDim&nbsp;Space.</p>
+        <div class="doors">
+          <div class="d ghost">Войти в этом браузере</div>
+        </div>
+      </div></main>
+    </div>
+    <p class="caption">Мария нажала «Войти в этом браузере» и ошиблась в адресе</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        __HEAD__
+        <p class="lede">Введите адрес электронной почты, на который пришло письмо, и ссылка откроет Вам вход в Пространство NDim&nbsp;Space.</p>
+        <div class="doors">
+          <div class="inp">maria@exmaple.com</div>
+          <div class="d primary">Войти в Пространство NDim&nbsp;Space</div>
+        </div>
+        <p class="err">Письмо со ссылкой пришло на другой адрес электронной почты. Введите адрес, на который пришло письмо.</p>
+      </div></main>
+    </div>
+  </div>
+
+</div>
+
+<div class="why">
+  <p><b>V1 «Одно поле».</b> Экран задаёт один вопрос, и ответ на него сразу открывает вход. Так
+  сделана страница подтверждения у FirebaseUI — интерфейса, который Google выпускает для нашего же
+  стека. <span class="cost">Цена: у человека, который не помнит, на какую почту просил письмо,
+  на экране нет другой дороги.</span></p>
+  <p><b>V2 «Поле и двери».</b> Поле стоит первым, а под «или» остаются вход через Google и вход
+  гостем — те же двери, что на экране входа. <span class="cost">Цена: под полем три синие кнопки,
+  и главный ход экрана виден слабее.</span></p>
+  <p><b>V3 «Сначала выбор».</b> Экран называет обе дороги сразу: войти здесь или открыть письмо в
+  браузере, где начинали вход. Поле появляется после выбора. <span class="cost">Цена: на один
+  нажим больше у того, кто хочет войти здесь.</span></p>
+  <p><b>V4 «Там, где начинали».</b> Экран советует открыть письмо в браузере, где начинали вход:
+  там ссылка откроет вход сразу, без поля. Вход в этом браузере стоит вторым. Ближе всего к
+  странице «новое устройство» у FirebaseUI. <span class="cost">Цена: человек с телефоном, у
+  которого ноутбук остался дома, получает совет, исполнить который не может.</span></p>
+</div>
+
+<div class="tech">
+  <h3>Что под кадром — и что из этого уже есть в коде</h3>
+  <ul>
+    <li><b>Есть:</b> <code>completeLoginLink(href, emailFromHuman)</code> в
+      <code>src/lib/data/account.ts</code> принимает почту, названную человеком, и отдаёт исход
+      <code>email-needed</code>, когда почту взять неоткуда. Экран, который ответит на этот исход,
+      и выбирается здесь.</li>
+    <li><b>Есть в коде, живьём не наблюдалось:</b> на несовпадение почты код ждёт от Firebase ответ
+      <code>auth/invalid-email</code> и разводит его в тот же исход <code>email-needed</code>
+      (<code>classifyLink</code>, пометка <code>[NOT-TESTED]</code>). Код ответа взят из комментария,
+      ни документацией, ни прогоном пока не подтверждён — сверяется при реализации, до кадра
+      «Мария ошиблась в адресе» в продукте.</li>
+    <li><b>Будет, по разведке:</b> ссылка сначала проверяется (<code>checkActionCode</code>, приём
+      FirebaseUI) — мёртвая ссылка получает честное «запросите новую» без поля.</li>
+    <li><b>Не делается никогда:</b> почта в адресе ссылки. Firebase: «<i>Do not pass the user’s
+      email in the redirect URL parameters and re-use it as this may enable session
+      injections</i>».</li>
+    <li><b>Вне этого набора, отдельными вопросами:</b> ссылка выписана одному аккаунту, а в браузере
+      вошёл другой; гость, сохраняющий оценки, открыл письмо в другом браузере.</li>
+  </ul>
+</div>
+
+<script>
+  // Повторяющиеся куски вида подставляются ОДНИМ источником: иначе восемь копий знака и поля
+  // разъехались бы на первой же правке. Всё ниже — разметка продукта, а не придуманные фигуры.
+  const FIELD = `<svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><g class="drift"><g class="links">
+    <line x1="120" y1="180" x2="320" y2="120"/><line x1="320" y1="120" x2="470" y2="260"/>
+    <line x1="1180" y1="140" x2="1330" y2="240"/><line x1="1040" y1="90" x2="1180" y2="140"/>
+    <line x1="180" y1="640" x2="360" y2="740"/><line x1="1240" y1="660" x2="1100" y2="780"/>
+    <line x1="90" y1="420" x2="230" y2="470"/><line x1="1350" y1="430" x2="1230" y2="500"/>
+    <line x1="700" y1="60" x2="850" y2="110"/><line x1="620" y1="820" x2="780" y2="850"/></g>
+    <g class="nodes"><circle cx="120" cy="180" r="3.5"/><circle cx="320" cy="120" r="5"/>
+    <circle cx="470" cy="260" r="3"/><circle cx="1180" cy="140" r="4.5"/><circle cx="1330" cy="240" r="3"/>
+    <circle cx="1040" cy="90" r="2.5"/><circle cx="180" cy="640" r="4"/><circle cx="360" cy="740" r="3"/>
+    <circle cx="1240" cy="660" r="4.5"/><circle cx="1100" cy="780" r="3"/><circle cx="90" cy="420" r="3"/>
+    <circle cx="230" cy="470" r="4"/><circle cx="1350" cy="430" r="3.5"/><circle cx="1230" cy="500" r="2.5"/>
+    <circle cx="700" cy="60" r="3"/><circle cx="850" cy="110" r="3.5"/><circle cx="620" cy="820" r="3.5"/>
+    <circle cx="780" cy="850" r="2.5"/></g></g></svg>`;
+  const MOON = '<path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>';
+  const SUN = '<path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8"/>';
+  const CTL = `<div class="lang"><span class="on">RU</span><span>EN</span></div>
+    <div class="th"><span class="to-dark"><svg viewBox="0 0 16 16">${MOON}</svg>Тёмная</span><span class="to-light"><svg viewBox="0 0 16 16">${SUN}</svg>Светлая</span></div>`;
+  let seq = 0;
+  const brand = () => {
+    const g = 'bg' + (seq += 1), h = 'bh' + seq;
+    return `<svg class="brand" width="46" height="46" viewBox="0 0 96 96" aria-hidden="true"><defs>
+      <linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70"><stop offset="0" stop-color="#4d9fff"/><stop offset="1" stop-color="#3fd9ff"/></linearGradient>
+      <filter id="${h}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter></defs>
+      <rect class="halo" width="96" height="96" rx="22" fill="rgba(63, 217, 255, 0.3)" filter="url(#${h})"/>
+      <rect width="96" height="96" rx="22" fill="#060b14"/>
+      <g stroke="url(#${g})" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g>
+      <g fill="url(#${g})"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg>`;
+  };
+  const HEAD = () => `<span class="mark">${brand()}</span><p class="eyebrow">Пространство NDim Space</p><h1>Войдите в Пространство NDim&nbsp;Space</h1>`;
+  const GOOGLE = `<svg class="gi" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
+
+  document.querySelectorAll('.screen').forEach((s) => {
+    s.innerHTML = s.innerHTML
+      .replaceAll('__FIELD__', FIELD).replaceAll('__CTL__', CTL)
+      .replaceAll('__GOOGLE__', GOOGLE)
+      .replace(/__HEAD__/g, () => HEAD());
+  });
+
+  // Переключатели дома стиля: вариант · ширина · тема. Съёмщик жмёт ровно эти кнопки.
+  const stage = document.getElementById('stage');
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === b.dataset.v));
+  }));
+  document.getElementById('width').addEventListener('click', () => {
+    stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390';
+  });
+  document.getElementById('theme').addEventListener('click', () => {
+    const el = document.documentElement;
+    el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+  });
+</script>
+</body>
+</html>

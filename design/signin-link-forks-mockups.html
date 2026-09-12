@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — две развилки ссылки входа: кадры вариантов поведения (bugs/233)</title>
+<!-- ─────────────────────────────────────────────────────────────────────────
+     КАДРЫ ДВУХ РАЗВИЛОК ПОВЕДЕНИЯ ссылки входа из письма. Это НЕ выбор формы
+     экрана (форма — `design/signin-other-browser-mockups.html`), а выбор того,
+     ЧТО ПРОДУКТ ДЕЛАЕТ. Кадр у каждого варианта — пример, по которому видно
+     исход глазами.
+
+     РАЗВИЛКА «Б» — ссылка из письма выписана на другой адрес, а в браузере уже
+     вошёл Николай (`nikolai@example.com`). 🔑 Продукт НЕ знает, на какой адрес
+     выписана ссылка: он знает только, что адрес Николая не подошёл (Firebase
+     отказал в сверке). Поэтому чужой адрес не показан ни в одном кадре.
+       Б1 «Остаться молча»         — сегодняшний промежуточный исход (`profile/+page.svelte:632`).
+       Б2 «Остаться и сказать»     — профиль Николая, врезка в карточке аккаунта.
+       Б3 «Спросить до профиля»    — отдельный экран с двумя дорогами.
+       Б4 «Выйти и спросить почту» — Николай выходит, экран спрашивает адрес.
+
+     РАЗВИЛКА «Г» — гость поставил оценки на ноутбуке, нажал «Сохранить мои
+     результаты», а письмо открыл на телефоне. Оценки живут в анонимной сессии
+     ноутбука; привязать почту в телефоне не к кому (`researches/69` §1.3).
+       Г1 «Только там, где оценивали» — экран объясняет, где оценки, и дорог не даёт.
+       Г2 «Там или здесь без оценок»  — то же объяснение и вход здесь, с ценой вслух.
+       (Третий путь — перенос оценок сервером синхронизации — кадра не имеет: это
+        работа, а не экран; описан в вопросе с ценой.)
+
+     ВЁРСТКА — КОД ПРОДУКТА: дверь — `SigninScreen.svelte`; шапка — `AppBar.svelte`;
+     карточка аккаунта, ряды и врезка — `profile/+page.svelte` (`.head-card`,
+     `.arow`, `.awarn`, `.btn`); буква-аватар — `Avatar.svelte`; иконки — `icons.ts`.
+     Врезка стоит ВНУТРИ карточки аккаунта, а не модальным окном: модальных окон в
+     продукте нет (№007 В3), и «Выйти?» у гостя живёт ровно так же.
+
+     ДОМ СТИЛЯ: `.picker button[data-v]` · `#width` · `#theme` · `#stage[data-w]`.
+     Съёмка: node tools/shoot-mockups.mjs design/signin-link-forks-mockups.html
+───────────────────────────────────────────────────────────────────────── -->
+<style>
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --panel-solid: #ffffff;
+    --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1f7fc9;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --ghost-brd: rgba(20,103,214,.35); --ghost-ink: #1a63c4;
+    --link-stroke: rgba(52,130,214,.24); --node-fill: rgba(52,130,214,.38);
+    --card-shadow: 0 16px 40px rgba(29,50,71,.08);
+    --sheet: #ffffff; --sheet-edge: #e3e9f3; --muted: #8a97ab;
+  }
+  :root[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.78); --panel-solid: #091322;
+    --edge: rgba(77,159,255,.22); --edge-soft: rgba(77,159,255,.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #3fd9ff;
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --ghost-brd: rgba(63,217,255,.45); --ghost-ink: #a8e2ff;
+    --link-stroke: rgba(77,159,255,.16); --node-fill: rgba(99,176,255,.4);
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
+    --sheet: #0e1626; --sheet-edge: #1c2942; --muted: #6c7f9c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.55;
+    background: var(--bg); color: var(--text); padding: 120px 16px 60px; }
+  @media (min-width: 900px) { body { padding-top: 84px; } }
+
+  .picker { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap; padding: 10px 14px; background: var(--sheet); border-bottom: 1px solid var(--sheet-edge);
+    font-size: 13px; color: var(--text); }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button { font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--sheet-edge); background: var(--bg); color: var(--text); }
+  .picker button.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .scene, .why, .tech { max-width: 980px; margin-left: auto; margin-right: auto; }
+  .scene { margin-bottom: 18px; padding: 12px 15px; border-radius: 12px; background: var(--sheet);
+    border: 1px solid var(--sheet-edge); font-size: 13px; line-height: 1.55; }
+  .scene b, .why b { color: var(--heading); }
+  .caption { margin: 22px auto 8px; font-size: 12px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .12em; font-weight: 700; }
+  .why { margin-top: 30px; font-size: 13.5px; line-height: 1.62; }
+  .why p { margin-bottom: 12px; }
+  .cost { color: var(--muted); }
+  .tech { margin-top: 24px; font-size: 13px; line-height: 1.6; }
+  .tech h3 { color: var(--heading); font-size: 15px; margin-bottom: 8px; }
+  .tech li { margin: 0 0 7px 20px; }
+  code { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: .92em; }
+
+  #stage { margin: 0 auto; }
+  #stage[data-w="390"]  { max-width: 390px; }
+  #stage[data-w="1440"] { max-width: 1280px; }
+  .variant { visibility: hidden; height: 0; overflow: hidden; }
+  .variant.active { visibility: visible; height: auto; overflow: visible; }
+
+  /* Рамка окна двери — `.signin-screen` продукта. */
+  .screen { position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--edge);
+    background: var(--bg); color: var(--text); box-shadow: var(--card-shadow);
+    display: grid; place-items: center; padding: 24px 18px; }
+  #stage[data-w="390"]  .screen { height: 780px; }
+  #stage[data-w="1440"] .screen { height: 740px; }
+  /* Рамка окна продукта ВНУТРИ — оболочка профиля: шапка сверху, рабочая область колонной. */
+  .app { position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--edge);
+    background: var(--bg); color: var(--text); box-shadow: var(--card-shadow); }
+  #stage[data-w="390"]  .app { height: 780px; }
+  /* Профиль на десктопе живёт в оболочке «Рабочий стол» (рельс + две колонны); растягивать телефонную
+     колонну на 1280 значило бы нарисовать экран, которого в продукте нет (EXP-0135). Развилка от ширины
+     не зависит — поэтому на 1440 кадр профиля честно остаётся телефоном, с подписью. */
+  #stage[data-w="1440"] .app { height: 780px; max-width: 390px; margin: 0 auto; }
+  .desk-note { max-width: 390px; margin: 8px auto 0; font-size: 12px; color: var(--muted); text-align: center; }
+  #stage[data-w="390"] .desk-note { display: none; }
+
+  /* ── Дверь «Колонна» (SigninScreen.svelte) ── */
+  .field { position: absolute; inset: 0; pointer-events: none; opacity: .85; }
+  .field svg { width: 100%; height: 100%; display: block; }
+  .field .links line { stroke: var(--link-stroke); stroke-width: 1; opacity: .55; }
+  .field .nodes circle { fill: var(--node-fill); opacity: .75; }
+  .vig { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 40%, transparent 40%, var(--bg) 100%); }
+  .ctl { position: absolute; top: 14px; right: 16px; display: flex; gap: 8px; align-items: center; z-index: 2; }
+  .ctl .lang { display: flex; border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; }
+  .ctl .lang span { font-size: 13px; padding: 6px 12px; color: var(--dim); }
+  .ctl .lang span.on { background: var(--primary); color: var(--primary-ink); }
+  .ctl .th { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 12px;
+    color: var(--dim); border: 1px solid var(--edge); border-radius: 999px; }
+  .ctl .th svg { width: 15px; height: 15px; fill: currentColor; }
+  .ctl .th span { display: inline-flex; gap: 6px; align-items: center; }
+  :root[data-theme="light"] .ctl .th .to-light { display: none; }
+  :root[data-theme="dark"]  .ctl .th .to-dark { display: none; }
+  .col { position: relative; z-index: 1; width: 100%; display: grid; place-items: center; }
+  .inner { width: min(420px, 100%); text-align: center; display: grid; gap: 10px; justify-items: center; }
+  .mark { display: block; margin-bottom: 2px; }
+  .brand { overflow: visible; display: block; }
+  .brand .halo { display: none; }
+  :root[data-theme="dark"] .brand .halo { display: initial; }
+  .eyebrow { margin: 0; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+  h1 { margin: 2px 0 0; line-height: 1.18; font-size: 24px; }
+  #stage[data-w="1440"] h1 { font-size: 32px; }
+  .lede { margin: 4px 0 10px; color: var(--dim); font-size: 15px; line-height: 1.5; }
+  .doors { display: grid; gap: 10px; width: 100%; }
+  .d { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 52px;
+    padding: 13px 18px; font: inherit; font-size: 15px; font-weight: 600; border-radius: 14px;
+    border: 1px solid transparent; text-align: center; }
+  .d.primary { background: var(--primary); color: var(--primary-ink); }
+  .d.ghost { background: transparent; border-color: var(--ghost-brd); color: var(--ghost-ink); }
+  .inp { width: 100%; min-height: 52px; padding: 13px 16px; font: inherit; font-size: 15px; color: var(--faint);
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; text-align: left; }
+  .pnote { margin: 0; color: var(--dim); font-size: 14px; line-height: 1.5; }
+
+  /* ── Оболочка профиля (AppBar.svelte + profile/+page.svelte) ── */
+  .bar { display: flex; align-items: center; gap: 9px; padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--edge); background: var(--panel-solid); }
+  .bar .wm { font-size: 15px; font-weight: 650; color: var(--heading); }
+  .bar .sq { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+    color: var(--dim); border: 1px solid var(--edge); border-radius: 10px; font-size: 12px; font-weight: 700; }
+  .bar .sq svg { width: 15px; height: 15px; fill: currentColor; }
+  .bar .sq.th { margin-left: auto; }
+  :root[data-theme="light"] .bar .sq .moon { display: none; }
+  :root[data-theme="dark"]  .bar .sq .sun { display: none; }
+  .body { padding: 14px; display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 458px; margin: 0 auto; }
+  .card { background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 14px; box-shadow: var(--card-shadow); }
+  .card h3 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; font-weight: 600; }
+  .head-card { display: flex; flex-direction: column; }
+  .head-who { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; }
+  .head-idn { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .head-card b { font-size: 17px; color: var(--heading); display: block; }
+  .ava { width: 54px; height: 54px; border-radius: 50%; background: var(--edge-soft); flex: none; display: flex;
+    align-items: center; justify-content: center; font-weight: 700; color: var(--primary); font-size: 20px; }
+  .ameta { font-size: 12px; color: var(--faint); word-break: break-word; }
+  .arow { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 2px; border-top: 1px solid var(--edge-soft);
+    font-size: 13.5px; color: var(--text); text-align: left; }
+  .arow .ic { width: 24px; display: flex; justify-content: center; color: var(--accent); }
+  .arow .ic svg { width: 20px; height: 20px; fill: currentColor; }
+  .arow .lb { flex: 1; }
+  .arow .chev { color: var(--faint); display: flex; }
+  .arow .chev svg { width: 13px; height: 13px; fill: currentColor; }
+  .awarn { margin: 0 0 4px; padding: 11px 13px; border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent); border-radius: 12px; }
+  .awarn-title { margin: 0; font-size: 13.5px; line-height: 1.4; color: var(--text); }
+  .awarn-cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .btn { display: block; flex: 1 1 auto; text-align: center; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600;
+    background: var(--primary); color: var(--primary-ink); border: 0; }
+  .btn.ghost { background: transparent; border: 1px solid var(--ghost-brd); color: var(--ghost-ink); }
+  .stub { height: 150px; }
+  .stub .line { height: 12px; border-radius: 6px; background: var(--edge-soft); margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Развилки ссылки входа</b>
+  <button data-v="b1" class="active">Б1 Остаться молча</button>
+  <button data-v="b2">Б2 Остаться и сказать</button>
+  <button data-v="b3">Б3 Спросить до профиля</button>
+  <button data-v="b4">Б4 Выйти и спросить почту</button>
+  <button data-v="g1">Г1 Только там, где оценивали</button>
+  <button data-v="g2">Г2 Там или здесь без оценок</button>
+  <span class="sp"></span>
+  <button id="width">390 ↔ 1440</button>
+  <button id="theme">тема</button>
+</div>
+
+<div class="scene">
+  <b>Б — ссылка для другого адреса.</b> Николай давно вошёл в Пространство NDim Space на телефоне
+  под адресом <code>nikolai@example.com</code>. Он открывает на этом телефоне письмо со ссылкой,
+  выписанной на другой адрес. Продукт знает только одно: адрес Николая к этой ссылке не подошёл.<br>
+  <b>Г — письмо гостя в другом браузере.</b> Гость поставил оценки на ноутбуке и нажал «Сохранить мои
+  результаты», а письмо открыл на телефоне. Оценки остались в браузере ноутбука.
+</div>
+
+<div id="stage" data-w="390">
+
+  <!-- ═══════ Б1 «Остаться молча» ═══════ -->
+  <div class="variant active" id="b1">
+    <p class="caption">Николай открыл ссылку — видимого исхода нет</p>
+    <div class="app">
+      __BAR__
+      <div class="body">
+        __HEADCARD__
+        __STUB__
+      </div>
+    </div>
+    <p class="desk-note">Кадр профиля показан телефоном: на десктопе та же карточка аккаунта стоит в оболочке «Рабочий стол», и исход от ширины не зависит.</p>
+  </div>
+
+  <!-- ═══════ Б2 «Остаться и сказать» ═══════ -->
+  <div class="variant" id="b2">
+    <p class="caption">Николай открыл ссылку — профиль и врезка в карточке аккаунта</p>
+    <div class="app">
+      __BAR__
+      <div class="body">
+        __HEADCARD_WARN__
+        __STUB__
+        <template id="warn-b2"><div class="awarn">
+          <p class="awarn-title">Ссылка из письма выписана на другой адрес электронной почты. Вы остаётесь в аккаунте nikolai@example.com.</p>
+          <div class="awarn-cta">
+            <span class="btn">Войти по этой ссылке</span>
+            <span class="btn ghost">Остаться в этом аккаунте</span>
+          </div>
+        </div></template>
+      </div>
+    </div>
+    <p class="desk-note">Кадр профиля показан телефоном: на десктопе та же карточка аккаунта стоит в оболочке «Рабочий стол», и исход от ширины не зависит.</p>
+  </div>
+
+  <!-- ═══════ Б3 «Спросить до профиля» ═══════ -->
+  <div class="variant" id="b3">
+    <p class="caption">Николай открыл ссылку — экран с двумя дорогами</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        <span class="mark">__BRAND__</span>
+        <p class="eyebrow">Пространство NDim&nbsp;Space</p>
+        <h1>Ссылка из письма для другого адреса</h1>
+        <p class="lede">Сейчас Вы в аккаунте nikolai@example.com. Останьтесь в этом аккаунте или войдите по ссылке: для входа понадобится адрес электронной почты, на который пришло письмо.</p>
+        <div class="doors">
+          <div class="d primary">Остаться в этом аккаунте</div>
+          <div class="d ghost">Войти по ссылке</div>
+        </div>
+      </div></main>
+    </div>
+  </div>
+
+  <!-- ═══════ Б4 «Выйти и спросить почту» ═══════ -->
+  <div class="variant" id="b4">
+    <p class="caption">Николай открыл ссылку — он вышел, экран спрашивает адрес</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        <span class="mark">__BRAND__</span>
+        <p class="eyebrow">Пространство NDim&nbsp;Space</p>
+        <h1>Войдите в Пространство NDim&nbsp;Space</h1>
+        <p class="lede">Ссылка из письма выписана на другой адрес электронной почты. Введите адрес, на который пришло письмо, и ссылка откроет Вам вход в Пространство NDim&nbsp;Space.</p>
+        <div class="doors">
+          <div class="inp">Ваш адрес электронной почты</div>
+          <div class="d primary">Войти в Пространство NDim&nbsp;Space</div>
+        </div>
+        <p class="pnote">Вы вышли из аккаунта nikolai@example.com.</p>
+      </div></main>
+    </div>
+  </div>
+
+  <!-- ═══════ Г1 «Только там, где оценивали» ═══════ -->
+  <div class="variant" id="g1">
+    <p class="caption">Гость открыл письмо на телефоне</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        <span class="mark">__BRAND__</span>
+        <p class="eyebrow">Пространство NDim&nbsp;Space</p>
+        <h1>Оценки остались в другом браузере</h1>
+        <p class="lede">Оценки, которые Вы поставили гостем, хранятся в браузере, где Вы их ставили. Откройте письмо в том браузере, и оценки перейдут в Ваш аккаунт в Пространстве NDim&nbsp;Space.</p>
+      </div></main>
+    </div>
+  </div>
+
+  <!-- ═══════ Г2 «Там или здесь без оценок» ═══════ -->
+  <div class="variant" id="g2">
+    <p class="caption">Гость открыл письмо на телефоне</p>
+    <div class="screen">
+      <div class="field" aria-hidden="true">__FIELD__</div><div class="vig"></div>
+      <div class="ctl">__CTL__</div>
+      <main class="col"><div class="inner">
+        <span class="mark">__BRAND__</span>
+        <p class="eyebrow">Пространство NDim&nbsp;Space</p>
+        <h1>Оценки остались в другом браузере</h1>
+        <p class="lede">Оценки, которые Вы поставили гостем, хранятся в браузере, где Вы их ставили. Откройте письмо в том браузере, и оценки перейдут в Ваш аккаунт в Пространстве NDim&nbsp;Space.</p>
+        <div class="doors">
+          <div class="d ghost">Войти здесь без этих оценок</div>
+        </div>
+        <p class="pnote">Оценки, поставленные гостем в том браузере, в аккаунт, созданный здесь, не перейдут.</p>
+      </div></main>
+    </div>
+  </div>
+
+</div>
+
+<div class="why">
+  <p><b>Б1 «Остаться молча».</b> Так продукт ведёт себя сегодня, после лечения 12 сентября. Так же
+  по умолчанию делает Clerk: вошедший человек остаётся собой. <span class="cost">Цена: Николай
+  нажал ссылку, и на экране не изменилось ничего — он не узнаёт, почему.</span></p>
+  <p><b>Б2 «Остаться и сказать».</b> Николай видит свой профиль, а в карточке аккаунта — врезку с
+  двумя кнопками, тем же приёмом, каким продукт спрашивает гостя «Выйти?». <span class="cost">Цена:
+  врезку легко пролистать, не прочитав.</span></p>
+  <p><b>Б3 «Спросить до профиля».</b> Прежде профиля — экран, который называет аккаунт Николая и две
+  дороги. Ближе всего к приёму Google в FirebaseUI: на расхождении аккаунтов он спрашивает и называет
+  адрес. <span class="cost">Цена: один лишний экран у того, кто открыл ссылку по ошибке.</span></p>
+  <p><b>Б4 «Выйти и спросить почту».</b> Продукт сразу выходит из аккаунта Николая и спрашивает
+  адрес для ссылки. <span class="cost">Цена: случайно пересланное письмо выводит человека из его
+  аккаунта без вопроса.</span></p>
+  <p><b>Г1 «Только там, где оценивали».</b> Экран объясняет, где оценки, и дорог не даёт. Так делает
+  FirebaseUI: страница «новое устройство». <span class="cost">Цена: человек, у которого ноутбук остался
+  дома, сейчас не может ни сохранить оценки, ни войти по этой ссылке.</span></p>
+  <p><b>Г2 «Там или здесь без оценок».</b> То же объяснение и вход здесь, с ценой, названной до
+  нажатия. <span class="cost">Цена: выбравший вход здесь теряет оценки гостя — позже привязать их к
+  этому адресу уже нельзя.</span></p>
+</div>
+
+<div class="tech">
+  <h3>Что под кадром — и что из этого уже есть в коде</h3>
+  <ul>
+    <li><b>Есть:</b> вошедший человек, открывший ссылку, предъявляет Firebase свой адрес
+      (<code>emailForLink</code>, <code>src/lib/data/account.ts</code>); не подошёл — исход
+      <code>email-needed</code>, и Николай остаётся собой без слов (<code>profile/+page.svelte:632</code>) — это Б1.</li>
+    <li><b>Есть:</b> адрес, на который выписана ссылка, продукт узнать не может и не пытается — почты
+      в ссылке нет (<code>researches/69</code> §1.1). Поэтому ни один вариант Б его не показывает.</li>
+    <li><b>Будет для Г:</b> ссылка несёт признак операции «сохранить оценки гостя» — Firebase это
+      разрешает прямо («<i>Some state can be passed in the link to provide information on the type of
+      operation</i>»); почты и личности в признаке нет. Сегодня признак живёт только в памяти браузера,
+      где вход начали (<code>ndim-pending-intent</code>), и в другом браузере его нет.</li>
+    <li><b>Не делается никогда:</b> почта в адресе ссылки.</li>
+  </ul>
+</div>
+
+<script>
+  const FIELD = `<svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice"><g><g class="links">
+    <line x1="120" y1="180" x2="320" y2="120"/><line x1="320" y1="120" x2="470" y2="260"/>
+    <line x1="1180" y1="140" x2="1330" y2="240"/><line x1="1040" y1="90" x2="1180" y2="140"/>
+    <line x1="180" y1="640" x2="360" y2="740"/><line x1="1240" y1="660" x2="1100" y2="780"/>
+    <line x1="90" y1="420" x2="230" y2="470"/><line x1="1350" y1="430" x2="1230" y2="500"/>
+    <line x1="700" y1="60" x2="850" y2="110"/><line x1="620" y1="820" x2="780" y2="850"/></g>
+    <g class="nodes"><circle cx="120" cy="180" r="3.5"/><circle cx="320" cy="120" r="5"/>
+    <circle cx="470" cy="260" r="3"/><circle cx="1180" cy="140" r="4.5"/><circle cx="1330" cy="240" r="3"/>
+    <circle cx="1040" cy="90" r="2.5"/><circle cx="180" cy="640" r="4"/><circle cx="360" cy="740" r="3"/>
+    <circle cx="1240" cy="660" r="4.5"/><circle cx="1100" cy="780" r="3"/><circle cx="90" cy="420" r="3"/>
+    <circle cx="230" cy="470" r="4"/><circle cx="1350" cy="430" r="3.5"/><circle cx="1230" cy="500" r="2.5"/>
+    <circle cx="700" cy="60" r="3"/><circle cx="850" cy="110" r="3.5"/><circle cx="620" cy="820" r="3.5"/>
+    <circle cx="780" cy="850" r="2.5"/></g></g></svg>`;
+  const MOON = '<path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>';
+  const SUN = '<path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8"/>';
+  const GEAR = '<path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>';
+  const LOGOUT = '<path d="M8.5 10c-.276 0-.5-.448-.5-1s.224-1 .5-1 .5.448.5 1-.224 1-.5 1"/><path d="M10.828.122A.5.5 0 0 1 11 .5V1h.5A1.5 1.5 0 0 1 13 2.5V15h1.5a.5.5 0 0 1 0 1h-13a.5.5 0 0 1 0-1H3V1.5a.5.5 0 0 1 .43-.495l7-1a.5.5 0 0 1 .398.117M11.5 2H11v13h1V2.5a.5.5 0 0 0-.5-.5M4 1.934V15h6V1.077z"/>';
+  const CHEV = '<path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>';
+  let seq = 0;
+  const brand = (size) => {
+    const g = 'bg' + (seq += 1), h = 'bh' + seq;
+    return `<svg class="brand" width="${size}" height="${size}" viewBox="0 0 96 96" aria-hidden="true"><defs>
+      <linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70"><stop offset="0" stop-color="#4d9fff"/><stop offset="1" stop-color="#3fd9ff"/></linearGradient>
+      <filter id="${h}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter></defs>
+      <rect class="halo" width="96" height="96" rx="22" fill="rgba(63, 217, 255, 0.3)" filter="url(#${h})"/>
+      <rect width="96" height="96" rx="22" fill="#060b14"/>
+      <g stroke="url(#${g})" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g>
+      <g fill="url(#${g})"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg>`;
+  };
+  const CTL = `<div class="lang"><span class="on">RU</span><span>EN</span></div>
+    <div class="th"><span class="to-dark"><svg viewBox="0 0 16 16">${MOON}</svg>Тёмная</span><span class="to-light"><svg viewBox="0 0 16 16">${SUN}</svg>Светлая</span></div>`;
+  const BAR = () => `<header class="bar">${brand(26)}<span class="wm">Пространство NDim</span>
+    <span class="sq th"><svg class="sun" viewBox="0 0 16 16">${SUN}</svg><svg class="moon" viewBox="0 0 16 16">${MOON}</svg></span><span class="sq">Ru</span></header>`;
+  const HEADCARD = (warn = '') => `<div class="card head-card"><div class="head-who"><span class="ava">Н</span>
+    <span class="head-idn"><b>Николай</b><span class="ameta">nikolai@example.com</span></span></div>${warn}${ROWS}</div>`;
+  const ROWS = `<div class="arow"><span class="ic"><svg viewBox="0 0 16 16">${GEAR}</svg></span><span class="lb">Управление аккаунтом</span><span class="chev"><svg viewBox="0 0 16 16">${CHEV}</svg></span></div>
+    <div class="arow"><span class="ic"><svg viewBox="0 0 16 16">${LOGOUT}</svg></span><span class="lb">Выйти</span><span class="chev"><svg viewBox="0 0 16 16">${CHEV}</svg></span></div>`;
+  const STUB = `<div class="card stub"><h3>Личная информация</h3><div class="line" style="width:70%"></div><div class="line" style="width:55%"></div><div class="line" style="width:62%"></div></div>`;
+
+  // Врезка Б2 живёт в <template>: её разметка не должна разбираться браузером раньше, чем карточка,
+  // внутрь которой она встаёт, — иначе закрывающие теги закрыли бы чужие блоки.
+  const WARN_B2 = document.getElementById('warn-b2').innerHTML;
+  document.querySelectorAll('.screen, .app').forEach((s) => {
+    s.innerHTML = s.innerHTML
+      .replaceAll('__FIELD__', FIELD).replaceAll('__CTL__', CTL)
+      .replaceAll('__HEADCARD_WARN__', HEADCARD(WARN_B2)).replaceAll('__HEADCARD__', HEADCARD()).replaceAll('__STUB__', STUB)
+      .replace(/__BAR__/g, () => BAR()).replace(/__BRAND__/g, () => brand(46));
+  });
+
+  const stage = document.getElementById('stage');
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === b.dataset.v));
+  }));
+  document.getElementById('width').addEventListener('click', () => { stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390'; });
+  document.getElementById('theme').addEventListener('click', () => {
+    const el = document.documentElement; el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+  });
+</script>
+</body>
+</html>
