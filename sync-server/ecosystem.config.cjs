@@ -41,6 +41,29 @@ const NODE = [
 module.exports = {
 	apps: [
 		{
+			/**
+			 * СЛУЖБА СТЕЙДЖА — не «копия боевой на всякий случай», а место, где ДОКАЗЫВАЕТСЯ дверь
+			 * выката (`plans/85`). Главный путь двери (выкат → пульс → откат) нельзя проверить,
+			 * не выкатив хоть куда-то, а выкат в бой требует отдельного слова владельца.
+			 * Заодно закрывается хвост `plans/83` — «стейдж под PM2 не поднят».
+			 *
+			 * ⛔ Ключ здесь тоже не живёт: контур назван доводом, ключ читает прибор запуска из `.env`.
+			 */
+			name: 'ndim-server-stage',
+			cwd: КОРЕНЬ,
+			script: 'tools/run-sync-server.mjs',
+			interpreter: NODE,
+			args: ['--contour', 'stage', '--entry', resolve(КОРЕНЬ, '..', 'ndim-server-stage', 'sync-server', 'index.mjs')],
+			watch: false,
+			autorestart: true,
+			exp_backoff_restart_delay: 5000,
+			min_uptime: 60_000,
+			max_restarts: 10,
+			max_memory_restart: '450M',
+			time: true,
+			merge_logs: true,
+		},
+		{
 			// Имя то же, что у контейнера, — чтобы в документах и привычках ничего не разъехалось.
 			name: 'ndim-server-prod',
 			cwd: КОРЕНЬ,

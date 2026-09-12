@@ -30,10 +30,11 @@
  * ⛔ Не переводить службу на рабочее дерево «чтобы проще».
  *
  * Запуск:
- *   node tools/deploy-sync-server.mjs --commit <коммит>        # выкатить коммит в бой
- *   node tools/deploy-sync-server.mjs --commit <коммит> --dry  # сказать, что сделает, не делая
- *   node tools/deploy-sync-server.mjs --rollback               # вернуть прежний коммит из расписки
- *   node tools/deploy-sync-server.mjs --selftest               # самотест чистых функций
+ *   node tools/deploy-sync-server.mjs --contour stage --commit <коммит>   # выкатить на стейдж
+ *   node tools/deploy-sync-server.mjs --contour prod  --commit <коммит>   # выкатить в бой
+ *   node tools/deploy-sync-server.mjs --contour <к> --commit <коммит> --dry  # сказать, не делая
+ *   node tools/deploy-sync-server.mjs --contour <к> --rollback         # вернуть прежний коммит
+ *   node tools/deploy-sync-server.mjs --selftest                    # самотест чистых функций
  *
  * Код возврата: 0 — выкат состоялся и пульс жив · 1 — дверь отказала (бой не тронут либо откачен).
  *
@@ -44,14 +45,26 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-/** Замороженная копия, из которой PM2 поднимает боевую службу (`plans/83`). */
-const БОЕВАЯ_КОПИЯ = resolve('D:/work/ai_sandbox/ndim-server-prod');
-
-/** Имя службы в PM2. */
-const СЛУЖБА = 'ndim-server-prod';
-
-/** Расписка выката: что уехало, когда и откуда. Ответ на «что сейчас в бою» без археологии. */
-const РАСПИСКА = '.kaif/sync-server-receipt.json';
+/**
+ * КОНТУРЫ ВЫКАТА. Дверь умеет оба — и это не удобство, а условие её проверяемости:
+ * главный путь (выкат → пульс → откат) нельзя доказать, не выкатив хоть куда-то, а выкат в бой
+ * требует отдельного слова владельца (`plans/85`). Стейдж — место, где дверь доказывают.
+ *
+ * ⛔ Умолчания НЕТ намеренно: цена путаницы несимметрична, и «ну, наверное, prod» здесь не будет
+ * — то же правило, по которому живёт `tools/run-sync-server.mjs`.
+ */
+const КОНТУРЫ = {
+	prod: {
+		копия: resolve('D:/work/ai_sandbox/ndim-server-prod'),
+		служба: 'ndim-server-prod',
+		расписка: '.kaif/sync-server-receipt.json',
+	},
+	stage: {
+		копия: resolve('D:/work/ai_sandbox/ndim-server-stage'),
+		служба: 'ndim-server-stage',
+		расписка: '.kaif/sync-server-receipt-stage.json',
+	},
+};
 
 /**
  * Минимальная версия Node — сервер импортирует ядро похожести ИСХОДНИКОМ `.ts`, а это умеет
@@ -190,31 +203,31 @@ function портЗанят(порт) {
 	}
 }
 
-function прогнатьТесты(коммит) {
+function прогнатьТесты(коммит, к) {
 	шаг('5. ТЕСТЫ СЕРВЕРА ПО ВЫКАТЫВАЕМОМУ КОММИТУ');
 	// Прогон идёт в ЗАМОРОЖЕННОЙ копии, уже сдвинутой на коммит: проверяется то, что поедет,
 	// а не то, что лежит в рабочем дереве. Их расхождение и есть весь смысл двери.
-	console.log(`   npm run test:sync (в ${БОЕВАЯ_КОПИЯ}, коммит ${коммит.slice(0, 7)})`);
+	console.log(`   npm run test:sync (в ${к.копия}, коммит ${коммит.slice(0, 7)})`);
 	try {
-		execSync('npm run test:sync', { cwd: БОЕВАЯ_КОПИЯ, stdio: 'inherit' });
+		execSync('npm run test:sync', { cwd: к.копия, stdio: 'inherit' });
 	} catch {
 		return false;
 	}
 	return true;
 }
 
-function сдвинутьКопию(коммит) {
+function сдвинутьКопию(коммит, к) {
 	шаг('6. ЗАМОРОЖЕННАЯ КОПИЯ СДВИГАЕТСЯ НА КОММИТ');
-	git(['checkout', '--detach', коммит], БОЕВАЯ_КОПИЯ);
-	console.log(`   копия на ${git(['rev-parse', '--short', 'HEAD'], БОЕВАЯ_КОПИЯ)}`);
+	git(['checkout', '--detach', коммит], к.копия);
+	console.log(`   копия на ${git(['rev-parse', '--short', 'HEAD'], к.копия)}`);
 	console.log('   npm install --omit=dev …');
-	execSync('npm install --omit=dev', { cwd: resolve(БОЕВАЯ_КОПИЯ, 'sync-server'), stdio: 'inherit' });
+	execSync('npm install --omit=dev', { cwd: resolve(к.копия, 'sync-server'), stdio: 'inherit' });
 	console.log('   ✅ зависимости на месте');
 }
 
-function перезапустить() {
+function перезапустить(к) {
 	шаг('7. СЛУЖБА ПЕРЕЗАПУСКАЕТСЯ');
-	execSync(`pm2 restart ${СЛУЖБА}`, { stdio: 'inherit' });
+	execSync(`pm2 restart ${к.служба}`, { stdio: 'inherit' });
 }
 
 /**
@@ -223,7 +236,7 @@ function перезапустить() {
  * 🔴 Почему с ожиданием: отчёт в базу пишется тактом 60 с, и сразу после перезапуска прошлый удар
  * ещё свежий — то есть первая же проверка сказала бы «жив» о СТАРОМ отчёте. Ждём НОВЫЙ удар.
  */
-function проверитьПульс({ ждатьСекунд = 150 } = {}) {
+function проверитьПульс(контур, { ждатьСекунд = 150 } = {}) {
 	шаг('8. ПУЛЬС ЖИВОЙ СЛУЖБЫ (прибором)');
 	const дедлайн = Date.now() + ждатьСекунд * 1000;
 	for (let попытка = 1; ; попытка += 1) {
@@ -241,9 +254,9 @@ function проверитьПульс({ ждатьСекунд = 150 } = {}) {
 	}
 }
 
-function прогнатьПульс() {
+function прогнатьПульс(контур) {
 	try {
-		execFileSync(process.execPath, ['tools/read-server-pulse.mjs', '--contour', 'prod'], {
+		execFileSync(process.execPath, ['tools/read-server-pulse.mjs', '--contour', контур], {
 			encoding: 'utf8',
 			stdio: 'inherit',
 		});
@@ -253,23 +266,24 @@ function прогнатьПульс() {
 	}
 }
 
-function прочитатьРасписку() {
-	return existsSync(РАСПИСКА) ? JSON.parse(readFileSync(РАСПИСКА, 'utf8')) : null;
+function прочитатьРасписку(к) {
+	return existsSync(к.расписка) ? JSON.parse(readFileSync(к.расписка, 'utf8')) : null;
 }
 
-function выписатьРасписку(коммит, прежний) {
+function выписатьРасписку(коммит, прежний, контур, к) {
 	const расписка = {
 		deployedAt: new Date().toISOString(),
 		commit: коммит,
 		commitShort: коммит.slice(0, 7),
 		subject: git(['log', '-1', '--format=%s', коммит]),
 		previousCommit: прежний,
-		service: СЛУЖБА,
-		worktree: БОЕВАЯ_КОПИЯ,
+		service: к.служба,
+		worktree: к.копия,
+		contour: контур,
 		by: 'tools/deploy-sync-server.mjs',
 	};
-	writeFileSync(РАСПИСКА, `${JSON.stringify(расписка, null, '\t')}\n`);
-	console.log(`\n🧾 расписка выписана: ${РАСПИСКА}`);
+	writeFileSync(к.расписка, `${JSON.stringify(расписка, null, '\t')}\n`);
+	console.log(`\n🧾 расписка выписана: ${к.расписка}`);
 	return расписка;
 }
 
@@ -301,16 +315,29 @@ function самотест() {
 async function главная() {
 	if (есть('--selftest')) return самотест();
 
+	// ⛔ Контур называется ЯВНО и всегда: цена путаницы несимметрична (боевым ключом можно
+	// перезаписать топы живых людей), поэтому молчаливого умолчания здесь нет.
+	const контур = довод('--contour');
+	if (!контур || !КОНТУРЫ[контур]) {
+		отказ(
+			`контур не назван либо неизвестен («${контур ?? '—'}»)`,
+			`--contour prod | --contour stage. Известные: ${Object.keys(КОНТУРЫ).join(', ')}`,
+		);
+	}
+	const к = КОНТУРЫ[контур];
+	console.log(`ДВЕРЬ ВЫКАТА СЕРВЕРА СИНХРОНИЗАЦИИ · контур ${контур.toUpperCase()}`);
+	console.log(`   копия ${к.копия} · служба ${к.служба}\n`);
+
 	if (есть('--rollback')) {
-		const расписка = прочитатьРасписку();
+		const расписка = прочитатьРасписку(к);
 		if (!расписка?.previousCommit) {
-			отказ('расписки с прежним коммитом нет — откатывать не на что', `посмотреть ${РАСПИСКА}`);
+			отказ('расписки с прежним коммитом нет — откатывать не на что', `посмотреть ${к.расписка}`);
 		}
 		console.log(`ОТКАТ на ${расписка.previousCommit.slice(0, 7)} (с ${расписка.commitShort})`);
-		сдвинутьКопию(расписка.previousCommit);
-		перезапустить();
-		if (!проверитьПульс()) отказ('после отката пульс не ожил — служба требует рук');
-		выписатьРасписку(расписка.previousCommit, расписка.commit);
+		сдвинутьКопию(расписка.previousCommit, к);
+		перезапустить(к);
+		if (!проверитьПульс(контур)) отказ('после отката пульс не ожил — служба требует рук');
+		выписатьРасписку(расписка.previousCommit, расписка.commit, контур, к);
 		console.log('\n✅ ОТКАТ СОСТОЯЛСЯ, пульс жив.');
 		return 0;
 	}
@@ -319,57 +346,59 @@ async function главная() {
 	if (!запрошен) {
 		отказ(
 			'не назван коммит',
-			'node tools/deploy-sync-server.mjs --commit <коммит>  (порядок порций — plans/85)',
+			'node tools/deploy-sync-server.mjs --contour <контур> --commit <коммит>  (порядок порций — plans/85)',
 		);
 	}
 
-	console.log('ДВЕРЬ ВЫКАТА СЕРВЕРА СИНХРОНИЗАЦИИ\n');
-	if (!existsSync(БОЕВАЯ_КОПИЯ)) {
-		отказ(`замороженной копии нет: ${БОЕВАЯ_КОПИЯ}`, 'git worktree add --detach ../ndim-server-prod <коммит>');
+	if (!existsSync(к.копия)) {
+		отказ(
+			`замороженной копии нет: ${к.копия}`,
+			`git worktree add --detach ${к.копия} <коммит> && npm --prefix ${к.копия}/sync-server install --omit=dev`,
+		);
 	}
 
-	const прежний = git(['rev-parse', 'HEAD'], БОЕВАЯ_КОПИЯ);
-	console.log(`   в бою сейчас: ${прежний.slice(0, 7)}`);
+	const прежний = git(['rev-parse', 'HEAD'], к.копия);
+	console.log(`   сейчас в контуре: ${прежний.slice(0, 7)}`);
 
 	проверитьNode();
 	проверитьДерево();
 	const коммит = проверитьКоммит(запрошен);
 
 	if (коммит === прежний) {
-		console.log('\n✅ этот коммит уже в бою — делать нечего.');
+		console.log('\n✅ этот коммит уже в контуре — делать нечего.');
 		return 0;
 	}
 
 	проверитьСтендПогашен();
 
 	if (есть('--dry')) {
-		console.log(`\n(--dry: дальше выкатил бы ${коммит.slice(0, 7)} вместо ${прежний.slice(0, 7)}; бой не тронут)`);
+		console.log(`\n(--dry: дальше выкатил бы ${коммит.slice(0, 7)} вместо ${прежний.slice(0, 7)}; контур не тронут)`);
 		return 0;
 	}
 
-	сдвинутьКопию(коммит);
+	сдвинутьКопию(коммит, к);
 
-	if (!прогнатьТесты(коммит)) {
+	if (!прогнатьТесты(коммит, к)) {
 		console.error('\n🔴 тесты сервера по этому коммиту КРАСНЫЕ — откатываю копию, служба не тронута.');
-		сдвинутьКопию(прежний);
+		сдвинутьКопию(прежний, к);
 		отказ('тесты выкатываемого коммита не прошли', 'починить код и повторить');
 	}
 
-	перезапустить();
+	перезапустить(к);
 
-	if (!проверитьПульс()) {
+	if (!проверитьПульс(контур)) {
 		console.error('\n🔴 ПУЛЬС НЕ ОЖИЛ — АВТОМАТИЧЕСКИЙ ОТКАТ.');
-		сдвинутьКопию(прежний);
-		перезапустить();
-		if (!проверитьПульс()) {
+		сдвинутьКопию(прежний, к);
+		перезапустить(к);
+		if (!проверитьПульс(контур)) {
 			отказ('откат выполнен, но пульс не ожил и на прежнем коммите — служба требует рук');
 		}
-		отказ(`коммит ${коммит.slice(0, 7)} убивает службу; бой возвращён на ${прежний.slice(0, 7)}`);
+		отказ(`коммит ${коммит.slice(0, 7)} убивает службу; контур возвращён на ${прежний.slice(0, 7)}`);
 	}
 
-	выписатьРасписку(коммит, прежний);
+	выписатьРасписку(коммит, прежний, контур, к);
 	console.log(`\n✅ ВЫКАТ СОСТОЯЛСЯ: ${прежний.slice(0, 7)} → ${коммит.slice(0, 7)}, пульс жив.`);
-	console.log('   Откат одной командой: node tools/deploy-sync-server.mjs --rollback');
+	console.log(`   Откат одной командой: node tools/deploy-sync-server.mjs --contour ${контур} --rollback`);
 	return 0;
 }
 
