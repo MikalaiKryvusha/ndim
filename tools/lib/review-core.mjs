@@ -882,6 +882,28 @@ export function selftest() {
  * @param {string[]} rest документы пачки, всё ещё ждущие ответа (без только что отвеченного)
  * @returns {boolean} true — очередь пуста, серверу пора завершиться; false — жить дальше
  */
+/**
+ * Очередь спрашивает признак «отвечено», а не доверяет списку (`bugs/NEW_review_queue_keeps_answered`).
+ *
+ * Очередь — простой список в `queue.json`: `queue` в него дописывал, а вынимал только успешный
+ * проход пачки. Ответ любым другим путём (страницей одного документа, правкой руками, чатом с
+ * разносом) очередь не трогал — и она копила отвеченные: «всего накоплено: 10» при одном
+ * ждущем; пачка показала бы владельцу девять вопросов, которые он уже закрыл своей рукой.
+ * Признак «ждёт» у проекта один и надёжен (`parseInterview().waiting`, его же читает
+ * `npm run questions`), поэтому и `queue`, и `batch` фильтруют список им и ПИШУТ отфильтрованное
+ * обратно — список перестаёт быть второй правдой рядом с самими документами.
+ *
+ * @param {Array<{doc: string}>} items записи очереди
+ * @param {(item: {doc: string}) => boolean} isWaiting документ существует и ждёт владельца
+ * @returns {{ live: Array, dropped: Array }} живые и отброшенные (отвеченные или исчезнувшие)
+ */
+export function pruneQueue(items, isWaiting) {
+	const live = [];
+	const dropped = [];
+	for (const item of items ?? []) (isWaiting(item) ? live : dropped).push(item);
+	return { live, dropped };
+}
+
 export function batchExitAfterDecision(rest) {
 	return Array.isArray(rest) && rest.length === 0;
 }

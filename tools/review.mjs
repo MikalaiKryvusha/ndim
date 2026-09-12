@@ -61,6 +61,7 @@ const positional = argv.filter((a, i) => !a.startsWith('--') && !argv[i - 1]?.st
 // Файл очереди пачки: общий queue.json либо `--queue <файл>` — флаг ради ЖИВОГО теста пачки
 // (`tools/review-batch.test.mjs`): прогон поднимает пачку из подложных документов, не трогая очередь владельца.
 const QUEUE = opt("--queue") ? resolve(ROOT, opt("--queue")) : QUEUE_FILE;
+import { pruneQueue } from './lib/review-core.mjs'; // bugs/NEW_review_queue_keeps_answered
 // Сколько пачка живёт после ПОСЛЕДНЕГО ответа без единого пульса от вкладок владельца. Живой тест
 // ставит секунду; для человека — полминуты: пока вкладка открыта, страница не имеет права умереть.
 const GRACE_MS = Number(opt('--grace', '30000'));
@@ -1313,29 +1314,50 @@ function readdirSyncSafe(d) {
  * Ставит документ в очередь (I7). Автономный цикл НИКОГДА не стоит у открытой страницы: он
  * паркует документ и идёт к следующей незаблокированной работе, а зовут владельца один раз на пачку.
  */
+/** Документ очереди существует и ждёт владельца — тот же признак, что у `npm run questions`. */
+function queueItemWaiting(item) {
+	const p = join(ROOT, item.doc);
+	if (!existsSync(p)) return false;
+	return parseInterview(p, readMd(p)).waiting;
+}
+
+/** Читает очередь и сразу вычищает отвеченные (`bugs/NEW_review_queue_keeps_answered`). */
+function readQueuePruned() {
+	const q = existsSync(QUEUE) ? JSON.parse(readFileSync(QUEUE, 'utf8')) : { items: [] };
+	const { live, dropped } = pruneQueue(q.items, queueItemWaiting);
+	if (dropped.length) {
+		writeFileSync(QUEUE, JSON.stringify({ ...q, items: live }, null, '\t') + '\n', 'utf8');
+		console.log(`Из очереди убрано отвеченных или исчезнувших: ${dropped.length}`);
+	}
+	return { ...q, items: live };
+}
+
 function cmdQueue(docPath) {
 	mkdirSync(DECISIONS_DIR, { recursive: true });
 	const rel = relative(ROOT, docPath).split('\\').join('/');
-	const q = existsSync(QUEUE) ? JSON.parse(readFileSync(QUEUE, 'utf8')) : { items: [] };
-	if (!q.items.some((i) => i.doc === rel)) {
-		q.items.push({ doc: rel, поставлен: new Date().toISOString() });
-		writeFileSync(QUEUE, JSON.stringify(q, null, '\t') + '\n', 'utf8');
-		console.log(`В очередь: ${rel} (всего накоплено: ${q.items.length})`);
-	} else {
+	const q = readQueuePruned();
+	if (q.items.some((i) => i.doc === rel)) {
 		console.log(`Уже в очереди: ${rel} (всего накоплено: ${q.items.length})`);
+		return q.items.length;
 	}
+	const item = { doc: rel, поставлен: new Date().toISOString() };
+	// Отвеченный документ в очередь не кладётся: пачка его всё равно не покажет, а число соврёт.
+	if (!queueItemWaiting(item)) {
+		console.log(`Не в очередь: ${rel} — документ не ждёт владельца (всего накоплено: ${q.items.length})`);
+		return q.items.length;
+	}
+	q.items.push(item);
+	writeFileSync(QUEUE, JSON.stringify(q, null, '\t') + '\n', 'utf8');
+	console.log(`В очередь: ${rel} (всего накоплено: ${q.items.length})`);
 	return q.items.length;
 }
 
 /** Одна страница «накопилось N» — карточка на документ, сигнал ОДИН раз на пачку (I7). */
 async function cmdBatch() {
-	const q = existsSync(QUEUE) ? JSON.parse(readFileSync(QUEUE, 'utf8')) : { items: [] };
-	// Из очереди выпадает всё, на что владелец уже ответил — иначе пачка растёт вечно.
-	const live = q.items.filter((i) => {
-		const p = join(ROOT, i.doc);
-		if (!existsSync(p)) return false;
-		return parseInterview(p, readMd(p)).waiting;
-	});
+	// Из очереди выпадает всё, на что владелец уже ответил, — и выпадает ИЗ ФАЙЛА, а не только из
+	// показа (`bugs/NEW_review_queue_keeps_answered`): иначе список копит отвеченные вечно.
+	const q = readQueuePruned();
+	const live = q.items;
 	if (!live.length) {
 		console.log('Очередь пуста — звать владельца незачем.');
 		return 0;
