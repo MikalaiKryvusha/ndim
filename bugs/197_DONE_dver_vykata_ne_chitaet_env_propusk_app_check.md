@@ -84,3 +84,5 @@ $ grep -c NDIM_APP_CHECK_DEBUG_TOKEN .env
 **Сверка прогоном 2026-09-12:** `node -e "import('./tools/lib/app-check-debug.mjs').then(m => m.debugToken())"` из чистой оболочки → `token: ЕСТЬ`.
 
 **Что остаётся вне закрытия:** ничего
+
+**Ручной функциональный прогон:** ✅ 2026-09-12 11:3x — `verify-prod-signed-in.mjs` из чистой оболочки: пропуск App Check дочитан из `.env`, 24/24. Раздел 12 отчёта `qa/reports/2026-09-12_red-bugs-series.md`. (Гигиена — строка выше; эта строка — тест по определению владельца.)
