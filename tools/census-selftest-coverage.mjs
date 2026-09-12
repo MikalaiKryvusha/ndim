@@ -88,7 +88,7 @@ const ХРАПОВИК = [
   'measure-name-registry.mjs',
   'review.mjs',
   'rewrite-catalog-descriptions.mjs',
-  'team-workplaces.mjs',
+  // team-workplaces.mjs — вылечен 2026-09-12: пара `team-workplaces.test.mjs` (bugs/168)
   'verify-contour-parity.mjs',
   'verify-copy-live.mjs',
   'verify-dims-manager-agreement.mjs',

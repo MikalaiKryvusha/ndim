@@ -10,8 +10,17 @@
  *   node tools/team-workplaces.mjs list                  # что развёрнуто, отставание веток от main
  *   node tools/team-workplaces.mjs relocate              # переезд каталогов на имена ndim_<роль>
  *   node tools/team-workplaces.mjs reset <роль>          # перезапуск ветки от свежего main (после мержа)
+ *   node tools/team-workplaces.mjs reset <роль> --force  # …и когда в ветке есть НЕВЛИТОЕ — со спасательной веткой
  *   node tools/team-workplaces.mjs remove <роль>         # уборка ПО EXP-0175 (junction-скан ДО удаления)
  *   node tools/team-workplaces.mjs --selftest            # чистые функции, без git и диска
+ *
+ * 🔴 `reset` — предохранитель невлитой работы (`bugs/168`). Перед `git reset --hard main`
+ * инструмент считает `git rev-list --count main..<ветка>`: не ноль — ОТКАЗ кодом 1 с числом и
+ * заголовками коммитов и двумя законными выходами (смержить · `--force`). С `--force` сброс идёт,
+ * но СНАЧАЛА ставится спасательная ветка `<ветка>-rescue-<ГГГГММДД-ЧЧММ>` на прежнюю голову — reflog
+ * истекает, ветка нет. Повод: ночь 2026-08-22, четыре коммита Дизайнера уехали на `main` от сброса
+ * «списком по всем ролям», и снаружи опасная ветка ничем не отличалась от четырёх безопасных.
+ * Юнит на временном репозитории — `tools/team-workplaces.test.mjs` (К1–К3), мутация — К4.
  *
  * 🔴 Уборка — урок EXP-0175: `git worktree remove --force` и рекурсивное удаление PowerShell
  * СЛЕДУЮТ сквозь junction в настоящую цель (уже съедали корневой node_modules главной копии).
@@ -68,10 +77,64 @@ export function removalDecision({ dirty, force }) {
   return { ok: true };
 }
 
+/**
+ * Решение о перезапуске ветки (`bugs/168`): `ahead` — сколько у ветки СВОИХ коммитов, которых нет
+ * в `main` (`git rev-list --count main..<ветка>`). Не ноль без `--force` — отказ; не ноль с
+ * `--force` — сброс разрешён, но обязан оставить спасательную ветку (`rescue: true`).
+ */
+export function resetDecision({ ahead, force }) {
+  if (ahead > 0 && !force) {
+    return { ok: false, rescue: false, reason: `в ветке ${ahead} ${plural(ahead, 'свой коммит', 'своих коммита', 'своих коммитов')}, которых нет в main — сброс уничтожил бы их` };
+  }
+  return { ok: true, rescue: ahead > 0 };
+}
+
+/** Имя спасательной ветки: прежняя ветка + метка момента, чтобы два спасения не столкнулись именем. */
+export function rescueBranchName(branch, now = new Date()) {
+  const p = (n) => String(n).padStart(2, '0');
+  return `${branch}-rescue-${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}-${p(now.getHours())}${p(now.getMinutes())}`;
+}
+
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+
 /* ── git-обвязка ───────────────────────────────────────────────────────────────────────── */
 
 function sh(cmd, opts = {}) { return execSync(cmd, { encoding: 'utf8', ...opts }).trim(); }
 function mainRepoRoot() { return dirname(sh('git rev-parse --path-format=absolute --git-common-dir')); }
+
+/**
+ * Перезапуск ветки роли от `main` — с предохранителем невлитой работы (`bugs/168`).
+ *
+ * Принимает адреса явно (`main` — корень главной копии, `wt` — рабочее место, `branch` — ветка),
+ * а не роль: так процедуру гоняет юнит на ВРЕМЕННОМ репозитории (`team-workplaces.test.mjs`),
+ * а живые рабочие места ролей мутациями не трогаются. Ничего не печатает и процесс не гасит —
+ * возвращает результат, а слова и код выхода — у CLI.
+ *
+ * Порядок обязателен: грязное дерево → отказ; свои коммиты без `--force` → отказ; свои коммиты с
+ * `--force` → СНАЧАЛА спасательная ветка на прежнюю голову, ПОТОМ сброс. Спасение ставится до
+ * разрушения, потому что разрушение, случившееся до спасения, спасать уже нечем.
+ */
+export function performReset({ main, wt, branch, force = false, now = new Date() }) {
+  if (sh('git status --porcelain', { cwd: wt }) !== '') {
+    return { ok: false, reason: 'дерево грязное — коммит в ветку роли прежде перезапуска', ahead: null };
+  }
+  const ahead = Number(sh(`git rev-list --count main..${branch}`, { cwd: main }));
+  const titles = ahead ? sh(`git log --oneline main..${branch}`, { cwd: main }).split(/\r?\n/) : [];
+  const d = resetDecision({ ahead, force });
+  if (!d.ok) return { ok: false, reason: d.reason, ahead, titles };
+  let rescue = null;
+  if (d.rescue) {
+    rescue = rescueBranchName(branch, now);
+    sh(`git branch ${rescue} ${branch}`, { cwd: main }); // на ПРЕЖНЮЮ голову, до сброса
+  }
+  sh('git reset --hard main', { cwd: wt });
+  return { ok: true, ahead, titles, rescue, head: sh('git rev-parse --short main', { cwd: main }) };
+}
 
 /** Reparse-точки (junction/симлинк) в известных местах worktree — EXP-0175. */
 function findReparse(wt) {
@@ -153,6 +216,11 @@ function selftest() {
     ['грязное дерево без force не убирается', () => !removalDecision({ dirty: true, force: false }).ok],
     ['грязное дерево с force убирается', () => removalDecision({ dirty: true, force: true }).ok],
     ['чистое дерево убирается', () => removalDecision({ dirty: false, force: false }).ok],
+    // bugs/168 — предохранитель невлитой работы при reset
+    ['reset: свои коммиты без force — отказ с числом', () => { const d = resetDecision({ ahead: 4, force: false }); return !d.ok && /4 своих коммита/.test(d.reason); }],
+    ['reset: свои коммиты с force — сброс со спасением', () => { const d = resetDecision({ ahead: 1, force: true }); return d.ok && d.rescue === true; }],
+    ['reset: влитая ветка — сброс без спасения', () => { const d = resetDecision({ ahead: 0, force: false }); return d.ok && d.rescue === false; }],
+    ['reset: имя спасательной ветки несёт ветку и момент', () => rescueBranchName('ndim_designer', new Date(2026, 7, 22, 2, 15)) === 'ndim_designer-rescue-20260822-0215'],
   ];
   let fail = 0;
   for (const [name, fn] of cases) {
@@ -178,7 +246,8 @@ function selftest() {
  * Снимать эту сверку нельзя: разъедься формы регистром диска, парк молча перестал бы
  * работать у всех ролей.
  *
- * ⛔ Семантика `reset` (`bugs/168`) НЕ тронута — правка чисто входная.
+ * Семантика `reset` вылечена отдельно (`bugs/168`, `performReset` выше) — предохранитель и
+ * правка входа друг друга не касаются.
  */
 const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
 
@@ -230,12 +299,19 @@ function выполнить() {
     const v = validateRole(roleArg);
     if (!v.ok) { console.error(`⛔ ${v.reason}`); process.exit(1); }
     const wt = workplaceFor(main, roleArg);
-    if (sh('git status --porcelain', { cwd: wt }) !== '') {
-      console.error(`⛔ ${roleArg}: дерево грязное — коммит в ветку роли прежде перезапуска`);
+    const branch = branchFor(roleArg);
+    const r = performReset({ main, wt, branch, force: process.argv.includes('--force') });
+    if (!r.ok) {
+      console.error(`⛔ ${roleArg}: ${r.reason}`);
+      if (r.ahead) {
+        for (const t of r.titles) console.error(`   ${t}`);
+        console.error(`   Два выхода: смержить работу в main — либо сбросить осознанно: node tools/team-workplaces.mjs reset ${roleArg} --force`);
+        console.error(`   (с --force инструмент сперва поставит спасательную ветку на нынешнюю голову ${branch})`);
+      }
       process.exit(1);
     }
-    sh(`git reset --hard main`, { cwd: wt });
-    console.log(`✅ ${roleArg}: ветка ${branchFor(roleArg)} перезапущена от текущего main (${sh('git rev-parse --short main', { cwd: main })})`);
+    if (r.rescue) console.log(`🛟 ${roleArg}: спасательная ветка ${r.rescue} держит ${r.ahead} невлитых коммита(ов) — reflog истекает, ветка нет`);
+    console.log(`✅ ${roleArg}: ветка ${branch} перезапущена от текущего main (${r.head})`);
   } else if (cmd === 'remove') {
     const main = mainRepoRoot();
     const v = validateRole(roleArg);
