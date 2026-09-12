@@ -191,6 +191,14 @@ export type UpgradeResult =
   | { readonly ok: true; readonly uid: Uid; readonly created: boolean }
   | { readonly ok: false; readonly reason: UpgradeFailure };
 
+/**
+ * Чем закончился ВОЗВРАТ ПО ССЫЛКЕ. Отличается от {@link UpgradeResult} ровно одним исходом —
+ * `email-needed`, который не ошибка, а вопрос человеку (см. {@link LinkFailure}).
+ */
+export type LinkResult =
+  | { readonly ok: true; readonly uid: Uid; readonly created: boolean }
+  | { readonly ok: false; readonly reason: LinkFailure };
+
 /** Первый ли это вход человека — Firebase знает это точно, нам выдумывать не надо. */
 function isNewUser(credentials: UserCredential): boolean {
   return getAdditionalUserInfo(credentials)?.isNewUser === true;
@@ -206,6 +214,25 @@ function isNewUser(credentials: UserCredential): boolean {
  */
 export type UpgradeFailure = 'already-in-use' | 'cancelled' | 'expired-link' | 'unknown';
 
+/**
+ * Исходы ВОЗВРАТА ПО ССЫЛКЕ — те же отказы плюс один, который отказом не является.
+ *
+ * 🔴 `email-needed` — НЕ ОШИБКА, А ВОПРОС: ссылка жива, но В ЭТОМ браузере некому сказать, кому
+ * она выписана. Так бывает всегда, когда письмо открыли не там, где начинали вход (`bugs/233`,
+ * находка владельца в бою). Firebase велит ровно одно: «*User opened the link on a different
+ * device. To prevent session fixation attacks, ask the user to provide the associated email
+ * again*» — СПРОСИТЬ почту, а не объявлять ссылку мёртвой.
+ *
+ * 🔑 ПОЧЕМУ ОТДЕЛЬНЫЙ ТИП, А НЕ ЕЩЁ ОДНА СТРОКА В СЛОВАРЕ ОШИБОК. Словарь `t.account.errors`
+ * существует, чтобы показать человеку ТЕКСТ ОТКАЗА. Положи `email-needed` туда — и любой экран
+ * сможет вывести вопрос как ошибку, то есть вернуть ровно тот дефект, ради которого всё это
+ * переписано. Разведённые типы поручают эту проверку компилятору: экран, читающий словарь,
+ * обязан СНАЧАЛА разобрать `email-needed` по существу, иначе сборка не пройдёт. Это тот же
+ * приём, что «закрывай класс по форме» (`BUG_FIXING_FRAMEWORK.md`) — форма не даёт классу
+ * разъехаться заново.
+ */
+export type LinkFailure = UpgradeFailure | 'email-needed';
+
 function classify(error: unknown): UpgradeFailure {
   const code = (error as { code?: string })?.code ?? '';
   if (code === 'auth/credential-already-in-use' || code === 'auth/email-already-in-use') {
@@ -219,6 +246,27 @@ function classify(error: unknown): UpgradeFailure {
   }
   console.error('Апгрейд гостя не удался:', error);
   return 'unknown';
+}
+
+/**
+ * То же самое для ВОЗВРАТА ПО ССЫЛКЕ — с одной развилкой, которой нет у остальных путей.
+ *
+ * 🔑 «ПОЧТА НЕ ТА» — ЭТО ВОПРОС, А НЕ ОТКАЗ (`bugs/233`). Firebase отвечает
+ * `auth/invalid-email`, когда предъявленная почта не совпала с той, на которую он выписывал
+ * ссылку. У нас это значит ровно одно: мы УГАДЫВАЛИ — взяли почту уже вошедшего человека, а
+ * письмо выписано кому-то другому. Сама ссылка при этом жива, и говорить человеку, что она
+ * умерла, — то же враньё, с которого начался этот баг. Исход тот же, что у «почты нет вовсе»:
+ * спросить, чья это ссылка.
+ *
+ * ⚠️ Сюда же попадает почта, введённая человеком с опечаткой, — и это правильно: он введёт её
+ * заново, а не упрётся в тупик.
+ *
+ * [NOT-TESTED]
+ */
+function classifyLink(error: unknown): LinkFailure {
+  const code = (error as { code?: string })?.code ?? '';
+  if (code === 'auth/invalid-email') return 'email-needed';
+  return classify(error);
 }
 
 /**
@@ -323,6 +371,51 @@ export function isLoginLink(href: string = location.href): boolean {
 }
 
 /**
+ * Чью почту предъявить Firebase при возврате по ссылке — ТРИ источника в порядке доверия.
+ *
+ * Firebase не завершит вход по ссылке, не сверив почту: без этой сверки перехваченная ссылка
+ * впускала бы в чужой профиль. Вопрос только в том, откуда мы эту почту берём, и до `bugs/233`
+ * источник был РОВНО ОДИН — память браузера, где вход начали. Отсюда и родился ложный диагноз:
+ * открыл письмо в другом браузере — «ссылка больше не действует».
+ *
+ *   1. **Рука человека** — он сам назвал почту, когда продукт спросил. Сильнее всех остальных:
+ *      это осознанный ответ, а не догадка продукта.
+ *   2. **Память этого браузера** (`ndim-pending-email`) — штатный путь: вход начали здесь же.
+ *   3. **Почта уже вошедшего человека** — 🔑 ЭТО И ЕСТЬ ЛЕЧЕНИЕ СЛУЧАЯ ВЛАДЕЛЬЦА. Он открыл
+ *      письмо в браузере, где давно вошёл. Раньше продукт ронял ошибку поверх его же данных;
+ *      теперь его собственная почта — законный кандидат, и решает Firebase: сойдётся с той, на
+ *      которую слал письмо, — человек просто войдёт собой ещё раз, и открытие ссылки не изменит
+ *      ничего (та самая идемпотентность, которую он просил). Не сойдётся — ссылка выписана
+ *      кому-то другому, и мы спросим почту, а не пустим молча.
+ *
+ * ⛔ ЧЕТВЁРТОГО ИСТОЧНИКА НЕТ И НЕ БУДЕТ: почту из адреса ссылки читать запрещено
+ * (session injection — первоисточник Firebase, разбор в `bugs/233`).
+ *
+ * ⚠️ Аноним сюда не попадает намеренно: у гостя почты нет вовсе, а если бы и была — гость это
+ * не «человек, который уже вошёл», а временная сессия. Его путь — привязка (`linkWithCredential`).
+ *
+ * 🔑 ПАМЯТЬ БРАУЗЕРА ПРИХОДИТ ДОВОДОМ, А НЕ ЧИТАЕТСЯ ЗДЕСЬ. Функция остаётся чистой: вся
+ * развилка проверяется `node --test` без браузера и без заглушек хранилища, а хождение в
+ * `localStorage` живёт ровно в одном месте — в вызывающем. Это `PHILOSOPHY.md` → «код прежде
+ * когниции» в применении к проверяемости: правило, которое можно проверить кодом, проверяется
+ * кодом, а не глазами в браузере.
+ *
+ * [TESTED: 2026-09-12 · `account.test.ts` — 9 случаев приоритета источников; мутация
+ *  «убрать ветвь вошедшего человека» роняет 3 из них адресно]
+ */
+export function emailForLink(
+  user: Pick<User, 'isAnonymous' | 'email'> | null,
+  remembered: string | null,
+  emailFromHuman?: string,
+): string | null {
+  const named = emailFromHuman?.trim();
+  if (named) return named;
+  if (remembered) return remembered;
+  if (user && !user.isAnonymous && user.email) return user.email;
+  return null;
+}
+
+/**
  * Ждёт, пока Firebase восстановит сессию из хранилища браузера.
  *
  * Сразу после загрузки страницы `currentUser` ещё null — восстановление асинхронное.
@@ -356,11 +449,22 @@ export function waitForSession(): Promise<User | null> {
  * `profile/+page.svelte`), потому что выход тянет за собой очистку кэшей и лиц (`signOutUser`),
  * а тащить их сюда значило бы замкнуть импорты `account` ↔ `profile`.
  */
-export async function completeLoginLink(href: string = location.href): Promise<UpgradeResult> {
-  const email = localStorage.getItem(PENDING_EMAIL_KEY);
-  if (!email) return { ok: false, reason: 'expired-link' };
-
+export async function completeLoginLink(
+  href: string = location.href,
+  /**
+   * Почта, названная САМИМ человеком, когда в этом браузере её взять неоткуда.
+   *
+   * 🔴 Именно рукой человека, и никогда из адреса ссылки. Первоисточник запрещает второе прямо:
+   * «*Do not pass the user's email in the redirect URL parameters and re-use it as this may
+   * enable session injections*». Почта в адресе перестала бы быть доказательством владения
+   * ящиком и стала бы параметром, который подделывается (`bugs/233`, разбор гипотезы владельца).
+   */
+  emailFromHuman?: string,
+): Promise<LinkResult> {
   const user = devAuth().currentUser;
+  const email = emailForLink(user, localStorage.getItem(PENDING_EMAIL_KEY), emailFromHuman);
+  // Ссылка жива — просто некому сказать, чья она. Это вопрос человеку, а не приговор ссылке.
+  if (!email) return { ok: false, reason: 'email-needed' };
 
   try {
     if (user && user.isAnonymous) {
@@ -375,7 +479,7 @@ export async function completeLoginLink(href: string = location.href): Promise<U
     // с почты на экране входа, — рождение аккаунта. Firebase различает это за нас.
     return { ok: true, uid: credentials.user.uid, created: isNewUser(credentials) };
   } catch (error) {
-    return { ok: false, reason: classify(error) };
+    return { ok: false, reason: classifyLink(error) };
   }
 }
 
