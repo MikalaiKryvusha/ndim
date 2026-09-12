@@ -1,0 +1,11 @@
+{
+	"deployedAt": "2026-09-12T12:06:37.022Z",
+	"commit": "f6a0c1407162cbf0319f8dc52d94c28d3d721043",
+	"commitShort": "f6a0c14",
+	"subject": "feat(ключи+бренд): ключи в .env, канон-правило имени, страж; сервер синхронизации 2.1.0",
+	"previousCommit": "0720d14d39b4b44129a2a67c41069d484e74ed8a",
+	"service": "ndim-server-stage",
+	"worktree": "D:\\work\\ai_sandbox\\ndim-server-stage",
+	"contour": "stage",
+	"by": "tools/deploy-sync-server.mjs"
+}
