@@ -59,6 +59,7 @@ import {
 	ageVerdict,
 	positionBands,
 	bandsByDevice,
+	sliceIntegrity,
 } from './lib/console-snapshot-core.mjs';
 import { settleExit } from './lib/exit-code.mjs';
 
@@ -242,6 +243,18 @@ async function main(argv) {
 	const weeks = weeklyBuckets(dateRows);
 	const wow = weekOverWeek(weeks);
 
+	// 🔴 ГОДНОСТЬ СРЕЗОВ (`bugs/232`). Эталон — разрез по датам: он единственный, про который
+	// известно, что он равен итогу ресурса. Срез, потерявший клики, не отвечает на вопросы о CTR,
+	// и прибор обязан сказать это ВСЛУХ, а не напечатать ноль как факт.
+	const sliceFitness = {
+		byPage: sliceIntegrity(slices.byPage.map(toRow), summary),
+		byQuery: sliceIntegrity(slices.byQuery.map(toRow), summary),
+		byDevice: sliceIntegrity(slices.byDevice.map(toRow), summary),
+		byCountry: sliceIntegrity(slices.byCountry.map(toRow), summary),
+		byDevicePage: sliceIntegrity(cross, summary),
+	};
+	const crossIntegrity = sliceFitness.byDevicePage;
+
 	const snapshot = {
 		formatVersion: 1,
 		takenAt: localIso(now),
@@ -265,7 +278,11 @@ async function main(argv) {
 			queries: topBy(slices.byQuery.map(toRow), 'impressions', 20),
 		},
 		positionBands: positionBands(slices.byPage.map(toRow)),
+		// 🔴 `bugs/232`: годность каждого среза — читатель снимка не должен гадать, какому числу верить.
+		sliceFitness,
+		// ↳ Годен ТОЛЬКО для показов: на соединении `page`+`device` Search Console теряет 87 % кликов.
 		deviceBands,
+		deviceBandsFit: crossIntegrity.fitForClicks ? 'clicks-and-impressions' : 'impressions-only',
 		slices: { ...slices, byDevicePage: cross },
 		otherConsoles: OTHER_CONSOLES,
 		boundaries: [
@@ -294,20 +311,66 @@ async function main(argv) {
 		console.log('НЕДЕЛЯ К НЕДЕЛЕ: полных недель меньше двух — сравнивать нечем');
 	}
 
-	// Полосы позиций по устройствам — то, ради чего снят перекрёстный разрез (гипотеза Г-2).
-	console.log('\nПОЛОСЫ ПОЗИЦИЙ ПО УСТРОЙСТВАМ (различают «устройство» и «глубина выдачи»):');
-	for (const item of deviceBands) {
+	// Полосы позиций ПО СТРАНИЦАМ — единственный разрез, где есть и позиция, и все клики.
+	console.log('\nПОЛОСЫ ПОЗИЦИЙ (разрез `page` — держит все клики):');
+	for (const band of snapshot.positionBands) {
+		if (band.impressions === 0) continue;
 		console.log(
-			`  ${item.device}: показов ${item.impressions} · кликов ${item.clicks} · ` +
-				`CTR ${(item.ctr * 100).toFixed(2)} % · позиция ${item.position?.toFixed(1) ?? '—'}`,
+			`  поз ${band.band.padEnd(7)} страниц ${String(band.rows).padStart(4)} ` +
+				`показов ${String(band.impressions).padStart(5)} кликов ${String(band.clicks).padStart(3)} ` +
+				`CTR ${(band.ctr * 100).toFixed(2)} %`,
 		);
-		for (const band of item.bands) {
-			if (band.impressions === 0) continue;
-			console.log(
-				`      поз ${band.band.padEnd(7)} показов ${String(band.impressions).padStart(5)} ` +
-					`кликов ${String(band.clicks).padStart(3)}  CTR ${(band.ctr * 100).toFixed(2)} %`,
-			);
+	}
+
+	// Устройства — из ЗДОРОВОГО разреза `device`, а не из перекрёстного (`bugs/232`).
+	console.log('\nУСТРОЙСТВА (разрез `device` — держит все клики):');
+	for (const row of slices.byDevice) {
+		console.log(
+			`  ${String(row.key).padEnd(8)} показов ${String(row.impressions).padStart(5)} ` +
+				`кликов ${String(row.clicks).padStart(3)} CTR ${(row.ctr * 100).toFixed(2)} % ` +
+				`позиция ${row.position?.toFixed(1) ?? '—'}`,
+		);
+	}
+
+	// Перекрёстный разрез: печатается ТОЛЬКО если удержал клики. Иначе — честный отказ.
+	console.log('\nПОЛОСЫ ПОЗИЦИЙ ПО УСТРОЙСТВАМ (гипотеза Г-2: «устройство» против «глубина выдачи»):');
+	if (!crossIntegrity.fitForClicks) {
+		console.log(`  ⛔ РАЗРЕЗ НЕ ГОДЕН: ${crossIntegrity.note}.`);
+		console.log(
+			`     Удержано кликов ${(100 * (crossIntegrity.clicksKept ?? 0)).toFixed(0)} %, ` +
+				`показов ${(100 * (crossIntegrity.impressionsKept ?? 0)).toFixed(0)} % — ` +
+				'Search Console режет строки ниже порога конфиденциальности вместе с кликами.',
+		);
+		console.log('     Гипотеза Г-2 этими данными НЕПРОВЕРЯЕМА (bugs/232). Показы ниже — только для справки.');
+		for (const item of deviceBands) {
+			console.log(`  ${item.device}: показов ${item.impressions} (кликов не читать)`);
 		}
+	} else {
+		for (const item of deviceBands) {
+			console.log(
+				`  ${item.device}: показов ${item.impressions} · кликов ${item.clicks} · ` +
+					`CTR ${(item.ctr * 100).toFixed(2)} % · позиция ${item.position?.toFixed(1) ?? '—'}`,
+			);
+			for (const band of item.bands) {
+				if (band.impressions === 0) continue;
+				console.log(
+					`      поз ${band.band.padEnd(7)} показов ${String(band.impressions).padStart(5)} ` +
+						`кликов ${String(band.clicks).padStart(3)}  CTR ${(band.ctr * 100).toFixed(2)} %`,
+				);
+			}
+		}
+	}
+
+	// Годность всех срезов разом — чтобы читатель снимка не гадал, какому числу верить.
+	console.log('\nГОДНОСТЬ СРЕЗОВ (сверка с эталоном: показов ' +
+		`${summary.impressions} · кликов ${summary.clicks}):`);
+	for (const [name, integrity] of Object.entries(sliceFitness)) {
+		const mark = integrity.fitForClicks ? '✅' : '🔴';
+		console.log(
+			`  ${mark} ${name.padEnd(13)} показов ${String(integrity.impressions).padStart(6)} ` +
+				`кликов ${String(integrity.clicks).padStart(3)} ` +
+				`(удержано ${(100 * (integrity.clicksKept ?? 0)).toFixed(0)} % кликов)`,
+		);
 	}
 
 	if (args.dry) {

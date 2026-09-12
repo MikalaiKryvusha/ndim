@@ -44,6 +44,7 @@ import {
 	ageVerdict,
 	positionBands,
 	bandsByDevice,
+	sliceIntegrity,
 	POSITION_BANDS,
 	RETENTION_MONTHS,
 } from './lib/console-snapshot-core.mjs';
@@ -364,4 +365,50 @@ test('строка без устройства в разрез не попада
 	]);
 	assert.equal(разрез.length, 1);
 	assert.equal(разрез[0].clicks, 1, 'чужие девять кликов не приписаны мобильному');
+});
+
+/** ── ГОДНОСТЬ СРЕЗА (`bugs/232`) ───────────────────────────────────────────────────────────
+ *
+ * 🔴 Повод у этих юнитов конкретный и дорогой: прибор напечатал «полоса 1–10 — 762 показа,
+ * 0 кликов» из разреза, державшего 5 кликов из 40, и это правдоподобное ложное число за час
+ * дошло до владельца и до `MASTER_PLAN.md`. Проверка годности — то, что теперь стоит между
+ * потерянными кликами и выводом о продукте.
+ */
+
+test('срез, потерявший клики, объявляется НЕ годным для CTR', () => {
+	const эталон = { clicks: 40, impressions: 9514 };
+	const битый = [
+		{ clicks: 4, impressions: 800, position: 20 },
+		{ clicks: 1, impressions: 6000, position: 60 },
+	];
+	const годность = sliceIntegrity(битый, эталон);
+	assert.equal(годность.clicks, 5);
+	assert.equal(годность.fitForClicks, false, 'пять кликов из сорока — это не годный срез');
+	assert.ok(годность.clicksKept < 0.2);
+	assert.match(годность.note, /НЕ годен/);
+});
+
+test('срез, удержавший клики, объявляется годным', () => {
+	const эталон = { clicks: 40, impressions: 9514 };
+	const целый = [{ clicks: 40, impressions: 9514, position: 44 }];
+	const годность = sliceIntegrity(целый, эталон);
+	assert.equal(годность.fitForClicks, true);
+	assert.equal(годность.clicksKept, 1);
+});
+
+test('постраничный разрез ВЫШЕ эталона годен, а не подозрителен', () => {
+	// Постраничная агрегация считает показ на каждую показанную страницу — превышение законно.
+	const годность = sliceIntegrity(
+		[{ clicks: 41, impressions: 11_370, position: 44 }],
+		{ clicks: 40, impressions: 9514 },
+	);
+	assert.equal(годность.fitForClicks, true, 'превышение эталона — норма постраничной агрегации');
+	assert.ok(годность.impressionsKept > 1);
+});
+
+test('без эталона срез НЕ объявляется годным по умолчанию', () => {
+	// Молчаливое «годен» при отсутствии эталона вернуло бы ровно тот дефект, ради которого всё это.
+	const годность = sliceIntegrity([{ clicks: 5, impressions: 100, position: 10 }], null);
+	assert.equal(годность.fitForClicks, false);
+	assert.equal(годность.clicksKept, null);
 });
