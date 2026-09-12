@@ -1,0 +1,11 @@
+{
+	"deployedAt": "2026-09-12T12:28:47.571Z",
+	"commit": "c8404c81fd0d0594fe1cf57de17c1717694bf656",
+	"commitShort": "c8404c8",
+	"subject": "feat(эпик 60, фаза 2): шаг 2 — подписка эскорта вместо опроса, обрыв переживается догоном",
+	"previousCommit": "f6a0c1407162cbf0319f8dc52d94c28d3d721043",
+	"service": "ndim-server-prod",
+	"worktree": "D:\\work\\ai_sandbox\\ndim-server-prod",
+	"contour": "prod",
+	"by": "tools/deploy-sync-server.mjs"
+}
