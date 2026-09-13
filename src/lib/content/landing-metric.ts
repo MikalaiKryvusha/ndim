@@ -19,5 +19,5 @@ export const PUBLIC_PEOPLE_SNAPSHOT = {
   ratings: 4076,
   /** Связей рассчитано — строк во всех топах последней синхронизации. */
   relations: 2368,
-  takenAt: '2026-09-11',
+  takenAt: '2026-09-13',
 } as const;
