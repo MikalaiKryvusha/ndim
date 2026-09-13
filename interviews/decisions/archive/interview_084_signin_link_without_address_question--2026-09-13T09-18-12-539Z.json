@@ -1,0 +1,19 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_084_signin_link_without_address_question.md",
+	"by": "Николай Кривуша",
+	"at": "2026-09-13T09:18:12.539Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "А",
+			"text": "",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "А",
+			"text": "как можно проще. Наверное, v1 минимальными усилиями",
+			"comment": ""
+		}
+	}
+}
