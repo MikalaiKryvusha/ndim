@@ -38,6 +38,7 @@
     lang,
     step,
     email = $bindable(''),
+    linkEmail = null,
     error,
     onGoogle,
     onEmailDoor,
@@ -45,9 +46,11 @@
     onSendLink,
   }: {
     lang: Lang;
-    /** Шаг двери почты: `doors` — три двери; дальше форма и её состояния. */
-    step: 'doors' | 'choose' | 'sending' | 'sent';
+    /** Шаг двери почты: `doors` — три двери; дальше форма и её состояния; `linking` — идёт вход по ссылке. */
+    step: 'doors' | 'choose' | 'sending' | 'sent' | 'linking';
     email?: string;
+    /** Адрес, в чей аккаунт идёт вход по ссылке, — строка шага `linking` (№084 В1 = А). */
+    linkEmail?: string | null;
     error?: string;
     onGoogle: () => void;
     onEmailDoor: () => void;
@@ -86,6 +89,16 @@
     sentNote: {
       ru: 'Откройте письмо на этом устройстве и нажмите ссылку — она откроет Вам вход в Пространство NDim Space.',
       en: 'Open the email on this device and tap the link — it opens your way into NDim Space.',
+    },
+    /*
+     * ШАГ «ИДЁТ ВХОД» — макет V1 «Шаг двери» (`design/signin-progress-mockups.html`), выбран
+     * владельцем 2026-09-13 (интервью №084 В2 = А: «как можно проще»). Русские строки — из
+     * утверждённого макета; EN — рабочий перевод агента до вычитки владельцем.
+     */
+    linking: { ru: 'Выполняем вход в Пространство NDim Space', en: 'Signing you in to NDim Space' },
+    linkingWho: {
+      ru: 'Вы входите в аккаунт с адресом электронной почты',
+      en: 'You are signing in to the account with the email address',
     },
     themeToDark: { ru: 'Тёмная', en: 'Dark' },
     themeToLight: { ru: 'Светлая', en: 'Light' },
@@ -147,7 +160,8 @@
       <span class="mark"><Brand size={46} /></span>
       <p class="eyebrow">{t.eyebrow[lang]}</p>
       <h1>{t.title[lang]}</h1>
-      <p class="lede">{t.lede[lang]}</p>
+      <!-- В макете V1 «Шаг двери» подзаголовка нет: пока идёт вход, звать оценивать не к чему. -->
+      {#if step !== 'linking'}<p class="lede">{t.lede[lang]}</p>{/if}
 
       <div class="doors">
         {#if step === 'doors'}
@@ -177,6 +191,14 @@
                продукта, а на копирайте. Текст остаётся под стражем побайтово
                (`tools/verify-signin-screen.mjs`, К4), а нажимают кнопку по крючку. -->
           <button type="button" class="d primary guest" data-door="guest" onclick={onGuest}>{t.guest[lang]}</button>
+        {:else if step === 'linking'}
+          <!-- Строка с адресом — защита от пересланной чужой ссылки: человек видит, в ЧЕЙ аккаунт
+               входит, до того как окажется внутри (№084 В1 = А). Без адреса строка не рисуется. -->
+          <div class="progress" role="status" aria-live="polite">
+            <span class="ring" aria-hidden="true"></span>
+            <p class="status">{t.linking[lang]}</p>
+            {#if linkEmail}<p class="who">{t.linkingWho[lang]} <b>{linkEmail}</b></p>{/if}
+          </div>
         {:else if step === 'sent'}
           <p class="sent"><Icon name="envelope" size={16} /> {t.sentTitle[lang]}</p>
           <p class="note">{t.sentNote[lang]}</p>
@@ -355,6 +377,18 @@
     border-radius: 14px;
   }
   .inp:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  /* Шаг «идёт вход» — стили макета V1 один в один. */
+  .progress { display: grid; gap: 12px; justify-items: center; width: 100%; padding: 6px 0 2px; }
+  .ring {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 3.5px solid var(--edge); border-top-color: var(--primary);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status { margin: 0; font-size: 16px; font-weight: 600; color: var(--heading, var(--text)); }
+  .who { margin: 0; font-size: 14px; line-height: 1.5; color: var(--dim); overflow-wrap: anywhere; }
+  .who b { color: var(--text); font-weight: 600; }
 
   .sent { margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
   .note { margin: 0; color: var(--dim); font-size: 14px; line-height: 1.5; }

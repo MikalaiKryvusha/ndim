@@ -227,7 +227,7 @@ try {
       `сессия: ${me.signedIn ? (me.anonymous ? 'АНОНИМНЫЙ ГОСТЬ' : me.email) : 'нет'}`);
     console.log(
       `  ${me.email === EMAIL ? '✅' : '⏳'} вход состоялся своей почтой` +
-        `${me.email === EMAIL ? '' : ' — ЖДЁТ экрана вопроса о почте (4 макета владельцу)'}`,
+        `${me.email === EMAIL ? '' : ' — ссылка К1 собрана БЕЗ адреса (письмо до №084); вход новых писем в чистом браузере доказывает tools/verify-signin-link-any-browser.mjs'}`,
     );
     check('консоль чиста', errors.length === 0, errors.slice(0, 2).join(' | '));
     await context.close();

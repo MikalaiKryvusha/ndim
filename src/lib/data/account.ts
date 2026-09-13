@@ -146,6 +146,30 @@ function loginLinkOrigin(): string {
 const PENDING_EMAIL_KEY = 'ndim-pending-email';
 
 /**
+ * Параметр адреса возврата, в котором письмо несёт почту (интервью №084 В1 = А, `bugs/233`).
+ * Нужен браузеру, где вход НЕ начинали: там `PENDING_EMAIL_KEY` нет по определению.
+ */
+const LINK_EMAIL_PARAM = 'email';
+
+/** Почта из адреса ссылки — или `null`, если письмо старое и адреса не несёт. */
+export function emailInLink(href: string = location.href): string | null {
+  try {
+    return new URL(href).searchParams.get(LINK_EMAIL_PARAM)?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Какой адрес назвать человеку на экране «идёт вход» — тот, которым вход и пойдёт у человека без
+ * сессии: память этого браузера, иначе адрес из ссылки. Строка на экране — защита от пересланной
+ * чужой ссылки: человек видит чужой адрес до того, как окажется внутри (№084 В1).
+ */
+export function emailShownForLink(href: string = location.href): string | null {
+  return localStorage.getItem(PENDING_EMAIL_KEY) ?? emailInLink(href);
+}
+
+/**
  * Ключ, под которым помним НАМЕРЕНИЕ — зачем человек ввёл почту (bugs/84, интервью №007 В4).
  *
  * Слово владельца: «не понимает разницы между гостем и попыткой использовать чужой email —
@@ -351,8 +375,13 @@ export async function sendLoginLink(
   returnPath: string = LINK_RETURN_PATH,
 ): Promise<UpgradeResult> {
   try {
+    // Адрес уезжает В САМОЙ ССЫЛКЕ — так письмо открывает вход и в браузере, где вход не
+    // начинали (интервью №084 В1 = А, `bugs/233`). Подменить его бесполезно: код ссылки привязан
+    // к адресу письма, чужой адрес Firebase отвергает (`tools/probe-link-email-binding.mjs`).
+    const back = new URL(`${loginLinkOrigin()}${returnPath}`);
+    back.searchParams.set(LINK_EMAIL_PARAM, email);
     await sendSignInLinkToEmail(devAuth(), email, {
-      url: `${loginLinkOrigin()}${returnPath}`,
+      url: back.href,
       handleCodeInApp: true,
     });
     localStorage.setItem(PENDING_EMAIL_KEY, email);
@@ -388,8 +417,13 @@ export function isLoginLink(href: string = location.href): boolean {
  *      ничего (та самая идемпотентность, которую он просил). Не сойдётся — ссылка выписана
  *      кому-то другому, и мы спросим почту, а не пустим молча.
  *
- * ⛔ ЧЕТВЁРТОГО ИСТОЧНИКА НЕТ И НЕ БУДЕТ: почту из адреса ссылки читать запрещено
- * (session injection — первоисточник Firebase, разбор в `bugs/233`).
+ *   4. **Адрес из самой ссылки** — ТОЛЬКО когда в браузере нет никакой сессии (новый браузер).
+ *      Решение владельца — интервью №084 В1 = А, 2026-09-13; прежний запрет снят им же после
+ *      проверки: подменённый адрес Firebase отвергает, цена «пересланная чужая ссылка» названа ему
+ *      до ответа, защита — строка с адресом на экране «идёт вход».
+ *      ⚠️ При живой сессии адрес из ссылки НЕ берётся, и это сознательно: «в браузере вошёл
+ *      другой аккаунт» (№083 В2) и «гость в новом браузере» (№083 В3) — развилки владельца без
+ *      ответа, поведение там остаётся прежним.
  *
  * ⚠️ Аноним сюда не попадает намеренно: у гостя почты нет вовсе, а если бы и была — гость это
  * не «человек, который уже вошёл», а временная сессия. Его путь — привязка (`linkWithCredential`).
@@ -402,16 +436,21 @@ export function isLoginLink(href: string = location.href): boolean {
  *
  * [TESTED: 2026-09-12 · `account.test.ts` — 9 случаев приоритета источников; мутация
  *  «убрать ветвь вошедшего человека» роняет 3 из них адресно]
+ * [TESTED: 2026-09-13 · источник 4 — ручной прогон на стенде `tools/verify-signin-link-any-browser.mjs`
+ *  К6 (чистый браузер вошёл адресом из ссылки) и К7 (подменённый адрес не впустил); отчёт
+ *  `qa/reports/2026-09-13_signin-link-any-browser.md`. Сессия «вошёл другой аккаунт» живьём не гонялась]
  */
 export function emailForLink(
   user: Pick<User, 'isAnonymous' | 'email'> | null,
   remembered: string | null,
   emailFromHuman?: string,
+  fromLink?: string | null,
 ): string | null {
   const named = emailFromHuman?.trim();
   if (named) return named;
   if (remembered) return remembered;
   if (user && !user.isAnonymous && user.email) return user.email;
+  if (!user && fromLink) return fromLink;
   return null;
 }
 
@@ -454,15 +493,18 @@ export async function completeLoginLink(
   /**
    * Почта, названная САМИМ человеком, когда в этом браузере её взять неоткуда.
    *
-   * 🔴 Именно рукой человека, и никогда из адреса ссылки. Первоисточник запрещает второе прямо:
-   * «*Do not pass the user's email in the redirect URL parameters and re-use it as this may
-   * enable session injections*». Почта в адресе перестала бы быть доказательством владения
-   * ящиком и стала бы параметром, который подделывается (`bugs/233`, разбор гипотезы владельца).
+   * Адрес из самой ссылки сюда НЕ передаётся — его берёт `emailForLink` (источник 4) и только
+   * у человека без сессии (интервью №084 В1 = А).
    */
   emailFromHuman?: string,
 ): Promise<LinkResult> {
   const user = devAuth().currentUser;
-  const email = emailForLink(user, localStorage.getItem(PENDING_EMAIL_KEY), emailFromHuman);
+  const email = emailForLink(
+    user,
+    localStorage.getItem(PENDING_EMAIL_KEY),
+    emailFromHuman,
+    emailInLink(href),
+  );
   // Ссылка жива — просто некому сказать, чья она. Это вопрос человеку, а не приговор ссылке.
   if (!email) return { ok: false, reason: 'email-needed' };
 

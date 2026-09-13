@@ -18,7 +18,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { emailForLink } from './account.ts';
+import { emailForLink, emailInLink } from './account.ts';
 
 /** Человек, который уже вошёл своей почтой. */
 const signedIn = (email: string) => ({ isAnonymous: false, email });
@@ -75,6 +75,29 @@ test('неоткуда взять — честный null, а не выдума�
   // («ask the user to provide the associated email again»).
   assert.equal(emailForLink(null, null), null);
   assert.equal(emailForLink(null, null, undefined), null);
+});
+
+test('🔴 НОВЫЙ БРАУЗЕР: сессии нет — вход идёт адресом из ссылки (№084 В1 = А)', () => {
+  assert.equal(emailForLink(null, null, undefined, 'maria@ndim.space'), 'maria@ndim.space');
+});
+
+test('адрес из ссылки НЕ перебивает живую сессию — развилки №083 В2/В3 не решаются кодом', () => {
+  // Вошёл другой аккаунт: предъявляется его почта, как и до решения №084.
+  assert.equal(emailForLink(signedIn('nikolai@ndim.space'), null, undefined, 'maria@ndim.space'), 'nikolai@ndim.space');
+  // Гость в новом браузере: адрес из ссылки не берётся, привязка к чужому гостю не начинается.
+  assert.equal(emailForLink(guest, null, undefined, 'maria@ndim.space'), null);
+});
+
+test('адрес из ссылки — последний источник: память браузера и рука человека сильнее', () => {
+  assert.equal(emailForLink(null, 'pamyat@ndim.space', undefined, 'ssylka@ndim.space'), 'pamyat@ndim.space');
+  assert.equal(emailForLink(null, null, 'ruka@ndim.space', 'ssylka@ndim.space'), 'ruka@ndim.space');
+});
+
+test('адрес из ссылки читается из адреса возврата, старое письмо без адреса даёт null', () => {
+  const link = 'https://ndimspace.app/profile?email=maria%2Btest%40ndim.space&apiKey=k&oobCode=c&mode=signIn';
+  assert.equal(emailInLink(link), 'maria+test@ndim.space');
+  assert.equal(emailInLink('https://ndimspace.app/profile?apiKey=k&oobCode=c&mode=signIn'), null);
+  assert.equal(emailInLink('не адрес'), null);
 });
 
 test('порядок источников именно такой, а не «какой найдётся»', () => {

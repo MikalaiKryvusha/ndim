@@ -62,6 +62,7 @@
   import {
     completeLoginLink,
     continueWithGoogle,
+    emailShownForLink,
     isLoginLink,
     linkGoogle,
     pendingIntent,
@@ -276,6 +277,15 @@
     | 'mine?'
     | 'done';
   let signupStep = $state<SignupStep>('facts');
+  /*
+   * ИДЁТ ВХОД ПО ССЫЛКЕ У ЧЕЛОВЕКА БЕЗ СЕССИИ — дверь входа со спиннером (`bugs/233`, интервью
+   * №084 В2 = А, макет V1 «Шаг двери»). Слово владельца: «выглядеть должно ровно так же, как если
+   * бы приняли ссылку в том же браузере - экран логина открывает спинер и выполняет процесс
+   * логина». Раньше в эти секунды стояла оболочка приложения с карточкой загрузки, а при отказе —
+   * три двери без слова. Гость, сохраняющий результаты, остаётся на своей гостевой карточке.
+   */
+  let linkingDoor = $state(false);
+  let linkingEmail = $state<string | null>(null);
   let signupEmail = $state('');
   let signupError = $state('');
 
@@ -570,11 +580,29 @@
     const released = intent === 'signin' && session?.isAnonymous === true;
     if (released) await signOutUser();
 
+    // Сессии нет (новый браузер, дверь входа) — вход идёт на двери входа со спиннером.
+    if (session === null || released) {
+      linkingDoor = true;
+      linkingEmail = emailShownForLink();
+    }
+
     const result = await completeLoginLink();
+    // Адрес возврата несёт почту (№084 В1) — стираем его сразу, вместе с одноразовым кодом.
     replaceUrl('/profile');
+    linkingDoor = false;
 
     if (result.ok) {
       guest = false; // сессия больше не гостевая: пилюля гостя и запреты уходят
+      /*
+       * 🔴 ДОКУМЕНТ ПРОФИЛЯ ЗАВОДИТСЯ ТАМ, ГДЕ РОЖДАЕТСЯ АККАУНТ (`bugs/235`).
+       * Раньше `users/{uid}` заводил только гостевой путь, и новый человек, вошедший ссылкой
+       * НИ РАЗУ не побыв гостем, получал «не удалось загрузить» (`ProfileMissingError`).
+       * `ensureSpaceExists` идемпотентна: у апгрейда гостя документ уже есть — вызов ничего не трогает.
+       * [TESTED: 2026-09-13 · ручной прогон на стенде, К6 `verify-signin-link-any-browser`: новичок
+       *  открыл свой профиль; мутант без этой строки — «Не удалось загрузить» + ProfileMissingError.
+       *  Апгрейд гостя — регресс К2 `verify-bug233` зелёный; поздравление глазами не сверялось]
+       */
+      if (result.created) await ensureSpaceExists(result.uid, lang);
       if (result.created) {
         // Аккаунт родился только что (апгрейд гостя или первый вход новичка) —
         // единственный случай, когда поздравление уместно.
@@ -620,13 +648,10 @@
      * это прямой вред: человек шёл ВХОДИТЬ в свой аккаунт — и молча получал чужую анонимную
      * личность. Ссылка при этом была жива, Firebase о ней даже не спрашивали.
      *
-     * ⏳ ИНТЕРИМ, И ОН НАЗВАН ЧЕСТНО. Правильный исход — спросить почту прямо здесь: так велит
-     * сам Firebase («*ask the user to provide the associated email again*»), и `account.ts` уже
-     * умеет её принять вторым доводом `completeLoginLink`. Экран для этого вопроса — новое
-     * состояние двери входа, то есть UI-решение на лице продукта: оно идёт владельцу четырьмя
-     * макетами с текстами (правило четырёх макетов, `AGENT_GUIDE.md` → «Дизайн»), а не
-     * сочиняется здесь. До его слова человек уходит на СУЩЕСТВУЮЩУЮ, им же принятую дверь
-     * входа — без вранья про мёртвую ссылку и без подмены личности.
+     * 🔄 С 2026-09-13 (№084 В1 = А) ссылка несёт адрес сама, и у человека без сессии этот исход
+     * рождается только у СТАРОГО письма, отправленного до выката. Поле вопроса об адресе владелец
+     * отверг (№083 В1): человек уходит на дверь входа — без вранья про мёртвую ссылку и без
+     * подмены личности — и просит новое письмо.
      */
     if (result.reason === 'email-needed') {
       if (!released && session?.isAnonymous === false) return session.uid; // вошедший остаётся собой
@@ -1350,16 +1375,19 @@
   }}
 />
 
-{#if stand === 'signedout'}
+{#if stand === 'signedout' || linkingDoor}
   <!-- ⛔ ОБОЛОЧКА ПРИЛОЖЕНИЯ СЮДА НЕ ЗАХОДИТ. Человек не вошёл — значит он не внутри продукта,
        и показывать ему табы, рельс и нижнюю панель приложения было ровно тем, на что владелец
        жаловался в `bugs/19`. Экран занимает окно целиком и несёт собственные переключатели
        языка и темы. -->
   <SigninScreen
     {lang}
-    step={signupStep === 'choose' || signupStep === 'sending' || signupStep === 'sent'
-      ? signupStep
-      : 'doors'}
+    step={linkingDoor
+      ? 'linking'
+      : signupStep === 'choose' || signupStep === 'sending' || signupStep === 'sent'
+        ? signupStep
+        : 'doors'}
+    linkEmail={linkingEmail}
     bind:email={signupEmail}
     error={signupError}
     onGoogle={() => signIn('google')}
