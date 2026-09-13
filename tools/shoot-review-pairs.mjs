@@ -41,7 +41,8 @@ for (const [v, label] of variants) {
   for (const theme of ['light', 'dark']) {
     await page.evaluate((t) => { document.documentElement.dataset.theme = t; }, theme);
     await page.waitForTimeout(150);
-    const frame = page.locator(`.variant[id="${v}"] .screen`).first();
+    // Рамка варианта: `.screen` — экран двери, `.app` — экран приложения (наборы развилок).
+    const frame = page.locator(`.variant[id="${v}"] .screen, .variant[id="${v}"] .app`).first();
     shots[theme] = await frame.screenshot();
   }
   // Склейка: две рамки рядом на нейтральном поле.
