@@ -11,6 +11,7 @@
  *
  *   node tools/verify-signin-link-any-browser.mjs                    # СЛ-01…08, СЛ-11
  *   node tools/verify-signin-link-any-browser.mjs --contour stage    # СЛ-12, СЛ-13
+ *   node tools/verify-signin-link-any-browser.mjs --contour prod     # СЛ-12, СЛ-13 в бою: метка прогона, учётки удаляются
  *
  * Граница: два разных движка браузера не доказаны — доказано ровно то, чем дефект вызван, у Б нет
  * памяти А. Кадры: test-results/signin-link-any-browser/<контур>/.
@@ -23,12 +24,16 @@ import { chromium } from '@playwright/test';
 import { portsFor, slotOf } from './lib/stand-slot.mjs';
 
 const CONTOUR = process.argv.includes('--contour') ? process.argv[process.argv.indexOf('--contour') + 1] : 'stand';
-const STAGE = CONTOUR === 'stage';
-if (!['stand', 'stage'].includes(CONTOUR)) {
-  console.error(`Контур «${CONTOUR}» не поддержан: stand | stage. Бой этим прибором не трогается.`);
+// Живой контур (стейдж или бой): ссылку выпускает сервисный ключ, она идёт через настоящий обработчик.
+const STAGE = CONTOUR === 'stage' || CONTOUR === 'prod';
+const PROD = CONTOUR === 'prod';
+if (!['stand', 'stage', 'prod'].includes(CONTOUR)) {
+  console.error(`Контур «${CONTOUR}» не поддержан: stand | stage | prod.`);
   process.exit(2);
 }
-const BASE = STAGE
+const BASE = PROD
+  ? 'https://ndimspace.app'
+  : STAGE
   ? 'https://ndim-stage.web.app'
   : (process.env.PROBE_BASE ?? `http://localhost:${portsFor(slotOf(basename(process.cwd())).slot).dev}`);
 const AUTH = 'http://127.0.0.1:9099';
@@ -77,14 +82,22 @@ const describe = (me) => (me ? (me.anonymous ? 'гость' : me.email) : 'не�
 async function browserOf(browser, { w = 390, h = 844, theme, lang } = {}) {
   const context = await browser.newContext({ viewport: { width: w, height: h }, locale: 'ru-RU' });
   // Тот же пропуск App Check, что у смоука двери выката (`tools/lib/app-check-debug.mjs`).
-  if (STAGE) await (await import('./lib/app-check-debug.mjs')).grantAppCheckDebug(context);
+  if (STAGE) await (await import('./lib/app-check-debug.mjs')).grantAppCheckDebug(context, { required: PROD });
+  // В бою прогон метится как свой: воронка при метке молчит (`tools/lib/probe-mark.mjs`).
+  if (PROD) await (await import('./lib/probe-mark.mjs')).markProbeContext(context);
   await context.addInitScript(([t, l]) => {
     if (t) localStorage.setItem('ndim-theme', t);
     if (l) localStorage.setItem('ndim-lang', l);
   }, [theme, lang]);
   const page = await context.newPage();
   const errors = [];
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  // Ошибка консоли называется АДРЕСОМ источника (урок `bugs/169`): переход по ссылке идёт через
+  // чужую страницу-обработчик, и «чья это строка» — первое, что надо знать.
+  page.on('console', (m) => {
+    if (m.type() !== 'error') return;
+    const where = m.location()?.url || page.url();
+    errors.push(`${m.text()} @ ${where.split('?')[0]}`);
+  });
   return { context, page, errors };
 }
 
@@ -289,10 +302,10 @@ try {
     const { getAuth } = await import('firebase-admin/auth');
     const { getFirestore } = await import('firebase-admin/firestore');
     const { serviceAccount } = await import('./lib/credentials.mjs');
-    const { STAGE_PROJECT, STAGE_DATABASE } = await import('./lib/contours.mjs');
-    initializeApp({ credential: cert(serviceAccount('stage')), projectId: STAGE_PROJECT });
+    const { STAGE_PROJECT, STAGE_DATABASE, PROD_PROJECT, PROD_DATABASE } = await import('./lib/contours.mjs');
+    initializeApp({ credential: cert(serviceAccount(CONTOUR)), projectId: PROD ? PROD_PROJECT : STAGE_PROJECT });
     const auth = getAuth();
-    const store = getFirestore(STAGE_DATABASE);
+    const store = getFirestore(PROD ? PROD_DATABASE : STAGE_DATABASE);
     const made = [];
 
     const realLink = async (email, path) => {
@@ -329,6 +342,37 @@ try {
         check('СЛ-13', 'вошёл своей почтой, профиль без «Не удалось загрузить»', me?.email === S && !(await text(page, DOWN)), describe(me));
         check('СЛ-13', 'консоль чиста', errors.length === 0, errors.slice(0, 3).join(' | '));
         await context.close();
+
+        // ═══ СЛ-06 на живом контуре · та же ссылка во втором чистом браузере ═════════════════════
+        console.log('\nСЛ-06 · использованная ссылка в чистом браузере (живой контур):');
+        const second = await browserOf(browser);
+        await second.page.goto(link);
+        await second.page.waitForTimeout(15000);
+        const me2 = await whoAmI(second.page);
+        if (me2?.uid) made.push(me2.uid); // заведённого по ошибке гостя тоже убираем
+        await second.page.screenshot({ path: `${SHOTS}/sl06-used-link.png`, fullPage: true });
+        check('СЛ-06', 'использованная ссылка не впустила, гость не заведён', me2 === null, describe(me2));
+        check('СЛ-06', 'на двери входа видна строка ошибки о ссылке', await text(second.page, DEAD));
+        await second.context.close();
+      }
+
+      // ═══ СЛ-05 на живом контуре · адрес в ссылке подменён ═══════════════════════════════════════
+      {
+        const X = `sl05-owner-${stamp}@ndim.space`;
+        const Y = `sl05-stranger-${stamp}@ndim.space`;
+        console.log(`\nСЛ-05 · письмо для ${X}, в ссылке подменён адрес на ${Y}:`);
+        const real = new URL(await realLink(X, '/profile'));
+        const cont = new URL(real.searchParams.get('continueUrl'));
+        cont.searchParams.set('email', Y);
+        real.searchParams.set('continueUrl', cont.href);
+        const forged = await browserOf(browser);
+        await forged.page.goto(real.href);
+        await forged.page.waitForTimeout(15000);
+        const me5 = await whoAmI(forged.page);
+        if (me5?.uid) made.push(me5.uid);
+        await forged.page.screenshot({ path: `${SHOTS}/sl05-forged.png`, fullPage: true });
+        check('СЛ-05', 'не вошёл никто — ни хозяин ссылки, ни названный адрес', me5 === null, describe(me5));
+        await forged.context.close();
       }
 
       // ═══ СЛ-12 · публичная дверь удаления ═════════════════════════════════════════════════════
