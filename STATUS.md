@@ -59,8 +59,12 @@
 `linking`), `profile/+page.svelte` (дверь со спиннером + `ensureSpaceExists` → `bugs/235`). Ручной
 прогон `tools/verify-signin-link-any-browser.mjs` 12/0, мутант красный, отчёт
 `qa/reports/2026-09-13_signin-link-any-browser.md`.
-**ДАЛЬШЕ:** тест-документация в `qa/suites/` → стейдж (`npm run deploy -- --stage`) → только потом
-вопрос о бое · приветствие новичка лжёт про оценки (`bugs/NEW_newcomer_welcome_claims_ratings_in_place.md`,
+🆕 **2026-09-13 17:5x — «пиши, тестируй» ИСПОЛНЕНО:** набор `qa/suites/signin-link-any-browser.md`
+(13 кейсов, пути `NDIM-AUTH-024…030`, `NDIM-ACCOUNT-012`), 13/13 pass на стенде и стейдже, мутанты
+М1–М3 красные, стейдж выкачен дверью (`5bda714`). Кейс СЛ-06 нашёл регресс — вылечен
+(`bugs/NEW_dead_link_in_clean_browser_makes_guest.md`). Ворота «катить» по тестированию закрыты —
+**выкат в бой ждёт слова владельца.**
+**ДАЛЬШЕ:** слово владельца о бое · приветствие новичка лжёт про оценки (`bugs/NEW_newcomer_welcome_claims_ratings_in_place.md`,
 текст — владельцу) · публичная дверь удаления тоже зовёт `completeLoginLink` — адрес из ссылки там
 живьём не гонялся · №083 В2/В3 (код держит прежнее поведение) и В4 — переформулировать и поднять.
 

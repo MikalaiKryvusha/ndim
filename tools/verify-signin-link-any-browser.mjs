@@ -76,6 +76,8 @@ const describe = (me) => (me ? (me.anonymous ? 'гость' : me.email) : 'не�
 /** Отдельный браузер: своё хранилище, своя сессия. `theme`/`lang` кладутся ДО загрузки. */
 async function browserOf(browser, { w = 390, h = 844, theme, lang } = {}) {
   const context = await browser.newContext({ viewport: { width: w, height: h }, locale: 'ru-RU' });
+  // Тот же пропуск App Check, что у смоука двери выката (`tools/lib/app-check-debug.mjs`).
+  if (STAGE) await (await import('./lib/app-check-debug.mjs')).grantAppCheckDebug(context);
   await context.addInitScript(([t, l]) => {
     if (t) localStorage.setItem('ndim-theme', t);
     if (l) localStorage.setItem('ndim-lang', l);
@@ -340,10 +342,13 @@ try {
         await page.goto(link);
         await page.waitForTimeout(15000);
         const me = await whoAmI(page);
-        const form = await page.locator('input[type="email"]').isVisible().catch(() => false);
+        // Поле почты на шаге удаления — ПОДТВЕРЖДЕНИЕ удаления, а не форма входа (первая редакция
+        // кейса путала их и красила продукт ложно, кадр 2026-09-13). Признак шага — его вопрос.
+        const step = await text(page, 'будут безвозвратно удалены');
+        const signinForm = await page.getByRole('button', { name: /Получить ссылку/ }).isVisible().catch(() => false);
         await page.screenshot({ path: `${SHOTS}/sl12-delete-door.png`, fullPage: true });
         check('СЛ-12', 'вошёл этой почтой', me?.email === D, describe(me));
-        check('СЛ-12', 'страница показывает шаг удаления, а не форму почты', !form, form ? 'на экране форма почты' : '');
+        check('СЛ-12', 'страница показывает шаг удаления, а не форму входа', step && !signinForm, `шаг ${step} · форма входа ${signinForm}`);
         check('СЛ-12', 'консоль чиста', errors.length === 0, errors.slice(0, 3).join(' | '));
         await context.close();
       }
