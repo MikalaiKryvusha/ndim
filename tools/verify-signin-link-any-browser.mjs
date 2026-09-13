@@ -1,43 +1,57 @@
 /**
- * РУЧНОЙ ФУНКЦИОНАЛЬНЫЙ ПРОГОН — ВХОД ПО ССЫЛКЕ ИЗ ПИСЬМА В ЛЮБОМ БРАУЗЕРЕ (`bugs/233`, `bugs/235`).
+ * РУЧНОЙ ФУНКЦИОНАЛЬНЫЙ ПРОГОН — ВХОД ПО ССЫЛКЕ ИЗ ПИСЬМА В ЛЮБОМ БРАУЗЕРЕ.
+ * Набор: `qa/suites/signin-link-any-browser.md` (кейсы СЛ-01…СЛ-13). Родители: `bugs/233`, `bugs/235`,
+ * решение владельца — интервью №084 (В1 = А адрес в ссылке + строка аккаунта, В2 = А экран V1).
  *
- * Решение владельца — интервью №084: В1 = А (адрес в ссылке + строка с адресом на экране),
- * В2 = А (экран «идёт вход» по макету V1 «Шаг двери»).
+ * СТЕНД (по умолчанию): путь идёт ДВЕРЬЮ ПРОДУКТА — браузер А просит письмо, эмулятор Auth отдаёт
+ * выпущенную ссылку (`EXP-0045`), браузер Б — отдельный контекст Playwright с пустым хранилищем.
+ * СТЕЙДЖ (`--contour stage`): ссылку выпускает сервисный ключ стейджа (`generateSignInWithEmailLink`),
+ * и она идёт через НАСТОЯЩИЙ обработчик Firebase `…firebaseapp.com/__/auth/action`. Учётки,
+ * заведённые прогоном, прибор удаляет в конце (Auth + `users/`).
  *
- * Путь идёт ДВЕРЬЮ ПРОДУКТА, а не в обход: браузер А на двери входа просит письмо, эмулятор Auth
- * отдаёт выпущенную ссылку (письмо без почтового ящика, `EXP-0045`), браузер Б — отдельный
- * контекст Playwright со своим хранилищем — открывает её. Граница названа: два РАЗНЫХ движка
- * браузера этим не доказаны; доказано ровно то, чем дефект вызван, — у Б нет памяти А.
+ *   node tools/verify-signin-link-any-browser.mjs                    # СЛ-01…08, СЛ-11
+ *   node tools/verify-signin-link-any-browser.mjs --contour stage    # СЛ-12, СЛ-13
  *
- *   К6 · новый человек, чистый браузер Б → спиннер с адресом → вошёл своей почтой → свой профиль,
- *        без «Не удалось загрузить» (`bugs/235`) и без гостевой пилюли;
- *   К7 · КОНТРОЛЬ: в ссылке подменён адрес → вход НЕ состоялся ни под каким адресом.
+ * Граница: два разных движка браузера не доказаны — доказано ровно то, чем дефект вызван, у Б нет
+ * памяти А. Кадры: test-results/signin-link-any-browser/<контур>/.
  *
- * Кадры: test-results/signin-link-any-browser/ (обе темы, 390 и 1440).
- * Требует поднятого стенда: `npm run stand`. Запуск: node tools/verify-signin-link-any-browser.mjs
- *
- * [TESTED: 2026-09-13 · стенд, 12/0; мутант «без ensureSpaceExists» дал 2 провала адресно]
+ * [TESTED: 2026-09-13 · стенд: первая редакция 12/0, мутант «без ensureSpaceExists» дал 2 провала адресно]
  */
 import { mkdir } from 'node:fs/promises';
 import { basename } from 'node:path';
 import { chromium } from '@playwright/test';
 import { portsFor, slotOf } from './lib/stand-slot.mjs';
 
-const BASE = process.env.PROBE_BASE ?? `http://localhost:${portsFor(slotOf(basename(process.cwd())).slot).dev}`;
+const CONTOUR = process.argv.includes('--contour') ? process.argv[process.argv.indexOf('--contour') + 1] : 'stand';
+const STAGE = CONTOUR === 'stage';
+if (!['stand', 'stage'].includes(CONTOUR)) {
+  console.error(`Контур «${CONTOUR}» не поддержан: stand | stage. Бой этим прибором не трогается.`);
+  process.exit(2);
+}
+const BASE = STAGE
+  ? 'https://ndim-stage.web.app'
+  : (process.env.PROBE_BASE ?? `http://localhost:${portsFor(slotOf(basename(process.cwd())).slot).dev}`);
 const AUTH = 'http://127.0.0.1:9099';
 const PROJECT = 'demo-ndim-dev';
-const SHOTS = 'test-results/signin-link-any-browser';
+const SHOTS = `test-results/signin-link-any-browser/${CONTOUR}`;
 const DOWN = 'Не удалось загрузить данные';
-const SPINNER = 'Выполняем вход в Пространство NDim Space';
-const WHO = 'Вы входите в аккаунт с адресом электронной почты';
+const SPINNER = { ru: 'Выполняем вход в Пространство NDim Space', en: 'Signing you in to NDim Space' };
+const WHO = { ru: 'Вы входите в аккаунт с адресом электронной почты', en: 'You are signing in to the account with the email address' };
+const LEDE = 'Оцените фильмы, книги, музыку';
+const WELCOME = 'Профиль сохранён';
+const DEAD = 'Ссылка больше не действует';
+const stamp = Date.now();
 
+/** Вердикты кейсов: у каждого кейса статус и названное наблюдение (`TESTING_FRAMEWORK.md`, шаг 4). */
+const verdicts = [];
 let failures = 0;
-const check = (name, ok, detail = '') => {
+function check(id, name, ok, detail = '') {
   if (!ok) failures += 1;
-  console.log(`${ok ? '  ✅' : '  ❌'} ${name}${detail ? ` — ${detail}` : ''}`);
-};
+  verdicts.push({ id, ok });
+  console.log(`${ok ? '  ✅' : '  ❌'} ${id} · ${name}${detail ? ` — ${detail}` : ''}`);
+}
 
-/** Кто вошёл по мнению самого Firebase: IndexedDB `firebaseLocalStorageDb` (см. verify-bug233, К0). */
+/** Кто вошёл по мнению самого Firebase: IndexedDB `firebaseLocalStorageDb` (урок `verify-bug233`, К0). */
 const whoAmI = (page) =>
   page.evaluate(
     () =>
@@ -50,114 +64,304 @@ const whoAmI = (page) =>
           const req = db.transaction('firebaseLocalStorage').objectStore('firebaseLocalStorage').getAll();
           req.onsuccess = () => {
             const u = (req.result ?? []).find((r) => String(r.fbase_key).startsWith('firebase:authUser:'));
-            resolve(u ? { email: u.value.email ?? null, anonymous: u.value.isAnonymous === true } : null);
+            resolve(u ? { uid: u.value.uid, email: u.value.email ?? null, anonymous: u.value.isAnonymous === true } : null);
           };
           req.onerror = () => resolve(null);
         };
       }),
   );
-
 const text = (page, needle) => page.evaluate((t) => document.body.innerText.includes(t), needle);
+const describe = (me) => (me ? (me.anonymous ? 'гость' : me.email) : 'нет сессии');
 
-/** Браузер А просит письмо ДВЕРЬЮ ПРОДУКТА; возвращает ссылку, какой её отдал бы Firebase. */
-async function letterFromDoor(browser, email) {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
-  const page = await ctx.newPage();
+/** Отдельный браузер: своё хранилище, своя сессия. `theme`/`lang` кладутся ДО загрузки. */
+async function browserOf(browser, { w = 390, h = 844, theme, lang } = {}) {
+  const context = await browser.newContext({ viewport: { width: w, height: h }, locale: 'ru-RU' });
+  await context.addInitScript(([t, l]) => {
+    if (t) localStorage.setItem('ndim-theme', t);
+    if (l) localStorage.setItem('ndim-lang', l);
+  }, [theme, lang]);
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  return { context, page, errors };
+}
+
+/** Придержать ответы Auth, чтобы шаг «идёт вход» был виден глазу и кадру (на стенде вход длится миг). */
+async function holdAuth(page, ms) {
+  await page.route(/identitytoolkit\.googleapis\.com/, async (r) => {
+    await new Promise((ok) => setTimeout(ok, ms));
+    await r.continue().catch(() => {});
+  });
+}
+
+// ─── СТЕНД: письмо ДВЕРЬЮ ПРОДУКТА ────────────────────────────────────────────────────────────
+/** Браузер А (или переданная страница) просит письмо на двери входа; возвращает ссылку, как её отдаёт Firebase. */
+async function letterFromDoor(browser, email, page = null) {
+  let own = null;
+  if (!page) {
+    own = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
+    page = await own.newPage();
+  }
   await page.goto(`${BASE}/profile?as=none`);
   await page.getByRole('button', { name: 'Войти по ссылке на почту' }).click();
   await page.locator('input[type="email"]').fill(email);
   await page.getByRole('button', { name: 'Получить ссылку для входа' }).click();
   await page.getByText('Письмо отправлено').waitFor({ timeout: 15000 });
-  await ctx.close();
+  if (own) await own.close();
 
   const codes = await fetch(`${AUTH}/emulator/v1/projects/${PROJECT}/oobCodes`).then((r) => r.json());
   const mine = (codes.oobCodes ?? []).filter((c) => c.email === email && c.requestType === 'EMAIL_SIGNIN').at(-1);
   if (!mine) throw new Error(`эмулятор не выпустил письмо для ${email}`);
-  // Боевой обработчик Firebase переводит человека на continueUrl, дописав код — собираем так же.
-  const cont = new URL(new URL(mine.oobLink).searchParams.get('continueUrl'));
-  cont.searchParams.set('mode', 'signIn');
-  cont.searchParams.set('oobCode', mine.oobCode);
-  cont.searchParams.set('apiKey', 'demo-api-key');
-  return cont;
+  // Боевой обработчик переводит человека на continueUrl, дописав код, — собираем так же.
+  const link = new URL(new URL(mine.oobLink).searchParams.get('continueUrl'));
+  link.searchParams.set('mode', 'signIn');
+  link.searchParams.set('oobCode', mine.oobCode);
+  link.searchParams.set('apiKey', 'demo-api-key');
+  return link;
+}
+
+/** Открыть ссылку и дождаться исхода входа. */
+async function openLink(page, href, wait = 7000) {
+  await page.goto(href);
+  await page.waitForTimeout(wait);
 }
 
 await mkdir(SHOTS, { recursive: true });
 const browser = await chromium.launch();
-const stamp = Date.now();
 
 try {
-  // ═══ К6 · новый человек открывает письмо в чистом браузере ═══════════════════════════════════
-  const EMAIL = `anybrowser-${stamp}@ndim.space`;
-  console.log(`К6 · письмо открыто в ЧИСТОМ браузере Б (почта ${EMAIL}):`);
-  {
-    const link = await letterFromDoor(browser, EMAIL);
-    check('письмо несёт адрес в ссылке', link.searchParams.get('email') === EMAIL, link.search.slice(0, 80));
+  if (!STAGE) {
+    // ═══ СЛ-01 · СЛ-02 (светлая 390) · новый человек, чистый браузер ═══════════════════════════
+    const A = `sl01-${stamp}@ndim.space`;
+    console.log(`СЛ-01 · новый человек открывает письмо в чистом браузере (${A}):`);
+    const link01 = await letterFromDoor(browser, A);
+    check('СЛ-01', 'письмо несёт адрес в ссылке', link01.searchParams.get('email') === A);
+    let uidA;
+    {
+      const { context, page, errors } = await browserOf(browser);
+      await holdAuth(page, 1500);
+      await page.goto(link01.href);
+      const spinner = await page.getByText(SPINNER.ru).waitFor({ timeout: 8000 }).then(() => true, () => false);
+      const who = spinner && (await text(page, WHO.ru)) && (await text(page, A));
+      const lede = await text(page, LEDE);
+      const doors = await page.getByRole('button', { name: 'Войти через Google' }).isVisible().catch(() => false);
+      await page.screenshot({ path: `${SHOTS}/sl02-390-light.png` });
+      check('СЛ-02', 'шаг «идёт вход»: спиннер · строка аккаунта · без подзаголовка · без кнопок · 390 светлая',
+        spinner && who && !lede && !doors, `спиннер ${spinner} · адрес ${Boolean(who)} · подзаголовок ${lede} · кнопки ${doors}`);
+      await page.waitForTimeout(12000);
+      const me = await whoAmI(page);
+      uidA = me?.uid;
+      await page.screenshot({ path: `${SHOTS}/sl01-after.png`, fullPage: true });
+      check('СЛ-01', 'вошёл своей почтой, не гость', me?.email === A && !me.anonymous, describe(me));
+      check('СЛ-01', 'профиль без «Не удалось загрузить» (bugs/235)', !(await text(page, DOWN)));
+      check('СЛ-01', 'адрес стёрт из строки браузера', !page.url().includes('email='), new URL(page.url()).search || 'пусто');
+      check('СЛ-01', 'консоль чиста', errors.length === 0, errors.slice(0, 2).join(' | '));
 
-    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
-    const page = await ctx.newPage();
-    const errors = [];
-    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-    // Сеть Auth придерживается на 1,5 с: на эмуляторе вход длится миг, и спиннер иначе не поймать.
-    await page.route('**/identitytoolkit.googleapis.com/**', async (r) => {
-      await new Promise((ok) => setTimeout(ok, 1500));
-      await r.continue();
-    });
-    await page.goto(link.href);
-    const spinner = await page.getByText(SPINNER).waitFor({ timeout: 8000 }).then(() => true, () => false);
-    const who = spinner && (await text(page, WHO)) && (await text(page, EMAIL));
-    await page.screenshot({ path: `${SHOTS}/k6-spinner-390-light.png` });
-    check('экран входа показал спиннер «Выполняем вход…»', spinner);
-    check('строка называет аккаунт — адрес из письма', Boolean(who));
+      // ═══ СЛ-06 · та же ссылка во втором чистом браузере — код одноразовый ═══════════════════
+      console.log('\nСЛ-06 · использованная ссылка в третьем чистом браузере:');
+      const third = await browserOf(browser);
+      await openLink(third.page, link01.href);
+      const me3 = await whoAmI(third.page);
+      const dead = await text(third.page, DEAD);
+      await third.page.screenshot({ path: `${SHOTS}/sl06-used-link.png`, fullPage: true });
+      check('СЛ-06', 'использованная ссылка не впустила, гость не заведён', me3 === null, describe(me3));
+      check('СЛ-06', 'на двери входа видна строка ошибки о ссылке', dead, dead ? `«${DEAD}»` : 'строки нет');
+      await third.context.close();
+      await context.close();
+    }
 
-    // Задержку не снимаем: снятие посреди висящего запроса роняет прибор («Route is already handled»).
-    await page.waitForTimeout(12000);
-    const me = await whoAmI(page);
-    const down = await text(page, DOWN);
-    const addressAfter = new URL(page.url()).search;
-    await page.screenshot({ path: `${SHOTS}/k6-after-390-light.png`, fullPage: true });
-    check('вошёл своей почтой', me?.email === EMAIL && me?.anonymous === false, JSON.stringify(me));
-    check('профиль открылся без «Не удалось загрузить» (bugs/235)', !down);
-    check('адрес ссылки стёрт из строки браузера', !addressAfter.includes('email'), addressAfter || 'пусто');
-    check('консоль чиста', errors.length === 0, errors.slice(0, 2).join(' | '));
-    await ctx.close();
-  }
+    // ═══ СЛ-02 · остальные клетки тема × ширина ═══════════════════════════════════════════════
+    console.log('\nСЛ-02 · шаг «идёт вход», остальные клетки:');
+    for (const [w, h, theme] of [[390, 844, 'dark'], [1440, 900, 'light'], [1440, 900, 'dark']]) {
+      const email = `sl02-${w}${theme}-${stamp}@ndim.space`;
+      const link = await letterFromDoor(browser, email);
+      const { context, page } = await browserOf(browser, { w, h, theme });
+      await holdAuth(page, 2500);
+      await page.goto(link.href);
+      const seen = await page.getByText(SPINNER.ru).waitFor({ timeout: 8000 }).then(() => true, () => false);
+      const applied = await page.evaluate(() => document.documentElement.dataset.theme);
+      const who = seen && (await text(page, email));
+      await page.screenshot({ path: `${SHOTS}/sl02-${w}-${theme}.png` });
+      check('СЛ-02', `спиннер и адрес · ${w} · ${theme}`, seen && who && applied === theme, `тема на странице: ${applied}`);
+      await context.close();
+    }
 
-  // ═══ К6б · тот же шаг «идёт вход» в тёмной теме и на 1440 — кадры для глаз ═══════════════════
-  for (const [w, h, theme] of [[390, 844, 'dark'], [1440, 900, 'light'], [1440, 900, 'dark']]) {
-    const email = `anybrowser-${stamp}-${w}${theme}@ndim.space`;
-    const link = await letterFromDoor(browser, email);
-    const ctx = await browser.newContext({ viewport: { width: w, height: h }, locale: 'ru-RU' });
-    await ctx.addInitScript((t) => localStorage.setItem('ndim-theme', t), theme);
-    const page = await ctx.newPage();
-    await page.route('**/identitytoolkit.googleapis.com/**', async (r) => {
-      await new Promise((ok) => setTimeout(ok, 2500));
-      await r.continue();
-    });
-    await page.goto(link.href);
-    const seen = await page.getByText(SPINNER).waitFor({ timeout: 8000 }).then(() => true, () => false);
-    await page.screenshot({ path: `${SHOTS}/k6-spinner-${w}-${theme}.png` });
-    check(`спиннер виден · ${w} · ${theme}`, seen);
-    await ctx.close();
-  }
+    // ═══ СЛ-03 · аккаунт уже есть, новый чистый браузер ════════════════════════════════════════
+    console.log('\nСЛ-03 · аккаунт уже есть, письмо открыто в новом чистом браузере:');
+    {
+      const link = await letterFromDoor(browser, A);
+      const { context, page, errors } = await browserOf(browser);
+      await openLink(page, link.href, 9000);
+      const me = await whoAmI(page);
+      const welcome = await text(page, WELCOME);
+      check('СЛ-03', 'вошёл тем же аккаунтом (тот же UID)', me?.email === A && me?.uid === uidA, `${describe(me)} · uid совпал: ${me?.uid === uidA}`);
+      check('СЛ-03', 'карточки «Профиль сохранён» нет — это вход, а не рождение', !welcome);
+      check('СЛ-03', 'консоль чиста', errors.length === 0, errors.slice(0, 2).join(' | '));
+      await context.close();
+    }
 
-  // ═══ К7 · КОНТРОЛЬ: адрес в ссылке подменён ═══════════════════════════════════════════════════
-  console.log('\nК7 · контроль — в ссылке подменён адрес:');
-  {
-    const OWNER = `owner-${stamp}@ndim.space`;
-    const link = await letterFromDoor(browser, OWNER);
-    link.searchParams.set('email', `stranger-${stamp}@ndim.space`);
-    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
-    const page = await ctx.newPage();
-    await page.goto(link.href);
-    await page.waitForTimeout(6000);
-    const me = await whoAmI(page);
-    await page.screenshot({ path: `${SHOTS}/k7-forged-address.png`, fullPage: true });
-    check('подменённый адрес не впустил никого', !me || me.anonymous === true, JSON.stringify(me));
-    await ctx.close();
+    // ═══ СЛ-04 · тот же браузер: адрес в памяти ════════════════════════════════════════════════
+    console.log('\nСЛ-04 · письмо открыто в том же браузере, где просили:');
+    {
+      const B = `sl04-${stamp}@ndim.space`;
+      const { context, page, errors } = await browserOf(browser);
+      const link = await letterFromDoor(browser, B, page);
+      await holdAuth(page, 1500);
+      await page.goto(link.href);
+      const seen = await page.getByText(SPINNER.ru).waitFor({ timeout: 8000 }).then(() => true, () => false);
+      await page.waitForTimeout(12000);
+      const me = await whoAmI(page);
+      check('СЛ-04', 'шаг «идёт вход» показан так же, как в новом браузере', seen);
+      check('СЛ-04', 'вошёл своей почтой', me?.email === B && !me.anonymous, describe(me));
+      check('СЛ-04', 'консоль чиста', errors.length === 0, errors.slice(0, 2).join(' | '));
+      await context.close();
+    }
+
+    // ═══ СЛ-05 · КОНТРОЛЬ: адрес подменён ══════════════════════════════════════════════════════
+    console.log('\nСЛ-05 · в ссылке подменён адрес:');
+    {
+      const X = `sl05-owner-${stamp}@ndim.space`;
+      const Y = `sl05-stranger-${stamp}@ndim.space`;
+      const link = await letterFromDoor(browser, X);
+      link.searchParams.set('email', Y);
+      const { context, page } = await browserOf(browser);
+      await openLink(page, link.href);
+      const me = await whoAmI(page);
+      await page.screenshot({ path: `${SHOTS}/sl05-forged.png`, fullPage: true });
+      check('СЛ-05', 'не вошёл никто — ни хозяин ссылки, ни названный адрес', me === null, describe(me));
+      await context.close();
+    }
+
+    // ═══ СЛ-07 · вошёл ДРУГОЙ аккаунт ══════════════════════════════════════════════════════════
+    console.log('\nСЛ-07 · письмо для A открыто там, где вошёл B:');
+    {
+      const B = `sl07-b-${stamp}@ndim.space`;
+      const Aother = `sl07-a-${stamp}@ndim.space`;
+      const { context, page, errors } = await browserOf(browser);
+      await openLink(page, (await letterFromDoor(browser, B, page)).href, 9000); // B вошёл в этом браузере
+      const before = await whoAmI(page);
+      const link = await letterFromDoor(browser, Aother);
+      await openLink(page, link.href, 9000);
+      const me = await whoAmI(page);
+      const guestCard = await text(page, 'Сейчас Вы гость');
+      await page.screenshot({ path: `${SHOTS}/sl07-other-account.png`, fullPage: true });
+      check('СЛ-07', 'подготовка: B вошёл', before?.email === B, describe(before));
+      check('СЛ-07', 'B остался в своём аккаунте, A не вошёл', me?.email === B, describe(me));
+      check('СЛ-07', 'гостевой карточки нет', !guestCard);
+      await context.close();
+    }
+
+    // ═══ СЛ-08 · гость в новом браузере ════════════════════════════════════════════════════════
+    console.log('\nСЛ-08 · письмо открыто в браузере, где сидит гость:');
+    {
+      const Aguest = `sl08-a-${stamp}@ndim.space`;
+      const link = await letterFromDoor(browser, Aguest);
+      const { context, page } = await browserOf(browser);
+      await openLink(page, `${BASE}/profile?guest=1`, 4000);
+      const before = await whoAmI(page);
+      await openLink(page, link.href, 9000);
+      const me = await whoAmI(page);
+      check('СЛ-08', 'подготовка: гость', before?.anonymous === true, describe(before));
+      check('СЛ-08', 'сессия осталась гостевой, адрес к гостю не привязан', me?.anonymous === true && me?.uid === before?.uid, describe(me));
+      await context.close();
+    }
+
+    // ═══ СЛ-11 · английская половина ═══════════════════════════════════════════════════════════
+    console.log('\nСЛ-11 · шаг «идёт вход» по-английски:');
+    {
+      const E = `sl11-${stamp}@ndim.space`;
+      const link = await letterFromDoor(browser, E);
+      const { context, page } = await browserOf(browser, { lang: 'en' });
+      await holdAuth(page, 2500);
+      await page.goto(link.href);
+      const seen = await page.getByText(SPINNER.en).waitFor({ timeout: 8000 }).then(() => true, () => false);
+      const who = seen && (await text(page, WHO.en));
+      const ru = await text(page, SPINNER.ru);
+      await page.screenshot({ path: `${SHOTS}/sl11-en.png` });
+      check('СЛ-11', 'английские строки шага на месте, русских нет', seen && who && !ru, `спиннер ${seen} · адрес ${Boolean(who)} · русская строка ${ru}`);
+      await context.close();
+    }
+  } else {
+    // ═══ СТЕЙДЖ: ссылка через настоящий обработчик Firebase ═══════════════════════════════════════
+    const { cert, initializeApp } = await import('firebase-admin/app');
+    const { getAuth } = await import('firebase-admin/auth');
+    const { getFirestore } = await import('firebase-admin/firestore');
+    const { serviceAccount } = await import('./lib/credentials.mjs');
+    const { STAGE_PROJECT, STAGE_DATABASE } = await import('./lib/contours.mjs');
+    initializeApp({ credential: cert(serviceAccount('stage')), projectId: STAGE_PROJECT });
+    const auth = getAuth();
+    const store = getFirestore(STAGE_DATABASE);
+    const made = [];
+
+    const realLink = async (email, path) => {
+      const back = new URL(`${BASE}${path}`);
+      back.searchParams.set('email', email);
+      return auth.generateSignInWithEmailLink(email, { url: back.href, handleCodeInApp: true });
+    };
+
+    try {
+      // ═══ СЛ-13 · новый человек через настоящий обработчик ═════════════════════════════════════
+      const S = `sl13-${stamp}@ndim.space`;
+      console.log(`СЛ-13 · настоящий обработчик ссылок, чистый браузер (${S}):`);
+      {
+        const link = await realLink(S, '/profile');
+        check('СЛ-13', 'ссылка ведёт через обработчик Firebase', /\/__\/auth\/action/.test(link), new URL(link).host);
+        const { context, page, errors } = await browserOf(browser);
+        let landed = null;
+        page.on('framenavigated', (f) => {
+          if (f === page.mainFrame() && f.url().startsWith(`${BASE}/profile`) && !landed) landed = f.url();
+        });
+        await holdAuth(page, 1500);
+        await page.goto(link);
+        const seen = await page.getByText(SPINNER.ru).waitFor({ timeout: 20000 }).then(() => true, () => false);
+        const who = seen && (await text(page, S));
+        await page.screenshot({ path: `${SHOTS}/sl13-spinner.png` });
+        await page.waitForTimeout(15000);
+        const me = await whoAmI(page);
+        if (me?.uid) made.push(me.uid);
+        await page.screenshot({ path: `${SHOTS}/sl13-after.png`, fullPage: true });
+        const url = landed ? new URL(landed) : null;
+        check('СЛ-13', 'обработчик довёл до /profile с адресом и кодом', Boolean(url?.searchParams.get('email') === S && url?.searchParams.get('oobCode')),
+          url ? `${url.pathname}?email=…&oobCode=${url.searchParams.get('oobCode') ? 'есть' : 'нет'}` : 'не долетел');
+        check('СЛ-13', 'шаг «идёт вход» со строкой аккаунта', Boolean(who));
+        check('СЛ-13', 'вошёл своей почтой, профиль без «Не удалось загрузить»', me?.email === S && !(await text(page, DOWN)), describe(me));
+        check('СЛ-13', 'консоль чиста', errors.length === 0, errors.slice(0, 3).join(' | '));
+        await context.close();
+      }
+
+      // ═══ СЛ-12 · публичная дверь удаления ═════════════════════════════════════════════════════
+      const D = `sl12-${stamp}@ndim.space`;
+      console.log(`\nСЛ-12 · публичная дверь удаления, чистый браузер (${D}) — удаление НЕ нажимается:`);
+      {
+        const user = await auth.createUser({ email: D, emailVerified: false });
+        made.push(user.uid);
+        const link = await realLink(D, '/ru/delete-account');
+        const { context, page, errors } = await browserOf(browser);
+        await page.goto(link);
+        await page.waitForTimeout(15000);
+        const me = await whoAmI(page);
+        const form = await page.locator('input[type="email"]').isVisible().catch(() => false);
+        await page.screenshot({ path: `${SHOTS}/sl12-delete-door.png`, fullPage: true });
+        check('СЛ-12', 'вошёл этой почтой', me?.email === D, describe(me));
+        check('СЛ-12', 'страница показывает шаг удаления, а не форму почты', !form, form ? 'на экране форма почты' : '');
+        check('СЛ-12', 'консоль чиста', errors.length === 0, errors.slice(0, 3).join(' | '));
+        await context.close();
+      }
+    } finally {
+      // Следы прогона: учётки Auth и документы `users/`, заведённые этим прогоном.
+      for (const uid of made) {
+        await store.doc(`users/${uid}`).delete().catch(() => {});
+        await auth.deleteUser(uid).catch(() => {});
+      }
+      console.log(`\nСледы убраны: учёток Auth ${made.length} и их документы users/.`);
+    }
   }
 } finally {
   await browser.close();
 }
 
-console.log(`\nПРОВАЛОВ: ${failures} · кадры: ${SHOTS}/`);
+const cases = [...new Set(verdicts.map((v) => v.id))];
+const failed = cases.filter((id) => verdicts.some((v) => v.id === id && !v.ok));
+console.log(`\nКЕЙСОВ: ${cases.length} · pass ${cases.length - failed.length} · fail ${failed.length}${failed.length ? ` (${failed.join(', ')})` : ''}`);
+console.log(`ПРОВЕРОК: ${verdicts.length} · ПРОВАЛОВ: ${failures} · кадры: ${SHOTS}/`);
 process.exit(failures === 0 ? 0 : 1);
