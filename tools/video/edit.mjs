@@ -24,7 +24,7 @@
  * ⚠️ Названные границы: HDR/HEVC телефона приводится к SDR только перекодированием, без тонмаппинга —
  * проверить на первом живом файле (риск 4 `plans/91`); язык распознавания по умолчанию `ru`.
  *
- * Запуск: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>]
+ * Запуск: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>]
  */
 
 import { spawnSync } from 'node:child_process';
@@ -32,7 +32,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { groupWords, readWords, toAss } from './words-to-ass.mjs';
+import { alignScript, groupWords, readWords, toAss } from './words-to-ass.mjs';
 import { checkVideo } from './selfcheck.mjs';
 import { BIN, STUDIO, transcribeWords } from './studio.mjs';
 
@@ -85,7 +85,7 @@ export function brollFilter({ start, end, assArg }) {
   ].join(';');
 }
 
-export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord } = {}) {
+export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, script } = {}) {
   for (const [k, p] of Object.entries(BIN)) if (!existsSync(p)) throw new Error(`нет ${k}: ${p} (NDIM_STUDIO_DIR)`);
   const id = name || basename(input, extname(input));
   const out = join(STUDIO, 'out', id);
@@ -113,7 +113,16 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord } 
   log('распознавание слов', { ms: Date.now() - t4 });
 
   const words = readWords(JSON.parse(readFileSync(wordsJson, 'utf8')));
-  const groups = groupWords(words, 3);
+  // Утверждённый сценарий даёт ТЕКСТ субтитров, распознавание — только время (alignScript, репетиция 2026-09-14).
+  let subWords = words;
+  if (script) {
+    const aligned = alignScript(readFileSync(script, 'utf8'), words);
+    const useScript = aligned.matched >= 0.8;
+    if (useScript) subWords = aligned.words;
+    journal.push({ step: 'текст субтитров из сценария', by: 'агент', script, matched: Number(aligned.matched.toFixed(3)),
+      used: useScript ? 'сценарий' : 'распознавание — речь отошла от сценария, спросить владельца' });
+  }
+  const groups = groupWords(subWords, 3);
   const ass = join(work, '05_subs.ass');
   writeFileSync(ass, toAss(groups), 'utf8');
   writeFileSync(join(out, 'transcript.txt'), groups.map((g) => g.text).join(' '), 'utf8');
@@ -145,12 +154,12 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord } 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const [input, ...rest] = process.argv.slice(2);
   if (!input) {
-    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>]');
+    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>]');
     process.exit(2);
   }
   const opt = (k) => { const i = rest.indexOf(`--${k}`); return i >= 0 ? rest[i + 1] : undefined; };
   try {
-    const { out, green, journal } = editVideo(input, { lang: opt('lang'), name: opt('name'), broll: opt('broll'), fromWord: opt('from-word'), toWord: opt('to-word') });
+    const { out, green, journal } = editVideo(input, { lang: opt('lang'), name: opt('name'), broll: opt('broll'), fromWord: opt('from-word'), toWord: opt('to-word'), script: opt('script') });
     for (const j of journal) console.log(`${j.by === 'владелец' ? '👤' : '🤖'} ${j.step}${j.ms ? ` · ${(j.ms / 1000).toFixed(1)} с` : ''}`);
     console.log(`${green ? 'ALL GREEN' : 'RED — см. selfcheck.json'} → ${out}`);
     process.exit(green ? 0 : 1);

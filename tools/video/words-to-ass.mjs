@@ -92,6 +92,73 @@ export function readWords(json) {
   return merged;
 }
 
+const alignKey = (w) => w.toLowerCase().replace(/ё/g, 'е').replace(/[^\p{L}\p{N}]+/gu, '');
+
+/**
+ * Текст утверждённого сценария → слова с таймингом распознавания.
+ *
+ * 🔴 ЗАЧЕМ — найдено генеральной репетицией пилота 2026-09-14: распознавание пишет «пространство НДИМ»,
+ * «НДИМ-ОЙДИ», «вашим», «звезды», «от 0 до 10» и теряет пунктуацию. Сценарий утверждён владельцем
+ * (№087) — значит текст субтитров берётся ИЗ СЦЕНАРИЯ («Пространство NDim», «Вашим», «звёзды»), а из
+ * распознавания берётся только ВРЕМЯ.
+ *
+ * Как: наибольшая общая подпоследовательность по ключу слова (нижний регистр, ё→е, без знаков). Слово
+ * сценария с парой берёт её `from`/`to`; без пары (например «нуля» против «0») — время делится поровну
+ * между соседями, у которых пара есть. ⚠️ Если владелец отступил от текста, субтитры покажут текст
+ * СЦЕНАРИЯ — поэтому доля совпавших слов возвращается, и навык обязан её судить (ниже 0,8 — субтитры из
+ * распознавания и вопрос владельцу).
+ */
+export function alignScript(scriptText, words) {
+  // Знак без букв («—») приклеивается к предыдущему слову: без этого тире из сценария терялось в субтитрах.
+  const script = scriptText.split(/\s+/).map((t) => t.trim()).filter(Boolean).reduce((acc, t) => {
+    if (alignKey(t).length > 0 || acc.length === 0) acc.push(t);
+    else acc[acc.length - 1] = `${acc[acc.length - 1]} ${t}`;
+    return acc;
+  }, []).filter((t) => alignKey(t).length > 0);
+  const rec = words.flatMap((w) => {
+    const parts = w.text.split(/\s+/).filter((t) => alignKey(t).length > 0);
+    return parts.map((t) => ({ key: alignKey(t), from: w.from, to: w.to }));
+  });
+  const n = script.length;
+  const m = rec.length;
+  const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      dp[i][j] = alignKey(script[i]) === rec[j].key ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  const pair = new Array(n).fill(-1);
+  for (let i = 0, j = 0; i < n && j < m; ) {
+    if (alignKey(script[i]) === rec[j].key) { pair[i] = j; i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
+    else j++;
+  }
+  const out = script.map((text, i) => (pair[i] >= 0 ? { text, from: rec[pair[i]].from, to: rec[pair[i]].to } : { text, from: null, to: null }));
+  // Интерполяция слов без пары между ближайшими соседями с парой.
+  for (let i = 0; i < n; i++) {
+    if (out[i].from !== null) continue;
+    let k = i;
+    while (k < n && out[k].from === null) k++;
+    const left = i > 0 ? out[i - 1].to : (rec[0]?.from ?? 0);
+    const right = k < n ? out[k].from : (rec[m - 1]?.to ?? left);
+    const step = (right - left) / (k - i + 1);
+    for (let t = i; t < k; t++) {
+      out[t].from = Math.round(left + step * (t - i));
+      out[t].to = Math.round(left + step * (t - i + 1));
+    }
+    i = k - 1;
+  }
+  // Имя бренда и «NDim ID» — одно слово для группировки, чтобы не резалось между субтитрами.
+  const merged = [];
+  for (const w of out) {
+    const prev = merged[merged.length - 1];
+    if (prev && ((/^пространств/i.test(prev.text) && /^NDim/.test(w.text)) || (/NDim$/.test(prev.text) && /^(ID|Space)/.test(w.text)))) {
+      merged[merged.length - 1] = { text: `${prev.text} ${w.text}`, from: prev.from, to: w.to };
+    } else merged.push(w);
+  }
+  return { words: merged, matched: pair.filter((p) => p >= 0).length / Math.max(1, n) };
+}
+
 /** Группы → текст ASS. */
 export function toAss(groups, { width = 1080, height = 1920 } = {}) {
   const fontSize = Math.round(height * 0.045);

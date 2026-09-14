@@ -6,7 +6,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { assTime, groupWords, readWords, toAss } from './words-to-ass.mjs';
+import { alignScript, assTime, groupWords, readWords, toAss } from './words-to-ass.mjs';
+
+test('🔴 субтитры берут текст сценария, время — из распознавания (репетиция пилота 2026-09-14)', () => {
+  // Распознавание дословно как на репетиции: «пространство НДИМ», «звезды», «от 0 до 10».
+  const rec = ['Я', 'сделал', 'пространство', 'НДИМ', 'ставите', 'фильму', 'звезды', 'от', '0', 'до', '10', 'Ваши', 'связи']
+    .map((text, i) => ({ text, from: i * 500, to: i * 500 + 400 }));
+  const { words, matched } = alignScript('Я сделал Пространство NDim. Ставите фильму звёзды, от нуля до десяти. Ваши Связи — людей', rec);
+  const texts = words.map((w) => w.text);
+  assert.ok(texts.includes('Пространство NDim.'), JSON.stringify(texts));
+  assert.ok(texts.includes('звёзды,'));
+  assert.ok(texts.includes('Связи —'), 'тире сценария не теряется');
+  const nulya = words.find((w) => w.text === 'нуля');
+  assert.ok(nulya.from >= 3500 && nulya.to <= 5000, `«нуля» без пары получает время между соседями: ${JSON.stringify(nulya)}`);
+  assert.ok(matched > 0.5 && matched < 1);
+});
 
 const seg = (from, to, text) => ({ offsets: { from, to }, text });
 

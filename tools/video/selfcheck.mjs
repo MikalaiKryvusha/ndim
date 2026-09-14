@@ -95,10 +95,12 @@ const norm = (w) => w.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
  *
  * Сопоставление по тексту: первое слово строки ищется в словах распознавания вперёд от прошлой
  * находки (окно 6 слов). Зелёное — сопоставлено ≥ 90 % строк и наибольший сдвиг ≤ `maxDriftMs`.
- * ⚠️ Таймкоды whisper.cpp сами неточны (`researches/70` §3.5а): порог 200 мс проверен только на
- * синтетике — живой файл владельца (ВК-09) может потребовать его пересмотра с доводом.
+ * ⚠️ Таймкоды whisper.cpp сами неточны (`researches/70` §3.5а). Порог 500 мс, а не прежние 200 — по
+ * наблюдению генеральной репетиции пилота 2026-09-14: два прогона распознавания на ОДНОМ звуке расходятся
+ * на −260…+320 мс в обе стороны, и 200 мс краснели на разбросе прибора. Класс, ради которого проверка
+ * существует («субтитры не с того звука»), даёт секунды: мутант «до вырезания пауз» — 9 900 мс.
  */
-export function subtitleDrift(assText, words, maxDriftMs = 200) {
+export function subtitleDrift(assText, words, maxDriftMs = 500) {
   const lines = assText
     .split(/\r?\n/)
     .filter((l) => l.startsWith('Dialogue:'))
@@ -110,7 +112,13 @@ export function subtitleDrift(assText, words, maxDriftMs = 200) {
   let matched = 0;
   let maxDrift = 0;
   for (const line of lines) {
-    const idx = words.slice(at, at + 6).findIndex((w) => norm(w.text.split(/\s+/)[0]) === line.first);
+    // Из кандидатов в окне — ближайший по времени, а не первый: повторяющееся слово («Пространство»
+    // шесть раз в пилоте) иначе хватает соседнее вхождение и даёт ложный сдвиг (1 570 мс на репетиции 2026-09-14).
+    let idx = -1;
+    words.slice(at, at + 6).forEach((w, k) => {
+      if (norm(w.text.split(/\s+/)[0]) !== line.first) return;
+      if (idx < 0 || Math.abs(w.from - line.start) < Math.abs(words[at + idx].from - line.start)) idx = k;
+    });
     if (idx < 0) continue;
     const w = words[at + idx];
     maxDrift = Math.max(maxDrift, Math.abs(w.from - line.start));
