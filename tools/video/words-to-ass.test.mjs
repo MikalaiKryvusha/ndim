@@ -6,7 +6,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { alignScript, assTime, groupWords, readWords, toAss } from './words-to-ass.mjs';
+import { alignScript, assTime, groupWords, readWords, styleLine, toAss } from './words-to-ass.mjs';
+
+test('четыре вида субтитров для выбора владельцем (фаза 2): плашки — BorderStyle 3, «Крупно» — по центру, чужой вид — отказ', () => {
+  const f = (s) => styleLine(s, { fontSize: 86, marginV: 422 }).split(',');
+  assert.equal(f('A')[15], '1');
+  assert.equal(f('B')[15], '3');
+  assert.equal(f('C')[15], '3');
+  assert.equal(f('C')[6], '&H00D66714', 'плашка бренда — цвет --primary #1467d6 в порядке BGR');
+  assert.equal(f('D')[18], '5', 'Alignment 5 — центр кадра');
+  assert.throws(() => styleLine('E', { fontSize: 86, marginV: 422 }), /только A, B, C, D/);
+  assert.ok(toAss([], { style: 'C' }).includes('&H00D66714'));
+});
 
 test('🔴 субтитры берут текст сценария, время — из распознавания (репетиция пилота 2026-09-14)', () => {
   // Распознавание дословно как на репетиции: «пространство НДИМ», «звезды», «от 0 до 10».

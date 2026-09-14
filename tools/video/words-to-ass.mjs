@@ -16,7 +16,7 @@
  * СЛОВАРЬ ЗАМЕН. Модель пишет имя бренда как `Ndim Space` (проба 2026-09-14, дважды); замена
  * идёт по тексту группы, регистр имени — канон продукта.
  *
- * СТИЛЬ — нейтральный намеренно: вид субтитров решает владелец в фазе 2 из четырёх вариантов
+ * СТИЛЬ — по умолчанию нейтральный `A`; четыре вида для выбора владельцем — `STYLE_NAMES` / `styleLine` ниже (фаза 2 эпика 90),
  * (канон «Дизайн»). Здесь только читаемость: белый текст, чёрная обводка, нижняя треть кадра.
  *
  * Запуск: node tools/video/words-to-ass.mjs <words.json> <out.ass> [--width 1080 --height 1920 --words 3]
@@ -159,8 +159,32 @@ export function alignScript(scriptText, words) {
   return { words: merged, matched: pair.filter((p) => p >= 0).length / Math.max(1, n) };
 }
 
+/**
+ * ЧЕТЫРЕ ВАРИАНТА ВИДА СУБТИТРОВ — заготовка фазы 2 эпика `plans/90` («Вид ролика: четыре варианта»).
+ * Выбирает владелец (канон «Дизайн»: агент рисует 4 варианта, владелец утверждает один), и выбирает на
+ * своём живом ролике — до его выбора конвейер рисует `A`. Цвет бренда — `--primary: #1467d6`
+ * (`src/routes/+layout.svelte`); в ASS цвет пишется `&HAABBGGRR`.
+ *   A «Обводка»  — белый текст, чёрная обводка, нижняя треть (нейтральный, как в фазе 1);
+ *   B «Плашка»   — белый текст на полупрозрачной тёмной плашке, нижняя треть;
+ *   C «Бренд»    — белый жирный текст на плашке цвета бренда, нижняя треть;
+ *   D «Крупно»   — крупный текст с толстой обводкой по центру кадра.
+ */
+export const STYLE_NAMES = { A: 'Обводка', B: 'Плашка', C: 'Бренд', D: 'Крупно' };
+
+export function styleLine(style = 'A', { fontSize, marginV }) {
+  const head = 'Style: Default,Arial';
+  const tail = (align, mv) => `2,${align === 5 ? 0 : 60},${align === 5 ? 0 : 60},${mv},204`.replace(/^2,/, `${align},`);
+  switch (style) {
+    case 'B': return `${head},${fontSize},&H00FFFFFF,&H00FFFFFF,&H80000000,&H80000000,-1,0,0,0,100,100,0,0,3,${Math.round(fontSize * 0.22)},0,${tail(2, marginV)}`;
+    case 'C': return `${head},${fontSize},&H00FFFFFF,&H00FFFFFF,&H00D66714,&H00D66714,-1,0,0,0,100,100,0,0,3,${Math.round(fontSize * 0.22)},0,${tail(2, marginV)}`;
+    case 'D': return `${head},${Math.round(fontSize * 1.4)},&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,${Math.round(fontSize * 0.14)},0,${tail(5, 0)}`;
+    case 'A': return `${head},${fontSize},&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,${Math.round(fontSize * 0.08)},0,${tail(2, marginV)}`;
+    default: throw new Error(`вид субтитров «${style}»: только A, B, C, D`);
+  }
+}
+
 /** Группы → текст ASS. */
-export function toAss(groups, { width = 1080, height = 1920 } = {}) {
+export function toAss(groups, { width = 1080, height = 1920, style = 'A' } = {}) {
   const fontSize = Math.round(height * 0.045);
   const marginV = Math.round(height * 0.22);
   const header = [
@@ -172,7 +196,7 @@ export function toAss(groups, { width = 1080, height = 1920 } = {}) {
     '',
     '[V4+ Styles]',
     'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
-    `Style: Default,Arial,${fontSize},&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,${Math.round(fontSize * 0.08)},0,2,60,60,${marginV},204`,
+    styleLine(style, { fontSize, marginV }),
     '',
     '[Events]',
     'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',

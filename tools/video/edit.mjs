@@ -24,7 +24,7 @@
  * ⚠️ Названные границы: HDR/HEVC телефона приводится к SDR только перекодированием, без тонмаппинга —
  * проверить на первом живом файле (риск 4 `plans/91`); язык распознавания по умолчанию `ru`.
  *
- * Запуск: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …]
+ * Запуск: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …] [--style A|B|C|D]
  */
 
 import { spawnSync } from 'node:child_process';
@@ -97,7 +97,7 @@ export function parseSegment(spec) {
   return { file, fromWord, toWord };
 }
 
-export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, script, segments } = {}) {
+export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, script, segments, style = 'A' } = {}) {
   for (const [k, p] of Object.entries(BIN)) if (!existsSync(p)) throw new Error(`нет ${k}: ${p} (NDIM_STUDIO_DIR)`);
   const id = name || basename(input, extname(input));
   const out = join(STUDIO, 'out', id);
@@ -136,7 +136,7 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
   }
   const groups = groupWords(subWords, 3);
   const ass = join(work, '05_subs.ass');
-  writeFileSync(ass, toAss(groups), 'utf8');
+  writeFileSync(ass, toAss(groups, { style }), 'utf8');
   writeFileSync(join(out, 'transcript.txt'), groups.map((g) => g.text).join(' '), 'utf8');
 
   const video = join(out, 'video.mp4');
@@ -172,12 +172,12 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const [input, ...rest] = process.argv.slice(2);
   if (!input) {
-    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …]');
+    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …] [--style A|B|C|D]');
     process.exit(2);
   }
   const opt = (k) => { const i = rest.indexOf(`--${k}`); return i >= 0 ? rest[i + 1] : undefined; };
   try {
-    const { out, green, journal } = editVideo(input, { lang: opt('lang'), name: opt('name'), broll: opt('broll'), fromWord: opt('from-word'), toWord: opt('to-word'), script: opt('script'), segments: rest.flatMap((v, i) => (rest[i - 1] === '--segment' ? [parseSegment(v)] : [])) });
+    const { out, green, journal } = editVideo(input, { lang: opt('lang'), name: opt('name'), broll: opt('broll'), fromWord: opt('from-word'), toWord: opt('to-word'), script: opt('script'), style: opt('style'), segments: rest.flatMap((v, i) => (rest[i - 1] === '--segment' ? [parseSegment(v)] : [])) });
     for (const j of journal) console.log(`${j.by === 'владелец' ? '👤' : '🤖'} ${j.step}${j.ms ? ` · ${(j.ms / 1000).toFixed(1)} с` : ''}`);
     console.log(`${green ? 'ALL GREEN' : 'RED — см. selfcheck.json'} → ${out}`);
     process.exit(green ? 0 : 1);
