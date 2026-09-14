@@ -1,0 +1,43 @@
+/**
+ * Юниты `words-to-ass.mjs` (эпик `plans/90`, шаг Ш3 `plans/91`).
+ * Каждый тест держит дефект, найденный прогоном на пробе 2026-09-14, а не придуманный.
+ * Запуск: node --test tools/video/words-to-ass.test.mjs
+ */
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+import { assTime, groupWords, readWords, toAss } from './words-to-ass.mjs';
+
+const seg = (from, to, text) => ({ offsets: { from, to }, text });
+
+test('🔴 имя бренда не разрезается между субтитрами и пишется как в продукте', () => {
+  // Ровно тот вход, на котором первый прогон отдал «Я сделал Ndim» и «Space, бесплатное…».
+  const json = { transcription: [seg(0, 300, ''), seg(2990, 2990, ' Я'), seg(2990, 2990, ' сделал'), seg(2990, 3820, ' Ndim'), seg(3820, 4400, ' Space,'), seg(4400, 5000, ' бесплатное')] };
+  const groups = groupWords(readWords(json), 3);
+  const texts = groups.map((g) => g.text);
+  assert.ok(texts.some((t) => t.includes('NDim Space,')), `имя целиком в одной группе: ${JSON.stringify(texts)}`);
+  assert.ok(!texts.some((t) => /\bNdim\b/.test(t)), 'написание модели не доезжает до кадра');
+});
+
+test('нулевое слово не рождает мигания: группа живёт до начала следующей', () => {
+  const words = [
+    { from: 1000, to: 1000, text: 'Я' },
+    { from: 1000, to: 1000, text: 'сделал' },
+    { from: 1000, to: 1500, text: 'сайт.' },
+    { from: 2000, to: 2400, text: 'Смотрите' },
+  ];
+  const [first, second] = groupWords(words, 3);
+  assert.equal(first.end, second.start);
+  assert.ok(first.end > first.start);
+});
+
+test('конец фразы закрывает группу раньше лимита', () => {
+  const words = [{ from: 0, to: 500, text: 'Привет.' }, { from: 600, to: 900, text: 'Меня' }];
+  assert.deepEqual(groupWords(words, 3).map((g) => g.text), ['Привет.', 'Меня']);
+});
+
+test('время ASS и фигурные скобки в тексте', () => {
+  assert.equal(assTime(3_723_450), '1:02:03.45');
+  const ass = toAss([{ start: 0, end: 1000, text: 'a {\\b1}b' }]);
+  assert.ok(ass.includes(',a \\b1b'), 'теги ASS из речи не исполняются');
+});
