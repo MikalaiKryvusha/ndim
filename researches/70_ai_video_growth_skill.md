@@ -355,7 +355,15 @@ https://www.iab.com/insights/the-ai-gap-widens/) · хэштег-спам · к�
 - Дословно сверено самое весомое для В1 утверждение — Википедия: «*On 12 February 2026, Roskomnadzor
   imposed a full nationwide block on the platform, making YouTube inaccessible in Russia without the use
   of a VPN.*»
-- ⚠️ Остальные цитаты разделов 3–5 дословной сверкой не проходили — только живость ссылок.
+- Дословно сверены утверждения, стоящие на странице интервью №086:
+  - Shorts (TechCrunch): «*starting on August 31st, links that appear in the Shorts comments section,
+    Shorts descriptions, and the vertical live feed will no longer be clickable.*»
+  - Сигналы Instagram (Social Media Today, Моссери): «*The top three signals that matter most for ranking
+    are watch time, likes and sends*» · «*sends are slightly more important for unconnected content*».
+  - Казахстан, Instagram 13,1 млн — сверено (§4.4); 🔴 «~10,6 млн YouTube» в источнике **не найдено** —
+    число делегированной разведки без опоры, помечено в таблице.
+- ⚠️ Остальные цитаты разделов 3–5 дословной сверкой не проходили — только живость ссылок. Урок сверки:
+  из пяти проверенных утверждений одно оказалось без опоры в своём источнике.
 
 ## 6. Выводы → последствия для эпика → развилки владельцу
 
