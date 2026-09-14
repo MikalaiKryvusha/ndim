@@ -401,10 +401,16 @@ using» (ChatyApp) · непроверенная статистика одино
     Shorts descriptions, and the vertical live feed will no longer be clickable.*»
   - Сигналы Instagram (Social Media Today, Моссери): «*The top three signals that matter most for ranking
     are watch time, likes and sends*» · «*sends are slightly more important for unconnected content*».
+  - «Связанное видео» (блог YouTube): «*allows you to attach a clickable link directly to your Short that
+    routes traffic to any long-form video, livestream, or secondary Short on your channel*»; для сценария —
+    «*build in verbal and visual cues during the final 5 seconds*» (устный призыв + жест вниз к ссылке).
+  - Google в Беларуси — AdSense/AdMob/Ad Manager, не Google Ads (§5, исправлено в №086 В4).
+  - «Платформы ценят сырое видео» — у Моссери совет авторам, не правило ранжирования (§4.3, исправлено в №086 В3).
+  - «Поиск YouTube приводит людей годами» — без опоры (§4.2, снято из №086 В2).
   - Казахстан, Instagram 13,1 млн — сверено (§4.4); 🔴 «~10,6 млн YouTube» в источнике **не найдено** —
     число делегированной разведки без опоры, помечено в таблице.
 - ⚠️ Остальные цитаты разделов 3–5 дословной сверкой не проходили — только живость ссылок. Урок сверки:
-  из семи проверенных утверждений три оказались шире своего источника или без опоры в нём (Казахстан YouTube · Google в Беларуси · «платформы ценят сырое видео»).
+  из девяти проверенных утверждений четыре оказались шире своего источника или без опоры в нём (Казахстан YouTube · Google в Беларуси · «платформы ценят сырое видео» · «поиск YouTube годами»).
 
 ## 6. Выводы → последствия для эпика → развилки владельцу
 
