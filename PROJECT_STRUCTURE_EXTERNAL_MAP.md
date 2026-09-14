@@ -50,6 +50,7 @@ D:\work\ai_sandbox\ndim\
 ├── researches/    # база знаний по большим трудным вопросам ← ЗДЕСЬ выжимка из версии 1.x
 ├── interviews/    # вопросы A/B/C/D владельцу по решениям его уровня
 ├── homeworks/     # задачи от агента человеку (то, что может сделать только человек)
+├── marketing/     # ИИ-студия роликов (эпик plans/90): гипотезы, сценарии, подписи, исходы; видео — вне git
 │
 │  ── КОД NDim Space 2.0 (SvelteKit: Kit 2.69 · Svelte 5 · Vite 8) ──
 ├── src/routes/                  # страницы приложения
@@ -139,9 +140,13 @@ D:\work\ai_sandbox\ndim\
 │   ├── lib/build-freshness.mjs # судья артефакта: свежесть по времени + происхождение по метке
 │   ├── 02-kaif-fetch.mjs    # скачивание и сверка ядра KAIF.md с origin
 │   ├── 03-kaif-verify.mjs   # перепроверка развёртывания + защита от утечки секретов
-│   └── kaif.mjs             # бэкенд npm-хендлов kaif:*
+│   ├── kaif.mjs             # бэкенд npm-хендлов kaif:*
+│   └── video/               # ИИ-студия роликов (plans/90): edit.mjs — сырой ролик → 1080×1920 с
+│                            #   субтитрами одной командой; selfcheck.mjs — самопроверка (набор
+│                            #   qa/suites/video-pipeline.md); программы и модель — NDIM_STUDIO_DIR
 │
 │  ── ЛОКАЛЬНОЕ, ВНЕ GIT ──
+├── ../ndim-studio/                # ИИ-студия роликов: bin\ (auto-editor, whisper CUDA), models\, inbox\, out\
 └── .private/                      # НИКОГДА не коммитится (см. .gitignore)
     ├── ndim-1.x-history.bundle    # полная git-история 1.x одним файлом (39 МБ, 825 коммитов)
     ├── email_list_prod.txt        # ПДн: 299 адресов участников беты
