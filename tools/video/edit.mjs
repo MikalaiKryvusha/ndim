@@ -24,7 +24,7 @@
  * ⚠️ Названные границы: HDR/HEVC телефона приводится к SDR только перекодированием, без тонмаппинга —
  * проверить на первом живом файле (риск 4 `plans/91`); язык распознавания по умолчанию `ru`.
  *
- * Запуск: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>]
+ * Запуск: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …]
  */
 
 import { spawnSync } from 'node:child_process';
@@ -70,22 +70,34 @@ export function wordRange(words, fromWord, toWord) {
 }
 
 /**
- * Фильтр монтажа: запись экрана во весь кадр на отрезке, лицо автора — малым окном сверху справа
- * (выше нижней трети, где субтитры и интерфейс площадки, `researches/70` §4.7), субтитры поверх всего.
+ * Фильтр монтажа: каждая запись экрана — во весь кадр на своём отрезке, субтитры поверх всего.
+ * Входы: 0 — ролик автора, 1…n — записи экрана по порядку `segments`.
+ *
+ * 🔴 Окна с лицом автора на отрезке НЕТ — снято генеральной репетицией 2026-09-14: окно сверху справа
+ * закрывало проценты экрана «Связи». Сценарий допускает оба вида («лицо в малом окне или сменяется
+ * записью»); берём тот, в котором перекрывать нечего.
  */
-export function brollFilter({ start, end, assArg }) {
-  const on = `enable='between(t,${start.toFixed(3)},${end.toFixed(3)})'`;
-  return [
-    '[0:v]split=2[main][face]',
-    `[1:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[scr]`,
-    `[main][scr]overlay=0:0:${on}:eof_action=pass[v1]`,
-    '[face]scale=324:576[pip]',
-    `[v1][pip]overlay=W-w-48:160:${on}[v2]`,
-    `[v2]ass='${assArg}'[v]`,
-  ].join(';');
+export function brollFilter({ segments, assArg }) {
+  const parts = [];
+  let last = '0:v';
+  segments.forEach(({ start, end }, k) => {
+    const on = `enable='between(t,${start.toFixed(3)},${end.toFixed(3)})'`;
+    parts.push(`[${k + 1}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[s${k}]`);
+    parts.push(`[${last}][s${k}]overlay=0:0:${on}:eof_action=pass[v${k}]`);
+    last = `v${k}`;
+  });
+  parts.push(`[${last}]ass='${assArg}'[v]`);
+  return parts.join(';');
 }
 
-export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, script } = {}) {
+/** `--segment "файл|слово начала|слово конца"` → объект; разделитель `|`, потому что в пути Windows есть `:`. */
+export function parseSegment(spec) {
+  const [file, fromWord, toWord] = String(spec).split('|');
+  if (!file || !fromWord || !toWord) throw new Error(`отрезок «${spec}»: нужен вид "файл|слово начала|слово конца"`);
+  return { file, fromWord, toWord };
+}
+
+export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, script, segments } = {}) {
   for (const [k, p] of Object.entries(BIN)) if (!existsSync(p)) throw new Error(`нет ${k}: ${p} (NDIM_STUDIO_DIR)`);
   const id = name || basename(input, extname(input));
   const out = join(STUDIO, 'out', id);
@@ -130,13 +142,19 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
   const video = join(out, 'video.mp4');
   // Фильтр `ass` читает путь как аргумент фильтра: двоеточие диска и обратные слэши экранируются.
   const assArg = ass.replace(/\\/g, '/').replace(/:/g, '\\:');
-  if (broll) {
-    if (!existsSync(broll)) throw new Error(`нет записи экрана: ${broll}`);
-    const range = wordRange(words, fromWord, toWord);
-    log('запись экрана + субтитры', run('запись экрана + субтитры', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', audio, '-stream_loop', '-1', '-i', broll,
-      '-filter_complex', brollFilter({ ...range, assArg }), '-map', '[v]', '-map', '0:a', '-shortest',
+  const specs = [...(segments ?? []), ...(broll ? [{ file: broll, fromWord, toWord }] : [])];
+  if (specs.length) {
+    const placed = specs.map((s) => {
+      if (!existsSync(s.file)) throw new Error(`нет записи экрана: ${s.file}`);
+      // Слова вставки ищутся в тексте СЦЕНАРИЯ с таймингом (subWords): распознавание пишет «10» вместо
+      // «десяти», и якорь по распознаванию не находился (репетиция 2026-09-14).
+      return { ...s, ...wordRange(subWords, s.fromWord, s.toWord) };
+    });
+    const inputs = placed.flatMap((s) => ['-stream_loop', '-1', '-i', s.file]);
+    log('запись экрана + субтитры', run('запись экрана + субтитры', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', audio, ...inputs,
+      '-filter_complex', brollFilter({ segments: placed, assArg }), '-map', '[v]', '-map', '0:a', '-shortest',
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-movflags', '+faststart', video]),
-    { words: words.length, groups: groups.length, broll: { file: broll, fromWord, toWord, ...range } });
+    { words: words.length, groups: groups.length, segments: placed });
   } else {
     log('субтитры', run('субтитры', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', audio, '-vf', `ass='${assArg}'`,
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-movflags', '+faststart', video]), { words: words.length, groups: groups.length });
@@ -154,12 +172,12 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const [input, ...rest] = process.argv.slice(2);
   if (!input) {
-    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>]');
+    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--broll <запись экрана> --from-word <слово> --to-word <слово>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …]');
     process.exit(2);
   }
   const opt = (k) => { const i = rest.indexOf(`--${k}`); return i >= 0 ? rest[i + 1] : undefined; };
   try {
-    const { out, green, journal } = editVideo(input, { lang: opt('lang'), name: opt('name'), broll: opt('broll'), fromWord: opt('from-word'), toWord: opt('to-word'), script: opt('script') });
+    const { out, green, journal } = editVideo(input, { lang: opt('lang'), name: opt('name'), broll: opt('broll'), fromWord: opt('from-word'), toWord: opt('to-word'), script: opt('script'), segments: rest.flatMap((v, i) => (rest[i - 1] === '--segment' ? [parseSegment(v)] : [])) });
     for (const j of journal) console.log(`${j.by === 'владелец' ? '👤' : '🤖'} ${j.step}${j.ms ? ` · ${(j.ms / 1000).toFixed(1)} с` : ''}`);
     console.log(`${green ? 'ALL GREEN' : 'RED — см. selfcheck.json'} → ${out}`);
     process.exit(green ? 0 : 1);
