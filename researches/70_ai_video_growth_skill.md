@@ -317,6 +317,40 @@ https://www.ftc.gov/news-events/news/press-releases/2024/08/federal-trade-commis
 https://www.iab.com/insights/the-ai-gap-widens/) · хэштег-спам · кликбейт (бьёт по досмотрам и
 удовлетворённости, которую YouTube учитывает).
 
+### 4.7 Хуки роликов основателей — для сценария пилота (веб-разведка 2026-09-14, `plans/91` Ш6)
+
+Ролики, где основатель сам на камеру объясняет приложение. Цифры строк 1–4 — из разборов Social
+Growth Engineers (SGE) и Playkit; сами ролики разведка не смотрела (TikTok/Instagram без входа закрыты).
+Роликов основателей Letterboxd, Goodreads, Hinge, Bumble BFF, Boo, Pie, 222 на камеру — **не найдено**.
+
+| Тип хука | Пример дословно | Цифры (дата источника) | Источник |
+|---|---|---|---|
+| «Я такой-то, это моё приложение» | "Hey I'm Shayna (….) this is my app" (Frds) | лучший ролик 1M (SGE, 2025-05-19) | https://www.socialgrowthengineers.com/college-girl-launches-dating-app-18k-users-in-90-days |
+| вопрос-желание | "So you want to travel this summer but have no one to go with?" (TripBFF) | 13.7M (Playkit, 2024) | https://playkit.beehiiv.com/p/tripbff |
+| контраст / сомнение | "tbt to when investors told me my startup idea was stupid bc 'girls don't use their notes app'" | 421K против 39.1K у другого хука того же автора (SGE, 2026-04-20) | https://www.socialgrowthengineers.com/they-said-girls-dont-use-their-notes-app |
+| «сделал X, потому что Y» | история → "so I made this app" (Candle) | 🔎 сверено: SGE — формат «*usually drives strong conversions to downloads*»; 🔴 сравнения «лучше списков советов» в статье **нет** (разведка обобщила) | https://www.socialgrowthengineers.com/candle-30k-3-3-founders-going-viral |
+| показ механики | "you're about to start Iris training" (iris Dating) | 8 040, 57 с (YouTube, 2022) | https://www.youtube.com/watch?v=M_rkxzsqq4E |
+
+**Официальное.** YouTube, Дженни Хойос — 🔎 сверено дословно: «*I really do think you have one second to
+hook someone, especially on Shorts.*» (https://blog.youtube/creator-and-artist-stories/youtube-shorts-deep-dive/).
+Независимых исследований «какой тип хука лучше» с методикой — **не найдено**.
+
+**Анти-паттерны у основателей (по разведке, дословно не сверялось):** выдуманная толпа «everyone on here is
+using» (ChatyApp) · непроверенная статистика одиночества (240 просмотров) · манифест без лица и показа
+(SocialCritiq, 58) · «мы не очередное приложение знакомств» (S'More, 96) · миллионы просмотров без показа
+продукта (Left Field: 5M+, скачиваний мало, SGE).
+
+**Показ экрана:** склейка «лицо → экран» проще всего снимается на телефон; зелёный экран — официальный
+приём TikTok (https://developers.tiktok.com/doc/green-screen-kit). Безопасные зоны 9:16 (сверху 14 %,
+снизу 35 %, по бокам 6 %) — пересказ правил Meta вторичным источником, первоисточник не открыт.
+
+🔴 **Фильтр канона на кандидатах хука (вывод агента, до письма сценария):**
+- «ищет людей **не** по фото — по фильмам» и «здесь нечего купить… вот что есть **вместо**» — построены на
+  противопоставлении: запрет З2 портрета голоса (`STATUS.md` п. 8, раздел 0 портрета 1.2). В сценарий не идут.
+- «покажу, кого по моим оценкам нашло приложение» — вывел бы в кадр **профили живых людей**: приватность
+  (№002 В4, `bugs/113`). Допустимо только на своём профиле без чужих лиц и имён либо на тестовых данных стенда.
+- Годные к письму типы: «я сделал это, потому что…» · вопрос-желание · показ механики на своём профиле.
+
 ## 5. Индустрия — платная реклама (веб-разведка 2026-09-14)
 
 - **NDim — почти наверняка «dating»-рекламодатель по обеим политикам.** Google «Dating and
