@@ -8,7 +8,7 @@
  *
  * Работает с любым набором по дому стиля макетов: `.picker button[data-v]` · `#theme` · `.variant`.
  *
- *   node tools/shoot-review-pairs.mjs design/<набор>.html test-results/owner-reviews/<папка>
+ * Запуск: node tools/shoot-review-pairs.mjs design/<набор>.html test-results/owner-reviews/<папка>
  *
  * [TESTED: 2026-09-13 · снят набор design/signin-progress-mockups.html, 4 пары прочитаны глазами]
  */

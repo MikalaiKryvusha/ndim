@@ -23,8 +23,8 @@
 
 import { createServer } from 'node:http';
 import { spawn, spawnSync } from 'node:child_process';
-import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync } from 'node:fs';
-import { join, relative, resolve, basename, dirname } from 'node:path';
+import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync, createReadStream } from 'node:fs';
+import { join, relative, resolve, basename, dirname, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
@@ -232,6 +232,9 @@ button:disabled{opacity:.5;cursor:default}
 .embed .frame{width:100%;height:440px;border:1px solid var(--line);
 	border-radius:10px;background:var(--card);display:block}
 .embed button.full{font-size:.8rem;padding:4px 10px}
+.clip{margin:.6em 0;display:inline-block;vertical-align:top;width:min(100%,300px);margin-right:12px}
+.clip video{width:100%;aspect-ratio:9/16;background:#000;border:1px solid var(--line);border-radius:10px;display:block}
+.clip figcaption{color:var(--dim);font-size:.82rem;margin-top:4px}
 .shot{margin:.6em 0;display:block}
 .shot img{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;display:block}
 .shot figcaption{color:var(--dim);font-size:.82rem;margin-top:4px}
@@ -328,6 +331,46 @@ function inlineImages(html, docDir) {
 		const b64 = readFileSync(p).toString('base64');
 		return `<figure class="shot"><img src="data:${mime};base64,${b64}" alt="${esc(label)}" loading="lazy"><figcaption>${esc(label)}</figcaption></figure>`;
 	});
+}
+
+/**
+ * Ссылка на ролик `.mp4` превращается в проигрыватель (эпик `plans/90`: ролик владельцу — страницей вычитки).
+ *
+ * Видео НЕ вшивается, в отличие от картинок и звука: четыре ролика по десяткам мегабайт сделали бы страницу
+ * неподъёмной. Файл отдаёт сервер страницы (`/media`, с перемоткой по Range) — только `.mp4` из проекта и из
+ * папки студии (`MEDIA_DIRS`). В снимке `render` проигрыватель не играет, и подпись это говорит.
+ */
+export const MEDIA_DIRS = () => [ROOT, resolve(process.env.NDIM_STUDIO_DIR || 'D:\\work\\ai_sandbox\\ndim-studio')];
+
+export const mediaAllowed = (p) =>
+	/\.mp4$/i.test(p) && MEDIA_DIRS().some((dir) => p.toLowerCase().startsWith(`${dir.toLowerCase()}${sep}`));
+
+function inlineVideos(html, docDir, live) {
+	return html.replace(/<a href="([^"]+\.mp4)">([^<]*)<\/a>/g, (m, src, label) => {
+		if (isExternal(src)) return m;
+		const p = resolveAsset(src, docDir);
+		if (!p || !mediaAllowed(p)) return `<span class="meta">нет файла: ${esc(src)}</span>`;
+		// `#t=0.5` — браузер показывает кадр полусекунды вместо чёрного прямоугольника: вид ролика виден до запуска.
+		return `<figure class="clip"><video controls preload="metadata" playsinline src="/media?p=${encodeURIComponent(p)}#t=0.5"></video><figcaption>${esc(label)}${live ? '' : ' · видео играет только на живой странице'}</figcaption></figure>`;
+	});
+}
+
+/** Отдача ролика с поддержкой Range: без неё браузер играет, но не перематывает. */
+function serveMedia(req, res, p) {
+	const size = statSync(p).size;
+	const m = /bytes=(\d*)-(\d*)/.exec(req.headers.range ?? '');
+	if (!m) {
+		res.writeHead(200, { 'content-type': 'video/mp4', 'accept-ranges': 'bytes', 'content-length': size });
+		return createReadStream(p).pipe(res);
+	}
+	const start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2]));
+	const end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
+	if (start >= size || start > end) {
+		res.writeHead(416, { 'content-range': `bytes */${size}` });
+		return res.end();
+	}
+	res.writeHead(206, { 'content-type': 'video/mp4', 'accept-ranges': 'bytes', 'content-range': `bytes ${start}-${end}/${size}`, 'content-length': end - start + 1 });
+	return createReadStream(p, { start, end }).pipe(res);
 }
 
 /** Карточка одного вопроса интервью: тело + варианты + поля ввода. */
@@ -818,7 +861,7 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 
 	// Порядок важен: HTML-рамки первыми — иначе ссылка на макет успела бы стать картинкой.
 	const docDir = dirname(docPath);
-	return inlineImages(inlineAudio(inlineHtmlFrames(page, docDir), docDir), docDir);
+	return inlineVideos(inlineImages(inlineAudio(inlineHtmlFrames(page, docDir), docDir), docDir), docDir, live);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1036,6 +1079,15 @@ function startServer({ docPath = null, index = null, onDecision = null }) {
 			// Страница всегда собирается заново: документ мог измениться, пока владелец читал.
 			return res.end(index ? index() : buildPage({ docPath, live: true }));
 		}
+		if (req.method === 'GET' && url.pathname === '/media') {
+			const p = resolve(url.searchParams.get('p') ?? '');
+			if (!mediaAllowed(p) || !existsSync(p)) {
+				res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+				return res.end('нет такого ролика');
+			}
+			server.lastBeat = Date.now();
+			return serveMedia(req, res, p);
+		}
 		if (req.method === 'GET' && url.pathname === '/doc') {
 			const p = resolve(ROOT, url.searchParams.get('p') ?? '');
 			if (!p.startsWith(ROOT) || !existsSync(p)) {
@@ -1168,12 +1220,14 @@ function preflightAssets(docPath) {
 	const docDir = dirname(docPath);
 	const missing = [];
 	const seen = new Set();
-	const ASSET_REF = /!?\[[^\]]*\]\(([^)\s]+\.(?:png|jpe?g|webp|svg|wav|mp3|ogg|html))\)/gi;
+	const ASSET_REF = /!?\[[^\]]*\]\(([^)\s]+\.(?:png|jpe?g|webp|svg|wav|mp3|ogg|html|mp4))\)/gi;
 	for (const m of text.matchAll(ASSET_REF)) {
 		const src = m[1];
 		if (isExternal(src) || seen.has(src)) continue;
 		seen.add(src);
-		if (!resolveAsset(src, docDir)) missing.push(src);
+		const p = resolveAsset(src, docDir);
+		// Ролик вне проекта и папки студии сервер страницы не отдаст — для владельца это тот же пустой стол.
+		if (!p || (/\.mp4$/i.test(src) && !mediaAllowed(p))) missing.push(src);
 	}
 	if (!missing.length) return true;
 	console.error('\n⛔ СТРАНИЦА НЕ ПОДНЯТА: она ссылается на файлы, которых НЕТ.\n');

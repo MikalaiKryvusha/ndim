@@ -9,6 +9,7 @@
  * и она идёт через НАСТОЯЩИЙ обработчик Firebase `…firebaseapp.com/__/auth/action`. Учётки,
  * заведённые прогоном, прибор удаляет в конце (Auth + `users/`).
  *
+ * Запуск:
  *   node tools/verify-signin-link-any-browser.mjs                    # СЛ-01…08, СЛ-11
  *   node tools/verify-signin-link-any-browser.mjs --contour stage    # СЛ-12, СЛ-13
  *   node tools/verify-signin-link-any-browser.mjs --contour prod     # СЛ-12, СЛ-13 в бою: метка прогона, учётки удаляются

@@ -40,7 +40,16 @@ export const LIMITS = {
   // порог 2 с ложно краснел на ней (синтетика `synthetic-003-screencast`, 2026-09-14). Брак класса
   // «картинка зависла, звук идёт» длиннее; мутант ВК-05 — 6 с.
   freezeSec: 5,
+  // Потеря высоких частот речи очисткой, дБ. Замер пилота 001 (2026-09-14): прежняя очистка `afftdn=nf=-25`
+  // теряла 9,4 дБ наклона (4–8 кГц против 150–1000 Гц), нынешняя `VOICE_CLEAN` — 0,1 дБ. Порог между ними.
+  speechHfLossDb: 3,
 };
+
+/** Полосы наклона спектра речи: низ — гласные, верх — шипящие и свистящие. */
+export const TILT_BANDS = { low: [150, 1000], high: [4000, 8000] };
+
+/** Потеря высоких частот речи: насколько верх полосы просел относительно низа после очистки. */
+export const speechHfLoss = (before, after) => (before.high - before.low) - (after.high - after.low);
 
 /** ffmpeg/ffprobe без оболочки; stderr ffmpeg и есть его отчёт фильтров. */
 function run(bin, args) {
@@ -93,14 +102,17 @@ const norm = (w) => w.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
  * слова в повторном распознавании. Ловит класс «субтитры сняты не с того звука» (например, до
  * вырезания пауз) — рассинхрон, который владелец увидел бы глазом.
  *
- * Сопоставление по тексту: первое слово строки ищется в словах распознавания вперёд от прошлой
- * находки (окно 6 слов). Зелёное — сопоставлено ≥ 90 % строк и наибольший сдвиг ≤ `maxDriftMs`.
+ * Сопоставление по тексту: первое слово строки ищется среди слов распознавания, начавшихся не дальше `searchMs`
+ * от начала строки, и берётся ближайшее по времени. Зелёное — сопоставлено ≥ 90 % строк и наибольший сдвиг ≤ `maxDriftMs`.
+ * 🔴 Окно — по ВРЕМЕНИ, а не по счёту слов: прежнее «6 слов вперёд от прошлой находки» на пилоте 001 (2026-09-14)
+ * сбилось на двух строках подряд, которых распознавание не пишет словами («десятибалльной» → «10-бальной»,
+ * «нуля» → «0»), и дальше не нашлась ни одна строка — 19 из 38 при субтитрах, стоящих точно (сдвиг 230 мс).
  * ⚠️ Таймкоды whisper.cpp сами неточны (`researches/70` §3.5а). Порог 500 мс, а не прежние 200 — по
  * наблюдению генеральной репетиции пилота 2026-09-14: два прогона распознавания на ОДНОМ звуке расходятся
  * на −260…+320 мс в обе стороны, и 200 мс краснели на разбросе прибора. Класс, ради которого проверка
  * существует («субтитры не с того звука»), даёт секунды: мутант «до вырезания пауз» — 9 900 мс.
  */
-export function subtitleDrift(assText, words, maxDriftMs = 500) {
+export function subtitleDrift(assText, words, maxDriftMs = 500, searchMs = 3000) {
   const lines = assText
     .split(/\r?\n/)
     .filter((l) => l.startsWith('Dialogue:'))
@@ -108,31 +120,40 @@ export function subtitleDrift(assText, words, maxDriftMs = 500) {
       const parts = l.split(',');
       return { start: assMs(parts[1]), first: norm(parts.slice(9).join(',').split(/\s+/)[0] ?? '') };
     });
-  let at = 0;
   let matched = 0;
   let maxDrift = 0;
   for (const line of lines) {
-    // Из кандидатов в окне — ближайший по времени, а не первый: повторяющееся слово («Пространство»
-    // шесть раз в пилоте) иначе хватает соседнее вхождение и даёт ложный сдвиг (1 570 мс на репетиции 2026-09-14).
-    let idx = -1;
-    words.slice(at, at + 6).forEach((w, k) => {
-      if (norm(w.text.split(/\s+/)[0]) !== line.first) return;
-      if (idx < 0 || Math.abs(w.from - line.start) < Math.abs(words[at + idx].from - line.start)) idx = k;
-    });
-    if (idx < 0) continue;
-    const w = words[at + idx];
-    maxDrift = Math.max(maxDrift, Math.abs(w.from - line.start));
+    // Ближайший по времени кандидат, а не первый: повторяющееся слово («Пространство» шесть раз в пилоте)
+    // иначе хватает соседнее вхождение и даёт ложный сдвиг (1 570 мс на репетиции 2026-09-14).
+    let best = null;
+    for (const w of words) {
+      const d = Math.abs(w.from - line.start);
+      if (d > searchMs || norm(w.text.split(/\s+/)[0]) !== line.first) continue;
+      if (!best || d < Math.abs(best.from - line.start)) best = w;
+    }
+    if (!best) continue;
+    maxDrift = Math.max(maxDrift, Math.abs(best.from - line.start));
     matched += 1;
-    at += idx + 1;
   }
   const ok = lines.length > 0 && matched / lines.length >= 0.9 && maxDrift <= maxDriftMs;
   return { ok, lines: lines.length, matched, maxDrift };
 }
 
+/** RMS звука в полосе частот, дБ (моно). */
+function bandRms(file, [lo, hi]) {
+  const out = run('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-af', `pan=mono|c0=0.5*c0+0.5*c1,highpass=f=${lo}:poles=2,lowpass=f=${hi}:poles=2,astats=metadata=0`, '-f', 'null', '-']);
+  const m = [...out.matchAll(/RMS level dB:\s*(-?[\d.]+|-inf)/g)].pop();
+  return m ? Number(m[1]) : null;
+}
+
+const tilt = (file) => ({ low: bandRms(file, TILT_BANDS.low), high: bandRms(file, TILT_BANDS.high) });
+
 /**
  * @param {string} file готовый ролик
- * @param {{ass?: string, lang?: string, workBase?: string}} [opt] без `ass` сверка субтитров
- *   честно помечается `skipped`, а не зелёной
+ * @param {{ass?: string, lang?: string, workBase?: string, voice?: string, before?: string}} [opt]
+ *   без `ass` сверка субтитров честно помечается `skipped`, а не зелёной;
+ *   `voice` — дорожка ГОЛОСА без музыки: паузы судятся по ней (музыка заливает тишину, и пауза в смеси не видна);
+ *   `before` — звук до очистки: вместе с `voice` судит потерю высоких частот речи (`speech-hf`), иначе `skipped`
  */
 export function checkVideo(file, opt = {}) {
   const results = [];
@@ -147,11 +168,21 @@ export function checkVideo(file, opt = {}) {
   const loud = parseIntegratedLufs(run('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-af', 'ebur128', '-f', 'null', '-']));
   add('loudness', loud !== null && loud >= LIMITS.lufsMin && loud <= LIMITS.lufsMax, `${loud} LUFS (окно ${LIMITS.lufsMin}…${LIMITS.lufsMax})`);
 
+  const pauseSource = opt.voice && existsSync(opt.voice) ? opt.voice : file;
   const pauses = countMatches(
-    run('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-af', `silencedetect=noise=${LIMITS.pauseNoiseDb}dB:d=${LIMITS.pauseSec}`, '-f', 'null', '-']),
+    run('ffmpeg', ['-hide_banner', '-nostats', '-i', pauseSource, '-af', `silencedetect=noise=${LIMITS.pauseNoiseDb}dB:d=${LIMITS.pauseSec}`, '-f', 'null', '-']),
     /silence_end:/g,
   );
-  add('pauses', pauses === 0, `пауз длиннее ${LIMITS.pauseSec} с: ${pauses}`);
+  add('pauses', pauses === 0, `пауз длиннее ${LIMITS.pauseSec} с: ${pauses} (${pauseSource === file ? 'по ролику' : 'по дорожке голоса'})`);
+
+  if (opt.before && opt.voice && existsSync(opt.before) && existsSync(opt.voice)) {
+    const b = tilt(opt.before);
+    const a = tilt(opt.voice);
+    const loss = Math.round(speechHfLoss(b, a) * 10) / 10;
+    add('speech-hf', loss <= LIMITS.speechHfLossDb, `высокие частоты речи после очистки просели на ${loss} дБ (порог ${LIMITS.speechHfLossDb} дБ)`);
+  } else {
+    results.push({ name: 'speech-hf', ok: null, detail: 'skipped — звук до очистки не передан' });
+  }
 
   // freezedetect с малым d=0,5 — длинный брак собирается склейкой отрезков, а не одним событием.
   const frames = run('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-vf', `blackdetect=d=${LIMITS.blackSec}:pix_th=0.10,freezedetect=n=0.001:d=0.5`, '-an', '-f', 'null', '-']);
@@ -180,7 +211,8 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const isDir = statSync(file).isDirectory();
   const lang = rest.includes('--lang') ? rest[rest.indexOf('--lang') + 1] : 'ru';
   const report = isDir
-    ? checkVideo(join(file, 'video.mp4'), { ass: join(file, 'work', '05_subs.ass'), lang, workBase: join(file, 'work', '06_recheck') })
+    ? checkVideo(join(file, 'video.mp4'), { ass: join(file, 'work', '05_subs.ass'), lang, workBase: join(file, 'work', '06_recheck'),
+      voice: join(file, 'work', '03_audio.mp4'), before: join(file, 'work', '02_cut.mp4') })
     : checkVideo(file, { lang, ass: rest.includes('--ass') ? rest[rest.indexOf('--ass') + 1] : undefined });
   for (const r of report.results) console.log(`${r.ok === null ? '⏭️ ' : r.ok ? '✅' : '🔴'} ${r.name}: ${r.detail}`);
   const j = rest.indexOf('--json');

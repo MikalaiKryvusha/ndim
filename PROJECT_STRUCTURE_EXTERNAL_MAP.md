@@ -142,12 +142,14 @@ D:\work\ai_sandbox\ndim\
 │   ├── 03-kaif-verify.mjs   # перепроверка развёртывания + защита от утечки секретов
 │   ├── kaif.mjs             # бэкенд npm-хендлов kaif:*
 │   └── video/               # ИИ-студия роликов (plans/90): edit.mjs — сырой ролик → 1080×1920 с
-│                            #   субтитрами одной командой; selfcheck.mjs — самопроверка (набор
-│                            #   qa/suites/video-pipeline.md); caption.mjs — ссылка с меткой и проверка подписи;
+│                            #   субтитрами, записями экрана, знаком NDim и музыкой одной командой;
+│                            #   takes.mjs — несколько дублей → лучшие фразы → склейка с проверкой стыков;
+│                            #   selfcheck.mjs — самопроверка (набор qa/suites/video-pipeline.md);
+│                            #   caption.mjs — ссылка с меткой и проверка подписи; outcome.mjs — воронка по метке;
 │                            #   программы и модель — NDIM_STUDIO_DIR; навык — .claude/skills/video-studio
 │
 │  ── ЛОКАЛЬНОЕ, ВНЕ GIT ──
-├── ../ndim-studio/                # ИИ-студия роликов: bin\ (auto-editor, whisper CUDA), models\, inbox\, out\
+├── ../ndim-studio/                # ИИ-студия роликов: bin\ (auto-editor, whisper CUDA), models\, music\ (CC0 + лицензии), inbox\, out\
 └── .private/                      # НИКОГДА не коммитится (см. .gitignore)
     ├── ndim-1.x-history.bundle    # полная git-история 1.x одним файлом (39 МБ, 825 коммитов)
     ├── email_list_prod.txt        # ПДн: 299 адресов участников беты

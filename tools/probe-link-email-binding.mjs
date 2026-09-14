@@ -1,5 +1,6 @@
 // Проба к развилке bugs/233: привязан ли oobCode ссылки входа к адресу и что отдаёт проверка кода.
 // Ходит в эмулятор Auth стенда теми же REST-вызовами, что делает SDK.
+// Запуск: node tools/probe-link-email-binding.mjs (нужен поднятый стенд: эмулятор Auth на 127.0.0.1:9099)
 const AUTH = 'http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1';
 const PROJECT = 'demo-ndim-dev';
 const KEY = 'demo-api-key';
