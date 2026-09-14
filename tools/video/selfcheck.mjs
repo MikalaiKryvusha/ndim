@@ -14,7 +14,7 @@
  * без него отчёт пишет строку `skipped`, а не молчит и не красит зелёным.
  *
  * Пороги — выводы разведки, не стандарты площадок (официального числа LUFS YouTube/Instagram
- * разведка не нашла): окно −16…−12 LUFS, пауза длиннее 1,0 с, чёрное и застывшее от 0,5 / 2 с.
+ * разведка не нашла): окно −16…−12 LUFS, пауза длиннее 1,0 с, чёрное и застывшее от 0,5 / 5 с.
  *
  * Запуск: node tools/video/selfcheck.mjs <папка выхода | video.mp4> [--ass <subs.ass>] [--lang ru|en] [--json <out.json>]
  * Код 0 и строка `ALL GREEN` — всё зелёное; код 1 — есть красное (названо поимённо).
@@ -36,7 +36,10 @@ export const LIMITS = {
   pauseSec: 1.0,
   pauseNoiseDb: -35,
   blackSec: 0.5,
-  freezeSec: 2,
+  // 5 с, а не 2: запись экрана продукта под живую речь стоит неподвижно по 3 с, и это не брак —
+  // порог 2 с ложно краснел на ней (синтетика `synthetic-003-screencast`, 2026-09-14). Брак класса
+  // «картинка зависла, звук идёт» длиннее; мутант ВК-05 — 6 с.
+  freezeSec: 5,
 };
 
 /** ffmpeg/ffprobe без оболочки; stderr ffmpeg и есть его отчёт фильтров. */
@@ -53,6 +56,26 @@ export function parseIntegratedLufs(text) {
   return m ? (m[1] === '-inf' ? -Infinity : Number(m[1])) : null;
 }
 export const countMatches = (text, re) => (text.match(re) ?? []).length;
+
+/**
+ * Застывшие отрезки из отчёта `freezedetect` (снятого с малым `d`), СКЛЕЕННЫЕ по стыкам.
+ *
+ * 🔴 Зачем склейка — найдено замером 2026-09-14: 6 с неподвижного кадра ffmpeg отдал ДВУМЯ
+ * отрезками 4,37 + 1,67 с со стыком на 8,33 с (шов перекодирования), и проверка «отрезок ≥ 5 с»
+ * пропустила настоящий брак. Отрезки, стык которых меньше `gapSec`, считаются одним.
+ */
+export function mergedFreezes(text, gapSec = 0.1) {
+  const starts = [...text.matchAll(/freeze_start: ([\d.]+)/g)].map((m) => Number(m[1]));
+  const ends = [...text.matchAll(/freeze_end: ([\d.]+)/g)].map((m) => Number(m[1]));
+  const merged = [];
+  starts.forEach((s, i) => {
+    const e = ends[i] ?? s;
+    const last = merged[merged.length - 1];
+    if (last && s - last.end <= gapSec) last.end = e;
+    else merged.push({ start: s, end: e });
+  });
+  return merged.map((m) => ({ ...m, duration: Math.round((m.end - m.start) * 1000) / 1000 }));
+}
 
 /** `H:MM:SS.cc` → миллисекунды. */
 const assMs = (t) => {
@@ -118,11 +141,12 @@ export function checkVideo(file, opt = {}) {
   );
   add('pauses', pauses === 0, `пауз длиннее ${LIMITS.pauseSec} с: ${pauses}`);
 
-  const frames = run('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-vf', `blackdetect=d=${LIMITS.blackSec}:pix_th=0.10,freezedetect=n=0.001:d=${LIMITS.freezeSec}`, '-an', '-f', 'null', '-']);
+  // freezedetect с малым d=0,5 — длинный брак собирается склейкой отрезков, а не одним событием.
+  const frames = run('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-vf', `blackdetect=d=${LIMITS.blackSec}:pix_th=0.10,freezedetect=n=0.001:d=0.5`, '-an', '-f', 'null', '-']);
   const black = countMatches(frames, /black_start:/g);
-  const freeze = countMatches(frames, /freeze_start/g);
+  const longest = Math.max(0, ...mergedFreezes(frames).map((f) => f.duration));
   add('black', black === 0, `чёрных отрезков ≥ ${LIMITS.blackSec} с: ${black}`);
-  add('freeze', freeze === 0, `застывших отрезков ≥ ${LIMITS.freezeSec} с: ${freeze}`);
+  add('freeze', longest < LIMITS.freezeSec, `самый длинный застывший отрезок ${longest} с (порог ${LIMITS.freezeSec} с)`);
 
   if (opt.ass && existsSync(opt.ass)) {
     const wordsJson = transcribeWords(file, opt.workBase ?? `${file}.recheck`, opt.lang ?? 'ru');
