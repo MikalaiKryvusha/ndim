@@ -101,7 +101,9 @@ description: ИИ-студия роликов NDim Space для Instagram Reels 
 
 1. Числа площадок: YouTube Analytics API (`views`, `engagedViews`); Instagram API — охват, сохранения,
    **отправки**. Переход на сайт Instagram API больше не отдаёт — только PostHog по `utm_campaign`.
-2. Воронка по метке: `landing_view` → `guest_start` → `rating_saved` с `utm_campaign` в PostHog.
+2. Воронка по метке: `node tools/video/outcome.mjs --campaign <NNN-имя> [--days 30]` — `landing_view` → `guest_start` →
+   `rating_saved` → `account_created` → `relations_view` с этой меткой в PostHog (только `env = prod`).
+   ⚠️ Перед первым настоящим исходом прогнать положительный контроль прибора (см. шапку `outcome.mjs`).
 3. Запиши в раздел «Исход» гипотезы: дата снятия чисел, числа, вывод. ⛔ Один ролик порога не даёт —
    горизонт органики ≥ 20 недель (`researches/70` §6.1); вывод делается по серии.
 

@@ -34,6 +34,8 @@
 | Конвейер: сырой → 1080×1920, текст субтитров из сценария, записи экрана по словам | `node tools/video/edit.mjs <вход> --name 001 --script marketing\scripts\001_author_shows_the_idea.speech.txt --segment "ndim-studio\broll\001a_film_card.mp4|открываете|десяти" --segment "ndim-studio\broll\001b_relations.mp4|считает|вкусами"` |
 | Самопроверка (6 проверок, каждая доказана мутантом) | `node tools/video/selfcheck.mjs <ndim-studio\out\имя>` · набор `qa/suites/video-pipeline.md` (ВК-01…ВК-11) |
 | Подпись: ссылка с меткой + механическая проверка | `node tools/video/caption.mjs link …` / `check <файл>` |
+| Вид субтитров — четыре варианта для выбора владельцем на живом ролике | `edit.mjs … --style A\|B\|C\|D` (заготовка фазы 2, владельцу не показывалось) |
+| Исход ролика — воронка PostHog по метке | `node tools/video/outcome.mjs --campaign pilot-001` (⚠️ положительный контроль не прошёл по сети 2026-09-14 21:23 — прогнать до первого исхода) |
 | Программы, модель, видео, записи экрана — **вне git** | `D:\work\ai_sandbox\ndim-studio` (`NDIM_STUDIO_DIR`) |
 | ✅ Решения владельца: №086 (линейки, короткие, числа, без рекламы) · №087 (сценарий А, NDim ID оставить, пилот без повода переслать) | `plans/90` → «Решения владельца» · `interviews/interview_087_pilot_video_script.md` |
 | **Пакет пилота 001 готов, кроме видео** | гипотеза `marketing/hypotheses/001…` · сценарий `marketing/scripts/001…` (утверждён) · подписи `marketing/captions/001_*` · записи экрана `ndim-studio\broll\001a/001b` · памятка `homeworks/17_film_pilot_video_001.md` |
