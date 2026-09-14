@@ -287,7 +287,7 @@ https://captions.ai/help/docs/api/pricing).
 | Россия | заблокирован с 03.2022; реклама в нём запрещена с 01.09.2025 | **заблокирован 12.02.2026** (при этом 22,4 млн/день смотрят через VPN) | https://en.wikipedia.org/wiki/Blocking_of_YouTube_in_Russia · https://www.cnews.ru/news/top/2026-07-08_auditoriya_youtube_v_rossii_prodolzhaet · https://www.themoscowtimes.com/2025/04/07/putin-signs-law-banning-advertising-on-platforms-labeled-extremist-or-undesirable-a88641 |
 | Беларусь | работает | работает | https://bmg.by/blog/smm/socialnye-seti-belarusi-2026/ |
 | Украина | работает | работает (VK заблокирован с 2017) | https://mezha.ua/en/news/yespl-viznav-zakonnim-blokuvannya-vkontakte-v-ukrajini-309949/ |
-| Казахстан | главная площадка, 13,1 млн (63 %) | ~10,6 млн | https://astanatimes.com/2026/01/how-social-media-is-shaping-kazakhstans-new-generation/ |
+| Казахстан | главная площадка, 13,1 млн (63 %) — сверено дословно: «*By late 2025, it comprised 13.1 million users, or 63% of the population.*» | работает; ~10,6 млн — 🔴 в указанном источнике **нет**, число разведки не подтверждено | https://astanatimes.com/2026/01/how-social-media-is-shaping-kazakhstans-new-generation/ |
 
 ⇒ Для заказанных владельцем Instagram и YouTube **английский — самая широкая аудитория**; русский
 доходит до Беларуси, Казахстана, Украины и диаспоры. Россия — VK Клипы/VK Видео, это другой канал и
