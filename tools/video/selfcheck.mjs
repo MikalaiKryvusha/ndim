@@ -10,19 +10,23 @@
  * (пауза 3 с · громкость −30 LUFS · чёрная секунда): прогон на каждом называет СВОЮ проверку.
  * Зелёное, которое не могло покраснеть, — класс, за которым охотится `TESTING_FRAMEWORK.md`.
  *
- * ⏭️ Не сделано и названо: сверка субтитров повторным распознаванием (допуск 200 мс) — следующий
- * заход Ш5; отчёт пишет её строкой `skipped`, а не молчит.
+ * Сверка субтитров повторным распознаванием (`subtitleDrift`) идёт, когда передан файл субтитров;
+ * без него отчёт пишет строку `skipped`, а не молчит и не красит зелёным.
  *
  * Пороги — выводы разведки, не стандарты площадок (официального числа LUFS YouTube/Instagram
  * разведка не нашла): окно −16…−12 LUFS, пауза длиннее 1,0 с, чёрное и застывшее от 0,5 / 2 с.
  *
- * Запуск: node tools/video/selfcheck.mjs <video.mp4> [--json <out.json>]
+ * Запуск: node tools/video/selfcheck.mjs <папка выхода | video.mp4> [--ass <subs.ass>] [--lang ru|en] [--json <out.json>]
  * Код 0 и строка `ALL GREEN` — всё зелёное; код 1 — есть красное (названо поимённо).
  */
 
 import { spawnSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+
+import { transcribeWords } from './studio.mjs';
+import { readWords } from './words-to-ass.mjs';
 
 export const LIMITS = {
   width: 1080,
@@ -50,7 +54,52 @@ export function parseIntegratedLufs(text) {
 }
 export const countMatches = (text, re) => (text.match(re) ?? []).length;
 
-export function checkVideo(file) {
+/** `H:MM:SS.cc` → миллисекунды. */
+const assMs = (t) => {
+  const [h, m, s] = t.split(':');
+  return Math.round((Number(h) * 3600 + Number(m) * 60 + Number(s)) * 1000);
+};
+const norm = (w) => w.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+
+/**
+ * Сверка субтитров со звуком ГОТОВОГО ролика: начало каждой строки субтитров против начала того же
+ * слова в повторном распознавании. Ловит класс «субтитры сняты не с того звука» (например, до
+ * вырезания пауз) — рассинхрон, который владелец увидел бы глазом.
+ *
+ * Сопоставление по тексту: первое слово строки ищется в словах распознавания вперёд от прошлой
+ * находки (окно 6 слов). Зелёное — сопоставлено ≥ 90 % строк и наибольший сдвиг ≤ `maxDriftMs`.
+ * ⚠️ Таймкоды whisper.cpp сами неточны (`researches/70` §3.5а): порог 200 мс проверен только на
+ * синтетике — живой файл владельца (ВК-09) может потребовать его пересмотра с доводом.
+ */
+export function subtitleDrift(assText, words, maxDriftMs = 200) {
+  const lines = assText
+    .split(/\r?\n/)
+    .filter((l) => l.startsWith('Dialogue:'))
+    .map((l) => {
+      const parts = l.split(',');
+      return { start: assMs(parts[1]), first: norm(parts.slice(9).join(',').split(/\s+/)[0] ?? '') };
+    });
+  let at = 0;
+  let matched = 0;
+  let maxDrift = 0;
+  for (const line of lines) {
+    const idx = words.slice(at, at + 6).findIndex((w) => norm(w.text.split(/\s+/)[0]) === line.first);
+    if (idx < 0) continue;
+    const w = words[at + idx];
+    maxDrift = Math.max(maxDrift, Math.abs(w.from - line.start));
+    matched += 1;
+    at += idx + 1;
+  }
+  const ok = lines.length > 0 && matched / lines.length >= 0.9 && maxDrift <= maxDriftMs;
+  return { ok, lines: lines.length, matched, maxDrift };
+}
+
+/**
+ * @param {string} file готовый ролик
+ * @param {{ass?: string, lang?: string, workBase?: string}} [opt] без `ass` сверка субтитров
+ *   честно помечается `skipped`, а не зелёной
+ */
+export function checkVideo(file, opt = {}) {
   const results = [];
   const add = (name, ok, detail) => results.push({ name, ok, detail });
 
@@ -75,17 +124,28 @@ export function checkVideo(file) {
   add('black', black === 0, `чёрных отрезков ≥ ${LIMITS.blackSec} с: ${black}`);
   add('freeze', freeze === 0, `застывших отрезков ≥ ${LIMITS.freezeSec} с: ${freeze}`);
 
-  results.push({ name: 'subtitles-sync', ok: null, detail: 'skipped — не реализовано (Ш5, следующий заход)' });
+  if (opt.ass && existsSync(opt.ass)) {
+    const wordsJson = transcribeWords(file, opt.workBase ?? `${file}.recheck`, opt.lang ?? 'ru');
+    const d = subtitleDrift(readFileSync(opt.ass, 'utf8'), readWords(JSON.parse(readFileSync(wordsJson, 'utf8'))));
+    add('subtitles-sync', d.ok, `строк ${d.lines}, сопоставлено ${d.matched}, наибольший сдвиг ${d.maxDrift} мс`);
+  } else {
+    results.push({ name: 'subtitles-sync', ok: null, detail: 'skipped — файл субтитров не передан' });
+  }
   return { file, green: results.every((r) => r.ok !== false), results };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const [file, ...rest] = process.argv.slice(2);
   if (!file) {
-    console.error('usage: node tools/video/selfcheck.mjs <video.mp4> [--json <out.json>]');
+    console.error('usage: node tools/video/selfcheck.mjs <папка выхода | video.mp4> [--ass <subs.ass>] [--lang ru|en] [--json <out.json>]');
     process.exit(2);
   }
-  const report = checkVideo(file);
+  // Папка выхода конвейера (`ndim-studio\out\<имя>`) — ролик и субтитры берутся из неё сами.
+  const isDir = statSync(file).isDirectory();
+  const lang = rest.includes('--lang') ? rest[rest.indexOf('--lang') + 1] : 'ru';
+  const report = isDir
+    ? checkVideo(join(file, 'video.mp4'), { ass: join(file, 'work', '05_subs.ass'), lang, workBase: join(file, 'work', '06_recheck') })
+    : checkVideo(file, { lang, ass: rest.includes('--ass') ? rest[rest.indexOf('--ass') + 1] : undefined });
   for (const r of report.results) console.log(`${r.ok === null ? '⏭️ ' : r.ok ? '✅' : '🔴'} ${r.name}: ${r.detail}`);
   const j = rest.indexOf('--json');
   if (j >= 0) writeFileSync(rest[j + 1], JSON.stringify(report, null, 2), 'utf8');

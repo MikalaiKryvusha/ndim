@@ -34,13 +34,7 @@ import { pathToFileURL } from 'node:url';
 
 import { groupWords, readWords, toAss } from './words-to-ass.mjs';
 import { checkVideo } from './selfcheck.mjs';
-
-const STUDIO = process.env.NDIM_STUDIO_DIR || 'D:\\work\\ai_sandbox\\ndim-studio';
-const BIN = {
-  autoEditor: join(STUDIO, 'bin', 'auto-editor.exe'),
-  whisper: join(STUDIO, 'bin', 'whisper', 'whisper-cli.exe'),
-  model: join(STUDIO, 'models', 'ggml-large-v3-turbo-q5_0.bin'),
-};
+import { BIN, STUDIO, transcribeWords } from './studio.mjs';
 
 /** Запуск без оболочки; провал шага останавливает конвейер с именем шага, а не молча. */
 function run(step, bin, args) {
@@ -82,12 +76,11 @@ export function editVideo(input, { lang = 'ru', name } = {}) {
     `afftdn=nf=-25,loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=${m.input_i}:measured_TP=${m.input_tp}:measured_LRA=${m.input_lra}:measured_thresh=${m.input_thresh}:offset=${m.target_offset}:linear=true,aresample=48000`,
     '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', audio]), { inputLufs: Number(m.input_i) });
 
-  const wav = join(work, '04_speech16k.wav');
-  run('речь 16 кГц', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', audio, '-ar', '16000', '-ac', '1', wav]);
-  const wordsBase = join(work, '04_words');
-  log('распознавание слов', run('распознавание слов', BIN.whisper, ['-m', BIN.model, '-l', lang, '-f', wav, '-ml', '1', '-sow', '-oj', '-of', wordsBase, '-np']));
+  const t4 = Date.now();
+  const wordsJson = transcribeWords(audio, join(work, '04_words'), lang);
+  log('распознавание слов', { ms: Date.now() - t4 });
 
-  const words = readWords(JSON.parse(readFileSync(`${wordsBase}.json`, 'utf8')));
+  const words = readWords(JSON.parse(readFileSync(wordsJson, 'utf8')));
   const groups = groupWords(words, 3);
   const ass = join(work, '05_subs.ass');
   writeFileSync(ass, toAss(groups), 'utf8');
@@ -99,7 +92,7 @@ export function editVideo(input, { lang = 'ru', name } = {}) {
   log('субтитры', run('субтитры', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', audio, '-vf', `ass='${assArg}'`,
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-movflags', '+faststart', video]), { words: words.length, groups: groups.length });
 
-  const report = checkVideo(video);
+  const report = checkVideo(video, { ass, lang, workBase: join(work, '06_recheck') });
   writeFileSync(join(out, 'selfcheck.json'), JSON.stringify(report, null, 2), 'utf8');
   journal.push({ step: 'самопроверка', by: 'агент', green: report.green });
   journal.push({ step: 'подпись, хэштеги, ссылка с меткой', by: 'агент', status: 'следующий шаг навыка — не этот скрипт' });
