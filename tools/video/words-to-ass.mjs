@@ -47,20 +47,77 @@ export function assTime(ms) {
 }
 
 /**
- * Слова → группы. Группа закрывается на `maxWords` словах или на знаке конца фразы, чтобы
- * субтитр не переносил начало новой мысли в хвост старой.
+ * Предлоги, союзы и отрицание — в русской речи они звучат слитно со СЛЕДУЮЩИМ словом, поэтому строка субтитров
+ * ими не кончается. Слово владельца 2026-09-14 (№088 В1): «*не разрывать текст субтитров, где фраза связанно
+ * читается, например, "музыки с" и на новом кадре "оценками других людей" - С должно было быть во второй фразе,
+ * после микропаузы*».
  */
-export function groupWords(words, maxWords = 3) {
-  const groups = [];
-  let cur = [];
-  for (const w of words) {
-    cur.push(w);
-    if (cur.length >= maxWords || /[.!?…]$/.test(w.text)) {
-      groups.push(cur);
-      cur = [];
+export const PROCLITICS = new Set(['с', 'со', 'в', 'во', 'на', 'к', 'ко', 'по', 'от', 'до', 'из', 'у', 'о', 'об', 'обо', 'за', 'под', 'над', 'при', 'про', 'для', 'без', 'через', 'и', 'а', 'но', 'или', 'да', 'что', 'чтобы', 'как', 'не', 'ни']);
+
+/** Пределы строки: слов и знаков (кегль 4,5 % высоты кадра — около 22 знаков в строку без переноса). */
+export const GROUPING = { maxWords: 4, maxChars: 24, pauseMs: 180 };
+
+const bare = (t) => t.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+
+/**
+ * Пауза на границе после слова `i`, мс: самая длинная тишина между серединой слова `i` и серединой следующего
+ * ЗНАЧИМОГО слова. 🔴 Предлог пропускается: распознавание ставит короткое «с» прямо в тишину перед ним (пилот 001:
+ * «музыки» — тишина 0,29 с — «с оценками»), и граница «музыки | с» иначе паузы бы не видела.
+ */
+function pauseAfter(words, i, pauses) {
+  if (!pauses?.length || i + 1 >= words.length) return 0;
+  let j = i + 1;
+  while (j + 1 < words.length && PROCLITICS.has(bare(words[j].text))) j++;
+  const from = (words[i].from + words[i].to) / 2;
+  const to = (words[j].from + words[j].to) / 2;
+  let best = 0;
+  for (const p of pauses) best = Math.max(best, Math.min(p.end, to) - Math.max(p.start, from));
+  return best;
+}
+
+/**
+ * Слова → строки субтитров. Разбивка ищется целиком (динамическое программирование) по цене строки: разрыв на конце
+ * фразы, запятой или паузе в звуке — выгоден; разрыв посреди слитной речи — дорог; строка, кончающаяся предлогом, —
+ * очень дорога; длинная строка и строка из одного слова — дороже. Время: строка живёт от начала своего первого слова
+ * до начала следующей строки (нулевые слова whisper не рождают мигания).
+ *
+ * @param {{from:number,to:number,text:string}[]} words время в мс
+ * @param {number | {maxWords?:number, maxChars?:number, pauseMs?:number, pauses?:{start:number,end:number}[]}} [opts]
+ *   число — прежняя форма (`maxWords`); `pauses` — тишины голоса в мс (`silencedetect`)
+ */
+export function groupWords(words, opts = {}) {
+  const o = { ...GROUPING, ...(typeof opts === 'number' ? { maxWords: opts } : opts) };
+  const n = words.length;
+  const cost = (a, b) => {
+    const g = words.slice(a, b + 1);
+    const text = g.map((w) => w.text).join(' ');
+    let c = 0;
+    if (g.length > o.maxWords) c += 20;
+    if (g.slice(0, -1).some((w) => /[.!?…]$/.test(w.text))) c += 20; // строка не переносит конец фразы внутрь
+    if (g.length > 1 && text.length > o.maxChars) c += 4 + (text.length - o.maxChars) * 0.3;
+    // Строка из одного слова мелькает: дороже паузы, дешевле конца фразы (пилот 001: «чьи», «внизу», «Связи.»).
+    if (g.length === 1) c += 2.2;
+    if (b === n - 1) return c;
+    const last = g[g.length - 1].text;
+    if (/[.!?…]$/.test(last)) return c - 2;
+    if (PROCLITICS.has(bare(last))) return c + 6;
+    if (/[,;:—–]$/.test(last) || /^[—–]/.test(words[b + 1].text)) return c - 1;
+    return pauseAfter(words, b, o.pauses) >= o.pauseMs ? c - 1.5 : c + 1.5;
+  };
+  const best = [0];
+  const cut = [0];
+  for (let i = 1; i <= n; i++) {
+    best[i] = Infinity;
+    for (let k = 1; k <= Math.min(i, o.maxWords + 1); k++) {
+      const v = best[i - k] + cost(i - k, i - 1);
+      if (v < best[i]) {
+        best[i] = v;
+        cut[i] = i - k;
+      }
     }
   }
-  if (cur.length) groups.push(cur);
+  const groups = [];
+  for (let i = n; i > 0; i = cut[i]) groups.unshift(words.slice(cut[i], i));
   return groups.map((g, i) => ({
     start: g[0].from,
     // До начала следующей группы — см. шапку про нулевые слова; последняя — до конца своего слова.
@@ -171,8 +228,8 @@ export function alignScript(scriptText, words) {
  */
 export const STYLE_NAMES = { A: 'Обводка', B: 'Плашка', C: 'Бренд', D: 'Крупно' };
 
-export function styleLine(style = 'A', { fontSize, marginV }) {
-  const head = 'Style: Default,Arial';
+export function styleLine(style = 'A', { fontSize, marginV, name = 'Default' }) {
+  const head = `Style: ${name},Arial`;
   const tail = (align, mv) => `2,${align === 5 ? 0 : 60},${align === 5 ? 0 : 60},${mv},204`.replace(/^2,/, `${align},`);
   switch (style) {
     case 'B': return `${head},${fontSize},&H00FFFFFF,&H00FFFFFF,&H80000000,&H80000000,-1,0,0,0,100,100,0,0,3,${Math.round(fontSize * 0.22)},0,${tail(2, marginV)}`;
@@ -183,10 +240,26 @@ export function styleLine(style = 'A', { fontSize, marginV }) {
   }
 }
 
-/** Группы → текст ASS. */
-export function toAss(groups, { width = 1080, height = 1920, style = 'A' } = {}) {
+/**
+ * Отступ субтитров от низа кадра, доля высоты. Было 0,22; слово владельца 2026-09-14 (№088 В1): «*хочется текст
+ * чуть-чуть выше поднять*» — стало 0,27 (на 96 px выше при 1920).
+ */
+export const SUB_MARGIN = 0.27;
+
+/**
+ * Отступ субтитров поверх ЗАПИСИ ЭКРАНА — прежний 0,22: на высоте 0,27 строка ложилась на проценты карточки Виктора
+ * экрана «Связи» (кадр пилота 001, 32 с), а ниже карточек экран пуст.
+ */
+export const SUB_MARGIN_SCREEN = 0.22;
+
+/**
+ * Группы → текст ASS. `screens` — окна записей экрана в мс: строка, начавшаяся в окне, получает стиль `Screen`
+ * с отступом `SUB_MARGIN_SCREEN`.
+ */
+export function toAss(groups, { width = 1080, height = 1920, style = 'A', screens = [] } = {}) {
   const fontSize = Math.round(height * 0.045);
-  const marginV = Math.round(height * 0.22);
+  const marginV = Math.round(height * SUB_MARGIN);
+  const onScreen = (g) => screens.some((s) => g.start >= s.start && g.start < s.end);
   const header = [
     '[Script Info]',
     'ScriptType: v4.00+',
@@ -197,11 +270,12 @@ export function toAss(groups, { width = 1080, height = 1920, style = 'A' } = {})
     '[V4+ Styles]',
     'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
     styleLine(style, { fontSize, marginV }),
+    styleLine(style, { fontSize, marginV: Math.round(height * SUB_MARGIN_SCREEN), name: 'Screen' }),
     '',
     '[Events]',
     'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',
   ];
-  const events = groups.map((g) => `Dialogue: 0,${assTime(g.start)},${assTime(g.end)},Default,,0,0,0,,${g.text.replace(/[{}]/g, '')}`);
+  const events = groups.map((g) => `Dialogue: 0,${assTime(g.start)},${assTime(g.end)},${onScreen(g) ? 'Screen' : 'Default'},,0,0,0,,${g.text.replace(/[{}]/g, '')}`);
   return [...header, ...events, ''].join('\n');
 }
 
@@ -216,7 +290,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     return i >= 0 ? Number(rest[i + 1]) : dflt;
   };
   const words = readWords(JSON.parse(readFileSync(input, 'utf8')));
-  const groups = groupWords(words, opt('words', 3));
+  const groups = groupWords(words, { maxWords: opt('words', GROUPING.maxWords) });
   writeFileSync(output, toAss(groups, { width: opt('width', 1080), height: opt('height', 1920) }), 'utf8');
   console.log(`слов ${words.length} · групп ${groups.length} → ${output}`);
 }

@@ -8,7 +8,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { brollFilter, musicFilter, musicLicense, parseSegment, VOICE_CLEAN, wordRange } from './edit.mjs';
+import { brollFilter, musicFilter, musicLicense, parseLogo, parseSegment, VOICE_CLEAN, wordRange } from './edit.mjs';
 import { speechHfLoss } from './selfcheck.mjs';
 
 const words = ['Вы', 'открываете', 'карточку', 'от', 'нуля', 'до', 'десяти.', 'Пространство NDim', 'считает', 'Связи —', 'людей', 'вкусами.']
@@ -40,7 +40,9 @@ test('🔴 фильтр: каждая запись на своём отрезк�
 
 test('🔴 запись экрана короче отрезка держит последний кадр, а не начинается заново (пилот 001)', () => {
   const f = brollFilter({ segments: [{ start: 20, end: 26 }], assArg: 'x.ass' });
-  assert.match(f, /tpad=stop_mode=clone:stop_duration=6\.000,setpts=PTS-STARTPTS\+20\.000\/TB\[s0\]/);
+  assert.match(f, /tpad=stop_mode=clone:stop_duration=6\.000,/);
+  // …и медленно наезжает: статичный экран «Связи» иначе законно краснел проверкой застывшего кадра (5,7 с).
+  assert.match(f, /scale=w='trunc\(1080\*\(1\+0\.06\*min\(t\/6\.000,1\)\)\/2\)\*2':h=-2:eval=frame,crop=1080:1920,setpts=PTS-STARTPTS\+20\.000\/TB\[s0\]/);
 });
 
 test('знак NDim — справа ниже интерфейса площадки, только на своих словах, с мягким появлением, под субтитрами', () => {
@@ -49,6 +51,15 @@ test('знак NDim — справа ниже интерфейса площад�
   assert.match(f, /\[0:v\]\[lg\]overlay=W-w-60:300:enable='between\(t,6\.000,18\.000\)'/);
   assert.ok(f.endsWith("[vl]ass='x.ass'[v]"), 'субтитры поверх знака');
   assert.equal(brollFilter({ segments: [], assArg: 'x.ass' }), "[0:v]ass='x.ass'[v]", 'без вставок и знака — одни субтитры');
+});
+
+test('плашка-логотип встаёт своим PNG на заданное место, без масштаба при ширине 0 (№088 В1)', () => {
+  const logo = parseLogo('D:\\studio\\brand\\lockup.png|Пространство NDim|Вашим|(W-w)/2|1000|0');
+  assert.deepEqual(logo, { file: 'D:\\studio\\brand\\lockup.png', fromWord: 'Пространство NDim', toWord: 'Вашим', x: '(W-w)/2', y: '1000', width: 0 });
+  const f = brollFilter({ segments: [], assArg: 'x.ass', logo: { ...logo, start: 6, end: 18 } });
+  assert.match(f, /\[1:v\]format=rgba,loop/, 'ширина 0 — без scale');
+  assert.match(f, /overlay=\(W-w\)\/2:1000:enable=/);
+  assert.deepEqual(parseLogo('a.png|x|y'), { file: 'a.png', fromWord: 'x', toWord: 'y' }, 'без места — прежний угол по умолчанию');
 });
 
 test('🔴 музыка: голос — ключ приглушения, подложка по длине ролика, смесь без нормировки amix', () => {

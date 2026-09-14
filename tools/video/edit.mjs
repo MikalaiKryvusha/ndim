@@ -38,6 +38,7 @@ import { pathToFileURL } from 'node:url';
 import { alignScript, groupWords, readWords, toAss } from './words-to-ass.mjs';
 import { checkVideo, parseIntegratedLufs } from './selfcheck.mjs';
 import { BIN, STUDIO, transcribeWords } from './studio.mjs';
+import { parseSilences } from './takes.mjs';
 
 /**
  * Очистка голоса. 🔴 Порог шума `nf` — ЗАМЕР, а не число «на глаз»: прежнее `afftdn=nf=-25` на живом голосе
@@ -49,13 +50,18 @@ import { BIN, STUDIO, transcribeWords } from './studio.mjs';
 export const VOICE_CLEAN = 'highpass=f=80,afftdn=nf=-60:nr=18:tn=1';
 
 /**
- * Подложка без речи — на 16 LU тише голоса (−14 LUFS); под речью её ещё приглушает `sidechaincompress`.
- * Слово владельца 2026-09-14 (пилот 001): «*музыку мо[ж]но тихонько поставить, на фоне*» — было −27, стало −30.
+ * Подложка без речи — на 14 LU тише голоса (−14 LUFS); под речью её ещё приглушает `sidechaincompress`.
+ * Слова владельца 2026-09-14 (пилот 001): «*музыку мо[ж]но тихонько поставить, на фоне*» — было −27, стало −30;
+ * затем №088 В2 = Б (Projector Screen) «*на 2 дБ громче*» — стало −28.
  */
-export const MUSIC_BED_LUFS = -30;
+export const MUSIC_BED_LUFS = -28;
 
-/** Знак NDim: ширина и отступы. Верх кадра Reels/Shorts закрывает интерфейс площадки — знак ниже этой зоны. */
-export const LOGO = { width: 150, right: 60, top: 300, fadeSec: 0.3 };
+/**
+ * Знак NDim по умолчанию: ширина и место. Верх кадра Reels/Shorts закрывает интерфейс площадки — знак ниже этой зоны.
+ * Плашка-логотип (№088 В1: «*плашку-логотип показывать, с лого и названием*») приходит готовым PNG со своим местом:
+ * `--logo "png|слово|слово|x|y|ширина"` (ширина 0 — как в файле).
+ */
+export const LOGO = { width: 150, x: 'W-w-60', y: '300', fadeSec: 0.3 };
 
 /** Запуск без оболочки; провал шага останавливает конвейер с именем шага, а не молча. */
 function run(step, bin, args) {
@@ -102,13 +108,19 @@ export function wordRange(words, fromWord, toWord) {
  * записью»); берём тот, в котором перекрывать нечего.
  * 🔴 Запись короче своего отрезка ДЕРЖИТ ПОСЛЕДНИЙ КАДР (`tpad` clone), а не начинается заново: на пилоте 001
  * карточка фильма (4,5 с) под фразой ~6 с на повторе прыгала бы к началу прокрутки.
+ * 🔴 И медленно НАЕЗЖАЕТ (`BROLL_ZOOM` за отрезок): статичный экран «Связи» стоял 5,7 с — самопроверка `freeze`
+ * законно краснела; наезд — обычный приём роликов с записью интерфейса, текст экрана остаётся читаемым.
  */
+export const BROLL_ZOOM = 0.06;
+
 export function brollFilter({ segments, assArg, logo }) {
   const parts = [];
   let last = '0:v';
   segments.forEach(({ start, end }, k) => {
     const on = `enable='between(t,${start.toFixed(3)},${end.toFixed(3)})'`;
-    parts.push(`[${k + 1}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,tpad=stop_mode=clone:stop_duration=${(end - start).toFixed(3)},setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[s${k}]`);
+    const len = Math.max(0.5, end - start).toFixed(3);
+    const zoom = `scale=w='trunc(1080*(1+${BROLL_ZOOM}*min(t/${len},1))/2)*2':h=-2:eval=frame,crop=1080:1920`;
+    parts.push(`[${k + 1}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,tpad=stop_mode=clone:stop_duration=${(end - start).toFixed(3)},${zoom},setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[s${k}]`);
     parts.push(`[${last}][s${k}]overlay=0:0:${on}:eof_action=pass[v${k}]`);
     last = `v${k}`;
   });
@@ -117,8 +129,10 @@ export function brollFilter({ segments, assArg, logo }) {
     const { start, end } = logo;
     const f = LOGO.fadeSec;
     const len = (end - start).toFixed(3);
-    parts.push(`[${n}:v]scale=${LOGO.width}:-1,format=rgba,loop=loop=-1:size=1,trim=duration=${len},fade=t=in:st=0:d=${f}:alpha=1,fade=t=out:st=${Math.max(0, end - start - f).toFixed(3)}:d=${f}:alpha=1,setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[lg]`);
-    parts.push(`[${last}][lg]overlay=W-w-${LOGO.right}:${LOGO.top}:enable='between(t,${start.toFixed(3)},${end.toFixed(3)})':eof_action=pass[vl]`);
+    const width = logo.width ?? LOGO.width;
+    const scale = width ? `scale=${width}:-1,` : '';
+    parts.push(`[${n}:v]${scale}format=rgba,loop=loop=-1:size=1,trim=duration=${len},fade=t=in:st=0:d=${f}:alpha=1,fade=t=out:st=${Math.max(0, end - start - f).toFixed(3)}:d=${f}:alpha=1,setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[lg]`);
+    parts.push(`[${last}][lg]overlay=${logo.x ?? LOGO.x}:${logo.y ?? LOGO.y}:enable='between(t,${start.toFixed(3)},${end.toFixed(3)})':eof_action=pass[vl]`);
     last = 'vl';
   }
   parts.push(`[${last}]ass='${assArg}'[v]`);
@@ -151,6 +165,13 @@ export function parseSegment(spec) {
   const [file, fromWord, toWord] = String(spec).split('|');
   if (!file || !fromWord || !toWord) throw new Error(`отрезок «${spec}»: нужен вид "файл|слово начала|слово конца"`);
   return { file, fromWord, toWord };
+}
+
+/** `--logo "png|слово|слово[|x|y[|ширина]]"` — место задают выражения `overlay` (`(W-w)/2`, `1000`); без них — угол справа. */
+export function parseLogo(spec) {
+  const [file, fromWord, toWord, x, y, width] = String(spec).split('|');
+  const base = parseSegment([file, fromWord, toWord].join('|'));
+  return { ...base, ...(x ? { x } : {}), ...(y ? { y } : {}), ...(width !== undefined && width !== '' ? { width: Number(width) } : {}) };
 }
 
 const probeDuration = (file) =>
@@ -209,14 +230,10 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
     journal.push({ step: 'текст субтитров из сценария', by: 'агент', script, matched: Number(aligned.matched.toFixed(3)),
       used: useScript ? 'сценарий' : 'распознавание — речь отошла от сценария, спросить владельца' });
   }
-  const groups = groupWords(subWords, 3);
-  const ass = join(work, '05_subs.ass');
-  writeFileSync(ass, toAss(groups, { style }), 'utf8');
-  writeFileSync(join(out, 'transcript.txt'), groups.map((g) => g.text).join(' '), 'utf8');
-
-  const video = join(out, 'video.mp4');
-  // Фильтр `ass` читает путь как аргумент фильтра: двоеточие диска и обратные слэши экранируются.
-  const assArg = ass.replace(/\\/g, '/').replace(/:/g, '\\:');
+  // Строки рвутся по паузам ГОЛОСА (№088 В1): тишины замеряются на дорожке без музыки.
+  const pauses = parseSilences(run('паузы голоса', 'ffmpeg', ['-hide_banner', '-nostats', '-i', audio, '-af',
+    'pan=mono|c0=0.5*c0+0.5*c1,silencedetect=noise=-35dB:d=0.08', '-f', 'null', '-']).out).map((p) => ({ start: p.start * 1000, end: p.end * 1000 }));
+  const groups = groupWords(subWords, { pauses });
   const specs = [...(segments ?? []), ...(broll ? [{ file: broll, fromWord, toWord }] : [])];
   // Слова вставок ищутся в тексте СЦЕНАРИЯ с таймингом (subWords): распознавание пишет «10» вместо
   // «десяти», и якорь по распознаванию не находился (репетиция 2026-09-14).
@@ -224,6 +241,14 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
     if (!existsSync(s.file)) throw new Error(`нет записи экрана: ${s.file}`);
     return { ...s, ...wordRange(subWords, s.fromWord, s.toWord) };
   });
+  const ass = join(work, '05_subs.ass');
+  // Поверх записей экрана субтитры ниже — не закрывают карточки (`SUB_MARGIN_SCREEN`).
+  writeFileSync(ass, toAss(groups, { style, screens: placed.map((p) => ({ start: p.start * 1000, end: p.end * 1000 })) }), 'utf8');
+  writeFileSync(join(out, 'transcript.txt'), groups.map((g) => g.text).join(' '), 'utf8');
+
+  const video = join(out, 'video.mp4');
+  // Фильтр `ass` читает путь как аргумент фильтра: двоеточие диска и обратные слэши экранируются.
+  const assArg = ass.replace(/\\/g, '/').replace(/:/g, '\\:');
   const logoPlaced = logo ? { ...logo, ...wordRange(subWords, logo.fromWord, logo.toWord) } : null;
   if (logoPlaced && !existsSync(logoPlaced.file)) throw new Error(`нет знака: ${logoPlaced.file}`);
   const inputs = [...placed.flatMap((s) => ['-i', s.file]), ...(logoPlaced ? ['-i', logoPlaced.file] : [])];
@@ -251,7 +276,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   try {
     const { out, green, journal } = editVideo(input, {
       lang: opt('lang'), name: opt('name'), broll: opt('broll'), fromWord: opt('from-word'), toWord: opt('to-word'), script: opt('script'),
-      style: opt('style'), music: opt('music'), logo: opt('logo') ? parseSegment(opt('logo')) : undefined,
+      style: opt('style'), music: opt('music'), logo: opt('logo') ? parseLogo(opt('logo')) : undefined,
       segments: rest.flatMap((v, i) => (rest[i - 1] === '--segment' ? [parseSegment(v)] : [])),
     });
     for (const j of journal) console.log(`${j.by === 'владелец' ? '👤' : '🤖'} ${j.step}${j.ms ? ` · ${(j.ms / 1000).toFixed(1)} с` : ''}`);

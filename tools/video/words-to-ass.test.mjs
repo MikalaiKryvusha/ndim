@@ -63,6 +63,35 @@ test('нулевое слово не рождает мигания: группа
   assert.ok(first.end > first.start);
 });
 
+test('🔴 строка не кончается предлогом и рвётся по паузе голоса (слово владельца №088 В1, пилот 001)', () => {
+  // Дословно с пилота: распознавание ставит «с» в тишину 11,84–12,13 с после «музыки».
+  const words = [[9180, 9620, 'оценки'], [9620, 10080, 'игр,'], [10080, 10990, 'фильмов,'], [10990, 11280, 'книг,'], [11280, 11840, 'музыки'], [11840, 12000, 'с'], [12000, 12600, 'оценками'], [12600, 13120, 'других'], [13120, 13580, 'людей']]
+    .map(([from, to, text]) => ({ from, to, text }));
+  const pauses = [{ start: 11840, end: 12130 }, { start: 13640, end: 13840 }];
+  const texts = groupWords(words, { pauses }).map((g) => g.text);
+  assert.ok(texts.includes('с оценками других людей'), JSON.stringify(texts));
+  assert.ok(!texts.some((t) => / с$/.test(t)), `ни одна строка не кончается «с»: ${JSON.stringify(texts)}`);
+  // Тот же вход по прежнему правилу «три слова» давал «книг, музыки с» — ровно то, что вернул владелец.
+  const legacy = [];
+  for (let i = 0; i < words.length; i += 3) legacy.push(words.slice(i, i + 3).map((w) => w.text).join(' '));
+  assert.ok(legacy.includes('книг, музыки с'), 'контроль: прежняя разбивка воспроизводит дефект');
+});
+
+test('строка из одного слова не мелькает там, где слово держится за соседей', () => {
+  const words = [[44440, 44850, 'внизу'], [44850, 45700, 'в'], [45700, 46000, 'профиле.'], [46000, 46690, 'Оцените'], [46690, 47000, 'то,']]
+    .map(([from, to, text]) => ({ from, to, text }));
+  const texts = groupWords(words, { pauses: [{ start: 44800, end: 45000 }] }).map((g) => g.text);
+  assert.equal(texts[0], 'внизу в профиле.');
+});
+
+test('субтитры выше на лице и ниже поверх записи экрана (№088 В1; карточка «Связей» пилота 001)', () => {
+  const ass = toAss([{ start: 1000, end: 2000, text: 'на лице' }, { start: 30000, end: 31000, text: 'на экране' }], { screens: [{ start: 29930, end: 35600 }] });
+  assert.ok(ass.includes('Style: Default,Arial,86,') && ass.includes(',518,204'), 'на лице — 27 % высоты');
+  assert.ok(ass.includes('Style: Screen,Arial,86,') && ass.includes(',422,204'), 'на экране — 22 % высоты');
+  assert.ok(ass.includes(',Default,,0,0,0,,на лице'));
+  assert.ok(ass.includes(',Screen,,0,0,0,,на экране'));
+});
+
 test('конец фразы закрывает группу раньше лимита', () => {
   const words = [{ from: 0, to: 500, text: 'Привет.' }, { from: 600, to: 900, text: 'Меня' }];
   assert.deepEqual(groupWords(words, 3).map((g) => g.text), ['Привет.', 'Меня']);
