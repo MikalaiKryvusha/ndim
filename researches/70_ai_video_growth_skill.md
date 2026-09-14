@@ -401,6 +401,12 @@ using» (ChatyApp) · непроверенная статистика одино
     Shorts descriptions, and the vertical live feed will no longer be clickable.*»
   - Сигналы Instagram (Social Media Today, Моссери): «*The top three signals that matter most for ranking
     are watch time, likes and sends*» · «*sends are slightly more important for unconnected content*».
+  - Суд `/fable-judge` 2026-09-14 20:28 — сверено: Google «*Dating and companionship advertisers must be
+    certified by Google in order to serve ads*», в охвате «*Livestream or chat apps whose primary focus is
+    meeting new people*» · Meta «*advertisers within Russia will no longer be able to create or run ads
+    anywhere in the world*». 🔴 **Не сверено:** разрешение Meta на рекламу знакомств (страница Meta без JS
+    пуста) и отключение рекламодателей из России у Google (CNN отдаёт 451) — в №086 В4 помечено как
+    «по вторичным источникам» / «ответа не найдено».
   - Instagram в России (Википедия, «Internet censorship in Russia»): «*Instagram was concurrently blocked by
     Roskomnadzor*» — 11 марта 2022 · Беларусь (bmg.by): «*Instagram в Беларуси работает*», «*YouTube в
     Беларуси доступен*» — сверено; цифр аудитории там нет.
