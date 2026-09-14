@@ -320,7 +320,7 @@ https://www.iab.com/insights/the-ai-gap-widens/) · хэштег-спам · к�
   Meta: реклама знакомств — только с предварительного письменного разрешения, 18+
   (https://transparency.meta.com/policies/ad-standards/restricted-goods-services/dating-ads/).
   Прятать суть — «Circumventing Systems», блокировка нескольких аккаунтов
-  (https://transparency.meta.com/km-kh/policies/ad-standards/deceptive-content/circumventing-systems).
+  (https://transparency.meta.com/policies/ad-standards/deceptive-content/circumventing-systems).
 - **Барьер — доступ, а не цена.** Рекламодатели из РФ отключены Meta и Google с 03.2022
   (https://about.fb.com/news/2022/02/metas-ongoing-efforts-regarding-russias-invasion-of-ukraine/);
   в Беларуси Google 13.12.2024 прекратил регистрацию новых аккаунтов
@@ -340,6 +340,22 @@ https://www.iab.com/insights/the-ai-gap-widens/) · хэштег-спам · к�
 
 ⇒ Платная реклама — **не первая фаза**: у неё юридический и платёжный барьер, а без органики у
 неё нет проверенных креативов. Ролики, сделанные эпиком, и есть будущие креативы.
+
+## 5а. Сверка источников агентом (2026-09-14)
+
+Разделы 3–5 добыты делегированными веб-разведками, поэтому ссылки проверены механически:
+`curl -L` по всем 63 уникальным адресам документа.
+
+- **60 из 63 отвечают 200/3xx.**
+- `transparency.meta.com/km-kh/…circumventing-systems` — 404 (чужая локаль); адрес без локали — 200,
+  ссылка исправлена.
+- `iab.com/insights/the-ai-gap-widens/` и `mezha.ua/…309949/` — **403 для роботов**: страница существует,
+  но утверждения «82 % / 45 %» (§4.6) и «ЕСПЧ 2026, VK заблокирован с 2017» (§4.4) агентом **не сверены**
+  дословно. На развилки эпика они не опираются.
+- Дословно сверено самое весомое для В1 утверждение — Википедия: «*On 12 February 2026, Roskomnadzor
+  imposed a full nationwide block on the platform, making YouTube inaccessible in Russia without the use
+  of a VPN.*»
+- ⚠️ Остальные цитаты разделов 3–5 дословной сверкой не проходили — только живость ссылок.
 
 ## 6. Выводы → последствия для эпика → развилки владельцу
 
