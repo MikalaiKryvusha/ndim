@@ -351,6 +351,37 @@ using» (ChatyApp) · непроверенная статистика одино
   (№002 В4, `bugs/113`). Допустимо только на своём профиле без чужих лиц и имён либо на тестовых данных стенда.
 - Годные к письму типы: «я сделал это, потому что…» · вопрос-желание · показ механики на своём профиле.
 
+### 4.8 Повод переслать ролик — без выпрашивания (веб-разведка 2026-09-14, по №086 В4 и №087 В3)
+
+Рост — только пересылками и репостами (слово владельца, №086 В4). Первый ролик снимается без повода
+переслать (№087 В3 = А); этот раздел — опора следующего ролика.
+
+**Правила площадок:**
+- **YouTube** — 🔎 сверено дословно: «*Repetitive or templated content aimed at artificially inflating engagement
+  through bots, coercion, or offering rewards in exchange for likes, views, or subscribers. It's okay to ask viewers
+  to like, comment, or subscribe.*» (https://support.google.com/youtube/answer/2801973). Формулировки о просьбе
+  «поделиться / переслать» — не найдено.
+- **Facebook** — по разведке, дословно агентом НЕ сверено (страницы Meta без JS пусты): «Share baiting: Asking people
+  to share the post with their friends» понижает охват, и правило написано для Facebook
+  (https://www.facebook.com/business/help/259911614709806 · https://transparency.meta.com/features/approach-to-ranking/content-distribution-guidelines/engagement-bait/).
+- **Instagram** — по разведке: «engagement bait» в списке ограничивающего распространение (Creators FAQ), определения
+  понятия для Instagram разведка не нашла. Вывод агента: прямую просьбу «перешлите» в ролик не ставим.
+
+**Почему люди делятся — 🔎 сверено дословно по тексту статьи** (Berger, 2014, обзор сарафанного радио,
+https://faculty.wharton.upenn.edu/wp-content/uploads/2014/12/WOM-Review.pdf):
+- «*these motivations are predominantly self- (rather than other) serving*»;
+- «*If someone always talks about new restaurants, others may infer that they are a foodie*» — делятся, чтобы
+  сказать о себе;
+- «*impression management should encourage people to share (a) entertaining, (b) useful, (c) self-concept
+  relevant, (d) status related, (e) unique, (f) common ground, and (g) accessible things*»;
+- разговор с одним человеком назван «*narrowcasting*»; по разведке (Barasch & Berger 2014, страница 403, не сверено)
+  при нём делятся тем, что полезно получателю.
+
+**Приёмы для NDim Space (вывод агента на опоре выше):** ролик называет тип знакомого из жизни зрителя («человек,
+с которым Вы обсуждаете фильмы») — зритель пересылает ОДНОМУ человеку; тема общей почвы — совпадение вкусов;
+вкус как высказывание о себе. ⛔ Фильтр канона на кандидатах разведки: «сколько общего у Вас с ним **в цифрах**» —
+обещание чисел, которых пара в продукте не показывает; «этот ролик как раз **про него**» — местоимение (З6).
+
 ## 5. Индустрия — платная реклама (веб-разведка 2026-09-14)
 
 - **NDim — почти наверняка «dating»-рекламодатель по обеим политикам.** Google «Dating and
