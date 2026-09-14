@@ -27,7 +27,14 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 /** Имя бренда и другие слова, которые модель пишет не так, как пишет продукт. */
-export const GLOSSARY = [[/\bn\s?dim\s+space\b/gi, 'NDim Space']];
+export const GLOSSARY = [[/\b(?:n\s?dim|endim)\s+space\b/gi, 'NDim Space']];
+
+/**
+ * Написания первой половины имени, которые модель УЖЕ давала (не догадки — наблюдения):
+ * `Ndim` (русская речь, 2026-09-14) · `Endim` (английская речь, 2026-09-14). Новое написание
+ * добавляется сюда после живого ролика, в котором оно встретилось.
+ */
+const BRAND_HEAD = /^(?:n\s?dim|endim)$/i;
 
 /** Миллисекунды → время ASS `H:MM:SS.cc`. */
 export function assTime(ms) {
@@ -76,7 +83,7 @@ export function readWords(json) {
   const merged = [];
   for (const w of words) {
     const prev = merged[merged.length - 1];
-    if (prev && /^n\s?dim$/i.test(prev.text) && /^space\b/i.test(w.text)) {
+    if (prev && BRAND_HEAD.test(prev.text) && /^space\b/i.test(w.text)) {
       merged[merged.length - 1] = { from: prev.from, to: w.to, text: `${prev.text} ${w.text}` };
     } else {
       merged.push(w);

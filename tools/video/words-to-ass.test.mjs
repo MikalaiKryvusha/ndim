@@ -19,6 +19,13 @@ test('🔴 имя бренда не разрезается между субти
   assert.ok(!texts.some((t) => /\bNdim\b/.test(t)), 'написание модели не доезжает до кадра');
 });
 
+test('английская речь: «Endim Space» тоже становится «NDim Space»', () => {
+  // Дословно из распознавания английской пробы 2026-09-14: «I built Endim Space, a free space…».
+  const json = { transcription: [seg(0, 400, ' I'), seg(400, 800, ' built'), seg(800, 1200, ' Endim'), seg(1200, 1700, ' Space,'), seg(1700, 1900, ' a')] };
+  const texts = groupWords(readWords(json), 3).map((g) => g.text);
+  assert.ok(texts.some((t) => t.includes('NDim Space,')), JSON.stringify(texts));
+});
+
 test('нулевое слово не рождает мигания: группа живёт до начала следующей', () => {
   const words = [
     { from: 1000, to: 1000, text: 'Я' },
