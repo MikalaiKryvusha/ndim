@@ -323,9 +323,11 @@ https://www.iab.com/insights/the-ai-gap-widens/) · хэштег-спам · к�
   (https://transparency.meta.com/policies/ad-standards/deceptive-content/circumventing-systems).
 - **Барьер — доступ, а не цена.** Рекламодатели из РФ отключены Meta и Google с 03.2022
   (https://about.fb.com/news/2022/02/metas-ongoing-efforts-regarding-russias-invasion-of-ukraine/);
-  в Беларуси Google 13.12.2024 прекратил регистрацию новых аккаунтов
-  (https://support.google.com/publisherpolicies/answer/15766875), официального статуса Google Ads
-  для новых рекламодателей и статуса Meta **не найдено**. Обход санкций не рассматривается.
+  в Беларуси Google 13.12.2024 остановил регистрацию и монетизацию **площадок** — сверено дословно:
+  «*Google will stop new account signups in Belarus and pause monetization for Belarus-based AdSense,
+  AdMob, and Ad Manager accounts.*» (https://support.google.com/publisherpolicies/answer/15766875) —
+  это продукты заработка сайтов, **не рекламный кабинет Google Ads**; официального статуса Google Ads
+  для рекламодателей из Беларуси и статуса Meta **не найдено**. Обход санкций не рассматривается.
 - **Малый бюджет застревает в обучении:** Meta требует ~50 целевых событий на группу за 7 дней
   (https://www.facebook.com/business/help/112167992830700/). Цен CPI для dating/social 2025–2026
   **не найдено** (последний профильный отчёт Liftoff — 2022).
