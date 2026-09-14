@@ -16,6 +16,12 @@ test('🔴 застывший кадр, разрезанный ffmpeg на ст�
   assert.equal(f[0].duration, 6.033);
 });
 
+test('🔴 один кадр движения между неподвижностями — это движение, а не шов', () => {
+  // Дословно из записи экрана продукта 2026-09-14: прокрутка разрывает неподвижность на 1–2 кадра.
+  const text = 'freeze_start: 0.466667\nfreeze_end: 5.133333\nfreeze_start: 5.166667\nfreeze_end: 7.533333';
+  assert.deepEqual(mergedFreezes(text).map((f) => f.duration), [4.667, 2.367]);
+});
+
 test('разнесённые неподвижности не склеиваются', () => {
   const text = 'freeze_start: 1\nfreeze_end: 3\nfreeze_start: 5\nfreeze_end: 7.5';
   assert.deepEqual(mergedFreezes(text).map((f) => f.duration), [2, 2.5]);
