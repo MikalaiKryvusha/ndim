@@ -143,7 +143,8 @@ D:\work\ai_sandbox\ndim\
 │   ├── kaif.mjs             # бэкенд npm-хендлов kaif:*
 │   └── video/               # ИИ-студия роликов (plans/90): edit.mjs — сырой ролик → 1080×1920 с
 │                            #   субтитрами одной командой; selfcheck.mjs — самопроверка (набор
-│                            #   qa/suites/video-pipeline.md); программы и модель — NDIM_STUDIO_DIR
+│                            #   qa/suites/video-pipeline.md); caption.mjs — ссылка с меткой и проверка подписи;
+│                            #   программы и модель — NDIM_STUDIO_DIR; навык — .claude/skills/video-studio
 │
 │  ── ЛОКАЛЬНОЕ, ВНЕ GIT ──
 ├── ../ndim-studio/                # ИИ-студия роликов: bin\ (auto-editor, whisper CUDA), models\, inbox\, out\
