@@ -401,6 +401,9 @@ using» (ChatyApp) · непроверенная статистика одино
     Shorts descriptions, and the vertical live feed will no longer be clickable.*»
   - Сигналы Instagram (Social Media Today, Моссери): «*The top three signals that matter most for ranking
     are watch time, likes and sends*» · «*sends are slightly more important for unconnected content*».
+  - Instagram в России (Википедия, «Internet censorship in Russia»): «*Instagram was concurrently blocked by
+    Roskomnadzor*» — 11 марта 2022 · Беларусь (bmg.by): «*Instagram в Беларуси работает*», «*YouTube в
+    Беларуси доступен*» — сверено; цифр аудитории там нет.
   - «Связанное видео» (блог YouTube): «*allows you to attach a clickable link directly to your Short that
     routes traffic to any long-form video, livestream, or secondary Short on your channel*»; для сценария —
     «*build in verbal and visual cues during the final 5 seconds*» (устный призыв + жест вниз к ссылке).
