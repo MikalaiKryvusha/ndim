@@ -204,8 +204,11 @@
 
 ### 5.4. Счётчики без слежки
 
-Сервис ведёт четыре суточных счётчика воронки онбординга — и больше ничего: ни идентификаторов,
-ни почты, ни устройства. Сторонняя аналитика и трекеры не применяются.
+Сервис ведёт шесть суточных счётчиков воронки — только числа за день: ни идентификаторов, ни почты,
+ни устройства. Для понимания того, как люди пользуются сервисом, применяется продуктовая аналитика
+PostHog (серверы в ЕС, Франкфурт) — без личных профилей; об этом сказано в документах сервиса,
+пункт 2.6. Главная страница считает приход одним событием и запоминает только домен сайта, с
+которого человек пришёл.
 
 ## 6. Сервер синхронизации
 
@@ -462,8 +465,11 @@ get only the outcome — the similarity value, never what it is made of.
 
 ### 5.4. Counters without tracking
 
-The service keeps four daily onboarding-funnel counters — and nothing else: no identifiers, no
-email, no device. Third-party analytics and trackers are not used.
+The service keeps six daily funnel counters — numbers per day only: no identifiers, no email, no
+device. To understand how people use the service, the PostHog product analytics service is used
+(servers in the EU, Frankfurt) — without personal profiles; this is stated in the service documents,
+section 2.6. The home page counts a visit as a single event and records only the domain of the site
+the person came from.
 
 ## 6. The sync server
 
