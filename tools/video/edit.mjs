@@ -27,6 +27,7 @@
  *
  * Запуск: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--script <текст речи.txt>]
  *   [--segment "файл|слово|слово" …] [--logo "png|слово|слово"] [--music <mp3 с лицензией рядом>] [--style A|B|C|D]
+ *   [--speed 1.1] [--outro <кадр.png>]
  *   [--broll <запись экрана> --from-word <слово> --to-word <слово>]
  */
 
@@ -74,6 +75,31 @@ export const MUSIC_BED_LUFS = -20;
  */
 export const LOGO = { width: 0, x: '(W-w)/2', y: '1220', fadeSec: 0.3 };
 
+/**
+ * Ускорение речи: видео и голос вместе, ПОСЛЕ вырезания пауз и ДО музыки, субтитров и вставок.
+ *
+ * 🔴 Порядок важен и он же — заказ владельца 2026-09-15: «*Ускорить видео со мной говорящим в 1.10 раза… Это не
+ * должно ускорить музыку и анимации - их накладываешься поверх ускоренного и нарезанного сырца*». Поэтому шаг
+ * стоит между `02_cut` и очисткой звука: музыка, наезды на записи экрана и кадр концовки кладутся на уже
+ * ускоренный сырец и своей скорости не меняют.
+ * `atempo` меняет темп, не трогая высоту голоса; отметки слов берутся распознаванием УЖЕ ускоренной дорожки,
+ * поэтому субтитры и окна вставок пересчитывать руками не нужно.
+ */
+export const SPEECH_SPEED = 1.1;
+
+/**
+ * Концовка: кадр со знаком и названием, затем уход в чёрное.
+ *
+ * Слово владельца 2026-09-15: «*В конце ролика на 1...2 секунды на черном фоне нужно показать крупно квадратный
+ * логотип черный с синим ареолом… и под ним подпись Пространство NDim - и затем фейд в черное и конец ролика*».
+ * Кадр рисует `lockup.mjs` (вариант В4 «Ореол» из `design/sign-dark-mockups.html`).
+ * Видно кадр 1,5 с, затем 0,5 с ухода — вместе 2 с, верх названной владельцем вилки.
+ * 🔴 Уход короче полусекунды держится НАМЕРЕННО: проверка `black` самопроверки краснеет на чёрном отрезке
+ * от 0,5 с, и удлинять фейд без правки проверки нельзя — иначе страж перестанет ловить настоящую чёрную дыру.
+ */
+export const OUTRO_SEC = 2.0;
+export const OUTRO_FADE = 0.45;
+
 /** Запуск без оболочки; провал шага останавливает конвейер с именем шага, а не молча. */
 function run(step, bin, args) {
   const t0 = Date.now();
@@ -108,6 +134,27 @@ export function wordRange(words, fromWord, toWord) {
   const j = words.findIndex((w, k) => k >= i && normWord(w.text) === normWord(toWord));
   if (j < 0) throw new Error(`слово конца вставки «${toWord}» не найдено после «${fromWord}»`);
   return { start: words[i].from / 1000, end: words[j].to / 1000 };
+}
+
+/**
+ * Вставки не наезжают друг на друга и идут в том же порядке, в каком названы.
+ *
+ * 🔴 Куплено ошибкой 2026-09-15. Якорь `--segment "…|по|десяти"` ищется с НАЧАЛА текста, а «по» встречалось
+ * раньше — в хвосте длинной фразы («ближе всего ПО вашим общим интересам»). Вторая вставка получила окно
+ * 18,05…26,50 с и накрыла первую (21,17…23,90), то есть легла поверх неё и поверх речи. Все стражи были
+ * зелёные: самопроверка судит готовый файл и наложения вставок не видит, а `wordRange` своё слово честно нашёл.
+ * Ловится только этой проверкой — и только потому, что она смотрит на вставки ВМЕСТЕ, а не поодиночке.
+ */
+export function assertSegmentsInOrder(placed) {
+  const name = (s) => basename(s.file);
+  placed.forEach((s, k) => {
+    const prev = placed[k - 1];
+    if (prev && s.start < prev.end) {
+      throw new Error(`вставка «${name(s)}» (${s.start.toFixed(2)}–${s.end.toFixed(2)} с) наезжает на «${name(prev)}» `
+        + `(${prev.start.toFixed(2)}–${prev.end.toFixed(2)} с): слово «${s.fromWord}» нашлось раньше, чем ожидалось — возьмите якорь, который встречается в тексте один раз`);
+    }
+  });
+  return placed;
 }
 
 /**
@@ -164,6 +211,26 @@ export function musicFilter({ duration, gainDb }) {
   ].join(';');
 }
 
+/**
+ * Фильтр ускорения: картинка и голос одним темпом. Отдельной функцией — чтобы юнит читал её без ffmpeg.
+ * `atempo` до 2× работает одним звеном; выше пришлось бы цеплять два, поэтому скорость ограничена.
+ */
+export function speedFilter(speed) {
+  if (!(speed > 0.5 && speed <= 2)) throw new Error(`скорость ${speed}: допустимо от 0,5 до 2 (одно звено atempo)`);
+  return `[0:v]setpts=PTS/${speed}[v];[0:a]atempo=${speed}[a]`;
+}
+
+/**
+ * Фильтр концовки: кадр PNG на `sec` секунд с уходом в чёрное за `fade`, приклеенный к ролику; звук концовки —
+ * тишина, музыку на неё положит следующий шаг. Входы: 0 — ролик с голосом, 1 — PNG, 2 — тишина.
+ */
+export function outroFilter({ sec = OUTRO_SEC, fade = OUTRO_FADE } = {}) {
+  return [
+    `[1:v]scale=1080:1920,fps=30,format=yuv420p,fade=t=out:st=${(sec - fade).toFixed(3)}:d=${fade.toFixed(3)}[o]`,
+    '[0:v][0:a][o][2:a]concat=n=2:v=1:a=1[v][a]',
+  ].join(';');
+}
+
 /** Музыка без файла лицензии рядом (`<имя>.license.txt`) в ролик не попадает (эстафета 2026-09-14). */
 export function musicLicense(file) {
   const lic = `${file.slice(0, file.length - extname(file).length)}.license.txt`;
@@ -188,7 +255,7 @@ export function parseLogo(spec) {
 const probeDuration = (file) =>
   Number(run('длительность', 'ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', file]).out.trim());
 
-export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, script, segments, logo, music, style = 'A' } = {}) {
+export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, script, segments, logo, music, outro, speed = 1, style = 'A' } = {}) {
   for (const [k, p] of Object.entries(BIN)) if (!existsSync(p)) throw new Error(`нет ${k}: ${p} (NDIM_STUDIO_DIR)`);
   const license = music ? musicLicense(music) : null;
   const id = name || basename(input, extname(input));
@@ -206,23 +273,44 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
   const cut = join(work, '02_cut.mp4');
   log('вырезание пауз', run('вырезание пауз', BIN.autoEditor, [norm, '--edit', 'audio:threshold=0.04', '--margin', '0.2s', '--no-open', '--progress', 'none', '-o', cut]));
 
-  const m = measureLoudnorm(cut);
+  // Ускорение речи — ДО звука и музыки: музыка и наезды кладутся на уже ускоренный сырец (заказ 2026-09-15).
+  let speech = cut;
+  if (speed !== 1) {
+    speech = join(work, '02b_fast.mp4');
+    log('ускорение речи', run('ускорение речи', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', cut,
+      '-filter_complex', speedFilter(speed), '-map', '[v]', '-map', '[a]',
+      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-c:a', 'aac', '-ar', '48000', '-b:a', '192k', speech]), { speed });
+  }
+
+  const m = measureLoudnorm(speech);
   const audio = join(work, '03_audio.mp4');
-  log('звук', run('звук', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', cut, '-af', `${VOICE_CLEAN},${loudnormApply(m)}`,
+  log('звук', run('звук', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', speech, '-af', `${VOICE_CLEAN},${loudnormApply(m)}`,
     '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', audio]), { inputLufs: Number(m.input_i), clean: VOICE_CLEAN });
 
+  // Концовка приклеивается ДО музыки, чтобы музыка играла и под ней и там же уходила. Дорожка ГОЛОСА (`audio`)
+  // остаётся без концовки: по ней судятся слова, паузы и высокие частоты — тишина концовки не должна их путать.
+  let base = audio;
+  if (outro) {
+    if (!existsSync(outro)) throw new Error(`нет кадра концовки: ${outro}`);
+    base = join(work, '03a_outro.mp4');
+    log('концовка со знаком', run('концовка со знаком', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', audio,
+      '-loop', '1', '-t', String(OUTRO_SEC), '-i', outro, '-f', 'lavfi', '-t', String(OUTRO_SEC), '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000',
+      '-filter_complex', outroFilter(), '-map', '[v]', '-map', '[a]',
+      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-c:a', 'aac', '-ar', '48000', '-b:a', '192k', base]), { outro, sec: OUTRO_SEC, fade: OUTRO_FADE });
+  }
+
   // Музыка — отдельной дорожкой смеси; слова и паузы по-прежнему судятся по ГОЛОСУ (`audio`).
-  let sound = audio;
+  let sound = base;
   if (music) {
-    const duration = probeDuration(audio);
+    const duration = probeDuration(base);
     const musicLufs = parseIntegratedLufs(run('музыка: замер', 'ffmpeg', ['-hide_banner', '-nostats', '-i', music, '-af', 'ebur128', '-f', 'null', '-']).out);
     const gainDb = MUSIC_BED_LUFS - musicLufs;
     const mix = join(work, '03b_mix.wav');
-    log('музыка под голос', run('музыка под голос', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', audio, '-stream_loop', '-1', '-i', music,
+    log('музыка под голос', run('музыка под голос', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', base, '-stream_loop', '-1', '-i', music,
       '-filter_complex', musicFilter({ duration, gainDb }), '-map', '[mix]', '-c:a', 'pcm_s16le', mix]), { music, musicLufs, gainDb: Number(gainDb.toFixed(2)) });
     const mm = measureLoudnorm(mix, '');
     sound = join(work, '03c_audio_music.mp4');
-    log('громкость смеси', run('громкость смеси', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', audio, '-i', mix, '-map', '0:v', '-map', '1:a',
+    log('громкость смеси', run('громкость смеси', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', base, '-i', mix, '-map', '0:v', '-map', '1:a',
       '-af', loudnormApply(mm), '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', sound]));
     copyFileSync(license, join(out, 'music.license.txt'));
   }
@@ -248,10 +336,10 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
   const specs = [...(segments ?? []), ...(broll ? [{ file: broll, fromWord, toWord }] : [])];
   // Слова вставок ищутся в тексте СЦЕНАРИЯ с таймингом (subWords): распознавание пишет «10» вместо
   // «десяти», и якорь по распознаванию не находился (репетиция 2026-09-14).
-  const placed = specs.map((s) => {
+  const placed = assertSegmentsInOrder(specs.map((s) => {
     if (!existsSync(s.file)) throw new Error(`нет записи экрана: ${s.file}`);
     return { ...s, ...wordRange(subWords, s.fromWord, s.toWord) };
-  });
+  }));
   const ass = join(work, '05_subs.ass');
   // Поверх записей экрана субтитры ниже — не закрывают карточки (`SUB_MARGIN_SCREEN`).
   writeFileSync(ass, toAss(groups, { style, screens: placed.map((p) => ({ start: p.start * 1000, end: p.end * 1000 })) }), 'utf8');
@@ -268,7 +356,7 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-movflags', '+faststart', video]),
   { words: words.length, groups: groups.length, segments: placed, logo: logoPlaced });
 
-  const report = checkVideo(video, { ass, lang, workBase: join(work, '06_recheck'), voice: audio, before: cut });
+  const report = checkVideo(video, { ass, lang, workBase: join(work, '06_recheck'), voice: audio, before: speech });  // `speech` — уже ускоренный сырец: полосы частот сравниваются с ним, а не с исходным темпом
   writeFileSync(join(out, 'selfcheck.json'), JSON.stringify(report, null, 2), 'utf8');
   journal.push({ step: 'самопроверка', by: 'агент', green: report.green });
   journal.push({ step: 'подпись, хэштеги, ссылка с меткой', by: 'агент', status: 'следующий шаг навыка — не этот скрипт' });
@@ -280,7 +368,7 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const [input, ...rest] = process.argv.slice(2);
   if (!input) {
-    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …] [--logo "png|слово|слово"] [--music <mp3>] [--style A|B|C|D] [--broll <запись экрана> --from-word <слово> --to-word <слово>]');
+    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …] [--logo "png|слово|слово"] [--music <mp3>] [--speed 1.1] [--outro <кадр.png>] [--style A|B|C|D] [--broll <запись экрана> --from-word <слово> --to-word <слово>]');
     process.exit(2);
   }
   const opt = (k) => { const i = rest.indexOf(`--${k}`); return i >= 0 ? rest[i + 1] : undefined; };
@@ -288,6 +376,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     const { out, green, journal } = editVideo(input, {
       lang: opt('lang'), name: opt('name'), broll: opt('broll'), fromWord: opt('from-word'), toWord: opt('to-word'), script: opt('script'),
       style: opt('style'), music: opt('music'), logo: opt('logo') ? parseLogo(opt('logo')) : undefined,
+      outro: opt('outro'), speed: opt('speed') ? Number(opt('speed')) : 1,
       segments: rest.flatMap((v, i) => (rest[i - 1] === '--segment' ? [parseSegment(v)] : [])),
     });
     for (const j of journal) console.log(`${j.by === 'владелец' ? '👤' : '🤖'} ${j.step}${j.ms ? ` · ${(j.ms / 1000).toFixed(1)} с` : ''}`);

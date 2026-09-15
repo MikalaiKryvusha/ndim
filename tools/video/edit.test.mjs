@@ -8,7 +8,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { brollFilter, musicFilter, musicLicense, parseLogo, parseSegment, VOICE_CLEAN, wordRange } from './edit.mjs';
+import { brollFilter, musicFilter, musicLicense, parseLogo, parseSegment, VOICE_CLEAN, wordRange, speedFilter, outroFilter, assertSegmentsInOrder, OUTRO_SEC, OUTRO_FADE } from './edit.mjs';
 import { speechHfLoss } from './selfcheck.mjs';
 
 const words = ['Вы', 'открываете', 'карточку', 'от', 'нуля', 'до', 'десяти.', 'Пространство NDim', 'считает', 'Связи —', 'людей', 'вкусами.']
@@ -89,4 +89,29 @@ test('🔴 очистка голоса не принимает речь за ш�
   const before = { low: -33.5, high: -51.9 };
   assert.ok(Math.abs(speechHfLoss(before, { low: -34.2, high: -62.0 }) - 9.4) < 1e-9);
   assert.ok(Math.abs(speechHfLoss(before, { low: -33.5, high: -52.0 }) - 0.1) < 1e-9);
+});
+
+test('🔴 ускорение речи: картинка и голос одним темпом, музыка и наезды сюда не попадают (слово владельца 2026-09-15)', () => {
+  assert.equal(speedFilter(1.1), '[0:v]setpts=PTS/1.1[v];[0:a]atempo=1.1[a]');
+  // Одно звено atempo честно работает до 2×; выше — молча испорченный звук, поэтому отказ.
+  assert.throws(() => speedFilter(2.5), /от 0,5 до 2/);
+  assert.throws(() => speedFilter(0), /от 0,5 до 2/);
+});
+
+test('🔴 концовка: кадр знака и уход в чёрное КОРОЧЕ полусекунды — иначе страж чёрного кадра ослепнет', () => {
+  const f = outroFilter({ sec: 2, fade: 0.45 });
+  assert.match(f, /\[1:v\]scale=1080:1920,fps=30,format=yuv420p,fade=t=out:st=1\.550:d=0\.450\[o\]/);
+  assert.match(f, /\[0:v\]\[0:a\]\[o\]\[2:a\]concat=n=2:v=1:a=1\[v\]\[a\]/, 'концовка приклеена ПОСЛЕ речи, со своей тишиной');
+  assert.ok(OUTRO_FADE < 0.5, 'уход в чёрное короче порога проверки black (0,5 с)');
+  assert.ok(OUTRO_SEC >= 1 && OUTRO_SEC <= 2, 'владелец назвал вилку 1…2 с');
+});
+
+test('🔴 вставки не наезжают друг на друга: якорь, встречающийся раньше, ловится ДО сборки (ошибка 2026-09-15)', () => {
+  const ok = [{ file: 'a.mp4', fromWord: 'открываете', toWord: 'по', start: 21.17, end: 23.96 },
+    { file: 'b.mp4', fromWord: 'десятибалльной', toWord: 'десяти', start: 23.96, end: 26.5 }];
+  assert.equal(assertSegmentsInOrder(ok), ok, 'встык — законно, между экранами лицо не мелькает');
+  // Ровно тот случай: «по» нашлось в «ближе всего ПО вашим общим интересам», окно уехало влево и накрыло первую.
+  const bad = [{ file: 'a.mp4', fromWord: 'открываете', toWord: 'по', start: 21.17, end: 23.90 },
+    { file: 'b.mp4', fromWord: 'по', toWord: 'десяти', start: 18.05, end: 26.5 }];
+  assert.throws(() => assertSegmentsInOrder(bad), /наезжает на «a.mp4».*«по»/s);
 });

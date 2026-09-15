@@ -10,7 +10,7 @@
  * (`src/routes/+layout.svelte`: тёмный фон #060b14, светлая «Бумага» #f6f8fb, шрифт system-ui / Segoe UI). Рисует
  * Chromium, чтобы SVG и кириллица легли так же, как в продукте; ffmpeg SVG не читает.
  *
- * Запуск: node tools/video/lockup.mjs [--out <папка>]   → row-dark.png · row-light.png · stack-dark.png · corner-dark.png
+ * Запуск: node tools/video/lockup.mjs [--out <папка>]   → row-dark.png · row-light.png · stack-dark.png · corner-dark.png · outro-card.png
  */
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -44,6 +44,46 @@ export function lockupHtml(svg, variants = LOCKUPS, name = BRAND_NAME) {
   </style>${blocks}`;
 }
 
+/**
+ * Концовка ролика: знак КРУПНО с ореолом на тёмном фоне и название под ним — кадр 1080×1920.
+ *
+ * ЗАЧЕМ. Слово владельца 2026-09-15: «*В конце ролика на 1...2 секунды на черном фоне нужно показать крупно
+ * квадратный логотип черный с синим ареолом (где-то такой рисовали, поищи) и под ним подпись Пространство NDim*».
+ * «Рисовали» — это вариант **В4 «Ореол»** из `design/sign-dark-mockups.html`: заливка плитки не трогается,
+ * силуэт рисует СВЕТ — мягкое свечение бирюзой из-под краёв.
+ *
+ * 🔴 ГЕОМЕТРИЯ ЗНАКА НЕ ПЕРЕРИСОВЫВАЕТСЯ. Она канонична (лого V3 «Диагональ», утверждено 2026-07-11,
+ * «освежать можно только цветом») и живёт в `static/favicon.svg`. Ореол ДОБАВЛЯЕТСЯ к нему числами макета
+ * В4 — размытие `stdDeviation 5`, цвет `rgba(63,217,255,0.30)`, поле viewBox расширено на 10 единиц, —
+ * а не рисуется заново. Если разметка favicon.svg изменится, `haloSvg` упадёт с именем пропавшего куска,
+ * а не молча отдаст другой знак.
+ */
+export const OUTRO = { width: 1080, height: 1920, sign: 640, font: 62, gap: 56, bg: '#060b14', color: '#eef6ff' };
+
+/** favicon.svg → тот же знак с ореолом В4. Каждая замена обязана сработать: иначе знак вышел бы другим. */
+export function haloSvg(svg) {
+  const steps = [
+    ['viewBox="0 0 96 96"', 'viewBox="-10 -10 116 116"'],
+    ['</defs>', '<filter id="halo" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter></defs>'],
+    ['<rect width="96" height="96" rx="22" fill="#060b14"/>',
+      '<rect width="96" height="96" rx="22" fill="rgba(63,217,255,0.30)" filter="url(#halo)"/><rect width="96" height="96" rx="22" fill="#060b14"/>'],
+  ];
+  return steps.reduce((s, [from, to]) => {
+    if (!s.includes(from)) throw new Error(`в знаке нет куска «${from}» — favicon.svg изменился, ореол В4 собрать нельзя`);
+    return s.replace(from, to);
+  }, svg);
+}
+
+/** Страница кадра концовки: знак с ореолом по центру, название под ним. */
+export function outroHtml(svg, o = OUTRO, name = BRAND_NAME) {
+  return `<!doctype html><meta charset="utf-8"><style>
+    html,body{margin:0;background:${o.bg}}
+    body{width:${o.width}px;height:${o.height}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:${o.gap}px}
+    svg{width:${o.sign}px;height:${o.sign}px;display:block}
+    p{margin:0;color:${o.color};font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:${o.font}px;font-weight:600;letter-spacing:.4px}
+  </style>${haloSvg(svg)}<p>${name}</p>`;
+}
+
 export async function renderLockups(outDir, { root = new URL('../../', import.meta.url) } = {}) {
   const { chromium } = await import('@playwright/test');
   mkdirSync(outDir, { recursive: true });
@@ -59,6 +99,13 @@ export async function renderLockups(outDir, { root = new URL('../../', import.me
       await page.locator(`#${id}`).screenshot({ path: file, omitBackground: true });
       files.push(file);
     }
+    // Кадр концовки — своя страница размером с кадр ролика, без прозрачности: он и есть фон.
+    const outro = join(outDir, 'outro-card.png');
+    const cardPage = await browser.newPage({ viewport: { width: OUTRO.width, height: OUTRO.height }, deviceScaleFactor: 1 });
+    await cardPage.setContent(outroHtml(svg));
+    await cardPage.evaluate(() => document.fonts.ready);
+    await cardPage.screenshot({ path: outro });
+    files.push(outro);
     return files;
   } finally {
     await browser.close();
