@@ -159,6 +159,14 @@ export function snapSentences(sentences, regions) {
   return out.map(({ ra, rb, ...rest }) => rest);
 }
 
+/**
+ * Написания имени бренда, которые whisper выдаёт на живой речи владельца, — один ключ `ndim`.
+ * 🔴 Список СНЯТ С ПРОГОНОВ, а не придуман: `Эндим` и `NDIM` (дубль 1, 2026-09-14), `Endim` и `Andim`
+ * (там же), `Ending` и `Endin` (дубль 2, 2026-09-15 — на «Endin» проверка стыков покраснела на верном
+ * куске: последнее слово фразы «…я создал Пространство NDim» считалось неуслышанным).
+ */
+const BRAND_HEARD = /^(?:ndim|endim|endin|ending|andim|эндим|ндим|андим)$/;
+
 /** Числа 0…10 словами и цифрами, имя бренда в написаниях модели — один ключ. */
 const NUMERALS = { ноль: '0', нуля: '0', нулю: '0', один: '1', одного: '1', два: '2', двух: '2', три: '3', трёх: '3', трех: '3', пять: '5', десять: '10', десяти: '10' };
 export const wordKey = (w) => {
@@ -166,7 +174,7 @@ export const wordKey = (w) => {
   // «10-ти», «10ти» — число с падежным хвостом (распознавание стыка 5 пилота 001).
   const digits = k.match(/^(\d+)\p{L}*$/u);
   if (digits) return digits[1];
-  return NUMERALS[k] ?? (/^(?:endim|ndim|эндим|ндим)$/.test(k) ? 'ndim' : k);
+  return NUMERALS[k] ?? (BRAND_HEARD.test(k) ? 'ndim' : k);
 };
 const keysOf = (text) => text.split(/\s+/).map(wordKey).filter(Boolean);
 

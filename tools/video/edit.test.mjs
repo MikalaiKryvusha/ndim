@@ -45,10 +45,12 @@ test('🔴 запись экрана короче отрезка держит п
   assert.match(f, /scale=w='trunc\(1080\*\(1\+0\.06\*min\(t\/6\.000,1\)\)\/2\)\*2':h=-2:eval=frame,crop=1080:1920,setpts=PTS-STARTPTS\+20\.000\/TB\[s0\]/);
 });
 
-test('знак NDim — справа ниже интерфейса площадки, только на своих словах, с мягким появлением, под субтитрами', () => {
+test('🔴 плашка по умолчанию — по центру НИЖЕ субтитров, чтобы не легла на бороду (слово владельца 2026-09-15)', () => {
   const f = brollFilter({ segments: [], assArg: 'x.ass', logo: { start: 6, end: 18 } });
-  assert.match(f, /\[1:v\]scale=150:-1,format=rgba,.*fade=t=in:st=0:d=0\.3:alpha=1.*setpts=PTS-STARTPTS\+6\.000\/TB\[lg\]/);
-  assert.match(f, /\[0:v\]\[lg\]overlay=W-w-60:300:enable='between\(t,6\.000,18\.000\)'/);
+  assert.match(f, /\[1:v\]format=rgba,.*fade=t=in:st=0:d=0\.3:alpha=1.*setpts=PTS-STARTPTS\+6\.000\/TB\[lg\]/);
+  // Низ плашки 1460 + 108 = 1568: ниже субтитров (низ 1402) и выше подписи площадки. Прежние 300 — знак у верха.
+  assert.match(f, /\[0:v\]\[lg\]overlay=\(W-w\)\/2:1460:enable='between\(t,6\.000,18\.000\)'/);
+  assert.ok(!/scale=150/.test(f), 'плашка идёт своим размером, без масштаба');
   assert.ok(f.endsWith("[vl]ass='x.ass'[v]"), 'субтитры поверх знака');
   assert.equal(brollFilter({ segments: [], assArg: 'x.ass' }), "[0:v]ass='x.ass'[v]", 'без вставок и знака — одни субтитры');
 });
@@ -59,7 +61,7 @@ test('плашка-логотип встаёт своим PNG на заданн�
   const f = brollFilter({ segments: [], assArg: 'x.ass', logo: { ...logo, start: 6, end: 18 } });
   assert.match(f, /\[1:v\]format=rgba,loop/, 'ширина 0 — без scale');
   assert.match(f, /overlay=\(W-w\)\/2:1000:enable=/);
-  assert.deepEqual(parseLogo('a.png|x|y'), { file: 'a.png', fromWord: 'x', toWord: 'y' }, 'без места — прежний угол по умолчанию');
+  assert.deepEqual(parseLogo('a.png|x|y'), { file: 'a.png', fromWord: 'x', toWord: 'y' }, 'без места — место по умолчанию из LOGO');
 });
 
 test('🔴 музыка: голос — ключ приглушения, подложка по длине ролика, смесь без нормировки amix', () => {

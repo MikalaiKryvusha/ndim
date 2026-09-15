@@ -46,6 +46,12 @@ test('🔴 два предложения без паузы между ними �
 test('сходство по доле общих слов: имя бренда в написаниях модели, «ё», числа словами и цифрами, «10-ти»', () => {
   assert.equal(wordKey('Эндим'), 'ndim');
   assert.equal(wordKey('Endim'), 'ndim');
+  // 🔴 Дубль 2 пилота (2026-09-15): «Endin» и «Ending» — на первом проверка стыков краснела на верном куске.
+  assert.equal(wordKey('Endin.'), 'ndim');
+  assert.equal(wordKey('Ending'), 'ndim');
+  assert.equal(wordKey('Andim'), 'ndim');
+  assert.equal(wordKey('ending,'), 'ndim');
+  assert.notEqual(wordKey('связи'), 'ndim', 'ключ бренда не глотает обычные слова');
   assert.equal(wordKey('десяти.'), '10');
   assert.equal(wordKey('10-ти'), '10');
   assert.equal(similarity('Пространство NDim — звёзды от нуля до десяти.', 'пространство Эндим звезды от 0 до 10'), 1);
