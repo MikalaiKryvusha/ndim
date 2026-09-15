@@ -30,6 +30,18 @@
  *     `oobCode` из адреса письма наружу не уходит, и предмету оценки здесь взяться неоткуда);
  *   · **личных профилей не заводим** — `$process_person_profile: false`, как `person_profiles:
  *     'never'` у SDK; `distinct_id` случайный на визит, нигде не хранится и ни с кем не клеится.
+ *   · 🆕 **источник захода — ТОЛЬКО ДОМЕН** (`$referring_domain`). Слово владельца 2026-09-15:
+ *     «*Счётчик главной будет записывать только домен сайта, откуда пришёл человек (youtube.com,
+ *     instagram.com, tiktok.com), без полного адреса… давай сделаем*». Повод: ролик пилота вышел в
+ *     Instagram, TikTok и YouTube с голым адресом `ndimspace.app` в подписи, а корень писал заход
+ *     без источника — зритель ролика был неотличим от прямого захода
+ *     (`bugs/NEW_root_landing_view_drops_utm.md`). Имя и смысл поля — как у SDK (`posthog-js`,
+ *     `update_referrer_info`): хост `document.referrer`, без источника — `$direct`. Поэтому ряды
+ *     корня и лендинга складываются в один отчёт «откуда пришли».
+ *     ⛔ Полный адрес (`$referrer`, который SDK шлёт рядом) корень НЕ шлёт: путь и query чужой
+ *     страницы могут нести чужие данные, а владелец назвал ровно домен.
+ *     ⚠️ Граница: адрес, НАБРАННЫЙ руками (подписи Instagram и TikTok не кликаются), приходит без
+ *     referrer в любом браузере и честно пишется `$direct`.
  *
  * ПОЧЕМУ ОТДЕЛЬНЫЙ МОДУЛЬ, А НЕ `analytics.ts`. Список роботов импортируется из `@posthog/core`
  * статически. `analytics.ts` — лёгкий чанк, который грузится динамически на всех экранах
@@ -88,7 +100,10 @@ export function rootLandingViewScript(): string {
     "var br=(n.userAgentData&&n.userAgentData.brands)||[];for(var j=0;j<br.length;j++){var b=String(br[j]&&br[j].brand||'').toLowerCase();for(var k=0;k<B.length;k++)if(b.indexOf(B[k])!==-1)return;}",
     `var env=(${hosts})[location.hostname];if(!env)return;`,
     "var id=(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(16).slice(2);",
-    `var d={api_key:${JSON.stringify(POSTHOG_TOKEN)},event:'landing_view',distinct_id:id,properties:{env:env,$process_person_profile:false,$lib:${JSON.stringify(ROOT_LANDING_VIEW_LIB)},$current_url:location.origin+location.pathname,$host:location.hostname,$pathname:location.pathname}};`,
+    // Источник — только хост `document.referrer`, как `$referring_domain` у SDK; без источника — `$direct`.
+    // Полный адрес не читается дальше разбора: наружу уходит одно имя сайта.
+    "var rd='$direct';try{var ref=String(document.referrer||'');if(ref)rd=new URL(ref).host||'$direct';}catch(e){rd='$direct';}",
+    `var d={api_key:${JSON.stringify(POSTHOG_TOKEN)},event:'landing_view',distinct_id:id,properties:{env:env,$process_person_profile:false,$lib:${JSON.stringify(ROOT_LANDING_VIEW_LIB)},$current_url:location.origin+location.pathname,$host:location.hostname,$pathname:location.pathname,$referring_domain:rd}};`,
     `fetch(${JSON.stringify(POSTHOG_CAPTURE_URL)},{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain'},body:JSON.stringify(d)}).catch(function(){});`,
     '}catch(e){}})();',
   ];

@@ -666,7 +666,7 @@ const HUMAN: Nav = {
 };
 
 /** Исполняет строку корня в заглушке и возвращает всё, что она попыталась отправить. */
-function runRootScript(opts: { hostname: string; search?: string; local?: Store; session?: Store; navigator?: Nav }): Sent[] {
+function runRootScript(opts: { hostname: string; search?: string; local?: Store; session?: Store; navigator?: Nav; referrer?: string }): Sent[] {
   const sent: Sent[] = [];
   const storage = (m: Store) =>
     m === 'throws'
@@ -682,8 +682,9 @@ function runRootScript(opts: { hostname: string; search?: string; local?: Store;
     sent.push({ url, init });
     return Promise.resolve({});
   };
-  const run = new Function('location', 'localStorage', 'sessionStorage', 'fetch', 'crypto', 'navigator', rootLandingViewScript());
-  run(location, storage(opts.local ?? {}), storage(opts.session ?? {}), fetch, globalThis.crypto, opts.navigator ?? HUMAN);
+  // `document` — только `referrer`: больше строка корня у документа ничего не читает.
+  const run = new Function('location', 'localStorage', 'sessionStorage', 'fetch', 'crypto', 'navigator', 'document', rootLandingViewScript());
+  run(location, storage(opts.local ?? {}), storage(opts.session ?? {}), fetch, globalThis.crypto, opts.navigator ?? HUMAN, { referrer: opts.referrer ?? '' });
   return sent;
 }
 
@@ -707,6 +708,47 @@ describe('главная считает приход одной строкой �
     assert.equal(body.properties.$lib, ROOT_LANDING_VIEW_LIB);
     assert.equal(body.properties.$current_url, 'https://ndimspace.app/');
     assert.equal(body.properties.$pathname, '/');
+  });
+
+  // ═══ Источник захода — только домен (слово владельца 2026-09-15, ролик пилота вышел без меток) ═══
+  const propsOf = (sent: Sent[]) => (JSON.parse(sent[0].init.body) as { properties: Record<string, unknown> }).properties;
+
+  test('🔴 источник: пришёл с площадки — в событии ровно домен площадки', () => {
+    for (const [referrer, domain] of [
+      ['https://www.youtube.com/', 'www.youtube.com'],
+      ['https://l.instagram.com/', 'l.instagram.com'],
+      ['https://www.tiktok.com/', 'www.tiktok.com'],
+    ]) {
+      const sent = runRootScript({ hostname: 'ndimspace.app', referrer });
+      assert.equal(sent.length, 1);
+      assert.equal(propsOf(sent).$referring_domain, domain, `с ${referrer}`);
+    }
+  });
+
+  test('🔴 источник: без referrer — `$direct`, как у SDK; поле не пропадает', () => {
+    assert.equal(propsOf(runRootScript({ hostname: 'ndimspace.app' })).$referring_domain, '$direct');
+    assert.equal(propsOf(runRootScript({ hostname: 'ndimspace.app', referrer: '' })).$referring_domain, '$direct');
+  });
+
+  test('🔴 источник: путь и query чужой страницы НЕ уходят — только имя сайта (слово владельца «без полного адреса»)', () => {
+    const referrer = 'https://l.instagram.com/?u=https%3A%2F%2Fndimspace.app%2F&e=AT0secret_token_42';
+    const sent = runRootScript({ hostname: 'ndimspace.app', referrer });
+    assert.equal(propsOf(sent).$referring_domain, 'l.instagram.com');
+    // Судится ВСЁ тело, а не одно поле: адрес не должен просочиться ни под каким ключом.
+    const body = sent[0].init.body;
+    assert.equal(body.includes('secret_token_42'), false, 'query чужой страницы ушёл в тело');
+    assert.equal(body.includes('%2F'), false, 'закодированный путь чужой страницы ушёл в тело');
+    assert.equal('$referrer' in propsOf(sent), false, 'полный адрес ($referrer SDK) корень не шлёт');
+  });
+
+  test('источник: битый referrer не роняет счёт — событие уходит с `$direct`', () => {
+    const sent = runRootScript({ hostname: 'ndimspace.app', referrer: 'не адрес вовсе' });
+    assert.equal(sent.length, 1, 'счёт прихода важнее источника: без источника — но посчитан');
+    assert.equal(propsOf(sent).$referring_domain, '$direct');
+  });
+
+  test('источник: переход внутри сайта пишется нашим доменом — как у SDK, без особых случаев', () => {
+    assert.equal(propsOf(runRootScript({ hostname: 'ndimspace.app', referrer: 'https://ndimspace.app/ru' })).$referring_domain, 'ndimspace.app');
   });
 
   test('стейдж считается со своим контуром — env = stage', () => {
@@ -747,7 +789,7 @@ describe('главная считает приход одной строкой �
   test('🔴 свойства — только `env` из союза и служебные `$`-поля PostHog; предмету оценки взяться неоткуда', () => {
     const [{ init }] = runRootScript({ hostname: 'ndimspace.app' });
     const props = (JSON.parse(init.body) as { properties: Record<string, unknown> }).properties;
-    const allowedDollar = new Set(['$process_person_profile', '$lib', '$current_url', '$host', '$pathname']);
+    const allowedDollar = new Set(['$process_person_profile', '$lib', '$current_url', '$host', '$pathname', '$referring_domain']);
     for (const [key, value] of Object.entries(props)) {
       if (key.startsWith('$')) {
         assert.ok(allowedDollar.has(key), `служебное поле «${key}» не объявлено`);

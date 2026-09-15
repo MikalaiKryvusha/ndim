@@ -105,7 +105,27 @@ test('🔴 бой: свежий человек на главной даёт ро
 	expect(body.properties.$process_person_profile).toBe(false);
 	expect(body.properties.$current_url).toBe(`http://${PROD}/`);
 	// Предмету оценки взяться неоткуда: ни одного ключа, кроме объявленных.
-	expect(Object.keys(body.properties).sort()).toEqual(['$current_url', '$host', '$lib', '$pathname', '$process_person_profile', 'env']);
+	expect(Object.keys(body.properties).sort()).toEqual(['$current_url', '$host', '$lib', '$pathname', '$process_person_profile', '$referring_domain', 'env']);
+	// Открыт напрямую, без источника — `$direct`, как у SDK (слово владельца 2026-09-15).
+	expect(body.properties.$referring_domain).toBe('$direct');
+});
+
+test('🔴 источник захода: пришёл со страницы YouTube — в событии только домен, адрес страницы не уходит', async ({ page }) => {
+	// Слово владельца 2026-09-15: «*Счётчик главной будет записывать только домен сайта, откуда пришёл человек…
+	// без полного адреса*». `referer` у `goto` — это настоящий `document.referrer` в браузере, не подмена строки.
+	const captured = await seal(page);
+	await asHuman(page);
+	const referer = 'https://www.youtube.com/shorts/AbCdEf123?feature=share&si=secret_si_token';
+	await page.goto(`http://${PROD}/`, { referer });
+	await settle(page);
+	expect(await page.evaluate(() => document.referrer), 'контроль прибора: браузер действительно видит источник').toBe(referer);
+	expect(captured).toHaveLength(1);
+	const raw = captured[0].postData() ?? '';
+	const body = JSON.parse(raw) as { properties: Record<string, unknown> };
+	expect(body.properties.$referring_domain).toBe('www.youtube.com');
+	expect(raw, 'путь чужой страницы не ушёл').not.toContain('shorts');
+	expect(raw, 'query чужой страницы не ушёл').not.toContain('secret_si_token');
+	expect(Object.keys(body.properties)).not.toContain('$referrer');
 });
 
 test('стейдж: то же событие несёт env = stage', async ({ page }) => {

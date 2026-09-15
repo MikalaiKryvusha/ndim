@@ -115,7 +115,26 @@ if (ЗАПУЩЕН_НАПРЯМУЮ) {
     console.log(`▶ П${i + 1} главная ${shape.width}×${shape.dark ? 'dark' : 'light'}: h1=${h1} · файлов кода ${scripts}`);
     check('ровно одно событие корня, принято 2xx', root.length === 1 && answers.length === 1 && answers[0] >= 200 && answers[0] < 300, describe(root) || `отправок ${root.length}, ответы ${answers.join(',')}`);
     check('тело: landing_view · env контура · $lib корня · путь /', root[0]?.event === 'landing_view' && root[0]?.properties?.env === contour.name && root[0]?.properties?.$lib === 'ndim-root-inline' && root[0]?.properties?.$pathname === '/');
+    check('прямой заход: источник `$direct`', root[0]?.properties?.$referring_domain === '$direct', `$referring_domain = ${root[0]?.properties?.$referring_domain}`);
     check('главная без файлов кода', scripts === 0, `script[src] = ${scripts}`);
+    await context.close();
+  }
+
+  // 🆕 ГЛ-21 — источник захода на ЖИВОМ контуре (слово владельца 2026-09-15: «*только домен сайта, откуда пришёл
+  // человек… без полного адреса*»). `referer` у `goto` — настоящий `document.referrer` страницы; адрес чужой
+  // страницы нарочно несёт путь и query, которые обязаны остаться в браузере.
+  {
+    const referer = 'https://www.youtube.com/shorts/ProbeAbc123?feature=share&si=probe_secret_si';
+    const { context, page, root, answers } = await freshPage(browser, shapes[0], tokens);
+    await page.goto(`${base}/`, { waitUntil: 'load', referer });
+    await page.waitForTimeout(2500);
+    const seen = await page.evaluate(() => document.referrer);
+    console.log(`▶ ГЛ-21 главная, пришли с ${referer}`);
+    check('контроль прибора: страница видит источник', seen === referer, `document.referrer = ${seen}`);
+    check('ровно одно событие корня, принято 2xx', root.length === 1 && answers[0] >= 200 && answers[0] < 300, describe(root) || `отправок ${root.length}`);
+    const raw = JSON.stringify(root[0] ?? {});
+    check('в событии только домен источника', root[0]?.properties?.$referring_domain === 'www.youtube.com', `$referring_domain = ${root[0]?.properties?.$referring_domain}`);
+    check('путь и query чужой страницы не ушли', !raw.includes('ProbeAbc123') && !raw.includes('probe_secret_si') && !('$referrer' in (root[0]?.properties ?? {})));
     await context.close();
   }
 

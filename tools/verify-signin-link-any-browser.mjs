@@ -23,6 +23,9 @@ import { mkdir } from 'node:fs/promises';
 import { basename } from 'node:path';
 import { chromium } from '@playwright/test';
 import { portsFor, slotOf } from './lib/stand-slot.mjs';
+// Метка своего прогона — статическим импортом и на КАЖДУЮ сессию, без условия контура: страж воронки судит текст,
+// а не контур, и прав (`bugs/NEW_signin_link_probe_sessions_unmarked_gate_red.md`). На стенде метка ничего не меняет.
+import { markProbeContext } from './lib/probe-mark.mjs';
 
 const CONTOUR = process.argv.includes('--contour') ? process.argv[process.argv.indexOf('--contour') + 1] : 'stand';
 // Живой контур (стейдж или бой): ссылку выпускает сервисный ключ, она идёт через настоящий обработчик.
@@ -84,8 +87,8 @@ async function browserOf(browser, { w = 390, h = 844, theme, lang } = {}) {
   const context = await browser.newContext({ viewport: { width: w, height: h }, locale: 'ru-RU' });
   // Тот же пропуск App Check, что у смоука двери выката (`tools/lib/app-check-debug.mjs`).
   if (STAGE) await (await import('./lib/app-check-debug.mjs')).grantAppCheckDebug(context, { required: PROD });
-  // В бою прогон метится как свой: воронка при метке молчит (`tools/lib/probe-mark.mjs`).
-  if (PROD) await (await import('./lib/probe-mark.mjs')).markProbeContext(context);
+  // Прогон метится как свой на любом контуре: воронка при метке молчит (`tools/lib/probe-mark.mjs`).
+  await markProbeContext(context);
   await context.addInitScript(([t, l]) => {
     if (t) localStorage.setItem('ndim-theme', t);
     if (l) localStorage.setItem('ndim-lang', l);
@@ -116,6 +119,7 @@ async function letterFromDoor(browser, email, page = null) {
   let own = null;
   if (!page) {
     own = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'ru-RU' });
+    await markProbeContext(own);
     page = await own.newPage();
   }
   await page.goto(`${BASE}/profile?as=none`);
