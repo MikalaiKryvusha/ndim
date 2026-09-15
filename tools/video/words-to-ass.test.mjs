@@ -86,8 +86,8 @@ test('строка из одного слова не мелькает там, г
 
 test('субтитры выше на лице и ниже поверх записи экрана (№088 В1; карточка «Связей» пилота 001)', () => {
   const ass = toAss([{ start: 1000, end: 2000, text: 'на лице' }, { start: 30000, end: 31000, text: 'на экране' }], { screens: [{ start: 29930, end: 35600 }] });
-  assert.ok(ass.includes('Style: Default,Arial,86,') && ass.includes(',518,204'), 'на лице — 27 % высоты');
-  assert.ok(ass.includes('Style: Screen,Arial,86,') && ass.includes(',422,204'), 'на экране — 22 % высоты');
+  assert.ok(ass.includes('Style: Default,Arial,86,') && ass.includes(',403,204'), 'на лице — 21 % высоты: субтитры опущены, чтобы над ними встала плашка (слово владельца 2026-09-15)');
+  assert.ok(ass.includes('Style: Screen,Arial,86,') && ass.includes(',365,204'), 'на экране — 19 % высоты, ниже, чем на лице: карточки экрана «Связи» не перекрываются');
   assert.ok(ass.includes(',Default,,0,0,0,,на лице'));
   assert.ok(ass.includes(',Screen,,0,0,0,,на экране'));
 });
