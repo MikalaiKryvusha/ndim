@@ -60,7 +60,34 @@ const debtKey = (h) =>
 // `candidates` и `reports` добавлены 2026-08-28: разнос №048 уехал в канон мастерской
 // (candidates/README.md), и страж, не видя каталога, объявил разнесённое неразнесённым —
 // ложный красный, который дважды доложили роли на запуске смены 7.
-const SCAN_DIRS = ['bugs', 'plans', 'ideas', 'researches', 'homeworks', 'design', 'candidates', 'reports'];
+// `marketing` добавлен 2026-09-16 — ТРЕТИЙ случай того же класса: разнос №090 уехал в сценарий
+// ролика, и страж снова объявил разнесённое неразнесённым. Разбор — `bugs/NEW_questions_guard_blind_to_marketing_and_qa.md`.
+// 🔴 ЭТОТ СПИСОК — только для ПОИСКА НАРУШЕНИЙ (половина 1). Он ведётся руками сознательно:
+// сюда входят каталоги, где вопрос владельцу является нарушением. Корпус РАЗНОСА (половина 3)
+// списком больше не ведётся — см. `propagationCorpusDirs()`: «ссылка есть ссылка», и список,
+// пополняемый руками, молчит о своём неполном составе.
+const SCAN_DIRS = ['bugs', 'plans', 'ideas', 'researches', 'homeworks', 'design', 'candidates', 'reports', 'marketing'];
+
+/**
+ * Каталоги корпуса РАЗНОСА — выводятся из дерева, а не перечисляются руками.
+ *
+ * 🔴 Почему по форме, а не списком (2026-09-16, третий случай класса). Список `SCAN_DIRS` трижды
+ * оказывался неполным — `candidates`/`reports` в августе, `marketing` и `qa` сегодня, — и каждый
+ * раз это был ЛОЖНЫЙ КРАСНЫЙ: разнесённое объявлялось неразнесённым. Замер того дня: вне списка
+ * жили 41 документ (`qa` 33, `marketing` 8), и ссылка в любом из них не считалась вовсе.
+ * Для разноса верно одно правило — «ссылка есть ссылка», — поэтому корпус берётся из дерева:
+ * все каталоги верхнего уровня, содержащие `.md`, кроме служебных и самих `interviews`.
+ */
+const PROPAGATION_SKIP = new Set(['node_modules', 'build', 'test-results', 'interviews', '.git', '.svelte-kit', '.claude', '.kaif']);
+
+function propagationCorpusDirs() {
+	return readdirSync(ROOT)
+		.filter((name) => !name.startsWith('.') && !PROPAGATION_SKIP.has(name))
+		.filter((name) => {
+			try { return statSync(join(ROOT, name)).isDirectory(); } catch { return false; }
+		})
+		.filter((name) => walkMd(join(ROOT, name)).length > 0);
+}
 
 /**
  * Документы, объявленные ОЧЕРЕДЬЮ РЕШЕНИЙ или ЛЕТОПИСЬЮ, — правило их не касается по замыслу.
@@ -190,9 +217,10 @@ const NEAR = 90;
 
 function propagation(interviews) {
 	// Корпус: всё, что НЕ интервью, включая STATUS.md и закрытые документы — ссылка есть ссылка.
+	// Каталоги выводятся из дерева (`propagationCorpusDirs`), а не перечисляются руками.
 	const corpus = [];
-	for (const d of [...SCAN_DIRS, '.']) {
-		for (const f of d === '.' ? [] : walkMd(join(ROOT, d))) corpus.push(f);
+	for (const d of propagationCorpusDirs()) {
+		for (const f of walkMd(join(ROOT, d))) corpus.push(f);
 	}
 	for (const name of readdirSync(ROOT)) {
 		if (name.endsWith('.md') && statSync(join(ROOT, name)).isFile()) corpus.push(join(ROOT, name));
