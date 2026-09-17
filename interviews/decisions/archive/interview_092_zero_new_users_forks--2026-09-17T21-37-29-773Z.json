@@ -1,0 +1,39 @@
+{
+	"kind": "interview",
+	"document": "interviews/interview_092_zero_new_users_forks.md",
+	"by": "Николай Кривуша",
+	"at": "2026-09-17T21:37:29.773Z",
+	"comment": "",
+	"answers": {
+		"В1": {
+			"choice": "",
+			"text": "C",
+			"comment": ""
+		},
+		"В2": {
+			"choice": "",
+			"text": "B + C",
+			"comment": ""
+		},
+		"В3": {
+			"choice": "",
+			"text": "A",
+			"comment": ""
+		},
+		"В4": {
+			"choice": "",
+			"text": "A",
+			"comment": ""
+		},
+		"В5": {
+			"choice": "",
+			"text": "A",
+			"comment": ""
+		},
+		"В6": {
+			"choice": "",
+			"text": "B. Числа не смотрел, для этого у нас есть аналитика",
+			"comment": ""
+		}
+	}
+}
