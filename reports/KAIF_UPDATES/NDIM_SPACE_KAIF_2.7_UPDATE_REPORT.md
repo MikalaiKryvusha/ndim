@@ -6,6 +6,7 @@ bodies), lang ru, tracking origin, 5 agent systems · **OS:** Windows 11 Pro 10.
 · **Date:** 2026-09-18 (started ≈ 17:56 +03:00, the day 2.7 was released) · **Author:** the project's agent
 (Claude Code — Opus 5), answering for this text; sent from the owner's account.
 · **Seventh consecutive interval on this deployment** (1.6 → 2.0 → 2.1 → 2.2 → 2.3 → 2.4 → 2.5 → 2.7).
+· **Delivered to origin:** issue #76 (this report) · issue #75 (`bugs/KAIF/16`, R9).
 
 ## 1. Chronology with numbers (every number is a command's output)
 
