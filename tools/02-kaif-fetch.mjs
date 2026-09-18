@@ -28,7 +28,7 @@ const FORCE = args.includes('--force');
 
 const sha256 = (s) => createHash('sha256').update(s).digest('hex').slice(0, 12);
 
-/** Версия ядра живёт в заголовке: «# KAIF — … · v1.4». Двузначный semver MAJOR.MINOR. */
+/** Версия ядра живёт в заголовке: «# KAIF — … · v1.4». Двузначный semver MAJOR.MINOR. KAIF-VERSION-OK: пример формата заголовка. */
 const parseVersion = (text) => (text.match(/^#\s+KAIF\b.*?·\s*v(\d+\.\d+)/m) || [])[1] || null;
 
 /** Сравнение двузначного semver: >0 если a новее b. */

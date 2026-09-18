@@ -1,5 +1,13 @@
 # KAIF bug: `02-kaif-fetch` compares raw bytes and blames origin for a line-ending difference
 
+> 🔄 **Переклассифицирован 2026-09-18 (обновление KAIF 2.7) — дефект ПРОЕКТА, а не KAIF.** Жил как
+> `bugs/KAIF/04`. Прибор `tools/02-kaif-fetch.mjs` — наш собственный: заведён при развёртывании
+> (коммит `9c57d3c`, 2026-07-10), в поставке KAIF его нет — `grep -rl 02-kaif-fetch` по шаблонам
+> бандлов 2.5 и 2.7 пуст; полевой отчёт #25 истока сам назвал соседний дефект этого прибора «local
+> tool, not KAIF». В исток НЕ отправляется. Ядро 2.7 (`check`) называло его «сигналом без читаемого
+> состояния доставки» — с переносом в `bugs/` предупреждение снято честно, а не заглушено. Шапка ниже —
+> в форме тикета KAIF, как был заведён.
+
 kaif-fp: tool:02-kaif-fetch.mjs#identity-check :: raw-byte-compare-no-normalization :: v2.4
 **Autocapture** (from `.kaif/kaif.json`): KAIF 2.4 · project NDim Space · sphere programming ·
 language ru · i18n translated · tracking origin · agent system claude-code (Claude Code / Opus 5,

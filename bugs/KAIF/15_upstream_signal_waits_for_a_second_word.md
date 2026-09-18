@@ -1,5 +1,7 @@
 # bugs/KAIF/15 — Сигнал в исток ждёт ВТОРОГО слова владельца: issue #37 воспроизведён в той самой сессии, что заводила тикеты о дисциплине агента
 
+**Delivered upstream:** https://github.com/MikalaiKryvusha/KAIF/issues/65
+
 > **Сигнал в исток:** https://github.com/MikalaiKryvusha/KAIF/issues/65 (шаблон B — усиление
 > ворот авторизации, KAIF 2.5), **отправлен ОДНИМ ДВИЖЕНИЕМ с заведением**, как и предписывает
 > `AGENT_GUIDE.md:1817` ·

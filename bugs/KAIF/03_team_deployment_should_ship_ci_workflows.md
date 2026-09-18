@@ -1,6 +1,7 @@
 # KAIF improvement request: /team-deployment should ship CI (GitHub Workflows) with the team
 
 kaif-fp: skill:team-deployment#deliverables :: ci-not-shipped :: v2.4
+**Delivered upstream:** https://github.com/MikalaiKryvusha/KAIF/issues/29
 **Autocapture** (from `.kaif/kaif.json`): KAIF 2.4 · project NDim Space · sphere programming ·
 language ru · i18n translated · tracking origin · agent system claude-code (Claude Code /
 Opus 5) · OS Windows 11 · Node 24.15.0

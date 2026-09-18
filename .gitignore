@@ -99,3 +99,5 @@ firebase.slot*.json
 static/door/
 .kaif/guarded-loop.json
 .kaif/update-rehearsal.json
+.kaif/voice-marker.json
+.kaif/contour-window/

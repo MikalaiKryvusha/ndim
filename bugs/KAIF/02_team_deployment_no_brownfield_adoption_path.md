@@ -1,6 +1,7 @@
 # KAIF improvement request: /team-deployment has no adoption path for an ALREADY-LIVE team
 
 kaif-fp: skill:team-deployment#operations :: brownfield-adoption-missing :: v2.4
+**Delivered upstream:** https://github.com/MikalaiKryvusha/KAIF/issues/26 — вошёл в полевой отчёт первого применения /team-deployment
 **Autocapture** (from `.kaif/kaif.json` + update receipt): KAIF 2.4 · project NDim Space ·
 sphere programming · language ru · i18n translated · tracking origin · agent system claude-code
 (Claude Code / Fable 5) · OS Windows 11 · Node 24.15.0

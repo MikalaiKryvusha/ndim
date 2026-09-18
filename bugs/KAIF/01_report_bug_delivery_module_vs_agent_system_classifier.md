@@ -1,6 +1,7 @@
 # KAIF improvement request: the 2.3 report-bug delivery module cannot pass an agent-system safety classifier
 
 kaif-fp: skill:report-bug#delivery-by-tracking-mode :: classifier-blocked-template :: v2.3
+**Delivered upstream:** https://github.com/MikalaiKryvusha/KAIF/issues/24 — вошёл в полевой отчёт обновления 2.3 (R1), наблюдение +1 — в #25
 **Autocapture** (from `.kaif/kaif.json` + update receipt): KAIF 2.3 · project NDim Space ·
 sphere programming · language ru · i18n translated · tracking origin · agent system claude-code
 (Claude Code / Fable 5, auto permission mode) · OS Windows 11 · Node 24.15.0

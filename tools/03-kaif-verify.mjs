@@ -100,9 +100,9 @@ const EXPECTED_SKILLS = [
   'revision', 'fix-vision', 'what-next', 'help-kaif', 'release', 'derive-styleguide',
   'kaif-version', 'kaif-update', 'kaif-fork', 'kaif-switch-origin', 'kaif-remove',
   'fable-method', 'fable-loop', 'fable-judge', 'fable-domain',
-  // Приехали с KAIF 2.1: лестница планирования, защищённый цикл, читающая ревизия, голос владельца.
+  // Приехали с KAIF 2.1: лестница планирования, защищённый цикл, читающая ревизия, голос владельца. KAIF-VERSION-OK: версия прихода, история.
   'plan-task', 'plan-epic', 'guarded-loop', 'code-revision', 'owner-voice', 'owner-reviews',
-  // Приехал с KAIF 2.2: пинок «продолжай» одной командой.
+  // Приехал с KAIF 2.2: пинок «продолжай» одной командой. KAIF-VERSION-OK: версия прихода, история.
   'kaif-go',
   // Приехали с KAIF 2.4: /end-chat расщеплён на пару, развёртывание команды агентов. KAIF-VERSION-OK: версия прибытия, история.
   'end-chat-soft', 'end-chat-force', 'team-deployment',
