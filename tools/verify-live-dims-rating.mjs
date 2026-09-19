@@ -26,7 +26,9 @@
  * Запуск: node tools/verify-live-dims-rating.mjs [--stage | --contour prod] [--width 390] [--theme light]
  * Кадры: test-results/live-dims-rating/<контур>-<ширина>-<тема>/
  *
- * [NOT-TESTED]
+ * [TESTED: 2026-09-19 · стейдж: на сборке до починки КРАСНЫЙ (гонка догрузки ленты — «уехала на 5/35px», К1 14px;
+ *  шапка гостя 14 против 173–185px), после — 56/0 на 390 light и 1440 dark; бой: 56/0 на 390 light и 1440 dark;
+ *  кадры гостя прочитаны глазами; отчёт qa/reports/2026-09-19_dims-flight-and-screen-heads.md]
  */
 
 import { mkdir } from 'node:fs/promises';
