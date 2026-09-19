@@ -152,6 +152,7 @@ const LIVE_BY_NAME = new Map([
 export const UNMARKED_DECLARATION = 'МЕТКИ ПРИБОРА ЗДЕСЬ НЕТ НАМЕРЕННО';
 export const UNMARKED_BY_DESIGN = new Map([
   ['probe-root-landing-view-live.mjs', 'проба слоя С: настоящий приход на главную обязан доехать до PostHog, под меткой строка молчит'],
+  ['probe-signin-failed-live.mjs', 'след отказа входа: под меткой capture() молчит; отправка к PostHog перехватывается и наружу не уходит, только стейдж'],
 ]);
 
 export function isLiveBrowserProbe(source, name = '') {

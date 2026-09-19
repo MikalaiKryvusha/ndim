@@ -546,7 +546,7 @@
    */
   async function signInGoogleFromGuest() {
     signupError = '';
-    const result = await signInWithGoogle();
+    const result = await signInWithGoogle('have_account');
     if (!result.ok) {
       signupError = t.account.errors[result.reason][lang];
       return;

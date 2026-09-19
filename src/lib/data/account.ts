@@ -42,6 +42,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, devAuth, isStage, isStand } from '../firebase.ts';
 import { SITE_ORIGIN } from '../site.ts';
 import type { Uid } from '../model/schema.ts';
+import type { SigninDoor, SigninMethod } from './analytics.ts';
 
 /** Куда почтовая ссылка возвращает человека. */
 const LINK_RETURN_PATH = '/profile';
@@ -341,12 +342,13 @@ async function finishUpgrade(): Promise<UpgradeResult> {
  */
 export async function continueWithGoogle(): Promise<UpgradeResult> {
   const user = devAuth().currentUser;
-  if (!(user && user.isAnonymous)) return signInWithGoogle();
+  if (!(user && user.isAnonymous)) return signInWithGoogle('signin');
 
   try {
     await linkWithPopup(user, new GoogleAuthProvider());
     return await finishUpgrade();
   } catch (error) {
+    reportSigninFailure('google', 'save', error);
     return { ok: false, reason: classifyGoogle(error) };
   }
 }
@@ -365,13 +367,36 @@ export async function continueWithGoogle(): Promise<UpgradeResult> {
  *
  * [TESTED: 2026-09-19 · ручной прогон на стенде, окно эмулятора Auth: `tools/verify-google-signin.mjs` 0 провалов, мутанты М1–М4 краснеют адресно, кадры глазами; отчёт `qa/reports/2026-09-19_google-signin.md`; настоящий Google в бою не пройден — нет тестового аккаунта]
  */
-export async function signInWithGoogle(): Promise<UpgradeResult> {
+export async function signInWithGoogle(door: SigninDoor = 'signin'): Promise<UpgradeResult> {
   try {
     const credentials = await signInWithPopup(devAuth(), new GoogleAuthProvider());
     return { ok: true, uid: credentials.user.uid, created: isNewUser(credentials) };
   } catch (error) {
+    reportSigninFailure('google', door, error);
     return { ok: false, reason: classifyGoogle(error) };
   }
+}
+
+/**
+ * След неудачной попытки входа в аналитике — событие `signin_failed` (слово владельца 2026-09-19:
+ * «*почему не видит? почему не добавил ивенты ошибок?*»; устройство и границы — `analytics.ts`,
+ * блок «НЕУДАЧНАЯ ПОПЫТКА ВХОДА»). Раньше отказ жил только строкой на экране человека, и о том,
+ * что Google не пускает, владелец узнал от людей.
+ *
+ * Импорт динамический, как у воронки (`funnel.ts` → `track`): чанк аналитики не едет в главный
+ * бандл (`EXP-0028`), и ждать его вход не обязан — след не имеет права задержать ответ человеку.
+ * [NOT-TESTED]
+ */
+function reportSigninFailure(method: SigninMethod, door: SigninDoor, error: unknown): void {
+  const isGuest = devAuth().currentUser?.isAnonymous === true;
+  // Публичная страница удаления аккаунта входит теми же функциями — её дверь отличаем по адресу,
+  // иначе в рядах она слилась бы с обычным входом (оговорка суда 2026-09-19).
+  if (typeof location !== 'undefined' && location.pathname.includes('/delete-account')) door = 'delete';
+  void import('./analytics.ts')
+    .then(({ capture, signinFailureOf }) =>
+      capture('signin_failed', { method, door, is_guest: isGuest, ...signinFailureOf(error) }),
+    )
+    .catch((failure) => console.debug('Аналитика: след отказа входа не отправлен', failure));
 }
 
 /**
@@ -424,6 +449,9 @@ export async function sendLoginLink(
     // Письмо отправлено — аккаунта это ещё не создало.
     return { ok: true, uid: devAuth().currentUser?.uid ?? '', created: false };
   } catch (error) {
+    // Дверь — по намерению: «Сохранить мои результаты» или вход в свой аккаунт (из-под гостя или без сессии).
+    const door: SigninDoor = intent === 'upgrade' ? 'save' : devAuth().currentUser?.isAnonymous ? 'have_account' : 'signin';
+    reportSigninFailure('email', door, error);
     return { ok: false, reason: classify(error) };
   }
 }
@@ -555,6 +583,7 @@ export async function completeLoginLink(
     // с почты на экране входа, — рождение аккаунта. Firebase различает это за нас.
     return { ok: true, uid: credentials.user.uid, created: isNewUser(credentials) };
   } catch (error) {
+    reportSigninFailure('email', 'link', error);
     return { ok: false, reason: classifyLink(error) };
   }
 }

@@ -187,12 +187,13 @@ export const POSTHOG_CAPTURE_URL = `${POSTHOG_HOST}/i/v0/e/`;
  */
 
 /**
- * БЕЛЫЙ СПИСОК СОБЫТИЙ (Ш4) — десять имён, и ни одного больше «что придёт само».
+ * БЕЛЫЙ СПИСОК СОБЫТИЙ (Ш4) — одиннадцать имён, и ни одного больше «что придёт само».
  *
  * Первые шесть — паритет со своей воронкой (`funnel.ts`). Он обязателен: своя воронка
  * остаётся ЭТАЛОНОМ сверки (её не режут блокировщики), а сверить два ряда можно только если
  * имена в них совпадают. Четыре последних — путь ВНУТРИ продукта, которого своя воронка не
- * знает по построению: она считает вход, а не дело.
+ * знает по построению: она считает вход, а не дело. Одиннадцатое, `signin_failed` (2026-09-19), — не путь,
+ * а СБОЙ на двери: неудачная попытка входа (разбор — блок «НЕУДАЧНАЯ ПОПЫТКА ВХОДА» ниже).
  *
  * 🔑 `relations_view` — ЧИСЛО ЦЕННОСТИ, а не просто ещё один шаг. Наша сегодняшняя воронка
  * кончается на `account_created`, то есть на НАШЕЙ выгоде; человек, создавший аккаунт и не
@@ -208,9 +209,16 @@ export const ANALYTICS_EVENTS = [
   'relations_view',
   'person_opened',
   'profile_filled',
+  'signin_failed',
 ] as const;
 
-export type AnalyticsEvent = FunnelStep | 'rating_saved' | 'relations_view' | 'person_opened' | 'profile_filled';
+export type AnalyticsEvent =
+  | FunnelStep
+  | 'rating_saved'
+  | 'relations_view'
+  | 'person_opened'
+  | 'profile_filled'
+  | 'signin_failed';
 
 /**
  * Разрезы кладутся в СВОЙСТВА, а не плодят имена событий (правило Mixpanel: «events should
@@ -219,7 +227,7 @@ export type AnalyticsEvent = FunnelStep | 'rating_saved' | 'relations_view' | 'p
  * ⛔ Свойства с идентификатором или названием измерения запрещены — это тот же предмет
  * оценки, просто сбоку. Список закрытый, и он тоже под юнитом.
  */
-export const ANALYTICS_PROPERTIES = ['lang', 'is_guest', 'entry', 'has_matches', 'env'] as const;
+export const ANALYTICS_PROPERTIES = ['lang', 'is_guest', 'entry', 'has_matches', 'env', 'method', 'door', 'reason', 'code'] as const;
 
 export type AnalyticsProperty = (typeof ANALYTICS_PROPERTIES)[number];
 
@@ -242,12 +250,90 @@ export const ANALYTICS_ENTRIES = ['landing', 'catalog_card', 'direct'] as const;
 
 export type AnalyticsEntry = (typeof ANALYTICS_ENTRIES)[number];
 
+/*
+ * ── НЕУДАЧНАЯ ПОПЫТКА ВХОДА (`signin_failed`) ─────────────────────────────────────────────────
+ *
+ * ПОВОД — слово владельца 2026-09-19: «*почему не видит? почему не добавил ивенты ошибок?*». Тем
+ * же вечером человек написал ему, что не смог создать аккаунт через Google
+ * (`bugs/NEW_google_signin_newcomer_lands_on_load_error.md`), а продукт об этом не знал ничего:
+ * отказы входа ловит наш же код и превращает в строку на экране, в аналитику не уходило ни слова,
+ * а автосбор ошибок PostHog видит только НЕпойманное.
+ *
+ * Все четыре свойства — закрытые союзы, как у остальных (Д4 вердикта №14): способ входа, дверь,
+ * причина и код отказа Firebase. Код — единственное значение, закрытое ФОРМОЙ, а не перечнем:
+ * `auth/<слово-через-дефисы>`. Он нужен ровно для причины `other` — чтобы невиданный отказ был
+ * виден в ряду по имени, а не прятался в «прочее». Форма не пропускает ни почты, ни измерения:
+ * в ней нет места для чего-либо, кроме кода SDK. «Политика» (п. 2.6: «*для понимания того, как
+ * люди пользуются Системой*») это покрывает — сверено по правилу владельца №082 В3.
+ */
+export const SIGNIN_METHODS = ['google', 'email'] as const;
+export type SigninMethod = (typeof SIGNIN_METHODS)[number];
+
+/** Где человек пытался войти: экран входа · гость «Сохранить мои результаты» · гость «У меня уже есть
+ *  аккаунт» · возврат по ссылке из письма · публичная страница удаления аккаунта (вход перед удалением). */
+export const SIGNIN_DOORS = ['signin', 'save', 'have_account', 'link', 'delete'] as const;
+export type SigninDoor = (typeof SIGNIN_DOORS)[number];
+
+export const SIGNIN_REASONS = [
+  'cancelled',
+  'popup_blocked',
+  'already_in_use',
+  'expired_link',
+  'invalid_email',
+  'network',
+  'unsupported_browser',
+  'unauthorized_domain',
+  'too_many',
+  'other',
+] as const;
+export type SigninReason = (typeof SIGNIN_REASONS)[number];
+
+/** Код отказа Firebase — единственная форма, которую пропускает свойство `code`. */
+const AUTH_CODE = /^auth\/[a-z0-9-]{1,60}$/;
+
+const REASON_BY_CODE: Readonly<Record<string, SigninReason>> = {
+  'auth/popup-closed-by-user': 'cancelled',
+  'auth/cancelled-popup-request': 'cancelled',
+  'auth/user-cancelled': 'cancelled',
+  'auth/popup-blocked': 'popup_blocked',
+  'auth/credential-already-in-use': 'already_in_use',
+  'auth/email-already-in-use': 'already_in_use',
+  'auth/account-exists-with-different-credential': 'already_in_use',
+  'auth/invalid-action-code': 'expired_link',
+  'auth/expired-action-code': 'expired_link',
+  'auth/invalid-email': 'invalid_email',
+  'auth/missing-email': 'invalid_email',
+  'auth/network-request-failed': 'network',
+  'auth/operation-not-supported-in-this-environment': 'unsupported_browser',
+  'auth/web-storage-unsupported': 'unsupported_browser',
+  'auth/unauthorized-domain': 'unauthorized_domain',
+  'auth/too-many-requests': 'too_many',
+  'auth/quota-exceeded': 'too_many',
+};
+
+/**
+ * Отказ входа → причина и код для события `signin_failed`. Чистая функция: её судит юнит.
+ * Код без формы `auth/…` (не ошибка Firebase вовсе) едет словом `none`, а не текстом ошибки:
+ * текст исключения — открытая строка, и в нём может оказаться что угодно.
+ *
+ * [NOT-TESTED]
+ */
+export function signinFailureOf(error: unknown): { reason: SigninReason; code: string } {
+  const raw = (error as { code?: unknown } | null)?.code;
+  const code = typeof raw === 'string' && AUTH_CODE.test(raw) ? raw : 'none';
+  return { reason: REASON_BY_CODE[code] ?? 'other', code };
+}
+
 /** Значения свойств — узкие по построению: тип не даёт написать, проверка не даёт отправить. */
 export type AnalyticsProps = {
   lang?: 'ru' | 'en';
   is_guest?: boolean;
   has_matches?: boolean;
   entry?: AnalyticsEntry;
+  method?: SigninMethod;
+  door?: SigninDoor;
+  reason?: SigninReason;
+  code?: string;
 };
 
 /**
@@ -271,6 +357,15 @@ export function propertyValueIsSafe(key: AnalyticsProperty, value: unknown): boo
     // ЗНАЧЕНИЙ. Ключа мало — дефект Д4 вердикта №14 стоил ровно этого разбора.
     case 'env':
       return (ANALYTICS_CONTOURS as readonly unknown[]).includes(value);
+    case 'method':
+      return (SIGNIN_METHODS as readonly unknown[]).includes(value);
+    case 'door':
+      return (SIGNIN_DOORS as readonly unknown[]).includes(value);
+    case 'reason':
+      return (SIGNIN_REASONS as readonly unknown[]).includes(value);
+    // Закрыт ФОРМОЙ: `auth/<слово-через-дефисы>` или `none` — см. `signinFailureOf`.
+    case 'code':
+      return value === 'none' || (typeof value === 'string' && AUTH_CODE.test(value));
   }
 }
 

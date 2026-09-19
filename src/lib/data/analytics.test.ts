@@ -46,6 +46,7 @@ import {
   posthogConfig,
   propertyValueIsSafe,
   setAnalyticsClientForTests,
+  signinFailureOf,
   whitelistLooksSafe,
 } from './analytics.ts';
 
@@ -103,7 +104,7 @@ describe('Ш4 — список событий белый, а не «что пр�
     }
     // И столь же обязателен обратный полюс: страж, краснеющий на честном имени, будет отключён
     // первым же человеком, которому он помешает. `guest_start` ловился подстрокой «star».
-    for (const честное of [...FUNNEL_STEPS, 'relations_view', 'person_opened', 'profile_filled']) {
+    for (const честное of [...FUNNEL_STEPS, 'relations_view', 'person_opened', 'profile_filled', 'signin_failed']) {
       assert.equal(nameSmellsOfSubject(честное), false, `ложное срабатывание стража на честном имени: ${честное}`);
     }
   });
@@ -119,7 +120,9 @@ describe('Ш4 — список событий белый, а не «что пр�
   });
 
   test('список остаётся МАЛЫМ — планка первоисточников, а не «на всякий случай»', () => {
-    assert.equal(ANALYTICS_EVENTS.length, 10);
+    // 10 → 11 (2026-09-19): `signin_failed` — слово владельца «почему не добавил ивенты ошибок?»,
+    // отказ входа до этого жил только строкой на экране. Планка «≤ 15» ниже не тронута.
+    assert.equal(ANALYTICS_EVENTS.length, 11);
     assert.equal(new Set(ANALYTICS_EVENTS).size, ANALYTICS_EVENTS.length, 'дубль имени в списке');
     assert.ok(ANALYTICS_EVENTS.length <= 15, 'больше пятнадцати — это уже «что придёт», а не белый список');
   });
@@ -127,10 +130,43 @@ describe('Ш4 — список событий белый, а не «что пр�
   test('свойства — закрытый список, и ни одно не знает предмета оценки', () => {
     // 🆕 `env` добавлен словом владельца 2026-08-29 («даём юзеру свойство — на каком он
     // окружении»). Список ОСТАЁТСЯ закрытым: расширение законно, открытость — нет.
-    assert.deepEqual([...ANALYTICS_PROPERTIES], ['lang', 'is_guest', 'entry', 'has_matches', 'env']);
+    // 🆕 2026-09-19: `method`, `door`, `reason`, `code` — свойства события `signin_failed`, каждое закрыто
+    // союзом значений (а `code` — формой `auth/…`); судит их случай «отказ входа» ниже.
+    assert.deepEqual([...ANALYTICS_PROPERTIES], ['lang', 'is_guest', 'entry', 'has_matches', 'env', 'method', 'door', 'reason', 'code']);
     for (const property of ANALYTICS_PROPERTIES) {
       assert.equal(/dim|slug|title|rating|score/.test(property), false, `свойство «${property}» пахнет предметом оценки`);
     }
+  });
+});
+
+describe('отказ входа — `signin_failed` говорит о причине и никогда о человеке', () => {
+  test('коды Firebase переводятся в закрытые причины; невиданный код виден по имени', () => {
+    assert.deepEqual(signinFailureOf({ code: 'auth/popup-closed-by-user' }), { reason: 'cancelled', code: 'auth/popup-closed-by-user' });
+    assert.deepEqual(signinFailureOf({ code: 'auth/popup-blocked' }), { reason: 'popup_blocked', code: 'auth/popup-blocked' });
+    assert.deepEqual(signinFailureOf({ code: 'auth/credential-already-in-use' }), { reason: 'already_in_use', code: 'auth/credential-already-in-use' });
+    assert.deepEqual(signinFailureOf({ code: 'auth/network-request-failed' }), { reason: 'network', code: 'auth/network-request-failed' });
+    assert.deepEqual(signinFailureOf({ code: 'auth/internal-error' }), { reason: 'other', code: 'auth/internal-error' });
+  });
+
+  test('🔴 не-код не уезжает: текст ошибки, почта и мусор становятся словом `none`', () => {
+    assert.deepEqual(signinFailureOf(new Error('user me@mail.ru failed')), { reason: 'other', code: 'none' });
+    assert.deepEqual(signinFailureOf({ code: 'auth/x me@mail.ru' }), { reason: 'other', code: 'none' });
+    assert.deepEqual(signinFailureOf({ code: 'dims/matrix' }), { reason: 'other', code: 'none' });
+    assert.deepEqual(signinFailureOf(null), { reason: 'other', code: 'none' });
+    assert.deepEqual(signinFailureOf(undefined), { reason: 'other', code: 'none' });
+  });
+
+  test('🔴 свойства события закрыты: значение вне союза или вне формы не отправляется', () => {
+    assert.equal(propertyValueIsSafe('method', 'google'), true);
+    assert.equal(propertyValueIsSafe('method', 'facebook'), false);
+    assert.equal(propertyValueIsSafe('door', 'have_account'), true);
+    assert.equal(propertyValueIsSafe('door', '/dims/matrix'), false);
+    assert.equal(propertyValueIsSafe('reason', 'popup_blocked'), true);
+    assert.equal(propertyValueIsSafe('reason', 'Error: boom'), false);
+    assert.equal(propertyValueIsSafe('code', 'auth/popup-blocked'), true);
+    assert.equal(propertyValueIsSafe('code', 'none'), true);
+    assert.equal(propertyValueIsSafe('code', 'me@mail.ru'), false, 'почта не пролезает в код');
+    assert.equal(propertyValueIsSafe('code', 'auth/Popup Blocked'), false);
   });
 });
 
