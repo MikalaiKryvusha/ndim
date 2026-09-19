@@ -60,7 +60,9 @@ export async function startTrace(page, ids) {
         };
       }
       window.__fl.rows.push(frame);
-      if (now < 14000) requestAnimationFrame(step);
+      // Потолок трассы с запасом на живой контур: там запись в базу идёт по сети, и последняя
+      // карточка серии улетает на секунды позже, чем на стенде (замер стейджа 2026-09-19).
+      if (now < 30000) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }, ids);

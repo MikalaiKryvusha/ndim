@@ -27,6 +27,11 @@
  *     К3: сразу после третьего тапа ВСЕ ТРИ карточки держат свои звёзды и свой отсчёт.
  *     К4: все три оценки легли в базу со своими значениями (истина — база, а не экран, EXP-0115).
  *     К1 и К2 — для каждой из трёх, по всей трассе.
+ *     К6: улетевшие карточки ушли с экрана — ни одна не вернулась в ленту.
+ *     ⚠️ Граница: гонку «догрузка ленты вернула улетающую карточку» (`loadMore`, найдена смоуком
+ *     стейджа 2026-09-19) стенд НЕ воспроизводит — база отвечает мгновенно, а придержка роутом
+ *     (опыт `--slow-db`) её не замедляет: Firestore ходит долгим каналом WebChannel. Мутант старого
+ *     `loadMore` здесь зелёный. Этот класс стережёт `tools/verify-live-dims-rating.mjs` (К6 на стейдже).
  *
  *   УХОД — звёзды на двух карточках и сразу переход на «Профиль», пока идут отсчёты (решение
  *     владельца в чате 2026-09-19, «А (советую)»: оценки сохраняются в момент ухода с экрана).
@@ -275,8 +280,16 @@ try {
       }
       await page.waitForTimeout(1500);
     } else {
-      await page.waitForTimeout(8000);
+      // Ждём ухода всех трёх, а не секундомера (на живом контуре улёт позже — запись идёт по сети).
+      await page
+        .waitForFunction((list) => list.every((id) => !document.querySelector(`article.dim[data-dim="${id}"]`)),
+          series.map((s) => s.id), { timeout: 25000 })
+        .catch(() => {});
+      await page.waitForTimeout(1500);
     }
+    const stuck = await page.evaluate((list) => list.filter((id) => document.querySelector(`article.dim[data-dim="${id}"]`)),
+      series.map((s) => s.id));
+    check(stuck.length === 0, `К6 · улетевшие карточки ушли с экрана, ни одна не вернулась в ленту${stuck.length ? ` — висят: ${stuck.join(', ')}` : ''}`);
     const rows = await readTrace(page);
     judgeTrace(rows, series.map((s) => s.id), ids, preTop, { check, say });
     printTrace(rows, ids.slice(1, 8));

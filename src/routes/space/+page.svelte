@@ -383,11 +383,11 @@
   <PullToRefresh onRefresh={refreshScreen} />
 
   <main class="body">
-  <GuestCard />
     <!-- Шапка экрана — общая (слово владельца 2026-09-19: подпись «оформлена не как хелп
          карточка, как на других страницах»). В 1.x эта строка и стояла серой плашкой под
-         заголовком (`design/reference-1x/app-03-пространство.png`). -->
+         заголовком (`design/reference-1x/app-03-пространство.png`). Первой, выше плашки гостя. -->
     <ScreenHead title={t.title[lang]} help={t.lede[lang]} />
+    <GuestCard />
 
     {#if stand === 'connecting'}
       <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->

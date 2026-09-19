@@ -204,8 +204,32 @@ try {
       );
     }
     await page.screenshot({ path: `${OUT}/series-0-three-countdowns.png` });
-    await page.waitForTimeout(8500);
-    judgeTrace(await readTrace(page), series.map((s) => s.id), ids, preTop, { check, say });
+    /*
+     * ⚠️ ЖДЁМ УХОДА ВСЕХ ТРЁХ, А НЕ СЕКУНДОМЕРА. Первая редакция ждала 8,5 с — на стенде хватало, а
+     * на стейдже запись идёт по сети, записи одного клиента уходят по очереди, и третья карточка
+     * трогалась позже: трасса обрывалась на её пятом пикселе («уехала на 5px»). Потолок 25 с.
+     */
+    await page
+      .waitForFunction((list) => list.every((id) => !document.querySelector(`article.dim[data-dim="${id}"]`)),
+        series.map((s) => s.id), { timeout: 25000 })
+      .catch(() => {});
+    await page.waitForTimeout(800);
+    const stuck = await page.evaluate((list) => list.filter((id) => document.querySelector(`article.dim[data-dim="${id}"]`)),
+      series.map((s) => s.id));
+    check(stuck.length === 0, `К6 · улетевшие карточки ушли с экрана, ни одна не вернулась в ленту${stuck.length ? ` — висят: ${stuck.join(', ')}` : ''}`);
+    const rows = await readTrace(page);
+    judgeTrace(rows, series.map((s) => s.id), ids, preTop, { check, say });
+    if (process.argv.includes('--trace')) {
+      const tracked = ids.slice(0, 6);
+      say('    трасса [мс : ' + tracked.map((id) => id.slice(0, 6)).join(' : ') + ']  (top/x/out)');
+      let last = '';
+      for (const r of rows) {
+        const line = tracked.map((id) => (r.cards[id] ? `${r.cards[id].top}/${r.cards[id].x}/${r.cards[id].out ? 'A' : '-'}` : '—')).join(' : ');
+        if (line === last) continue;
+        last = line;
+        say(`    ${String(r.t).padStart(5)} : ${line}`);
+      }
+    }
     await page.close();
   }
 
