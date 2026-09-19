@@ -343,6 +343,15 @@ for (const cfg of CONFIGS) {
     await page
       .waitForFunction(() => (document.body?.innerText || '').length > 150, null, { timeout: 25000 })
       .catch(() => { /* не наполнился — ниже это станет честным провалом с числом */ });
+    /*
+     * 🔄 2026-09-19: шапка экрана (заголовок + подсказка) видна уже во время загрузки — слово
+     * владельца, `$lib/ui/ScreenHead`. «Текста больше 150» теперь выполняется на карточке
+     * «Загрузка», поэтому ждём и её ухода (`.state .load-card`) — иначе метка содержимого
+     * «Профиля» проверялась бы до того, как оно приехало (так покраснели ворота smoke стейджа).
+     */
+    await page
+      .waitForFunction(() => !document.querySelector('.state .load-card'), null, { timeout: 25000 })
+      .catch(() => { /* не ушла — ниже это станет честным провалом */ });
     const text = await bodyText(page);
     check(text.length > 80 && screen.mark.test(text), `[${tag}] «${screen.name}» отрисован`, `символов ${text.length}`);
     await page.screenshot({ path: `${OUT}/${tag}-${screen.name}.png` });

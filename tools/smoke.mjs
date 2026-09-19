@@ -237,11 +237,23 @@ async function person(browser) {
 
 const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png` }).catch(() => {});
 
-/** Ждёт, пока экран ОТРИСОВАН: текст, а не «200 OK». */
+/**
+ * Ждёт, пока экран ОТРИСОВАН: текст, а не «200 OK», — и ушла экранная карточка «Загрузка».
+ *
+ * 🔄 2026-09-19: шапка экрана (заголовок + плашка-подсказка, ~300 знаков) видна уже ВО ВРЕМЯ
+ * загрузки — слово владельца: «*Пока страницы грузятся… везде должна быть*» (`$lib/ui/ScreenHead`).
+ * Прежний признак «текста больше N» после этого срабатывал на карточке «Загрузка», и набор искал
+ * «Редактировать» и «Выйти» раньше, чем они появлялись: ворота стейджа покраснели на ИСПРАВНОМ
+ * «Профиле» (кадр `06-signed-in` того же прогона — экран целиком). Признак готовности — уход
+ * экранной «Загрузки» (`.state .load-card`); лоадер догрузки ленты (`.loader`) сюда не входит.
+ */
 async function rendered(page, minChars = 200) {
   await page.waitForLoadState('domcontentloaded');
   await page
     .waitForFunction((min) => (document.body?.innerText ?? '').trim().length > min, minChars, { timeout: 20000 })
+    .catch(() => {});
+  await page
+    .waitForFunction(() => !document.querySelector('.state .load-card'), null, { timeout: 20000 })
     .catch(() => {});
 }
 
