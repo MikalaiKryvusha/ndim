@@ -34,7 +34,15 @@ export const DEV_USER = { email: 'dev@ndim.space', password: 'ndim-dev-stand' } 
 /** Боевой веб-конфиг проекта `ndim-space` (публичный по устройству Firebase). */
 const PROD_CONFIG = {
   apiKey: 'AIzaSyCZsGkY0Lw_OJ35QhRumcD5RzNJUFsAsww',
-  authDomain: 'ndim-space.firebaseapp.com',
+  // Адрес окна входа — НАШ домен, а не адрес Firebase (слово владельца 2026-09-19: «сделай оба через
+  // браузер»): экран Google пишет «Переход в приложение "ndimspace.app"», а не «ndim-space.firebaseapp.com».
+  // Держится на ДВУХ настройках вне кода, и без них вход ломается у всех («Доступ заблокирован»):
+  //   · `https://ndimspace.app/__/auth/handler` в адресах возврата клиента OAuth «NDim Space Web»
+  //     (Google Cloud → Google Auth Platform → Clients; добавлен 2026-09-19 23:4x, публичного API нет);
+  //   · `ndimspace.app` в разрешённых доменах Firebase Auth.
+  // Служебные страницы `/__/auth/*` отдаёт Firebase Hosting на нашем домене сам. Бонус — окно входа
+  // и его iframe на одном сайте с продуктом: блокировка чужих хранилищ браузерами их не задевает.
+  authDomain: 'ndimspace.app',
   projectId: 'ndim-space',
   storageBucket: 'ndim-space.appspot.com',
   messagingSenderId: '1077558742259',

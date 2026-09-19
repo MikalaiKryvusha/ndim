@@ -32,6 +32,9 @@ const WIDTH = Number(arg('--width', '390'));
 const THEME = arg('--theme', 'light');
 const OUT = `test-results/live-google-signin/${CONTOUR.name}-${WIDTH}-${THEME}`;
 const NOT_DONE = 'Вход через Google не завершён';
+// Как Google называет приложение на экране входа: в бою — наш домен (authDomain, 2026-09-19); на стейдже
+// адрес Firebase не менялся, проверки нет.
+const EXPECTED_APP = CONTOUR.name === 'prod' ? 'ndimspace.app' : null;
 
 let failures = 0;
 function check(id, name, ok, detail = '') {
@@ -71,6 +74,7 @@ async function openAndClose(id, page, button, shot) {
   const popup = await popupP;
   let where = 'окно не открылось';
   let signinPage = false;
+  let appNamed = null;
   if (popup) {
     await popup.waitForLoadState('domcontentloaded').catch(() => {});
     await popup.waitForURL(/accounts\.google\.com/, { timeout: 20000 }).catch(() => {});
@@ -78,12 +82,18 @@ async function openAndClose(id, page, button, shot) {
     const u = new URL(popup.url());
     where = `${u.host}${u.pathname}`;
     const text = await popup.evaluate(() => document.body.innerText).catch(() => '');
+    appNamed = text.match(/(?:Переход в приложение|to continue to|Continue to)\s*[«"]?([a-z0-9.-]+\.[a-z]{2,})/i)?.[1] ?? null;
     // Страница входа Google: поле «Телефон или адрес эл. почты» / «Email or phone», без слов ошибки.
     signinPage = u.host === 'accounts.google.com' && /signin|oauthchooseaccount/i.test(u.pathname) && !/403|disallowed_useragent|Error 400|redirect_uri_mismatch|invalid_client/i.test(text);
     await popup.screenshot({ path: `${OUT}/${shot}-google.png` }).catch(() => {});
     await popup.close().catch(() => {});
   }
   check(id, 'окно Google открылось на странице входа', signinPage, where);
+  // ГЖ-04: в бою Google называет приложение НАШИМ доменом (authDomain = ndimspace.app, 2026-09-19).
+  if (EXPECTED_APP && popup) {
+    const named = appNamed;
+    check(id, `Google называет приложение «${EXPECTED_APP}» (ГЖ-04)`, named === EXPECTED_APP, `на экране: ${named ?? 'не найдено'}`);
+  }
   const said = await page.getByText(NOT_DONE).waitFor({ timeout: 25000 }).then(() => true, () => false);
   await page.screenshot({ path: `${OUT}/${shot}-closed.png` });
   check(id, 'закрытое окно: «Вход через Google не завершён…»', said);
