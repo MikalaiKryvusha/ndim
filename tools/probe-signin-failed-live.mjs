@@ -23,7 +23,9 @@
  * Только СТЕЙДЖ: в бою шаги двери и гостей без метки испортили бы боевую воронку (`bugs/202`).
  * Запуск:  node tools/probe-signin-failed-live.mjs --stage
  *
- * [NOT-TESTED]
+ * [TESTED: 2026-09-19 · стейдж: на сборке f9002ac АН-02…АН-06 0 провалов, канал живой в каждом кейсе; на промежуточной
+ *  сборке db7429d покраснел ровно АН-06 (дверь `save` вместо `signin` — настоящий дефект, вылечен); в PostHog за прогоны
+ *  0 событий `signin_failed` и 0 событий стейджа — наружу не ушло ничего; отчёт `qa/reports/2026-09-19_google-signin.md`]
  */
 import { gunzipSync } from 'node:zlib';
 import { chromium } from 'playwright';

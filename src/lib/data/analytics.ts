@@ -316,7 +316,7 @@ const REASON_BY_CODE: Readonly<Record<string, SigninReason>> = {
  * Код без формы `auth/…` (не ошибка Firebase вовсе) едет словом `none`, а не текстом ошибки:
  * текст исключения — открытая строка, и в нём может оказаться что угодно.
  *
- * [NOT-TESTED]
+ * [TESTED: 2026-09-19 · стейдж, проба `tools/probe-signin-failed-live.mjs` АН-02…АН-06 0 провалов (перехват, наружу ничего), юниты `analytics.test.ts`; отчёт `qa/reports/2026-09-19_google-signin.md`]
  */
 export function signinFailureOf(error: unknown): { reason: SigninReason; code: string } {
   const raw = (error as { code?: unknown } | null)?.code;

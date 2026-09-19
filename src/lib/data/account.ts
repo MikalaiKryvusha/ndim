@@ -385,7 +385,7 @@ export async function signInWithGoogle(door: SigninDoor = 'signin'): Promise<Upg
  *
  * Импорт динамический, как у воронки (`funnel.ts` → `track`): чанк аналитики не едет в главный
  * бандл (`EXP-0028`), и ждать его вход не обязан — след не имеет права задержать ответ человеку.
- * [NOT-TESTED]
+ * [TESTED: 2026-09-19 · стейдж, проба `tools/probe-signin-failed-live.mjs` АН-02…АН-06 0 провалов (перехват, наружу ничего), юниты `analytics.test.ts`; отчёт `qa/reports/2026-09-19_google-signin.md`]
  */
 function reportSigninFailure(method: SigninMethod, door: SigninDoor, error: unknown): void {
   const isGuest = devAuth().currentUser?.isAnonymous === true;
