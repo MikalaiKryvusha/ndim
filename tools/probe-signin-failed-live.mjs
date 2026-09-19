@@ -68,8 +68,28 @@ function eventsOf(buffer) {
 const browser = await chromium.launch({ args: ['--host-resolver-rules=MAP *.posthog.com 0.0.0.0, MAP posthog.com 0.0.0.0'] });
 const tokens = new Set();
 
+/*
+ * 🔴 БРАУЗЕР ОБЯЗАН ВЫГЛЯДЕТЬ ЧЕЛОВЕКОМ — иначе SDK молча выбрасывает ВСЕ события (замер 2026-09-19).
+ * posthog-js по умолчанию не шлёт событий от ботов и узнаёт их по трём приметам: строка браузера
+ * (`headlesschrome` в списке), бренды `userAgentData`, `navigator.webdriver` — а у Playwright он `true`.
+ * Первая редакция пробы этого не знала: и на старой сборке, и на новой она печатала «события нет», и
+ * «отрицательный контроль» был пуст по построению — он не мог позеленеть ни на какой сборке. Лечение —
+ * предъявить приметы обычного Chrome; и контроль «канал живой» (кейс ниже) отличает «наш код не зовёт
+ * отправку» от «канал мёртв».
+ */
+const HUMAN_UA = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36';
+
 async function contextOf({ blockPopups = false } = {}) {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 860 }, locale: 'ru-RU', hasTouch: true, isMobile: true });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 860 }, locale: 'ru-RU', hasTouch: true, isMobile: true, userAgent: HUMAN_UA });
+  await ctx.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false });
+    const brands = [{ brand: 'Chromium', version: '128' }, { brand: 'Google Chrome', version: '128' }];
+    try {
+      Object.defineProperty(Navigator.prototype, 'userAgentData', {
+        get: () => ({ brands, mobile: true, platform: 'Android', getHighEntropyValues: async () => ({ brands, model: 'Pixel 7' }) }),
+      });
+    } catch { /* нет userAgentData — примета и так отсутствует */ }
+  });
   const sent = [];
   // Всё, что идёт к PostHog, — перехват: тело читается, запрос обрывается, наружу не уходит ничего.
   await ctx.route(/posthog\.com/, async (route) => {
@@ -97,6 +117,12 @@ async function failedEvent(sent, ms = 20000) {
     await new Promise((ok) => setTimeout(ok, 500));
   }
   return null;
+}
+
+/** Канал живой: перехвачено хоть одно НАШЕ событие, кроме `signin_failed` (шаг воронки двери или гостя). */
+function channelAlive(id, sent) {
+  const other = [...new Set(sent.map((x) => x.e.event).filter((name) => name !== 'signin_failed' && !name.startsWith('$')))];
+  check(id, 'канал к PostHog живой — перехвачены и другие наши события', other.length > 0, other.join(', ') || 'ни одного');
 }
 
 function judge(id, hit, expected) {
@@ -152,6 +178,7 @@ try {
     await closeGooglePopup(page, door);
     await refusalShown('АН-02', page, page.getByText(NOT_DONE), `«${NOT_DONE}…»`);
     judge('АН-02', await failedEvent(sent), { method: 'google', door: 'signin', reason: 'cancelled', code: 'auth/popup-closed-by-user', is_guest: false });
+    channelAlive('АН-02', sent);
     await ctx.close();
   }
 
@@ -165,6 +192,7 @@ try {
     await door.click();
     await refusalShown('АН-03', page, page.getByText(NOT_DONE), `«${NOT_DONE}…»`);
     judge('АН-03', await failedEvent(sent), { method: 'google', door: 'signin', reason: 'popup_blocked', code: 'auth/popup-blocked' });
+    channelAlive('АН-03', sent);
     await ctx.close();
   }
 
@@ -176,6 +204,7 @@ try {
     await closeGooglePopup(page, page.getByRole('button', { name: 'Продолжить с Google' }));
     await refusalShown('АН-04', page, page.getByText(NOT_DONE), `«${NOT_DONE}…»`);
     judge('АН-04', await failedEvent(sent), { method: 'google', door: 'save', reason: 'cancelled', is_guest: true });
+    channelAlive('АН-04', sent);
     await ctx.close();
   }
 
@@ -188,6 +217,7 @@ try {
     await closeGooglePopup(page, page.getByRole('button', { name: 'Войти через Google' }));
     await refusalShown('АН-05', page, page.getByText(NOT_DONE), `«${NOT_DONE}…»`);
     judge('АН-05', await failedEvent(sent), { method: 'google', door: 'have_account', reason: 'cancelled', is_guest: true });
+    channelAlive('АН-05', sent);
     await ctx.close();
   }
 
@@ -201,6 +231,7 @@ try {
     await page.getByRole('button', { name: 'Получить ссылку для входа' }).click();
     await refusalShown('АН-06', page, page.locator('.err'), 'строка ошибки');
     judge('АН-06', await failedEvent(sent), { method: 'email', door: 'signin', reason: 'invalid_email', code: 'auth/invalid-email' });
+    channelAlive('АН-06', sent);
     await ctx.close();
   }
 } finally {

@@ -449,8 +449,11 @@ export async function sendLoginLink(
     // Письмо отправлено — аккаунта это ещё не создало.
     return { ok: true, uid: devAuth().currentUser?.uid ?? '', created: false };
   } catch (error) {
-    // Дверь — по намерению: «Сохранить мои результаты» или вход в свой аккаунт (из-под гостя или без сессии).
-    const door: SigninDoor = intent === 'upgrade' ? 'save' : devAuth().currentUser?.isAnonymous ? 'have_account' : 'signin';
+    // Дверь — СНАЧАЛА по сессии, потом по намерению: экран входа без сессии шлёт письмо с намерением
+    // `upgrade` (намерение `signin` ставит только дверь гостя), и первая редакция записала его как «Сохранить
+    // мои результаты» — поймано пробой `probe-signin-failed-live.mjs`, кейс АН-06, 2026-09-19.
+    const guest = devAuth().currentUser?.isAnonymous === true;
+    const door: SigninDoor = !guest ? 'signin' : intent === 'upgrade' ? 'save' : 'have_account';
     reportSigninFailure('email', door, error);
     return { ok: false, reason: classify(error) };
   }
