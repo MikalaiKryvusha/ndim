@@ -68,6 +68,7 @@
     linkGoogle,
     pendingIntent,
     sendLoginLink,
+    signInWithGoogle,
     waitForSession,
   } from '$lib/data/account';
   import { track } from '$lib/data/funnel';
@@ -322,6 +323,29 @@
 
 
   /**
+   * Загрузка экрана, которая ЛЕЧИТ недозаведённый аккаунт (`bugs/NEW_google_signin_newcomer_lands_on_load_error.md`,
+   * вторая половина плана `bugs/235`).
+   *
+   * У вошедшего человека (не гостя) документа `users/{uid}` может не оказаться: его аккаунт родился
+   * путём, который документ не завёл, — так было у двери Google до 2026-09-19. Это не поломка базы, а
+   * недостроенный профиль, и экран «Не удалось загрузить» был ложным диагнозом: обновление страницы
+   * не помогало никогда. Теперь профиль достраивается на месте — и тот, кто споткнулся раньше,
+   * входит при следующей попытке. У гостя пустота — норма (`bugs/87`), её разбирает `catch` ниже.
+   * Цена — ноль на обычном пути: лишнее чтение случается только у пустого профиля.
+   *
+   * [TESTED: 2026-09-19 · ручной прогон на стенде, окно эмулятора Auth: `tools/verify-google-signin.mjs` 0 провалов, мутанты М1–М4 краснеют адресно, кадры глазами; отчёт `qa/reports/2026-09-19_google-signin.md`; настоящий Google в бою не пройден — нет тестового аккаунта]
+   */
+  async function loadScreenHealing(uid: string): Promise<void> {
+    try {
+      await loadScreen(uid);
+    } catch (error) {
+      if (!(error instanceof ProfileMissingError) || isGuestSession()) throw error;
+      await ensureSpaceExists(uid, lang);
+      await loadScreen(uid);
+    }
+  }
+
+  /**
    * Перечитать «Дом». Отдельной функцией: её зовут `onMount` при заходе и жест «потянуть
    * вниз» по требованию человека (интервью №006).
    *
@@ -453,7 +477,7 @@
         guest = isGuestSession();
         guestCard = guest && localStorage.getItem(GUEST_CARD_KEY) !== 'later';
       }
-      await loadScreen(uid);
+      await loadScreenHealing(uid);
     } catch (error) {
       /*
        * У ГОСТЯ ДОКУМЕНТА МОЖЕТ НЕ БЫТЬ, И ЭТО НОРМА (bugs/87; обработка переехала сюда
@@ -494,11 +518,41 @@
         signupStep = 'facts';
         return;
       }
+      await bornAccount(result);
       location.reload(); // сессия появилась — перезагружаем экран уже как вошедший
       return;
     }
 
     signupStep = 'choose'; // форма почты: дальше по той же дороге, что и у гостя
+  }
+
+  /**
+   * Аккаунт родился только что — документ профиля заводится ЗДЕСЬ, до перезагрузки экрана
+   * (`bugs/NEW_google_signin_newcomer_lands_on_load_error.md`; тот же шаг у письма — `finishEmailLink`,
+   * `bugs/235`). Счётчик воронки дожидаемся: следующей строкой зовущий перезагрузит страницу.
+   */
+  async function bornAccount(result: { uid: string; created: boolean }): Promise<void> {
+    if (!result.created) return;
+    await ensureSpaceExists(result.uid, lang);
+    await track('account_created');
+  }
+
+  /**
+   * «Войти через Google» в двери «У меня уже есть аккаунт» — вход в СВОЙ аккаунт из-под гостя
+   * (`bugs/NEW_guest_signin_door_has_no_google.md`). Гость уходит, как у письма в этой же двери.
+   * Перезагрузка отпускает память вкладки — кэш экранов и лица принадлежали гостю (`cache.ts` →
+   * «ПРИВАТНОСТЬ»).
+   * [TESTED: 2026-09-19 · ручной прогон на стенде, окно эмулятора Auth: `tools/verify-google-signin.mjs` 0 провалов, мутанты М1–М4 краснеют адресно, кадры глазами; отчёт `qa/reports/2026-09-19_google-signin.md`; настоящий Google в бою не пройден — нет тестового аккаунта]
+   */
+  async function signInGoogleFromGuest() {
+    signupError = '';
+    const result = await signInWithGoogle();
+    if (!result.ok) {
+      signupError = t.account.errors[result.reason][lang];
+      return;
+    }
+    await bornAccount(result);
+    location.reload();
   }
 
   /** Продолжить гостем — тот же путь, что с лендинга. */
@@ -743,6 +797,14 @@
       if (result.created) void track('account_created');
       return;
     }
+    // Этот Google уже чей-то профиль — то же развилочное состояние, что у почты (`bugs/84`),
+    // а не красная строка «создайте аккаунт на другую почту»
+    // (`bugs/NEW_guest_google_taken_says_use_other_email.md`).
+    // [TESTED: 2026-09-19 · ручной прогон на стенде, окно эмулятора Auth: `tools/verify-google-signin.mjs` 0 провалов, мутанты М1–М4 краснеют адресно, кадры глазами; отчёт `qa/reports/2026-09-19_google-signin.md`; настоящий Google в бою не пройден — нет тестового аккаунта]
+    if (result.reason === 'already-in-use') {
+      signupStep = 'mine?';
+      return;
+    }
     signupError = t.account.errors[result.reason][lang];
   }
 
@@ -960,6 +1022,9 @@
         en: 'Your results live in a temporary guest profile. Create a full account linked to your email address to keep your ratings and relations, and so that NDim Space can look for people similar to you even when you are not using NDim Space.',
       },
       google: { ru: 'Продолжить с Google', en: 'Continue with Google' },
+      // Кнопка ВХОДА в двери «У меня уже есть аккаунт» — слова экрана входа дословно
+      // (`SigninScreen.svelte`, макет V1 «Колонна», утверждён владельцем 2026-09-04).
+      googleSignin: { ru: 'Войти через Google', en: 'Continue with Google' },
       emailPlaceholder: { ru: 'Ваш адрес электронной почты', en: 'Your email address' },
       sendLink: { ru: 'Получить ссылку для входа', en: 'Get a sign-in link' },
       emailNote: {
@@ -1381,6 +1446,12 @@
   }}
 />
 
+<!-- Знак Google для кнопок гостевой карточки: апгрейд («Продолжить с Google») и вход («Войти через
+     Google») — одна копия рисунка на обе. -->
+{#snippet googleMark()}
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2z" /><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" /><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z" /><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z" /></svg>
+{/snippet}
+
 {#if stand === 'signedout' || linkingDoor}
   <!-- ⛔ ОБОЛОЧКА ПРИЛОЖЕНИЯ СЮДА НЕ ЗАХОДИТ. Человек не вошёл — значит он не внутри продукта,
        и показывать ему табы, рельс и нижнюю панель приложения было ровно тем, на что владелец
@@ -1681,9 +1752,16 @@
                 </div>
               </div>
             {:else if signupStep === 'signin'}
-              <!-- Дверь «у меня уже есть аккаунт»: та же форма почты, но своим заголовком и
-                   БЕЗ Google-кнопки апгрейда — здесь человек не превращает гостя, а входит. -->
+              <!-- Дверь «у меня уже есть аккаунт»: здесь человек не превращает гостя, а ВХОДИТ.
+                   Поэтому кнопка Google здесь — ВХОДА (`signInWithGoogle`), а не апгрейда
+                   (`linkGoogle`): привязка к гостю для существующего аккаунта дала бы отказ «уже
+                   связан». До 2026-09-19 кнопки не было вовсе (`bugs/NEW_guest_signin_door_has_no_google.md`).
+                   Раскладка — как у соседнего состояния и экрана входа: Google основной, письмо вторым. -->
               <h3 class="door-title">{t.account.signinTitle[lang]}</h3>
+              <button type="button" class="btn google" onclick={signInGoogleFromGuest}>
+                {@render googleMark()}
+                {t.account.googleSignin[lang]}
+              </button>
               <p class="acc-lead">{t.account.signinLead[lang]}</p>
               <input
                 class="inp acc-email"
@@ -1693,7 +1771,7 @@
                 placeholder={t.account.emailPlaceholder[lang]}
                 bind:value={signupEmail}
               />
-              <button type="button" class="btn" onclick={requestLink}>{t.account.sendLink[lang]}</button>
+              <button type="button" class="btn ghost" onclick={requestLink}>{t.account.sendLink[lang]}</button>
               {#if signupError}<p class="err">{signupError}</p>{/if}
               <div class="guest-cta">
                 <button type="button" class="btn ghost" onclick={cancelSignIn}>{t.guest.leaveNo[lang]}</button>
@@ -1701,7 +1779,7 @@
             {:else}
               <p class="acc-lead">{t.account.lead[lang]}</p>
               <button type="button" class="btn google" disabled={signupStep === 'sending'} onclick={startGoogle}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2z" /><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" /><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z" /><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z" /></svg>
+                {@render googleMark()}
                 {t.account.google[lang]}
               </button>
               <input

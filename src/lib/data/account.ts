@@ -268,7 +268,7 @@ function classify(error: unknown): UpgradeFailure {
   if (code === 'auth/invalid-action-code' || code === 'auth/expired-action-code') {
     return 'expired-link';
   }
-  console.error('Апгрейд гостя не удался:', error);
+  console.error('Вход или апгрейд гостя не удался:', error);
   return 'unknown';
 }
 
@@ -341,18 +341,52 @@ async function finishUpgrade(): Promise<UpgradeResult> {
  */
 export async function continueWithGoogle(): Promise<UpgradeResult> {
   const user = devAuth().currentUser;
+  if (!(user && user.isAnonymous)) return signInWithGoogle();
 
   try {
-    if (user && user.isAnonymous) {
-      await linkWithPopup(user, new GoogleAuthProvider());
-      return await finishUpgrade();
-    }
+    await linkWithPopup(user, new GoogleAuthProvider());
+    return await finishUpgrade();
+  } catch (error) {
+    return { ok: false, reason: classifyGoogle(error) };
+  }
+}
 
+/**
+ * ВХОД в свой аккаунт окном Google — без привязки к кому-либо (`signInWithPopup`).
+ *
+ * Два пути сюда: дверь входа без сессии и дверь гостя «У меня уже есть аккаунт»
+ * (`bugs/NEW_guest_signin_door_has_no_google.md`). Во втором гостевая сессия уходит — ровно как у
+ * письма в той же двери: врезка «Ваши оценки исчезнут» уже предупредила человека, а слить два
+ * профиля нельзя (шапка модуля, `bugs/84`).
+ *
+ * ⚠️ `created: true` значит «аккаунт родился только что», и документ профиля ему заводит
+ * ВЫЗЫВАЮЩИЙ (`ensureSpaceExists`) — иначе новичок попадает на «Не удалось загрузить»
+ * (`bugs/NEW_google_signin_newcomer_lands_on_load_error.md`, близнец `bugs/235`).
+ *
+ * [TESTED: 2026-09-19 · ручной прогон на стенде, окно эмулятора Auth: `tools/verify-google-signin.mjs` 0 провалов, мутанты М1–М4 краснеют адресно, кадры глазами; отчёт `qa/reports/2026-09-19_google-signin.md`; настоящий Google в бою не пройден — нет тестового аккаунта]
+ */
+export async function signInWithGoogle(): Promise<UpgradeResult> {
+  try {
     const credentials = await signInWithPopup(devAuth(), new GoogleAuthProvider());
     return { ok: true, uid: credentials.user.uid, created: isNewUser(credentials) };
   } catch (error) {
-    return { ok: false, reason: classify(error) };
+    return { ok: false, reason: classifyGoogle(error) };
   }
+}
+
+/**
+ * Отказ окна Google — человеку говорится то, что правда во ВСЕХ случаях.
+ *
+ * Кроме «этот Google уже связан с другим профилем» (у него своё состояние карточки) наружу приходят
+ * закрытое окно, заблокированное окно (`auth/popup-blocked` — встроенные браузеры приложений), сеть,
+ * внутренняя ошибка. Раньше всё, кроме закрытого окна, читалось как «Не удалось создать аккаунт.
+ * Пожалуйста, попробуйте ещё раз» — неправда для того, кто входит в СВОЙ аккаунт, и пустой совет для
+ * заблокированного окна. Текст `cancelled` («Вход через Google не завершён. Попробуйте ещё раз или
+ * войдите по ссылке на почту.») верен для каждого из них и ведёт к работающей двери.
+ */
+function classifyGoogle(error: unknown): UpgradeFailure {
+  const reason = classify(error);
+  return reason === 'already-in-use' ? reason : 'cancelled';
 }
 
 /** Старое имя — оставлено для экрана профиля: там это всегда апгрейд гостя. */

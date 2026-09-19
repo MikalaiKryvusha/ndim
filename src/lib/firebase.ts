@@ -219,6 +219,10 @@ function ensureApp(): FirebaseApp {
             // Эмулятору Storage нужен явный бакет: без него getStorage() падает раньше,
             // чем connectStorageEmulator успевает его перенаправить (bugs/14).
             storageBucket: `${DEV_PROJECT_ID}.appspot.com`,
+            // Тот же капкан для входа через Google: без `authDomain` SDK роняет
+            // `auth/auth-domain-config-required` ДО окна эмулятора, и путь Google на стенде был
+            // неисполним вовсе — ни один прибор его не проходил (`bugs/NEW_google_signin_newcomer_lands_on_load_error.md`).
+            authDomain: `${DEV_PROJECT_ID}.firebaseapp.com`,
           }
         : isStage()
           ? STAGE_CONFIG
