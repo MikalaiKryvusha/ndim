@@ -28,6 +28,10 @@
  *     К4: все три оценки легли в базу со своими значениями (истина — база, а не экран, EXP-0115).
  *     К1 и К2 — для каждой из трёх, по всей трассе.
  *
+ *   УХОД — звёзды на двух карточках и сразу переход на «Профиль», пока идут отсчёты (решение
+ *     владельца в чате 2026-09-19, «А (советую)»: оценки сохраняются в момент ухода с экрана).
+ *     К5: обе оценки в базе. Контроль прибора — в миг ухода отсчёты действительно шли.
+ *
  * Контроль прибора ПЕРВЫМ (EXP-0082): улетающая обязана реально уехать вправо (> 100px) —
  * иначе «прыжка нет» зелено на трассе, где полёта не было вовсе.
  *
@@ -36,7 +40,7 @@
  *
  * Требует поднятый `npm run stand`.
  * Запуск: node tools/verify-dims-flight.mjs [--width 390|1440] [--theme light|dark]
- *                                            [--only one|series] [--trace]
+ *                                            [--only one|series|leave] [--trace]
  * Выход: test-results/dims-flight/<ширина>-<тема>/ (видео + report.txt)
  *
  * [TESTED: 2026-09-19 · стенд, 390/1440 × light/dark: на старом коде красный (К3/К4 ❌, прыжок 552px), после
@@ -48,6 +52,7 @@
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
+import { startTrace, readTrace, judgeTrace } from './lib/dims-flight.mjs';
 
 const STAND = 'http://localhost:5173';
 const AUTH = 'http://127.0.0.1:9099';
@@ -68,10 +73,6 @@ const TRACE = process.argv.includes('--trace');
  */
 const SHOTS = process.argv.includes('--shots');
 const OUT = `test-results/dims-flight/${WIDTH}-${THEME}`;
-
-/** Допуски, объявленные до прогона (см. шапку). */
-const HOLD_PX = 3;
-const MIN_FLIGHT_PX = 100;
 
 const lines = [];
 function say(text = '') {
@@ -131,109 +132,6 @@ async function dropRating(uid, dimId) {
     method: 'DELETE',
     headers: { Authorization: 'Bearer owner' },
   });
-}
-
-/** Покадровая трасса экранного `top` и сдвига X для набора карточек. Пишется со страницы. */
-async function startTrace(page, ids) {
-  await page.evaluate((tracked) => {
-    window.__fl = { rows: [] };
-    const t0 = performance.now();
-    /*
-     * Сдвиг ЖЕСТА — свойство `translate` (`flyAway`). В `transform` у улетающей карточки стоит
-     * неподвижная поправка места (Svelte / `holdInPlace`): сложенная со сдвигом, она печатала
-     * «уехала на 1056px» у карточки второй колонки на 1440. Жест, вернувшийся в `transform`,
-     * даст здесь 0 и уронит контроль прибора — громко, а не молча.
-     */
-    const shiftX = (el) => {
-      const tl = getComputedStyle(el).translate;
-      if (!tl || tl === 'none') return 0;
-      return parseFloat(tl) || 0;
-    };
-    const step = () => {
-      const now = Math.round(performance.now() - t0);
-      const frame = { t: now, cards: {} };
-      for (const id of tracked) {
-        const el = document.querySelector(`article.dim[data-dim="${id}"]`);
-        if (!el) continue;
-        const r = el.getBoundingClientRect();
-        frame.cards[id] = {
-          top: Math.round(r.top),
-          h: Math.round(r.height),
-          x: Math.round(shiftX(el)),
-          // Вышла ли карточка из потока — от этого кадра она обязана стоять на месте.
-          out: getComputedStyle(el).position === 'absolute',
-          // Для разбора (`--debug`): inline-стиль и итоговый transform/translate кадра.
-          css: el.style.cssText,
-          ct: getComputedStyle(el).transform,
-          tl: getComputedStyle(el).translate,
-          an: el.getAnimations().length,
-        };
-      }
-      window.__fl.rows.push(frame);
-      if (now < 12000) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, ids);
-}
-
-/**
- * Судит трассу по К1 и К2. `leavers` — карточки, которые должны улететь; `all` — все, за кем следим.
- * Возвращает число провалов (печатает сам).
- */
-function judgeTrace(rows, leavers, all, preTop) {
-  for (const id of leavers) {
-    const own = rows.map((r) => ({ t: r.t, c: r.cards[id] })).filter((r) => r.c);
-    const flightIdx = own.findIndex((r) => r.c.x > 2);
-    const peak = Math.max(0, ...own.map((r) => r.c.x));
-    check(peak > MIN_FLIGHT_PX, `контроль прибора: карточка ${id} уехала вправо на ${peak}px (> ${MIN_FLIGHT_PX})`);
-    if (flightIdx === -1) continue;
-    /*
-     * ⚠️ ТОЧКА ОТСЧЁТА — ПОСЛЕДНИЙ КАДР ДО ВЫХОДА ИЗ ПОТОКА, а не «кадр перед сдвигом X».
-     * Первая редакция брала кадр перед сдвигом — а прыжок случается В ТОМ ЖЕ кадре, где
-     * карточка выходит из потока, при сдвиге ещё 0. Точка отсчёта оказывалась уже ПОСЛЕ
-     * прыжка, и К1 печатал «0px» на воспроизведённом дефекте (поймал К2). В серии соседи
-     * могли подтянуть карточку выше до её собственного улёта — поэтому берётся именно кадр,
-     * а не место до первого тапа.
-     */
-    const outIdx = own.findIndex((r) => r.c.out);
-    const startIdx = outIdx === -1 ? flightIdx : Math.min(outIdx, flightIdx);
-    const before = startIdx > 0 ? own[startIdx - 1].c.top : preTop[id];
-    if (outIdx === -1) say(`  ⚠️ ${id}: из потока в полёте не выходила — соседи дёрнутся, когда её удалят`);
-    const during = own.slice(startIdx);
-    const worst = during.reduce((m, r) => Math.max(m, Math.abs(r.c.top - before)), 0);
-    const at = during.find((r) => Math.abs(r.c.top - before) === worst);
-    check(
-      worst <= HOLD_PX,
-      `К1 · ${id} улетает со своего места: отход по вертикали ${worst}px (допуск ${HOLD_PX})` +
-        (worst > HOLD_PX ? ` — стояла на ${before}px, в полёте оказалась на ${at?.c.top}px` : ''),
-    );
-  }
-  /*
-   * ⚠️ РЫВОК ОПРЕДЕЛЯЕТСЯ ФОРМОЙ ДВИЖЕНИЯ, А НЕ ВЕЛИЧИНОЙ ШАГА.
-   * Первая редакция краснела на любом шаге > 60px за кадр — и покраснела на ЗДОРОВОМ
-   * подтягивании: после серии из трёх оценок соседи едут вверх разом на 748px, `cubicOut`
-   * стартует быстро (99px за 16 мс), а трасса ещё и потеряла кадр (68 мс → 111px). И была
-   * слепа к мелкой дрожи: соседи вздрагивали на 4 → 6 → 17px в миг каждой записи серии
-   * (`flip` Svelte, см. `settle` на экране). Рывок у всех этих случаев ОДНОЙ формы: карточка
-   * стояла, за один кадр перескочила и снова стоит (прыжок в начало ленты 260 → −292 и дальше
-   * −292; рывок соседа в миг удаления невынутой карточки; шаг дрожи 885 → 876 и стоп).
-   * Анимация так не выглядит никогда: до и после своего шага она движется.
-   */
-  const REST_PX = 1;
-  const jerks = [];
-  for (const id of all) {
-    const own = rows.map((r) => ({ t: r.t, c: r.cards[id] })).filter((r) => r.c);
-    for (let i = 2; i + 1 < own.length; i += 1) {
-      const before = Math.abs(own[i - 1].c.top - own[i - 2].c.top);
-      const jump = Math.abs(own[i].c.top - own[i - 1].c.top);
-      const after = Math.abs(own[i + 1].c.top - own[i].c.top);
-      if (before <= REST_PX && jump > HOLD_PX && after <= REST_PX) {
-        jerks.push(`${id} на ${own[i].t} мс: ${own[i - 1].c.top} → ${own[i].c.top}`);
-      }
-    }
-  }
-  check(jerks.length === 0, `К2 · рывков (из покоя в покой больше ${HOLD_PX}px за кадр): ${jerks.length}` +
-    (jerks.length > 0 ? ` — ${jerks.slice(0, 4).join(' · ')}` : ''));
 }
 
 function printTrace(rows, ids) {
@@ -310,8 +208,8 @@ try {
       }
     }
     await page.waitForTimeout(2600);
-    const rows = await page.evaluate(() => window.__fl.rows);
-    judgeTrace(rows, [target], ids, { [target]: preTop });
+    const rows = await readTrace(page);
+    judgeTrace(rows, [target], ids, { [target]: preTop }, { check, say });
     printTrace(rows, ids.slice(2, 6));
     if (process.argv.includes('--debug')) {
       const own = rows.map((r) => ({ t: r.t, c: r.cards[target] })).filter((r) => r.c);
@@ -379,8 +277,8 @@ try {
     } else {
       await page.waitForTimeout(8000);
     }
-    const rows = await page.evaluate(() => window.__fl.rows);
-    judgeTrace(rows, series.map((s) => s.id), ids, preTop);
+    const rows = await readTrace(page);
+    judgeTrace(rows, series.map((s) => s.id), ids, preTop, { check, say });
     printTrace(rows, ids.slice(1, 8));
     if (process.argv.includes('--debug')) {
       for (const s of series) {
@@ -395,6 +293,40 @@ try {
     for (const s of series) {
       const inDb = await ratingInDb(uid, s.id);
       check(inDb === s.value, `К4 · ${s.id} в базе: ${inDb} (ожидали ${s.value})`);
+    }
+  }
+
+  // ── УХОД: звёзды на двух карточках и сразу уход на «Профиль» при идущих отсчётах ──────────
+  // Решение владельца в чате 2026-09-19: «А (советую)» — «оценки сохраняются в момент ухода с
+  // экрана. В «Мой NDim ID» будут все пять».
+  if (ONLY === 'all' || ONLY === 'leave') {
+    await page.goto(`${STAND}/dims`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('article.dim[data-dim]', { timeout: 30000 });
+    await page.waitForTimeout(800);
+    const ids = await page.locator('article.dim[data-dim]').evaluateAll((els) =>
+      els.slice(0, 4).map((el) => el.getAttribute('data-dim')),
+    );
+    const leave = [
+      { id: ids[1], value: 4 },
+      { id: ids[2], value: 2 },
+    ];
+    say('');
+    say(`УХОД — звёзды ${leave.map((s) => `${s.id}=${s.value}`).join(' · ')} и сразу «Профиль»`);
+    for (const s of leave) {
+      await page.locator(`article.dim[data-dim="${s.id}"] .stars .st[aria-label="${s.value}"]`).click();
+      written.add(s.id);
+      await page.waitForTimeout(250);
+    }
+    // Контроль прибора: в миг ухода отсчёты ИДУТ — иначе запись сделал бы сам таймер, и сценарий
+    // ничего не доказывал бы.
+    const ticking = await page.locator('article.dim .countdown').count();
+    check(ticking === leave.length, `контроль прибора: в миг ухода идёт отсчётов ${ticking} (ожидали ${leave.length})`);
+    await page.locator('a[href="/profile"]:visible').first().click();
+    await page.waitForURL(/\/profile/, { timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(2500);
+    for (const s of leave) {
+      const inDb = await ratingInDb(uid, s.id);
+      check(inDb === s.value, `К5 · ушли с экрана при идущем отсчёте — ${s.id} в базе: ${inDb} (ожидали ${s.value})`);
     }
   }
 
