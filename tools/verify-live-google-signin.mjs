@@ -16,7 +16,8 @@
  *          node tools/verify-live-google-signin.mjs --contour prod   [--width 1440] [--theme dark]
  * Кадры:   test-results/live-google-signin/<контур>-<ширина>-<тема>/
  *
- * [NOT-TESTED]
+ * [TESTED: 2026-09-19 · контроль на старой сборке стейджа — ГЖ-03 красный, остальное зелёное; новая сборка: стейдж 0
+ *  провалов, бой 0 провалов на 390 светлой и 1440 тёмной, кадры глазами; отчёт `qa/reports/2026-09-19_google-signin.md`]
  */
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
