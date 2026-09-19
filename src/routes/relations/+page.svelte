@@ -17,6 +17,7 @@
   // Пояснение тому, кого внёс внутрь интерактив лендинга (Ш6 `plans/67`).
   import BridgeNote from '$lib/ui/BridgeNote.svelte';
   import GuestCard from '$lib/ui/GuestCard.svelte';
+  import ScreenHead from '$lib/ui/ScreenHead.svelte';
   import Avatar from '$lib/ui/Avatar.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import Icon from '$lib/ui/Icon.svelte';
@@ -383,7 +384,9 @@
     <!-- Карточка-мостик: только для пришедшего из демо, и только когда экран знает правду о
          списке. Сама решает, показываться ли, — экран о мосте ничего не знает. -->
     <BridgeNote ready={stand === 'ready'} hasCards={(data?.cards.length ?? 0) > 0} />
-    <h1 class="screen-title">{t.title[lang]}</h1>
+    <!-- Шапка экрана — общая, и стоит ВНЕ веток: видна и пока экран грузится (слово владельца
+         2026-09-19, `$lib/ui/ScreenHead.svelte`). -->
+    <ScreenHead title={t.title[lang]} help={t.intro[lang]} />
 
     {#if stand === 'connecting'}
       <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
@@ -399,7 +402,6 @@
         {#if standError}<p class="hint mono">{standError}</p>{/if}
       </div>
     {:else if data === null || data.cards.length === 0}
-      <p class="intro">{t.intro[lang]}</p>
       {#if waitingFirst}
         <!-- Честное ожидание вместо ложного «оцените» (`plans/64`): оценки уже поставлены,
              сервер синхронизации ещё не подтвердил пересчёт. Экран перечитывает сам;
@@ -412,8 +414,6 @@
         <div class="card"><p class="state">{t.empty[lang]}</p></div>
       {/if}
     {:else}
-      <!-- Вводная подсказка экрана — канон 1.x (bugs/27) -->
-      <p class="intro">{t.intro[lang]}</p>
       {#each data.cards.slice(0, revealed) as card, index (card.entry.guestUid)}
         {@const entry = card.entry}
         <!-- Лёгкая лесенка появления: карточки приходят друг за другом, а не стеной. -->
@@ -555,12 +555,6 @@
     flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px;
     width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
   }
-  .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); }
-  /* Вводная подсказка экрана (канон 1.x, bugs/27). */
-  .intro {
-    font-size: 12px; line-height: 1.55; color: var(--dim); margin: 0;
-    padding: 10px 12px; border-radius: 10px; background: var(--edge-soft);
-  }
 
   /* ── Десктоп: макет V2 «Рабочий стол» (утверждён владельцем 2026-07-11) ──
      Рельс слева во всю высоту, справа шапка и контент. Связи — сетка карточек:
@@ -585,9 +579,8 @@
       align-content: start;
       gap: 14px;
     }
-    .body > .screen-title,
-    .body > .state,
-    .body > .intro {
+    .body > :global(.screen-head),
+    .body > .state {
       grid-column: 1 / -1;
     }
     /* Плашка гостя — во всю строку (`bugs/226`). `:global` — элемент чужой, из

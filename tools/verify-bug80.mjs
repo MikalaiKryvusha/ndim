@@ -390,11 +390,18 @@ try {
     await page.evaluate(([selector, neighbour]) => {
       window.__fly = { first: null, last: null, gone: null, frames: 0, peak: 0, trace: [], nb: [] };
       const t0 = performance.now();
+      /*
+       * 🔄 2026-09-19: сдвиг ЖЕСТА живёт в свойстве `translate`, а не в `transform`
+       * (`flyAway` на экране «Измерения»). В `transform` у улетающей карточки теперь стоит
+       * НЕПОДВИЖНАЯ поправка места, которую ставит Svelte, вынимая её из потока; сдвиг жеста,
+       * написанный туда же, эту поправку затирал, и карточка ниже по списку улетала из
+       * начала ленты (слово владельца того же дня). Читать `transform` здесь значило бы
+       * мерить поправку: у карточки второй колонки это 576px «сдвига» ещё до жеста.
+       */
       const shiftX = (el) => {
-        const tr = getComputedStyle(el).transform;
-        if (!tr || tr === 'none') return 0;
-        const nums = tr.slice(tr.indexOf('(') + 1, -1).split(',').map(Number);
-        return nums.length === 6 ? nums[4] : (nums[12] ?? 0);
+        const tl = getComputedStyle(el).translate;
+        if (!tl || tl === 'none') return 0;
+        return parseFloat(tl) || 0;
       };
       const step = () => {
         const el = document.querySelector(selector);

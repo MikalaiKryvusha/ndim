@@ -27,12 +27,12 @@
    * (--panel/--card-shadow), движение — переходы Svelte по канону MOTION (`$lib/ui/motion`).
    */
   import { onMount, tick } from 'svelte';
-  import { flip } from 'svelte/animate';
   import { cubicOut } from 'svelte/easing';
   import { fade, fly, slide } from 'svelte/transition';
 
   import AppBar from '$lib/ui/AppBar.svelte';
   import GuestCard from '$lib/ui/GuestCard.svelte';
+  import ScreenHead from '$lib/ui/ScreenHead.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import Loading from '$lib/ui/Loading.svelte';
@@ -182,9 +182,30 @@
   let expanded = $state<string | null>(null);
   let menuOpen = $state<string | null>(null);
 
-  /** Оценка выбрана, но ещё не сохранена: идёт обратный отсчёт. */
-  let pending = $state<{ dimId: string; value: number; left: number } | null>(null);
-  let ticker: ReturnType<typeof setInterval> | null = null;
+  /**
+   * Оценки выбраны, но ещё не сохранены: У КАЖДОЙ КАРТОЧКИ СВОЙ ОБРАТНЫЙ ОТСЧЁТ.
+   *
+   * Слово владельца 2026-09-19, дословно: «Если я поставил звёзды одному измерению и ставлю
+   * звезды другому измерению — это не должно снимать звезды с того первого измерения, а оно
+   * просто должно запускать в очередном измерении очередной таймер сохранения — можно очень
+   * быстро сколько угодно много измерений оценивать, просто запуская им таймеры выставкой звёзд.»
+   *
+   * Прежняя редакция держала ОДИН отсчёт на экран и отменяла его звёздами на другой карточке
+   * («сохраняем только то, на что смотрят» — выбор агента, не слово владельца). Замер
+   * `tools/verify-dims-flight.mjs` до правки: из трёх оценок подряд в базу легла одна.
+   * Ключ — `dimId`; карта пересоздаётся целиком при каждой правке (идиом файла, как `ratings`),
+   * иначе `$state` не увидит изменения внутри `Map`.
+   */
+  let pending = $state<Map<string, { value: number; left: number }>>(new Map());
+  /** Таймеры отсчётов — по одному на карточку. Не реактивны: экран рисует `pending`, а не их. */
+  const tickers = new Map<string, ReturnType<typeof setInterval>>();
+
+  /** Копия карты или множества без одного ключа — для реактивных `pending`, `saved`, `leaving`. */
+  function without<T extends Map<string, unknown> | Set<string>>(source: T, key: string): T {
+    const next = (source instanceof Map ? new Map(source) : new Set(source)) as T;
+    next.delete(key);
+    return next;
+  }
 
   /**
    * СОХРАНЁННАЯ КАРТОЧКА ДЕРЖИТ СВОЙ ВИД ДО КОНЦА ОТЪЕЗДА (bugs/172).
@@ -202,22 +223,26 @@
    * НА ОДНОМ КАДРЕ, ряд смайликов 22px → 0 за 240 мс переходом `slide`, кнопка исчезала на
    * +100 мс — и только потом, ещё через сотню миллисекунд, карточка трогалась с места.
    *
-   * Флагом `saved` внутри `pending` это не лечится: пока карточка летит (700 мс), человек
-   * вправе тапнуть звезду на СОСЕДНЕЙ карточке, а `pick()` заменяет `pending` целиком — и
-   * улетающая обстриглась бы на середине пути. Два состояния живут независимо и не мешают
-   * друг другу: `pending` — «идёт отсчёт», `saved` — «уже сохранено и сейчас уедет».
+   * Флагом `saved` внутри `pending` это не лечится: запись в `pending` гаснет в `commit()` ДО
+   * улёта, и улетающая обстриглась бы на середине пути. Два состояния живут независимо и не
+   * мешают друг другу: `pending` — «идёт отсчёт», `saved` — «уже сохранено и сейчас уедет».
    *
    * Гасится по `outroend` самой карточки — то есть ровно тогда, когда отъезд закончился, а не
    * по таймеру на глазок. Ветки, где карточка ОСТАЁТСЯ (выдача поиска, «Мой NDim ID»), гасят
    * его сами: там отъезда нет и события не будет.
+   *
+   * С независимыми отсчётами (2026-09-19) сохранённых и улетающих карточек бывает несколько
+   * разом, поэтому это карта «dimId → оценка», а не одна запись.
    */
-  let saved = $state<{ dimId: string; value: number } | null>(null);
+  let saved = $state<Map<string, number>>(new Map());
 
   /**
-   * Оценённая карточка уезжает ВПРАВО (жест 1.x). Метка отличает этот уход от обычного
+   * Оценённые карточки уезжают ВПРАВО (жест 1.x). Метка отличает этот уход от обычного
    * исчезновения (фильтр, смена вкладки): out-переход по ней выбирает большой сдвиг вправо.
+   * Множество, а не одна строка: две записи подряд могут завершиться в одном кадре, и
+   * одиночная метка отдала бы жест только последней.
    */
-  let leaving = $state<string | null>(null);
+  let leaving = $state<Set<string>>(new Set());
 
   /**
    * ПОКА КАРТОЧКА ЛЕТИТ, СОСЕДИ НЕ ЗАНИМАЮТ ЕЁ МЕСТО (жалоба владельца 2026-07-30, дословно:
@@ -305,7 +330,8 @@
     })();
 
     return () => {
-      if (ticker !== null) clearInterval(ticker);
+      for (const ticker of tickers.values()) clearInterval(ticker);
+      tickers.clear();
       if (undoTimer !== null) clearTimeout(undoTimer);
     };
   });
@@ -542,39 +568,46 @@
     if (starValue(dimId) === value) {
       // Идёт отсчёт по ЭТОЙ карточке — человек передумал: отменяем, записи не будет.
       // (Роль `hideSaveButton` из 1.x играет отмена отсчёта: сохраняла кнопка — теперь время.)
-      if (pending?.dimId === dimId) {
-        stopCountdown();
-        pending = null;
+      if (pending.has(dimId)) {
+        stopCountdown(dimId);
+        pending = without(pending, dimId);
       }
       // Оценка уже сохранена — жест звезды её не удаляет. Заодно не платим Firestore за
       // запись того же значения (канон «экономить запросы», AGENT_GUIDE → «Модель данных»).
       return;
     }
 
-    // Передумал на другой карточке — прежний отсчёт отменяем: сохраняем только то, на что смотрят.
-    stopCountdown();
-    pending = { dimId, value, left: COUNTDOWN_SECONDS };
+    // Звёзды на ДРУГОЙ карточке запускают ЕЙ свой отсчёт и не трогают чужие (слово владельца
+    // 2026-09-19 — см. `pending`). Другая звезда на ЭТОЙ же карточке перезапускает её отсчёт.
+    stopCountdown(dimId);
+    pending = new Map(pending).set(dimId, { value, left: COUNTDOWN_SECONDS });
 
-    ticker = setInterval(() => {
-      if (pending === null) return;
-      const left = pending.left - 1;
-      if (left <= 0) {
-        void commit();
-        return;
-      }
-      pending = { ...pending, left };
-    }, 1000);
+    tickers.set(
+      dimId,
+      setInterval(() => {
+        const ticking = pending.get(dimId);
+        if (ticking === undefined) return;
+        const left = ticking.left - 1;
+        if (left <= 0) {
+          void commit(dimId);
+          return;
+        }
+        pending = new Map(pending).set(dimId, { ...ticking, left });
+      }, 1000),
+    );
   }
 
-  function stopCountdown(): void {
-    if (ticker !== null) clearInterval(ticker);
-    ticker = null;
+  function stopCountdown(dimId: string): void {
+    const ticker = tickers.get(dimId);
+    if (ticker !== undefined) clearInterval(ticker);
+    tickers.delete(dimId);
   }
 
-  /** Сохраняет выбранную оценку. Вызывается и по истечении отсчёта, и по «Сохранить сейчас». */
-  async function commit(): Promise<void> {
-    if (pending === null || uid === null) return;
-    const { dimId, value } = pending;
+  /** Сохраняет выбранную оценку карточки. Вызывается и по истечении её отсчёта, и по «Сохранить сейчас». */
+  async function commit(dimId: string): Promise<void> {
+    const ticking = pending.get(dimId);
+    if (ticking === undefined || uid === null) return;
+    const { value } = ticking;
 
     /*
      * СЛЕД УЛЕТАЮЩЕЙ КАРТОЧКИ ПРИБИВАЕТСЯ ПЕРВЫМ ДЕЙСТВИЕМ — до `pending = null` и до любого
@@ -610,9 +643,9 @@
      * оценки. Прежняя редакция гасила `pending` и оставляла карточку пустой на всё время
      * записи в Firestore и ещё сотню миллисекунд сверх — это и видел владелец.
      */
-    saved = { dimId, value };
-    stopCountdown();
-    pending = null;
+    saved = new Map(saved).set(dimId, value);
+    stopCountdown(dimId);
+    pending = without(pending, dimId);
 
     try {
       await saveRating(uid, dimId, value);
@@ -625,7 +658,7 @@
       }
       // …и «сохранено» снимаем: карточка не сохранена, врать о ней нельзя. Звёзды при этом
       // честно возвращаются к тому, что лежит в `ratings`, — то есть к прежней оценке.
-      saved = null;
+      saved = without(saved, dimId);
       return;
     }
 
@@ -656,14 +689,14 @@
       // если она исчезнет в момент оценки, он решит, что что-то сломалось.
       // Отъезда здесь нет, значит `outroend` не придёт — гасим «сохранено» сами, иначе
       // зелёная кнопка осталась бы на карточке навсегда (bugs/172).
-      saved = null;
+      saved = without(saved, dimId);
       showUndo(dimId, card ? dimCardTitle(loc(card.title), card.year).name : '');
     } else if (tab === 'all') {
       // Карточка уезжает вправо (как в 1.x): её везёт out-переход, а соседей плавно
-      // подтягивает animate:flip — руками ничего не хронометрируем.
-      leaving = dimId;
+      // подтягивает animate:settle (свой FLIP) — руками ничего не хронометрируем.
+      leaving = new Set(leaving).add(dimId);
       // …но подтягивает их ПОСЛЕ ухода, а не одновременно с ним: флаг держится ровно столько,
-      // сколько длится жест, и на это время `animate:flip` получает задержку.
+      // сколько длится жест, и на это время `animate:settle` получает задержку.
       flying = true;
       if (flightTimer !== null) clearTimeout(flightTimer);
       flightTimer = setTimeout(() => (flying = false), MOTION.gesture);
@@ -671,7 +704,7 @@
     } else {
       // Во вкладке «Мой NDim ID» карточка тоже остаётся — гасим «сохранено» по той же
       // причине, что и в выдаче поиска: отъезда нет, `outroend` не придёт.
-      saved = null;
+      saved = without(saved, dimId);
     }
     // Во вкладке «Мой NDim ID» карточка ОСТАЁТСЯ и переезжает по сортировке. Раньше смена
     // оценки отсюда ВЫКИДЫВАЛА карточку из вкладки, хотя оценка стояла (bugs/18, п. 4).
@@ -700,11 +733,11 @@
     const next = new Map(ratings);
     next.delete(dimId);
     ratings = next;
-    leaving = null; // вернувшаяся карточка впредь уходит как обычная, а не «вправо»
+    leaving = without(leaving, dimId); // вернувшаяся карточка впредь уходит как обычная, а не «вправо»
     // …и «сохранено» с неё снимается: оценки больше нет, зелёная кнопка на ней была бы
     // ложью. Отмена во время полёта воскрешает ТОТ ЖЕ узел (bugs/96), поэтому событие
     // `outroend` может и не прийти вовсе — гасим здесь явно (bugs/172).
-    if (saved?.dimId === dimId) saved = null;
+    if (saved.has(dimId)) saved = without(saved, dimId);
 
     // Возвращаем измерение в начало очереди и сразу показываем — человек должен УВИДЕТЬ результат.
     queue = feedWithRestored(queue, dimId);
@@ -728,6 +761,11 @@
      * поймал: overflow пуст, height вернулся 246px). Двойной rAF — приём bugs/90:
      * «восстановление платформы прилетает следующим кадром». Если улёт уже завершился и
      * узел умер — селектор вернёт свежий узел без стилей (или null), очистка безвредна.
+     *
+     * Вместе со следом снимается и ВЫХОД ИЗ ПОТОКА (`holdInPlace`, 2026-09-19): когда Svelte
+     * вынимал карточку сам, его `unfix()` возвращает прежние стили, но когда вынимал
+     * `holdInPlace` (у Svelte был пропуск), возвращать их некому — карточка осталась бы
+     * `position: absolute` поверх ленты.
      */
     await tick();
     requestAnimationFrame(() =>
@@ -736,6 +774,10 @@
         if (returned !== null) {
           returned.style.height = '';
           returned.style.overflow = '';
+          returned.style.position = '';
+          returned.style.width = '';
+          returned.style.transform = '';
+          returned.style.transition = '';
         }
       }),
     );
@@ -802,11 +844,13 @@
    * `null` — не оценено, все звёзды пусты.
    */
   function starValue(dimId: string): number | null {
-    if (pending?.dimId === dimId) return pending.value;
+    const ticking = pending.get(dimId);
+    if (ticking !== undefined) return ticking.value;
     // Сохранённая и уезжающая карточка светит своими звёздами до конца отъезда (bugs/172).
-    // Ветка нужна и после обновления `ratings`: между `pending = null` и ответом Firestore
+    // Ветка нужна и после обновления `ratings`: между снятием отсчёта и ответом Firestore
     // есть окно, в котором оценки нет НИ ТАМ, НИ ТАМ, — ровно в нём звёзды и гасли.
-    if (saved?.dimId === dimId) return saved.value;
+    const kept = saved.get(dimId);
+    if (kept !== undefined) return kept;
     return ratings.get(dimId) ?? null;
   }
 
@@ -862,13 +906,15 @@
    * `t` у out-перехода Svelte идёт от 1 к 0 (с применённым easing): при `t = 1` карточка на
    * месте и видна, при `t = 0` — за краем и прозрачна.
    */
-  function flyAway(_node: Element, { away }: { away: boolean }) {
+  function flyAway(node: Element, { away }: { away: boolean }) {
+    holdInPlace(node as HTMLElement);
     // Обычное исчезновение (фильтр, смена вкладки) осталось прежним: короткий уход вниз.
     // Меняем ТОЛЬКО жест «оценил — уехала вправо», о котором говорил владелец.
+    // Сдвиг — свойством `translate`, а не `transform`: почему — в `holdInPlace`.
     if (!away) {
       return {
         duration: MOTION.fast,
-        css: (t: number) => `transform: translateY(${(1 - t) * 8}px); opacity: ${t}`,
+        css: (t: number) => `translate: 0 ${(1 - t) * 8}px; opacity: ${t}`,
       };
     }
     /*
@@ -892,9 +938,85 @@
         const u = 1 - t;
         const shift = 480 * Math.pow(u, 1.7);
         const opacity = u < 0.8 ? 1 : Math.max(0, (1 - u) / 0.2);
-        return `transform: translateX(${shift}px); opacity: ${opacity}`;
+        return `translate: ${shift}px 0; opacity: ${opacity}`;
       },
     };
+  }
+
+  /**
+   * УЛЕТАЮЩАЯ КАРТОЧКА УЕЗЖАЕТ СО СВОЕГО МЕСТА, А НЕ ИЗ НАЧАЛА ЛЕНТЫ.
+   *
+   * Слово владельца 2026-09-19, дословно: «Я в мобилке выставлял оценки измерениям, которые не
+   * в топе списка, а где-то ниже — анимация прыгает куда-то вверх, а не выполняется на том
+   * месте, где находится карточка в списке».
+   *
+   * Механика, снятая чтением исходника Svelte (`each.js` → `fix()`, `transitions.js`) и замером
+   * `tools/verify-dims-flight.mjs` (390px, четвёртая карточка: прыжок 552px вверх в первом же
+   * кадре улёта). У карточки с `animate:` Svelte перед уходом вынимает её из потока —
+   * `position: absolute` — и возвращает на место поправкой `transform: translate(…)`. Лента на
+   * телефоне — flex-колонка, и вынутая карточка без поправки встаёт В НАЧАЛО ЛЕНТЫ. Переход
+   * улёта писал свой `transform: translateX(…)`, а анимация перебивает inline-стиль: поправка
+   * пропадала, карточка прыгала в начало ленты и улетала оттуда. Первая карточка ленты этого
+   * не показывала по построению — её место и есть начало ленты; поэтому прежние приборы,
+   * оценивавшие первую, были зелёными.
+   *
+   * Лечение — три строки, и каждая закрывает свою половину (все три сняты замером по кадрам,
+   * `verify-dims-flight.mjs --debug`):
+   *   1) сдвиг улёта — ОТДЕЛЬНЫМ свойством `translate` (оно складывается с `transform`, а не
+   *      заменяет его): поправка Svelte остаётся жить весь полёт;
+   *   2) у улетающей карточки снимается CSS-переход. У `.dim` стоит `transition: transform`
+   *      (подъём на 1px при наведении, `bugs/147`), и поправку Svelte — смену inline-`transform`
+   *      — он растягивал на 180 мс: карточка всё равно на миг оказывалась в начале ленты и ехала
+   *      оттуда на место (замер после первой строки лечения: 0 → 46 → 144 → 258px за 50 мс).
+   *      Снимается ДО первого чтения стиля: тогда смена `transform` и `transition: none`
+   *      попадают в один пересчёт, и переход не начинается вовсе;
+   *   3) эта функция — на случай, когда Svelte карточку НЕ вынул. Его `fix()` молча пропускает
+   *      элемент, у которого идёт анимация, а при быстрой серии оценок (независимые отсчёты,
+   *      слово владельца того же дня) следующая карточка часто ещё подтягивается `flip` на
+   *      место предыдущей. Тогда она оставалась в потоке, улетала, а соседи прыгали вверх
+   *      рывком в миг её удаления. Здесь она вынимается так же, как это делает Svelte, — с
+   *      того места, где её ВИДНО в этот кадр (подтягивание гасится).
+   *
+   * Вызывается синхронно в начале out-перехода: Svelte зовёт функцию перехода сразу после
+   * `fix()` и ДО того, как соседи измерят своё новое место (их `flip` идёт микрозадачей позже),
+   * поэтому соседи видят карточку уже вне потока и подтягиваются плавно.
+   */
+  /**
+   * ПОДТЯГИВАНИЕ СОСЕДЕЙ — свой FLIP вместо `flip` из `svelte/animate` (2026-09-19).
+   *
+   * `flip` Svelte умножает сдвиг на `clientHeight / to.height` — это поправка на масштаб
+   * предков. У карточки рамка 1px: `clientHeight` её не содержит, а прямоугольник
+   * `getBoundingClientRect` содержит, и сдвиг выходит короче настоящего на ~1 % пути.
+   * Одиночный улёт (путь 258px) давал 2–3px рывка в первом кадре — глазу незаметно. Серия
+   * оценок подряд (независимые отсчёты, слово владельца того же дня) кладёт подтягивания друг
+   * на друга, и ошибка копится: замер `verify-dims-flight.mjs --only series --trace` — соседи
+   * вздрагивали на 4 → 6 → 17px в миг каждой записи.
+   * У ленты нет масштаба (ни `zoom`, ни `scale` у предков), поэтому поправка на него не нужна:
+   * сдвиг — ровно разница прямоугольников. Масштаб самой карточки (`scale` у `flip`) тоже не
+   * нужен: при перестроении карточка размер не меняет, а если растёт (ряд смайликов выезжает
+   * у только что оценённой), сжимать её на время подтягивания хуже, чем дать дорасти.
+   */
+  function settle(
+    _node: Element,
+    { from, to }: { from: DOMRect; to: DOMRect },
+    params: { delay: number; duration: number; easing: (t: number) => number },
+  ) {
+    const dx = from.left - to.left;
+    const dy = from.top - to.top;
+    return { ...params, css: (_t: number, u: number) => `transform: translate(${u * dx}px, ${u * dy}px)` };
+  }
+
+  function holdInPlace(node: HTMLElement): void {
+    node.style.transition = 'none'; // до первого чтения стиля — см. строку 2 выше
+    if (getComputedStyle(node).position === 'absolute') return; // Svelte уже вынул сам
+    const from = node.getBoundingClientRect();
+    for (const running of node.getAnimations()) running.cancel();
+    const { width, height } = getComputedStyle(node);
+    node.style.position = 'absolute';
+    node.style.width = width;
+    node.style.height = height;
+    const to = node.getBoundingClientRect();
+    node.style.transform = `translate(${from.left - to.left}px, ${from.top - to.top}px)`;
   }
 
   /** Добрать «Мой NDim ID» до прежнего числа карточек. Карточки уже в памяти — это 0 чтений. */
@@ -1333,7 +1455,9 @@
 
   <main class="body">
   <GuestCard />
-    <h1 class="screen-title">{t.title[lang]}</h1>
+    <!-- Шапка экрана — общая, и стоит ВНЕ веток: вводная подсказка (канон 1.x, bugs/27) видна
+         и пока экран грузится (слово владельца 2026-09-19, `$lib/ui/ScreenHead.svelte`). -->
+    <ScreenHead title={t.title[lang]} help={t.intro[lang]} />
 
     {#if stand === 'connecting'}
       <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
@@ -1349,8 +1473,6 @@
         {#if standError}<p class="hint mono">{standError}</p>{/if}
       </div>
     {:else}
-      <!-- Вводная подсказка экрана — канон 1.x (bugs/27) -->
-      <p class="intro">{t.intro[lang]}</p>
 
       <!--
         Строка поиска ПРИБИТА под шапкой, и в ней живёт вход в «Предложить измерение»
@@ -1409,7 +1531,7 @@
         {:else if searchCards.length === 0}
           <div class="card pad" in:fade={{ duration: MOTION.base }}><p class="state">{t.nothingFound[lang]}</p></div>
         {:else if searchTotal > SEARCH_RESULT_LIMIT}
-          <p class="intro" in:fade={{ duration: MOTION.base }}>{t.tooMany[lang](SEARCH_RESULT_LIMIT)}</p>
+          <p class="note" in:fade={{ duration: MOTION.base }}>{t.tooMany[lang](SEARCH_RESULT_LIMIT)}</p>
         {/if}
       {:else if tab === 'mine' && myCount === 0}
         <!-- Пусто ИМЕННО потому, что оценок нет. Пока грузится первая порция, молчим:
@@ -1428,11 +1550,13 @@
             Вид у этих двух состояний ОДИН И ТОТ ЖЕ — в этом вся суть починки; различается
             только содержимое строки сохранения.
           -->
+          {@const ticking = pending.get(card.id)}
+          {@const kept = saved.get(card.id)}
           {@const held =
-            pending?.dimId === card.id
-              ? { value: pending.value, left: pending.left, done: false }
-              : saved?.dimId === card.id
-                ? { value: saved.value, left: 0, done: true }
+            ticking !== undefined
+              ? { value: ticking.value, left: ticking.left, done: false }
+              : kept !== undefined
+                ? { value: kept, left: 0, done: true }
                 : null}
           {@const kind = typeKind(card)}
           {@const title = dimCardTitle(loc(card.title), card.year)}
@@ -1440,9 +1564,12 @@
             class="card dim"
             data-dim={card.id}
             in:fly={{ y: 14, duration: MOTION.base, easing: cubicOut }}
-            out:flyAway={{ away: leaving === card.id }}
-            animate:flip={{ duration: MOTION.slow, delay: flying ? MOTION.gesture : 0, easing: cubicOut }}
-            onoutroend={() => { if (saved?.dimId === card.id) saved = null; }}
+            out:flyAway={{ away: leaving.has(card.id) }}
+            animate:settle={{ duration: MOTION.slow, delay: flying ? MOTION.gesture : 0, easing: cubicOut }}
+            onoutroend={() => {
+              if (saved.has(card.id)) saved = without(saved, card.id);
+              if (leaving.has(card.id)) leaving = without(leaving, card.id);
+            }}
           >
             <div class="top">
               <div class="titles">
@@ -1565,7 +1692,7 @@
                   <button type="button" class="now done" disabled>{t.savedShort[lang]}</button>
                 {:else}
                   <span>{t.savingIn[lang]} {held.left} {t.sec[lang]}…</span>
-                  <button type="button" class="now" onclick={() => void commit()}>{t.saveNow[lang]}</button>
+                  <button type="button" class="now" onclick={() => void commit(card.id)}>{t.saveNow[lang]}</button>
                 {/if}
               </div>
             {/if}
@@ -1642,13 +1769,16 @@
      Нижний отступ 24px: прежние 96px — страховка времён ДО прибитой панели,
      теперь они давали мёртвую пустую зону в конце ленты (bugs/20). */
   .body {
-    flex: 1; padding: 12px 14px 24px;
+    flex: 1; padding: 14px 14px 24px;
     width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
   }
 
-  .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); margin: 6px 0 12px; }
-  /* Вводная подсказка экрана (канон 1.x, bugs/27): спокойная плашка, а не карточка. */
-  .intro {
+  /* Шапка экрана — общий компонент; `.body` здесь блочный, поэтому зазор под шапкой задаёт
+     экран. Верхнего поля у неё нет: заголовок стоит на той же высоте от верха рабочей области,
+     что на остальных экранах (замер `verify-screen-heads`: было 18px против 14 на телефоне). */
+  .body > :global(.screen-head) { margin: 0 0 12px; }
+  /* Строка «найдено слишком много» над выдачей поиска — спокойная плашка того же вида. */
+  .note {
     font-size: 12px; line-height: 1.55; color: var(--dim); margin: 0 0 12px;
     padding: 10px 12px; border-radius: 10px; background: var(--edge-soft);
   }
@@ -1834,7 +1964,7 @@
 
   .feed { display: flex; flex-direction: column; gap: 12px; }
 
-  /* Карточка. Уезд вправо и подтягивание соседей — переходы Svelte (fly + flip). */
+  /* Карточка. Уезд вправо и подтягивание соседей — переход `flyAway` и свой FLIP `settle`. */
   /*
    * 🔴 У КАРТОЧЕК ИЗМЕРЕНИЙ ТЕНИ НЕТ (`bugs/147`, слово владельца 2026-08-17): «*какая-то тень
    * внутри карточки исчезает, снаружи карточки появляется — не нравятся мне эти тени. Карточка

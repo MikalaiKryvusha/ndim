@@ -20,6 +20,7 @@
   import { fly } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import GuestCard from '$lib/ui/GuestCard.svelte';
+  import ScreenHead from '$lib/ui/ScreenHead.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import type { IconName } from '$lib/ui/icons';
@@ -383,10 +384,10 @@
 
   <main class="body">
   <GuestCard />
-    <div class="head">
-      <h1 class="screen-title">{t.title[lang]}</h1>
-      <p class="lede">{t.lede[lang]}</p>
-    </div>
+    <!-- Шапка экрана — общая (слово владельца 2026-09-19: подпись «оформлена не как хелп
+         карточка, как на других страницах»). В 1.x эта строка и стояла серой плашкой под
+         заголовком (`design/reference-1x/app-03-пространство.png`). -->
+    <ScreenHead title={t.title[lang]} help={t.lede[lang]} />
 
     {#if stand === 'connecting'}
       <!-- Каноничная карточка загрузки 1.x вместо голого текста (bugs/21) -->
@@ -610,8 +611,6 @@
     flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 12px;
     width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
   }
-  .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); }
-  .lede { font-size: 12.5px; color: var(--dim); margin-top: 3px; }
   .state { font-size: 14px; color: var(--dim); text-align: center; padding: 14px 6px; }
   .mono { font-family: var(--mono); font-size: 11px; word-break: break-word; }
   .hint { font-size: 11.5px; color: var(--dim); line-height: 1.5; }
@@ -733,7 +732,7 @@
       align-items: start;
       gap: 12px;
     }
-    .head, .full { grid-column: 1 / -1; }
+    .body > :global(.screen-head), .full { grid-column: 1 / -1; }
     /* Плашка гостя — во всю строку (`bugs/226`). `:global` — элемент чужой, из
        `$lib/ui/GuestCard.svelte`; разбор класса стоит в `account/+page.svelte`.
        ⚠️ Она НЕ виджет: шаг сетки (`ideas/24`) назначает ширину виджетам, а плашка —

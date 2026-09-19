@@ -15,6 +15,7 @@
   import { fly, slide } from 'svelte/transition';
   import AppBar from '$lib/ui/AppBar.svelte';
   import GuestCard from '$lib/ui/GuestCard.svelte';
+  import ScreenHead from '$lib/ui/ScreenHead.svelte';
   import BottomNav from '$lib/ui/BottomNav.svelte';
   import SideRail from '$lib/ui/SideRail.svelte';
   // Иконки строк (bugs/17). Здесь стоял зоопарк из 15 знаков ТРЁХ разных природ —
@@ -141,7 +142,9 @@
 
   <main class="body">
   <GuestCard />
-    <h1 class="screen-title">{t.title[lang]}</h1>
+    <!-- Шапка экрана — общая с остальными экранами. Плашки-подсказки у «Меню» нет: её не было
+         и в 1.x (`design/reference-1x/app-08-меню.png`). -->
+    <ScreenHead title={t.title[lang]} />
 
     <!--
       ⚠️ МАНИФЕСТА ЗДЕСЬ БОЛЬШЕ НЕТ — НИ ВИДЖЕТА, НИ СТРАНИЦЫ, НИ ССЫЛКИ.
@@ -278,7 +281,6 @@
     flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 10px;
     width: 100%; max-width: 458px; margin: 0 auto; /* 430px контента + поля */
   }
-  .screen-title { font-size: 19px; font-weight: 700; color: var(--heading); }
   .col { display: flex; flex-direction: column; gap: 10px; }
 
   .card {
@@ -360,7 +362,7 @@
     }
     /* Колонна — большой виджет, два шага. */
     .body > .col { grid-column: span 2; }
-    .screen-title { grid-column: 1 / -1; }
+    .body > :global(.screen-head) { grid-column: 1 / -1; }
     /* Плашка гостя — во всю строку (`bugs/226`). `:global` — элемент чужой, из
        `$lib/ui/GuestCard.svelte`; разбор класса стоит в `account/+page.svelte`. */
     .body > :global(.gnote) { grid-column: 1 / -1; }
