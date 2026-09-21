@@ -1,0 +1,377 @@
+{
+  "formatVersion": 1,
+  "takenAt": "2026-09-21T17:29:23+03:00",
+  "takenBy": "tools/bing-snapshot.mjs",
+  "source": {
+    "console": "Bing Webmaster Tools",
+    "api": "https://ssl.bing.com/webmaster/api.svc/json",
+    "siteUrl": "https://ndimspace.app",
+    "protocol": "JSON/HTTP"
+  },
+  "trust": "[NOT-TESTED: живой ответ Bing] — снять может только первый настоящий прогон",
+  "assumption": {
+    "claim": "JSON-протокол переживает отставку SOAP и POX",
+    "retirementDate": "2026-08-31",
+    "verified": false,
+    "how": "первый прогон после рубежа: отдаст данные или нет"
+  },
+  "totals": {
+    "impressions": 4,
+    "clicks": 0,
+    "ctr": 0
+  },
+  "byDate": [
+    {
+      "date": "2026-07-13",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-14",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-15",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-16",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-17",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-18",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-19",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-20",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-21",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-22",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-23",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-24",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-25",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-26",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-27",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-28",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-29",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-30",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-07-31",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-01",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-02",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-03",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-04",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-05",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-06",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-07",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-08",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-09",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-10",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-11",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-12",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-13",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-14",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-15",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-16",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-17",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-18",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-19",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-20",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-21",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-22",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-23",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-24",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-25",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-26",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-27",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-28",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-29",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-30",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-08-31",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-01",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-02",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-03",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-04",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-05",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-06",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-07",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-08",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-09",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-10",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-11",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-12",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-13",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-14",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-15",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-16",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-17",
+      "impressions": 0,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-18",
+      "impressions": 4,
+      "clicks": 0
+    },
+    {
+      "date": "2026-09-19",
+      "impressions": 0,
+      "clicks": 0
+    }
+  ],
+  "unparsedRows": [],
+  "byQuery": [],
+  "byPage": [],
+  "boundaries": [
+    "позиции этот метод не отдаёт — величины нет, и выдумывать её нельзя",
+    "разрезы по устройствам и странам в списке методов не найдены (researches §6 п.5)"
+  ]
+}
