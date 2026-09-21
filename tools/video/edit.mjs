@@ -26,8 +26,8 @@
  * язык распознавания по умолчанию `ru`. Несколько дублей в один ролик — `takes.mjs`, затем этот конвейер.
  *
  * Запуск: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--script <текст речи.txt>]
- *   [--segment "файл|слово|слово" …] [--logo "png|слово|слово"] [--music <mp3 с лицензией рядом>] [--style A|B|C|D]
- *   [--speed 1.1] [--outro <кадр.png>]
+ *   [--segment "файл|слово|слово" …] [--logo "png|слово|слово" …] [--music <mp3 с лицензией рядом>] [--style A|B|C|D]
+ *   [--speed 1.1] [--outro <кадр.png>] [--no-cut] [--keep-source] [--sub-words N] [--sub-chars N]
  *   [--broll <запись экрана> --from-word <слово> --to-word <слово>]
  */
 
@@ -76,6 +76,23 @@ export const MUSIC_BED_LUFS = -20;
 export const LOGO = { width: 0, x: '(W-w)/2', y: '1220', fadeSec: 0.3 };
 
 /**
+ * Кадр по умолчанию — вертикаль Reels/Shorts. С `--keep-source` берётся РАЗМЕР ИСХОДНИКА
+ * (заказ владельца 2026-09-19: «*разрешение и битрейт сохранить как в исходнике*»), и тогда все числа
+ * вида, привязанные к высоте кадра, пересчитываются от неё: отступ субтитров и кегль считает
+ * `words-to-ass.mjs` долями, место плашки — `logoY` ниже.
+ */
+export const FRAME = { width: 1080, height: 1920 };
+
+/**
+ * Место плашки-логотипа для кадра любой высоты. 1220 из 1920 — замер пилота 001 (подбородок опускается
+ * до y ≈ 1180), доля 0,635 переносит его на другой кадр.
+ * 🔴 Доля — только СТАРТОВАЯ оценка. Итоговое место судит КРОП готового кадра на двухстрочной реплике:
+ * арифметика по кеглю уже ошибалась на 43 px (`EXP-0310`), и пропорция ошибётся так же, если лицо в
+ * новом ролике стоит иначе.
+ */
+export const logoY = (frame = FRAME) => String(Math.round((1220 / 1920) * frame.height));
+
+/**
  * Ускорение речи: видео и голос вместе, ПОСЛЕ вырезания пауз и ДО музыки, субтитров и вставок.
  *
  * 🔴 Порядок важен и он же — заказ владельца 2026-09-15: «*Ускорить видео со мной говорящим в 1.10 раза… Это не
@@ -99,6 +116,17 @@ export const SPEECH_SPEED = 1.1;
  */
 export const OUTRO_SEC = 2.0;
 export const OUTRO_FADE = 0.45;
+
+/**
+ * Появление кадра концовки — короткий переход из ролика в кадр, а не стык.
+ *
+ * Слово владельца 2026-09-19, посмотрев первую сборку: «*финальная заставка показывается резко, не хватает
+ * быстрого фейда*». Сделано `xfade`, а не парой «затемнить ролик + проявить кадр»: пара дала бы ДВА
+ * полутёмных отрезка подряд, и вместе они подошли бы к порогу 0,5 с проверки `black` — страж чёрной дыры
+ * начал бы краснеть на исправном ролике. Переход забирает `OUTRO_IN` секунд у конца ролика, поэтому общая
+ * длина = длина ролика + `OUTRO_SEC` − `OUTRO_IN`, и тишина концовки кроится под неё же.
+ */
+export const OUTRO_IN = 0.35;
 
 /** Запуск без оболочки; провал шага останавливает конвейер с именем шага, а не молча. */
 function run(step, bin, args) {
@@ -171,28 +199,32 @@ export function assertSegmentsInOrder(placed) {
  */
 export const BROLL_ZOOM = 0.06;
 
-export function brollFilter({ segments, assArg, logo }) {
+export function brollFilter({ segments, assArg, logo, logos = logo ? [logo] : [], frame = FRAME }) {
+  const { width: W, height: H } = frame;
   const parts = [];
   let last = '0:v';
   segments.forEach(({ start, end }, k) => {
     const on = `enable='between(t,${start.toFixed(3)},${end.toFixed(3)})'`;
     const len = Math.max(0.5, end - start).toFixed(3);
-    const zoom = `scale=w='trunc(1080*(1+${BROLL_ZOOM}*min(t/${len},1))/2)*2':h=-2:eval=frame,crop=1080:1920`;
-    parts.push(`[${k + 1}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,tpad=stop_mode=clone:stop_duration=${(end - start).toFixed(3)},${zoom},setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[s${k}]`);
+    const zoom = `scale=w='trunc(${W}*(1+${BROLL_ZOOM}*min(t/${len},1))/2)*2':h=-2:eval=frame,crop=${W}:${H}`;
+    parts.push(`[${k + 1}:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},fps=30,tpad=stop_mode=clone:stop_duration=${(end - start).toFixed(3)},${zoom},setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[s${k}]`);
     parts.push(`[${last}][s${k}]overlay=0:0:${on}:eof_action=pass[v${k}]`);
     last = `v${k}`;
   });
-  if (logo) {
-    const n = segments.length + 1;
-    const { start, end } = logo;
+  // Плашек может быть НЕСКОЛЬКО: на длинном ролике знак нужен и там, где автор называет продукт, и в
+  // конце под призыв (заказ 2026-09-19: «*лого плашку со ссылкой*» на ролике 66 с). Каждая — свой вход
+  // ffmpeg и свой слой поверх предыдущего; порядок проверен `assertSegmentsInOrder`, как у вставок.
+  logos.forEach((lg, k) => {
+    const n = segments.length + 1 + k;
+    const { start, end } = lg;
     const f = LOGO.fadeSec;
     const len = (end - start).toFixed(3);
-    const width = logo.width ?? LOGO.width;
+    const width = lg.width ?? LOGO.width;
     const scale = width ? `scale=${width}:-1,` : '';
-    parts.push(`[${n}:v]${scale}format=rgba,loop=loop=-1:size=1,trim=duration=${len},fade=t=in:st=0:d=${f}:alpha=1,fade=t=out:st=${Math.max(0, end - start - f).toFixed(3)}:d=${f}:alpha=1,setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[lg]`);
-    parts.push(`[${last}][lg]overlay=${logo.x ?? LOGO.x}:${logo.y ?? LOGO.y}:enable='between(t,${start.toFixed(3)},${end.toFixed(3)})':eof_action=pass[vl]`);
-    last = 'vl';
-  }
+    parts.push(`[${n}:v]${scale}format=rgba,loop=loop=-1:size=1,trim=duration=${len},fade=t=in:st=0:d=${f}:alpha=1,fade=t=out:st=${Math.max(0, end - start - f).toFixed(3)}:d=${f}:alpha=1,setpts=PTS-STARTPTS+${start.toFixed(3)}/TB[lg${k}]`);
+    parts.push(`[${last}][lg${k}]overlay=${lg.x ?? LOGO.x}:${lg.y ?? logoY(frame)}:enable='between(t,${start.toFixed(3)},${end.toFixed(3)})':eof_action=pass[vl${k}]`);
+    last = `vl${k}`;
+  });
   parts.push(`[${last}]ass='${assArg}'[v]`);
   return parts.join(';');
 }
@@ -224,10 +256,17 @@ export function speedFilter(speed) {
  * Фильтр концовки: кадр PNG на `sec` секунд с уходом в чёрное за `fade`, приклеенный к ролику; звук концовки —
  * тишина, музыку на неё положит следующий шаг. Входы: 0 — ролик с голосом, 1 — PNG, 2 — тишина.
  */
-export function outroFilter({ sec = OUTRO_SEC, fade = OUTRO_FADE } = {}) {
+export function outroFilter({ sec = OUTRO_SEC, fade = OUTRO_FADE, frameIn = OUTRO_IN, frame = FRAME, duration } = {}) {
+  if (!(duration > frameIn)) throw new Error(`концовка: нужна длительность ролика больше ${frameIn} с, дана ${duration}`);
   return [
-    `[1:v]scale=1080:1920,fps=30,format=yuv420p,fade=t=out:st=${(sec - fade).toFixed(3)}:d=${fade.toFixed(3)}[o]`,
-    '[0:v][0:a][o][2:a]concat=n=2:v=1:a=1[v][a]',
+    // 🔴 `settb=AVTB` на ОБЕИХ ветках обязателен: `xfade` отказывается сводить дорожки с разной шкалой
+    // времени. Куплено прогоном 2026-09-19 — дорожка ролика пришла со шкалой 1/15360, кадр знака со шкалой
+    // 1/30, и шаг упал с «First input link main timebase (1/15360) do not match … (1/30)».
+    `[1:v]scale=${frame.width}:${frame.height},fps=30,format=yuv420p,fade=t=out:st=${(sec - fade).toFixed(3)}:d=${fade.toFixed(3)},settb=AVTB[o]`,
+    // Переход начинается за `frameIn` до конца ролика: картинка ролика растворяется в кадре знака.
+    `[0:v]settb=AVTB[m]`,
+    `[m][o]xfade=transition=fade:duration=${frameIn.toFixed(3)}:offset=${(duration - frameIn).toFixed(3)}[v]`,
+    '[0:a][2:a]concat=n=2:v=0:a=1[a]',
   ].join(';');
 }
 
@@ -255,7 +294,26 @@ export function parseLogo(spec) {
 const probeDuration = (file) =>
   Number(run('длительность', 'ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', file]).out.trim());
 
-export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, script, segments, logo, music, outro, speed = 1, style = 'A' } = {}) {
+/**
+ * Размер и битрейты исходника — для `--keep-source`. Битрейт видеопотока может отсутствовать в контейнере;
+ * тогда он честно `null`, и конвейер возвращается к постоянному качеству, а не подставляет выдуманное число
+ * (правило трёх дверей: выдуманное число хуже отсутствующего).
+ */
+export function probeSource(file) {
+  const j = JSON.parse(run('исходник', 'ffprobe', ['-v', 'error', '-show_entries',
+    'stream=codec_type,width,height,bit_rate:format=bit_rate', '-of', 'json', file]).out);
+  const v = j.streams.find((s) => s.codec_type === 'video');
+  const a = j.streams.find((s) => s.codec_type === 'audio');
+  if (!v?.width || !v?.height) throw new Error(`у «${file}» нет видеодорожки с размером`);
+  return {
+    width: Number(v.width),
+    height: Number(v.height),
+    videoBitrate: Number(v.bit_rate) || null,
+    audioBitrate: Number(a?.bit_rate) || null,
+  };
+}
+
+export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, script, segments, logo, logos, music, outro, speed = 1, style = 'A', noCut = false, keepSource = false, subWordsMax, subChars } = {}) {
   for (const [k, p] of Object.entries(BIN)) if (!existsSync(p)) throw new Error(`нет ${k}: ${p} (NDIM_STUDIO_DIR)`);
   const license = music ? musicLicense(music) : null;
   const id = name || basename(input, extname(input));
@@ -265,13 +323,34 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
   const journal = [{ step: 'съёмка', by: 'владелец', file: input }];
   const log = (step, r, extra = {}) => journal.push({ step, by: 'агент', ms: r.ms, ...extra });
 
+  // Кадр и битрейт: по умолчанию вертикаль 1080×1920 и постоянное качество; с `keepSource` — то, чем
+  // снят и смонтирован исходник (заказ владельца 2026-09-19). Перекодирование неизбежно — субтитры,
+  // плашка и концовка вшиваются в картинку, — поэтому битрейт задаётся ЧИСЛОМ исходника, а не `crf`.
+  const src = keepSource ? probeSource(input) : null;
+  const frame = src ? { width: src.width, height: src.height } : FRAME;
+  const vArgs = src?.videoBitrate
+    ? ['-b:v', String(src.videoBitrate), '-maxrate', String(Math.round(src.videoBitrate * 1.25)), '-bufsize', String(src.videoBitrate * 2)]
+    : ['-crf', '18'];
+  const aBitrate = src?.audioBitrate ? `${Math.round(src.audioBitrate / 1000)}k` : '192k';
+  if (src) journal.push({ step: 'кадр и битрейт из исходника', by: 'агент', ...src });
+
   const norm = join(work, '01_norm.mp4');
   log('приведение формата', run('приведение формата', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', input,
-    '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,format=yuv420p',
-    '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-c:a', 'aac', '-ar', '48000', '-b:a', '192k', norm]));
+    '-vf', `scale=${frame.width}:${frame.height}:force_original_aspect_ratio=increase,crop=${frame.width}:${frame.height},fps=30,format=yuv420p`,
+    '-c:v', 'libx264', '-preset', 'veryfast', ...vArgs, '-c:a', 'aac', '-ar', '48000', '-b:a', aBitrate, norm]));
 
-  const cut = join(work, '02_cut.mp4');
-  log('вырезание пауз', run('вырезание пауз', BIN.autoEditor, [norm, '--edit', 'audio:threshold=0.04', '--margin', '0.2s', '--no-open', '--progress', 'none', '-o', cut]));
+  // 🔴 `noCut` — для УЖЕ СМОНТИРОВАННОГО владельцем ролика (заказ 2026-09-19: «*оно уже смонтировано*»).
+  // Второй проход `auto-editor` по готовому монтажу режет там, где автор паузу оставил НАМЕРЕННО, и обрывает
+  // фразы на выдохе — класс, который владелец слышит ухом, а стражи не ловят
+  // (`bugs/NEW_no_guard_for_cut_on_sounding_word.md`, `EXP-0309`). Шаг пропускается целиком, а не смягчается
+  // порогом: порог — это догадка о чужом монтаже, пропуск — свойство входа.
+  let cut = norm;
+  if (noCut) {
+    journal.push({ step: 'вырезание пауз', by: 'агент', skipped: 'вход уже смонтирован владельцем (--no-cut)' });
+  } else {
+    cut = join(work, '02_cut.mp4');
+    log('вырезание пауз', run('вырезание пауз', BIN.autoEditor, [norm, '--edit', 'audio:threshold=0.04', '--margin', '0.2s', '--no-open', '--progress', 'none', '-o', cut]));
+  }
 
   // Ускорение речи — ДО звука и музыки: музыка и наезды кладутся на уже ускоренный сырец (заказ 2026-09-15).
   let speech = cut;
@@ -279,13 +358,13 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
     speech = join(work, '02b_fast.mp4');
     log('ускорение речи', run('ускорение речи', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', cut,
       '-filter_complex', speedFilter(speed), '-map', '[v]', '-map', '[a]',
-      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-c:a', 'aac', '-ar', '48000', '-b:a', '192k', speech]), { speed });
+      '-c:v', 'libx264', '-preset', 'veryfast', ...vArgs, '-c:a', 'aac', '-ar', '48000', '-b:a', aBitrate, speech]), { speed });
   }
 
   const m = measureLoudnorm(speech);
   const audio = join(work, '03_audio.mp4');
   log('звук', run('звук', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', speech, '-af', `${VOICE_CLEAN},${loudnormApply(m)}`,
-    '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', audio]), { inputLufs: Number(m.input_i), clean: VOICE_CLEAN });
+    '-c:v', 'copy', '-c:a', 'aac', '-b:a', aBitrate, audio]), { inputLufs: Number(m.input_i), clean: VOICE_CLEAN });
 
   // Концовка приклеивается ДО музыки, чтобы музыка играла и под ней и там же уходила. Дорожка ГОЛОСА (`audio`)
   // остаётся без концовки: по ней судятся слова, паузы и высокие частоты — тишина концовки не должна их путать.
@@ -293,10 +372,12 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
   if (outro) {
     if (!existsSync(outro)) throw new Error(`нет кадра концовки: ${outro}`);
     base = join(work, '03a_outro.mp4');
+    // Тишина концовки короче кадра ровно на переход: переход съедает `OUTRO_IN` секунд ролика.
+    const dur = probeDuration(audio);
     log('концовка со знаком', run('концовка со знаком', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', audio,
-      '-loop', '1', '-t', String(OUTRO_SEC), '-i', outro, '-f', 'lavfi', '-t', String(OUTRO_SEC), '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000',
-      '-filter_complex', outroFilter(), '-map', '[v]', '-map', '[a]',
-      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-c:a', 'aac', '-ar', '48000', '-b:a', '192k', base]), { outro, sec: OUTRO_SEC, fade: OUTRO_FADE });
+      '-loop', '1', '-t', String(OUTRO_SEC), '-i', outro, '-f', 'lavfi', '-t', String(OUTRO_SEC - OUTRO_IN), '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000',
+      '-filter_complex', outroFilter({ frame, duration: dur }), '-map', '[v]', '-map', '[a]',
+      '-c:v', 'libx264', '-preset', 'veryfast', ...vArgs, '-c:a', 'aac', '-ar', '48000', '-b:a', aBitrate, base]), { outro, sec: OUTRO_SEC, fade: OUTRO_FADE });
   }
 
   // Музыка — отдельной дорожкой смеси; слова и паузы по-прежнему судятся по ГОЛОСУ (`audio`).
@@ -311,7 +392,7 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
     const mm = measureLoudnorm(mix, '');
     sound = join(work, '03c_audio_music.mp4');
     log('громкость смеси', run('громкость смеси', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', base, '-i', mix, '-map', '0:v', '-map', '1:a',
-      '-af', loudnormApply(mm), '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', sound]));
+      '-af', loudnormApply(mm), '-c:v', 'copy', '-c:a', 'aac', '-b:a', aBitrate, sound]));
     copyFileSync(license, join(out, 'music.license.txt'));
   }
 
@@ -332,7 +413,7 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
   // Строки рвутся по паузам ГОЛОСА (№088 В1): тишины замеряются на дорожке без музыки.
   const pauses = parseSilences(run('паузы голоса', 'ffmpeg', ['-hide_banner', '-nostats', '-i', audio, '-af',
     'pan=mono|c0=0.5*c0+0.5*c1,silencedetect=noise=-35dB:d=0.08', '-f', 'null', '-']).out).map((p) => ({ start: p.start * 1000, end: p.end * 1000 }));
-  const groups = groupWords(subWords, { pauses });
+  const groups = groupWords(subWords, { pauses, ...(subWordsMax ? { maxWords: subWordsMax } : {}), ...(subChars ? { maxChars: subChars } : {}) });
   const specs = [...(segments ?? []), ...(broll ? [{ file: broll, fromWord, toWord }] : [])];
   // Слова вставок ищутся в тексте СЦЕНАРИЯ с таймингом (subWords): распознавание пишет «10» вместо
   // «десяти», и якорь по распознаванию не находился (репетиция 2026-09-14).
@@ -342,21 +423,24 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
   }));
   const ass = join(work, '05_subs.ass');
   // Поверх записей экрана субтитры ниже — не закрывают карточки (`SUB_MARGIN_SCREEN`).
-  writeFileSync(ass, toAss(groups, { style, screens: placed.map((p) => ({ start: p.start * 1000, end: p.end * 1000 })) }), 'utf8');
+  writeFileSync(ass, toAss(groups, { style, width: frame.width, height: frame.height, screens: placed.map((p) => ({ start: p.start * 1000, end: p.end * 1000 })) }), 'utf8');
   writeFileSync(join(out, 'transcript.txt'), groups.map((g) => g.text).join(' '), 'utf8');
 
   const video = join(out, 'video.mp4');
   // Фильтр `ass` читает путь как аргумент фильтра: двоеточие диска и обратные слэши экранируются.
   const assArg = ass.replace(/\\/g, '/').replace(/:/g, '\\:');
-  const logoPlaced = logo ? { ...logo, ...wordRange(subWords, logo.fromWord, logo.toWord) } : null;
-  if (logoPlaced && !existsSync(logoPlaced.file)) throw new Error(`нет знака: ${logoPlaced.file}`);
-  const inputs = [...placed.flatMap((s) => ['-i', s.file]), ...(logoPlaced ? ['-i', logoPlaced.file] : [])];
+  const logoSpecs = logos ?? (logo ? [logo] : []);
+  const logoPlaced = assertSegmentsInOrder(logoSpecs.map((l) => {
+    if (!existsSync(l.file)) throw new Error(`нет знака: ${l.file}`);
+    return { ...l, ...wordRange(subWords, l.fromWord, l.toWord) };
+  }));
+  const inputs = [...placed.flatMap((s) => ['-i', s.file]), ...logoPlaced.flatMap((l) => ['-i', l.file])];
   log('монтаж кадра и субтитры', run('монтаж кадра и субтитры', 'ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', sound, ...inputs,
-    '-filter_complex', brollFilter({ segments: placed, assArg, logo: logoPlaced }), '-map', '[v]', '-map', '0:a', '-shortest',
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-movflags', '+faststart', video]),
+    '-filter_complex', brollFilter({ segments: placed, assArg, logos: logoPlaced, frame }), '-map', '[v]', '-map', '0:a', '-shortest',
+    '-c:v', 'libx264', '-preset', 'medium', ...(src?.videoBitrate ? vArgs : ['-crf', '20']), '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-movflags', '+faststart', video]),
   { words: words.length, groups: groups.length, segments: placed, logo: logoPlaced });
 
-  const report = checkVideo(video, { ass, lang, workBase: join(work, '06_recheck'), voice: audio, before: speech });  // `speech` — уже ускоренный сырец: полосы частот сравниваются с ним, а не с исходным темпом
+  const report = checkVideo(video, { ass, lang, workBase: join(work, '06_recheck'), voice: audio, before: speech, frame });  // `speech` — уже ускоренный сырец: полосы частот сравниваются с ним, а не с исходным темпом
   writeFileSync(join(out, 'selfcheck.json'), JSON.stringify(report, null, 2), 'utf8');
   journal.push({ step: 'самопроверка', by: 'агент', green: report.green });
   journal.push({ step: 'подпись, хэштеги, ссылка с меткой', by: 'агент', status: 'следующий шаг навыка — не этот скрипт' });
@@ -368,15 +452,18 @@ export function editVideo(input, { lang = 'ru', name, broll, fromWord, toWord, s
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const [input, ...rest] = process.argv.slice(2);
   if (!input) {
-    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …] [--logo "png|слово|слово"] [--music <mp3>] [--speed 1.1] [--outro <кадр.png>] [--style A|B|C|D] [--broll <запись экрана> --from-word <слово> --to-word <слово>]');
+    console.error('usage: node tools/video/edit.mjs <вход.mp4> [--lang ru|en] [--name <имя>] [--script <текст речи.txt>] [--segment "файл|слово|слово" …] [--logo "png|слово|слово" …] [--music <mp3>] [--speed 1.1] [--outro <кадр.png>] [--style A|B|C|D] [--no-cut] [--keep-source] [--sub-words N] [--sub-chars N] [--broll <запись экрана> --from-word <слово> --to-word <слово>]');
     process.exit(2);
   }
   const opt = (k) => { const i = rest.indexOf(`--${k}`); return i >= 0 ? rest[i + 1] : undefined; };
   try {
     const { out, green, journal } = editVideo(input, {
       lang: opt('lang'), name: opt('name'), broll: opt('broll'), fromWord: opt('from-word'), toWord: opt('to-word'), script: opt('script'),
-      style: opt('style'), music: opt('music'), logo: opt('logo') ? parseLogo(opt('logo')) : undefined,
+      style: opt('style'), music: opt('music'),
+      logos: rest.flatMap((v, i) => (rest[i - 1] === '--logo' ? [parseLogo(v)] : [])),
       outro: opt('outro'), speed: opt('speed') ? Number(opt('speed')) : 1,
+      noCut: rest.includes('--no-cut'), keepSource: rest.includes('--keep-source'),
+      subWordsMax: opt('sub-words') ? Number(opt('sub-words')) : undefined, subChars: opt('sub-chars') ? Number(opt('sub-chars')) : undefined,
       segments: rest.flatMap((v, i) => (rest[i - 1] === '--segment' ? [parseSegment(v)] : [])),
     });
     for (const j of journal) console.log(`${j.by === 'владелец' ? '👤' : '🤖'} ${j.step}${j.ms ? ` · ${(j.ms / 1000).toFixed(1)} с` : ''}`);

@@ -150,8 +150,11 @@ const tilt = (file) => ({ low: bandRms(file, TILT_BANDS.low), high: bandRms(file
 
 /**
  * @param {string} file готовый ролик
- * @param {{ass?: string, lang?: string, workBase?: string, voice?: string, before?: string}} [opt]
+ * @param {{ass?: string, lang?: string, workBase?: string, voice?: string, before?: string, frame?: {width:number,height:number}}} [opt]
  *   без `ass` сверка субтитров честно помечается `skipped`, а не зелёной;
+ *   `frame` — ожидаемый кадр: по умолчанию вертикаль `LIMITS`, с `--keep-source` — размер исходника
+ *   (заказ владельца 2026-09-19). Проверка `format` сверяется С НИМ, а не с константой, иначе она краснела бы
+ *   на исправном ролике — то есть стала бы ложным красным;
  *   `voice` — дорожка ГОЛОСА без музыки: паузы судятся по ней (музыка заливает тишину, и пауза в смеси не видна);
  *   `before` — звук до очистки: вместе с `voice` судит потерю высоких частот речи (`speech-hf`), иначе `skipped`
  */
@@ -162,7 +165,8 @@ export function checkVideo(file, opt = {}) {
   const probe = JSON.parse(run('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type,width,height:format=duration', '-of', 'json', file]));
   const v = probe.streams.find((s) => s.codec_type === 'video');
   const hasAudio = probe.streams.some((s) => s.codec_type === 'audio');
-  add('format', !!v && v.width === LIMITS.width && v.height === LIMITS.height, v ? `${v.width}×${v.height}` : 'нет видеодорожки');
+  const want = { width: opt.frame?.width ?? LIMITS.width, height: opt.frame?.height ?? LIMITS.height };
+  add('format', !!v && v.width === want.width && v.height === want.height, v ? `${v.width}×${v.height} (ждём ${want.width}×${want.height})` : 'нет видеодорожки');
   add('audio', hasAudio, hasAudio ? 'есть' : 'нет звуковой дорожки');
 
   const loud = parseIntegratedLufs(run('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-af', 'ebur128', '-f', 'null', '-']));
