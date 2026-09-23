@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — новый лендинг /ru: четыре макета (эпик plans/102, фаза 2)</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────────────────
+     ЧЕТЫРЕ МАКЕТА НОВОГО ЛЕНДИНГА `ndimspace.app/ru` — эпик `plans/102`, фаза 2 (`plans/103`).
+
+     ЗАКАЗ ВЛАДЕЛЬЦА 2026-09-23, дословно: «делаем лендинг поновому. ту страницу, где карта т можно
+     попробовать фунциона с максом, алисой, настей» · «вдоховляйся сайтами лендингами» (AIBoy, Eve,
+     Remaxi) · «наш лендингдоносит до людей ценность проложения ндим в решении болей изапросов».
+     Разведка — `researches/74` (образцы владельца §3, топы §6, боли и запросы §4, законы §5).
+
+     ЧЕТЫРЕ ШКОЛЫ — варианты различаются тем, что человек видит ПЕРВЫМ:
+       V1 «Игра сама вносит внутрь» — выбор владельца 2026-08-15 (`plans/52`), переписан: звёзды и
+          карта в первом экране (16Personalities · Duolingo: продукт и есть первый экран);
+       V2 «Запрос → ответ» — Remaxi: ценность картинкой продукта за полсекунды, демо вторым экраном;
+       V3 «Знакомьтесь: Макс, Алиса, Настя» — AIBoy · Eve: персонажи с характером, сравнение с одним;
+       V4 «Насколько Вы похожи» — 16Personalities: тест по одному объекту, результат, «с другом».
+
+     ДЕМО ЖИВОЕ: звёзды пересчитывают проценты и карту. Формула — макетная копия ядра
+     `src/lib/similarity/similarity.ts` (близость = 1 − (d/D)^0.7 · общность по Дайсу · похожесть =
+     произведение); копия сверена с ядром 2026-09-23 на трёх персонажах: Алиса 80, Макс 45, Настя 44
+     при стартовых оценках — совпало всё (scratchpad `persona-math.mts`).
+
+     МАТЕРИАЛ НАСТОЯЩИЙ: пять объектов — записи каталога `dims-build.json` с наибольшим числом голосов
+     («Матрица» 11 голосов, NDSR 9,3; «Гарри Поттер и философский камень» 14 · 8,4; «Интерстеллар» 10 ·
+     9,2; «Игра престолов» 8 · 9,1; «Титаник» 8 · 9,0). Числа Пространства — снимок
+     `src/lib/content/landing-metric.ts` (2026-09-19): 5 153 · 4 096 · 96 · 2 412. Портреты —
+     `static/img/personas/`. Персонажи вымышленные и подписаны так на странице.
+
+     ТЕКСТЫ. Принятые владельцем строки взяты дословно (подзаголовок 1.x; три шага главной №060;
+     поп-ап «самая сильная связь» и «Смотреть больше» №009/№043; кнопка двери каталога №036; подписи
+     чисел главной; отличие «Только объективная математика» — его строка из 1.x). Одна механическая
+     правка по канону имени: «Пространство NDim» → «Пространство NDim Space» (страж
+     `tools/guard-product-copy.mjs`, правило «имя-бренда-усечено»). Новые строки перечислены в блоке
+     «Что здесь новое» над макетами — они идут на вычитку владельцу построчно в фазе 3.
+  ───────────────────────────────────────────────────────────────────────── */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* Токены — снятые с живого продукта (`design/flow-map/design-system.json`, 2026-09-05). */
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --panel-solid: #ffffff; --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1f7fc9; --star: #e8a516; --star-off: #cfdbe8;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --link-stroke: rgba(52,130,214,.24); --node-fill: rgba(52,130,214,.38);
+    --card-shadow: 0 16px 40px rgba(29,50,71,.08); --soft-glow: rgba(20,103,214,.10);
+    --up: #0ea578; --down: #d6544f; --plate: #0b1420;
+    --hero-wash: radial-gradient(ellipse at 50% 20%, rgba(20,103,214,.10), transparent 62%);
+  }
+  :root[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.78); --panel-solid: #091322; --edge: rgba(77,159,255,.22);
+    --edge-soft: rgba(77,159,255,.14); --primary: #1467d6; --primary-ink: #fff; --accent: #3fd9ff;
+    --star: #ffc93d; --star-off: #2a3b55; --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --link-stroke: rgba(77,159,255,.16); --node-fill: rgba(99,176,255,.4);
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(0,0,0,.45); --soft-glow: rgba(63,217,255,.12);
+    --hero-wash: radial-gradient(ellipse at 50% 18%, rgba(31,168,201,.18), transparent 62%);
+  }
+  body { font: 15px/1.55 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 120px 16px 60px; }
+
+  /* ── Панель выбора: дом стиля макетов (`tools/shoot-mockups.mjs` жмёт ровно эти кнопки) ── */
+  .picker { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel-solid); border-bottom: 1px solid var(--edge); box-shadow: var(--card-shadow); font-size: 13px; }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button { font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px; border: 1px solid var(--edge); background: var(--bg); color: var(--text); }
+  .picker button.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .note { max-width: 980px; margin: 0 auto 14px; padding: 12px 16px; background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 12px; font-size: 13px; line-height: 1.55; color: var(--heading); }
+  .note b { color: var(--primary); }
+  .note ul { margin: 6px 0 0 18px; }
+  .note li { margin: 2px 0; }
+
+  #stage { margin: 0 auto; transition: max-width .2s; }
+  #stage[data-w="390"] { max-width: 390px; }
+  #stage[data-w="1440"] { max-width: 1240px; }
+  .variant { display: none; }
+  .variant.active { display: block; }
+
+  /* ── Поверхность продукта (судится стражем `guard-product-copy` по классу .screen) ── */
+  .screen { background: var(--bg); background-image: var(--hero-wash); border: 1px solid var(--edge); border-radius: 22px; overflow: hidden; color: var(--text); }
+  .wrap { padding: 0 18px; }
+  #stage[data-w="1440"] .wrap { padding: 0 56px; }
+  .sec { padding: 34px 0; }
+  #stage[data-w="1440"] .sec { padding: 56px 0; }
+  .kicker { font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; font-weight: 700; color: var(--primary); }
+  :root[data-theme="dark"] .kicker { color: var(--accent); }
+  h1 { color: var(--heading); font-size: 29px; line-height: 1.15; font-weight: 800; letter-spacing: -.01em; margin: 8px 0 10px; }
+  #stage[data-w="1440"] h1 { font-size: 46px; }
+  h2 { color: var(--heading); font-size: 22px; line-height: 1.2; font-weight: 800; margin: 6px 0 10px; }
+  #stage[data-w="1440"] h2 { font-size: 32px; }
+  .lede { font-size: 15.5px; color: var(--text); }
+  #stage[data-w="1440"] .lede { font-size: 18px; max-width: 640px; }
+  .accent { color: var(--primary); }
+  :root[data-theme="dark"] .accent { color: var(--accent); }
+  .muted { color: var(--dim); font-size: 12.5px; }
+
+  /* Шапка страницы: знак + имя, язык, тема, тихий вход для своих (№009 В3: «обычная кнопка [Войти в пространство]») */
+  .top { display: flex; align-items: center; gap: 10px; padding: 14px 18px; }
+  #stage[data-w="1440"] .top { padding: 18px 56px; }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--heading); font-size: 16px; white-space: nowrap; }
+  #stage[data-w="390"] .top { gap: 6px; padding: 14px 14px; }
+  #stage[data-w="390"] .pill { padding: 5px 7px; }
+  .brand svg { width: 30px; height: 30px; border-radius: 8px; background: var(--plate); }
+  .top .sp { flex: 1; }
+  .pill { font-size: 12px; padding: 5px 9px; border: 1px solid var(--edge); border-radius: 99px; color: var(--dim); background: var(--panel-solid); }
+  .pill.on { color: var(--primary); border-color: var(--primary); font-weight: 700; }
+  .signin { font-size: 14px; font-weight: 700; color: var(--primary); text-decoration: none; padding: 7px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--panel-solid); }
+  :root[data-theme="dark"] .signin { color: var(--accent); }
+
+  .card { background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--card-shadow); }
+  :root[data-theme="dark"] .card { background: var(--panel); backdrop-filter: blur(10px); }
+
+  /* Строка оценки: вид · «Название» (год) · звёзды 1…10 · число (канон «звёзды для ввода») */
+  .rows { display: flex; flex-direction: column; gap: 4px; }
+  .srow { padding: 8px 12px; border-radius: 12px; }
+  .srow + .srow { border-top: 1px solid var(--edge-soft); border-radius: 0; }
+  .srow .t { color: var(--heading); font-weight: 700; font-size: 14.5px; line-height: 1.25; }
+  .srow .t .yr { color: var(--dim); font-weight: 500; }
+  .srow .t .kind { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); font-weight: 700; margin-right: 6px; }
+  .srow .line { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .stars { display: flex; gap: 2px; }
+  .stars button { font-size: 21px; line-height: 1; background: none; border: 0; cursor: pointer; color: var(--star-off); padding: 0 1px; transition: transform .12s, color .12s; }
+  .stars button.on { color: var(--star); }
+  .stars button:hover { transform: scale(1.18); }
+  .srow .val { min-width: 22px; text-align: right; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+  :root[data-theme="dark"] .srow .val { color: var(--accent); }
+
+  /* Карта Пространства: «Я» в центре, три лица, расстояния настоящие */
+  .mapbox { position: relative; }
+  .map { width: 100%; height: auto; display: block; }
+  .map .ring { fill: none; stroke: var(--edge); stroke-dasharray: 3 6; }
+  .map .link { stroke: var(--primary); stroke-linecap: round; transition: all .5s cubic-bezier(.33,1,.68,1); }
+  :root[data-theme="dark"] .map .link { stroke: var(--accent); }
+  .map .me { fill: var(--primary); }
+  .map .me-t { fill: #fff; font: 700 13px 'Segoe UI', sans-serif; }
+  .map .lbl { fill: var(--heading); font: 700 13px 'Segoe UI', sans-serif; }
+  .map .face { transition: transform .5s cubic-bezier(.33,1,.68,1); }
+  .map .halo { fill: none; stroke-width: 3; }
+  .popup { position: absolute; left: 50%; transform: translateX(-50%); top: 4px; background: var(--heading); color: var(--bg); font-size: 13px; line-height: 1.3; padding: 8px 12px; border-radius: 12px; box-shadow: var(--card-shadow); white-space: normal; width: max-content; max-width: 88%; text-align: center; animation: pop 2.8s ease-in-out infinite; }
+  .popup b { color: #ffd166; }
+  :root[data-theme="dark"] .popup b { color: #1467d6; } /* в тёмной теме плашка светлая — жёлтое на ней не читается */
+  @keyframes pop { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-3px); } }
+
+  /* Кнопка моста: «Смотреть больше» мягко пульсирует и испускает волны (№009 В3) */
+  .bridge { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 26px; border-radius: 14px;
+    background: var(--primary); color: #fff; font-weight: 800; font-size: 15.5px; text-decoration: none; isolation: isolate; }
+  .bridge::before, .bridge::after { content: ''; position: absolute; inset: 0; border-radius: 14px; border: 2px solid var(--primary); z-index: -1; animation: wave 2.4s ease-out infinite; }
+  .bridge::after { animation-delay: 1.2s; }
+  @keyframes wave { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.35, 1.6); opacity: 0; } }
+  .bridge.wide { width: 100%; }
+  .honest { font-size: 12.5px; color: var(--dim); margin-top: 10px; }
+
+  /* Полоса живых чисел (подписи — главная, №060) */
+  .nums { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 10px; padding: 16px; }
+  #stage[data-w="1440"] .nums { grid-template-columns: repeat(4, 1fr); padding: 22px 28px; }
+  .nums .n { font-size: 26px; font-weight: 800; color: var(--heading); font-variant-numeric: tabular-nums; }
+  #stage[data-w="1440"] .nums .n { font-size: 34px; }
+  .nums .l { font-size: 12.5px; color: var(--dim); line-height: 1.3; }
+  .nums-title { font-size: 12px; font-weight: 700; color: var(--up); letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 7px; padding: 14px 16px 0; }
+  .nums-title::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--up); box-shadow: 0 0 0 4px rgba(14,165,120,.18); animation: beat 2s infinite; }
+  @keyframes beat { 50% { box-shadow: 0 0 0 7px rgba(14,165,120,.06); } }
+
+  /* Экран продукта в рамке телефона — собран по живым экранам «Связи» и «Измерения» */
+  .phone { width: 240px; border-radius: 34px; padding: 9px; background: #0c1320; box-shadow: 0 24px 60px rgba(12,19,32,.28); flex: 0 0 auto; }
+  .phone .scr { border-radius: 26px; overflow: hidden; background: var(--bg); min-height: 420px; position: relative; }
+  .phone .notch { width: 84px; height: 20px; border-radius: 0 0 14px 14px; background: #0c1320; margin: 0 auto 6px; }
+  .phone .bar { display: flex; align-items: center; gap: 7px; padding: 4px 12px 8px; font-weight: 800; color: var(--heading); font-size: 13px; border-bottom: 1px solid var(--edge); }
+  .phone .bar svg { width: 20px; height: 20px; border-radius: 6px; background: var(--plate); }
+  .phone .ttl { font-weight: 800; color: var(--heading); font-size: 17px; padding: 10px 12px 6px; }
+  .phone .nav { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 7px 4px 9px; border-top: 1px solid var(--edge); background: var(--panel-solid); font-size: 9.5px; color: var(--dim); }
+  .phone .nav span.on { color: var(--primary); font-weight: 700; }
+
+  /* Карточка связи — как в продукте: лицо, имя, три бара «Общность · Близость · Похожесть» */
+  .rel { background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 14px; padding: 10px; margin: 0 10px 8px; }
+  .rel .who { display: flex; align-items: center; gap: 8px; }
+  .rel .who img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+  .rel .who b { color: var(--heading); font-size: 14px; }
+  .rel .sys { font-size: 9px; padding: 2px 6px; border-radius: 99px; background: var(--edge-soft); color: var(--dim); font-weight: 700; letter-spacing: .03em; }
+  .rel .m3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; text-align: center; }
+  .rel .m3 .k { font-size: 9.5px; color: var(--dim); }
+  .rel .m3 .v { font-size: 15px; font-weight: 800; color: var(--primary); }
+  .bar2 { height: 4px; border-radius: 4px; background: var(--edge-soft); overflow: hidden; margin-top: 3px; }
+  .bar2 i { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), #1fa8c9); border-radius: 4px; transition: width .5s cubic-bezier(.33,1,.68,1); }
+
+  /* Карточка измерения — как в продукте: вид, «Название» (год), NDSR, звёзды 0…10 с цифрами */
+  .dimc { background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 14px; padding: 10px 11px; margin: 0 10px 8px; }
+  .dimc .badge { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .08em; padding: 3px 7px; border-radius: 7px; background: rgba(20,103,214,.10); color: var(--primary); }
+  .dimc .nm { color: var(--heading); font-weight: 800; font-size: 15px; margin: 5px 0 3px; }
+  .dimc .nm span { color: var(--dim); font-weight: 500; }
+  .dimc .nd { font-size: 11.5px; color: var(--dim); }
+  .dimc .nd b { color: var(--up); font-size: 15px; margin-right: 4px; }
+  .dimc .sc { display: grid; grid-template-columns: repeat(11, 1fr); margin-top: 6px; text-align: center; font-size: 12px; color: var(--star-off); }
+  .dimc .sc span { display: flex; flex-direction: column; line-height: 1.1; }
+  .dimc .sc span.on { color: var(--star); }
+  .dimc .sc small { font-size: 8.5px; color: var(--dim); }
+
+  /* Три шага */
+  .steps { display: flex; flex-direction: column; gap: 26px; align-items: center; }
+  #stage[data-w="1440"] .steps { flex-direction: row; align-items: flex-start; justify-content: space-between; }
+  .step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; max-width: 320px; }
+  .step .no { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: #fff; font-weight: 800; }
+  .step p { color: var(--text); font-size: 14.5px; }
+
+  /* Вопросы-ответы (без разметки FAQPage — researches/26 §13) */
+  .faq { max-width: 760px; margin: 0 auto; }
+  .faq details { border-bottom: 1px solid var(--edge); padding: 14px 2px; }
+  .faq summary { cursor: pointer; color: var(--heading); font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  .faq summary::after { content: '+'; color: var(--dim); font-size: 20px; line-height: 1; }
+  .faq details[open] summary::after { content: '−'; }
+  .faq details p { margin-top: 8px; font-size: 14.5px; }
+
+  /* Финальный призыв и подвал */
+  .final { text-align: center; padding: 34px 20px; border-radius: 22px; background: var(--plate); color: #dce9f7; overflow: hidden; }
+  .final h2 { color: #fff; }
+  .final .bridge { margin-top: 16px; }
+  .foot { padding: 22px 18px 28px; border-top: 1px solid var(--edge); font-size: 13px; color: var(--dim); }
+  #stage[data-w="1440"] .foot { padding: 26px 56px 34px; }
+  .foot .links { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 10px; }
+  .foot a { color: var(--text); text-decoration: none; }
+
+  /* ── V1 «Игра сама вносит внутрь» ── */
+  /* Телефон: заголовок → карта → звёзды (закон №009 В2: карта и звёзды «прямо перед глазами»).
+     Десктоп: слева заголовок и звёзды, справа карта во всю высоту. */
+  .v1 .hero { display: grid; gap: 14px; padding-top: 8px; grid-template-areas: "head" "map" "play"; }
+  .v1 .head { grid-area: head; } .v1 .play { grid-area: play; } .v1 .mapcard { grid-area: map; }
+  #stage[data-w="1440"] .v1 .hero { grid-template-columns: 1.05fr 1fr; grid-template-areas: "head map" "play map"; column-gap: 40px; row-gap: 10px; align-items: start; padding-top: 22px; }
+  #stage[data-w="390"] .v1 .mapcard { padding: 8px 6px 14px; }
+  #stage[data-w="390"] .v1 .mapcard .map { max-height: 290px; }
+  .v1 .play { padding: 10px 6px; }
+  .v1 .mapcard { padding: 14px 10px 18px; text-align: center; }
+  .v1 .after { display: grid; gap: 18px; }
+  #stage[data-w="1440"] .v1 .after { grid-template-columns: 1fr 1fr; align-items: center; }
+
+  /* ── V2 «Запрос → ответ» (Remaxi) ── */
+  /* Веер трёх экранов продукта (приём Remaxi «до/после» в первом кадре): телефоны стоят в потоке,
+     крайние наклонены и заходят под средний; масштаб — через zoom всего веера, шапку не задевает. */
+  .v2 .fan { display: flex; justify-content: center; align-items: flex-end; padding: 18px 0 24px; }
+  .v2 .fan .phone { position: relative; }
+  .v2 .fan .phone.l { transform: rotate(-8deg) translateY(26px); margin-right: -64px; z-index: 1; }
+  .v2 .fan .phone.c { z-index: 2; }
+  .v2 .fan .phone.r { transform: rotate(8deg) translateY(26px); margin-left: -64px; z-index: 1; }
+  #stage[data-w="390"] .v2 .fan { zoom: .56; }
+  #stage[data-w="1440"] .v2 .fan { zoom: .92; }
+  .v2 .center { text-align: center; }
+  .v2 .center .lede { margin: 0 auto; }
+  .v2 .down { display: inline-block; margin-top: 14px; font-weight: 800; color: var(--primary); text-decoration: none; border-bottom: 2px solid currentColor; }
+  .v2 .demo { display: grid; gap: 16px; }
+  #stage[data-w="1440"] .v2 .demo { grid-template-columns: 1fr 1fr; align-items: start; }
+  .v2 .feats { display: grid; gap: 16px; }
+  #stage[data-w="1440"] .v2 .feats { grid-template-columns: 1fr 1fr; }
+  .v2 .feat { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .v2 .feat h3 { color: var(--heading); font-size: 17px; line-height: 1.25; }
+  .v2 .feat .pic { border-radius: 14px; background: var(--bg); border: 1px solid var(--edge-soft); padding: 12px 0; }
+  .v2 .formula { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-weight: 800; color: var(--heading); padding: 10px; }
+  .v2 .formula span { background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 10px; padding: 6px 10px; }
+  .v2 .formula .x { border: 0; background: none; color: var(--dim); padding: 0; }
+
+  /* ── V3 «Знакомьтесь» (AIBoy · Eve) ── */
+  .v3 .hero { display: grid; gap: 16px; padding-top: 6px; }
+  #stage[data-w="1440"] .v3 .hero { grid-template-columns: 1fr 1.05fr; gap: 36px; align-items: center; padding-top: 24px; }
+  /* Три портрета карточками 3:4 рядом (приём AIBoy · Eve «Pick your character»): средняя выше,
+     у каждой — имя, возраст и пузырь «что я люблю» с настоящей оценкой. */
+  .v3 .trio { display: flex; gap: 8px; justify-content: center; align-items: flex-end; padding-top: 34px; }
+  .v3 .port { position: relative; width: 31%; aspect-ratio: 3 / 4; border-radius: 18px; overflow: visible; }
+  .v3 .port img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; border-radius: 18px; box-shadow: var(--card-shadow); display: block; }
+  .v3 .port.mid { width: 35%; transform: translateY(-14px); }
+  .v3 .port .nm3 { position: absolute; left: 8px; bottom: 8px; background: rgba(11,20,32,.78); color: #fff; font-weight: 800; font-size: 12.5px; padding: 3px 8px; border-radius: 9px; }
+  .v3 .bub { position: absolute; left: 50%; top: -26px; transform: translateX(-50%); z-index: 3; white-space: nowrap; font-size: 11.5px; font-weight: 700; background: var(--panel-solid); color: var(--heading); border: 1px solid var(--edge); border-radius: 12px; padding: 4px 8px; box-shadow: var(--card-shadow); animation: bob 3s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateX(-50%) translateY(-3px); } }
+  .v3 .bub b { color: var(--star); }
+  #stage[data-w="1440"] .v3 .trio { gap: 16px; }
+  #stage[data-w="1440"] .v3 .bub { font-size: 13.5px; padding: 6px 10px; top: -30px; }
+  #stage[data-w="1440"] .v3 .port .nm3 { font-size: 15px; }
+  .v3 .who3 { display: grid; gap: 12px; }
+  #stage[data-w="1440"] .v3 .who3 { grid-template-columns: repeat(3, 1fr); }
+  .v3 .pc { padding: 14px; cursor: pointer; border: 2px solid transparent; transition: border-color .2s, transform .2s; }
+  .v3 .pc:hover { transform: translateY(-2px); }
+  .v3 .pc.sel { border-color: var(--primary); }
+  .v3 .pc .top3 { display: flex; gap: 12px; align-items: center; }
+  .v3 .pc img { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; }
+  .v3 .pc b { color: var(--heading); font-size: 17px; }
+  .v3 .pc .ln { font-size: 13.5px; margin-top: 8px; }
+  .v3 .pc .loves { font-size: 12.5px; color: var(--dim); margin-top: 6px; }
+  .v3 .pc .sim { font-size: 22px; font-weight: 800; color: var(--primary); margin-left: auto; }
+  .v3 .cmp { padding: 16px; display: grid; gap: 14px; }
+  #stage[data-w="1440"] .v3 .cmp { grid-template-columns: 1.2fr 1fr; gap: 28px; padding: 24px; align-items: center; }
+  .v3 .cmp table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .v3 .cmp th { text-align: left; color: var(--dim); font-weight: 600; font-size: 12px; padding-bottom: 6px; }
+  .v3 .cmp td { padding: 7px 0; border-top: 1px solid var(--edge-soft); color: var(--heading); }
+  .v3 .cmp td.n { text-align: center; font-weight: 800; color: var(--primary); width: 64px; }
+  .v3 .math { display: grid; gap: 10px; }
+  .v3 .math .r { display: grid; grid-template-columns: 96px 1fr 44px; gap: 8px; align-items: center; font-size: 13.5px; }
+  .v3 .math .r b { text-align: right; color: var(--heading); }
+  .v3 .math .eq { font-weight: 800; color: var(--heading); font-size: 15px; }
+
+  /* ── V4 «Насколько Вы похожи» (16Personalities) ── */
+  .v4 .hero { text-align: center; padding-top: 6px; }
+  .v4 .hero .lede { margin: 0 auto; }
+  .v4 .test { max-width: 640px; margin: 18px auto 0; padding: 18px; }
+  #stage[data-w="1440"] .v4 .test { padding: 28px 34px; }
+  .v4 .prog { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--dim); }
+  .v4 .prog span:first-child { white-space: nowrap; font-weight: 700; color: var(--heading); }
+  .v4 .prog span:last-child { text-align: right; }
+  .v4 .track { height: 6px; border-radius: 6px; background: var(--edge-soft); margin: 8px 0 18px; overflow: hidden; }
+  .v4 .track i { display: block; height: 100%; width: 20%; background: linear-gradient(90deg, var(--primary), #1fa8c9); }
+  .v4 .q { font-size: 24px; font-weight: 800; color: var(--heading); text-align: center; line-height: 1.2; }
+  #stage[data-w="1440"] .v4 .q { font-size: 32px; }
+  .v4 .q span { color: var(--dim); font-weight: 500; font-size: 17px; }
+  .v4 .qk { text-align: center; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); font-weight: 700; }
+  .v4 .big { display: grid; grid-template-columns: repeat(11, 1fr); gap: 2px; margin: 16px 0 6px; text-align: center; }
+  .v4 .big span { font-size: 25px; color: var(--star-off); display: flex; flex-direction: column; line-height: 1.05; cursor: pointer; }
+  #stage[data-w="1440"] .v4 .big span { font-size: 34px; }
+  .v4 .big span.on { color: var(--star); }
+  .v4 .big small { font-size: 11px; color: var(--dim); }
+  .v4 .next { display: flex; justify-content: flex-end; margin-top: 12px; }
+  .v4 .next a { font-weight: 800; color: var(--primary); text-decoration: none; }
+  .v4 .res { display: grid; gap: 16px; }
+  #stage[data-w="1440"] .v4 .res { grid-template-columns: 1.1fr .9fr; gap: 28px; align-items: start; }
+  .v4 .resc { padding: 18px; }
+  .v4 .brow { display: grid; grid-template-columns: 40px 1fr 48px; gap: 10px; align-items: center; margin-top: 12px; }
+  .v4 .brow img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+  .v4 .brow b { text-align: right; color: var(--primary); font-size: 17px; }
+  .v4 .brow .nm { color: var(--heading); font-weight: 700; font-size: 14px; }
+  .v4 .story { width: 210px; height: 373px; margin: 0 auto; border-radius: 22px; padding: 22px 18px; background: linear-gradient(160deg, #0b1f3d, #0a1426 55%, #0b2c3a); color: #eaf4ff; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 24px 60px rgba(12,19,32,.35); }
+  .v4 .story .s1 { font-size: 12px; opacity: .8; }
+  .v4 .story .s2 { font-size: 21px; font-weight: 800; line-height: 1.2; }
+  .v4 .story .s2 b { color: #ffd166; font-size: 44px; display: block; }
+  .v4 .story img { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid #7c5cff; }
+  .v4 .story .s3 { font-size: 11px; opacity: .8; }
+  .v4 .friend { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .v4 .friend .alt { text-align: center; font-weight: 800; color: var(--primary); padding: 12px; border: 2px solid var(--primary); border-radius: 14px; text-decoration: none; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- Знак: N-сеть 1.x, вариант V3 «Диагональ» (утверждён владельцем 2026-07-11). Форма не тронута. -->
+    <linearGradient id="mk" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#1467d6"/><stop offset="1" stop-color="#1fa8c9"/></linearGradient>
+    <symbol id="mark" viewBox="0 0 32 32">
+      <g stroke="url(#mk)" stroke-width="2.6" stroke-linecap="round"><line x1="9" y1="23" x2="9" y2="9"/><line x1="9" y1="9" x2="23" y2="23"/><line x1="23" y1="23" x2="23" y2="9"/></g>
+      <g fill="url(#mk)"><circle cx="9" cy="23" r="3.1"/><circle cx="9" cy="9" r="3.1"/><circle cx="23" cy="23" r="3.1"/><circle cx="23" cy="9" r="3.1"/></g>
+    </symbol>
+    <clipPath id="face"><circle cx="0" cy="0" r="26"/></clipPath>
+  </defs>
+</svg>
+
+<div class="picker">
+  <b>Новый лендинг /ru — 4 макета:</b>
+  <button data-v="1" class="active">V1 Игра сама вносит внутрь</button>
+  <button data-v="2">V2 Запрос → ответ</button>
+  <button data-v="3">V3 Знакомьтесь: Макс, Алиса, Настя</button>
+  <button data-v="4">V4 Насколько Вы похожи</button>
+  <span class="sp"></span>
+  <button id="width">390 ↔ 1440</button>
+  <button id="theme">тема</button>
+</div>
+
+<div class="note">
+  <b>Что выбирается.</b> Вид страницы <code>ndimspace.app/ru</code> — той, где карта и Макс, Алиса, Настя. Цель — Ваше слово: «наш лендинг доносит до людей ценность приложения NDim в решении болей и запросов».
+  У всех четырёх один состав: тихий вход «Войти» для своих · живое демо со звёздами и картой · поп-ап «Ваша самая сильная связь» и кнопка «Смотреть больше» с волнами · живые числа · три шага с экранами продукта · вопросы и ответы · финальный призыв.
+  Различаются варианты тем, что человек видит <b>первым</b>. Демо живое: поставьте звёзды, и проценты с картой пересчитаются формулой ядра.
+  <br><b>Что здесь новое (Вы этих строк ещё не видели):</b>
+  <ul>
+    <li>заголовки вариантов: «Люди, которые думают так же, как и Вы» (V1) · «Пространство NDim Space находит людей, похожих на Вас, по тому, что Вы любите» (V2) · «Вымышленные персонажи Макс, Алиса и Настя поставили звёзды фильмам и сериалам» (V3) · «Насколько Вы похожи на вымышленных персонажей Макса, Алису и Настю» (V4);</li>
+    <li>надпись к демо «Оцените пять фильмов и сериалов, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы» — собрана из Вашего текста двери каталога;</li>
+    <li>пояснение «Близость — насколько одинаково Вы и другой человек оценили общие вещи» — Ваша строка из 1.x, где «одни и те же вещи» заменено на «общие вещи» по запрету «тот же»;</li>
+    <li>«Макс, Алиса и Настя — вымышленные персонажи Пространства NDim Space», строки характера персонажей, заголовки вопросов и ответов, надписи V4 про друга и карточку для сторис.</li>
+  </ul>
+  Остальное — Ваши принятые тексты дословно. Английская версия идёт с фазой текстов.
+</div>
+
+<div id="stage" data-w="390">
+
+<!-- ════════════════ V1 «Игра сама вносит внутрь» ════════════════ -->
+<div class="variant active" id="1">
+<div class="screen v1">
+  <div data-c="top"></div>
+  <div class="wrap">
+    <div class="hero">
+      <div class="head">
+        <div class="kicker">Знакомства нового измерения</div>
+        <h1>Люди, которые думают так же, <span class="accent">как и Вы</span></h1>
+      </div>
+      <div class="card play">
+        <div class="muted" style="padding:2px 12px 6px">Оцените пять фильмов и сериалов, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы.</div>
+        <div class="rows" data-c="rows"></div>
+      </div>
+      <div class="card mapcard">
+        <div class="mapbox" data-c="map"></div>
+        <a class="bridge" href="#">Смотреть больше</a>
+        <div class="honest">Макс, Алиса и Настя — вымышленные персонажи Пространства NDim Space.</div>
+      </div>
+    </div>
+    <div class="sec after">
+      <p class="lede">Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — мы подберём тех, с кем у Вас настоящая совместимость.</p>
+      <div class="card"><div data-c="nums"></div></div>
+    </div>
+    <div class="sec"><div class="kicker" style="text-align:center">Как устроено Пространство NDim Space</div><div data-c="steps" style="margin-top:18px"></div></div>
+    <div class="sec"><h2 style="text-align:center">Вопросы и ответы</h2><div data-c="faq"></div></div>
+    <div class="sec"><div data-c="final"></div></div>
+  </div>
+  <div data-c="foot"></div>
+</div></div>
+
+<!-- ════════════════ V2 «Запрос → ответ» (Remaxi) ════════════════ -->
+<div class="variant" id="2">
+<div class="screen v2">
+  <div data-c="top"></div>
+  <div class="wrap">
+    <div class="fan">
+      <div class="phone l" data-c="phone-dims"></div>
+      <div class="phone c" data-c="phone-map"></div>
+      <div class="phone r" data-c="phone-rel"></div>
+    </div>
+    <div class="center">
+      <div class="kicker">Как найти своих людей</div>
+      <h1><span class="accent">Пространство NDim Space</span> находит людей, похожих на Вас, по тому, что Вы любите</h1>
+      <p class="lede">Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — мы подберём тех, с кем у Вас настоящая совместимость.</p>
+      <a class="down" href="#">Оцените пять фильмов и сериалов ↓</a>
+    </div>
+    <div class="sec"><div class="card"><div data-c="nums"></div></div></div>
+    <div class="sec demo">
+      <div class="card" style="padding:10px 6px"><div class="muted" style="padding:2px 12px 6px">Оцените пять фильмов и сериалов, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы.</div><div class="rows" data-c="rows"></div></div>
+      <div class="card" style="padding:14px 10px 18px;text-align:center"><div class="mapbox" data-c="map"></div><a class="bridge" href="#">Смотреть больше</a><div class="honest">Макс, Алиса и Настя — вымышленные персонажи Пространства NDim Space.</div></div>
+    </div>
+    <div class="sec feats">
+      <div class="card feat"><div class="kicker">Связи</div><h3>В Связях Вы видите людей с наибольшей Похожестью на Вас.</h3><div class="pic" data-c="rel-list"></div></div>
+      <div class="card feat"><div class="kicker">Похожесть</div><h3>Похожесть — это близость, умноженная на общность.</h3><div class="pic"><div class="formula"><span>Близость <b data-k="prox">80 %</b></span><span>Общность <b data-k="com">100 %</b></span><span>Похожесть <b data-k="sim">80 %</b></span></div></div></div>
+      <div class="card feat"><div class="kicker">NDim Space Rating</div><h3>NDim Space Rating — уникальная система рейтинга Пространства NDim Space</h3><div class="pic" data-c="dimcard"></div></div>
+      <div class="card feat"><div class="kicker">Тест вдвоём</div><h3>Пришлите другу ссылку на тест: он оценит пять фильмов и сериалов, которые оценили Вы, и Пространство NDim Space покажет, насколько Вы и Ваш друг похожи.</h3><div class="pic" style="text-align:center;padding:16px"><a class="bridge" href="#">Сравниться с другом</a></div></div>
+    </div>
+    <div class="sec"><div class="kicker" style="text-align:center">Как устроено Пространство NDim Space</div><div data-c="steps" style="margin-top:18px"></div></div>
+    <div class="sec"><h2 style="text-align:center">Вопросы и ответы</h2><div data-c="faq"></div></div>
+    <div class="sec"><div data-c="final"></div></div>
+  </div>
+  <div data-c="foot"></div>
+</div></div>
+
+<!-- ════════════════ V3 «Знакомьтесь: Макс, Алиса, Настя» (AIBoy · Eve) ════════════════ -->
+<div class="variant" id="3">
+<div class="screen v3">
+  <div data-c="top"></div>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="kicker">Знакомства нового измерения</div>
+        <h1>Вымышленные персонажи Макс, Алиса и Настя поставили звёзды <span class="accent">фильмам и сериалам</span></h1>
+        <p class="lede">Поставьте звёзды этим фильмам и сериалам, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы.</p>
+      </div>
+      <div class="trio">
+        <div class="port"><img src="../static/img/personas/max.png" alt="Макс"><div class="bub">«Матрица» <b>★ 10</b></div><div class="nm3">Макс, 31</div></div>
+        <div class="port mid"><img src="../static/img/personas/alice.png" alt="Алиса"><div class="bub" style="animation-delay:.6s">«Интерстеллар» <b>★ 10</b></div><div class="nm3">Алиса, 27</div></div>
+        <div class="port"><img src="../static/img/personas/nastya.png" alt="Настя"><div class="bub" style="animation-delay:1.2s">«Игра престолов» <b>★ 10</b></div><div class="nm3">Настя, 24</div></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="who3" data-c="personas"></div>
+      <div class="honest" style="text-align:center">Макс, Алиса и Настя — вымышленные персонажи Пространства NDim Space.</div>
+    </div>
+    <div class="card" style="padding:10px 6px;margin-bottom:16px"><div class="kicker" style="padding:4px 12px">Ваши звёзды</div><div class="rows" data-c="rows"></div></div>
+    <div class="card cmp">
+      <div>
+        <div class="kicker">Вы и <span data-k="selname">Алиса</span></div>
+        <table data-c="cmp-table"></table>
+      </div>
+      <div class="math" data-c="math"></div>
+    </div>
+    <div class="sec" style="text-align:center"><a class="bridge" href="#">Смотреть больше</a></div>
+    <div class="sec"><div class="kicker" style="text-align:center">Как устроено Пространство NDim Space</div><div data-c="steps" style="margin-top:18px"></div></div>
+    <div class="sec"><div class="card"><div data-c="nums"></div></div></div>
+    <div class="sec"><h2 style="text-align:center">Вопросы и ответы</h2><div data-c="faq"></div></div>
+    <div class="sec"><div data-c="final"></div></div>
+  </div>
+  <div data-c="foot"></div>
+</div></div>
+
+<!-- ════════════════ V4 «Насколько Вы похожи» (16Personalities) ════════════════ -->
+<div class="variant" id="4">
+<div class="screen v4">
+  <div data-c="top"></div>
+  <div class="wrap">
+    <div class="hero">
+      <div class="kicker">Тест из пяти фильмов и сериалов</div>
+      <h1>Насколько Вы похожи на вымышленных персонажей <span class="accent">Макса, Алису и Настю</span></h1>
+      <p class="lede">Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — мы подберём тех, с кем у Вас настоящая совместимость.</p>
+      <div class="card test">
+        <div class="prog"><span>1 из 5</span><span>Макс, Алиса и Настя — вымышленные персонажи</span></div>
+        <div class="track"><i></i></div>
+        <div class="qk">Фильм</div>
+        <div class="q">«Матрица» <span>(1999)</span></div>
+        <div class="big" data-c="big"></div>
+        <div class="next"><a href="#">Дальше →</a></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="kicker" style="text-align:center">После пятой оценки</div>
+      <div class="res" style="margin-top:14px">
+        <div class="card resc">
+          <div data-k="popup-line" style="font-size:18px;font-weight:800;color:var(--heading)">Алиса — Ваша самая сильная связь: 80 %</div>
+          <div data-c="bars"></div>
+          <div class="friend">
+            <a class="bridge wide" href="#">Смотреть больше</a>
+            <a class="alt" href="#">Сравниться с другом</a>
+            <div class="muted" style="text-align:center">Пришлите другу ссылку на тест: он оценит пять фильмов и сериалов, которые оценили Вы, и Пространство NDim Space покажет, насколько Вы и Ваш друг похожи.</div>
+          </div>
+        </div>
+        <div>
+          <div class="story">
+            <div class="s1">Пространство NDim Space</div>
+            <div class="s2" data-k="story">Моя самая сильная связь — вымышленный персонаж Алиса: Похожесть <b>80 %</b></div>
+            <img data-k="story-face" src="../static/img/personas/alice_face.png" alt="">
+            <div class="s3">ndimspace.app</div>
+          </div>
+          <div class="muted" style="text-align:center;margin-top:8px">Карточка для сторис</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec"><div class="kicker" style="text-align:center">Как устроено Пространство NDim Space</div><div data-c="steps" style="margin-top:18px"></div></div>
+    <div class="sec"><div class="card"><div data-c="nums"></div></div></div>
+    <div class="sec"><h2 style="text-align:center">Вопросы и ответы</h2><div data-c="faq"></div></div>
+    <div class="sec"><div data-c="final"></div></div>
+  </div>
+  <div data-c="foot"></div>
+</div></div>
+
+</div>
+
+<script>
+  /* ─── Переключатели дома стиля: вариант · ширина · тема. Съёмщик жмёт ровно эти кнопки. ─── */
+  const stage = document.getElementById('stage');
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === b.dataset.v));
+  }));
+  document.getElementById('width').addEventListener('click', () => { stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390'; render(); });
+  document.getElementById('theme').addEventListener('click', () => {
+    const el = document.documentElement; el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+  });
+
+  /* ─── Материал: пять объектов каталога (dims-build.json), персонажи, стартовые оценки ─── */
+  const OBJ = [
+    { id: 'matrix', t: 'Матрица', y: 1999, k: 'Фильм', nd: '9,3', v: 11 },
+    { id: 'hp', t: 'Гарри Поттер и философский камень', y: 2001, k: 'Фильм', nd: '8,4', v: 14 },
+    { id: 'inter', t: 'Интерстеллар', y: 2014, k: 'Фильм', nd: '9,2', v: 10 },
+    { id: 'got', t: 'Игра престолов', y: 2011, k: 'Телесериал', nd: '9,1', v: 8 },
+    { id: 'tit', t: 'Титаник', y: 1997, k: 'Фильм', nd: '9,0', v: 8 },
+  ];
+  const P = {
+    alice: { name: 'Алиса', age: 27, col: '#7c5cff', ang: -90, line: 'Любит фантастику и истории о волшебстве.', loves: '«Интерстеллар» · «Гарри Поттер и философский камень»', d: { matrix: 7, hp: 10, inter: 10, got: 6, tit: 8 } },
+    max: { name: 'Макс', age: 31, col: '#0ea578', ang: 28, line: 'Оценил три из пяти: «Матрицу», «Интерстеллар» и «Игру престолов».', loves: '«Матрица» · «Игра престолов»', d: { matrix: 10, inter: 8, got: 9 } },
+    nastya: { name: 'Настя', age: 24, col: '#d6544f', ang: 152, line: 'Любит сериалы и истории о большой любви.', loves: '«Игра престолов» · «Титаник»', d: { matrix: 3, hp: 5, inter: 4, got: 10, tit: 9 } },
+  };
+  const ME = { matrix: 8, hp: 9, inter: 9, got: 5, tit: 7 };
+  let SEL = 'alice';
+  const face = (id) => `../static/img/personas/${id}_face.png`;
+
+  /* Макетная копия ядра similarity.ts — сверена с ядром 2026-09-23 (Алиса 80 · Макс 45 · Настя 44). */
+  function rel(a, b) {
+    const ka = Object.keys(a), kb = Object.keys(b); // ноль — законная оценка, в расчёт входит (как в ядре)
+    const common = ka.filter((k) => k in b);
+    if (!common.length) return null;
+    let s = 0; for (const k of common) s += (a[k] - b[k]) ** 2;
+    const dist = Math.sqrt(s), D = Math.sqrt(common.length) * 10;
+    const prox = 1 - Math.pow(dist / D, 0.7), com = (2 * common.length) / (ka.length + kb.length);
+    return { sim: Math.round(prox * com * 100), prox: Math.round(prox * 100), com: Math.round(com * 100), rate: Math.round(dist / D * 100) };
+  }
+  const R = () => Object.fromEntries(Object.entries(P).map(([id, p]) => [id, rel(ME, p.d) || { sim: 0, prox: 0, com: 0, rate: 100 }]));
+  const ranked = () => { const r = R(); return Object.keys(P).sort((x, y) => r[y].sim - r[x].sim); };
+
+  /* ─── Компоненты ─── */
+  const mark = (s = 30) => `<svg viewBox="0 0 32 32" width="${s}" height="${s}"><use href="#mark"/></svg>`;
+  const topBar = () => `<div class="top"><span class="brand">${mark()}NDim Space</span><span class="sp"></span><span class="pill on">RU</span><span class="pill">EN</span><span class="pill" aria-label="тема"><svg viewBox="0 0 24 24" width="12" height="12" style="vertical-align:-2px" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg></span><a class="signin" href="#">Войти</a></div>`;
+  const rows = () => OBJ.map((o) => `<div class="srow"><div class="t"><span class="kind">${o.k}</span>«${o.t}» <span class="yr">(${o.y})</span></div>
+      <div class="line"><div class="stars">${Array.from({ length: 10 }, (_, i) => `<button data-o="${o.id}" data-s="${i + 1}" class="${i < ME[o.id] ? 'on' : ''}">★</button>`).join('')}</div><span class="val">${ME[o.id]}</span></div></div>`).join('');
+
+  function mapSvg(compact) {
+    // В телефоне карта плотнее: те же доли расстояния, меньший холст — лица читаются крупнее.
+    const r = R(), best = ranked()[0], W = compact ? 340 : 480, H = compact ? 320 : 420, cx = W / 2, cy = H / 2 + 12;
+    const MIN = compact ? 66 : 58, SPAN = compact ? 92 : 150; // в телефоне ближайшая подпись не заходит под «Я»
+    const nodes = Object.entries(P).map(([id, p]) => {
+      const d = MIN + (r[id].rate / 100) * SPAN, a = p.ang * Math.PI / 180;
+      const x = cx + d * Math.cos(a), y = cy + d * Math.sin(a), g = r[id].sim / 100;
+      return `<line class="link" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke-opacity="${Math.max(.14, g).toFixed(2)}" stroke-width="${(1.5 + 4 * g).toFixed(1)}"/>
+        <g class="face" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><circle class="halo" r="29" stroke="${p.col}"/><image href="${face(id)}" x="-26" y="-26" width="52" height="52" clip-path="url(#face)" preserveAspectRatio="xMidYMid slice"/>
+        <text class="lbl" y="46" text-anchor="middle">${p.name} · ${r[id].sim} %</text></g>`;
+    }).join('');
+    return `<svg class="map" viewBox="0 0 ${W} ${H}"><circle class="ring" cx="${cx}" cy="${cy}" r="${MIN + SPAN}"/>${nodes}
+      <circle class="me" cx="${cx}" cy="${cy}" r="21"/><text class="me-t" x="${cx}" y="${cy + 5}" text-anchor="middle">Я</text></svg>
+      <div class="popup"><b>${P[best].name}</b> — Ваша самая сильная связь: <b>${r[best].sim} %</b></div>`;
+  }
+  const bar = (v) => `<div class="bar2"><i style="width:${v}%"></i></div>`;
+  const relCard = (id) => { const r = R()[id]; return `<div class="rel"><div class="who"><img src="${face(id)}" alt=""><b>${P[id].name}</b><span class="sys">системный персонаж</span></div>
+      <div class="m3"><div><div class="k">Общность</div><div class="v">${r.com} %</div>${bar(r.com)}</div><div><div class="k">Близость</div><div class="v">${r.prox} %</div>${bar(r.prox)}</div><div><div class="k">Похожесть</div><div class="v">${r.sim} %</div>${bar(r.sim)}</div></div></div>`; };
+  const relList = () => ranked().map(relCard).join('');
+  const dimCard = (o = OBJ[0]) => `<div class="dimc"><span class="badge">${o.k.toUpperCase()}</span><div class="nm">«${o.t}» <span>(${o.y})</span></div>
+      <div class="nd"><b>${o.nd}</b>NDim Space Rating · ${o.v} голосов</div>
+      <div class="sc">${Array.from({ length: 11 }, (_, i) => `<span class="${i <= ME[o.id] && i > 0 ? 'on' : ''}">★<small>${i}</small></span>`).join('')}</div></div>`;
+  const phone = (title, body, on) => `<div class="notch"></div><div class="scr"><div class="bar">${mark(20)}NDim Space</div><div class="ttl">${title}</div>${body}
+      <div class="nav">${['Профиль', 'Связи', 'Пространство', 'Измерения', 'Меню'].map((n) => `<span class="${n === on ? 'on' : ''}">${n}</span>`).join('')}</div></div>`;
+  const nums = () => `<div class="nums-title">Пространство NDim Space сейчас</div><div class="nums">
+      <div><div class="n">5 153</div><div class="l">объектов человеческой культуры</div></div><div><div class="n">4 096</div><div class="l">оценок поставлено</div></div>
+      <div><div class="n">96</div><div class="l">человек в Пространстве</div></div><div><div class="n">2 412</div><div class="l">связей рассчитано</div></div></div>`;
+  const steps = () => `<div class="steps">
+      <div class="step"><div class="no">1</div><div class="phone">${phone('Измерения', OBJ.slice(0, 2).map(dimCard).join(''), 'Измерения')}</div><p>Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры.</p></div>
+      <div class="step"><div class="no">2</div><div class="phone">${phone('Пространство', `<div class="mapbox" style="padding:22px 6px 0">${mapSvg(true).replace('<div class="popup">', '<div class="popup" style="display:none">')}</div>`, 'Пространство')}</div><p>Пространство NDim Space считает Похожесть между людьми по их оценкам.</p></div>
+      <div class="step"><div class="no">3</div><div class="phone">${phone('Связи', relList(), 'Связи')}</div><p>В Связях Вы видите людей с наибольшей Похожестью на Вас.</p></div></div>`;
+  const faq = () => `<div class="faq">
+      <details open><summary>Что такое Пространство NDim Space?</summary><p>В Пространстве NDim Space Вы найдёте людей, действительно похожих на Вас. Люди оценивают объекты человеческой культуры — фильмы, сериалы, книги, игры. Пространство NDim Space считает Похожесть между людьми по их оценкам.</p></details>
+      <details><summary>Как считается Похожесть?</summary><p>Похожесть — это близость, умноженная на общность. Близость — насколько одинаково Вы и другой человек оценили общие вещи. Общность — насколько широко Ваши описания пересекаются.</p></details>
+      <details><summary>Кто такие Макс, Алиса и Настя?</summary><p>Макс, Алиса и Настя — вымышленные персонажи Пространства NDim Space.</p></details>
+      <details><summary>Сколько стоит Пространство NDim Space?</summary><p>Пространство NDim Space работает бесплатно для всех людей по всему Миру.</p></details></div>`;
+  const final = () => `<div class="final"><h2>В Пространстве NDim Space Вы найдёте людей, действительно похожих на Вас.</h2><a class="bridge" href="#">Оцените, чтобы найти людей, кто думает, как Вы</a></div>`;
+  const foot = () => `<div class="foot"><div class="links"><a href="#">Тесты</a><a href="#">Каталог</a><a href="#">Руководство</a><a href="#">О проекте</a><a href="#">Об авторе</a><a href="#">Условия</a><a href="#">Политика</a></div>Пространство NDim Space · открытая платформа, сделанная с заботой о людях</div>`;
+  const personas = () => { const r = R(); return ranked().map((id) => `<div class="card pc ${id === SEL ? 'sel' : ''}" data-p="${id}"><div class="top3"><img src="${face(id)}" alt=""><div><b>${P[id].name}</b>, ${P[id].age}<div class="muted">вымышленный персонаж</div></div><span class="sim">${r[id].sim} %</span></div>
+      <div class="ln">${P[id].line}</div><div class="loves">Любит: ${P[id].loves}</div></div>`).join(''); };
+  const cmpTable = () => `<tr><th>Фильм или сериал</th><th style="text-align:center">Вы</th><th style="text-align:center">${P[SEL].name}</th></tr>` + OBJ.map((o) => `<tr><td>«${o.t}»</td><td class="n">★ ${ME[o.id]}</td><td class="n">${P[SEL].d[o.id] != null ? '★ ' + P[SEL].d[o.id] : '—'}</td></tr>`).join('');
+  const math = () => { const r = R()[SEL]; return `<div class="r"><span>Близость</span>${bar(r.prox)}<b>${r.prox} %</b></div><div class="r"><span>Общность</span>${bar(r.com)}<b>${r.com} %</b></div><div class="r"><span>Похожесть</span>${bar(r.sim)}<b>${r.sim} %</b></div>
+      <div class="eq">Похожесть — это близость, умноженная на общность.</div><div class="muted">Близость — насколько одинаково Вы и другой человек оценили общие вещи. Общность — насколько широко Ваши описания пересекаются.</div>`; };
+  const big = () => Array.from({ length: 11 }, (_, i) => `<span data-big="${i}" class="${i > 0 && i <= ME.matrix ? 'on' : ''}">★<small>${i}</small></span>`).join('');
+  const bars = () => { const r = R(); return ranked().map((id) => `<div class="brow"><img src="${face(id)}" alt=""><div><div class="nm">${P[id].name}</div>${bar(r[id].sim)}</div><b>${r[id].sim} %</b></div>`).join(''); };
+
+  /* ─── Отрисовка и живость: каждая звезда пересчитывает всё ─── */
+  const FILL = { top: topBar, rows, map: () => mapSvg(false), nums, steps, faq, final, foot, 'rel-list': relList, dimcard: () => dimCard(OBJ[0]), personas, 'cmp-table': cmpTable, math, big, bars,
+    'phone-dims': () => phone('Измерения', OBJ.slice(0, 3).map(dimCard).join(''), 'Измерения'), 'phone-map': () => phone('Пространство', `<div class="mapbox" style="padding:22px 6px 0">${mapSvg(true)}</div>`, 'Пространство'), 'phone-rel': () => phone('Связи', relList(), 'Связи') };
+  function render() {
+    document.querySelectorAll('[data-c]').forEach((el) => { const f = FILL[el.dataset.c]; if (f) el.innerHTML = f(); });
+    const r = R(), best = ranked()[0], s = R()[SEL];
+    document.querySelectorAll('[data-k="selname"]').forEach((e) => { e.textContent = P[SEL].name; });
+    document.querySelectorAll('.v2 [data-k="prox"]').forEach((e) => { e.textContent = r[best].prox + ' %'; });
+    document.querySelectorAll('.v2 [data-k="com"]').forEach((e) => { e.textContent = r[best].com + ' %'; });
+    document.querySelectorAll('[data-k="sim"]').forEach((e) => { e.textContent = r[best].sim + ' %'; });
+    document.querySelectorAll('[data-k="popup-line"]').forEach((e) => { e.textContent = `${P[best].name} — Ваша самая сильная связь: ${r[best].sim} %`; });
+    document.querySelectorAll('[data-k="story"]').forEach((e) => { e.innerHTML = `Моя самая сильная связь — вымышленный персонаж ${P[best].name}: Похожесть <b>${r[best].sim} %</b>`; });
+    document.querySelectorAll('[data-k="story-face"]').forEach((e) => { e.src = face(best); e.style.borderColor = P[best].col; });
+    void s;
+  }
+  document.addEventListener('click', (e) => {
+    const st = e.target.closest('.stars button');
+    if (st) { const o = st.dataset.o, v = +st.dataset.s; ME[o] = ME[o] === v ? 0 : v; render(); return; }
+    const bg = e.target.closest('[data-big]');
+    if (bg) { ME.matrix = +bg.dataset.big; render(); return; }
+    const pc = e.target.closest('.pc');
+    if (pc) { SEL = pc.dataset.p; render(); return; }
+    if (e.target.closest('a[href="#"]')) e.preventDefault();
+  });
+  render();
+</script>
+</body>
+</html>
