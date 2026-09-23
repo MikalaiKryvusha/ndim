@@ -8,8 +8,9 @@
 
 > **Создан:** 2026-09-23 ≈19:00–20:30 +03:00, по слову владельца в чате (цитаты — §1) · **Родитель:** эпик
 > «лендинг-как-приложение» `plans/21` · выбор первого экрана V4 `plans/52` · разведки `researches/25`, `27`, `30`,
-> `60`, `73` · **Статус:** 🔬 ступень 1 лестницы `/plan-epic`: наш лендинг, образцы владельца, числа прихода, боли и
-> запросы, законы владельца — сняты и сверены; обзор индустрии — §6 · **Исходящее:** метаплан эпика в `plans/` →
+> `60`, `73` · **Статус:** ✅ ступень 1 лестницы `/plan-epic` закрыта 2026-09-23 ≈21:00: наш лендинг, образцы
+> владельца, числа прихода, боли и запросы, законы владельца, обзор индустрии (§6 + Приложение А) — сняты и сверены
+> · **Исходящее:** метаплан эпика `plans/102` →
 > четыре макета нового лендинга → интервью владельцу с выбором и развилками §9.
 
 > ⚠️ **Правило цитат.** Слова владельца — только дословно и с адресом. Где слова владельца нет, стоит пометка
@@ -258,8 +259,66 @@ REAL REVIEWS · ANSWERS); один акцентный цвет на весь с�
 
 ## §6. Индустрия: механизмы, которые делают первый экран работающим, и худшие решения
 
-*Раздел заполняется веб-разведкой (разведчик запущен 2026-09-23 ≈19:05; каждое утверждение — адрес и дословная
-цитата). Уже снятое проектом и действующее:*
+Снято веб-разведчиком 2026-09-23 16:00–16:32 UTC (выход в сеть из ЕС — отсюда баннеры согласия): первые экраны 17
+продуктов живым браузером на 1440 и 390, цитаты сверены с сырым текстом страниц; 77 адресов открыто, 19 не открылось.
+Полный отчёт — **Приложение А** ниже; кадры — `test-results/landing-refs-2026-09-23/tops/` (41).
+**Механическая сверка агентом** (скрипт: скачать страницу → снять теги → искать дословную строку; контроль прибора —
+заведомо отсутствующая строка, «не найдено»): 7 из 7 ключевых цитат НАЙДЕНЫ — NN/g 57 % внимания на первом экране ·
+Vodafone LCP +31 % → продаж +8 % · NN/g объективный текст +27 %, вместе с краткостью +124 % · Google «69% of the visits
+abandoned our page» на окне «скачайте приложение» · NN/g стена входа раздражает сильнее всего · NN/g ценность — за 10
+секунд. ⚠️ Цитата Buell & Norton о 15 секундах на симуляции знакомств (PDF) механически НЕ сверялась.
+
+### 6.1 Первые экраны топов — одной строкой каждый
+
+| Продукт | Первый экран | Дело до входа |
+|---|---|---|
+| 16Personalities | «It’s so incredible to finally be understood.» · «Take the test»; первый вопрос теста виден сразу; результат со своей ссылкой — без входа; «Compare with someone you know» | да |
+| Duolingo | «The most fun way to learn languages, chess, and more!» · «GET STARTED» / «I ALREADY HAVE AN ACCOUNT» — урок без аккаунта | да |
+| TikTok · Spotify · tldraw · ChatGPT | первый экран — сам продукт (лента, плеер, доска, поле ввода); вход просят для дополнительного («Sign in to share») | да |
+| Hinge | «The dating app designed to be deleted» · «Download»; ниже «effective, not addictive» | нет |
+| Tinder | «It starts with a swipe.™» · «Get the app» / «Create account» | нет |
+| Bumble | заголовка нет: логотип, карточки анкет, «Get the Bumble app» | нет |
+| Letterboxd | «Track films you’ve watched. Save those you want to see. Tell your friends what’s good.» · «Get started — it‘s free!» | частично |
+| Instagram · LinkedIn | форма входа первым экраном | нет |
+| musictaste.space (совместимость вкусов с друзьями) | «SIGN IN WITH SPOTIFY» первым действием | нет |
+
+### 6.2 Механизмы успеха (уровень доказательности в скобках)
+
+1. **Продукт вместо рекламы продукта в первом экране** — там, где продукт живёт в браузере, первый экран и есть
+   продукт (наблюдение по 6 топам); стена входа раздражает сильнее всего, превью её не спасают (NN/g, юзабилити);
+   демо без формы вовлекает на 6–10 % лучше (Navattic, вендор).
+2. **Коротко и ясно** — 57 % внимания на первом экране, 74 % на первых двух (NN/g, айтрекинг 120 человек); ценность —
+   за 10 секунд (NN/g по данным Microsoft Research); объективный текст +27 %, вместе с краткостью и беглым чтением
+   +124 % к удобству (NN/g, эксперимент); лучше всего досматривают демо в 1–6 шагов (Navattic, вендор).
+3. **Видимый расчёт и завершённый результат** — видимая работа сервиса повышает ценность результата, в том числе на
+   симуляции знакомств (Buell & Norton 2011, эксперименты); сделанное руками ценят только завершённым (эффект IKEA,
+   эксперименты); рассказывать о своих вкусах приятно само по себе (Tamir & Mitchell, PNAS 2012).
+4. **Результат, которым делятся, и «сравнись с другом»** — 16P: два уровня приватности при шаринге, «Compare»;
+   двусторонняя выгода приглашения +60 % регистраций (Dropbox о своих данных); Wrapped — 630 млн шарингов (Spotify о
+   своих данных).
+5. **Скорость** — LCP +31 % → продаж +8 % (Vodafone, A/B); пороги Google: LCP ≤ 2,5 с, INP ≤ 200 мс, CLS ≤ 0,1.
+
+### 6.3 Худшие решения — не берём
+
+Стена входа до ценности (Instagram, LinkedIn, musictaste) · полноэкранное «откройте в приложении» (TikTok, LinkedIn —
+Google+: 69 % уходили; Google понижает такие страницы в поиске с 2017) · баннер согласия, съедающий первый экран
+(Bumble ~70 % экрана на телефоне) · автокарусели и автоплей (у снятых топов в первом экране нет ни одного видео) ·
+рекламный язык и обещания вместо показа · стоковые фото людей · фейковый «интерес» в знакомствах (Match Group: иск FTC
+2019, урегулирование $14 млн 2025) · механики удержания (сердечки и серии Duolingo — у них работают, мы не берём по
+`GOAL.md`) · платная стена поверх результата (16P «Unlock full results») · маленькие счётчики как социальное
+доказательство (NN/g: маленькая цифра убеждает в обратном).
+
+⚠️ **Для нас последнее — прямой риск:** «96 человек» в первом экране может сыграть против (NN/g). Решение о месте чисел
+— владельцу через макеты (его закон «живая настоящая цифра» №010 Р7 не отменяется, вопрос только о месте).
+
+### 6.4 Где NDim может быть лучше топов [AI, сырьё для макетов]
+
+Действие в первом экране там, где топы знакомств показывают логотип и «скачайте» · полный результат бесплатно и про
+людей, а не ярлык · сравнение с другом по одной ссылке без входа · персонажи явно подписаны вымышленными (граница с
+тёмным паттерном Match) · «близость × общность» показаны прямо в демо, на живых оценках человека · первый экран без
+стены входа и без окна «в приложение».
+
+### 6.5 Уже снятое проектом раньше и действующее
 
 - `researches/60` — двери десяти топов (живая разметка «робот / человек», 2026-08-28): лучшие двери ведут в дело до
   аккаунта, стена входа первым экраном — худшее решение (Instagram), «Get the app» главной дорогой — худшее (Tinder);
@@ -307,6 +366,14 @@ REAL REVIEWS · ANSWERS); один акцентный цвет на весь с�
    не увидит.
 7. **Сначала четыре макета, потом код.** Один вариант — V4, переписанный под правила 28.08 и 05.09; три — новые, на
    нашем материале.
+8. **Результат демо — завершённый и свой, и им можно поделиться.** Демо заканчивается цельным ответом «вот на кого Вы
+   похожи и чем» без замков (эффект IKEA, §6.2 п. 3); рядом — «сравнитесь с другом по ссылке», потому что сравнение и
+   есть наша математика (16P «Compare», §6.2 п. 4). Семейство «Тест» уже умеет пару по личной ссылке — лендинг может
+   вести в него.
+9. **Короче в словах, длиннее в показе.** Одна фраза о том, что это, объективным языком (NN/g, §6.2 п. 2); каждая
+   возможность — картинкой; 3–5 оценок до первого результата.
+10. **Числа — с осторожностью к месту.** Маленькая цифра людей в первом экране может убеждать в обратном (NN/g, §6.3);
+    закон владельца «живая настоящая цифра» стоит, макеты показывают разные места для чисел.
 
 ---
 
@@ -317,3 +384,351 @@ REAL REVIEWS · ANSWERS); один акцентный цвет на весь с�
 2. **Что оценивает человек в демо:** настоящие объекты каталога (фильмы, книги, игры) — или качества, как сегодня.
 3. **Персонажи в базе** (№010 Р6) — до выката нового лендинга или после.
 4. **Выбор одного из четырёх макетов** с правками.
+
+---
+
+## Приложение А — полный отчёт веб-разведки 2026-09-23 (дословно, как сдан разведчиком)
+
+> Пути `scratchpad\snaps\` в тексте ниже — временная папка сессии; кадры перенесены в
+> `test-results/landing-refs-2026-09-23/tops/`. Уровни доказательности и цитаты — разведчика; семь ключевых сверены
+> агентом механически (§6).
+
+### Разведка индустрии: новый лендинг NDim Space
+
+Дата снятия: **2026-09-23**, 16:00–16:32 UTC. Исполнитель: агент-разведчик (только чтение веба, в репозиторий ничего не писалось).
+
+### А.Как снималось (важно для доверия к цифрам)
+
+- Первые экраны сняты **живьём** тремя способами: сырой HTML через `curl`; рендер настоящим браузером (Playwright + Chromium, headless) в двух ширинах — десктоп 1440×900 и телефон 390×844 (UA iPhone); у ключевых — скриншоты, которые я сам просмотрел. Пересказ WebFetch (там пересказывает маленькая модель) для цитат **не использовался**: каждая цитата ниже сверена с сырым текстом страницы или с DOM.
+- **Регион — ЕС (Латвия).** Это видно по самим страницам: 16Personalities показал счётчик «542K+ Tests taken in Latvia», Spotify — латышские треки. Поэтому почти везде был баннер согласия на cookie (GDPR). Из США первые экраны могут выглядеть иначе. Плюс A/B-тесты у топов: другой посетитель может увидеть другой вариант.
+- Скриншоты и сырой текст лежат рядом: `scratchpad\snaps\*.png` (41 скриншот), `scratchpad\snaps\*.json`, `scratchpad\txt\*.txt`.
+- Уровни доказательности: **эксперимент** (A/B или рандомизированный лабораторный/полевой) · **наблюдательное** (логи/корреляции) · **отчёт вендора по своим данным** · **опрос** · **исследование юзабилити** (качественное, айтрекинг) · **мнение эксперта** · **анекдот/кейс** · **наблюдение** (я сам видел на живой странице).
+
+---
+
+### А.A) Первые экраны топов
+
+| Продукт | Заголовок первого экрана (дословно) | Главное действие (дословно) | Взаимодействие до регистрации | Адрес | Дата снятия |
+|---|---|---|---|---|---|
+| **16Personalities** (EN) | “It’s so incredible to finally be understood.” («Как же здорово, когда тебя наконец понимают») | «Take the test» | **Да.** Тест без входа: на странице теста первый вопрос виден сразу — «You regularly make new friends.», шкала Agree…Disagree из 7 кружков. Я дважды прошёл все 60 вопросов: результат открывается **без регистрации**, у него своя ссылка | https://www.16personalities.com/ | 2026-09-23 |
+| 16Personalities (RU) | «Это настолько невероятно – наконец-то быть понятым». | «Пройдите тест» | Да (то же) | https://www.16personalities.com/ru | 2026-09-23 |
+| **Hinge** | Десктоп и телефон: h1 “The dating app designed to be deleted” («Приложение для знакомств, которое создано, чтобы его удалили»); на экране стоит знак ™ | Телефон: «Download». На десктопе в первом экране кнопки нет, есть только меню | **Нет.** Только чтение | https://hinge.co/ | 2026-09-23 |
+| **Bumble** | Заголовка в первом экране **нет**: гигантский логотип «Bumble», карточки «Danna, 28», «Josh, 34», «Tiana, 30» и h3 «Get the Bumble app». Слоган стоит ниже сгиба: “We exist to bring people closer to love.” | «Download Bumble» (во втором экране); в меню «Sign in» | **Нет** | https://bumble.com/ | 2026-09-23 |
+| Bumble (RU) | Ниже сгиба: «Мы существуем ради того, чтобы помочь людям найти любовь.» | «Скачать приложение» | Нет | https://bumble.com/ru | 2026-09-23 |
+| **Tinder** | “It starts with a swipe.™” («Всё начинается со свайпа») | «Get the app» · «Create account» | **Нет** | https://tinder.com/ | 2026-09-23 |
+| **OkCupid** | **Не удалось открыть** (подробности ниже в A.1) | — | — | https://www.okcupid.com/ | 2026-09-23 |
+| **Letterboxd** | h2 “Track films you’ve watched. Save those you want to see. Tell your friends what’s good.” («Отмечайте, что посмотрели. Сохраняйте то, что хотите увидеть. Говорите друзьям, что хорошо»). h1 здесь — логотип «Letterboxd — Your life in film» | «Get started — it‘s free!» | **Частично.** Можно читать популярные рецензии и списки, оценивать нельзя | https://letterboxd.com/ | 2026-09-23 |
+| **Duolingo** | “The most fun way to learn languages, chess, and more!” («Самый весёлый способ учить языки, шахматы и не только») | «GET STARTED» · «I ALREADY HAVE AN ACCOUNT» | **Да, полноценно.** Я прошёл весь путь: выбор курса → 11 экранов вопросов → **настоящий урок** «Which one of these is “cat”?» по адресу /lesson. Аккаунт не создавал | https://www.duolingo.com/ | 2026-09-23 |
+| **Spotify** | Лендинга **нет**: spotify.com сразу уводит в веб-плеер open.spotify.com. На экране «Trending songs», «Popular artists», поиск «What do you want to play?» | Нижняя плашка: «Preview of Spotify» / «Sign up free». На телефоне: «Try 3 months for €0» | **Да.** Каталог и поиск доступны без входа | https://www.spotify.com/ → https://open.spotify.com/ | 2026-09-23 |
+| **Instagram** | Десктоп: “See everyday moments from your close friends.”, рядом форма «Log into Instagram». Телефон: h1 “Share everyday moments with your close friends.” | Десктоп: «Log in» / «Create new account». Телефон: «Open Instagram» / «Log in» / «sign up» | **Нет** (стена входа) | https://www.instagram.com/ | 2026-09-23 |
+| **TikTok** | Заголовка нет. **Сам продукт**: лента «For You» играет видео, поверх неё окно «Log in to TikTok» с кнопкой «Skip». На телефоне: «Get the full app experience» | Десктоп: вход через «Use QR code», «Continue with Google» и т. д. Телефон: «Open TikTok» / «Not now» | **Да.** Нажал «Skip» — смотришь ленту | https://www.tiktok.com/ | 2026-09-23 |
+| **LinkedIn** | “Welcome to your professional community” («Добро пожаловать в Ваше профессиональное сообщество») | «Continue with google» · «Sign in with email» · «New to LinkedIn? Join now» | **Частично.** Меню ведёт на публичные разделы «Top Content», «Jobs» и другие | https://www.linkedin.com/ | 2026-09-23 |
+| **tldraw** (можно потрогать) | Первый экран — **сама доска** с инструментами. Скрытый h1: “tldraw - free and instant collaborative whiteboarding” | «Sign in to share» (вход просят только ради «поделиться») | **Да**, рисуй сразу | https://www.tldraw.com/ | 2026-09-23 |
+| **Excalidraw** (можно потрогать) | Первый экран — доска. Надпись на холсте: «Pick a tool & Start drawing!» | Меню: «Open», «Live collaboration...», «Sign up» | **Да.** Баннера cookie я **не видел** | https://excalidraw.com/ | 2026-09-23 |
+| **Photopea** (можно потрогать) | “Free Online Photo Editor” | «Start using Photopea» | Со слов страницы — да («No downloads, no hassle»). **Сам на кнопку не нажимал** | https://www.photopea.com/ | 2026-09-23 |
+| **ChatGPT** (можно потрогать) | “Where should we begin?” («С чего начнём?») + поле «Ask ChatGPT» | «Sign up for free» · «Log in» | **Да.** Поле ввода открыто без входа. Сообщение я не отправлял | https://chatgpt.com/ | 2026-09-23 |
+| **musictaste.space** (аналог: «совместимость вкусов с друзьями») | Надзаголовок «YOUR MUSIC SPACE», заголовок «musictaste» | «SIGN IN WITH SPOTIFY» | **Нет.** Сначала нужен вход через Spotify; ниже на странице показан чужой пример-профиль «Inside harp's space» | https://musictaste.space/ | 2026-09-23 |
+
+#### A.1 Подробности по каждому (подзаголовок · второй экран · что ещё заметно)
+
+**16Personalities** — ближайший структурный аналог.
+- Подзаголовок: «Only 10 minutes to get a “freakishly accurate” description of who you are and why you do things the way you do.» («Всего 10 минут — и Вы получите «пугающе точное» описание того, кто Вы и почему поступаете так, как поступаете»).
+- Сразу под кнопкой стоят счётчики: «245K+ Tests taken today», «542K+ Tests taken in Latvia» (подставляется страна посетителя), «1.58B+ Total tests taken», «91.2% Accuracy rating».
+- Второй экран: «Personality types» → h2 «Understand others». Дальше «Understand your team better», отзывы «See what others have to say» (карусель, ниже сгиба) и финальный призыв «Curious how accurate we are about you?» + «Take the test».
+- На странице теста: «Question 1 of 60: You regularly make new friends.» и счётчик «5M Shares».
+- **Страница результата** (я прошёл тест): «Your personality type is: Entrepreneur ESTP-A». У неё своя ссылка вида `/profiles/estp-a/f/3wr430gxk`. Кнопки: «Share results», «Email results», «Compare» и платная «Unlock full results».
+- Окно «Share your profile» даёт **два уровня приватности**: «Your personality type description — Doesn’t include your personal trait scores. Recommended for social media.» (описание типа без личных баллов — для соцсетей) и «Your personal report — Includes your personal trait scores. Recommended for friends, family, and any professionals you’re working with.» (личный отчёт с баллами — для близких).
+- Окно «Compare»: «Compare with someone you know» / «Who would you like to add?». В частых вопросах: «How accurate is the “guess their type” questionnaire?» — то есть тип друга можно **угадать за него**.
+
+**Hinge.** Второй экран: h2 «Go on your last first date.» («Сходите на своё последнее первое свидание») и текст: «Hinge is built on the belief that anyone looking for love should be able to find it. It’s also built on an acclaimed Nobel-Prize-winning algorithm, so we can succeed in getting you out on promising dates, not keeping you on the app.» («…алгоритм, отмеченный Нобелевской премией, — чтобы вывести Вас на хорошие свидания, а не удерживать в приложении»). Ниже, в блоке вакансий: «We’re looking for people who want to make dating effective, not addictive.» («…знакомства эффективными, а не вызывающими зависимость»). Отзывы идут автолистающейся каруселью (компонент `TimedCarousel`), примерно на 3150 px вниз.
+
+**Bumble.** Второй экран: «We exist to bring people closer to love.» / «We want our members to find meaningful and authentic relationships that ignite confidence and joy.» / «Download Bumble». Карточки анкет сделаны стопкой-каруселью (`carousel-stacked-cards`). На телефоне баннер согласия «Protecting and respecting your privacy» закрывает около 70 % первого экрана (видел на скриншоте).
+
+**Tinder.** Под заголовком: «Someone on Tinder might give you butterflies.» / «Find out who ↓». Второй экран: «A lot has changed since your last swipe.» — ручная карусель «Tinder features» («Slide 1 of 3»). Дальше по странице: «Party of four», «Cosmic chemistry», «No skips», «Our approach to safety», «Ok but.. why Tinder?». Финальный призыв: «You’ve read enough. Go find out.». В меню есть пункт «Subscriptions».
+
+**OkCupid — главная не открылась.** WebFetch получил 403. `curl` отдал только пустую оболочку SPA. Браузер Playwright показал «It’s not you, it’s us. We’re having trouble reaching our servers. Please try again.» — это защита от ботов. Снимок web.archive.org от 2026-09-21 (`/web/20260921111719/https://okcupid.com/`) отрисовал только логотип и баннер согласия. Справочные статьи help.okcupid.com увели на общую главную Zendesk. **Официальное описание** взял из App Store: «Match with people with similar interests and receive a personalized match percentage when you answer our unique questions.» («Находите людей с похожими интересами и получайте личный процент совпадения, отвечая на наши вопросы») — https://apps.apple.com/us/app/okcupid-dating-date-singles/id338701294 . Заголовок первого экрана OkCupid **не знаю и не додумываю**.
+
+**Letterboxd.** Под кнопкой: «The social network for film lovers.». Второй экран: «Letterboxd lets you…» — список возможностей, где у каждого пункта своя ссылка. Дальше «Just Reviewed…» со счётчиком «3,983,021,249 films watched» и h1 «Write and share reviews. Compile your own lists. Share your life in film.», затем живые популярные рецензии недели. Окно согласия: «…shared with 633 partners…» («…передаваться 633 партнёрам»).
+
+**Duolingo.** Второй экран: «free. fun. effective.», затем «backed by science», «stay motivated», «personalized learning». Путь до урока (все экраны видел сам):
+1. «I want to learn...» — у каждого курса число учеников, например «Spanish 42.1M learners».
+2. «Hi there! I’m Duo!»
+3. «Let’s get this party started!»
+4. «How did you hear about Duolingo?»
+5. «Why are you learning Spanish?»
+6. «How much Spanish do you know?»
+7. «Here’s what you can achieve!»
+8. «What’s your daily learning goal?»
+9. «Now let’s find the best place to start!»
+10. «It can be hard to stay motivated…»
+11. «…so Duolingo is designed to be fun like a game!»
+12. Урок: «Which one of these is “cat”?».
+
+Сразу после первой ошибки: «Each mistake costs 1 heart!» («Каждая ошибка стоит одно сердечко»).
+
+**LinkedIn.** Второй экран: «Explore top LinkedIn content», дальше «Find the right job or internship for you». Поверх страницы плашка «LinkedIn is better on the app» / «Open the app».
+
+**TikTok (телефон).** «Get the full app experience» / «Enjoy more videos and great features on the app» / «Open TikTok» / «Not now».
+
+**Excalidraw.** На холсте честное предупреждение про гостевые данные: «Your drawings are saved in your browser's storage. Browser storage can be cleared unexpectedly. Save your work to a file regularly to avoid losing it.» («Рисунки хранятся в браузере; хранилище может неожиданно очиститься — регулярно сохраняйте в файл»). Взял со скриншота.
+
+**Photopea.** h2 «Unlock your creativity with the best free photo editor.», текст «…works right in your browser. No downloads, no hassle.». Второй экран: «Fully Local» — «There are no uploads. Photopea runs on your device…».
+
+**ChatGPT.** Внизу слева: «Get responses tailored to you» / «Log in to get answers based on saved chats, plus create images and upload files.» Вход нужен только для **дополнительных** возможностей.
+
+**musictaste.space.** «Connect Spotify and get one page with your top artists, playlists, and how compatible you are with your friends.» / «Takes seconds. No app to download.»
+
+#### A.2 Что общего у первых экранов топов (наблюдение по снятому)
+
+1. **Там, где продукт можно показать в браузере, первый экран и есть продукт**: TikTok, Spotify, tldraw, Excalidraw, ChatGPT, тест 16P. У знакомств (Hinge, Bumble, Tinder) продукт живёт в приложении, поэтому на сайте только «скачайте».
+2. **Заголовок короткий**, от 5 до 10 слов: Tinder — 5, LinkedIn — 5, Hinge — 7, Instagram — 7, 16P — 8, Duolingo — 10. Это либо обещание результата (16P, Hinge), либо название механики (Tinder «swipe»).
+3. **Одно главное действие** плюс вторичное «уже есть аккаунт».
+4. **Большие числа как социальное доказательство**: у 16P, Letterboxd и Duolingo.
+5. **Автоплей-видео в первом экране ни у кого нет.** Проверил DOM Hinge, Tinder, Bumble, Duolingo и LinkedIn: элементов `<video>` ноль. **Карусели есть, но только ниже сгиба**: Hinge, Tinder, Bumble, 16P.
+6. **Баннер согласия на cookie стоит почти у всех** (в ЕС) и отъедает первый экран. Исключение, которое я видел, — Excalidraw.
+
+---
+
+### А.B) Механизмы: что приводит к успеху, с доказательствами
+
+#### B.1 «Попробуй до регистрации» и интерактивное демо
+
+| Утверждение | Дословная цитата (перевод) | Адрес | Уровень |
+|---|---|---|---|
+| Стена входа до показа ценности злит людей, а превью и туры её не спасают | «In our many usability tests, we rarely have seen users more annoyed than when they come across a login wall.» («В наших тестах мы редко видели людей более раздражёнными, чем перед стеной входа») · «Users are utterly vexed to have to enter information before they get a taste of what is in store for them.» · «In most cases these previews or tours are so vague that users cannot really make a decision based on them.» («Чаще всего превью и туры настолько размыты, что по ним нельзя принять решение») · «Gilt’s approach makes more sense because it shows users what they will get in the app and offers them a reason to register.» | https://www.nngroup.com/articles/login-walls/ | Исследование юзабилити (качественное) + мнение эксперта, 2014 |
+| Убрали принудительную регистрацию — покупок стало больше | «The results: The number of customers purchasing went up by 45%. The extra purchases resulted in an extra $15 million the first month. For the first year, the site saw an additional $300,000,000.» Слова покупателя: «I’m not here to enter into a relationship. I just want to buy something.» («Я пришёл не отношения заводить, а купить») | https://articles.centercentre.com/three_hund_million_button/ | Анекдот/кейс консультанта (J. Spool); ритейлер не назван, проверить нельзя |
+| Требование завести аккаунт — одна из главных причин бросить покупку | «18 % The site wanted me to create an account» («Сайт требовал создать аккаунт») | https://baymard.com/lists/cart-abandonment-rate | Опрос (покупатели США, Baymard) |
+| Демо без формы на входе работают лучше, чем с формой | «Ungated demos outperform gated. 66% of top demos are ungated, showing 6% higher engagement.» (2026) · «Ungated demos have a 10% higher engagement rate than gated demos» (2025) | https://www.navattic.com/report/state-of-the-interactive-product-demo-2026 · https://www.navattic.com/report/state-of-the-interactive-product-demo-2025 | Отчёт вендора по своим данным (40 000+ демо, B2B SaaS) |
+| Короткое демо досматривают чаще | «The flows with the highest completion rate are between 1 to 6 steps» · «Shorter, multi-flow demos with minimal text. The optimal demo has 5-13 steps per flow, uses multiple flows, and keeps dialog boxes to 25-30 words.» | https://www.navattic.com/report/state-of-the-interactive-product-demo-2026 | Отчёт вендора |
+| Клиенты вендора сами говорят о росте конверсии | «Survey respondents reported demo leads attributed to about 10% - 20% of their inbound lead volume and about a 20% - 25% increase in website conversion rate.» | https://www.navattic.com/report/state-of-the-interactive-product-demo-2025 | Опрос клиентов вендора (самоотчёт, 280 человек) — слабо |
+| Интерактив обыгрывает видео, но во сколько раз — вендоры не сходятся | Navattic: «Interactive demos have a 12% higher conversion rate than product videos». Arcade: «Your demo outperforms videos by at least 10x». | https://www.navattic.com/report/state-of-the-interactive-product-demo-2026 · https://www.arcade.software/post/interactive-demo-benchmarks | Отчёты вендоров. **Разброс от +12 % до ×10 — числам вендоров верить осторожно.** В тексте Arcade к тому же опечатка: оба сценария подписаны «median demo» (720 и 8 040 регистраций) |
+| «Постепенное вовлечение»: сначала дело, анкета потом | «I’ll just come out and say this: sign-up forms must die.» · Про Geni: «In Geni’s case, their approach to gradual engagement has given them five million profiles in five months.» · **Оговорка**: «any web service that automatically sets up an account for its customers may leave some people confused about whether they actually have an account or not.» («сервис, который сам заводит аккаунт, может запутать людей: есть у них аккаунт или нет») | https://alistapart.com/article/signupforms/ | Мнение эксперта (L. Wroblewski, 2008); цифра Geni без первоисточника |
+| Регистрация на пути вирусного цикла стоит до 80–90 % людей | «Assume up to 80% to 90% attrition if you are asking them to register for a username/password, for example.» | https://andrewchen.com/whats-your-viral-loop-understanding-the-engine-of-adoption/ | Мнение эксперта (A. Chen; даты на странице не нашёл) |
+| Вход просят в момент, когда он нужен человеку, а не сервису | tldraw: «Sign in to share». ChatGPT: «Log in to get answers based on saved chats, plus create images and upload files.». Duolingo: урок без аккаунта. 16P: результат без аккаунта | см. A | Наблюдение |
+
+#### B.2 Первый экран, «над сгибом», ясность ценности
+
+| Утверждение | Дословная цитата (перевод) | Адрес | Уровень |
+|---|---|---|---|
+| Больше половины внимания уходит на первый экран | «In our most recent study, users spent about 57% of their page-viewing time above the fold. 74% of the viewing time was spent in the first two screenfuls , up to 2160px.» («57 % времени — первый экран, 74 % — первые два») | https://www.nngroup.com/articles/scrolling-and-attention/ | Исследование юзабилити (айтрекинг, 120 участников, 130 000+ фиксаций взгляда), 2018 |
+| Листают вниз, только если наверху есть что-то обещающее | «Users do scroll, but only if what’s above the fold is promising enough.» · «The average difference in how users treat info above vs. below the fold is 84%.» | https://www.nngroup.com/articles/page-fold-manifesto/ | Мнение эксперта по своим исследованиям, 2015 |
+| На решение «остаться или уйти» есть около 10 секунд | «Users often leave Web pages in 10–20 seconds, but pages with a clear value proposition can hold people's attention for much longer. To gain several minutes of user attention, you must clearly communicate your value proposition within 10 seconds.» | https://www.nngroup.com/articles/how-long-do-users-stay-on-web-pages/ | Разбор экспертом наблюдательных данных Microsoft Research (более 2 млрд замеров времени на странице) |
+| Одна фраза, что делает сайт, — особенно для новичка | Правило «1. Include a one-sentence tagline» («…that summarizes what the site or company does, especially if you're new or less than famous.») | https://www.nngroup.com/articles/top-ten-guidelines-for-homepage-usability/ | Мнение эксперта, 2002 |
+| Первое впечатление складывается за доли секунды; выигрывает «просто и привычно» | «In less than 50 milliseconds, users build an initial “gut feeling” that helps them decide whether they’ll stay or leave.» · «users strongly prefer website designs that look both simple (low complexity) and familiar (high prototypicality).» | https://research.google/blog/users-love-simple-and-familiar-designs-why-websites-need-to-make-a-great-first-impression/ | Лабораторное исследование (Google, рецензируемая статья), 2012 |
+| Объективный текст удобнее рекламного | «…a sample Web site scored 58% higher in measured usability when it was written concisely, 47% higher when the text was scannable, and 27% higher when it was written in an objective style instead of the promotional style… Combining these three changes… resulted in 124% higher measured usability.» | https://www.nngroup.com/articles/concise-scannable-and-objective-how-to-write-for-the-web/ | **Контролируемый эксперимент** (5 групп, 51 участник), 1997 |
+| Чем больше сложных слов, тем ниже конверсия; трафик в основном мобильный | «the data shows a -24.3% correlation between the number of difficult words used and your conversion rate.» · «83% of the visits we analyzed happened on mobile devices» | https://unbounce.com/conversion-benchmark-report/ | Отчёт вендора, корреляции (41 000+ лендингов) |
+| Посадочная страница должна продолжать обещание рекламы | «…one of the best ways to improve your conversion rate is to match the messaging on your landing page with the messaging you’re using in your ads.» | https://unbounce.com/conversion-benchmark-report/ | Совет вендора |
+| «5-секундный тест» — полезный приём, но не закон природы | «its core belief boils down to virtually a superstition. A notion barely backed up by concrete evidence» («…по сути суеверие, почти не подкреплённое данными») | https://www.smashingmagazine.com/2023/12/five-second-testing-case-study/ | Мнение эксперта (автор из вендора UXtweak). Статьи NN/g о 5-секундном тесте нет: адрес отдал 404 |
+| Кнопку демо держат в первом экране | «80% of top performing demo CTAs are visible above the fold or in the navbar» | https://www.navattic.com/report/state-of-the-interactive-product-demo-2026 | Отчёт вендора |
+
+#### B.3 Скорость страницы
+
+| Утверждение | Дословная цитата (перевод) | Адрес | Уровень |
+|---|---|---|---|
+| Ускорили отрисовку главного блока — продаж стало больше | «a 31% improvement in LCP led to 8% more sales, a 15% improvement in their lead to visit rate, and a 11% improvement in their cart to visit rate.» Тест шёл на лендинге, трафик в том числе из «social». LCP — время, за которое появляется главный крупный блок страницы | https://web.dev/case-studies/vodafone | **A/B-эксперимент** (Vodafone, опубликовано Google) |
+| Даже 0,1 с заметна | «Results showed that a mere 0.1s change in load time can influence every step of the user journey… Conversions grew by 8% for retail sites and by 10% for Travel sites on average.» · таблица в отчёте: «As page load times go from...» — «1s to 3s» — «The probability of bounce increases by 32%» (подпись: «Google/SOASTA research 2017») | https://www.thinkwithgoogle.com/_qs/documents/9757/Milliseconds_Make_Millions_report_hQYAbZJ.pdf | Наблюдательное исследование (37 брендов, 20,5 млн сессий; Google + Deloitte Digital + Fifty-Five) — корреляция, не эксперимент |
+| Официальные пороги «хорошей» скорости | «LCP should occur within 2.5 seconds…», «pages should have a INP of 200 milliseconds or less», «pages should maintain a CLS of 0.1. or less», замер — «the 75th percentile of page loads, segmented across mobile and desktop devices.» (INP — отклик на нажатие, CLS — прыжки вёрстки) | https://web.dev/articles/vitals | Руководство Google |
+| Ещё кейсы | «Tokopedia improved LCP by 55% and saw 23% better average session duration.» | https://web.dev/case-studies/vitals-business-impact | Кейсы компаний (подборка Google) |
+
+#### B.4 Социальное доказательство
+
+| Утверждение | Дословная цитата (перевод) | Адрес | Уровень |
+|---|---|---|---|
+| Люди ориентируются на других, но маленькие цифры играют против | «The most significant risk with using social proof is the perception that too few people approve of the piece of content, service, or product.» («Главный риск — ощущение, что одобривших слишком мало») | https://www.nngroup.com/articles/social-proof-ux/ | Мнение эксперта + наблюдение из юзабилити-теста |
+| Фраза «так делает большинство» сработала в отеле | «Appeals employing descriptive norms (e.g., "the majority of guests reuse their towels") proved superior to a traditional appeal…» | https://experts.umn.edu/en/publications/a-room-with-a-viewpoint-using-social-norms-to-motivate-environmen/ | Полевой эксперимент (Goldstein, Cialdini, Griskevicius, 2008) |
+| …но **повтор в Германии этого не подтвердил** | «However, descriptive norm messages were not more effective than the standard message, and effects of proximity were inconsistent across studies.» | https://pmc.ncbi.nlm.nih.gov/articles/PMC4118982/ | Полевой эксперимент-повтор (выборки 724 и 204 человека) |
+| Топы показывают огромные живые счётчики, иногда под страну посетителя | 16P: «1.58B+ Total tests taken», «542K+ Tests taken in Latvia». Letterboxd: «3,983,021,249 films watched». Duolingo: «Spanish 42.1M learners» | см. A | Наблюдение |
+
+#### B.5 «Покажи, а не рассказывай», прозрачность расчёта, личный результат
+
+| Утверждение | Дословная цитата (перевод) | Адрес | Уровень |
+|---|---|---|---|
+| Когда видно, как сервис работает на тебя, его ценят выше. Проверено в том числе на **сайте знакомств** | «when websites engage in operational transparency by signaling that they are exerting effort, people can actually prefer websites with longer waits to those that return instantaneous results--even when those results are identical.» Порог: «with the online dating simulation in Experiment 5, the decline began even earlier, at 15 seconds.» («на симуляции знакомств польза пошла вниз уже после 15 секунд») | https://www.hbs.edu/ris/Publication%20Files/Norton_Michael_The%20labor%20illusion%20How%20operational_f4269b70-3732-4fc4-8113-72d0c47533e0.pdf | **Лабораторные эксперименты** (5 штук; Buell & Norton, Management Science, 2011) |
+| Сделанное своими руками ценят выше, но только если дело **завершено** | «labor leads to increased valuation only when labor results in successful completion of tasks; thus when participants built and then destroyed their creations, or failed to complete them, the IKEA effect dissipated.» | https://www.hbs.edu/ris/Publication%20Files/11-091.pdf | Лабораторные эксперименты («эффект IKEA», Norton, Mochon, Ariely) |
+| Рассказывать о себе, в том числе о своих вкусах, приятно само по себе | «individuals were willing to forgo money to disclose about the self.» Пример вопроса из эксперимента: «how much do you enjoy winter sports such as skiing?» | https://pmc.ncbi.nlm.nih.gov/articles/PMC3361411/ | Лабораторный эксперимент + fMRI (Tamir & Mitchell, PNAS, 2012) |
+| Фото настоящих людей и предметов рассматривают, стоковые пропускают | «Photos of products and real people (as opposed to stock photos of models) often fall into this category.» · «users ignore stock photos of generic people» | https://www.nngroup.com/articles/photos-as-web-content/ | Исследование юзабилити (айтрекинг) |
+| Показать продукт вместо рассказа о нём | Dropbox о своём раннем ролике: «Prototype worked; video could show product in best light; get much of the same feedback as if we shipped working code» | https://www.slideshare.net/slideshow/dropbox-startup-lessons-learned-3836587/3836587 | Рассказ компании о себе (слайды основателя, 2010) |
+| Лучшие объясняют, как считают личный результат | Spotify: «Each story is made to be accurate , fair , and reflective» · приватные сессии не попадают в «вкусовые» итоги: «your secret sessions deserve to be kept to yourself» | https://newsroom.spotify.com/2025-12-03/how-your-wrapped-is-made/ | Рассказ компании о себе |
+
+#### B.6 Как расходится результат (вирусный цикл)
+
+| Утверждение | Дословная цитата (перевод) | Адрес | Уровень |
+|---|---|---|---|
+| Вирусный цикл — путь человека от входа до приглашения следующих | «The steps a user goes through between entering the site to inviting the next set of new users» · сильный крючок — «a deep personal expression (music, avatars, slideshows, celebrity posters, etc) or a communication mechanism» | https://andrewchen.com/whats-your-viral-loop-understanding-the-engine-of-adoption/ | Мнение эксперта |
+| Думать петлёй: как одна волна людей приводит следующую | «Loops force you to answer “How does one cohort of users lead to another cohort of users?”» | https://www.reforge.com/blog/growth-loops | Мнение экспертов (Balfour, Winters, Kwok, Chen, 2018) |
+| Приглашение, выгодное **обеим сторонам**, поднимает приток навсегда | «Referral program w/ 2-sided incentive permanently increased signups by 60% (!!)» · «35% of daily signups from referral program» | https://www.slideshare.net/slideshow/dropbox-startup-lessons-learned-3836587/3836587 | Рассказ компании о своих данных (Drew Houston, 2010) |
+| Личный итог, которым делятся, — самая массовая механика | «At the end of the campaign, Wrapped had more than 300 million engaged users and more than 630 million shares on social media globally in 56 languages.» | https://newsroom.spotify.com/2026-02-10/spotify-q4-2025-earnings/ | Рассказ компании о своих данных |
+| Делятся тем, что вызывает сильную эмоцию, удивляет, полезно | «Content that evokes high-arousal positive (awe) or negative (anger or anxiety) emotions is more viral.» (и дальше: surprising, interesting, practically useful тоже связаны с вирусностью) | https://jonahberger.com/wp-content/uploads/2013/02/ViralityB.pdf | Наблюдательные данные (статьи NYT за 3 месяца) + эксперименты (Berger & Milkman, JMR, 2012) |
+| 16P превращает результат в повод позвать другого | «Share results» с двумя уровнями приватности, «Compare with someone you know», «guess their type», счётчик «5M Shares» | см. A.1 | Наблюдение (живой прогон теста) |
+| Совместимость с друзьями как главное обещание | musictaste: «…and how compatible you are with your friends.» | https://musictaste.space/ | Наблюдение |
+
+---
+
+### А.C) Худшие решения — не берём
+
+| Решение | Кто так делает или делал | Почему вредит | Источник |
+|---|---|---|---|
+| **Стена входа/регистрации до показа ценности** | Instagram (десктоп: весь первый экран — форма входа), LinkedIn («Continue with google» как главное действие), musictaste.space (сначала вход через Spotify), Tagged.com (по A. Chen: «won’t even let you use the website without entering in your e-mail») | Люди сильнее всего раздражаются на стене входа; превью её не спасают. Кейс: без принудительной регистрации покупок стало на 45 % больше. 18 % бросали покупку из-за требования аккаунта | https://www.nngroup.com/articles/login-walls/ · https://articles.centercentre.com/three_hund_million_button/ · https://baymard.com/lists/cart-abandonment-rate · https://andrewchen.com/whats-your-viral-loop-understanding-the-engine-of-adoption/ |
+| **Полноэкранное «откройте в приложении»** | TikTok (телефон: «Get the full app experience… Open TikTok»), LinkedIn («LinkedIn is better on the app»), Instagram (телефон: главная кнопка «Open Instagram») | Эксперимент Google+: «69% of the visits abandoned our page» («69 % визитов бросили страницу»); после замены на небольшую плашку «1-day active users on our mobile website increased by 17%.» А с 10.01.2017 такие окна ухудшают позиции в поиске: «pages where content is not easily accessible to a user on the transition from the mobile search results may not rank as high.» Для нас важно, потому что поиск — наш канал | https://developers.google.com/search/blog/2015/07/google-case-study-on-app-download-interstitials · https://developers.google.com/search/blog/2016/08/helping-users-easily-access-content-on |
+| **Баннер согласия, который съедает первый экран, и тёмные паттерны в согласии** | Bumble (телефон, около 70 % экрана), Letterboxd («shared with 633 partners»), Instagram, TikTok, LinkedIn, Hinge, Duolingo | Первый экран — это 57 % внимания (NN/g). Исследование баннеров: «only 11.8% meet the minimal requirements that we set based on European law», а «removing the opt-out button from the first page increases consent by 22--23 percentage points» — баннер обычно манипулирует. Оговорка: Google не штрафует баннеры, которые нужны по закону | https://arxiv.org/abs/2001.02479 · https://www.nngroup.com/articles/scrolling-and-attention/ · https://developers.google.com/search/blog/2016/08/helping-users-easily-access-content-on |
+| **Автолистающиеся карусели** (особенно в первом экране) | Hinge (автокарусель отзывов, ниже сгиба); Tinder, Bumble, 16P — карусели ниже сгиба | «Accordions and carousels should show a new panel only when users ask for it.» Пользователь не нашёл главное предложение на странице Siemens, потому что блок сам менял слайды. По живым данным: «Approximately 1% of visitors click on a feature… 84% were on stories in position 1». Честная оговорка: на одном сайте Notre Dame автокарусель собрала больше кликов (8,8 %) | https://www.nngroup.com/articles/auto-forwarding/ · https://erikrunyon.com/2013/01/carousel-interaction-stats/ · https://shouldiuseacarousel.com/ |
+| **Автоплей видео и звука** | На главных страницах топов **не увидел** (Hinge, Tinder, Bumble, Duolingo, LinkedIn — 0 видео). Индустрия от этого отошла | Автоплей-видео в числе самых ненавистных приёмов: «a four-way tie between modal ads, autoplay video ads, intracontent ads… and deceptive links». И ещё: «Users don’t appreciate being surprised by video content that they do not expect.» | https://www.nngroup.com/articles/most-hated-advertising-techniques/ (опрос, 452 человека) · https://www.nngroup.com/articles/video-usability/ |
+| **Рекламный язык и обещания вместо показа** | Классический пример NN/g — Siemens со слоганом «Rewarding.Life.Style.». Среди снятых: 16P («freakishly accurate», «91.2% Accuracy rating») — у них работает, но это обещание | В эксперименте объективный текст дал +27 % к удобству, вместе с краткостью и удобством беглого чтения — +124 %. Сложные слова коррелируют с падением конверсии на 24,3 %. К тому же наши правила текста запрещают обещания | https://www.nngroup.com/articles/concise-scannable-and-objective-how-to-write-for-the-web/ · https://www.nngroup.com/articles/auto-forwarding/ · https://unbounce.com/conversion-benchmark-report/ |
+| **Декоративные стоковые фото** | Пример NN/g — страница Yale School of Management | «users ignore stock photos of generic people»; такое фото — «pure filler» | https://www.nngroup.com/articles/photos-as-web-content/ |
+| **Фейковый «интерес» и прочие тёмные паттерны в знакомствах** | Match Group (Match.com, Tinder, OkCupid, PlentyOfFish). Отдельно — Dropbox о своём провале: прятали бесплатный тариф от платного трафика | FTC в 2019 обвинила Match в рассылке «fake love interest advertisements»: «millions of contacts that generated Match’s “You caught his eye” notices came from accounts the company had already flagged as likely to be fraudulent». В 2025 году урегулирование на **$14 млн** — по обманным «гарантиям», сложной отмене подписки и блокировке тех, кто оспаривал списания. Dropbox: «Hiding free option was shady, confusing, buggy». Отраслевой масштаб: «we discover 1,818 dark pattern instances» на ~11 тыс. магазинов | https://www.ftc.gov/news-events/news/press-releases/2019/09/ftc-sues-owner-online-dating-service-matchcom-using-fake-love-interest-ads-trick-consumers-paying · https://www.ftc.gov/news-events/news/press-releases/2025/08/match-group-agrees-pay-14-million-permanently-stop-deceptive-advertising-cancellation-billing · https://www.slideshare.net/slideshow/dropbox-startup-lessons-learned-3836587/3836587 · https://arxiv.org/abs/1907.07032 |
+| **Механики удержания** (сердечки, серии, «не прерывай серию») | Duolingo: «Each mistake costs 1 heart!»; по их данным «learners who reach a streak of just 7 days are 3.6 times more likely to complete their course» | **У них это работает** (их данные, корреляция). Мы не берём по цели, а не потому что неэффективно: GOAL.md прямо отвергает механики удержания. Ближе к нам позиция Hinge — «effective, not addictive» | https://blog.duolingo.com/how-duolingo-streak-builds-habit/ · https://hinge.co/ |
+| **Платная стена поверх результата** | 16P: «Unlock full results», «Get access now» (часть результата закрыта) | Противоречит «бесплатно». Плюс эффект IKEA держится только на **завершённом** результате, а наполовину закрытый результат завершённым не ощущается (вывод агента из цитаты B.5) | https://www.hbs.edu/ris/Publication%20Files/11-091.pdf |
+| **Маленькие счётчики как «социальное доказательство»** | Пример NN/g: «only 1000 people had shared the article… the 17 G+ users are even less impressive» | Маленькая цифра убеждает в обратном. Для NDim с небольшой базой это прямой риск | https://www.nngroup.com/articles/social-proof-ux/ |
+| **Длинная анкета до первой ценности** (спорно) | Duolingo: 11 экранов вопросов до урока, включая «How did you hear about Duolingo?» (без аккаунта) | Прямых данных, что это вредит Duolingo, у меня нет. Но у вендора демо досматривают лучше всего при 1–6 шагах, а 17 % бросают слишком длинное оформление. Копировать длину онбординга Duolingo без проверки не стоит | https://www.navattic.com/report/state-of-the-interactive-product-demo-2026 · https://baymard.com/lists/cart-abandonment-rate |
+
+---
+
+### А.D) Что годится NDim и где можно сделать лучше топов
+
+> Всё в этом разделе — **вывод агента** из найденного выше, а не решение. Любое UI/UX- и брендовое решение утверждает владелец по четырём макетам (канон проекта). Здесь только сырьё для этих макетов.
+
+#### D.1 Что брать: механизм → у кого подсмотрено → как это ложится на NDim
+
+1. **Продукт вместо рекламы продукта в первом экране.** Так делают TikTok, Spotify, tldraw, ChatGPT и страница теста 16P, где первый вопрос виден сразу. У NDim живое демо уже есть, и это сильная сторона: сохранить и сделать ещё прямее. **Первая оценка звёздами прямо в первом экране**, без кнопки «начать». Опора: NN/g (стены входа и туры/превью слабее настоящего действия), Navattic (демо без формы вовлекают лучше), сам 16P.
+2. **Коротко: 1–6 действий до первого результата, не больше ~30 слов на шаг.** У вендоров досматриваемость лучшая при 1–6 шагах. Отсюда число объектов в демо: примерно 3–5 оценок до первого процента похожести, дальше человек добавляет по желанию. Длину онбординга Duolingo (11 экранов) не копировать.
+3. **Одна фраза: что это и сколько стоит по времени.** У 16P: «Only 10 minutes to get…». По NN/g — одно предложение о том, что делает сайт, и ценность должна дойти за 10 секунд. Текст объективный, без обещаний: и эксперимент NN/g, и наши правила текста запрещают обещания («навсегда», «идеальная пара» и т. п.).
+4. **Сначала знакомое, потом новое.** По Google Research, первое впечатление за <50 мс выигрывают «простые и привычные» формы. Звёзды — привычно, карта Пространства — ново. Гипотеза для макетов: звёзды первыми, карта как **награда-результат**, а не первая картинка.
+5. **Показывать расчёт по-настоящему** («близость × общность» прямо на глазах). Эксперименты Buell & Norton, в том числе на **симуляции знакомств**: видимая работа сервиса повышает ценность результата. Порог там же: в знакомствах польза пошла вниз после 15 секунд. Честная поправка: у них это «иллюзия труда», а у нас расчёт настоящий. Искусственные задержки **не** делать, показывать реальные шаги коротко.
+6. **Результат должен быть завершённым и своим.** Эффект IKEA держится только на завершённом деле. Демо должно заканчиваться цельным результатом: «вот Вы на карте, вот на кого Вы похожи и почему», без замков и «продолжение после входа». Здесь же Tamir & Mitchell: рассказывать о своих вкусах приятно само по себе, и сама оценка — уже удовольствие, а не анкета.
+7. **Вход — только когда он нужен человеку.** tldraw: «Sign in to share», ChatGPT — вход ради сохранённых чатов. У NDim перенос гостем уже есть. Две оговорки. Первая, Wroblewski: сервис, который сам заводит аккаунт, путает людей («есть у меня аккаунт или нет?»). Вторая, Excalidraw: он честно пишет, что гостевые данные живут в браузере и могут пропасть. Значит, **гостевой статус надо называть прямо**, человеческими словами.
+8. **Поделиться результатом с двумя уровнями приватности.** У 16P: «описание типа — для соцсетей» против «личного отчёта с баллами — для близких». Spotify исключает приватные сессии из итогов. Для NDim это «карточка вкуса без деталей — в сторис» против «полного сравнения — другу».
+9. **«Сравнись со мной» — готовый вирусный цикл, потому что это и есть наша математика.** У 16P есть «Compare with someone you know» и даже «угадай тип друга», у musictaste главное обещание — «how compatible you are with your friends». У Dropbox приглашение выгодно обеим сторонам (+60 % регистраций). У NDim выгода обоюдная без всяких бонусов: друг по ссылке оценивает те же измерения, и **оба** видят свой процент похожести. По A. Chen и Reforge — это ровно «вход → приглашение следующих».
+10. **Карточка результата под формат канала.** Приток идёт из Reels/Shorts, а у Spotify личные итоги-«истории» дали 630 млн шарингов. Вертикальная карточка результата замыкает круг: ролик → лендинг → карточка в сторис → лендинг. По Berger & Milkman делятся тем, что удивляет и вызывает сильное чувство. Неожиданное «Вы на 87 % похожи на…» — это оно (гипотеза).
+11. **Продолжать обещание ролика.** Совет Unbounce: текст лендинга должен совпадать с рекламой. Гипотеза: если ролик про фильмы, первые измерения в демо тоже фильмы (по метке ссылки).
+12. **Скорость — часть первого экрана.** Трафик с роликов почти весь мобильный: у Unbounce 83 % визитов с телефона, у нас это встроенный браузер Instagram/YouTube. Цель по руководству Google: LCP ≤ 2,5 с, INP ≤ 200 мс, CLS ≤ 0,1 на 75-м перцентиле мобильных. A/B Vodafone: +31 % к LCP дали +8 % продаж.
+13. **Социальное доказательство — осторожно.** Большие счётчики работают у топов, а у нас маленькая цифра сыграет против (NN/g). Данные по «так делает большинство» смешанные: повтор в Германии не подтвердил. Лучше без счётчиков, пока цифры небольшие.
+
+#### D.2 Где NDim может быть лучше топов и почему
+
+| Где | Как у топов (снято) | Как можем мы | Почему это лучше |
+|---|---|---|---|
+| Первая секунда | Знакомства-топы: логотип или фото, «скачайте приложение» и баннер cookie. Ни одного действия (Hinge, Bumble, Tinder) | Действие в первом экране: первая оценка звёздами | Стена входа и «превью» проигрывают настоящему действию (NN/g, Navattic) |
+| Результат | 16P: результат — ярлык («Entrepreneur»), часть закрыта «Unlock full results» | Полный результат бесплатно, и он про **людей**: на кого Вы похожи и чем | Эффект IKEA требует завершённого результата; наша цель — найти людей, а не ярлык |
+| Друг | musictaste: сначала вход через Spotify. 16P: сравнение живёт внутри их профиля | Сравнение по одной ссылке, **другу не нужен вход** | Каждый лишний шаг режет цикл (Chen: на регистрации теряется до 80–90 %) |
+| Честность персонажей | История Match Group: фейковые «интересы», иск FTC и $14 млн | Макс, Алиса и Настя **явно подписаны как вымышленные** (например, рисованные, а не фото), и никогда не выдаются за людей, которые «ждут Вас» | Доверие — главный актив сервиса знакомств; граница с тёмным паттерном должна быть очевидной |
+| Прозрачность алгоритма | Hinge называет «Nobel-Prize-winning algorithm», но не показывает его. Spotify объясняет расчёт в отдельной статье | Показываем «близость × общность» **прямо в демо**, на живых оценках человека | Видимая работа повышает ценность результата (эксперименты, включая знакомства) |
+| Первый экран без помех | Почти у всех баннер cookie, у TikTok и LinkedIn — «откройте в приложении» | Без стены приложения, без стены входа. Баннера нет, **если** нет необязательных cookie и сторонних трекеров. Это юридический вопрос, проверить отдельно | 57 % внимания — первый экран; окна «в приложение» теряли 69 % визитов |
+| Этика удержания | Duolingo: сердечки и серии; Tinder: свайпы и подписки | Без механик удержания; позиция, близкая к Hinge («effective, not addictive»), но последовательнее | Цель проекта — добро, а не удержание (GOAL.md) |
+
+#### D.3 Открытые вопросы — владельцу через макеты
+
+1. Что на первом экране **первым** — звёзды или карта? Данные «просто и привычно» говорят за звёзды, но решает владелец по 4 макетам.
+2. Сколько оценок в демо до первого результата: 3, 5 или 7?
+3. Как выглядит «Сравнись со мной» и карточка для сторис (формат, что показываем, уровни приватности)?
+4. Как визуально подписать вымышленных персонажей?
+
+---
+
+### А.E) Адреса
+
+#### E.1 Открыты мной (77)
+
+**Первые экраны и продукты (26):**
+1. https://www.16personalities.com/
+2. https://www.16personalities.com/ru
+3. https://www.16personalities.com/free-personality-test
+4. https://www.16personalities.com/profiles/estp-a/f/3wr430gxk (мой результат теста)
+5. https://www.16personalities.com/profiles/isfp-t/o/4m3h3vc9t (мой второй результат: окна Share и Compare)
+6. https://hinge.co/
+7. https://bumble.com/
+8. https://bumble.com/ru
+9. https://tinder.com/
+10. https://letterboxd.com/ (через curl и Playwright; WebFetch — 403)
+11. https://www.duolingo.com/
+12. https://www.duolingo.com/register
+13. https://www.duolingo.com/welcome
+14. https://www.duolingo.com/lesson
+15. https://www.spotify.com/ → https://open.spotify.com/
+16. https://www.instagram.com/
+17. https://www.tiktok.com/
+18. https://www.linkedin.com/
+19. https://www.tldraw.com/
+20. https://excalidraw.com/
+21. https://www.photopea.com/
+22. https://chatgpt.com/
+23. https://musictaste.space/
+24. https://tastedive.com/ (открыт, в выводах не использован)
+25. https://www.gnoosic.com/ (открыт, в выводах не использован)
+26. https://apps.apple.com/us/app/okcupid-dating-date-singles/id338701294 (сервер ответил 429, но страница отрисовалась)
+
+**Доказательства (51):**
+27. https://www.nngroup.com/articles/scrolling-and-attention/
+28. https://www.nngroup.com/articles/page-fold-manifesto/
+29. https://www.nngroup.com/articles/how-long-do-users-stay-on-web-pages/
+30. https://www.nngroup.com/articles/auto-forwarding/
+31. https://www.nngroup.com/articles/photos-as-web-content/
+32. https://www.nngroup.com/articles/concise-scannable-and-objective-how-to-write-for-the-web/
+33. https://www.nngroup.com/articles/login-walls/
+34. https://www.nngroup.com/articles/social-proof-ux/
+35. https://www.nngroup.com/articles/most-hated-advertising-techniques/
+36. https://www.nngroup.com/articles/video-usability/
+37. https://www.nngroup.com/articles/top-ten-guidelines-for-homepage-usability/
+38. https://web.dev/learn/performance/why-speed-matters (переадресация с /articles/why-speed-matters; цифр оттуда не цитирую — они были в ссылках)
+39. https://web.dev/case-studies/vodafone
+40. https://web.dev/case-studies/vitals-business-impact
+41. https://web.dev/articles/vitals
+42. https://www.thinkwithgoogle.com/_qs/documents/9757/Milliseconds_Make_Millions_report_hQYAbZJ.pdf
+43. https://www.navattic.com/report/state-of-the-interactive-product-demo-2026
+44. https://www.navattic.com/report/state-of-the-interactive-product-demo-2025
+45. https://www.navattic.com/blog/interactive-demos-industry-benchmarks (открыт, не цитирован)
+46. https://www.arcade.software/post/interactive-demo-benchmarks
+47. https://www.arcade.software/post/video-vs-interactive-demo (открыт, не цитирован)
+48. https://articles.centercentre.com/three_hund_million_button/
+49. https://baymard.com/lists/cart-abandonment-rate
+50. https://erikrunyon.com/2013/01/carousel-interaction-stats/
+51. https://shouldiuseacarousel.com/
+52. https://developers.google.com/search/blog/2016/08/helping-users-easily-access-content-on
+53. https://developers.google.com/search/blog/2015/07/google-case-study-on-app-download-interstitials
+54. https://www.ftc.gov/news-events/news/press-releases/2022/09/ftc-report-shows-rise-sophisticated-dark-patterns-designed-trick-trap-consumers
+55. https://www.ftc.gov/news-events/news/press-releases/2019/09/ftc-sues-owner-online-dating-service-matchcom-using-fake-love-interest-ads-trick-consumers-paying
+56. https://www.ftc.gov/news-events/news/press-releases/2025/08/match-group-agrees-pay-14-million-permanently-stop-deceptive-advertising-cancellation-billing
+57. https://arxiv.org/abs/2001.02479
+58. https://arxiv.org/abs/1907.07032
+59. https://andrewchen.com/whats-your-viral-loop-understanding-the-engine-of-adoption/
+60. https://www.reforge.com/blog/growth-loops
+61. https://newsroom.spotify.com/2026-02-10/spotify-q4-2025-earnings/
+62. https://newsroom.spotify.com/2024-12-04/10-years-spotify-wrapped/
+63. https://newsroom.spotify.com/2025-12-03/wrapped-marketing-campaign/
+64. https://newsroom.spotify.com/2025-12-03/how-your-wrapped-is-made/
+65. https://pmc.ncbi.nlm.nih.gov/articles/PMC3361411/
+66. https://www.hbs.edu/ris/Publication%20Files/Norton_Michael_The%20labor%20illusion%20How%20operational_f4269b70-3732-4fc4-8113-72d0c47533e0.pdf
+67. https://www.hbs.edu/ris/Publication%20Files/11-091.pdf
+68. https://research.google/blog/users-love-simple-and-familiar-designs-why-websites-need-to-make-a-great-first-impression/
+69. https://unbounce.com/conversion-benchmark-report/
+70. https://www.slideshare.net/slideshow/dropbox-startup-lessons-learned-3836587/3836587
+71. https://www.slideserve.com/cwoodring/startup-lessons-learned-drew-houston-drewhouston-powerpoint-ppt-presentation (копия тех же слайдов, для сверки)
+72. https://alistapart.com/article/signupforms/
+73. https://experts.umn.edu/en/publications/a-room-with-a-viewpoint-using-social-norms-to-motivate-environmen/
+74. https://pmc.ncbi.nlm.nih.gov/articles/PMC4118982/
+75. https://jonahberger.com/wp-content/uploads/2013/02/ViralityB.pdf
+76. https://www.smashingmagazine.com/2023/12/five-second-testing-case-study/
+77. https://blog.duolingo.com/how-duolingo-streak-builds-habit/
+
+#### E.2 Не открылись (19)
+
+1. https://www.okcupid.com/ — WebFetch 403; curl отдал пустую оболочку SPA; браузер показал «It’s not you, it’s us. We’re having trouble reaching our servers.»
+2. https://web.archive.org/web/20260921111719/https://okcupid.com/ — отрисовались только логотип и баннер согласия
+3. https://archive.org/wayback/available?url=okcupid.com (и instagram, tiktok) — 429 Too Many Requests
+4. WebFetch к web.archive.org — инструмент отказал («unable to fetch»)
+5. https://help.okcupid.com/article/128-how-is-match-calculated — увело на общую главную Zendesk
+6. https://help.okcupid.com/article/178-comparing-questions-and-answers-with-your-matches — пустая оболочка
+7. https://www.nngroup.com/articles/5-second-test/ — 404
+8. https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html — 403
+9. https://www.thinkwithgoogle.com/marketing-strategies/app-and-mobile/mobile-site-speed-roi/ — переадресация на главную business.google.com, материала нет
+10. https://www.thinkwithgoogle.com/consumer-insights/consumer-trends/mobile-site-load-time-statistics/ — то же. Известную цифру «53 % уходят через 3 с» поэтому **не цитирую**
+11. https://openviewpartners.com/product-led-growth/ — переадресация на главную, материалы OpenView о PLG сняты
+12. https://archive.uie.com/brainsparks/2009/01/14/the-300-million-button/ — 404 (статья открыта по другому адресу, E.1 № 48)
+13. https://developers.google.com/search/blog/2015/07/google-case-study-app-download — 404 (правильный адрес — E.1 № 53)
+14. https://www.ftc.gov/…/2019/09/ftc-sues-owner-online-dating-service-matchcom-using-fake-love-interest-ads-trick-consumers-paying-matchcom — 404 (правильный адрес — E.1 № 55)
+15. https://www.pnas.org/doi/10.1073/pnas.1202129109 — 403 (открыта копия в PMC, E.1 № 65)
+16. https://www.hbs.edu/faculty/Pages/item.aspx?num=41121 — 405 (открыт PDF, E.1 № 67)
+17. https://www.hbs.edu/faculty/Pages/item.aspx?num=40158 — 405 (открыт PDF, E.1 № 66)
+18. https://academic.oup.com/jcr/article-abstract/35/3/472/1856513 — 403 (аннотация открыта на UMN, E.1 № 73)
+19. https://www.researchgate.net/publication/316275909_Measuring_the_First_Impression_Testing_the_Validity_of_the_5_Second_Test — 403
+
+Отдельно: WebSearch использовался только чтобы **найти** адреса. Ни одна цитата не взята из выдачи поиска, только со страниц, открытых выше.
