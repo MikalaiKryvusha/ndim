@@ -1,6 +1,7 @@
 // ДРАЙВЕР РУЧНОГО ПРОГОНА — набор `qa/suites/signin-link-forks.md`: порция 1 (экран Б3 + вкладка «письмо отправлено»,
 // ВС-01…ВС-09) и порция 2 (экран Г2, ВС-10…ВС-15; граница Б3 по использованной ссылке — ВС-16). Флаг `--portion1`
-// останавливает прогон после ВС-09, `--portion2` гоняет только ВС-10…ВС-16. Мутанты — `…signin-link-forks.mutants.mjs`.
+// останавливает прогон после ВС-09, `--portion2` гоняет только ВС-10…ВС-16, `--welcome` — только ВС-18 (карточка
+// «Добро пожаловать» в четырёх клетках). Мутанты — `…signin-link-forks.mutants.mjs`.
 // Стенд (`npm run stand` в этом рабочем месте). Письмо просится ДВЕРЬЮ ПРОДУКТА, ссылку отдаёт эмулятор Auth (`EXP-0045`),
 // «другой браузер» — отдельный контекст Playwright со своим хранилищем. Приёмы сняты с `tools/verify-signin-link-any-browser.mjs`.
 // Запуск из корня рабочего места: node qa/reports/2026-09-25_signin-link-forks.driver.mjs
@@ -201,6 +202,49 @@ async function g2Seen(page, lang = 'ru') {
 /** Ничего не вылезает за правый край окна (адрес без пробелов на 390). */
 const noOverflow = (page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
+/**
+ * ВС-18 · карточка «Добро пожаловать» в четырёх клетках (`bugs/NEW_newcomer_welcome_claims_ratings_in_place.md`): новичок
+ * по письму двери входа (оценок нет) — «Аккаунт создан.» без «Ваши оценки… на месте»; апгрейд гостя с оценкой в том же
+ * браузере — строка целиком. Флаг `--welcome` гоняет только этот кейс.
+ */
+async function welcomeCells(browser, stamp) {
+  console.log('\nВС-18 · карточка «Добро пожаловать»: новичок без оценок и гость с оценкой, 390/1440 × обе темы:');
+  for (const [w, h, theme] of [[390, 844, 'light'], [390, 844, 'dark'], [1440, 900, 'light'], [1440, 900, 'dark']]) {
+    const cell = `${w}-${theme}`;
+    {
+      const A = `vs18n-${cell}-${stamp}@ndim.space`;
+      const link = await letterFromDoor(browser, A);
+      const { context, page, errors } = await browserOf(browser, { w, h, theme });
+      await page.goto(link);
+      await page.getByText(WELCOME).waitFor({ timeout: 20000 }).catch(() => {});
+      await page.waitForTimeout(4000); // экран прочитал оценки: будь строка «на месте», она бы уже появилась
+      const applied = await page.evaluate(() => document.documentElement.dataset.theme);
+      await page.screenshot({ path: `${SHOTS}/vs18-newcomer-${cell}.png` });
+      const me = await whoAmI(page);
+      const zero = me ? (await dimsCount(me.uid)) === 0 : false;
+      check('ВС-18', `новичок · ${cell}: «${WELCOME}» без «${KEPT}» (оценок 0)`, (await text(page, WELCOME)) && !(await text(page, KEPT)) && zero && applied === theme && (await noOverflow(page)) && errors.length === 0, `${describe(me)} · тема ${applied} · консоль ${errors.length}`);
+      await context.close();
+    }
+    {
+      const A = `vs18g-${cell}-${stamp}@ndim.space`;
+      const { context, page, errors } = await browserOf(browser, { w, h, theme });
+      const g = await guestWithRating(page);
+      const link = await guestSaveLetter(page, A);
+      const tab = await context.newPage();
+      tab.on('console', (m) => {
+        if (m.type() === 'error') errors.push(`${m.text()} @ ${(m.location()?.url || tab.url()).split('?')[0]}`);
+      });
+      await tab.goto(link);
+      await tab.getByText(KEPT).waitFor({ timeout: 20000 }).catch(() => {});
+      const applied = await tab.evaluate(() => document.documentElement.dataset.theme);
+      await tab.screenshot({ path: `${SHOTS}/vs18-upgrade-${cell}.png` });
+      const me = await whoAmI(tab);
+      check('ВС-18', `апгрейд гостя с оценкой · ${cell}: «${WELCOME} ${KEPT}…»`, g.rated && me?.uid === g.uid && !me.anonymous && (await text(tab, WELCOME)) && (await text(tab, KEPT)) && applied === theme && (await noOverflow(tab)) && errors.length === 0, `${describe(me)} · тема ${applied} · консоль ${errors.length}`);
+      await context.close();
+    }
+  }
+}
+
 await mkdir(SHOTS, { recursive: true });
 // Голова и чистота дерева печатаются первыми (суд порции 1, п. 7): кадры и числа прогона принадлежат НАЗВАННОЙ голове, а
 // не грязной копии. Грязное дерево не останавливает прогон (мутанты правят файлы продукта), но называется вслух.
@@ -210,6 +254,10 @@ console.log(`Голова: ${git(['rev-parse', '--short', 'HEAD'])} · дере�
 const browser = await chromium.launch();
 try {
   console.log(`Стенд: ${BASE}`);
+  if (process.argv.includes('--welcome')) {
+    await welcomeCells(browser, stamp);
+    throw Object.assign(new Error('только ВС-18 — стоп'), { stop: true });
+  }
   // `--portion2` — только кейсы Г2 (ВС-10…ВС-15): перепрогон после правки строк Г2 без повторения порции 1.
   const ONLY2 = process.argv.includes('--portion2');
   if (!ONLY2) {
@@ -610,6 +658,8 @@ try {
     check('ВС-17', `${w}: консоль чиста`, errors.length === 0, errors.slice(0, 2).join(' | '));
     await context.close();
   }
+
+  await welcomeCells(browser, stamp);
 } catch (e) {
   if (!e.stop) throw e;
 } finally {
