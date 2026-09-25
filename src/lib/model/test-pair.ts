@@ -60,6 +60,64 @@ export function sanitizeAnswers(raw: unknown, allowedIds: ReadonlySet<string>): 
   return clean;
 }
 
+// ── Очередь второго: ТЕ ЖЕ вещи, что оценил первый (№098 В2, пул и случайная дюжина) ───────────
+
+/**
+ * ОЧЕРЕДЬ ВТОРОГО ЧЕЛОВЕКА ПАРЫ — вещи, которые оценил первый, В ПОРЯДКЕ ПУЛА.
+ *
+ * С пулом и случайной дюжиной (`content/test-set.ts`) у каждой попытки своя перетасовка, и очередь
+ * «как у первого» больше не выводится из сборки. Выводится она из самого документа пары: ключи
+ * `aAnswers` — это ровно то, что первый оценил в рамках теста (№002 В4). Схема документа и правила
+ * `testPairs` не меняются. Порядок — порядок пула: детерминирован и одинаков у всех, кто открыл
+ * одну ссылку. Вещи вне пула (пул сменился между выкатами) выпадают: карточки для них у страницы нет.
+ * [TESTED: 2026-09-25 · стенд (слот 5, сборка + vite preview :4195) · второй по ссылке `?pair=…&set=…` без сессии
+ * оценил ровно 12 вещей первого, первая карточка — из вещей первого, своей дюжины нет · qa/reports/2026-09-26_compat-test-v4.md]
+ */
+export function pairQueueIds(poolIds: readonly string[], firstRated: ReadonlySet<string>): string[] {
+  return poolIds.filter((id) => firstRated.has(id));
+}
+
+/**
+ * Имя параметра ссылки с набором первого: `?pair=<id>&set=<код>`.
+ *
+ * 🔑 ЗАЧЕМ ОН ВООБЩЕ. Документ пары читает только вошедший (`allow get: if signedIn()`), а незнакомцу
+ * по ссылке сессию молча не заводят (канон `profile.ts`: «он мог просто открыть страницу»). Значит
+ * второй человек без сессии видит свою ПЕРВУЮ карточку раньше, чем может прочитать пару, — и без
+ * подсказки в ссылке первая карточка была бы не из вещей первого. Код в ссылке даёт очередь сразу;
+ * после первой оценки пара читается, и её `aAnswers` становятся очередью (подсказка — только мост
+ * до этого момента).
+ */
+export const PAIR_SET_PARAM = 'set';
+
+/** Символ на вещь: номер вещи в пуле в 36-ричной записи. Пул длиннее 36 так не кодируется. */
+const SET_DIGITS = 36;
+
+/**
+ * Код набора первого для ссылки: номера вещей пула, по символу на вещь, в порядке пула
+ * (12 вещей из 20 — 12 символов). Вещи вне пула в код не попадают.
+ */
+export function encodePairSet(poolIds: readonly string[], rated: Iterable<string>): string {
+  if (poolIds.length > SET_DIGITS) throw new Error(`пул ${poolIds.length} длиннее ${SET_DIGITS}: код набора не вместит`);
+  const mine = new Set(rated);
+  return poolIds
+    .map((id, i) => (mine.has(id) ? i.toString(SET_DIGITS) : ''))
+    .join('');
+}
+
+/**
+ * Набор первого из кода ссылки. Код — внешние данные (адресная строка): чужой символ и номер вне
+ * пула молча выпадают. Пустой или отсутствующий код — `null` («подсказки нет»), а не пустой набор.
+ */
+export function decodePairSet(poolIds: readonly string[], code: string | null): Set<string> | null {
+  if (code === null) return null;
+  const ids = new Set<string>();
+  for (const ch of code.toLowerCase()) {
+    const i = Number.parseInt(ch, SET_DIGITS);
+    if (Number.isInteger(i) && i >= 0 && i < poolIds.length) ids.add(poolIds[i]);
+  }
+  return ids.size > 0 ? ids : null;
+}
+
 /** Одна строка результата: объект и две оценки. Никаких производных величин. */
 export interface PairFactRow {
   readonly id: string;

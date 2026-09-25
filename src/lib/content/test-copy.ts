@@ -25,6 +25,10 @@
  *
  * Пример результата («Вы и Аня», «12 совпадений») — ИЛЛЮСТРАЦИЯ ФОРМЫ, подписанная на странице
  * словом «пример»: имена вымышлены, числа не утверждают ничего о продукте.
+ *
+ * 🔄 2026-09-26: тексты «Теста на совместимость» заменены текстами макета V4 (интервью №098 В1 = Г) —
+ * разбор отступлений от дословности стоит над ключом `compatibility`. Тексты «Теста личности» и
+ * «Калькулятора любви» этой работой не тронуты.
  */
 
 import type { Lang } from '$lib/content/langs';
@@ -38,6 +42,30 @@ type L<T> = Record<Lang, T>;
 export interface TestStep { lead: string; rest: string }
 export interface TestFaq { q: string; a: string }
 export interface TestFact { icon: string; text: string }
+
+/**
+ * ТЕКСТ ПОД ДЕЛОМ — разделы страницы «Тест на совместимость» (макет V4, интервью №098 В1 = Г).
+ * Блок раздела: абзац · нумерованные шаги (жирное начало + продолжение) · виды строк результата
+ * (значок + жирное имя + продолжение) · абзац о пуле теста, где СПИСОК вещей подставляет страница
+ * из очереди сборки (список живёт в `test-set.ts`, а не набирается текстом второй раз).
+ */
+export type GuideBlock =
+  | { kind: 'p'; text: string }
+  | { kind: 'ol'; items: TestStep[] }
+  | { kind: 'kinds'; items: { icon: string; lead: string; rest: string }[] }
+  | { kind: 'pool'; lead: string; tail: string };
+export interface GuideSection { h2: string; blocks: GuideBlock[] }
+
+/** Блок «После теста — Друзья по интересам в Пространстве NDim Space» (макет V4). */
+export interface AfterTest {
+  kicker: string;
+  title: string;
+  body: string;
+  /** Подпись над списком «вещь — N человек»: только счётчики, ни людей, ни их оценок (№002 В4). */
+  ratedTitle: string;
+  findCta: string;
+  saveCta: string;
+}
 
 export interface TestCopy {
   /** Подпись жанра в карточке хаба: «Для двоих», «Для одного»… */
@@ -61,11 +89,19 @@ export interface TestCopy {
   resultCount?: { n: string; label: string; sub: string };
   resultRows: TestFact[];
   resultFoot: string;
-  /** Мост-паспорт. */
-  keepTitle: string;
-  keepBody: string;
-  keepCta: string;
-  keepGhost: string;
+  /** Мост-паспорт. У «Теста на совместимость» его место занимает блок `after` (V4). */
+  keepTitle?: string;
+  keepBody?: string;
+  keepCta?: string;
+  keepGhost?: string;
+  /** Строки ссылки создателя пары; без них — общие строки страницы. */
+  pairLinkReady?: string;
+  pairWaiting?: string;
+  /** V4 (№098 В1 = Г): блок «Друзья по интересам», текст под делом, заголовки вопросов и мостов. */
+  after?: AfterTest;
+  guide?: GuideSection[];
+  faqTitle?: string;
+  crossTitle?: string;
   faq: TestFaq[];
   /** Мосты между обёртками: подпись → слаг. */
   crossLinks: { text: string; slug: TestSlug }[];
@@ -98,89 +134,258 @@ export const TEST_FOOT: L<string> = {
 };
 
 export const TESTS: Record<TestSlug, L<TestCopy>> = {
+  /*
+   * ═══ «ТЕСТ НА СОВМЕСТИМОСТЬ» — МАКЕТ V4 «От пары к людям Пространства» (интервью №098 В1 = Г) ═══
+   *
+   * Русские строки — ДОСЛОВНО из `design/compat-test-page-mockups.html` (вариант V4 = всё из V1 и ниже
+   * блок «Друзья по интересам»): тексты прошли независимую проверку по портрету голоса владельца
+   * (§7Б) и не переписываются. Отступления от дословности — ТОЛЬКО там, где новый набор теста (пул 20
+   * и случайная дюжина, №098 В2) сделал бы строку неправдой, и каждое названо здесь:
+   *   · подзаголовок и вопрос «с другом»: «фильмы, книги, сериалы и практики» → «фильмы, сериалы и
+   *     игры» (в пуле нет ни книг, ни практик); из подзаголовка снята строка «Практики — это то, чем
+   *     люди занимаются» (практик в наборе нет); вопрос «не знаю фильм или книгу» → «фильм или сериал»;
+   *   · пример «по-разному»: «Гарри Поттер и Тайная комната · Роман, 1998» → «Гарри Поттер и
+   *     философский камень · Фильм, 2001» (романа в пуле нет, фильм есть);
+   *   · абзац о первых двенадцати вещах (список самых оценённых подряд, с «Сексом» и шестью «Гарри
+   *     Поттерами») переписан под пул — `[AI]`, на вычитку владельцу; список вещей подставляет страница;
+   *   · `metaDesc` собран из строк V4 (в макете его нет; прежний нёс «Честный…» и «без выдуманных
+   *     процентов» — форму оправдания, снятую словом владельца 2026-08-28).
+   * Подпись страницы (`TEST_FOOT`) НЕ тронута сознательно: она общая с хабом тестов и с 10 222
+   * страницами каталога — её замена идёт отдельной работой на все поверхности сразу.
+   */
   compatibility: {
     ru: {
       badge: 'Для двоих',
       // H1 — «Тест на совместимость», «тест для двоих» в подзаголовке (интервью №028, В2 = А).
       h1: 'Тест на совместимость',
-      sub: 'Тест для двоих — по-настоящему: без выдуманных процентов. Вы оба оцениваете одни и те же вещи, а совпадения говорят сами за себя.',
-      facts: ['без регистрации', '12 вещей · ~3 минуты', 'бесплатно'],
+      sub: 'Тест для двоих: Вы и второй человек оцениваете 12 вещей одного набора — фильмы, сериалы и игры — звёздами от 0 до 10, каждый со своего телефона или компьютера. Результат называет вещи, в которых ваши оценки совпали.',
+      facts: ['без регистрации', '12 вещей · ~3 минуты', 'бесплатно', 'отвечают оба'],
       steps: [
-        { lead: 'Оцените 12 вещей', rest: 'звёздами — «правильных ответов» нет.' },
-        { lead: 'Отправьте ссылку второму', rest: '— он проходит те же 12.' },
-        { lead: 'Смотрите совпадения', rest: '— факты, не случайный процент.' },
+        { lead: 'Оцените 12 вещей', rest: 'звёздами от 0 до 10.' },
+        { lead: 'Отправьте тест второму человеку', rest: '— второй человек оценивает вещи этого теста у себя.' },
+        { lead: 'Смотрите совпадения', rest: '— вещи, в которых ваши оценки совпали.' },
       ],
       mirrorTitle: 'Ваша анкета растёт',
       mirrorEmpty: 'Поставьте первую оценку — здесь появятся первые факты о Вас.',
-      inviteTitle: 'Позовите второго',
-      inviteBody: 'Пройдите свою половину теста — и здесь появится личная ссылка для второго.',
-      inviteNote: 'Результат увидите только вы двое: ссылка личная, в поиске её нет.',
-      resultTitle: 'Каким будет результат',
+      inviteTitle: 'Отправьте тест второму человеку',
+      inviteBody: 'Когда Вы оцените 12 вещей, здесь появится кнопка «Создать личную ссылку». Отправьте ссылку второму человеку: второй человек откроет ссылку со своего телефона или компьютера и оценит вещи этого теста.',
+      inviteNote: 'Результат показывается только вам двоим — участникам пары: ссылка личная, и её получает тот, кому Вы её отправите.',
+      pairLinkReady: 'Личная ссылка готова — отправьте её второму человеку:',
+      pairWaiting: 'Как только второй человек пройдёт тест, здесь появится результат.',
+      resultTitle: 'Пример результата теста на совместимость',
       resultCaption: 'Вы и Аня · пример результата',
       resultRows: [
-        { icon: '⭐', text: 'Вы оба поставили 10 — Warcraft III' },
-        { icon: '🤝', text: 'Вы рядом в «Пацанах» и «Особом мнении»' },
-        { icon: '💬', text: '«Катание на лыжах» вы видите по-разному — будет о чём поговорить' },
+        { icon: '⭐', text: 'Вы оба поставили 10 — Побег из Шоушенка · Фильм, 1994' },
+        { icon: '⭐', text: 'Вы оба поставили 9 — Гладиатор · Фильм, 2000' },
+        { icon: '⭐', text: 'Вы оба поставили 8 — Матрица · Фильм, 1999' },
+        { icon: '🤝', text: 'Вы рядом в «Доктор Хаус · Телесериал, 2004»: 7 и 8' },
+        { icon: '💬', text: '«Гарри Поттер и философский камень · Фильм, 2001» вы видите по-разному (8 и 2) — будет о чём поговорить' },
       ],
-      resultFoot: 'Никаких процентов: только то, что можно проверить.',
-      keepTitle: 'Это не разовый тест',
-      keepBody: 'Каждая Ваша оценка уже собирается в анкету — Ваш NDim ID. Она живёт и растёт вместе с Вами, а Пространство ищет по ней людей, которые совпадают с Вами по-настоящему. Гостевая анкета хранится 7 дней.',
-      keepCta: 'Сохранить мою анкету',
-      keepGhost: 'Продолжить гостем',
+      resultFoot: 'Сравнили вещей: 12.',
+      after: {
+        kicker: 'После теста',
+        title: 'Друзья по интересам в Пространстве NDim Space',
+        body: 'Ваши оценки теста уже лежат в Вашем NDim ID — анкете, где собраны все вещи, которые Вы оценили, вместе с Вашими оценками. По этой анкете Пространство NDim Space ищет людей, чьи оценки похожи на Ваши, и собирает самых похожих людей в разделе «Связи». Каждая новая оценка вещи каталога ложится в Ваш NDim ID, и Пространство NDim Space ищет похожих людей по всем Вашим оценкам. Гостевая анкета хранится 7 дней с момента создания.',
+        ratedTitle: 'Вещи этого теста уже оценили люди Пространства NDim Space:',
+        findCta: 'Найти друзей по интересам',
+        saveCta: 'Сохранить мою анкету',
+      },
+      guide: [
+        {
+          h2: 'Как пройти тест на совместимость для двоих',
+          blocks: [
+            { kind: 'p', text: 'Тест на совместимость для двоих в Пространстве NDim Space проходится в три шага. Каждый из двоих делает свою часть сам, со своего телефона или компьютера.' },
+            {
+              kind: 'ol',
+              items: [
+                { lead: 'Оцените 12 вещей', rest: 'звёздами от 0 до 10. Ноль значит «совсем не моё», десять — «это про меня». Вещь, которую Вы не знаете, пропустите кнопкой «Не знаю эту вещь — дальше»: тест покажет следующую.' },
+                { lead: 'Отправьте тест второму человеку.', rest: 'Нажмите «Создать личную ссылку» и отправьте ссылку в мессенджере, в письме или там, где Вам удобно. Второй человек открывает ссылку со своего телефона или компьютера и оценивает вещи этого теста.' },
+                { lead: 'Смотрите совпадения.', rest: 'Второй человек нажимает «Сравнить ответы» и сразу видит результат: совпадения, близкие оценки и вещи, которые вы видите по-разному. Вы видите результат, когда нажимаете «Проверить» под личной ссылкой или открываете свою личную ссылку.' },
+              ],
+            },
+            { kind: 'p', text: 'Весь тест занимает около трёх минут. Оценки второго человека Вы видите после того, как оценили оба, — поэтому каждая оценка остаётся собственным ответом человека.' },
+            { kind: 'p', text: 'Сравниться можно с несколькими людьми. Ваши оценки остаются в Вашей анкете. Чтобы сравниться со следующим человеком, откройте страницу теста заново и нажмите «Создать личную ссылку»: одна ссылка — одна пара.' },
+            {
+              // [AI] Переписан под пул (№098 В2) — на вычитку владельцу; список вещей подставляет страница.
+              kind: 'pool',
+              lead: 'Двенадцать вещей теста Пространство NDim Space выбирает случайно из 20 вещей каталога. Эти 20 вещей — самые оценённые вещи каталога Пространства NDim Space с NDim Space Rating от 8 и выше, по одной вещи от каждой серии:',
+              tail: 'Второй человек пары оценивает те же вещи, которые оценил первый человек. Самые оценённые вещи чаще других знакомы обоим, и двоим есть что сравнить.',
+            },
+          ],
+        },
+        {
+          h2: 'Что показывает результат теста на совместимость',
+          blocks: [
+            { kind: 'p', text: 'Результат теста на совместимость называет вещи. Каждая строка результата — одна вещь и две оценки: Ваша и оценка второго человека. Строки результата бывают трёх видов.' },
+            {
+              kind: 'kinds',
+              items: [
+                { icon: '⭐', lead: 'Совпадение', rest: '— вы оба оценили вещь одинаково. Пример: «Вы оба поставили 10 — Побег из Шоушенка · Фильм, 1994».' },
+                { icon: '🤝', lead: 'Рядом', rest: '— ваши оценки отличаются на одну звезду. Пример: «Вы рядом в „Доктор Хаус · Телесериал, 2004“: 7 и 8».' },
+                { icon: '💬', lead: 'По-разному', rest: '— ваши оценки расходятся на четыре звезды и больше. Пример: «„Гарри Поттер и философский камень · Фильм, 2001“ вы видите по-разному (8 и 2) — будет о чём поговорить».' },
+              ],
+            },
+            { kind: 'p', text: 'Под строками стоит, сколько вещей оценили вы оба.' },
+            { kind: 'p', text: 'Результат показывается только вам двоим — участникам пары. Кнопка «Удалить пару и ссылку» есть у обоих участников пары: кнопка удаляет пару и ссылку. Оценки в анкетах обоих при этом остаются.' },
+          ],
+        },
+        {
+          h2: 'На чём основан тест на совместимость пары',
+          blocks: [
+            { kind: 'p', text: 'Оценка вещи — это короткий ответ человека на вопрос: насколько эта вещь про меня? Фильм, книга, сериал, практика — каждая вещь несёт свой мир: свой юмор, своих героев, свой темп, свои ценности. Высокая оценка говорит: этот мир мне близок.' },
+            { kind: 'p', text: 'Совпадения двух людей по многим вещам складываются в рисунок — общий юмор, общие любимые истории, общий взгляд на то, что важно. Такой рисунок и есть совместимость двух людей по вкусам.' },
+            { kind: 'p', text: 'Расхождения работают на пару тоже. Вещь, которую вы видите по-разному, — готовая тема для разговора: почему «Матрица» у Вас на 10 и у второго человека на 3?' },
+            { kind: 'p', text: 'По этому принципу Пространство NDim Space ищет похожих людей — по всем оценкам человека сразу. Каждая вещь каталога — Измерение Пространства, и оценка человека задаёт место человека на этом Измерении. Похожесть двух людей Пространство NDim Space считает из двух мер: Общности и Близости. Общность показывает, насколько совпадают интересы двоих людей: Пространство NDim Space делит число вещей, которые оценили оба человека, на среднее число вещей, которые оценил каждый из двоих. Близость показывает, насколько похожи оценки двоих людей по общим вещам. Общность, умноженная на Близость, и есть Похожесть. По Похожести Пространство NDim Space подбирает каждому человеку его Связи — самых похожих на него людей.' },
+          ],
+        },
+        {
+          h2: 'Тест на совместимость онлайн и бесплатно',
+          blocks: [
+            { kind: 'p', text: 'Тест на совместимость проходится онлайн, прямо на этой странице, со своего телефона или компьютера. Тест на совместимость бесплатный: оценки, личная ссылка и результат пары. Второй человек отвечает со своего телефона или компьютера — личная ссылка открывает тест прямо там.' },
+            { kind: 'p', text: 'Тест проходится без регистрации: первая оценка сразу создаёт Вашу гостевую анкету. Гостевая анкета хранится 7 дней с момента создания. Кнопка «Сохранить мою анкету» сохраняет гостевую анкету за Вами: Вы входите в Пространство NDim Space через Google или по ссылке из письма на Вашу почту, и все оценки остаются с Вами.' },
+            { kind: 'p', text: 'Ваша анкета называется NDim ID — это все вещи, которые Вы оценили, вместе с Вашими оценками. Каждая оценка теста уже лежит в Вашем NDim ID. По NDim ID Пространство NDim Space находит Вам людей с похожими оценками — Ваши Связи.' },
+          ],
+        },
+      ],
+      faqTitle: 'Частые вопросы о тесте на совместимость',
       faq: [
-        { q: 'Почему нет процента совместимости?', a: 'Проценты интернет-калькуляторов случайны. Мы показываем то, что можно проверить: ваши настоящие совпадения — по вещам, которые вы оба оценили.' },
-        { q: 'Это бесплатно?', a: 'Да. Без рекламы, без подписок и без покупок.' },
-        { q: 'Второй увидит все мои ответы?', a: 'Только по вещам этого теста, которые оценили вы оба, — и только после того, как каждый нажмёт кнопку сам. Остальная Ваша анкета видна так, как решите Вы.' },
+        { q: 'Тест на совместимость для двоих — отвечают оба?', a: 'Да, отвечают оба. Каждый из двоих оценивает вещи сам, со своего телефона или компьютера. Первый человек оценивает 12 вещей и отправляет личную ссылку, второй человек открывает ссылку и оценивает вещи этого теста. Результат строится по оценкам обоих.' },
+        { q: 'Как пройти тест на совместимость пары онлайн?', a: 'Оцените 12 вещей на этой странице, нажмите «Создать личную ссылку» и отправьте ссылку второму человеку. Второй человек оценивает вещи этого теста у себя, нажимает «Сравнить ответы» и сразу видит результат. Вы видите результат, когда нажимаете «Проверить» под личной ссылкой или открываете свою личную ссылку.' },
+        { q: 'Тест на совместимость — бесплатно?', a: 'Да. Тест на совместимость бесплатный: оценки, личная ссылка и результат пары.' },
+        { q: 'Можно пройти тест на совместимость без регистрации?', a: 'Да. Первая оценка создаёт гостевую анкету, и тест проходится до результата. Гостевая анкета хранится 7 дней с момента создания. Кнопка «Сохранить мою анкету» сохраняет гостевую анкету за Вами.' },
+        { q: 'Можно пройти тест на совместимость мужчине и женщине?', a: 'Да. Тест подходит мужчине и женщине, паре, двум друзьям, двум подругам — любым двоим. Вещи теста одинаковы для обоих, и результат показывает совпадения двух людей.' },
+        { q: 'Можно пройти тест на совместимость с другом?', a: 'Да. Вы оцениваете 12 вещей и отправляете другу личную ссылку. Друг оценивает вещи этого теста у себя, и результат показывает, в каких фильмах, сериалах и играх ваши вкусы совпали.' },
+        { q: 'Кто видит мои ответы в тесте на совместимость?', a: 'Результат показывается только вам двоим — участникам пары. Второй человек видит Ваши оценки в строках результата — по вещам этого теста, которые оценили вы оба, — после двух нажатий: Вы нажали «Создать личную ссылку», второй человек нажал «Сравнить ответы». Остальные оценки Вашего NDim ID видите только Вы.' },
+        { q: 'Что делать, если я не знаю фильм или сериал из теста?', a: 'Нажмите «Не знаю эту вещь — дальше», и тест покажет следующую вещь. Результат сравнивает вещи, которые оценили вы оба.' },
+        { q: 'Как найти друзей по интересам?', a: 'Сохраните свою анкету и продолжайте оценивать вещи каталога Пространства NDim Space — фильмы, книги, сериалы, игры и практики. Пространство NDim Space ищет людей с похожими оценками по всем Вашим оценкам и собирает самых похожих людей в разделе «Связи».' },
       ],
+      crossTitle: 'Другие тесты Пространства NDim Space',
       crossLinks: [
-        { text: 'Узнать больше о себе — тест личности', slug: 'personality' },
-        { text: 'Поиграть вдвоём — калькулятор любви', slug: 'love' },
+        { text: 'Тест личности', slug: 'personality' },
+        { text: 'Калькулятор любви', slug: 'love' },
       ],
       hubLine: 'Вы оба оцениваете одни и те же 12 вещей — совпадения говорят сами за себя.',
       hubCta: 'Пройти',
       metaTitle: 'Тест на совместимость для двоих — NDim Space',
-      metaDesc: 'Честный тест на совместимость для двоих: вы оба оцениваете одни и те же фильмы, игры и привычки, а совпадения говорят сами за себя. Без регистрации и без выдуманных процентов.',
+      metaDesc: 'Тест на совместимость для двоих онлайн, бесплатно и без регистрации: Вы и второй человек оцениваете 12 вещей — фильмы, сериалы и игры — звёздами от 0 до 10. Результат называет вещи, в которых ваши оценки совпали.',
     },
+    /*
+     * [AI] EN — черновик на вычитку владельцу. Написан ОТ СМЫСЛА русских строк V4, а не калькой: те же
+     * блоки и те же факты, английский порядок слов и английские кавычки. Термины — по словарю
+     * продукта (NDim ID · Relations · Dimension · Similarity = Proximity × Commonality).
+     */
     en: {
       badge: 'For two',
       h1: 'Compatibility test',
-      sub: 'A test for two — for real: no made-up percentages. You both rate the same things, and the matches speak for themselves.',
-      facts: ['no sign-up', '12 things · ~3 minutes', 'free'],
+      sub: 'A test for two: you and the other person rate the same set of 12 things — movies, TV series and games — with stars from 0 to 10, each on your own phone or computer. The result names the things where your ratings matched.',
+      facts: ['no sign-up', '12 things · ~3 minutes', 'free', 'you both answer'],
       steps: [
-        { lead: 'Rate 12 things', rest: 'with stars — there are no “right answers”.' },
-        { lead: 'Send the link to your partner', rest: '— they rate the same 12.' },
-        { lead: 'See your matches', rest: '— facts, not a random percentage.' },
+        { lead: 'Rate 12 things', rest: 'with stars from 0 to 10.' },
+        { lead: 'Send the test to the other person', rest: '— they rate the things of this test on their own device.' },
+        { lead: 'See your matches', rest: '— the things where your ratings matched.' },
       ],
       mirrorTitle: 'Your profile is growing',
       mirrorEmpty: 'Give your first rating — the first facts about you will appear here.',
-      inviteTitle: 'Invite the second person',
-      inviteBody: 'Finish your half of the test — a personal link for the second person will appear here.',
-      inviteNote: 'Only the two of you will see the result: the link is private and never appears in search.',
-      resultTitle: 'What the result looks like',
+      inviteTitle: 'Send the test to the other person',
+      inviteBody: 'Once you have rated 12 things, a “Create a personal link” button appears here. Send the link to the other person: they open it on their own phone or computer and rate the things of this test.',
+      inviteNote: 'Only the two of you see the result — the two people in the pair: the link is personal, and it goes to the person you send it to.',
+      pairLinkReady: 'Your personal link is ready — send it to the other person:',
+      pairWaiting: 'As soon as the other person finishes the test, the result appears here.',
+      resultTitle: 'Sample compatibility test result',
       resultCaption: 'You and Anna · sample result',
       resultRows: [
-        { icon: '⭐', text: 'You both gave a 10 — Warcraft III' },
-        { icon: '🤝', text: 'You are close on “The Boys” and “Minority Report”' },
-        { icon: '💬', text: 'You see “Skiing” differently — something to talk about' },
+        { icon: '⭐', text: 'You both gave 10 — The Shawshank Redemption · Movie, 1994' },
+        { icon: '⭐', text: 'You both gave 9 — Gladiator · Movie, 2000' },
+        { icon: '⭐', text: 'You both gave 8 — The Matrix · Movie, 1999' },
+        { icon: '🤝', text: 'You are close on “House M.D. · TV series, 2004”: 7 and 8' },
+        { icon: '💬', text: 'You see “Harry Potter and the Sorcerer’s Stone · Movie, 2001” differently (8 and 2) — something to talk about' },
       ],
-      resultFoot: 'No percentages: only things you can check.',
-      keepTitle: 'This is not a one-time test',
-      keepBody: 'Every rating you give is already building your profile — your NDim ID. It lives and grows with you, and NDim Space uses it to find people who truly match you. A guest profile is kept for 7 days.',
-      keepCta: 'Save my profile',
-      keepGhost: 'Continue as a guest',
+      resultFoot: 'Things compared: 12.',
+      after: {
+        kicker: 'After the test',
+        title: 'Friends with shared interests in NDim Space',
+        body: 'Your test ratings are already in your NDim ID — the profile that holds every thing you have rated, together with your ratings. NDim Space uses this profile to look for people whose ratings are close to yours, and gathers the most similar people in the “Relations” section. Every new rating of a catalog thing goes into your NDim ID, and NDim Space looks for similar people across all of your ratings. A guest profile is kept for 7 days from the moment it is created.',
+        ratedTitle: 'People in NDim Space have already rated the things of this test:',
+        findCta: 'Find friends with shared interests',
+        saveCta: 'Save my profile',
+      },
+      guide: [
+        {
+          h2: 'How to take the compatibility test for two',
+          blocks: [
+            { kind: 'p', text: 'The compatibility test for two in NDim Space takes three steps. Each of the two people does their own part, on their own phone or computer.' },
+            {
+              kind: 'ol',
+              items: [
+                { lead: 'Rate 12 things', rest: 'with stars from 0 to 10. Zero means “not my thing”, ten means “that’s me”. If you don’t know a thing, skip it with the “I don’t know this one — next” button: the test shows the next one.' },
+                { lead: 'Send the test to the other person.', rest: 'Press “Create a personal link” and send the link in a messenger, by email or wherever suits you. The other person opens the link on their own phone or computer and rates the things of this test.' },
+                { lead: 'See your matches.', rest: 'The other person presses “Compare answers” and sees the result right away: matches, close ratings and the things you see differently. You see the result when you press “Check” under your personal link or open your personal link.' },
+              ],
+            },
+            { kind: 'p', text: 'The whole test takes about three minutes. You see the other person’s ratings once both of you have rated — so every rating stays each person’s own answer.' },
+            { kind: 'p', text: 'You can compare with several people. Your ratings stay in your profile. To compare with the next person, open the test page again and press “Create a personal link”: one link — one pair.' },
+            {
+              kind: 'pool',
+              lead: 'NDim Space picks the 12 things of the test at random from 20 things of the catalog. These 20 things are the most-rated things of the NDim Space catalog with an NDim Space Rating of 8 or higher, one thing per series:',
+              tail: 'The second person of a pair rates the same things the first person rated. The most-rated things are the ones both people are most likely to know, so the two of you have something to compare.',
+            },
+          ],
+        },
+        {
+          h2: 'What the compatibility test result shows',
+          blocks: [
+            { kind: 'p', text: 'The compatibility test result names things. Each line of the result is one thing and two ratings: yours and the other person’s. Result lines come in three kinds.' },
+            {
+              kind: 'kinds',
+              items: [
+                { icon: '⭐', lead: 'Match', rest: '— you both rated the thing the same. Example: “You both gave 10 — The Shawshank Redemption · Movie, 1994”.' },
+                { icon: '🤝', lead: 'Close', rest: '— your ratings differ by one star. Example: “You are close on ‘House M.D. · TV series, 2004’: 7 and 8”.' },
+                { icon: '💬', lead: 'Different', rest: '— your ratings are four or more stars apart. Example: “You see ‘Harry Potter and the Sorcerer’s Stone · Movie, 2001’ differently (8 and 2) — something to talk about”.' },
+              ],
+            },
+            { kind: 'p', text: 'Below the lines is the number of things you both rated.' },
+            { kind: 'p', text: 'Only the two of you see the result — the two people in the pair. Both people in the pair have a “Delete the pair and the link” button: it deletes the pair and the link. The ratings in both profiles stay.' },
+          ],
+        },
+        {
+          h2: 'What the couple compatibility test is based on',
+          blocks: [
+            { kind: 'p', text: 'Rating a thing is a person’s short answer to the question: how much is this thing me? A movie, a book, a series, a practice — each thing carries its own world: its own humour, its own heroes, its own pace, its own values. A high rating says: this world is close to me.' },
+            { kind: 'p', text: 'When two people match on many things, the matches add up to a pattern — shared humour, shared favourite stories, a shared view of what matters. That pattern is the compatibility of two people’s tastes.' },
+            { kind: 'p', text: 'Differences work for the pair too. A thing you see differently is a ready topic for a conversation: why is “The Matrix” a 10 for you and a 3 for the other person?' },
+            { kind: 'p', text: 'NDim Space looks for similar people on the same principle — across all of a person’s ratings at once. Every thing in the catalog is a Dimension of the Space, and a person’s rating sets that person’s place on that Dimension. NDim Space calculates the Similarity of two people from two measures: Commonality and Proximity. Commonality shows how much the interests of two people overlap: NDim Space divides the number of things both people rated by the average number of things each of the two rated. Proximity shows how close the two people’s ratings are on the shared things. Commonality multiplied by Proximity is Similarity. By Similarity, NDim Space picks each person’s Relations — the people most similar to them.' },
+          ],
+        },
+        {
+          h2: 'Compatibility test online and free',
+          blocks: [
+            { kind: 'p', text: 'The compatibility test runs online, right on this page, on your own phone or computer. The compatibility test is free: the ratings, the personal link and the pair’s result. The other person answers on their own phone or computer — the personal link opens the test right there.' },
+            { kind: 'p', text: 'The test needs no sign-up: your first rating creates your guest profile right away. A guest profile is kept for 7 days from the moment it is created. The “Save my profile” button keeps the guest profile as yours: you sign in to NDim Space with Google or with a link sent to your email, and all your ratings stay with you.' },
+            { kind: 'p', text: 'Your profile is called NDim ID — every thing you have rated, together with your ratings. Every test rating is already in your NDim ID. By your NDim ID, NDim Space finds you people with similar ratings — your Relations.' },
+          ],
+        },
+      ],
+      faqTitle: 'Frequently asked questions about the compatibility test',
       faq: [
-        { q: 'Why is there no compatibility percentage?', a: 'Percentages in online calculators are random. We show what you can check: your real matches — on the things you both rated.' },
-        { q: 'Is it free?', a: 'Yes. No ads, no subscriptions, no purchases.' },
-        { q: 'Will the second person see all my answers?', a: 'Only on the things of this test that you both rated — and only after each of you presses the button yourself. The rest of your profile is visible the way you decide.' },
+        { q: 'Compatibility test for two — do both people answer?', a: 'Yes, both people answer. Each of the two rates the things on their own phone or computer. The first person rates 12 things and sends a personal link; the second person opens the link and rates the things of this test. The result is built from both people’s ratings.' },
+        { q: 'How do we take the couple compatibility test online?', a: 'Rate 12 things on this page, press “Create a personal link” and send the link to the other person. The other person rates the things of this test on their side, presses “Compare answers” and sees the result right away. You see the result when you press “Check” under your personal link or open your personal link.' },
+        { q: 'Is the compatibility test free?', a: 'Yes. The compatibility test is free: the ratings, the personal link and the pair’s result.' },
+        { q: 'Can I take the compatibility test without signing up?', a: 'Yes. Your first rating creates a guest profile, and the test runs all the way to the result. A guest profile is kept for 7 days from the moment it is created. The “Save my profile” button keeps the guest profile as yours.' },
+        { q: 'Can a man and a woman take the compatibility test?', a: 'Yes. The test suits a man and a woman, a couple, two friends — any two people. The things of the test are the same for both, and the result shows where the two people match.' },
+        { q: 'Can I take the compatibility test with a friend?', a: 'Yes. You rate 12 things and send your friend a personal link. Your friend rates the things of this test on their side, and the result shows in which movies, TV series and games your tastes matched.' },
+        { q: 'Who sees my answers in the compatibility test?', a: 'Only the two of you see the result — the two people in the pair. The other person sees your ratings in the result lines — on the things of this test that you both rated — after two presses: you pressed “Create a personal link”, the other person pressed “Compare answers”. The rest of the ratings in your NDim ID are seen only by you.' },
+        { q: 'What if I don’t know a movie or a series from the test?', a: 'Press “I don’t know this one — next”, and the test shows the next thing. The result compares the things you both rated.' },
+        { q: 'How do I find friends with shared interests?', a: 'Save your profile and keep rating things in the NDim Space catalog — movies, books, TV series, games and practices. NDim Space looks for people with similar ratings across all of your ratings and gathers the most similar people in the “Relations” section.' },
       ],
+      crossTitle: 'Other NDim Space tests',
       crossLinks: [
-        { text: 'Learn more about yourself — the personality test', slug: 'personality' },
-        { text: 'Play together — the love calculator', slug: 'love' },
+        { text: 'Personality test', slug: 'personality' },
+        { text: 'Love calculator', slug: 'love' },
       ],
       hubLine: 'You both rate the same 12 things — the matches speak for themselves.',
       hubCta: 'Take the test',
       metaTitle: 'Compatibility test for two — NDim Space',
-      metaDesc: 'An honest compatibility test for two: you both rate the same movies, games and habits, and the matches speak for themselves. No sign-up and no made-up percentages.',
+      metaDesc: 'A compatibility test for two, online, free and with no sign-up: you and the other person rate 12 things — movies, TV series and games — with stars from 0 to 10. The result names the things where your ratings matched.',
     },
   },
 

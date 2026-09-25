@@ -7,8 +7,9 @@
   рядом → «позовите второго» → «каким будет результат» → мост-паспорт → FAQ → подпись.
   Кнопки «Начать» нет сознательно: она была ценой V2 (церемония на странице без стены).
 
-  ТАКТ Б (`plans/42` шаг 3): движок ЖИВОЙ. Очередь карточек детерминирована и собрана на
-  сборке (`test-set.ts` — популярнейшие объекты каталога), жест звезды — канон экрана
+  ТАКТ Б (`plans/42` шаг 3): движок ЖИВОЙ. Пул карточек собран на сборке (`test-set.ts` —
+  20 вещей по правилу, №098 В2); каждой попытке — своя случайная дюжина, второму человеку пары —
+  вещи первого (см. «Очередь попытки» ниже), жест звезды — канон экрана
   «Измерения» (11 звёзд 0…10, повторный тап отменяет отсчёт, 5 с + «Сохранить сейчас», ряд
   смайликов). Первая оценка = вход: без сессии молча рождается гость, и оценки пишутся в его
   настоящий NDim ID (`$lib/data/test-engine.ts`; Firebase — только динамическим импортом).
@@ -19,13 +20,21 @@
     · формы до результата — путь гостя без стены (канон `ideas/09`);
     · рельса навигации — как у всех публичных страниц (незнакомца из поиска пять пунктов
       рельса ведут в пять тупиков за стеной входа);
-    · личной ссылки пары и общего результата — это такт В, блок «Позовите второго» пока текст.
+    · в блоке V4 «Друзья по интересам» — людей и их оценок: только счётчики Пространства и «N человек»
+      у вещей теста (№002 В4).
+
+  «ТЕСТ НА СОВМЕСТИМОСТЬ» — МАКЕТ V4 «От пары к людям Пространства» (интервью №098 В1 = Г,
+  `design/compat-test-page-mockups.html`): каркас V5 тот же; мост-паспорт вырос в блок «После теста —
+  Друзья по интересам в Пространстве NDim Space», под делом — разделы текста и девять частых вопросов.
+  Новые блоки ветвятся по `c.after` / `c.guide` — они есть только в текстах совместимости.
 -->
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { slide, fly } from 'svelte/transition';
   import type { TestPageData } from './+page.server';
   import { LANGS } from '$lib/content/langs';
-  import { RATED_FACT_FROM } from '$lib/content/test-set';
+  import { RATED_FACT_FROM, attemptSeed, shuffledIds } from '$lib/content/test-set';
+  import { peopleUnit } from '$lib/ui/format';
   // Шапка — ОБЩАЯ шапка публичных страниц: своей копии здесь больше нет (слово владельца
   // 2026-09-25 о переключателях, которые «в разных местах разные»).
   import PublicBar from '$lib/ui/PublicBar.svelte';
@@ -44,7 +53,16 @@
     deletePair,
   } from '$lib/data/test-engine';
   import { SESSION_MARK } from '$lib/data/session';
-  import { answersFromRatings, sanitizeAnswers, pairFacts, type PairDoc } from '$lib/model/test-pair';
+  import {
+    answersFromRatings,
+    sanitizeAnswers,
+    pairFacts,
+    pairQueueIds,
+    encodePairSet,
+    decodePairSet,
+    PAIR_SET_PARAM,
+    type PairDoc,
+  } from '$lib/model/test-pair';
 
   import { replaceUrl } from '$lib/ui/history';
   let { data }: { data: TestPageData } = $props();
@@ -87,7 +105,8 @@
       closeRow: (name: string, a: number, b: number) => `Вы рядом в «${name}»: ${a} и ${b}`,
       differRow: (name: string, a: number, b: number) =>
         `«${name}» вы видите по-разному (${a} и ${b}) — будет о чём поговорить`,
-      comparedLine: (n: number) => `Сравнили вещей: ${n}. Никаких процентов — только то, что можно проверить.`,
+      // Констатация без оправдательной второй половины (слово владельца 2026-08-28; макет V4).
+      comparedLine: (n: number) => `Сравнили вещей: ${n}.`,
       noOverlap: 'Пока ни одной вещи, оценённой вами обоими, — оцените ещё.',
       deletePair: 'Удалить пару и ссылку',
     },
@@ -121,7 +140,7 @@
       closeRow: (name: string, a: number, b: number) => `You are close on “${name}”: ${a} and ${b}`,
       differRow: (name: string, a: number, b: number) =>
         `You see “${name}” differently (${a} and ${b}) — something to talk about`,
-      comparedLine: (n: number) => `Things compared: ${n}. No percentages — only what you can check.`,
+      comparedLine: (n: number) => `Things compared: ${n}.`,
       noOverlap: 'No things rated by both of you yet — rate a few more.',
       deletePair: 'Delete the pair and the link',
     },
@@ -140,8 +159,62 @@
   let saveFailed = $state(false);
   let touched = false;
 
-  const current = $derived(data.queue.find((e) => !ratings.has(e.id) && !skipped.has(e.id)) ?? null);
-  const mineRows = $derived(data.queue.filter((e) => ratings.has(e.id)));
+  // ── Очередь попытки (№098 В2): пул → случайная дюжина; второму человеку пары — вещи первого ──
+  //
+  // 🔑 ПРЕРЕНДЕР И ГИДРАТАЦИЯ СХОДЯТСЯ ПО ПОСТРОЕНИЮ. `data.queue` — пул В ПОРЯДКЕ ПРАВИЛА, его видят и
+  // пререндер, и первый проход гидратации. Случайная затравка берётся только в `onMount` — после
+  // оживления; до этого карточка держит место и невидима (`.qcard.asleep`), а с оживлением влетает
+  // уже своей вещью. Кнопки звёзд до гидратации не работают и так — невидимая карточка не зовёт
+  // жать мёртвое.
+
+  /** Все вещи пула — порядок пула; по нему строятся результат и код набора в ссылке. */
+  const poolIds = $derived(data.queue.map((e) => e.id));
+  const byId = $derived(new Map(data.queue.map((e) => [e.id, e])));
+  /** Перетасовка этой попытки; `null` до оживления (пререндер и гидратация — порядок пула). */
+  let order = $state<readonly string[] | null>(null);
+  /** Страница открыта личной ссылкой пары (`?pair=`) — очередь второго, а не своя дюжина. */
+  let pairFromUrl = $state(false);
+  /** Набор первого из кода ссылки (`&set=`) — мост до чтения пары, см. `PAIR_SET_PARAM`. */
+  let hintIds = $state<ReadonlySet<string> | null>(null);
+  let alive = $state(false);
+
+  /**
+   * Вещи первого человека — для того, кто пришёл по личной ссылке. Прочитанная пара — главный
+   * источник (`aAnswers` — ровно то, что первый оценил в рамках теста); до её чтения — код ссылки.
+   */
+  const invited = $derived.by((): ReadonlySet<string> | null => {
+    if (!pairFromUrl) return null;
+    if (pair !== null) return new Set(Object.keys(pair.aAnswers ?? {}));
+    return hintIds;
+  });
+
+  const queue = $derived.by(() => {
+    // Вещей первого нет в пуле вовсе (пул сменился между выкатами) — очередь пула, а не пустая карточка.
+    const theirs = invited === null ? [] : pairQueueIds(poolIds, invited);
+    if (theirs.length > 0) return theirs.flatMap((id) => byId.get(id) ?? []);
+    if (order !== null) return order.flatMap((id) => byId.get(id) ?? []);
+    return data.queue;
+  });
+
+  /**
+   * Список вещей пула для абзаца «из каких вещей тест» (V4): «Название» (вид, год) — вид строчной
+   * буквой в середине фразы. «TV series» начинается с аббревиатуры и строчной не становится
+   * (тот же разделяющий случай, что в `dim-kind.ts` → `kindTitleLower`).
+   */
+  const poolLine = $derived(
+    data.queue
+      .map((e) => {
+        const kind = /^TV\b/.test(e.kind) ? e.kind : e.kind.charAt(0).toLowerCase() + e.kind.slice(1);
+        const tail = [kind, e.year].filter((part) => part !== '').join(', ');
+        // Кавычки внутри кавычек по-русски — „лапки“: «Операция „Ы“ и другие приключения Шурика».
+        const name = data.lang === 'ru' ? `«${e.name.replaceAll('«', '„').replaceAll('»', '“')}»` : `“${e.name}”`;
+        return tail === '' ? name : `${name} (${tail})`;
+      })
+      .join(', '),
+  );
+
+  const current = $derived(queue.find((e) => !ratings.has(e.id) && !skipped.has(e.id)) ?? null);
+  const mineRows = $derived(queue.filter((e) => ratings.has(e.id)));
   const done = $derived(Math.min(mineRows.length, data.target));
   const finished = $derived(mineRows.length >= data.target);
 
@@ -272,7 +345,8 @@
   let copied = $state(false);
   let busyPair = $state(false);
 
-  const queueIds = $derived(data.queue.map((e) => e.id));
+  /** Вещи ЭТОЙ очереди: у создателя — его перетасованный пул, у второго — вещи первого. */
+  const queueIds = $derived(queue.map((e) => e.id));
   /*
    * В строки результата идёт ПОДПИСЬ (имя · вид, год), а не голое имя: результат читают двое,
    * и второй вещей не выбирал — «Вы оба поставили 8» и «Вы оба поставили 6» под одинаковым
@@ -285,25 +359,51 @@
   const pairTaken = $derived(
     pair !== null && pair.bUid !== null && pair.aUid !== myUid && pair.bUid !== myUid,
   );
-  const shareLink = $derived(pairId === null ? '' : `${data.canonical}?pair=${pairId}`);
+  /**
+   * Личная ссылка несёт и КОД НАБОРА первого (`&set=`): второй без сессии видит вещи первого с первой
+   * карточки, до чтения пары (`PAIR_SET_PARAM`). Код строится из прочитанной пары — ссылка показывается
+   * создателю только тогда, когда пара уже прочитана (`iAmCreator`).
+   */
+  const shareLink = $derived.by(() => {
+    if (pairId === null) return '';
+    const code = pair === null ? '' : encodePairSet(poolIds, Object.keys(pair.aAnswers ?? {}));
+    return `${data.canonical}?pair=${pairId}${code === '' ? '' : `&${PAIR_SET_PARAM}=${code}`}`;
+  });
 
-  /** Результат: только для участника сложившейся пары. Чужие ответы — через защитный фильтр. */
+  /**
+   * Результат: только для участника сложившейся пары. Чужие ответы — через защитный фильтр.
+   * Судится ПО ПУЛУ, а не по очереди вкладки: у создателя очередь — своя перетасовка, у второго —
+   * вещи первого; строки результата обоих идут в одном порядке — порядке пула.
+   */
   const liveFacts = $derived.by(() => {
     if (pair === null || pair.bUid === null || myUid === null) return null;
     if (pair.aUid !== myUid && pair.bUid !== myUid) return null;
-    const allowed = new Set(queueIds);
+    const allowed = new Set(poolIds);
     const mineIsA = pair.aUid === myUid;
     return pairFacts(
       sanitizeAnswers(mineIsA ? pair.aAnswers : pair.bAnswers, allowed),
       sanitizeAnswers(mineIsA ? pair.bAnswers : pair.aAnswers, allowed),
-      queueIds,
+      poolIds,
     );
   });
 
-  // ?pair из адреса — только на клиенте (страница пререндерена без query).
-  $effect(() => {
-    const fromUrl = new URLSearchParams(location.search).get('pair');
-    if (fromUrl !== null && /^[a-z0-9-]{20,}$/i.test(fromUrl)) pairId = fromUrl;
+  /*
+   * ОЖИВЛЕНИЕ — только на клиенте (страница пререндерена без query и без случайности):
+   *   · пришёл по личной ссылке (`?pair=`) — очередь второго: вещи первого, из кода ссылки до
+   *     чтения пары и из самой пары после него. Своей дюжины у него нет;
+   *   · пришёл сам — случайная перетасовка пула: дюжина этой попытки и запас под пропуски.
+   */
+  onMount(() => {
+    const params = new URLSearchParams(location.search);
+    const fromUrl = params.get('pair');
+    if (fromUrl !== null && /^[a-z0-9-]{20,}$/i.test(fromUrl)) {
+      pairId = fromUrl;
+      pairFromUrl = true;
+      hintIds = decodePairSet(poolIds, params.get(PAIR_SET_PARAM));
+    } else {
+      order = shuffledIds(poolIds, attemptSeed());
+    }
+    alive = true;
   });
 
   // Пару читаем, когда сессия УЖЕ есть (маркер). Незнакомцу по ссылке сессию молча не заводим
@@ -429,7 +529,8 @@
 
   <!-- Движок и растущая анкета рядом — «зеркало» (V4-половина каркаса). -->
   <div class="two">
-    <section class="qcard" aria-label={c.h1}>
+    <!-- `asleep` — до оживления карточка держит место и невидима: вещь попытки тянется в `onMount`. -->
+    <section class="qcard" class:asleep={!alive} aria-label={c.h1}>
       {#if current !== null}
         <!--
           Состояние жеста этой карточки одним объектом (близнец bugs/172): либо идёт отсчёт
@@ -448,7 +549,8 @@
             : saved?.dimId === current.id
               ? { value: saved.value, left: 0, done: true }
               : null}
-        {#key current.id}
+        <!-- Ключ несёт и оживление: с ним карточка влетает своей вещью, даже если та совпала с первой вещью пула. -->
+        {#key `${alive}:${current.id}`}
           <div in:fly={{ x: 32, duration: MOTION.base }}>
             <p class="kind">{current.kind}</p>
             <p class="name">{current.name}</p>
@@ -546,13 +648,13 @@
     {:else if pairId !== null && pairReady}
       <p class="fine">{ui.seeBelow}</p>
     {:else if pairId !== null && iAmCreator}
-      <p>{ui.linkReady}</p>
+      <p>{c.pairLinkReady ?? ui.linkReady}</p>
       <p class="share">
         <code>{shareLink}</code>
         <button type="button" class="copy" onclick={copyLink}>{copied ? ui.copied : ui.copyBtn}</button>
       </p>
       <p class="fine">
-        {ui.waiting}
+        {c.pairWaiting ?? ui.waiting}
         <button type="button" class="checkbtn" onclick={() => void refreshPair()} disabled={busyPair}>{ui.checkBtn}</button>
       </p>
     {:else if pairId !== null}
@@ -619,28 +721,105 @@
     {/if}
   </section>
 
-  <!-- Мост-паспорт: кнопки появляются вместе с анкетой — сохранять пустоту было бы обманом. -->
-  <section class="keep">
-    <h2>{c.keepTitle}</h2>
-    <p>{c.keepBody}</p>
-    {#if mineRows.length > 0}
-      <div class="keepacts" transition:slide={{ duration: MOTION.base }}>
-        <a class="cta" href="/profile">{c.keepCta}</a>
-        <a class="ghost" href="#top" onclick={(e) => { e.preventDefault(); document.querySelector('.qcard')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>{c.keepGhost}</a>
+  {#if c.after}
+    <!--
+      V4 «После теста — Друзья по интересам в Пространстве NDim Space» (№098 В1 = Г). Числа Пространства —
+      снимок боя перед выкатом (`data.space`); у вещей — «N человек» из каталога сборки. Только счётчики:
+      ни людей, ни их оценок, ни похожести (№002 В4, №018 В4).
+    -->
+    <section class="keep after">
+      <p class="kicker">{c.after.kicker}</p>
+      <h2>{c.after.title}</h2>
+      <p class="afterbody">{c.after.body}</p>
+      {#if data.space}
+        <div class="nums-card">
+          <p class="nums-title">{data.space.title}</p>
+          <ul class="nums">
+            {#each data.space.items as n (n.label)}
+              <li><b>{n.value}</b><span>{n.label}</span></li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
+      <p class="rated-t">{c.after.ratedTitle}</p>
+      <ul class="rated">
+        {#each data.queue.filter((e) => e.rates >= RATED_FACT_FROM) as e (e.id)}
+          <li>{e.label} — <b>{e.rates}</b>&nbsp;{peopleUnit(e.rates, data.lang)}</li>
+        {/each}
+      </ul>
+      <div class="go">
+        <!-- Внутрь продукта — дверью гостя со словом места входа `test` (`funnel.ts`); сессия есть — профиль её увидит. -->
+        <a class="bridge" href="/profile?guest=test">{c.after.findCta}</a>
+        <a class="ghostbtn" href="/profile">{c.after.saveCta}</a>
       </div>
-    {/if}
-  </section>
+    </section>
+  {:else if c.keepTitle}
+    <!-- Мост-паспорт: кнопки появляются вместе с анкетой — сохранять пустоту было бы обманом. -->
+    <section class="keep">
+      <h2>{c.keepTitle}</h2>
+      <p>{c.keepBody}</p>
+      {#if mineRows.length > 0}
+        <div class="keepacts" transition:slide={{ duration: MOTION.base }}>
+          <a class="cta" href="/profile">{c.keepCta}</a>
+          <a class="ghost" href="#top" onclick={(e) => { e.preventDefault(); document.querySelector('.qcard')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}>{c.keepGhost}</a>
+        </div>
+      {/if}
+    </section>
+  {/if}
 
-  <section class="faq" aria-label="FAQ">
-    {#each c.faq as f, i (f.q)}
-      <details open={i === 0}>
-        <summary>{f.q}</summary>
-        <p>{f.a}</p>
-      </details>
-    {/each}
-  </section>
+  {#if c.guide}
+    <!-- Текст под делом (V4 = всё из V1): разделы словами запросов и девять частых вопросов. -->
+    <div class="guide">
+      {#each c.guide as s (s.h2)}
+        <section>
+          <h2>{s.h2}</h2>
+          {#each s.blocks as b, bi (bi)}
+            {#if b.kind === 'p'}
+              <p>{b.text}</p>
+            {:else if b.kind === 'ol'}
+              <ol>
+                {#each b.items as it (it.lead)}
+                  <li><span><b>{it.lead}</b> {it.rest}</span></li>
+                {/each}
+              </ol>
+            {:else if b.kind === 'kinds'}
+              <ul class="kinds">
+                {#each b.items as it (it.lead)}
+                  <li><span class="ic">{it.icon}</span><span><b>{it.lead}</b> {it.rest}</span></li>
+                {/each}
+              </ul>
+            {:else if b.kind === 'pool'}
+              <!-- Список вещей пула — из очереди сборки: текст не расходится с тем, что стоит в тесте. -->
+              <p>{b.lead} {poolLine}. {b.tail}</p>
+            {/if}
+          {/each}
+        </section>
+      {/each}
+      <section>
+        {#if c.faqTitle}<h2>{c.faqTitle}</h2>{/if}
+        <div class="faq v4">
+          {#each c.faq as f, i (f.q)}
+            <details open={i === 0}>
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          {/each}
+        </div>
+      </section>
+    </div>
+  {:else}
+    <section class="faq" aria-label="FAQ">
+      {#each c.faq as f, i (f.q)}
+        <details open={i === 0}>
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      {/each}
+    </section>
+  {/if}
 
   <nav class="cross" aria-label="NDim Space">
+    {#if c.crossTitle}<span class="cross-t">{c.crossTitle}</span>{/if}
     {#each c.crossLinks as l (l.slug)}
       <a href="/{data.lang}/test/{l.slug}">{l.text} →</a>
     {/each}
@@ -732,6 +911,11 @@
     border: 1px solid var(--edge);
     border-radius: 16px;
     box-shadow: var(--card-shadow);
+  }
+  /* До оживления вещь попытки ещё не выбрана (случайность — только в `onMount`): карточка держит
+     место и невидима, раскладка не прыгает. С оживлением содержимое влетает по `{#key}`. */
+  .qcard.asleep > :global(*) {
+    visibility: hidden;
   }
   .qcard .kind {
     margin: 0;
@@ -1215,11 +1399,344 @@
     line-height: 1.55;
   }
 
+  /* ── V4 «После теста — Друзья по интересам» (№098 В1 = Г): вид — из макета
+        `design/compat-test-page-mockups.html`, числа — приём `.nums` главной. ── */
+  .keep.after {
+    --hero-wash: radial-gradient(ellipse at 50% 0%, rgba(20, 103, 214, 0.1), transparent 64%);
+    padding: 1.1rem 1rem 1.2rem;
+    background: var(--panel);
+    background-image: var(--hero-wash);
+    border-radius: 18px;
+    box-shadow: var(--card-shadow);
+  }
+  :global(:root[data-theme='dark']) .keep.after {
+    --hero-wash: radial-gradient(ellipse at 50% 0%, rgba(31, 168, 201, 0.18), transparent 64%);
+  }
+  .keep.after .kicker {
+    margin: 0;
+    font-size: 11.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  :global(:root[data-theme='dark']) .keep.after .kicker {
+    color: var(--accent);
+  }
+  .keep.after h2 {
+    margin: 0.35rem 0 0.5rem;
+    font-size: 1.3rem;
+    line-height: 1.22;
+    font-weight: 800;
+  }
+  .keep.after .afterbody {
+    font-size: 0.92rem;
+    line-height: 1.62;
+  }
+  .nums-card {
+    margin-top: 0.9rem;
+    background: var(--panel-solid);
+    border: 1px solid var(--edge);
+    border-radius: 16px;
+  }
+  :global(:root[data-theme='dark']) .nums-card {
+    background: var(--panel);
+  }
+  .keep .nums-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    padding: 12px 14px 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--up);
+  }
+  .nums-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--up);
+    box-shadow: 0 0 0 4px rgba(14, 165, 120, 0.18);
+    animation: beat 2s infinite;
+  }
+  @keyframes beat {
+    50% {
+      box-shadow: 0 0 0 7px rgba(14, 165, 120, 0.06);
+    }
+  }
+  .nums {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 10px;
+    margin: 0;
+    padding: 12px 14px 14px;
+    list-style: none;
+  }
+  .nums b {
+    display: block;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--heading);
+    font-variant-numeric: tabular-nums;
+  }
+  .nums span {
+    font-size: 12.5px;
+    line-height: 1.3;
+    color: var(--dim);
+  }
+  .keep .rated-t {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--heading);
+  }
+  /* Названия — целиком (закон 2026-08-14): плашка растёт по высоте, обрезки нет. */
+  .rated {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rated li {
+    padding: 5px 10px;
+    border-radius: 10px;
+    background: var(--edge-soft);
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+  .rated li b {
+    color: var(--heading);
+  }
+  .go {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 26px;
+    margin-top: 1.3rem;
+  }
+  .bridge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 22px;
+    border-radius: 14px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    text-align: center;
+    text-decoration: none;
+    isolation: isolate;
+  }
+  /* Волна — приём главной, только уже: рядом стоит вторая кнопка, и широкая волна ложилась на неё. */
+  .bridge::before,
+  .bridge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 2px solid var(--primary);
+    border-radius: 14px;
+    animation: wave 2.4s ease-out infinite;
+  }
+  .bridge::after {
+    animation-delay: 1.2s;
+  }
+  @keyframes wave {
+    0% {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    100% {
+      transform: scale(1.06, 1.3);
+      opacity: 0;
+    }
+  }
+  .ghostbtn {
+    padding: 12px 18px;
+    border: 1px solid var(--ghost-brd);
+    border-radius: 14px;
+    color: var(--ghost-ink);
+    font-weight: 700;
+    font-size: 14.5px;
+    text-align: center;
+    text-decoration: none;
+    transition: background var(--motion-fast) var(--motion-ease);
+  }
+  @media (hover: hover) {
+    .ghostbtn:hover {
+      background: var(--edge-soft);
+    }
+  }
+  @media (max-width: 599px) {
+    .go .bridge,
+    .go .ghostbtn {
+      width: 100%;
+    }
+  }
+
+  /* ── Текст под делом (V4 = всё из V1): разделы и частые вопросы ── */
+  .guide {
+    margin-top: 2.2rem;
+  }
+  .guide h2 {
+    margin: 1.9rem 0 0.6rem;
+    font-size: 1.28rem;
+    line-height: 1.25;
+    font-weight: 750;
+    color: var(--heading);
+  }
+  .guide > section:first-child h2 {
+    margin-top: 0;
+  }
+  .guide p {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.68;
+  }
+  .guide b {
+    color: var(--heading);
+  }
+  .guide ol {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0 0 0.9rem;
+    padding: 0;
+    list-style: none;
+    counter-reset: s;
+  }
+  .guide ol li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    counter-increment: s;
+  }
+  .guide ol li::before {
+    content: counter(s);
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    margin-top: 1px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--primary-ink);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .guide ul.kinds {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0 0 0.9rem;
+    padding: 0;
+    list-style: none;
+  }
+  .guide ul.kinds li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  .guide ul.kinds .ic {
+    flex: none;
+    width: 1.4rem;
+    text-align: center;
+  }
+
+  /* Частые вопросы V4 — вид и плавное раскрытие главной (`LandingV1.svelte` → `.faq`): раскрывашкой
+     управляет браузер, высоту и прозрачность ведёт `::details-content` с `interpolate-size`. Старый
+     браузер просто не анимирует. */
+  .faq.v4 {
+    margin: 0;
+  }
+  .faq.v4 details {
+    padding: 13px 2px;
+    border-top: 0;
+    border-bottom: 1px solid var(--edge);
+  }
+  .faq.v4 details:first-of-type {
+    border-top: 1px solid var(--edge);
+  }
+  .faq.v4 summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    list-style: none;
+  }
+  .faq.v4 summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq.v4 summary::after {
+    content: '+';
+    flex: none;
+    color: var(--dim);
+    font-size: 20px;
+    line-height: 1;
+    transition: transform var(--motion-base) var(--motion-ease);
+  }
+  .faq.v4 details[open] summary::after {
+    content: '−';
+    transform: rotate(180deg);
+  }
+  .faq.v4 p {
+    margin: 8px 0 0;
+    font-size: 0.92rem;
+    line-height: 1.62;
+  }
+  @supports (interpolate-size: allow-keywords) and selector(::details-content) {
+    .faq.v4 details {
+      interpolate-size: allow-keywords;
+    }
+    .faq.v4 details::details-content {
+      block-size: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition:
+        block-size var(--motion-base) var(--motion-ease),
+        opacity var(--motion-base) var(--motion-ease),
+        content-visibility var(--motion-base) allow-discrete;
+    }
+    .faq.v4 details[open]::details-content {
+      block-size: auto;
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bridge::before,
+    .bridge::after,
+    .nums-title::before {
+      animation: none;
+    }
+  }
+
   .cross {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
     margin: 1.2rem 0 0;
+  }
+  .cross .cross-t {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--dim);
   }
   .cross a {
     font-size: 0.87rem;
@@ -1249,6 +1766,30 @@
     .two {
       grid-template-columns: 1.25fr 1fr;
       align-items: start;
+    }
+    /* V4 на десктопе — размеры макета при 1440: читательская колонна текста, числа в ряд. */
+    .keep.after {
+      padding: 1.5rem 1.6rem 1.6rem;
+    }
+    .keep.after h2 {
+      max-width: 40rem;
+      font-size: 1.6rem;
+    }
+    .keep.after .afterbody {
+      max-width: 46rem;
+      font-size: 1rem;
+    }
+    .nums {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .guide {
+      max-width: 46rem;
+    }
+    .guide h2 {
+      font-size: 1.45rem;
+    }
+    .guide p {
+      font-size: 1rem;
     }
   }
 </style>
