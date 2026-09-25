@@ -1261,7 +1261,7 @@ function startServer({ docPath = null, index = null, onDecision = null }) {
 			const rev = target && target.startsWith(ROOT) && existsSync(target) ? docRevision(target) : null;
 			// Состояние ввода — только из пульса СТРАНИЦЫ: он всегда несёт `i`. Пульс без него (страница-список пачки, проба
 			// живости из команды `?ping=1`) — не «печатал только что»: `Number(null)` дал бы 0, и close отказывал бы зря
-			// (суд p3, п. 8). Проба живости не держит сервер и сердцебием вкладки не считается.
+			// (суд p3, п. 8). Проба живости не держит сервер и сердцебиением вкладки не считается.
 			const iRaw = url.searchParams.get('i');
 			const i = iRaw === null ? NaN : Number(iRaw);
 			if (Number.isFinite(i)) {
@@ -1471,7 +1471,8 @@ async function lockNow(held) {
  * GET к серверу страницы из КОМАНДЫ агента (`open`, `close`) — `node:http` без пула (`agent: false`), с потолком
  * времени; отказ и тайм-аут — `null`. Не встроенный `fetch`: его сокет keep-alive, живой при `process.exit()`, роняет
  * Node на Windows (`Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)`) — `close` выходил кодом 127 вместо 4
- * (прогон драйвера 2026-09-25 20:04, проба 20:13). Без пула сокет закрыт к моменту ответа, висеть при выходе нечему.
+ * (прогон драйвера 2026-09-25 19:57–20:04; пробы по журналу сессии — код 127 в 20:09:17 и 20:11:03, после лечения
+ * 20:12:07 — 4 · 4 · 4). Без пула сокет закрыт к моменту ответа, висеть при выходе нечему.
  */
 function localGet(url, timeoutMs) {
 	return new Promise((ok) => {
