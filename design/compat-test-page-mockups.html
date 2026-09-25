@@ -3,28 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NDim Space — «Тест на совместимость для двоих»: четыре макета страницы</title>
+<title>NDim Space — «Тест на совместимость»: четыре макета страницы на каркасе V5</title>
 <!-- ─────────────────────────────────────────────────────────────────────────
-     ЧЕТЫРЕ МАКЕТА СТРАНИЦЫ «ТЕСТ НА СОВМЕСТИМОСТЬ ДЛЯ ДВОИХ» — переделка
-     `/ru/test/compatibility` (адрес сохраняется). План 107 «Страницы под запросы
-     людей», фаза 2; разведка — `researches/76_people_query_pages_serp.md` §8, «Страница 1».
+     ЧЕТЫРЕ МАКЕТА СТРАНИЦЫ «ТЕСТ НА СОВМЕСТИМОСТЬ» — переделка `/ru/test/compatibility`
+     (адрес сохраняется). План 107 «Страницы под запросы людей», фаза 2; разведка —
+     `researches/76_people_query_pages_serp.md` §8, «Страница 1».
 
-     V1 «Дело сверху, руководство под делом»
-     V2 «Образец результата первым»            (донор — soulmatescan, разведка §6 п.2)
-     V3 «Три шага и оба со своих устройств»    (доноры — best-friend.me, mylovematch, §6 п.3 и п.6)
-     V4 «От пары к людям Пространства»         (вакансия Кинопоиска, §0 и §8)
+     КАРКАС — РЕШЕНИЕ ВЛАДЕЛЬЦА, ОН ОДИН У ВСЕХ ЧЕТЫРЁХ ВАРИАНТОВ:
+       · V5 «Зеркало + инструкция» — интервью «Форма страниц теста» (№029, В2 = А, 2026-08-14):
+         компактная полоса трёх шагов (строка на шаг; на десктопе в ряд) → движок ОДНОЙ
+         карточкой (звёзды 0–10, «Не знаю эту вещь — дальше», очередь с запасом) и рядом
+         растущее зеркало «Ваша анкета растёт» → «Позовите второго» → «Каким будет результат»
+         → мост к анкете → вопросы → соседние тесты → подпись. Кнопки «Начать» нет.
+       · H1 «Тест на совместимость», «тест для двоих» — в подзаголовке: интервью «Имя страницы
+         двоих» (№028, В2 = А).
+     Варианты различаются ТОЛЬКО тем, что добавляет разведка поверх каркаса:
+       V1 — руководство под делом (разделы словами запросов + 8 вопросов);
+       V2 — образец результата «Вы и Аня» поднят к первому экрану;
+       V3 — «Каждый отвечает со своего телефона» и шаги словами запроса «пройти вдвоём»;
+       V4 — мост к анкете вырос в блок «После теста» со счётчиками Пространства.
 
-     ВЁРСТКА — КОД ПРОДУКТА: шапка — `PublicBar.svelte` + общая пара `HeadControls.svelte`
-     (квадраты 34×34 «☀» и «Ru», пилюля «Войти»); строки теста — `.srow` главной
-     (`LandingV1.svelte`) со звёздами 0–10 и цифрами страницы теста (`.st`); приглашение,
-     карточка результата, строки фактов, частые вопросы — `test/[slug]/+page.svelte`;
-     блок чисел — `.nums` главной; раскрытие вопросов — `::details-content` главной.
+     ВЁРСТКА — КОД ПРОДУКТА: шапка — `PublicBar.svelte` + `HeadControls.svelte`; каркас, движок,
+     зеркало, приглашение, карточка результата, мост — `test/[slug]/+page.svelte` (классы
+     `.steps`, `.qcard`, `.st`, `.mirror`, `.rows`, `.invite`, `.pair`, `.keep`); числа — `.nums`
+     главной; раскрытие вопросов — `::details-content` главной. Вид снят с живой сборки
+     `build/` 272c836 (штамп 2026-09-25T19:15Z, чистая).
 
-     ДАННЫЕ — НАСТОЯЩИЕ: 12 вещей и «уже оценили: N» — первые 12 карточек очереди из сборки
-     2026-09-25 21:35 (`build/ru/test/compatibility.html`, порядок `test-set.ts`: rates ↓);
-     счётчики V4 — снимок боя `src/lib/content/landing-metric.ts` (takenAt 2026-09-25);
-     виды строк результата — `pairFacts` (`src/lib/model/test-pair.ts`): совпадение a = b,
-     рядом |a − b| = 1, по-разному |a − b| ≥ 4. «Вы и Аня» — пример, подписан словом «пример».
+     ДАННЫЕ — НАСТОЯЩИЕ: очередь (12 + запас) и «уже оценили: N» — из той же сборки
+     (`build/ru/test/compatibility.html`, порядок `test-set.ts`: rates ↓); счётчики V4 —
+     `src/lib/content/landing-metric.ts` (снимок 2026-09-25); виды строк результата —
+     `pairFacts` (`src/lib/model/test-pair.ts`). «Вы и Аня» — пример, подписан словом «пример».
 
      ДОМ СТИЛЯ: `.picker button[data-v]` · `#width` · `#theme` · `#stage[data-w]`.
      Съёмка: node tools/shoot-mockups.mjs design/compat-test-page-mockups.html
@@ -38,8 +46,7 @@
     --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
     --ghost-brd: rgba(20,103,214,.35); --ghost-ink: #1a63c4;
     --card-shadow: 0 16px 40px rgba(29,50,71,.08);
-    --up: #0ea578; --ok: #0a7f5c; --ok-ink: #ffffff;
-    --star-off: #cfdbe8;
+    --up: #0ea578; --ok: #0a7f5c; --ok-ink: #ffffff; --danger: #c0392b;
     --hero-wash: radial-gradient(ellipse at 50% 0%, rgba(20,103,214,.10), transparent 64%);
     --motion-fast: 140ms; --motion-base: 240ms; --motion-ease: cubic-bezier(.33,1,.68,1);
     --sheet: #ffffff; --sheet-edge: #e3e9f3; --muted: #8a97ab;
@@ -53,7 +60,6 @@
     --ghost-brd: rgba(63,217,255,.45); --ghost-ink: #a8e2ff;
     --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
     --up: #34d399; --ok: #34d399; --ok-ink: #052e22;
-    --star-off: #2a3b55;
     --hero-wash: radial-gradient(ellipse at 50% 0%, rgba(31,168,201,.18), transparent 64%);
     --sheet: #0e1626; --sheet-edge: #1c2942; --muted: #6c7f9c;
   }
@@ -89,9 +95,9 @@
   .caption { margin: 0 auto 8px; font-size: 12px; color: var(--muted); text-transform: uppercase;
     letter-spacing: .12em; font-weight: 700; }
 
-  /* Рамка страницы: у публичных страниц нет рельса — шапка и колонна (PublicBar + article.test). */
-  .page { border-radius: 16px; border: 1px solid var(--edge); background: var(--bg); background-image: var(--hero-wash);
-    background-repeat: no-repeat; box-shadow: var(--card-shadow); overflow: hidden; color: var(--text); }
+  /* Рамка страницы. Шрифт — как у продукта: корень 16px и нормальный интерлиньяж (в продукте `body` их не задаёт). */
+  .page { border-radius: 16px; border: 1px solid var(--edge); background: var(--bg); box-shadow: var(--card-shadow);
+    overflow: hidden; color: var(--text); font-size: 16px; line-height: normal; }
 
   /* ── Шапка публичной страницы — PublicBar.svelte + HeadControls.svelte ── */
   .bar { display: flex; align-items: center; gap: .6rem; min-height: 52px; padding: 0 1rem;
@@ -109,55 +115,41 @@
   .brand .halo { display: none; }
   :root[data-theme="dark"] .brand .halo { display: initial; }
 
-  /* ── Колонна страницы теста — test/[slug]/+page.svelte ── */
-  .test { padding: 1.5rem 1rem 3.5rem; }
-  #stage[data-w="1440"] .test { max-width: 64rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
-  h1 { margin: 0; font-size: 1.5rem; line-height: 1.18; color: var(--heading); font-weight: 750; }
-  #stage[data-w="1440"] h1 { font-size: 2.1rem; }
+  /* ── Каркас V5 — test/[slug]/+page.svelte, один в один ── */
+  .test { max-width: 46rem; margin: 0 auto; padding: 1.5rem 1rem 3.5rem; color: var(--text); }
+  #stage[data-w="1440"] .test { max-width: 64rem; padding: 2rem 1.5rem 4rem; }
+  h1 { margin: 0; font-size: 1.5rem; line-height: 1.18; color: var(--heading); }
+  #stage[data-w="1440"] h1 { font-size: 2rem; }
   .sub { margin: .5rem 0 0; font-size: .95rem; line-height: 1.55; color: var(--dim); }
-  #stage[data-w="1440"] .sub { max-width: 46rem; font-size: 1rem; }
   .lede { display: flex; flex-wrap: wrap; gap: .35rem .8rem; margin: .6rem 0 0; font-size: .78rem; color: var(--faint); }
   .lede i { font-style: normal; color: var(--ok); }
-  .block { margin-top: 1rem; }
-  .two { display: grid; gap: .9rem; margin-top: 1rem; }
-  .side { display: grid; gap: .9rem; align-content: start; }
-  #stage[data-w="1440"] .two { align-items: start; }
 
-  /* ── Тест: строки главной (.srow) со звёздами 0–10 страницы теста (.st) ── */
-  .play { background: var(--panel); border: 1px solid var(--edge); border-radius: 16px; box-shadow: var(--card-shadow); padding: 4px 0 6px; }
-  .play-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 0; }
-  .play-head .ph-t { font-size: .8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
-  .play-head .ph-p { font-size: .78rem; font-weight: 600; color: var(--dim); white-space: nowrap; }
-  .play-head .ph-p b { color: var(--heading); }
-  .hint { padding: 2px 14px 6px; font-size: .74rem; color: var(--faint); }
-  .rows { display: flex; flex-direction: column; }
-  .srow { padding: 8px 12px 6px; }
-  .srow + .srow { border-top: 1px solid var(--edge-soft); }
-  .srow .t { color: var(--heading); font-weight: 700; font-size: 14.5px; line-height: 1.3; overflow-wrap: anywhere; }
-  .srow .kind { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-right: 6px; }
-  .srow .yr { color: var(--dim); font-weight: 500; }
-  .srow .rby { color: var(--faint); font-weight: 500; font-size: 12px; white-space: nowrap; }
-  /* Десктоп: двенадцать строк теста — в две колонны на всю ширину, приглашение и пример — парой под тестом.
-     Одной колонной тест уходил на 950 px вниз, и справа от него стояло пустое поле (кадр V1-1440, первый заход). */
-  #stage[data-w="1440"] .two.wide { grid-template-columns: 1fr; }
-  #stage[data-w="1440"] .two.wide .rows { display: grid; grid-template-columns: 1fr 1fr; }
-  #stage[data-w="1440"] .two.wide .srow { border-top: 1px solid var(--edge-soft); }
-  #stage[data-w="1440"] .two.wide .srow:nth-child(-n+2) { border-top: 0; }
-  #stage[data-w="1440"] .two.wide .srow:nth-child(odd) { border-right: 1px solid var(--edge-soft); }
-  #stage[data-w="1440"] .two.wide .side { grid-template-columns: 1fr 1fr; align-items: start; }
-  /* V2: образец слева сверху, приглашение под ним, тест справа во всю высоту; на телефоне — образец, тест, приглашение. */
-  #stage[data-w="1440"] .two.flip { grid-template-columns: 1fr 1.25fr; grid-template-areas: "s t" "i t"; grid-template-rows: auto 1fr; }
-  #stage[data-w="1440"] .two.flip > .sample { grid-area: s; }
-  #stage[data-w="1440"] .two.flip > .play { grid-area: t; }
-  #stage[data-w="1440"] .two.flip > .invite { grid-area: i; }
-  /* V2 на телефоне: образец компактнее, чтобы первая строка теста осталась в первом экране 390×844. */
-  #stage[data-w="390"] #v2 .legend, #stage[data-w="390"] #v2 .sample h2.sh { display: none; }
-  #stage[data-w="390"] #v2 .sample .facts li { padding: .3rem 0; }
-  .starsrow { display: flex; gap: 2px; margin-top: 3px; }
+  .steps { display: grid; gap: .4rem; margin: .9rem 0 .4rem; padding: 0; list-style: none; }
+  .steps li { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; background: var(--panel);
+    border: 1px solid var(--edge); border-radius: 12px; font-size: .83rem; line-height: 1.4; }
+  .steps .n { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 999px;
+    background: var(--primary); color: var(--primary-ink); font-size: .7rem; font-weight: 700; }
+  .steps b { color: var(--heading); }
+  #stage[data-w="1440"] .steps { grid-template-columns: 1fr 1fr 1fr; }
+  .steps-h { margin: .9rem 0 0; font-size: .95rem; color: var(--heading); }
+  .steps-h + .steps { margin-top: .45rem; }
+
+  .two { display: grid; gap: .9rem; margin: .7rem 0 0; }
+  #stage[data-w="1440"] .two { grid-template-columns: 1.25fr 1fr; align-items: start; }
+  .col { display: grid; gap: .9rem; align-content: start; }
+
+  .qcard { padding: 1rem; background: var(--panel); border: 1px solid var(--edge); border-radius: 16px; box-shadow: var(--card-shadow); overflow: hidden; }
+  .qcard .fly { animation: fly-in var(--motion-base) var(--motion-ease); }
+  @keyframes fly-in { from { opacity: 0; transform: translateX(32px); } }
+  .qcard .kind { font-size: .72rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+  .qcard .name { margin: .2rem 0 0; font-size: 1.15rem; font-weight: 700; color: var(--heading); overflow-wrap: anywhere; }
+  .qcard .meta { font-size: .78rem; color: var(--faint); }
+  .qcard .drained { font-size: .9rem; color: var(--dim); }
+  .starsrow { display: flex; gap: 2px; margin: .6rem 0 0; }
   .st { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; background: none; border: 0;
-    cursor: pointer; border-radius: 9px; padding: 3px 0; font: inherit; transition: background .15s ease, transform .12s ease; }
+    cursor: pointer; border-radius: 9px; padding: 4px 0; font: inherit; transition: background .15s ease, transform .12s ease; }
   @media (hover: hover) { .st:hover { background: var(--edge-soft); transform: translateY(-2px); } }
-  .st i { font-style: normal; font-size: 20px; line-height: 1; color: color-mix(in srgb, var(--faint) 55%, transparent);
+  .st i { font-style: normal; font-size: 22px; line-height: 1; color: color-mix(in srgb, var(--faint) 55%, transparent);
     transition: color .15s ease, transform .15s ease, filter .15s ease; }
   .st b { font-size: 10px; font-weight: 600; color: var(--faint); transition: color .15s ease; }
   .st.fill i, .st.fill b { color: #f5a524; }
@@ -165,15 +157,41 @@
   .st.peak b { color: #ffc247; }
   .st.zero i, .st.zero b { color: var(--faint); }
   .st.zero i { transform: scale(1.08); }
+  .scale { display: flex; justify-content: space-between; margin: .15rem 0 0; font-size: .68rem; color: var(--faint); }
+  .countdown { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px;
+    border-top: 1px dashed var(--edge-soft); color: var(--dim); font-size: 13px; animation: fly-in var(--motion-base) var(--motion-ease); }
+  .now { background: var(--primary); border: 0; color: var(--primary-ink); font: inherit; font-size: 13px; border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  .skip { display: block; margin: .55rem 0 0; padding: 0; background: none; border: 0; font: inherit; font-size: .8rem;
+    color: var(--dim); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 
-  /* ── Приглашение второго — .invite страницы теста ── */
-  .invite { padding: .9rem 1rem; border: 1.5px dashed var(--accent); border-radius: 16px; }
+  .mirror { padding: .9rem 1rem; background: var(--panel); border: 1px solid var(--edge); border-radius: 16px; box-shadow: var(--card-shadow); }
+  .mirror h2 { margin: 0 0 .45rem; font-size: .8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+  .mirror .empty { font-size: .85rem; line-height: 1.5; color: var(--dim); }
+  .mirror .progress { margin: 0 0 .4rem; font-size: .78rem; font-weight: 600; color: var(--dim); }
+  .mirror .progress.full { color: var(--ok); }
+  .rows { list-style: none; }
+  .rows li { display: flex; align-items: flex-start; gap: .5rem; padding: .32rem 0; font-size: .84rem; line-height: 1.35; animation: fly-in var(--motion-base) var(--motion-ease); }
+  .rows li + li { border-top: 1px dashed var(--edge); }
+  .rows .rname { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .rows .rval { flex: none; color: var(--faint); font-size: .78rem; }
+  .rows .rval b { color: #f5a524; font-size: .9rem; }
+  .rows .rm { flex: none; width: 22px; height: 22px; padding: 0; background: none; border: 0; border-radius: 6px; color: var(--faint); font-size: .75rem; cursor: pointer; }
+  .mirror .fin { margin: .5rem 0 0; font-size: .8rem; line-height: 1.5; color: var(--ok); }
+
+  .invite { margin: 1.1rem 0 0; padding: .9rem 1rem; border: 1.5px dashed var(--accent); border-radius: 16px; }
   .invite h2 { margin: 0 0 .45rem; font-size: .95rem; color: var(--heading); }
-  .invite p { margin: 0; font-size: .85rem; line-height: 1.5; }
-  .invite .fine { margin-top: .5rem; font-size: .73rem; color: var(--faint); }
+  .invite p { font-size: .85rem; line-height: 1.5; }
+  .invite .fine { margin-top: .4rem; font-size: .73rem; color: var(--faint); }
+  .pairbtn { margin-top: .35rem; padding: .45rem 1rem; border: 0; border-radius: 999px; background: var(--primary); color: var(--primary-ink);
+    font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+  .share { display: flex; align-items: center; gap: .5rem; margin: .4rem 0 0; min-width: 0; }
+  .share code { flex: 1; min-width: 0; overflow-wrap: anywhere; padding: .35rem .6rem; background: var(--edge-soft); border-radius: 8px; font-size: .72rem; }
+  .share .copy { flex: none; padding: .35rem .8rem; border: 1px solid var(--edge); border-radius: 999px; background: transparent; color: var(--dim);
+    font: inherit; font-size: .78rem; font-weight: 600; }
 
-  /* ── Карточка результата — .result/.pair страницы теста ── */
-  .sample h2.sh { margin: 0 0 .45rem; font-size: 1.05rem; color: var(--heading); }
+  .result { margin: 1.3rem 0 0; }
+  .result h2, .keep h2 { margin: 0 0 .45rem; font-size: 1.05rem; font-weight: 700; color: var(--heading); }
+  .col > .result { margin: 0; }
   .pair { padding: .95rem 1rem; background: var(--panel); border: 1px solid var(--edge); border-radius: 16px; box-shadow: var(--card-shadow); }
   .pair .cap { margin: 0 0 .4rem; font-size: .78rem; color: var(--faint); }
   .bigcount { display: flex; align-items: baseline; gap: .5rem; }
@@ -184,91 +202,33 @@
   .facts li { display: flex; gap: .55rem; align-items: flex-start; padding: .4rem 0; font-size: .87rem; line-height: 1.45; }
   .facts li + li { border-top: 1px dashed var(--edge); }
   .facts .ic { flex: none; width: 1.3rem; text-align: center; }
-  .rfoot { margin-top: .5rem; font-size: .8rem; color: var(--dim); }
-  .legend { margin-top: .6rem; padding-top: .55rem; border-top: 1px solid var(--edge-soft); display: grid; gap: .2rem;
-    font-size: .76rem; color: var(--dim); line-height: 1.45; }
+  .rfoot { margin: .5rem 0 0; font-size: .8rem; color: var(--dim); }
 
-  /* ── Руководство под делом ── */
-  .guide { margin-top: 2.2rem; }
-  #stage[data-w="1440"] .guide { max-width: 46rem; }
-  .guide h2 { margin: 1.9rem 0 .6rem; font-size: 1.28rem; line-height: 1.25; color: var(--heading); font-weight: 750; }
-  .guide > section:first-child h2 { margin-top: 0; }
-  #stage[data-w="1440"] .guide h2 { font-size: 1.45rem; }
-  .guide p { margin: 0 0 .75rem; font-size: .95rem; line-height: 1.68; }
-  #stage[data-w="1440"] .guide p { font-size: 1rem; }
-  .guide b { color: var(--heading); }
-  .guide ol { margin: 0 0 .9rem; padding: 0; list-style: none; counter-reset: s; display: grid; gap: .55rem; }
-  .guide ol li { counter-increment: s; display: flex; gap: .7rem; align-items: flex-start; font-size: .95rem; line-height: 1.6; }
-  .guide ol li::before { content: counter(s); flex: none; display: grid; place-items: center; width: 24px; height: 24px; margin-top: 1px;
-    border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-size: .75rem; font-weight: 700; }
-  .guide ul.kinds { list-style: none; margin: 0 0 .9rem; display: grid; gap: .45rem; }
-  .guide ul.kinds li { display: flex; gap: .6rem; align-items: flex-start; font-size: .95rem; line-height: 1.6; }
-  .guide ul.kinds .ic { flex: none; width: 1.4rem; text-align: center; }
-  .updated { margin-top: 1rem; font-size: .78rem; color: var(--faint); }
+  .keep { margin: 1.3rem 0 0; padding: .9rem 1rem; background: var(--edge-soft); border: 1px solid var(--edge); border-radius: 16px; }
+  .keep > p { font-size: .85rem; line-height: 1.55; }
+  .keepacts { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .7rem; }
+  .keepacts .cta { padding: .45rem 1rem; border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-weight: 600; font-size: .85rem; }
+  .keepacts .ghost { padding: .45rem 1rem; border-radius: 999px; border: 1px solid var(--edge); color: var(--dim); font-weight: 600; font-size: .85rem; }
+  .keepacts[hidden] { display: none; }
 
-  /* ── Частые вопросы: плавное раскрытие, приём главной (::details-content) ── */
-  .faq { margin-top: .3rem; }
-  .faq details { border-bottom: 1px solid var(--edge); padding: 13px 2px; }
-  .faq details:first-of-type { border-top: 1px solid var(--edge); }
-  .faq summary { cursor: pointer; color: var(--heading); font-weight: 700; font-size: .95rem; list-style: none;
-    display: flex; justify-content: space-between; gap: 12px; }
-  .faq summary::-webkit-details-marker { display: none; }
-  .faq summary::after { content: '+'; color: var(--dim); font-size: 20px; line-height: 1; transition: transform var(--motion-base) var(--motion-ease); }
-  .faq details[open] summary::after { content: '−'; transform: rotate(180deg); }
-  .faq details p { margin: 8px 0 0; font-size: .92rem; line-height: 1.62; }
-  @supports (interpolate-size: allow-keywords) and selector(::details-content) {
-    .faq details { interpolate-size: allow-keywords; }
-    .faq details::details-content { block-size: 0; overflow: hidden; opacity: 0;
-      transition: block-size var(--motion-base) var(--motion-ease), opacity var(--motion-base) var(--motion-ease),
-        content-visibility var(--motion-base) allow-discrete; }
-    .faq details[open]::details-content { block-size: auto; opacity: 1; }
-  }
-
-  .cross { display: flex; flex-direction: column; gap: .4rem; margin-top: 1.6rem; }
-  .cross .cross-t { font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--dim); }
-  .cross a { font-size: .9rem; font-weight: 600; color: var(--accent); text-decoration: none; }
-  .foot { margin-top: 1.6rem; padding-top: .8rem; border-top: 1px solid var(--edge); font-size: .78rem; line-height: 1.55; color: var(--faint); }
-
-  /* ── V3: три шага первым экраном ── */
-  .both { display: flex; align-items: center; gap: .6rem; margin-top: .8rem; padding: .6rem .8rem; border-radius: 12px;
+  /* ── V3: строка «каждый отвечает со своего телефона» ── */
+  .both { display: flex; align-items: center; gap: .6rem; margin-top: .8rem; padding: .55rem .8rem; border-radius: 12px;
     background: color-mix(in srgb, var(--primary) 8%, transparent); border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); }
   :root[data-theme="dark"] .both { background: color-mix(in srgb, var(--accent) 8%, transparent); border-color: color-mix(in srgb, var(--accent) 28%, transparent); }
-  .both svg { flex: none; width: 22px; height: 22px; fill: var(--primary); }
+  .both svg { flex: none; width: 20px; height: 20px; fill: var(--primary); }
   :root[data-theme="dark"] .both svg { fill: var(--accent); }
-  .both b { display: block; color: var(--heading); font-size: .95rem; }
-  .both span { font-size: .82rem; color: var(--dim); }
-  .steps3 { margin-top: 1rem; }
-  .steps3 h2 { margin: 0 0 .6rem; font-size: 1.05rem; color: var(--heading); }
-  .steps3 .grid { display: grid; gap: .6rem; }
-  #stage[data-w="1440"] .steps3 .grid { grid-template-columns: repeat(3, 1fr); }
-  .step { display: flex; flex-direction: column; gap: .45rem; padding: .85rem .9rem; background: var(--panel); border: 1px solid var(--edge);
-    border-radius: 16px; box-shadow: var(--card-shadow); }
-  .step .top { display: flex; align-items: center; gap: .55rem; }
-  .step .n { display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 999px; background: var(--primary);
-    color: var(--primary-ink); font-size: .8rem; font-weight: 700; }
-  .step .top b { font-size: 1rem; color: var(--heading); }
-  .step p { font-size: .85rem; line-height: 1.5; }
-  .step .mini { margin-top: auto; padding-top: .45rem; border-top: 1px dashed var(--edge); }
-  .step .mini .starsrow { margin: 0; }
-  .step .mini .st { cursor: default; padding: 1px 0; }
-  .step .mini .st i { font-size: 15px; }
-  .step .mini .st b { font-size: 9px; }
-  .share { display: flex; align-items: center; gap: .5rem; min-width: 0; }
-  .share code { flex: 1; min-width: 0; overflow-wrap: anywhere; padding: .35rem .6rem; background: var(--edge-soft); border-radius: 8px; font-size: .72rem; color: var(--text); }
-  .share .copy { flex: none; padding: .35rem .8rem; border: 1px solid var(--edge); border-radius: 999px; background: transparent; color: var(--dim);
-    font: inherit; font-size: .78rem; font-weight: 600; }
-  .step .mini .facts li { padding: 0; font-size: .82rem; }
+  .both b { display: block; color: var(--heading); font-size: .9rem; }
+  .both span { font-size: .8rem; color: var(--dim); }
 
-  /* ── V4: мост от пары к людям Пространства ── */
-  .bridgebox { margin-top: 1.3rem; padding: 1.1rem 1rem 1.2rem; border-radius: 18px; background: var(--panel);
-    border: 1px solid var(--edge); box-shadow: var(--card-shadow); background-image: var(--hero-wash); }
-  #stage[data-w="1440"] .bridgebox { padding: 1.5rem 1.6rem 1.6rem; }
+  /* ── V4: мост к анкете вырос в «После теста» ── */
+  .keep.after { background: var(--panel); background-image: var(--hero-wash); box-shadow: var(--card-shadow); padding: 1.1rem 1rem 1.2rem; border-radius: 18px; }
+  #stage[data-w="1440"] .keep.after { padding: 1.5rem 1.6rem 1.6rem; }
   .kicker { font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; font-weight: 700; color: var(--primary); }
   :root[data-theme="dark"] .kicker { color: var(--accent); }
-  .bridgebox h2 { margin: .35rem 0 .5rem; font-size: 1.3rem; line-height: 1.22; color: var(--heading); font-weight: 800; }
-  #stage[data-w="1440"] .bridgebox h2 { font-size: 1.6rem; max-width: 40rem; }
-  .bridgebox > p { font-size: .92rem; line-height: 1.62; }
-  #stage[data-w="1440"] .bridgebox > p { max-width: 46rem; font-size: 1rem; }
+  .keep.after h2 { margin: .35rem 0 .5rem; font-size: 1.3rem; line-height: 1.22; font-weight: 800; }
+  #stage[data-w="1440"] .keep.after h2 { font-size: 1.6rem; max-width: 40rem; }
+  .keep.after > p { font-size: .92rem; line-height: 1.62; }
+  #stage[data-w="1440"] .keep.after > p { max-width: 46rem; font-size: 1rem; }
   .nums-card { margin-top: .9rem; background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 16px; }
   :root[data-theme="dark"] .nums-card { background: var(--panel); }
   .nums-title { font-size: 12px; font-weight: 700; color: var(--up); letter-spacing: .08em; text-transform: uppercase; display: flex;
@@ -290,58 +250,111 @@
   .bridge::before, .bridge::after { content: ''; position: absolute; inset: 0; border-radius: 14px; border: 2px solid var(--primary); z-index: -1;
     animation: wave 2.4s ease-out infinite; }
   .bridge::after { animation-delay: 1.2s; }
-  /* Волна уже, чем на главной: там кнопка стоит одна, здесь рядом вторая, и широкая волна ложилась на неё (кадр V4-1440). */
+  /* Волна уже, чем на главной: там кнопка стоит одна, здесь рядом вторая, и широкая волна ложилась на неё. */
   @keyframes wave { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.06, 1.3); opacity: 0; } }
-  .ghostbtn { padding: 12px 18px; border-radius: 14px; border: 1px solid var(--ghost-brd); color: var(--ghost-ink); font-weight: 700; font-size: 14.5px; }
+  .ghostbtn { padding: 12px 18px; border-radius: 14px; border: 1px solid var(--ghost-brd); color: var(--ghost-ink); font-weight: 700; font-size: 14.5px; text-align: center; }
   #stage[data-w="390"] .go .bridge, #stage[data-w="390"] .go .ghostbtn { width: 100%; }
-  #stage[data-w="390"] .go .ghostbtn { text-align: center; }
+
+  /* ── V2: образец «Вы и Аня» у первого экрана: на телефоне сразу под карточкой, на десктопе — в колонне зеркала ── */
+  #stage[data-w="1440"] .two.v2 { grid-template-areas: "c m" "c s"; }
+  #stage[data-w="1440"] .two.v2 > .qcard { grid-area: c; }
+  #stage[data-w="1440"] .two.v2 > .mirror { grid-area: m; }
+  #stage[data-w="1440"] .two.v2 > .result { grid-area: s; }
+  .two > .result { margin: 0; }
+  .legend { margin-top: .6rem; padding-top: .55rem; border-top: 1px solid var(--edge-soft); display: grid; gap: .2rem;
+    font-size: .76rem; color: var(--dim); line-height: 1.45; }
+
+  /* ── Руководство под делом ── */
+  .guide { margin-top: 2.2rem; }
+  #stage[data-w="1440"] .guide { max-width: 46rem; }
+  .guide h2 { margin: 1.9rem 0 .6rem; font-size: 1.28rem; line-height: 1.25; color: var(--heading); font-weight: 750; }
+  .guide > section:first-child h2 { margin-top: 0; }
+  #stage[data-w="1440"] .guide h2 { font-size: 1.45rem; }
+  .guide p { margin: 0 0 .75rem; font-size: .95rem; line-height: 1.68; }
+  #stage[data-w="1440"] .guide p { font-size: 1rem; }
+  .guide b { color: var(--heading); }
+  .guide ol { margin: 0 0 .9rem; padding: 0; list-style: none; counter-reset: s; display: grid; gap: .55rem; }
+  .guide ol li { counter-increment: s; display: flex; gap: .7rem; align-items: flex-start; font-size: .95rem; line-height: 1.6; }
+  .guide ol li::before { content: counter(s); flex: none; display: grid; place-items: center; width: 24px; height: 24px; margin-top: 1px;
+    border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-size: .75rem; font-weight: 700; }
+  .guide ul.kinds { list-style: none; margin: 0 0 .9rem; display: grid; gap: .45rem; }
+  .guide ul.kinds li { display: flex; gap: .6rem; align-items: flex-start; font-size: .95rem; line-height: 1.6; }
+  .guide ul.kinds .ic { flex: none; width: 1.4rem; text-align: center; }
+
+  /* ── Частые вопросы: плавное раскрытие, приём главной (::details-content) ── */
+  .faq details { border-bottom: 1px solid var(--edge); padding: 13px 2px; }
+  .faq details:first-of-type { border-top: 1px solid var(--edge); }
+  .faq summary { cursor: pointer; color: var(--heading); font-weight: 700; font-size: .95rem; list-style: none;
+    display: flex; justify-content: space-between; gap: 12px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; color: var(--dim); font-size: 20px; line-height: 1; transition: transform var(--motion-base) var(--motion-ease); }
+  .faq details[open] summary::after { content: '−'; transform: rotate(180deg); }
+  .faq details p { margin: 8px 0 0; font-size: .92rem; line-height: 1.62; }
+  @supports (interpolate-size: allow-keywords) and selector(::details-content) {
+    .faq details { interpolate-size: allow-keywords; }
+    .faq details::details-content { block-size: 0; overflow: hidden; opacity: 0;
+      transition: block-size var(--motion-base) var(--motion-ease), opacity var(--motion-base) var(--motion-ease),
+        content-visibility var(--motion-base) allow-discrete; }
+    .faq details[open]::details-content { block-size: auto; opacity: 1; }
+  }
+
+  .cross { display: flex; flex-direction: column; gap: .4rem; margin-top: 1.4rem; }
+  .cross .cross-t { font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--dim); }
+  .cross a { font-size: .87rem; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .foot { margin: 1.6rem 0 0; padding-top: .8rem; border-top: 1px solid var(--edge); font-size: .78rem; line-height: 1.55; color: var(--faint); }
 </style>
 </head>
 <body>
 
 <div class="picker">
-  <b>Тест на совместимость для двоих</b>
-  <button data-v="1" class="active">V1 Дело сверху, руководство под делом</button>
-  <button data-v="2">V2 Образец результата первым</button>
-  <button data-v="3">V3 Три шага, оба со своих устройств</button>
-  <button data-v="4">V4 От пары к людям Пространства</button>
+  <b>Тест на совместимость</b>
+  <button data-v="1" class="active">V1 Руководство под делом</button>
+  <button data-v="2">V2 Образец результата у первого экрана</button>
+  <button data-v="3">V3 Оба со своих телефонов</button>
+  <button data-v="4">V4 После теста — люди Пространства</button>
   <span class="sp"></span>
   <button id="width">390 ↔ 1440</button>
   <button id="theme">тема</button>
 </div>
 
 <div class="scene">
-  <p><b>Что это.</b> Страница «Тест на совместимость для двоих» — переделка нашей страницы
-  <code>/ru/test/compatibility</code>, адрес остаётся тем же. Заказ — «чиним приток юзеров».</p>
+  <p><b>Что это.</b> Страница «Тест на совместимость» — переделка нашей страницы <code>/ru/test/compatibility</code>,
+  адрес остаётся тем же. Заказ — «чиним приток юзеров». <b>Каркас — Ваш V5 из интервью «Форма страниц теста» (№029),
+  заголовок — Ваш ответ «Имя страницы двоих» (№028 В2 = А).</b> Каркас нарисован один в один с живой страницей
+  (сборка 25 сентября): полоса трёх шагов, одна карточка со звёздами и «Не знаю эту вещь — дальше», рядом растущее
+  зеркало «Ваша анкета растёт», дальше приглашение второго, пример результата, мост к анкете, вопросы. На кадрах
+  поставлена одна оценка, чтобы зеркало было видно живым; звёзды в макете нажимаются. Тексты каркаса, которые на живой
+  странице спорят с шестью запретами («без выдуманных процентов», «те же 12», «Это не разовый тест»), здесь переписаны
+  констатацией.</p>
   <p><b>Спрос.</b> «тест на совместимость» — 62 467 показов в месяц; внутри: «для двоих» 16 508 · «пары» 7 504 ·
   «мужчины и женщины» 4 980 · «бесплатно» 3 473 · «онлайн» 3 357 · «отвечают оба» 1 125 · «без регистрации» 105
   (Вордстат 2026-08-14; разведка «Страницы под запросы людей», <code>researches/76</code> §2.1). Наша страница в индексе,
   и за три месяца Google показал её ноль раз: на ней 2 068 знаков при медиане лидеров около 6 000, подзаголовки словами
-  жеста («Ваша анкета растёт») и ни одной ссылки из каталога (там же, §5).</p>
-  <p><b>Общее у всех четырёх.</b> Заголовок — дословно словами уточнения «для двоих». Тест — первым делом на экране
-  телефона. Под тестом — текст разделами, подзаголовки и вопросы словами уточнений. Двенадцать вещей — настоящий набор
-  сборки 25 сентября (самые оценённые вещи каталога) с настоящими «уже оценили: N». Результат — вещи и две оценки,
-  ровно как считает код. Число совпадений над строками результата — новое для этой страницы; на странице «Калькулятор
-  любви» оно уже живёт, разведка называет его разрешённым числом (§5.2). Тест нарисован строками главной, как в заказе;
-  в бою сегодня тест показывает одну карточку за раз — выбор формы тоже за Вами.</p>
-  <p><b>Чем различаются.</b></p>
+  жеста и ни одной ссылки из каталога (там же, §5).</p>
+  <p><b>Чем различаются</b> — только тем, что разведка добавляет поверх каркаса:</p>
   <ul>
-    <li><b>V1 «Дело сверху, руководство под делом»</b> — заголовок, факты, сразу строки со звёздами (на десктопе —
-      двумя колоннами); под тестом приглашение и пример результата; ниже полный текст: пять разделов и восемь частых
-      вопросов.
-      <span class="cost">Цена: образец результата на телефоне — только после двенадцати строк теста.</span></li>
-    <li><b>V2 «Образец результата первым»</b> — карточка «Вы и Аня» с числом совпадений стоит над тестом (на
-      десктопе — слева от теста); текст под делом короче. <span class="cost">Цена: первая строка теста на телефоне
-      стоит у самого низа первого экрана (827 px при высоте экрана 844); текста под делом втрое меньше, чем в V1.</span></li>
-    <li><b>V3 «Три шага, оба со своих устройств»</b> — строка «Каждый отвечает со своего телефона» и три карточки шагов
-      с кусочками настоящего интерфейса, потом тест. <span class="cost">Цена: первая строка теста на телефоне уходит
-      на второй экран (1 043 px).</span></li>
-    <li><b>V4 «От пары к людям Пространства»</b> — тест и результат пары, под ними блок «В Пространстве NDim Space есть
-      и другие люди с похожими оценками»: живые числа Пространства и «уже оценили» у вещей теста, кнопка к людям.
-      <span class="cost">Цена: ещё один крупный блок до текста; числа Пространства пока скромные — 95 человек.</span></li>
+    <li><b>V1 «Руководство под делом»</b> — под каркасом текст разделами с подзаголовками словами запросов и восемь частых
+      вопросов. <span class="cost">Цена: образец результата на телефоне — на втором экране, как сегодня.</span></li>
+    <li><b>V2 «Образец результата у первого экрана»</b> — карточка «Вы и Аня» с числом совпадений стоит сразу под
+      карточкой теста (на десктопе — в колонне зеркала). Над карточкой теста она не помещается: первая карточка ушла
+      бы за первый экран (замер ниже). Текст под делом короче. <span class="cost">Цена: зеркало на телефоне опускается
+      под образец.</span></li>
+    <li><b>V3 «Оба со своих телефонов»</b> — строка «Каждый отвечает со своего телефона» над полосой шагов, шаги
+      словами запроса «как пройти тест на совместимость вдвоём»; текст под делом средний. <span class="cost">Цена: две
+      строки над карточкой теста.</span></li>
+    <li><b>V4 «После теста — люди Пространства»</b> — мост к анкете (сегодня «Это не разовый тест») вырос в блок «В
+      Пространстве NDim Space есть и другие люди с похожими оценками»: живые числа Пространства и «уже оценили» у вещей
+      теста; ниже полный текст. <span class="cost">Цена: крупный блок до текста; числа Пространства пока скромные — 95
+      человек.</span></li>
   </ul>
-  <p><b>Объём текста под делом</b> (разделы и частые вопросы, знаки глазами робота): V1 — 6 179 · V2 — 2 461 ·
-  V3 — 3 617 · V4 — 6 053 и ещё 1 251 в блоке-мосте. Сегодня на всей странице 2 068, медиана лидеров — 5 974.</p>
+  <p><b>Первый экран телефона 390×844</b> (низ первой карточки теста): V1 — 656 px · V2 — 656 px · V3 — 795 px ·
+  V4 — 656 px. Образец над карточкой в V2 дал бы низ карточки на 1 208 px — за первым экраном, поэтому образец стоит под карточкой.</p>
+  <p><b>Объём текста под делом</b> (разделы и частые вопросы, знаки глазами робота): V1 — 6 042 · V2 — 2 363 ·
+  V3 — 3 506 · V4 — 6 103 и ещё 1 284 в блоке «После теста». Сегодня на всей странице 2 068, медиана лидеров — 5 974.</p>
+  <p><b>Открыто на Ваше решение.</b> Число совпадений над строками результата («3 совпадения · Общих «десяток»: 1»)
+  — новое для этой страницы; на странице «Калькулятор любви» оно уже живёт, разведка называет его разрешённым числом
+  (§5.2). Строка «Страница обновлена 25 сентября 2026 года» в подписи — совет разведки (§6 п.9), живой даты в продукте
+  пока нет.</p>
   <p><b>Сознательно не показано.</b> Чисел похожести на странице нет — закон «числа похожести наружу не отдаём»
   (№018 В4, №023). В V4 нет ни людей, ни их оценок — только счётчики (№002 В4). Разметка для поисковиков и ссылки из
   каталога на эту страницу — фаза разработки плана «Страницы под запросы людей», в вид страницы они не входят.</p>
@@ -351,24 +364,18 @@
 
 <div id="stage" data-w="390">
 
-  <!-- ═══════ V1 «Дело сверху, руководство под делом» ═══════ -->
+  <!-- ═══════ V1 «Руководство под делом» ═══════ -->
   <div class="variant active" id="v1">
-    <p class="caption">V1 · Дело сверху, руководство под делом</p>
+    <p class="caption">V1 · Руководство под делом</p>
     <div class="page">
       <div data-use="bar"></div>
       <article class="test">
-        <h1>Тест на совместимость для двоих</h1>
-        <p class="sub">Вы и второй человек оцениваете одинаковые 12 вещей — фильмы, книги, сериалы и привычки — звёздами
-        от 0 до 10. Каждый отвечает со своего телефона. Результат называет вещи, в которых ваши оценки совпали, и вещи,
-        которые вы видите по-разному.</p>
-        <div data-use="facts"></div>
-        <div class="two wide">
-          <div data-use="test"></div>
-          <div class="side">
-            <div data-use="invite"></div>
-            <div data-use="sample"></div>
-          </div>
-        </div>
+        <div data-use="head"></div>
+        <div data-use="steps"></div>
+        <div class="two"><section class="qcard" aria-label="Тест на совместимость"></section><aside class="mirror"></aside></div>
+        <div data-use="invite"></div>
+        <div data-use="result"></div>
+        <div data-use="keep"></div>
         <div class="guide">
           <div data-use="t-how"></div>
           <div data-use="t-result"></div>
@@ -378,27 +385,24 @@
             <div data-use="t-faq-h"></div>
             <div class="faq" data-faq="f1,f2,f3,f4,f5,f10,f6,f7"></div>
           </section>
-          <div data-use="cross"></div>
         </div>
+        <div data-use="cross"></div>
         <div data-use="foot"></div>
       </article>
     </div>
   </div>
 
-  <!-- ═══════ V2 «Образец результата первым» ═══════ -->
+  <!-- ═══════ V2 «Образец результата у первого экрана» ═══════ -->
   <div class="variant" id="v2">
-    <p class="caption">V2 · Образец результата первым</p>
+    <p class="caption">V2 · Образец результата у первого экрана</p>
     <div class="page">
       <div data-use="bar"></div>
       <article class="test">
-        <h1>Тест на совместимость для двоих</h1>
-        <p class="sub">Каждый отвечает со своего телефона.</p>
-        <div data-use="facts"></div>
-        <div class="two flip">
-          <div data-use="sample-first"></div>
-          <div data-use="test"></div>
-          <div data-use="invite"></div>
-        </div>
+        <div data-use="head"></div>
+        <div data-use="steps"></div>
+        <div class="two v2"><section class="qcard" aria-label="Тест на совместимость"></section><div data-use="result-legend"></div><aside class="mirror"></aside></div>
+        <div data-use="invite"></div>
+        <div data-use="keep"></div>
         <div class="guide">
           <div data-use="t-how-short"></div>
           <div data-use="t-why-short"></div>
@@ -407,52 +411,34 @@
             <div data-use="t-faq-h"></div>
             <div class="faq" data-faq="f1,f3,f4,f5,f6"></div>
           </section>
-          <div data-use="cross"></div>
         </div>
+        <div data-use="cross"></div>
         <div data-use="foot"></div>
       </article>
     </div>
   </div>
 
-  <!-- ═══════ V3 «Три шага и оба со своих устройств» ═══════ -->
+  <!-- ═══════ V3 «Оба со своих телефонов» ═══════ -->
   <div class="variant" id="v3">
-    <p class="caption">V3 · Три шага, оба со своих устройств</p>
+    <p class="caption">V3 · Оба со своих телефонов</p>
     <div class="page">
       <div data-use="bar"></div>
       <article class="test">
-        <h1>Тест на совместимость для двоих</h1>
+        <div data-use="head"></div>
         <div class="both">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/><path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/></svg>
           <div><b>Каждый отвечает со своего телефона</b><span>Вы оцениваете вещи у себя, второй человек оценивает у себя — по личной ссылке.</span></div>
         </div>
-        <div data-use="facts"></div>
-        <section class="steps3">
-          <h2>Как пройти тест на совместимость вдвоём</h2>
-          <div class="grid">
-            <div class="step">
-              <div class="top"><span class="n">1</span><b>Оцените</b></div>
-              <p>12 вещей звёздами от 0 до 10: фильмы, книги, сериалы и привычки. Около трёх минут.</p>
-              <div class="mini" data-use="mini-stars"></div>
-            </div>
-            <div class="step">
-              <div class="top"><span class="n">2</span><b>Отправьте ссылку</b></div>
-              <p>Нажмите «Создать личную ссылку» и отправьте ссылку второму. Второй оценивает двенадцать вещей теста на своём телефоне.</p>
-              <div class="mini"><p class="share"><code>ndimspace.app/ru/test/compatibility?pair=…</code><span class="copy">Скопировать</span></p></div>
-            </div>
-            <div class="step">
-              <div class="top"><span class="n">3</span><b>Смотрите совпадения</b></div>
-              <p>Результат называет вещи, в которых вы совпали, и вещи, которые вы видите по-разному. Результат видите только вы двое.</p>
-              <div class="mini"><ul class="facts"><li><span class="ic">⭐</span><span>Вы оба поставили 10 — Побег из Шоушенка · Фильм, 1994</span></li></ul></div>
-            </div>
-          </div>
-        </section>
-        <div class="two wide">
-          <div data-use="test"></div>
-          <div class="side">
-            <div data-use="invite"></div>
-            <div data-use="sample"></div>
-          </div>
-        </div>
+        <h2 class="steps-h">Как пройти тест на совместимость вдвоём</h2>
+        <ol class="steps">
+          <li><span class="n">1</span><span><b>Оцените 12 вещей</b> звёздами от 0 до 10 — около трёх минут.</span></li>
+          <li><span class="n">2</span><span><b>Отправьте личную ссылку второму</b> — второй проходит тест на своём телефоне.</span></li>
+          <li><span class="n">3</span><span><b>Смотрите совпадения вдвоём</b> — результат видите только вы двое.</span></li>
+        </ol>
+        <div class="two"><section class="qcard" aria-label="Тест на совместимость"></section><aside class="mirror"></aside></div>
+        <div data-use="invite"></div>
+        <div data-use="result"></div>
+        <div data-use="keep"></div>
         <div class="guide">
           <div data-use="t-result"></div>
           <div data-use="t-why-short"></div>
@@ -461,36 +447,31 @@
             <div data-use="t-faq-h"></div>
             <div class="faq" data-faq="f1,f3,f4,f5,f6,f7"></div>
           </section>
-          <div data-use="cross"></div>
         </div>
+        <div data-use="cross"></div>
         <div data-use="foot"></div>
       </article>
     </div>
   </div>
 
-  <!-- ═══════ V4 «От пары к людям Пространства» ═══════ -->
+  <!-- ═══════ V4 «После теста — люди Пространства» ═══════ -->
   <div class="variant" id="v4">
-    <p class="caption">V4 · От пары к людям Пространства</p>
+    <p class="caption">V4 · После теста — люди Пространства</p>
     <div class="page">
       <div data-use="bar"></div>
       <article class="test">
-        <h1>Тест на совместимость для двоих</h1>
-        <p class="sub">Вы и второй человек оцениваете одинаковые 12 вещей, каждый со своего телефона. Результат называет
-        вещи, в которых вы совпали. После теста Пространство NDim Space ищет по Вашим оценкам и других людей, похожих на Вас.</p>
-        <div data-use="facts"></div>
-        <div class="two wide">
-          <div data-use="test"></div>
-          <div class="side">
-            <div data-use="invite"></div>
-            <div data-use="sample"></div>
-          </div>
-        </div>
-        <section class="bridgebox">
+        <div data-use="head"></div>
+        <div data-use="steps"></div>
+        <div class="two"><section class="qcard" aria-label="Тест на совместимость"></section><aside class="mirror"></aside></div>
+        <div data-use="invite"></div>
+        <div data-use="result"></div>
+        <section class="keep after">
           <p class="kicker">После теста</p>
           <h2>В Пространстве NDim Space есть и другие люди с похожими оценками</h2>
           <p>Ваши оценки теста уже лежат в Вашем NDim ID — анкете, где собраны все вещи, которые Вы оценили, вместе с
           Вашими оценками. По этой анкете Пространство NDim Space ищет людей, чьи оценки похожи на Ваши, и собирает самых
-          похожих в разделе «Связи». Каждая новая оценка вещи каталога добавляет Пространству данных для подбора людей.</p>
+          похожих в разделе «Связи». Каждая новая оценка вещи каталога добавляет Пространству данных для подбора людей.
+          Гостевая анкета хранится 7 дней.</p>
           <div class="nums-card">
             <p class="nums-title">Пространство NDim Space в числах</p>
             <ul class="nums">
@@ -514,10 +495,10 @@
           <div data-use="t-online"></div>
           <section>
             <div data-use="t-faq-h"></div>
-            <div class="faq" data-faq="f1,f2,f3,f4,f5,f6,f9"></div>
+            <div class="faq" data-faq="f1,f2,f3,f4,f5,f6,f7,f9"></div>
           </section>
-          <div data-use="cross"></div>
         </div>
+        <div data-use="cross"></div>
         <div data-use="foot"></div>
       </article>
     </div>
@@ -533,9 +514,9 @@
   сам, на своём телефоне или компьютере.</p>
   <ol>
     <li><span><b>Оцените 12 вещей</b> звёздами от 0 до 10. Ноль значит «совсем не моё», десять — «это про меня». Вещь,
-    которую Вы не знаете, пропустите: результат сравнивает вещи, которые оценили вы оба.</span></li>
+    которую Вы не знаете, пропустите кнопкой «Не знаю эту вещь — дальше»: тест покажет следующую.</span></li>
     <li><span><b>Отправьте личную ссылку второму.</b> Нажмите «Создать личную ссылку» и отправьте ссылку в мессенджере,
-    в письме, где Вам удобно. Второй человек открывает ссылку у себя и оценивает двенадцать вещей теста.</span></li>
+    в письме, где Вам удобно. Второй человек открывает ссылку у себя и оценивает вещи теста.</span></li>
     <li><span><b>Смотрите совпадения.</b> Второй нажимает «Сравнить ответы», и результат появляется у вас обоих:
     совпадения, близкие оценки и вещи, которые вы видите по-разному.</span></li>
   </ol>
@@ -543,16 +524,16 @@
   оценка остаётся собственным ответом человека.</p>
   <p>Сравниться можно с несколькими людьми. Ваши оценки остаются в Вашей анкете, и для каждого нового человека
   создаётся своя личная ссылка: одна ссылка — одна пара.</p>
-  <p>Двенадцать вещей теста — самые оценённые вещи каталога Пространства NDim Space: «Гарри Поттер и философский камень»
-  — фильм 2001 года и роман 1997 года, «Побег из Шоушенка», «Матрица», «Доктор Хаус», «Гладиатор», «Пираты Карибского
-  моря: На краю света» и ещё пять. Самые оценённые вещи чаще других знакомы обоим, и двоим есть что сравнить.</p>
+  <p>Вещи теста — самые оценённые вещи каталога Пространства NDim Space: «Гарри Поттер и философский камень» — фильм
+  2001 года и роман 1997 года, «Побег из Шоушенка», «Матрица», «Доктор Хаус», «Гладиатор», «Пираты Карибского моря: На
+  краю света». Самые оценённые вещи чаще других знакомы обоим, и двоим есть что сравнить.</p>
 </section></template>
 
 <template id="t-how-short"><section>
   <h2>Как пройти тест на совместимость вдвоём</h2>
   <p>Оцените 12 вещей звёздами от 0 до 10 и отправьте личную ссылку второму человеку. Второй открывает ссылку на своём
-  телефоне, оценивает двенадцать вещей теста и нажимает «Сравнить ответы». Результат появляется у вас обоих — такой,
-  как в примере наверху страницы. Весь тест занимает около трёх минут.</p>
+  телефоне, оценивает вещи теста и нажимает «Сравнить ответы». Результат появляется у вас обоих — такой, как в примере
+  «Вы и Аня» рядом с тестом. Весь тест занимает около трёх минут.</p>
 </section></template>
 
 <template id="t-result"><section>
@@ -621,8 +602,8 @@
 
 <template id="f1"><details open><summary>Тест на совместимость для двоих — отвечают оба?</summary>
   <p>Да, отвечают оба. Каждый из двоих оценивает вещи сам, со своего телефона или компьютера. Первый человек оценивает
-  12 вещей и отправляет личную ссылку, второй открывает ссылку и оценивает двенадцать вещей теста. Результат строится
-  по оценкам обоих.</p></details></template>
+  12 вещей и отправляет личную ссылку, второй открывает ссылку и оценивает вещи теста. Результат строится по оценкам
+  обоих.</p></details></template>
 <template id="f2"><details><summary>Как пройти тест на совместимость пары онлайн?</summary>
   <p>Оцените 12 вещей на этой странице, нажмите «Создать личную ссылку» и отправьте ссылку второму. Второй оценивает
   вещи теста у себя и нажимает «Сравнить ответы» — результат появляется у вас обоих.</p></details></template>
@@ -638,8 +619,8 @@
   <p>Результат видите только вы двое. Второй человек видит Ваши оценки по вещам этого теста, которые оценили вы оба,
   и только после того, как каждый нажал кнопку сам. Остальная Ваша анкета видна так, как решите Вы.</p></details></template>
 <template id="f7"><details><summary>Что делать, если я не знаю фильм или книгу из теста?</summary>
-  <p>Пропустите эту вещь. Результат сравнивает вещи, которые оценили вы оба, поэтому пропущенная вещь просто остаётся
-  за рамками сравнения.</p></details></template>
+  <p>Нажмите «Не знаю эту вещь — дальше», и тест покажет следующую вещь. Результат сравнивает вещи, которые оценили
+  вы оба.</p></details></template>
 <template id="f10"><details><summary>Можно пройти тест на совместимость с другом?</summary>
   <p>Да. Вы оцениваете 12 вещей и отправляете другу личную ссылку. Друг оценивает вещи теста у себя, и результат
   показывает, в каких фильмах, книгах и сериалах ваши вкусы совпали.</p></details></template>
@@ -649,8 +630,9 @@
   данных для подбора.</p></details></template>
 
 <script>
-  /* Первые 12 карточек очереди теста из сборки 2026-09-25 (build/ru/test/compatibility.html). */
-  const ITEMS = [
+  /* Очередь теста из сборки 2026-09-25 (build/ru/test/compatibility.html): набор 12 + начало запаса под «не знаю». */
+  const TARGET = 12;
+  const QUEUE = [
     { k: 'Фильм', n: 'Гарри Поттер и философский камень', y: '2001', r: 14 },
     { k: 'Фильм', n: 'Побег из Шоушенка', y: '1994', r: 12 },
     { k: 'Роман', n: 'Гарри Поттер и философский камень', y: '1997', r: 11 },
@@ -663,6 +645,14 @@
     { k: 'Фильм', n: 'Гарри Поттер и Дары Смерти. Часть 2', y: '2011', r: 10 },
     { k: 'Фильм', n: 'Гарри Поттер и Кубок огня', y: '2005', r: 10 },
     { k: 'Фильм', n: 'Гарри Поттер и узник Азкабана', y: '2004', r: 10 },
+    { k: 'Фильм', n: 'Леон', y: '1994', r: 10 },
+    { k: 'Роман', n: 'Гарри Поттер и узник Азкабана', y: '1999', r: 10 },
+    { k: 'Фильм', n: 'Интерстеллар', y: '2014', r: 10 },
+    { k: 'Фильм', n: 'Форрест Гамп', y: '1994', r: 10 },
+    { k: 'Видеоигра', n: 'Grand Theft Auto: San Andreas', y: '2004', r: 9 },
+    { k: 'Фильм', n: 'Остров проклятых', y: '2010', r: 9 },
+    { k: 'Фильм', n: 'Пятый Элемент', y: '1997', r: 9 },
+    { k: 'Фильм', n: 'Люди в чёрном', y: '1997', r: 9 },
   ];
   const label = (it) => it.n + ' · ' + [it.k, it.y].filter(Boolean).join(', ');
 
@@ -672,40 +662,41 @@
     return `<button type="button" class="${cls}" data-v="${v}" aria-label="${v}"><i>${val !== null && v <= val ? '★' : '☆'}</i><b>${v}</b></button>`;
   }).join('');
 
-  const rowHTML = (it, i, val) => `<div class="srow" data-i="${i}"><div class="t"><span class="kind">${it.k}</span>${it.n}${it.y ? `<span class="yr">&nbsp;(${it.y})</span>` : ''}<span class="rby"> · уже оценили: ${it.r}</span></div>
-    <div class="starsrow" role="group" aria-label="${it.n}">${starsHTML(val)}</div></div>`;
+  const HEAD = `<header><h1>Тест на совместимость</h1>
+    <p class="sub">Тест для двоих: Вы и второй человек оцениваете одинаковые 12 вещей — фильмы, книги, сериалы и привычки —
+    звёздами от 0 до 10, каждый со своего телефона. Результат называет вещи, в которых ваши оценки совпали.</p>
+    <p class="lede"><span><i>✓</i> без регистрации</span><span><i>✓</i> 12 вещей · ~3 минуты</span><span><i>✓</i> бесплатно</span><span><i>✓</i> отвечают оба</span></p></header>`;
 
-  const TEST = () => `<section class="play" aria-label="Тест на совместимость для двоих">
-    <div class="play-head"><span class="ph-t">Ваши оценки</span><span class="ph-p">Оценено <b data-done>1</b> из 12</span></div>
-    <p class="hint">0 — совсем не моё · 10 — это про меня</p>
-    <div class="rows">${ITEMS.map((it, i) => rowHTML(it, i, i === 0 ? 9 : null)).join('')}</div></section>`;
+  const STEPS = `<ol class="steps">
+    <li><span class="n">1</span><span><b>Оцените 12 вещей</b> звёздами от 0 до 10.</span></li>
+    <li><span class="n">2</span><span><b>Отправьте ссылку второму</b> — второй оценивает вещи теста у себя.</span></li>
+    <li><span class="n">3</span><span><b>Смотрите совпадения</b> — вещи, в которых ваши оценки совпали.</span></li></ol>`;
 
-  const FACTS = `<p class="lede"><span><i>✓</i> без регистрации</span><span><i>✓</i> 12 вещей · ~3 минуты</span><span><i>✓</i> бесплатно</span><span><i>✓</i> отвечают оба</span></p>`;
+  const INVITE_BODY = `<p>Когда Вы оцените 12 вещей, здесь появится кнопка «Создать личную ссылку». Отправьте ссылку второму человеку:
+    второй откроет ссылку на своём телефоне и оценит вещи теста.</p>`;
+  const INVITE_NOTE = `<p class="fine">Результат видите только вы двое: ссылка личная, и её получает тот, кому Вы её отправите.</p>`;
+  const INVITE = `<section class="invite"><h2>Позовите второго</h2><div class="inv">${INVITE_BODY}${INVITE_NOTE}</div></section>`;
 
-  const INVITE = `<section class="invite"><h2>Позовите второго</h2>
-    <p>Когда Вы оцените 12 вещей, здесь появится кнопка «Создать личную ссылку». Отправьте ссылку второму человеку: второй
-    откроет ссылку на своём телефоне и оценит двенадцать вещей теста.</p>
-    <p class="fine">Результат видите только вы двое: ссылка личная, и её получает тот, кому Вы её отправите.</p></section>`;
-
-  const SAMPLE_ROWS = `<ul class="facts">
-    <li><span class="ic">⭐</span><span>Вы оба поставили 10 — Побег из Шоушенка · Фильм, 1994</span></li>
-    <li><span class="ic">⭐</span><span>Вы оба поставили 9 — Гладиатор · Фильм, 2000</span></li>
-    <li><span class="ic">⭐</span><span>Вы оба поставили 8 — Матрица · Фильм, 1999</span></li>
-    <li><span class="ic">🤝</span><span>Вы рядом в «Доктор Хаус · Телесериал, 2004»: 7 и 8</span></li>
-    <li><span class="ic">💬</span><span>«Гарри Поттер и Тайная комната · Роман, 1998» вы видите по-разному (8 и 2) — будет о чём поговорить</span></li>
-  </ul>`;
-  const SAMPLE_HEAD = `<p class="cap">Вы и Аня · пример результата</p>
+  const SAMPLE_CARD = (legend) => `<div class="pair"><p class="cap">Вы и Аня · пример результата</p>
     <p class="bigcount"><span class="n">3</span> <span>совпадения</span></p>
-    <p class="subcount">Общих «десяток»: 1</p>`;
-  const SAMPLE = `<section class="sample"><h2 class="sh">Так выглядит результат</h2><div class="pair">${SAMPLE_HEAD}${SAMPLE_ROWS}
-    <p class="rfoot">Сравнили вещей: 12.</p></div></section>`;
-  const SAMPLE_FIRST = `<section class="sample"><h2 class="sh">Так выглядит результат теста</h2><div class="pair">${SAMPLE_HEAD}${SAMPLE_ROWS}
-    <p class="rfoot">Сравнили вещей: 12.</p>
-    <div class="legend"><span>⭐ Совпадение — одинаковая оценка</span><span>🤝 Рядом — разница в одну звезду</span><span>💬 По-разному — разница в четыре звезды и больше</span></div></div></section>`;
+    <p class="subcount">Общих «десяток»: 1</p>
+    <ul class="facts">
+      <li><span class="ic">⭐</span><span>Вы оба поставили 10 — Побег из Шоушенка · Фильм, 1994</span></li>
+      <li><span class="ic">⭐</span><span>Вы оба поставили 9 — Гладиатор · Фильм, 2000</span></li>
+      <li><span class="ic">⭐</span><span>Вы оба поставили 8 — Матрица · Фильм, 1999</span></li>
+      <li><span class="ic">🤝</span><span>Вы рядом в «Доктор Хаус · Телесериал, 2004»: 7 и 8</span></li>
+      <li><span class="ic">💬</span><span>«Гарри Поттер и Тайная комната · Роман, 1998» вы видите по-разному (8 и 2) — будет о чём поговорить</span></li>
+    </ul>
+    <p class="rfoot">Сравнили вещей: 12.</p>${legend ? `<div class="legend"><span>⭐ Совпадение — одинаковая оценка</span><span>🤝 Рядом — разница в одну звезду</span><span>💬 По-разному — разница в четыре звезды и больше</span></div>` : ''}</div>`;
+  const RESULT = `<section class="result"><h2>Каким будет результат</h2>${SAMPLE_CARD(false)}</section>`;
+  const RESULT_LEGEND = `<section class="result"><h2>Каким будет результат</h2>${SAMPLE_CARD(true)}</section>`;
 
-  const MINI_STARS = `<div class="starsrow" aria-hidden="true">${starsHTML(8)}</div>`;
-  const RATED = ITEMS.map((it) => `<li>${label(it)} — <b>${it.r}</b>&nbsp;человек</li>`).join('');
+  const KEEP = `<section class="keep"><h2>Ваша анкета — Ваш NDim ID</h2>
+    <p>Каждая Ваша оценка уже собирается в анкету — Ваш NDim ID. Анкета живёт и растёт вместе с Вами, и Пространство NDim Space
+    ищет по ней людей, которые совпадают с Вами по-настоящему. Гостевая анкета хранится 7 дней.</p>
+    <div class="keepacts"><span class="cta">Сохранить мою анкету</span><span class="ghost">Продолжить гостем</span></div></section>`;
 
+  const RATED = QUEUE.slice(0, TARGET).map((it) => `<li>${label(it)} — <b>${it.r}</b>&nbsp;человек</li>`).join('');
   const CROSS = `<nav class="cross" aria-label="Другие тесты"><span class="cross-t">Другие тесты Пространства NDim Space</span>
     <a href="#">Тест личности →</a><a href="#">Калькулятор любви →</a><a href="#">Все тесты →</a></nav>`;
   const FOOT = `<p class="foot">Пространство NDim Space — поиск похожих людей по математической близости оценок.<br>Страница обновлена 25 сентября 2026 года.</p>`;
@@ -727,31 +718,94 @@
     <span class="hc"><span class="sq" title="Тема"><svg class="sun" viewBox="0 0 16 16">${SUN}</svg><svg class="moon" viewBox="0 0 16 16">${MOON}</svg></span><span class="sq" title="Язык">Ru</span></span>
     <span class="enter">Войти</span></header>`;
 
-  const PARTS = { bar: BAR, facts: () => FACTS, test: TEST, invite: () => INVITE, sample: () => SAMPLE,
-    'sample-first': () => SAMPLE_FIRST, 'mini-stars': () => MINI_STARS, rated: () => RATED, cross: () => CROSS, foot: () => FOOT };
-
+  const PARTS = { bar: BAR, head: () => HEAD, steps: () => STEPS, invite: () => INVITE, result: () => RESULT,
+    'result-legend': () => RESULT_LEGEND, keep: () => KEEP, rated: () => RATED, cross: () => CROSS, foot: () => FOOT };
   document.querySelectorAll('[data-use]').forEach((el) => {
     const key = el.dataset.use;
     const html = PARTS[key] ? PARTS[key]() : document.getElementById(key).innerHTML;
-    if (el.tagName === 'UL' || el.classList.contains('mini')) { el.innerHTML = html; el.removeAttribute('data-use'); }
+    if (el.tagName === 'UL') { el.innerHTML = html; el.removeAttribute('data-use'); }
     else el.outerHTML = html;
   });
   document.querySelectorAll('[data-faq]').forEach((el) => {
     el.innerHTML = el.dataset.faq.split(',').map((id) => document.getElementById(id).innerHTML).join('');
   });
 
-  /* Жест звезды в макете: касание красит звёзды до выбранной, счётчик «Оценено N из 12» живой. */
-  document.addEventListener('click', (e) => {
-    const st = e.target.closest('.play .st');
-    if (!st) return;
-    const row = st.closest('.srow');
-    const v = Number(st.dataset.v);
-    row.querySelector('.starsrow').innerHTML = starsHTML(v);
-    row.dataset.val = v;
-    const play = row.closest('.play');
-    const done = [...play.querySelectorAll('.srow')].filter((r, i) => r.dataset.val !== undefined || i === 0).length;
-    play.querySelector('[data-done]').textContent = done;
-  });
+  /*
+   * Движок каркаса V5 — поведение страницы теста (`+page.svelte`), упрощённо для макета: касание звезды запускает
+   * отсчёт 5 с («Сохранить сейчас» — сразу), повторное касание той же звезды отменяет; сохранённая вещь уходит в
+   * зеркало, карточка сменяется следующей; «Не знаю эту вещь — дальше» пропускает; «✕» в зеркале возвращает вещь
+   * в очередь. Ряда смайликов под звёздами в макете нет. На кадрах поставлена одна оценка — зеркало видно живым.
+   */
+  function mountEngine(page) {
+    const card = page.querySelector('.qcard');
+    const mirror = page.querySelector('.mirror');
+    const keepActs = page.querySelector('.keep:not(.after) .keepacts');
+    const inv = page.querySelector('.invite .inv');
+    const s = { ratings: new Map([[0, 9]]), skipped: new Set(), pending: null, timer: null, linked: false };
+    const current = () => QUEUE.findIndex((_, i) => !s.ratings.has(i) && !s.skipped.has(i));
+    const mine = () => QUEUE.map((_, i) => i).filter((i) => s.ratings.has(i));
+
+    function renderCard(fly) {
+      const i = current();
+      if (i < 0) { card.innerHTML = `<p class="drained">Это всё: очередь пройдена целиком.</p>`; return; }
+      const it = QUEUE[i];
+      const val = s.pending && s.pending.i === i ? s.pending.v : null;
+      card.innerHTML = `<div class="${fly ? 'fly' : ''}">
+        <p class="kind">${it.k}</p><p class="name">${it.n}</p>
+        <p class="meta">${it.y}${it.r >= 3 ? `${it.y ? ' · ' : ''}уже оценили: ${it.r}` : ''}</p>
+        <div class="starsrow" role="group">${starsHTML(val)}</div>
+        <p class="scale"><span>0 — совсем не моё</span><span>10 — это про меня</span></p>
+        ${s.pending && s.pending.i === i ? `<div class="countdown"><span>Сохраню через ${s.pending.left} с…</span><button type="button" class="now">Сохранить сейчас</button></div>` : ''}
+        <button type="button" class="skip">Не знаю эту вещь — дальше</button></div>`;
+    }
+    function renderMirror() {
+      const rows = mine();
+      const done = Math.min(rows.length, TARGET);
+      const fin = rows.length >= TARGET;
+      mirror.innerHTML = `<h2>Ваша анкета растёт</h2>` + (rows.length === 0
+        ? `<p class="empty">Поставьте первую оценку — здесь появятся первые факты о Вас.</p>`
+        : `<p class="progress${fin ? ' full' : ''}">Оценено ${done} из ${TARGET}</p><ul class="rows">${rows.map((i) =>
+            `<li><span class="rname">${label(QUEUE[i])}</span><span class="rval"><b>${s.ratings.get(i)}</b>/10</span><button type="button" class="rm" data-i="${i}" title="Убрать оценку" aria-label="Убрать оценку">✕</button></li>`).join('')}</ul>`
+          + (fin ? `<p class="fin">Набор пройден — анкета собрана и живёт в Вашем NDim ID.</p>` : ''));
+      if (keepActs) keepActs.hidden = rows.length === 0;
+      if (inv) {
+        if (s.linked) inv.innerHTML = `<p>Личная ссылка готова — отправьте её второму:</p><p class="share"><code>ndimspace.app/ru/test/compatibility?pair=…</code><span class="copy">Скопировать</span></p><p class="fine">Как только второй пройдёт тест, здесь появится результат.</p>`;
+        else if (fin) inv.innerHTML = `<button type="button" class="pairbtn">Создать личную ссылку</button>${INVITE_NOTE}`;
+        else inv.innerHTML = INVITE_BODY + INVITE_NOTE;
+      }
+    }
+    function stop() { if (s.timer) clearInterval(s.timer); s.timer = null; }
+    function commit() {
+      if (!s.pending) return;
+      stop();
+      s.ratings.set(s.pending.i, s.pending.v);
+      s.pending = null;
+      renderCard(true); renderMirror();
+    }
+    card.addEventListener('click', (e) => {
+      const st = e.target.closest('.st');
+      if (st) {
+        const i = current(); const v = Number(st.dataset.v);
+        if (s.pending && s.pending.i === i && s.pending.v === v) { stop(); s.pending = null; renderCard(false); return; }
+        stop();
+        s.pending = { i, v, left: 5 };
+        s.timer = setInterval(() => { s.pending.left -= 1; if (s.pending.left <= 0) commit(); else renderCard(false); }, 1000);
+        renderCard(false);
+        return;
+      }
+      if (e.target.closest('.now')) { commit(); return; }
+      if (e.target.closest('.skip')) { stop(); s.pending = null; s.skipped.add(current()); renderCard(true); }
+    });
+    mirror.addEventListener('click', (e) => {
+      const rm = e.target.closest('.rm');
+      if (!rm) return;
+      s.ratings.delete(Number(rm.dataset.i));
+      renderCard(false); renderMirror();
+    });
+    if (inv) inv.addEventListener('click', (e) => { if (e.target.closest('.pairbtn')) { s.linked = true; renderMirror(); } });
+    renderCard(false); renderMirror();
+  }
+  document.querySelectorAll('.page').forEach(mountEngine);
 
   const stage = document.getElementById('stage');
   document.querySelectorAll('.picker button[data-v]').forEach((b) => b.addEventListener('click', () => {
