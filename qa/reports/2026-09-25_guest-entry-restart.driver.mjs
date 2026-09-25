@@ -10,10 +10,11 @@
  * на 8 суток (срок гостя — 7). Перед касанием «Начать заново» часы возвращаются к настоящим: новый гость рождается с
  * настоящими метками, в базе стейджа не остаётся документа «из будущего».
  *
- * 🔑 ВОЗВРАТ — В НОВОЙ ВКЛАДКЕ (ЕВ-08). Человек возвращается через неделю, а шаг воронки занимается на визит вкладки
- * (`claimStep`, `sessionStorage`, `funnel.ts`): гость, рождённый в ЭТОЙ вкладке, уже занял `guest_start`. Первые два
- * прогона вели возврат в той же вкладке и видели 0 событий после касания — это наблюдение сохранено вторым заходом
- * (ЕВ-08н, «та же вкладка»): он печатает, занят ли шаг до касания и ушло ли событие, и в провалы не считается.
+ * 🔑 ДВА ВОЗВРАТА. Шаг воронки занимается на визит вкладки (`claimStep`, `sessionStorage`, `funnel.ts`): гость, рождённый
+ * в ЭТОЙ вкладке, уже занял `guest_start`. ЕВ-08 — возврат в новой вкладке (шаг свободен). ЕВ-08н — возврат в той же
+ * вкладке, где гость родился (вкладка прожила 7+ суток): до лечения событие съедалось — 0 после касания
+ * (`bugs/NEW_restart_guest_start_swallowed_in_same_tab.md`); лечение — `releaseStep('guest_start')` в `restartAsGuest`.
+ * Предусловие ЕВ-08н — шаг прежнего гостя занят ДО касания, иначе кейс лечения не судит.
  *
  * Превью — НЕ 4173 (порт выкатной двери): `npx vite preview --port 4183 --strictPort` (или `PREVIEW=<адрес>`).
  * Запуск из корня рабочего места: node qa/reports/2026-09-25_guest-entry-restart.driver.mjs
@@ -44,7 +45,6 @@ function check(id, name, ok, detail = '') {
   if (!ok) failures += 1;
   console.log(`${ok ? '  PASS' : '  FAIL'} ${id} · ${name}${detail ? ` — ${detail}` : ''}`);
 }
-const note = (id, text) => console.log(`  НАБЛ ${id} · ${text}`);
 
 /** Тело запроса posthog-js → события (как в драйвере мест входа). */
 function eventsOf(buffer) {
@@ -205,18 +205,18 @@ async function scenario(id, sameTab) {
 
   const before = [...new Set(sent.slice(0, from).map((e) => `${e.event}:${e.properties?.entry ?? '—'}`))].join(', ') || 'нет';
   if (sameTab) {
-    note(id, `шаг guest_start занят визитом вкладки ДО касания: ${JSON.stringify(takenBefore)} · до касания ушло: ${before}`);
-    note(id, `guest_start после касания: ${uuids.size} (entry ${JSON.stringify(p.entry)})`);
+    // Предусловие кейса: вкладка ДЕРЖИТ шаг прежнего гостя — иначе кейс не судит лечение (`releaseStep` в `restartAsGuest`).
+    check(id, 'та же вкладка: шаг guest_start прежнего гостя занят ДО касания', takenBefore === '1', `sessionStorage ${JSON.stringify(takenBefore)} · до касания ушло: ${before}`);
   } else {
     check(id, 'новая вкладка: шаг guest_start до касания НЕ занят', takenBefore === null, `sessionStorage ${JSON.stringify(takenBefore)} · до касания ушло: ${before}`);
-    check(id, 'guest_start после касания — ровно один (по uuid)', uuids.size === 1, `разных ${uuids.size}, отправок ${raw.length}`);
-    check(id, 'entry = restart', p.entry === 'restart', `пришло ${JSON.stringify(p.entry)}`);
-    check(id, 'env = stage', p.env === 'stage', `пришло ${JSON.stringify(p.env)}`);
-    const ours = Object.keys(p).filter((k) => !k.startsWith('$') && !['token', 'distinct_id'].includes(k));
-    const stray = ours.filter((k) => !PROPS.has(k));
-    check(id, 'ключи свойств — только из белого списка', stray.length === 0, stray.join(', ') || ours.join(', '));
-    check(id, 'в свойствах нет ни одного @', !JSON.stringify(p).includes('@'));
   }
+  check(id, 'guest_start после касания — ровно один (по uuid)', uuids.size === 1, `разных ${uuids.size}, отправок ${raw.length}`);
+  check(id, 'entry = restart', p.entry === 'restart', `пришло ${JSON.stringify(p.entry)}`);
+  check(id, 'env = stage', p.env === 'stage', `пришло ${JSON.stringify(p.env)}`);
+  const ours = Object.keys(p).filter((k) => !k.startsWith('$') && !['token', 'distinct_id'].includes(k));
+  const stray = ours.filter((k) => !PROPS.has(k));
+  check(id, 'ключи свойств — только из белого списка', stray.length === 0, stray.join(', ') || ours.join(', '));
+  check(id, 'в свойствах нет ни одного @', !JSON.stringify(p).includes('@'));
   const other = [...new Set(sent.slice(from).map((e) => e.event).filter((n) => n !== 'guest_start' && !n.startsWith('$')))];
   console.log(`       прочие события после касания: ${other.join(', ') || 'нет'}`);
   // Корень второго гостя — тоже его токеном: учётку удалит уборка, документ сиротой не останется.
@@ -230,7 +230,7 @@ try {
   console.log(`сборка ${PREVIEW} под именем ${BASE} · Firebase стейджа · PostHog перехвачен\n`);
   console.log('ЕВ-08 · истёкший гость возвращается в НОВОЙ вкладке → «Начать заново»:');
   await scenario('ЕВ-08', false);
-  console.log('\nЕВ-08н · наблюдение: возврат в ТОЙ ЖЕ вкладке, где гость родился (в провалы не считается):');
+  console.log('\nЕВ-08н · истёкший гость возвращается в ТОЙ ЖЕ вкладке, где родился → «Начать заново»:');
   await scenario('ЕВ-08н', true);
 } finally {
   await browser.close();

@@ -250,6 +250,24 @@ export function claimStep(step: FunnelStep): boolean {
 }
 
 /**
+ * Отпускает шаг, занятый этим визитом: следующий `claimStep` того же шага снова скажет `true`.
+ *
+ * Один законный повод — визит кончился, а вкладка осталась (`bugs/NEW_restart_guest_start_swallowed_in_same_tab.md`):
+ * «Начать заново» после истёкшей гостевой сессии отпускает мёртвого гостя и рождает нового той же вкладкой. Вкладка,
+ * прожившая 7+ суток (телефон, восстановленная сессия браузера), ещё держит `guest_start` прежнего гостя — и шаг нового
+ * гостя, `entry: 'restart'`, молча съедался. Выход из сессии — конец визита гостя; повтор шага без выхода по-прежнему молчит.
+ * Состав данных не меняется: то же событие с теми же свойствами уходит тому же получателю (Политика, п. 2.6, №082 В3).
+ * [TESTED: 2026-09-25 21:54 · ЕВ-08н живьём, юниты funnel.test.ts «Отпущенный шаг»; отчёт qa/reports/2026-09-25_restart-release-step.md]
+ */
+export function releaseStep(step: FunnelStep): void {
+  try {
+    sessionStorage.removeItem(`${SESSION_PREFIX}${step}`);
+  } catch {
+    // Хранилища нет — занимать было нечем, отпускать тоже.
+  }
+}
+
+/**
  * Куда уходит шаг. По умолчанию — в PostHog И в свой счётчик `space/funnel/days`.
  * `ownCounter: false` — только PostHog: так считает главная `ndimspace.app/` по слову владельца (интервью №078, В1 = Г):
  * «*только аналитикой постхог, мы свою БД фаерстор не грузим запросами*».
@@ -279,8 +297,10 @@ export function landingTrackOptions(entry: 'root' | 'landing'): TrackOptions {
  * [TESTED: 2026-09-25 · перехваченный guest_start несёт entry у шести дверей из семи (root · landing · catalog_card · signin ·
  *  test · direct); дверь restart живьём не пройдена; отчёт qa/reports/2026-09-25_guest-entry.md]
  * [TESTED: 2026-09-25 21:37 · дверь restart — ЕВ-08, истёкший гость вернулся в НОВОЙ вкладке: один guest_start, entry
- *  restart, env stage; в ТОЙ ЖЕ вкладке шаг уже занят визитом и событие не уходит (ЕВ-08н,
+ *  restart, env stage; в ТОЙ ЖЕ вкладке шаг был занят визитом и событие не уходило (ЕВ-08н,
  *  bugs/NEW_restart_guest_start_swallowed_in_same_tab.md); отчёт qa/reports/2026-09-25_guest-entry-restart.md]
+ * [TESTED: 2026-09-25 21:54 · после лечения (`releaseStep` в «Начать заново») ЕВ-08н — та же вкладка, один guest_start,
+ *  entry restart; отчёт qa/reports/2026-09-25_restart-release-step.md]
  */
 export async function track(step: FunnelStep, props: AnalyticsProps = {}, options: TrackOptions = {}): Promise<void> {
   if (!claimStep(step)) return;
