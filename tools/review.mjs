@@ -2107,7 +2107,8 @@ async function main() {
 		case 'queue':
 			if (!docPath) return usage(), 1;
 			cmdQueue(docPath);
-			return 0;
+			// Отказ очереди (вопрос без кнопок) ставит код 1 — не затирать его нулём.
+			return process.exitCode ?? 0;
 		case 'batch':
 			return await cmdBatch();
 		default:
