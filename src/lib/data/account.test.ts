@@ -18,7 +18,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { emailForLink, emailInLink, linkFork } from './account.ts';
+import { emailForLink, emailInLink, guestLetter, linkFork } from './account.ts';
 
 /** Человек, который уже вошёл своей почтой. */
 const signedIn = (email: string) => ({ isAnonymous: false, email });
@@ -139,4 +139,40 @@ test('старое письмо без адреса и вошедший без �
   assert.equal(linkFork(signedIn('nikolai@example.com'), null), null);
   assert.equal(linkFork(signedIn('nikolai@example.com'), '   '), null);
   assert.equal(linkFork({ isAnonymous: false, email: null }, 'maria@example.com'), null);
+});
+
+/*
+ * ─── РАЗВИЛКА Г2 «Там или здесь без оценок» (№096 В12 = Б) ───
+ * Стережёт: письмо гостя, открытое ТАМ, ГДЕ ЕГО НЕ ПРОСИЛИ, даёт экран Г2; там, где просили, — обычная привязка;
+ * вошедший человек идёт своей развилкой (тот же адрес — тихо собой, другой — Б3).
+ */
+
+test('🔴 Г2: письмо гостя в чистом браузере — экран «Оценки остались в другом браузере»', () => {
+  assert.deepEqual(linkFork(null, 'maria@example.com', true, null), { kind: 'guest-elsewhere', link: 'maria@example.com' });
+});
+
+test('Г2 и там, где сидит СВОЙ гость второго браузера — памяти письма у него нет', () => {
+  assert.deepEqual(linkFork(guest, 'maria@example.com', true, null), { kind: 'guest-elsewhere', link: 'maria@example.com' });
+});
+
+test('письмо гостя там, где его просили (память письма есть) — не Г2, обычная привязка', () => {
+  assert.equal(linkFork(guest, 'maria@example.com', true, 'maria@example.com'), null);
+  assert.equal(linkFork(null, 'maria@example.com', true, 'maria@example.com'), null);
+});
+
+test('письмо без пометки гостя — не Г2 (регресс двери входа без сессии)', () => {
+  assert.equal(linkFork(null, 'maria@example.com', false, null), null);
+  assert.equal(linkFork(guest, 'maria@example.com', false, null), null);
+});
+
+test('вошедший человек и письмо гостя: свой адрес — тихо собой, чужой — Б3, а не Г2', () => {
+  assert.equal(linkFork(signedIn('maria@example.com'), 'maria@example.com', true, null), null);
+  assert.equal(linkFork(signedIn('nikolai@example.com'), 'maria@example.com', true, null)?.kind, 'other-account');
+});
+
+test('пометка «письмо гостя» читается из адреса возврата и не путается с дверью гостя ?guest=', () => {
+  assert.equal(guestLetter('https://ndimspace.app/profile?email=a%40b.c&from=guest&mode=signIn'), true);
+  assert.equal(guestLetter('https://ndimspace.app/profile?email=a%40b.c&mode=signIn'), false);
+  assert.equal(guestLetter('https://ndimspace.app/profile?guest=1'), false);
+  assert.equal(guestLetter('не адрес'), false);
 });

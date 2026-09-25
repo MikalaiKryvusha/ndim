@@ -48,13 +48,15 @@
     onSendLink,
     onForkStay = () => {},
     onForkSwitch = () => {},
+    onForkHere = () => {},
   }: {
     lang: Lang;
     /**
      * Шаг двери почты: `doors` — три двери; дальше форма и её состояния; `linking` — идёт вход по ссылке;
-     * `fork-account` — экран Б3 «Спросить до профиля» (№096 В11 = В): ссылка из письма для другого адреса.
+     * `fork-account` — экран Б3 «Спросить до профиля» (№096 В11 = В): ссылка из письма для другого адреса;
+     * `fork-guest` — экран Г2 «Там или здесь без оценок» (№096 В12 = Б): письмо гостя открыто не там, где его просили.
      */
-    step: 'doors' | 'choose' | 'sending' | 'sent' | 'linking' | 'fork-account';
+    step: 'doors' | 'choose' | 'sending' | 'sent' | 'linking' | 'fork-account' | 'fork-guest';
     email?: string;
     /** Адрес, в чей аккаунт идёт вход по ссылке, — строка шага `linking` (№084 В1 = А). */
     linkEmail?: string | null;
@@ -69,6 +71,8 @@
     /** Экран Б3: «Остаться в аккаунте …» и «Войти в аккаунт …». */
     onForkStay?: () => void;
     onForkSwitch?: () => void;
+    /** Экран Г2: «Войти здесь без этих оценок». */
+    onForkHere?: () => void;
   } = $props();
 
   const t = {
@@ -131,6 +135,22 @@
     },
     forkStay: { ru: (email: string) => `Остаться в аккаунте ${email}`, en: (email: string) => `Stay signed in to the ${email} account` },
     forkSwitch: { ru: (email: string) => `Войти в аккаунт ${email}`, en: (email: string) => `Sign in to the ${email} account` },
+    /*
+     * ЭКРАН Г2 «ТАМ ИЛИ ЗДЕСЬ БЕЗ ОЦЕНОК» — интервью №096 В12 = Б, кадр `interview-085/Vg2.png` (макет
+     * `design/signin-link-forks-mockups.html`, вариант g2). Русские строки — дословно с утверждённого кадра; EN — [AI]
+     * черновик агента по портрету голоса, поправленный независимым проходом §7Б («these ratings» указывало бы на оценки
+     * ЭТОГО браузера — стало «those»; кальки «stayed», «stored», пассивные причастия заменены); ждёт вычитки владельцем.
+     */
+    forkGuestTitle: { ru: 'Оценки остались в другом браузере', en: 'Your ratings are still in the other browser' },
+    forkGuestLede: {
+      ru: 'Оценки, которые Вы поставили гостем, хранятся в браузере, где Вы их ставили. Откройте письмо в том браузере, и оценки перейдут в Ваш аккаунт в Пространстве NDim Space.',
+      en: 'The ratings you gave as a guest are saved in the browser where you gave them. Open the email in that browser, and the ratings will carry over to your NDim Space account.',
+    },
+    forkHere: { ru: 'Войти здесь без этих оценок', en: 'Sign in here without those ratings' },
+    forkGuestNote: {
+      ru: 'Оценки, поставленные гостем в том браузере, в аккаунт, созданный здесь, не перейдут.',
+      en: 'The ratings you gave as a guest in that browser will not carry over to an account you create here.',
+    },
   } as const;
 </script>
 
@@ -177,10 +197,12 @@
     <div class="inner">
       <span class="mark"><Brand size={46} /></span>
       <p class="eyebrow">{t.eyebrow[lang]}</p>
-      <h1>{step === 'fork-account' ? t.forkAccountTitle[lang] : t.title[lang]}</h1>
+      <h1>{step === 'fork-account' ? t.forkAccountTitle[lang] : step === 'fork-guest' ? t.forkGuestTitle[lang] : t.title[lang]}</h1>
       <!-- В макете V1 «Шаг двери» подзаголовка нет: пока идёт вход, звать оценивать не к чему. -->
       {#if step === 'fork-account'}
         <p class="lede fork">{t.forkAccountLede[lang](forkCurrent, forkLink)}</p>
+      {:else if step === 'fork-guest'}
+        <p class="lede">{t.forkGuestLede[lang]}</p>
       {:else if step !== 'linking'}<p class="lede">{t.lede[lang]}</p>{/if}
 
       <div class="doors">
@@ -224,6 +246,10 @@
                `data-fork` — устойчивый крючок приборов, как `data-door="guest"`: кнопку не ищут по тексту. -->
           <button type="button" class="d primary fork" data-fork="stay" onclick={onForkStay}>{t.forkStay[lang](forkCurrent)}</button>
           <button type="button" class="d ghost fork" data-fork="switch" onclick={onForkSwitch}>{t.forkSwitch[lang](forkLink)}</button>
+        {:else if step === 'fork-guest'}
+          <!-- Кадр Г2: одна дорога — войти здесь; цена названа строкой ПОД кнопкой, до нажатия. -->
+          <button type="button" class="d ghost" data-fork="here" onclick={onForkHere}>{t.forkHere[lang]}</button>
+          <p class="note">{t.forkGuestNote[lang]}</p>
         {:else if step === 'sent'}
           <p class="sent"><Icon name="envelope" size={16} /> {t.sentTitle[lang]}</p>
           <p class="note">{t.sentNote[lang]}</p>
