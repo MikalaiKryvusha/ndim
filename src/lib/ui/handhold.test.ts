@@ -78,20 +78,33 @@ test('лицо в верхнем углу выталкивает поп-ап в 
 
 test('карточка-мостик достраивает фразу ПО ФАКТУ наличия связей (Н3)', () => {
   const full = bridgeLine('ru', true);
-  assert.equal(full.lead, 'Это была демонстрация');
-  assert.equal(full.tail, ' — вот Ваши настоящие связи.');
-  assert.equal(full.draft, false, 'слова владельца плашкой не помечаются');
+  assert.equal(full.lead, 'Ваши Связи');
+  assert.equal(full.tail, ' — люди с наибольшей Похожестью на Вас.');
+  assert.equal(full.draft, true, 'строка агента обязана нести плашку до ответа владельца');
 
   const empty = bridgeLine('ru', false);
-  assert.equal(empty.tail, ' — здесь будут Ваши настоящие связи.');
+  assert.equal(empty.lead, 'Оцените фильмы, сериалы, книги и игры, которые Вы любите');
   assert.equal(empty.draft, true, 'новая строка обязана нести плашку до ответа владельца');
 });
 
 test('мостик не обещает пустоте того, чего в ней нет', () => {
-  // Пустому списку нельзя говорить «вот они» — это и было ложью макета а4.
+  // Пустому списку нельзя говорить «вот они» — это и было ложью макета а4: без Связей мостик зовёт оценивать.
   for (const lang of ['ru', 'en'] as const) {
-    assert.doesNotMatch(bridgeLine(lang, false).tail, /вот|here are/);
-    assert.match(bridgeLine(lang, true).tail, /вот|here are/);
+    assert.doesNotMatch(bridgeLine(lang, false).lead + bridgeLine(lang, false).tail, /вот|here are/);
+    assert.match(bridgeLine(lang, false).lead, /Оцените|Rate/);
+  }
+});
+
+test('мостик не называет персонажей теста ненастоящими — ни в одной ветке (слово владельца 2026-09-25)', () => {
+  // «Только не пишем, что они вымышленные!» — «демонстрация» и «настоящие связи» рядом с тестом говорили ровно это.
+  const forbidden = /демонстрац\p{L}*|demonstration|настоящ\p{L}*|\breal\b|вымышл\p{L}*|fictional/iu;
+  for (const lang of ['ru', 'en'] as const) {
+    for (const hasCards of [true, false]) {
+      for (const carried of [true, false]) {
+        const { lead, tail } = bridgeLine(lang, hasCards, carried);
+        assert.doesNotMatch(lead + tail, forbidden, `${lang} · карточки ${hasCards} · перенос ${carried}`);
+      }
+    }
   }
 });
 
