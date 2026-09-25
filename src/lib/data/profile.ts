@@ -190,15 +190,51 @@ export async function ensureSpaceExists(uid: Uid, language: 'ru' | 'en' = 'ru'):
   const store = db();
   const root = await getDoc(doc(store, 'users', uid));
   if (root.exists()) return;
+  await setDoc(doc(store, 'users', uid), emptyRootDoc(language));
+}
 
+/** Корень нового человека — один документ на обе дороги заведения (`ensureSpaceExists` и пакет моста). */
+function emptyRootDoc(language: 'ru' | 'en'): UserRootDoc {
   const now = Date.now();
-  const emptyRoot: UserRootDoc = {
+  return {
     visibility: {},
     settings: { language },
     time: { created: now, updated: now, lastSignIn: now },
     groupCount: 0,
   };
-  await setDoc(doc(store, 'users', uid), emptyRoot);
+}
+
+/**
+ * ПАКЕТ МОСТА ГЛАВНОЙ — оценки теста одной записью (2026-09-25).
+ *
+ * Замер моста на стейдже (`qa/reports/2026-09-25_bridge-timing.md`): после рождения гостя шли чтение корня, запись корня
+ * и цепочка записей оценок — ≈1,5 с последовательных запросов из ≈3,06 с моста. Одним пакетом `writeBatch` уходят: корень
+ * `users/{uid}` (только у ТОЛЬКО ЧТО рождённого гостя — `newRoot`; его корня быть не может, чтение не нужно), все оценки
+ * `points/{uid}/dims/{id}` и отметка «NDim ID обновлён» на точке — то же, что `ensureSpaceExists` + N × `saveRating`,
+ * но за один запрос. Правила пускают пакет: у корня условие «сам владелец», у оценки — «сам владелец и значение 0…10»,
+ * зависимостей между документами нет (`firestore.rules`, `users/{userId}` и `points/{ownerId}/dims/{dimId}`).
+ * Событие `rating_saved` уходит на КАЖДУЮ оценку, как у `saveRating`: число недели считает людей с ≥ 5 такими событиями.
+ * [NOT-TESTED]
+ */
+export async function saveRatingsBatch(
+  uid: Uid,
+  ratings: ReadonlyArray<readonly [string, number]>,
+  options: { readonly newRoot?: 'ru' | 'en' } = {},
+): Promise<void> {
+  if (ratings.length === 0) return;
+  for (const [, value] of ratings) assertValidRating(value);
+  const store = db();
+  const batch = writeBatch(store);
+  if (options.newRoot) batch.set(doc(store, 'users', uid), emptyRootDoc(options.newRoot));
+  for (const [dimId, value] of ratings) batch.set(doc(store, 'points', uid, 'dims', dimId), { value });
+  batch.set(doc(store, 'points', uid), dirtyStamp(), { merge: true });
+  await batch.commit();
+  afterMyRatingChanged();
+  void import('./analytics.ts')
+    .then(({ capture }) => {
+      for (let i = 0; i < ratings.length; i++) void capture('rating_saved');
+    })
+    .catch(() => {});
 }
 
 /**

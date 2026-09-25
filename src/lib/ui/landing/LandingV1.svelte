@@ -25,7 +25,7 @@
   import { catalogPath } from '$lib/content/catalog-hub';
   import {
     applyStar,
-    carryRatings,
+    carryAll,
     EARLY_TAP_SCRIPT,
     rankedRelations,
     ratingsToCarry,
@@ -33,7 +33,7 @@
     type DemoRatings,
   } from '$lib/ui/compat-demo';
   import { markBridgeCrossed, popupCorner, strongestPeer } from '$lib/ui/handhold';
-  import { saveTestRating } from '$lib/data/test-engine';
+  import { saveTestRatings } from '$lib/data/test-engine';
   import { landingTrackOptions, track, type AnalyticsEntry } from '$lib/data/funnel';
   import { endBoot, hasSession } from '$lib/data/session';
   import { landingDims, landingPeople, landingRatings, landingRelations } from '$lib/data/metrics';
@@ -124,9 +124,9 @@
     event.preventDefault();
     if (busy) return;
     busy = true;
-    // Первая оценка рождает гостя с местом входа этой двери; профиль по адресу увидит живую сессию
+    // Оценки рождают гостя с местом входа этой двери и ложатся ОДНИМ пакетом; профиль по адресу увидит живую сессию
     // и второго `guest_start` не пошлёт. Без оценок гостя заведёт сам профиль — как прежний мост.
-    const saved = await carryRatings(ratingsToCarry(mine), (id, value) => saveTestRating(lang, id, value, entry));
+    const saved = await carryAll(ratingsToCarry(mine), (entries) => saveTestRatings(lang, entries, entry));
     markBridgeCrossed(saved);
     location.replace(guestUrl);
   }

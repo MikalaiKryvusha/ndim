@@ -54,27 +54,25 @@ export function ratingsToCarry(mine: DemoRatings): Array<readonly [string, numbe
 }
 
 /**
- * ЗАПИСЬ ОЦЕНОК ДЕМО В NDIM ID ГОСТЯ — первая по одной (она рождает гостя), остальные разом.
+ * ЗАПИСЬ ОЦЕНОК ДЕМО В NDIM ID ГОСТЯ — все оценки ОДНИМ вызовом `saveAll` (пакет `saveRatingsBatch`, 2026-09-25).
+ * Прежде первая оценка писалась одна (она рождала гостя), остальные — после неё: замер моста на стейдже — ≈3,06 с, из
+ * них ≈1,5 с последовательных записей (`qa/reports/2026-09-25_bridge-timing.md`); пакет пишет всё одним запросом.
  *
  * Ждём записи не дольше `capMs`: мост уводит страницу, а уход обрывает незавершённую запись. Потолок
  * — образец острова двери карточки (`src/lib/door/island.js:201-212`, 8 с): медленная сеть не
  * запирает человека на лендинге. Ошибки не роняют мост — человек уходит внутрь и без оценок; число
- * записанных возвращается для отметки моста.
+ * записанных возвращается для отметки моста (пакет атомарен: все или ни одной).
  */
-export async function carryRatings(
+export async function carryAll(
   entries: ReadonlyArray<readonly [string, number]>,
-  save: (id: string, value: number) => Promise<unknown>,
+  saveAll: (entries: ReadonlyArray<readonly [string, number]>) => Promise<number>,
   capMs = 8000,
 ): Promise<number> {
   if (entries.length === 0) return 0;
   let saved = 0;
-  const work = (async () => {
-    const [first, ...rest] = entries;
-    await save(first[0], first[1]);
-    saved += 1;
-    const results = await Promise.allSettled(rest.map(([id, value]) => save(id, value)));
-    saved += results.filter((x) => x.status === 'fulfilled').length;
-  })();
+  const work = saveAll(entries).then((n) => {
+    saved = n;
+  });
   let timer: ReturnType<typeof setTimeout> | undefined;
   const cap = new Promise<void>((resolve) => {
     timer = setTimeout(resolve, capMs);

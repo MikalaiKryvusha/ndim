@@ -7,7 +7,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { applyStar, carryRatings, rankedRelations, ratingsToCarry, replayQueue } from './compat-demo.ts';
+import { applyStar, carryAll, rankedRelations, ratingsToCarry, replayQueue } from './compat-demo.ts';
 import { DEMO_ITEMS, DEMO_PERSONAS } from '../content/landing-demo.ts';
 
 const [HP, , MATRIX, , TITANIC, GOT] = DEMO_ITEMS.map((d) => d.id);
@@ -49,34 +49,35 @@ test('в NDim ID уезжают ровно поставленные оценки
   assert.deepEqual(ratingsToCarry({}), []);
 });
 
-test('перенос: первая оценка пишется ОДНА (она рождает гостя), остальные — после неё', async () => {
-  const log: string[] = [];
-  let firstDone = false;
-  const save = async (id: string) => {
-    if (log.length > 0) assert.ok(firstDone, 'вторая запись стартовала раньше, чем первая завершилась');
-    log.push(id);
-    await new Promise((r) => setTimeout(r, 5));
-    if (log.length === 1) firstDone = true;
+test('перенос: все оценки уходят ОДНИМ вызовом, в порядке списка демо', async () => {
+  const calls: Array<ReadonlyArray<readonly [string, number]>> = [];
+  const saveAll = async (e: ReadonlyArray<readonly [string, number]>) => {
+    calls.push(e);
+    return e.length;
   };
-  const saved = await carryRatings([[HP, 10], [MATRIX, 8], [GOT, 6]], save, 1000);
+  const saved = await carryAll([[HP, 10], [MATRIX, 8], [GOT, 6]], saveAll, 1000);
   assert.equal(saved, 3);
-  assert.equal(log[0], HP);
+  assert.equal(calls.length, 1, 'пакет один — не цепочка записей');
+  assert.deepEqual(calls[0].map(([id]) => id), [HP, MATRIX, GOT]);
 });
 
 test('перенос не запирает человека: зависшая сеть отпускает мост по потолку', async () => {
-  const hang = () => new Promise(() => {});
+  const hang = () => new Promise<number>(() => {});
   const started = Date.now();
-  const saved = await carryRatings([[HP, 10]], hang, 50);
+  const saved = await carryAll([[HP, 10]], hang, 50);
   assert.equal(saved, 0);
   assert.ok(Date.now() - started < 1000);
 });
 
-test('перенос не роняет мост на ошибке сети — возвращает, сколько записано', async () => {
-  const save = async (id: string) => {
-    if (id === MATRIX) throw new Error('сеть');
+test('перенос не роняет мост на ошибке сети — пакет атомарен: ни одной; без оценок — ноль без вызова', async () => {
+  let called = 0;
+  const fail = async () => {
+    called += 1;
+    throw new Error('сеть');
   };
-  assert.equal(await carryRatings([[HP, 10], [MATRIX, 8], [GOT, 6]], save, 1000), 2);
-  assert.equal(await carryRatings([], save, 1000), 0);
+  assert.equal(await carryAll([[HP, 10], [MATRIX, 8], [GOT, 6]], fail, 1000), 0);
+  assert.equal(await carryAll([], fail, 1000), 0);
+  assert.equal(called, 1, 'пустой перенос не зовёт запись');
 });
 
 test('касания до гидратации проигрываются теми же жестами; чужие id и мусор отбрасываются', () => {
