@@ -27,10 +27,14 @@
  *   4. HTML-комментарии — маркеры гидратации `<!--[-->`, `<!---->`;
  *   5. живые числа витрины главной — `<ul class="nums …">` (`LandingV1.svelte`, снимок `landing-metric.ts`: меняется
  *      на каждом боевом выкате без правки страницы);
- *   6. год копирайта `© 2026` — Google прямо называет его незначимым (на страницах карты его сегодня нет — правило на
+ *   6. виджет версий — `<div class="vers …">` (`src/lib/ui/Versions.svelte` на `/menu/about`: номер и время сборки
+ *      «Приложение 2.2 (2195) Собрано … в 22:44», версия сервера синхронизации). Меняется на КАЖДОЙ сборке — найдено
+ *      прогоном 2026-09-25 22:41–22:45 (`qa/reports/2026-09-25_sitemap-lastmod.driver.mjs`, ЛМ-02: две сборки без правок
+ *      дали разный отпечаток ровно у `/ru/menu/about` и `/en/menu/about`);
+ *   7. год копирайта `© 2026` — Google прямо называет его незначимым (на страницах карты его сегодня нет — правило на
  *      будущее);
- *   7. пробелы — схлопываются; сущности `&nbsp;` · `&amp;` и числовые — раскрываются.
- * Метка сборки живёт в `build/build-stamp.json`, а не в страницах, — исключать её не из чего.
+ *   8. пробелы — схлопываются; сущности `&nbsp;` · `&amp;` и числовые — раскрываются.
+ * Элементы 5 и 6 вырезаются по классу со счётом вложенности одноимённых тегов (внутри `.vers` — вложенные `<div>`).
  *
  * ⚠️ `RULES` — версия этих правил. Правка правил меняет отпечатки ВСЕХ страниц без правки содержания; реестр другой версии
  * поэтому читается как «не прочитался» (дат нет в этот выкат), а не как «всё изменилось» (всем сегодня).
@@ -43,8 +47,33 @@ export const RULES = 'sitemap-lastmod/v1';
 export const LEDGER_FILE = 'sitemap-lastmod.json';
 
 const LD_RE = /<script\b[^>]*\btype\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
-const NUMS_RE = /<ul\b[^>]*\bclass\s*=\s*["'](?:[^"']*\s)?nums(?:\s[^"']*)?["'][^>]*>[\s\S]*?<\/ul>/gi;
 const COPYRIGHT_RE = /©\s*\d{4}(?:\s*[–-]\s*\d{4})?/g;
+/** Служебные элементы — `[тег, класс]` (пункты 5 и 6 шапки). */
+const SERVICE = [['ul', 'nums'], ['div', 'vers']];
+
+/** Вырезает каждый элемент `<tag class="… token …">` вместе с содержимым, считая вложенные одноимённые теги. */
+export function stripByClass(html, tag, token) {
+  const open = new RegExp(`<${tag}\\b[^>]*\\bclass\\s*=\\s*["'](?:[^"']*\\s)?${token}(?:\\s[^"']*)?["'][^>]*>`, 'gi');
+  const any = new RegExp(`<(/?)${tag}\\b[^>]*>`, 'gi');
+  let out = '';
+  let from = 0;
+  let m;
+  while ((m = open.exec(html)) !== null) {
+    any.lastIndex = m.index;
+    let depth = 0;
+    let end = -1;
+    let t;
+    while ((t = any.exec(html)) !== null) {
+      depth += t[1] ? -1 : 1;
+      if (depth === 0) { end = any.lastIndex; break; }
+    }
+    if (end < 0) break; // незакрытый элемент — не трогаем остаток
+    out += `${html.slice(from, m.index)} `;
+    from = end;
+    open.lastIndex = end;
+  }
+  return out + html.slice(from);
+}
 
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" };
 function decode(text) {
@@ -66,11 +95,11 @@ export function significantParts(html) {
   const ld = [...html.matchAll(LD_RE)].map((m) => {
     try { return JSON.stringify(JSON.parse(m[1])); } catch { return m[1].trim(); }
   });
-  const clean = html
+  let clean = html
     .replace(/<script\b[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style\b[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(NUMS_RE, ' ');
+    .replace(/<!--[\s\S]*?-->/g, '');
+  for (const [tag, token] of SERVICE) clean = stripByClass(clean, tag, token);
   const title = squash(clean.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '');
   const metaTag = [...clean.matchAll(/<meta\b[^>]*>/gi)].map((m) => m[0]).find((t) => (attr(t, 'name') ?? '').toLowerCase() === 'description');
   const description = metaTag ? squash(attr(metaTag, 'content') ?? '') : '';

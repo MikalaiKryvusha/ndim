@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { buildFileOf, lastmodViolations, pageFingerprint, parseLedger, RULES, significantParts, sitemapPaths, stampLastmod, w3cNow } from './sitemap-lastmod.mjs';
 
 /** Страница по образцу собранной карточки каталога: служебное подставляется параметрами. */
-function page({ hash = 'a1b2c3', css = 'svelte-d710dx', chunk = 'DrtlQxDa', nums = '95', text = 'Японская видеоигра 1998 года.', title = '1080° Snowboarding', ld = 'VideoGame', href = '/ru/catalog', year = '2026' } = {}) {
+function page({ hash = 'a1b2c3', css = 'svelte-d710dx', chunk = 'DrtlQxDa', nums = '95', text = 'Японская видеоигра 1998 года.', title = '1080° Snowboarding', ld = 'VideoGame', href = '/ru/catalog', year = '2026', build = '2195 · 22:44' } = {}) {
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8" />
 <link href="../../_app/immutable/assets/0.${chunk}.css" rel="stylesheet">
 <link rel="modulepreload" href="../../_app/immutable/entry/start.${chunk}.js">
@@ -17,6 +17,7 @@ function page({ hash = 'a1b2c3', css = 'svelte-d710dx', chunk = 'DrtlQxDa', nums
 </head><body data-sveltekit-preload-data="hover"><div style="display: contents"><!--[--><main class="${css}">
 <h1 class="${css}">${title}</h1><p class="${css}">${text}&nbsp;Оценок: 3</p>
 <ul class="nums ${css}"><!--[--><li class="${css}"><b class="${css}">${nums}</b><span>человек в Пространстве</span></li><!--]--></ul>
+<section class="card ${css}"><div class="vers ${css}"><div class="ver ${css}"><span class="k">Приложение</span><span class="t">Собрано ${build}</span></div><div class="ver"><span>Сервер синхронизации</span></div></div><p>После версий</p></section>
 <a href="${href}" class="${css}">Каталог</a><footer>© ${year} NDim Space</footer><!--]--></main></div>
 <script>{ __sveltekit_${hash} = { base: new URL("../..", location).pathname.slice(0, -1) }; import("../../_app/immutable/entry/start.${chunk}.js"); }</script>
 </body></html>`;
@@ -24,8 +25,14 @@ function page({ hash = 'a1b2c3', css = 'svelte-d710dx', chunk = 'DrtlQxDa', nums
 
 test('🔴 пересборка без правок — тот же отпечаток: хеш сборки, классы Svelte, чанки, числа витрины, год копирайта', () => {
   const a = pageFingerprint(page());
-  const b = pageFingerprint(page({ hash: 'zz9y8x', css: 'svelte-1o4rq58', chunk: 'Qq77Xx00', nums: '96', year: '2027' }));
+  const b = pageFingerprint(page({ hash: 'zz9y8x', css: 'svelte-1o4rq58', chunk: 'Qq77Xx00', nums: '96', year: '2027', build: '2196 · 23:10' }));
   assert.equal(a, b);
+});
+
+test('🔴 виджет версий (номер и время сборки) вырезан целиком, со вложенными <div>, — текст после него цел', () => {
+  const p = significantParts(page());
+  assert.ok(!p.text.includes('Собрано') && !p.text.includes('Сервер синхронизации'), 'виджет версий исключён');
+  assert.ok(p.text.includes('После версий'), 'содержимое после виджета не съедено');
 });
 
 test('🔴 значимое меняет отпечаток: основной текст · JSON-LD · ссылка · заголовок', () => {
