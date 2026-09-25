@@ -574,7 +574,7 @@ try {
     const { context, page, errors } = await browserOf(browser, { w, h, theme: 'light' });
     await page.goto(`${BASE}/profile?as=none`);
     await page.locator('.hc .theme').waitFor({ timeout: 15000 }).catch(() => {});
-    // Касание ДО оживления страницы теряется: кнопка режима `live` переключает тему обработчиком Svelte (проба 20:56 в
+    // Касание ДО оживления страницы теряется: кнопка режима `live` переключает тему обработчиком Svelte (проба 20:55:26 в
     // скретчпаде: сразу после загрузки — light → light, через 2 с — light → dark). Кейс судит касание человека по живой
     // странице; окно до оживления — находка в отчёте, зона HeadControls.
     await page.waitForTimeout(2000);
