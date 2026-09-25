@@ -29,6 +29,7 @@ import {
   linkWithCredential,
   linkWithPopup,
   onAuthStateChanged,
+  onIdTokenChanged,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
   sendSignInLinkToEmail,
@@ -486,9 +487,11 @@ export function isLoginLink(href: string = location.href): boolean {
  *      Решение владельца — интервью №084 В1 = А, 2026-09-13; прежний запрет снят им же после
  *      проверки: подменённый адрес Firebase отвергает, цена «пересланная чужая ссылка» названа ему
  *      до ответа, защита — строка с адресом на экране «идёт вход».
- *      ⚠️ При живой сессии адрес из ссылки НЕ берётся, и это сознательно: «в браузере вошёл
- *      другой аккаунт» (№083 В2) и «гость в новом браузере» (№083 В3) — развилки владельца без
- *      ответа, поведение там остаётся прежним.
+ *      ⚠️ При живой сессии адрес из ссылки НЕ берётся, и это сознательно. «В браузере вошёл другой
+ *      аккаунт» владелец решил экраном Б3 (№096 В11 = В): его задаёт {@link linkFork} ДО этой функции,
+ *      и сюда вошедший с чужой ссылкой доходит, только выбрав «Войти в аккаунт …» — уже без сессии.
+ *      «Гость в новом браузере» (№096 В12 = Б, экран Г2) — вторая порция `plans/NEW_signin_link_forks_b3_g2.md`.
+ *      *(Поправка 2026-09-25: прежде здесь стояло «развилки владельца без ответа» — ответ дан 2026-09-25 08:42.)*
  *
  * ⚠️ Аноним сюда не попадает намеренно: у гостя почты нет вовсе, а если бы и была — гость это
  * не «человек, который уже вошёл», а временная сессия. Его путь — привязка (`linkWithCredential`).
@@ -517,6 +520,58 @@ export function emailForLink(
   if (user && !user.isAnonymous && user.email) return user.email;
   if (!user && fromLink) return fromLink;
   return null;
+}
+
+/**
+ * РАЗВИЛКА ДО ВХОДА ПО ССЫЛКЕ — какой вопрос задать человеку прежде профиля (`bugs/233`, интервью №096).
+ *
+ * `other-account` — экран Б3 «Спросить до профиля» (№096 В11 = В): в браузере вошёл человек с адресом, а ссылка
+ * из письма несёт ДРУГОЙ адрес (с 2026-09-13 адрес едет в ссылке, №084 В1 = А). Прежде профиля экран называет оба
+ * аккаунта и две дороги. Раньше вошедший молча оставался собой (Б1): его адрес предъявлялся Firebase и не подходил.
+ *
+ * FORK: options <сравнить адреса ДО Firebase | войти адресом вошедшего и ловить auth/invalid-email> · price of error
+ *   <второе прячет развилку за отказом и тратит запрос; сравнение с учётом регистра даст ложный вопрос самому себе> ·
+ *   consulted <`researches/69` §2.3 — FirebaseUI сверяет адреса и спрашивает при расхождении (`emailMismatch`); проба
+ *   `tools/probe-link-email-binding.mjs` — неудачная сверка код ссылки не сжигает> → адреса сравниваются ДО Firebase,
+ *   без учёта регистра и пробелов. Решение плана одобрено Менеджером 2026-09-25 (`plans/NEW_signin_link_forks_b3_g2.md`).
+ *
+ * `null` — вопроса нет: тот же аккаунт (тихий вход собой — идемпотентность `bugs/233`), вошедший без адреса, старое
+ * письмо без адреса (прежнее поведение), гость или пустая сессия. Функция чистая: развилка проверяется `node --test`.
+ * [TESTED: 2026-09-25 17:32 · ручной прогон на стенде dev-1, набор qa/suites/signin-link-forks.md ВС-01…ВС-06 pass (экран
+ *  Б3 обе темы × 390/1440 и EN, обе дороги, контроли «тот же аккаунт» и «чистый браузер»); мутант «всегда null» — красные
+ *  адресно; юниты account.test.ts 4 случая; отчёт qa/reports/2026-09-25_signin-link-forks.md]
+ */
+export type LinkFork = { readonly kind: 'other-account'; readonly current: string; readonly link: string } | null;
+
+export function linkFork(user: Pick<User, 'isAnonymous' | 'email'> | null, linkEmail: string | null): LinkFork {
+  if (!user || user.isAnonymous) return null;
+  const current = user.email?.trim();
+  const link = linkEmail?.trim();
+  if (!current || !link) return null;
+  return current.toLowerCase() === link.toLowerCase() ? null : { kind: 'other-account', current, link };
+}
+
+/**
+ * Вкладка с шагом «Мы отправили Вам письмо» узнаёт, что ссылку открыли в СОСЕДНЕЙ вкладке того же браузера
+ * (`bugs/233`: строка «Эту страницу можно не закрывать — она откроет Ваш профиль сама» не исполнялась, подтверждено
+ * живьём 2026-09-25 09:53).
+ *
+ * FORK: options <onIdTokenChanged | onAuthStateChanged | перечитывание при возврате фокуса> · price of error
+ *   <onAuthStateChanged молчит при привязке почты к гостю — uid тот же (это и был дефект); фокус не срабатывает, пока
+ *   вкладка в фоне> · consulted <исходник SDK `@firebase/auth` 1.13.3: `_onStorageEvent` при том же uid делает
+ *   `_assign` (isAnonymous, email) и `getIdToken()`, а `notifyAuthListeners` шлёт `idTokenSubscription` всегда и
+ *   `authStateSubscription` — только при смене uid> → `onIdTokenChanged`.
+ *
+ * `then` зовётся, как только в сессии браузера оказался вошедший человек (не гость): привязка почты к гостю в соседней
+ * вкладке или вход в аккаунт там же. Возвращает отписку.
+ * [TESTED: 2026-09-25 17:32 · ручной прогон на стенде dev-1, ВС-07 (гость, привязка в соседней вкладке) и ВС-08 (без сессии,
+ *  вход в соседней вкладке) pass, контроль ВС-09 (никто не вошёл — вкладка стоит) pass; мутант «подписка снята» — ВС-07/08
+ *  красные; отчёт qa/reports/2026-09-25_signin-link-forks.md]
+ */
+export function onSignedInElsewhere(then: () => void): () => void {
+  return onIdTokenChanged(devAuth(), (user) => {
+    if (user && !user.isAnonymous) then();
+  });
 }
 
 /**
