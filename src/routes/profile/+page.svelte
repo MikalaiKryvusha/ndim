@@ -1791,7 +1791,8 @@
             <h2>{t.account.doneTitle[lang]}</h2>
             <!-- «Оценки на месте» — только при оценках: судит то же число, что «Количество измерений» ниже. Пробел между
                  половинами — внутри выражения: ведущий пробел в `{#if}` Svelte срезает («создан.Ваши» — кадр прогона 22:06).
-                 [NOT-TESTED] -->
+                 [TESTED: 2026-09-25 22:14 · стенд слота 3, ВС-11…ВС-14 и ВС-18 (новичок и апгрейд гостя, 390/1440 × обе
+                  темы) 79/79, кадры глазами, мутанты W1/W2 адресно; qa/reports/2026-09-25_newcomer-welcome-truth.md] -->
             <p class="acc-lead">{t.account.doneBody[lang]}{ratedCount > 0 ? ` ${t.account.doneKept[lang]}` : ''}</p>
             <p class="hint">{t.account.doneNote[lang]}</p>
             <div class="guest-cta">

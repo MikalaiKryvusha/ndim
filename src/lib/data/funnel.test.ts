@@ -232,6 +232,13 @@ describe('Отпущенный шаг — «Начать заново» рожд
     assert.equal(claimStep('guest_start'), true);
   });
 
+  test('отпущенный landing_view занимается снова — функция читает шаг, а не зашитый guest_start (мутант М5 суда)', () => {
+    withStorage();
+    assert.equal(claimStep('landing_view'), true);
+    releaseStep('landing_view');
+    assert.equal(claimStep('landing_view'), true);
+  });
+
   test('отпускается ровно названный шаг — соседние по-прежнему заняты', () => {
     withStorage();
     claimStep('guest_start');
