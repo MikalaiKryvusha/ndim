@@ -77,7 +77,7 @@
     waitForSession,
     type LinkFork,
   } from '$lib/data/account';
-  import { entryOf, track } from '$lib/data/funnel';
+  import { entryOf, releaseStep, track } from '$lib/data/funnel';
   import { EVERYONE, FRIENDS } from '$lib/model/visibility';
   import type { Audience, ProfileProperty } from '$lib/model/visibility';
   import { GUEST_TTL_DAYS, isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
@@ -609,9 +609,13 @@
    * отпускаем (signOutUser чистит и кэш экранов — дыра приватности иначе), затем — тот же
    * путь, что с лендинга. Труд не переносится: его больше нет, об этом честно сказал экран.
    * Слово `restart` — место входа (`plans/105` Б2): это вернувшийся человек, и ряд должен это видеть.
+   * Выход из сессии — конец визита гостя: шаг `guest_start` прежнего гостя отпускается, иначе во вкладке, прожившей
+   * 7+ суток, шаг нового гостя молча съедался (`bugs/NEW_restart_guest_start_swallowed_in_same_tab.md`, выбор Менеджера — А).
+   * [NOT-TESTED]
    */
   async function restartAsGuest() {
     await signOutUser();
+    releaseStep('guest_start');
     location.href = '/profile?guest=restart';
   }
 
