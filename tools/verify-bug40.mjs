@@ -67,7 +67,7 @@ const LOOK = () => {
   const box = boot ? boot.getBoundingClientRect() : null;
   return {
     shield,
-    landing: !shield && /Добро пожаловать|Welcome to/.test(document.body.innerText || ''),
+    landing: !shield && /Знакомства по интересам|Meet people who share/.test(document.body.innerText || ''),
     path: location.pathname,
     covers: !!box && box.width >= innerWidth - 1 && box.height >= innerHeight - 1,
     sign: !!boot && !!boot.querySelector('svg circle'),

@@ -1,150 +1,142 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-// Первый e2e-сценарий NDim Space: лендинг (src/routes/+page.svelte).
-// Проверяет четыре обещания лендинга:
-//   1) пререндер — тексты владельца лежат в самом HTML, до всякого JS (SEO, GOAL.md);
-//   2) дефолт — светлая тема «Бумага» и русский язык (решение владельца 2026-07-11);
-//   3) переключатели темы и языка работают и переживают перезагрузку;
-//   4) кнопки ведут в живое приложение 1.x, консоль без ошибок.
-// Каждый тест получает чистый браузерный контекст — localStorage между тестами не течёт.
+// Новая V1 главной — `/`, `/ru`, `/en` (`plans/106`; эпик `plans/104`, фаза 2). Макет —
+// `design/new-landing-v1.html`, структура утверждена владельцем (№096 В5), заголовок — вариант А (№096 В15),
+// 12 вопросов и ответов (№096 В16). Здесь — страница целиком без теста на совместимость; тест — `demo.spec.ts`.
+// Кейсы набора — `qa/suites/new-landing-v1.md` (НЛ-01…НЛ-07).
+//
+// 🔄 2026-09-25: спека переписана тем же коммитом, что страница. Прежняя судила лендинг «Колонна»
+// («Добро пожаловать в Пространство NDim», три фичи, кнопки «Создать Аккаунт»/«Войти в Аккаунт») —
+// его больше нет. Могли ли старые проверки теперь проходить по неверной причине? Нет: они искали
+// тексты и классы, которых в новой разметке нет, и краснели бы; каждая проверка ниже стережёт то, что
+// заявляет, на новой разметке.
 
-const RU_TITLE = 'Добро пожаловать в Пространство NDim';
-const EN_TITLE = 'Welcome to the NDim Space';
-/** Кнопки лендинга ведут в сам продукт: вход без пароля живёт на экране профиля. */
-const APP_URL = '/profile';
+const RU_H1 = 'Знакомства по интересам в Пространстве NDim Space';
+const EN_H1 = 'Meet people who share your interests in NDim Space';
 
 // Фон <body> — объективный маркер применённой темы (переменная --bg в +layout.svelte)
-const LIGHT_BG = 'rgb(246, 248, 251)'; // #f6f8fb — светлая «Бумага»
-const DARK_BG = 'rgb(6, 11, 20)'; // #060b14 — тёмный киберпанк
+const LIGHT_BG = 'rgb(246, 248, 251)';
+const DARK_BG = 'rgb(6, 11, 20)';
 
-test('пререндер: русские тексты и скрипт темы лежат в сыром HTML', async ({ request }) => {
-	// Лендинг живёт на языковых адресах (`plans/39` шаг 2). Корень `/` с 2026-09-05 — ГЛАВНАЯ
-	// с содержанием (макет V5, `plans/81`), а не распознаватель: у него свой заголовок «NDim Space»
-	// и свои проверки, поэтому все тесты лендинга ходят на `/ru` явно, а не через корень.
+/**
+ * Консоль без ошибок — кроме ОДНОЙ, честной: `track()` пишет счётчик воронки в Firestore, и на localhost
+ * без эмуляторов (e2e гоняется при погашенном стенде, EXP-0027) браузер печатает «соединение отказано».
+ * Это деградация стенда, а не дефект страницы; любая другая ошибка роняет тест.
+ */
+function collectErrors(page: Page): string[] {
+	const errors: string[] = [];
+	page.on('console', (msg) => {
+		if (msg.type() === 'error' && !msg.text().includes('ERR_CONNECTION_REFUSED')) errors.push(msg.text());
+	});
+	page.on('pageerror', (err) => errors.push(String(err)));
+	return errors;
+}
+
+test('пререндер /ru: заголовок, тест на 10 объектов, 12 вопросов и скрипт темы — в сыром HTML', async ({ request }) => {
 	const res = await request.get('/ru');
 	expect(res.status()).toBe(200);
-	// В текстах лендинга есть неразрывные пробелы (U+00A0, «Пространство NDim» не рвётся
-	// при переносе). Браузерные матчеры Playwright нормализуют их сами, сырой HTML — нормализуем мы.
-	const html = (await res.text()).replace(/\u00a0|&nbsp;/g, ' ');
-	// Тексты владельца обязаны быть в статическом HTML — иначе индексация сломана
-	expect(html).toContain(RU_TITLE);
-	expect(html).toContain('Знакомства нового измерения');
-	// Инлайн-скрипт из app.html применяет тему/язык ДО отрисовки (без мигания)
-	expect(html).toContain('ndim-theme');
-	expect(html).toContain('ndim-lang');
-});
-
-test('пререндер: витрина людей стоит в HTML и НЕ выдумана', async ({ request }) => {
-	/*
-	 * Хвост `plans/05` (п. 2), полтора месяца стоявший ненаписанным, и приёмка `bugs/81`.
-	 *
-	 * Две вещи разом, и обе — в СЫРОМ HTML, до всякого JS:
-	 *   1. строка витрины ЕСТЬ (это `bugs/81`: раньше число приезжало из Firestore уже после
-	 *      показа лендинга, и в HTML его не было вовсе — ни для человека, ни для поисковика);
-	 *   2. число РАВНО снимку боевой метрики, умноженному на целое (это `bugs/07`: «лендинг
-	 *      врёт — 2 184 зашито в код»). Выдуманному литералу это равенство не удовлетворяет.
-	 *
-	 * Снимок импортируется из того же сгенерированного файла, что использует продукт, — иначе
-	 * тест сравнивал бы одну догадку с другой.
-	 */
-	const { PUBLIC_PEOPLE_SNAPSHOT } = await import('../src/lib/content/landing-metric.ts');
-
-	const res = await request.get('/ru');
 	const html = (await res.text()).replace(/ |&nbsp;/g, ' ');
-
-	/*
-	 * 🔴 СТРАЖ РАЗВЁРНУТ 2026-08-02, А НЕ УДАЛЁН (`EXP-0123`).
-	 *
-	 * Он краснел на ИСПРАВНОМ коде, потому что искал строку «С нами уже N человек», которой
-	 * больше нет: владелец сменил героя витрины на полосу из четырёх настоящих чисел
-	 * (`5 111 · 4 089 · 2 346 · 94`). Удалить такой тест значило бы тихо подогнать проверку под
-	 * новое поведение; правильный ход — навести его на то, что стало.
-	 *
-	 * Заодно проверка стала СТРОЖЕ. Прежде допускалась кратность снимку: витрина имела право
-	 * умножать (множитель ×30). Владелец его отменил (интервью №010, Р7: «делаем живую настоящую
-	 * цифру»), поэтому теперь требуется РАВЕНСТВО — любое расхождение с боевым снимком есть
-	 * выдумка, то есть `bugs/07`.
-	 */
-	const band = [
-		['измерений', PUBLIC_PEOPLE_SNAPSHOT.dims],
-		['оценок', PUBLIC_PEOPLE_SNAPSHOT.ratings],
-		['связей рассчитано', PUBLIC_PEOPLE_SNAPSHOT.relations],
-		['человек', PUBLIC_PEOPLE_SNAPSHOT.people],
-	] as const;
-
-	for (const [label, expected] of band) {
-		const shown = new RegExp(`<b[^>]*>\\s*([\\d\\s]+?)\\s*</b>\\s*</?[^>]*>?\\s*${label}`).exec(html);
-		expect(
-			shown,
-			`числа «${label}» нет в пререндеренном HTML — это дефект bugs/81 (витрина обязана быть в сыром HTML, до всякого JS)`,
-		).not.toBeNull();
-
-		const value = Number(shown![1]!.replace(/\s/g, ''));
-		expect(value).toBeGreaterThan(0);
-		expect(
-			value,
-			`витрина «${label}» показывает ${value}, а боевой снимок — ${expected}; ` +
-				'множителя больше нет (интервью №010, Р7), значит расхождение = выдуманное число (bugs/07)',
-		).toBe(expected);
-	}
-
-	// Исторический литерал из bugs/07 — при 331 живом человеке на лендинге стояло 2 184.
-	expect(html).not.toContain('2 184');
-	expect(html).not.toContain('2,184');
+	expect(html).toContain('Знакомства по интересам в');
+	expect(html).toContain('Знакомства нового измерения');
+	expect(html).toContain('Пройти тест на совместимость');
+	// Объекты теста — настоящие измерения каталога: их id стоят в разметке (звезда уедет под этим id).
+	const { DEMO_ITEMS } = await import('../src/lib/content/landing-demo.ts');
+	for (const d of DEMO_ITEMS) expect(html, `нет строки «${d.title.ru}»`).toContain(`data-dim="${d.id}"`);
+	expect((html.match(/<summary[^>]*>/g) ?? []).length).toBe(12);
+	// Инлайн-скрипт app.html применяет тему до отрисовки; ранний тап ловится до гидратации (`plans/106` Д6).
+	expect(html).toContain('ndim-theme');
+	expect(html).toContain('__ndimDemoQ');
+	// Слово владельца к герою V3: «не пишем, что они вымышленные».
+	expect(html.toLowerCase()).not.toContain('вымышлен');
 });
 
-test('дефолт: светлая тема «Бумага», русский язык, три фичи', async ({ page }) => {
+test('пререндер: числа Пространства стоят в HTML и равны снимку боя', async ({ request }) => {
+	// `bugs/81` (число в сыром HTML, не «на горячую») и `bugs/07` (число не выдумано): РАВЕНСТВО снимку.
+	const { PUBLIC_PEOPLE_SNAPSHOT } = await import('../src/lib/content/landing-metric.ts');
+	const html = (await (await request.get('/ru')).text()).replace(/ |&nbsp;/g, ' ');
+	const band = [
+		['объектов человеческой культуры', PUBLIC_PEOPLE_SNAPSHOT.dims],
+		['оценок поставлено', PUBLIC_PEOPLE_SNAPSHOT.ratings],
+		['человек в Пространстве', PUBLIC_PEOPLE_SNAPSHOT.people],
+		['связей рассчитано', PUBLIC_PEOPLE_SNAPSHOT.relations],
+	] as const;
+	for (const [label, expected] of band) {
+		const shown = new RegExp(`<b[^>]*>\\s*([\\d\\s]+?)\\s*</b>\\s*<span[^>]*>${label}`).exec(html);
+		expect(shown, `числа «${label}» нет в пререндеренном HTML (bugs/81)`).not.toBeNull();
+		expect(Number(shown![1]!.replace(/\s/g, '')), `«${label}» расходится со снимком боя (bugs/07)`).toBe(expected);
+	}
+});
+
+test('дефолт /ru: светлая тема, русский язык, заголовок А', async ({ page }) => {
 	await page.goto('/ru');
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 	await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(RU_TITLE);
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(RU_H1);
 	await expect(page.locator('body')).toHaveCSS('background-color', LIGHT_BG);
-	await expect(page.locator('.feat')).toHaveCount(3);
+	await expect(page.locator('.port img')).toHaveCount(3);
 });
 
 test('тема: переключение в тёмную и сохранение после перезагрузки', async ({ page }, testInfo) => {
 	await page.goto('/ru');
-	await page.screenshot({ path: testInfo.outputPath('landing-light.png'), fullPage: true });
-	// Кнопка подписана тем, КУДА переключит нажатие (aria-label)
 	await page.getByRole('button', { name: 'Тёмная тема' }).click();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 	await expect(page.locator('body')).toHaveCSS('background-color', DARK_BG);
 	await page.screenshot({ path: testInfo.outputPath('landing-dark.png'), fullPage: true });
-	// Выбор переживает перезагрузку: инлайн-скрипт app.html читает localStorage до отрисовки
 	await page.reload();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-	await expect(page.locator('body')).toHaveCSS('background-color', DARK_BG);
 });
 
-test('язык: EN переключается, переживает перезагрузку, RU возвращается', async ({ page }) => {
-	// Переключатель — ССЫЛКИ на языковые адреса (`plans/39` шаг 2): у каждого языка своя страница.
+test('язык: EN — ссылкой на /en, RU — обратно на /ru', async ({ page }) => {
 	await page.goto('/ru');
-	await page.getByRole('link', { name: 'EN' }).click();
+	await page.getByRole('link', { name: 'EN', exact: true }).click();
 	await expect(page).toHaveURL(/\/en$/);
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(EN_TITLE);
-	// Перезагрузка: язык держит АДРЕС (и память — мост записал выбор)
-	await page.reload();
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(EN_TITLE);
-	await page.getByRole('link', { name: 'RU' }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(EN_H1);
+	await page.getByRole('link', { name: 'RU', exact: true }).click();
 	await expect(page).toHaveURL(/\/ru$/);
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(RU_TITLE);
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(RU_H1);
 });
 
-test('кнопки ведут в живое приложение 1.x; консоль чистая', async ({ page }) => {
-	// Собираем ошибки консоли и необработанные исключения за всю сессию теста
-	const errors: string[] = [];
-	page.on('console', (msg) => {
-		if (msg.type() === 'error') errors.push(msg.text());
-	});
-	page.on('pageerror', (err) => errors.push(String(err)));
+test.describe('главная /: та же страница на русском, язык НЕ угадывается', () => {
+	test.use({ locale: 'en-US' });
 
+	test('англоязычный браузер с «en» в памяти видит на / русскую страницу и ссылку EN', async ({ page }) => {
+		// №096 В6 = Б: «язык выбирается переключателем вверху»; №058 В1 = А — «молчаливое угадывание языка» не берём.
+		await page.addInitScript(() => {
+			try {
+				localStorage.setItem('ndim-lang', 'en');
+			} catch {}
+		});
+		await page.goto('/');
+		await expect(page).toHaveURL(/\/$/);
+		await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText(RU_H1);
+		await expect(page.getByRole('link', { name: 'EN', exact: true })).toHaveAttribute('href', '/en');
+	});
+
+	test('контроль прибора: тот же человек на /en видит английский', async ({ page }) => {
+		await page.goto('/en');
+		await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText(EN_H1);
+	});
+});
+
+test('главная /: canonical — сама главная, hreflang на оба языка, x-default — английский', async ({ request }) => {
+	const html = await (await request.get('/')).text();
+	expect(html).toMatch(/<link rel="canonical" href="https:\/\/ndimspace\.app\/"/);
+	expect(html).toMatch(/hreflang="ru" href="https:\/\/ndimspace\.app\/ru"/);
+	expect(html).toMatch(/hreflang="en" href="https:\/\/ndimspace\.app\/en"/);
+	expect(html).toMatch(/hreflang="x-default" href="https:\/\/ndimspace\.app\/en"/);
+	expect(html).not.toMatch(/name="robots"[^>]*noindex/);
+});
+
+test('«Войти» ведёт на экран входа; подвал ведёт на тесты словами запросов; консоль чистая', async ({ page }) => {
+	const errors = collectErrors(page);
 	await page.goto('/ru');
-	await expect(page.getByRole('link', { name: 'Создать Аккаунт' })).toHaveAttribute('href', APP_URL);
-	await expect(page.getByRole('link', { name: 'Войти в Аккаунт' })).toHaveAttribute('href', APP_URL);
-	// Переключатели не должны сыпать ошибками (язык — ссылка на /en, plans/39 шаг 2)
+	await expect(page.getByRole('link', { name: 'Войти', exact: true })).toHaveAttribute('href', '/profile');
+	await expect(page.getByRole('link', { name: 'Тест на совместимость', exact: true })).toHaveAttribute('href', '/ru/test/compatibility');
+	await expect(page.getByRole('link', { name: 'Калькулятор любви', exact: true })).toHaveAttribute('href', '/ru/test/love');
 	await page.getByRole('button', { name: 'Тёмная тема' }).click();
-	await page.getByRole('link', { name: 'EN' }).click();
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText(EN_TITLE);
+	await page.waitForTimeout(500);
 	expect(errors).toEqual([]);
 });

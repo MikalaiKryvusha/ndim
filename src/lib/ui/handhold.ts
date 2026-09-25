@@ -108,8 +108,16 @@ export function popupCorner(faces: readonly FacePoint[], viewWidth: number): 'le
 export function bridgeLine(
   lang: Lang,
   hasCards: boolean,
+  carried = false,
 ): { lead: string; tail: string; draft: boolean } {
-  const lead = { ru: 'Это была демонстрация', en: 'That was a demonstration' }[lang];
+  /*
+   * 🆕 2026-09-25 (`plans/106` Д5, №096 В8 = А): демо новой V1 переносит звёзды в NDim ID гостя. Тому,
+   * чьи оценки уехали, «Это была демонстрация» больше не правда — его оценки теперь настоящие.
+   * `[AI]` Строка `carried` НОВАЯ и стоит на вычитке у владельца (интервью №097).
+   */
+  const lead = carried
+    ? { ru: 'Ваши оценки из теста на совместимость сохранены', en: 'Your ratings from the compatibility test are saved' }[lang]
+    : { ru: 'Это была демонстрация', en: 'That was a demonstration' }[lang];
   return hasCards
     ? {
         lead,
@@ -143,9 +151,13 @@ export function bridgeLine(
  */
 const BRIDGE_KEY = 'ndim-bridge-crossed';
 
-export function markBridgeCrossed(): void {
+/**
+ * `carried` — сколько оценок демо уехало в NDim ID гостя (`plans/106` Д5). Значение отметки —
+ * `'1'` без переноса (прежняя форма, её читают старые вкладки) или `'1:N'` с переносом.
+ */
+export function markBridgeCrossed(carried = 0): void {
   try {
-    sessionStorage.setItem(BRIDGE_KEY, '1');
+    sessionStorage.setItem(BRIDGE_KEY, carried > 0 ? `1:${carried}` : '1');
   } catch {
     /* хранилище недоступно — мостик просто не покажется */
   }
@@ -153,8 +165,19 @@ export function markBridgeCrossed(): void {
 
 export function bridgeCrossed(): boolean {
   try {
-    return sessionStorage.getItem(BRIDGE_KEY) === '1';
+    return (sessionStorage.getItem(BRIDGE_KEY) ?? '').startsWith('1');
   } catch {
     return false;
+  }
+}
+
+/** Сколько оценок демо уехало в NDim ID при переходе мостом; 0 — не уезжало ничего. */
+export function bridgeCarried(): number {
+  try {
+    const raw = sessionStorage.getItem(BRIDGE_KEY) ?? '';
+    const n = Number(raw.split(':')[1]);
+    return raw.startsWith('1:') && Number.isInteger(n) && n > 0 ? n : 0;
+  } catch {
+    return 0;
   }
 }

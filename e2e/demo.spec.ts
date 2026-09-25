@@ -1,111 +1,80 @@
 import { test, expect } from '@playwright/test';
 
-// Демо похожести на лендинге (src/lib/ui/SimilarityDemo.svelte, макет V5 «Синтез»).
-// Проверяет три обещания демо:
-//   1) пререндер — блок и посчитанные ядром числа лежат в сыром HTML (SEO + честность);
-//   2) живой пересчёт — движение звёзд меняет похожесть ровно так, как считает ядро;
-//   3) двуязычность — EN переименовывает персонажей (Алиса → Emma).
-// Эталонные числа сверены с настоящим ядром (node + src/lib/similarity):
-//   дефолт: Алиса 80/80/100, Макс 41/54/75, Настя 42/42/100;
-//   после «Спорт: 10»: Алиса 54, Настя 47, Макс 46.
+// Тест на совместимость новой V1 главной (`plans/106` Д3, Д5, Д6; кейсы НЛ-08…НЛ-14 набора
+// `qa/suites/new-landing-v1.md`). Объекты — настоящие измерения каталога (`landing-demo.ts`), похожесть
+// считает ядро; стартует пустым — горит только поставленное человеком (№096 В8 = А).
+//
+// 🔄 2026-09-25: спека переписана тем же коммитом, что демо. Прежняя судила демо V5 на выдуманных качествах
+// («Спорт», «Люблю тишину», стартовые оценки 80 % у Алисы) — его больше нет. Старые проверки не могли бы
+// пройти по неверной причине: они искали имена кнопок («Спорт: 10») и классы (`.axis`), которых в новой
+// разметке нет. Проверка «Назад после моста не возвращает на лендинг» перенесена без изменения смысла.
 
-test('пререндер: демо и числа ядра лежат в сыром HTML', async ({ request }) => {
-	// Лендинг — на языковых адресах (`plans/39` шаг 2). Прежде живые тесты ниже ходили через
-	// корень и заодно проверяли распознаватель; с 2026-09-05 корень — главная с содержанием
-	// (`plans/81`), демо на нём нет, поэтому все тесты идут на `/ru` явно.
-	const res = await request.get('/ru');
-	expect(res.status()).toBe(200);
-	const html = (await res.text()).replace(/ |&nbsp;/g, ' ');
-	expect(html).toContain('Попробуйте прямо здесь');
-	expect(html).toContain('Алиса');
-	// Похожесть с Алисой при стартовых оценках — 80%: посчитано ядром при пререндере
-	expect(html).toContain('80%');
-	expect(html).toContain('Персонажи вымышленные');
+const rows = '#compat-rows [data-dim]';
+
+test('старт пустой: ни одной горящей звезды, похожести нет, поп-апа нет', async ({ page }) => {
+	await page.goto('/ru');
+	await expect(page.locator(rows)).toHaveCount(10);
+	await expect(page.locator(`${rows} [data-star].on`)).toHaveCount(0);
+	await expect(page.locator('.who3 .sim')).toHaveText(['—', '—', '—']);
+	await expect(page.locator('.popup')).toHaveCount(0);
 });
 
-test('живой пересчёт: «Спорт: 10» меняет похожесть с 80% на 54%', async ({ page }) => {
+test('звезда пересчитывает карту, карточки и карточку для сторис — ядром, а не литералом', async ({ page }) => {
 	await page.goto('/ru');
-	const demo = page.getByRole('region', { name: 'Попробуйте прямо здесь' });
-	// ОБОСНОВАНИЕ ПРАВКИ (`plans/67` Ш3): с появлением итог-панели то же число живёт в демо
-	// ДВАЖДЫ — в карточке персонажа и в строке панели. Прежний `.first()` по всему блоку
-	// сегодня попадает в карточку и завтра попадёт куда угодно: он стал зависеть от порядка
-	// разметки, а не от того, что проверяет. Сужено до карточек — тест стережёт заявленное.
-	const cards = demo.locator('.personas');
-	// Дефолт: Алиса ближе всех с 80%
-	await expect(demo.getByText('Алиса · ближе всех')).toBeVisible();
-	await expect(cards.getByText('80%').first()).toBeVisible();
-	// Двигаем звезду: Спорт → 10. Ядро даёт Алисе 54% (см. эталон в шапке файла)
-	await page.getByRole('button', { name: 'Спорт: 10' }).click();
-	await expect(cards.getByText('54%').first()).toBeVisible();
-	// Алиса остаётся ближе всех (54 > 47 > 46), порядок не рвётся
-	await expect(demo.getByText('Алиса · ближе всех')).toBeVisible();
+	const matrix = page.locator(rows).filter({ hasText: 'Матрица' });
+	// Касание до гидратации ловит инлайн-очередь (отдельный тест ниже); здесь ждём живого Svelte.
+	await page.waitForFunction(() => (window as unknown as { __ndimDemoLive?: boolean }).__ndimDemoLive === true);
+	await matrix.getByRole('button', { name: 'Матрица: 9' }).click();
+	await expect(matrix.locator('.val')).toHaveText('9');
+	await expect(matrix.locator('[data-star].on')).toHaveCount(9);
+	// Одна оценка «Матрице»: Макс оценил 5 из 10 объектов — его Общность выше, он первый (юнит `compat-demo.test.ts`).
+	await expect(page.locator('.popup')).toContainText('Макс — Ваша самая сильная связь:');
+	const sims = await page.locator('.who3 .sim').allTextContents();
+	expect(sims.every((s) => /^\d+ %$/.test(s)), `проценты карточек: ${sims.join(' | ')}`).toBe(true);
+	await expect(page.locator('.story .s2')).toContainText('Моя самая сильная связь — Макс');
+	// Повторное касание той же звезды снимает оценку — похожести снова нет.
+	await matrix.getByRole('button', { name: 'Матрица: 9' }).click();
+	await expect(matrix.locator('.val')).toHaveText('');
+	await expect(page.locator('.who3 .sim')).toHaveText(['—', '—', '—']);
 });
 
-test('аватарки: кроп лица в карточке, тап открывает полный портрет, Esc закрывает', async ({ page }) => {
-	await page.goto('/ru');
-	const demo = page.getByRole('region', { name: 'Попробуйте прямо здесь' });
-	// В карточке — кроп лица (alice_face.png), картинка реально отдаётся
-	const face = demo.locator('img[src="/img/personas/alice_face.png"]');
-	await expect(face).toBeVisible();
-	const faceRes = await page.request.get('/img/personas/alice_face.png');
-	expect(faceRes.status()).toBe(200);
-	// Тап по аватару — оверлей с ПОЛНОЙ иллюстрацией
-	await demo.getByRole('button', { name: 'Алиса — увеличить портрет' }).first().click();
-	const overlay = page.getByRole('button', { name: 'Закрыть портрет' });
-	await expect(overlay.locator('img[src="/img/personas/alice.png"]')).toBeVisible();
-	// Esc закрывает
-	await page.keyboard.press('Escape');
-	await expect(overlay).not.toBeVisible();
+test('ранний тап: касание ДО гидратации горит сразу и доезжает до расчёта', async ({ page }) => {
+	// Придерживаем код приложения: страница стоит пререндеренной, Svelte не ожил (риск «а» `plans/104`).
+	let release!: () => void;
+	const gate = new Promise<void>((r) => (release = r));
+	await page.route('**/_app/immutable/**/*.js', async (route) => {
+		await gate;
+		await route.continue();
+	});
+	await page.goto('/ru', { waitUntil: 'domcontentloaded' });
+	const titanic = page.locator(rows).filter({ hasText: 'Титаник' });
+	await titanic.locator('[data-star="7"]').click();
+	// Горит сразу — красит инлайн-скрипт, а не Svelte.
+	await expect(titanic.locator('[data-star].on')).toHaveCount(7);
+	expect(await page.evaluate(() => (window as unknown as { __ndimDemoLive?: boolean }).__ndimDemoLive)).toBeFalsy();
+	release();
+	// После гидратации очередь проиграна: оценка в расчёте, поп-ап назвал самого похожего.
+	await expect(page.locator('.popup')).toContainText('Ваша самая сильная связь', { timeout: 15000 });
+	await expect(titanic.locator('.val')).toHaveText('7');
+	await expect(titanic.locator('[data-star].on')).toHaveCount(7);
 });
 
-test('язык: EN переименовывает персонажей и тексты демо', async ({ page }) => {
+test('мост: ссылка на гостя с местом входа, «Назад» с первого экрана продукта не возвращает на лендинг', async ({ page }) => {
 	await page.goto('/ru');
-	// Переключатель — ссылка на /en (`plans/39` шаг 2)
-	await page.getByRole('link', { name: 'EN' }).click();
-	const demo = page.getByRole('region', { name: 'Try it right here' });
-	await expect(demo.getByText('Emma · closest')).toBeVisible();
-	await expect(demo.getByText('The characters are fictional', { exact: false })).toBeVisible();
-});
-
-test('мост в гостя: кнопка приходит после звёзд, ведёт в гостя и не оставляет записи истории', async ({ page }) => {
-	// ОБОСНОВАНИЕ ПРАВКИ ЭТОГО ТЕСТА (`plans/67`, фаза 5 эпика 23). Прежняя редакция стерегла
-	// прямо противоположное поведение: «на localhost мост переключается в гостевой режим» —
-	// то есть ДОЛГ, из-за которого публичный посетитель упирался в стену входа (Ш1). Долг снят,
-	// и тест теперь стережёт три обещания моста вместо одного.
-	await page.goto('/ru');
-	const demo = page.getByRole('region', { name: 'Попробуйте прямо здесь' });
-	const bridge = demo.getByRole('link', { name: 'Смотреть больше' });
-
-	// Ш4: двери нет, пока человек не потрогал демо. Композиция владельца (А2/А4: «кнопка
-	// появляется после звёзд») и решение №009 В3: человека вносит внутрь его же действие.
-	await expect(bridge).toHaveCount(0);
-
-	// Касание звезды раньше гидратации теряется (`bugs/NEW_DONE_e2e_demo_bridge_flaky_on_mobile.md`: под нагрузкой 1 провал
-	// из 10, с паузой перед кликом 20 из 20), поэтому клик повторяется, пока ОЦЕНКА не станет 10 — и только она. Мост
-	// проверяется ОДИН раз после первого сработавшего касания: регрессия «мост приходит лишь со второго касания» краснеет
-	// (суд 2026-09-25 №2, Д5 — прежняя редакция повторяла клик до прихода моста и эту регрессию прощала). Ранний тап
-	// человека до гидратации — отдельный риск фазы 2 (`plans/104`, риски) и отдельный кейс её набора.
-	const sportValue = demo.locator('.axis', { hasText: 'Спорт' }).locator('.val');
-	await expect(async () => {
-		await page.getByRole('button', { name: 'Спорт: 10' }).click();
-		await expect(sportValue).toHaveText('10', { timeout: 1000 });
-	}).toPass({ timeout: 15000 });
-	await expect(bridge).toBeVisible();
-
-	// Ш1: адрес один для всех хостов — гостевая дверь, а не стена входа.
-	// Н4: разметка обязана остаться ССЫЛКОЙ, иначе умрут средний клик и «открыть в новой вкладке».
-	// 2026-09-25 (`plans/105` Б2): слово двери `landing` — место входа гостя для аналитики.
+	const bridge = page.getByRole('link', { name: 'Смотреть больше' });
+	// Ш1 `plans/67`: гостевая дверь, а не стена входа; Н4: разметка остаётся ССЫЛКОЙ (средний клик, новая вкладка).
+	// `plans/105` Б2: слово двери — место входа гостя для аналитики.
 	await expect(bridge).toHaveAttribute('href', '/profile?guest=landing');
-
-	// Ш5 и ворота фазы: «Назад» с первого экрана продукта НЕ возвращает на лендинг. Иначе
-	// лендинг молча вытолкнул бы гостя обратно внутрь (bugs/08.1 — и это его работа), то есть
-	// человек получил бы отскок. Дверь выбрана та, что не оставляет записи истории.
+	await page.waitForFunction(() => (window as unknown as { __ndimDemoLive?: boolean }).__ndimDemoLive === true);
 	await bridge.click();
 	await page.waitForURL('**/profile*');
 	await page.goBack().catch(() => null);
-	// Сравниваем ПУТЬ, а не строку адреса: регулярка по адресу здесь читалась бы хуже, чем
-	// то, что она проверяет, — а проверять надо ровно одно: это не лендинг.
 	const landed = new URL(page.url()).pathname;
 	expect(landed).not.toBe('/ru');
 	expect(landed).not.toBe('/en');
+});
+
+test('мост главной ведёт гостя со словом двери root', async ({ page }) => {
+	await page.goto('/');
+	await expect(page.getByRole('link', { name: 'Смотреть больше' })).toHaveAttribute('href', '/profile?guest=root');
 });

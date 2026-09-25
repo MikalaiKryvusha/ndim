@@ -132,7 +132,6 @@ function srcFilesWithCalls(dir = SRC) {
  */
 const LIVE_BY_NAME = new Map([
   ['smoke.mjs', 'набор SMOKE гоняется дверью выката и принимает --base — в живой контур направляется рукой'],
-  ['probe-bridge.mjs', 'зонд моста лендинга: по умолчанию localhost, но --base уводит его в бой'],
   ['verify-funnel-v2.mjs', 'приёмка воронки: ходит по слоту стенда, а пишет РЕАЛЬНЫЕ счётчики'],
 ]);
 
@@ -143,6 +142,8 @@ const LIVE_BY_NAME = new Map([
  * root-landing-view.md`, ГЛ-13): под меткой строка корня молчит по построению, и единственный
  * способ доказать, что НАСТОЯЩИЙ приход доезжает до PostHog, — прийти без метки. След прогона
  * при этом называется в шапке прибора и в отчёте, а не прячется.
+ * 🔄 2026-09-25 (`plans/106`): инлайн-строка корня и её проба сняты вместе с главной V5 — приход
+ * главной считает `track('landing_view')` новой V1; в списке остаётся проба отказа входа.
  *
  * 🔒 ПАРА С ДВУХ СТОРОН, и ослабить её односторонне нельзя: имя здесь + дословная строка
  * `UNMARKED_DECLARATION` в тексте прибора. Имя без строки — красный (список не даёт пропуск
@@ -151,7 +152,6 @@ const LIVE_BY_NAME = new Map([
  */
 export const UNMARKED_DECLARATION = 'МЕТКИ ПРИБОРА ЗДЕСЬ НЕТ НАМЕРЕННО';
 export const UNMARKED_BY_DESIGN = new Map([
-  ['probe-root-landing-view-live.mjs', 'проба слоя С: настоящий приход на главную обязан доехать до PostHog, под меткой строка молчит'],
   ['probe-signin-failed-live.mjs', 'след отказа входа: под меткой capture() молчит; отправка к PostHog перехватывается и наружу не уходит, только стейдж'],
 ]);
 
@@ -515,12 +515,12 @@ const SELFTEST_CASES = [
   {
     name: '🔑 прибор-человек: назван в UNMARKED_BY_DESIGN И объявляет строку — чисто',
     run: () =>
-      judgeProbe('probe-root-landing-view-live.mjs', `// ${UNMARKED_DECLARATION}\nimport { chromium } from 'playwright';\nconst BASE='https://ndim-stage.web.app';\nawait chromium.launch();\nconst ctx = await browser.newContext();\n`).length === 0,
+      judgeProbe('probe-signin-failed-live.mjs', `// ${UNMARKED_DECLARATION}\nimport { chromium } from 'playwright';\nconst BASE='https://ndim-stage.web.app';\nawait chromium.launch();\nconst ctx = await browser.newContext();\n`).length === 0,
   },
   {
     name: '🔴 назван в списке, но строки в тексте нет — красный (список не даёт пропуск молча)',
     run: () =>
-      judgeProbe('probe-root-landing-view-live.mjs', `import { chromium } from 'playwright';\nconst BASE='https://ndim-stage.web.app';\nawait chromium.launch();\nconst ctx = await browser.newContext();\n`).length === 1,
+      judgeProbe('probe-signin-failed-live.mjs', `import { chromium } from 'playwright';\nconst BASE='https://ndim-stage.web.app';\nawait chromium.launch();\nconst ctx = await browser.newContext();\n`).length === 1,
   },
   {
     name: '🔴 объявляет строку, но в списке не назван — красный (сам себя человеком не объявишь)',

@@ -24,6 +24,13 @@ import { expect, test } from '@playwright/test';
  *   · интервью №010, Р5 = В — у каждого языка свой префикс адреса.
  */
 
+/**
+ * Страница БЕЗ языка в адресе — личный экран. До 2026-09-25 здесь стоял корень `/`, но корень стал
+ * русской новой V1 с фиксированным языком (`ROOT_LANG`, `plans/106`) и больше не спрашивает ни память, ни
+ * браузер — правило «адрес → память → браузер» живёт на экранах без языкового адреса.
+ */
+const NO_LANG_PAGE = '/profile';
+
 /** Любая настоящая страница каталога — они собраны на обоих языках (`plans/36`). */
 const DIM_SLUG = '10-cloverfield-lane-js0baimt';
 
@@ -39,7 +46,7 @@ test.describe('пустая память: язык берётся у брауз�
 		test.use({ locale: 'ru-RU' });
 
 		test('русскоязычный человек без памяти получает РУССКИЙ', async ({ page }) => {
-			await page.goto('/');
+			await page.goto(NO_LANG_PAGE);
 			await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
 		});
 	});
@@ -48,7 +55,7 @@ test.describe('пустая память: язык берётся у брауз�
 		test.use({ locale: 'en-US' });
 
 		test('англоязычный человек без памяти получает АНГЛИЙСКИЙ', async ({ page }) => {
-			await page.goto('/');
+			await page.goto(NO_LANG_PAGE);
 			await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 		});
 	});
@@ -59,7 +66,7 @@ test.describe('пустая память: язык берётся у брауз�
 		test('немецкоязычный человек получает АНГЛИЙСКИЙ, а не пустоту', async ({ page }) => {
 			// «Иначе английский» — вторая половина ответа В1 = А. Проверка существует потому,
 			// что третий язык здесь легко было бы не обработать вовсе.
-			await page.goto('/');
+			await page.goto(NO_LANG_PAGE);
 			await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 		});
 	});
@@ -74,13 +81,13 @@ test.describe('память побеждает язык браузера', () =>
 
 	test('английский браузер + выбранный РУССКИЙ = русский', async ({ page }) => {
 		await page.addInitScript(remember('ru'));
-		await page.goto('/');
+		await page.goto(NO_LANG_PAGE);
 		await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
 	});
 
 	test('контроль прибора: тот же браузер БЕЗ памяти даёт английский', async ({ page }) => {
 		// Без этой пары проверка выше была бы зелёной и на коде, который всегда отдаёт «ru».
-		await page.goto('/');
+		await page.goto(NO_LANG_PAGE);
 		await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 	});
 });

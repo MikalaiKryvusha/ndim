@@ -46,6 +46,12 @@ const LANG_MODULE = join('src', 'lib', 'ui', 'lang.svelte.ts');
 const APP_HTML = join('src', 'app.html');
 /** Корень-распознаватель: `csr = false`, бандла нет — до-JS скрипт, модуль недоступен. */
 const ROOT_PAGE = join('src', 'routes', '+page.svelte');
+/**
+ * Страница главной — новая V1 (`plans/106`): корень рисует `LandingV1.svelte`, и ссылки на языки стоят
+ * в компоненте. Проверка «главная ведёт на каждый язык» судит то, что главная ОТДАЁТ, — файл корня вместе
+ * с его компонентом.
+ */
+const ROOT_VIEW = join('src', 'lib', 'ui', 'landing', 'LandingV1.svelte');
 /** Где типу `Lang` жить разрешено. */
 const TYPE_HOMES = [join('src', 'lib', 'ui', 'format.ts'), join('src', 'lib', 'content', 'langs.ts')];
 
@@ -261,7 +267,8 @@ console.log('\n— корень: одно плечо ПИСЬМО, языков�
   const langs = [...((text.get(join('src', 'lib', 'content', 'langs.ts')) ?? '')
     .match(/export const LANGS\s*=\s*\[([^\]]*)\]/)?.[1] ?? '')
     .matchAll(/'([a-z-]+)'/g)].map((m) => m[1]);
-  const missing = langs.filter((l) => !new RegExp(`href="/${l}"`).test(raw));
+  const shown = raw + (text.get(ROOT_VIEW) ?? '');
+  const missing = langs.filter((l) => !new RegExp(`href="/${l}"`).test(shown));
   check('главная ведёт на КАЖДЫЙ язык модуля ссылкой', langs.length >= 2 && missing.length === 0,
     missing.length === 0 ? langs.join(', ') : `нет ссылки на: ${missing.join(', ')}`);
 }

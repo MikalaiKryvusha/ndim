@@ -29,7 +29,9 @@ const ЗАПУЩЕН_НАПРЯМУЮ = Boolean(process.argv[1]) && import.meta.
 export const ЦЕПЬ = {
   shell: 'src/app.html',
   root: 'src/routes/+page.svelte',
-  landing: 'src/routes/[lang=lang]/+page.svelte',
+  // 🔄 2026-09-25 (`plans/106`): лендинг `/ru`, `/en` (и корень) рисует `LandingV1.svelte` — `hasSession()` и
+  // `endBoot()` живут там, а файл маршрута держит только адресную часть. Страж судит, КТО опускает щит.
+  landing: 'src/lib/ui/landing/LandingV1.svelte',
   session: 'src/lib/data/session.ts',
 };
 

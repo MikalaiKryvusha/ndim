@@ -502,14 +502,16 @@ const live = (kind: KindKey, page: number, lang: 'ru' | 'en') => {
 /** Сколько имён в описании: считаем ОТКРЫВАЮЩИЕ кавычки — по одной на имя, в обоих языках. */
 const namesIn = (desc: string) => (desc.match(/[«“]/g) ?? []).length;
 
-test('🔴 КЕЙС-06 · 07 · 08: граница ступени на `movie/8` ru, ТРИ значения порога', { skip: NO_BUILD }, () => {
+test('🔴 КЕЙС-06 · 07 · 08: граница ступени на `movie/12` ru, ТРИ значения порога', { skip: NO_BUILD }, () => {
   /*
    * Одна страница, три порога — и это тот самый юнит, «падающий при сдвиге длины на знак»,
    * которого потребовало условие 2 вердикта. Сдвинь шаблон на один знак в любую сторону, и хотя
    * бы одна из строк ниже покраснеет: при 155 текст перестанет влезать (уйдёт на ступень 2)
    * либо при 154 внезапно влезет (останется на ступени 1).
    */
-  const { facts, title } = live('movie', 8, 'ru');
+  // 🔄 2026-09-25: каталог вырос (+9) и голоса сдвинули страницы — `movie/8 ru` больше не стоит на границе
+  // (при 155 даёт одно имя, 147 знаков). Та же граница найдена перебором всех 178 описаний на `movie/12 ru`.
+  const { facts, title } = live('movie', 12, 'ru');
   const at = (limit: number) => hubMetaDesc(title, 'ru', facts, limit);
 
   // КЕЙС-06 — ориентир 155: ступень 1 (два имени), длина РОВНО 155.
@@ -520,29 +522,32 @@ test('🔴 КЕЙС-06 · 07 · 08: граница ступени на `movie/8`
   assert.equal(namesIn(at(156)), 2);
   assert.equal(at(156), at(155));
 
-  // КЕЙС-08 — ориентир 154: ступень 2 (одно имя), длина 135.
+  // КЕЙС-08 — ориентир 154: ступень 2 (одно имя), длина 138.
   assert.equal(namesIn(at(154)), 1);
-  assert.equal(chars(at(154)), 135);
+  assert.equal(chars(at(154)), 138);
 });
 
-test('КЕЙС-09: `video-game/10` en — верхняя граница ступени 2, ровно 155 с ОДНИМ именем', { skip: NO_BUILD }, () => {
-  const { facts, title } = live('video-game', 10, 'en');
-  const desc = hubMetaDesc(title, 'en', facts);
+test('КЕЙС-09: `movie/10` ru — верхняя граница ступени 2, ровно 155 с ОДНИМ именем', { skip: NO_BUILD }, () => {
+  // 🔄 2026-09-25: прежняя страница `video-game/10 en` сдвинулась ростом каталога; единственная страница с этим
+  // свойством в каталоге из 5153 записей — `movie/10 ru` (перебор всех 178 описаний).
+  const { facts, title } = live('movie', 10, 'ru');
+  const desc = hubMetaDesc(title, 'ru', facts);
   assert.equal(namesIn(desc), 1);
   assert.equal(chars(desc), 155);
 });
 
-test('КЕЙС-10: `video-game/14` — ступень 3: имён нет, номер страницы есть, 127 ru и 129 en', { skip: NO_BUILD }, () => {
-  const ru = live('video-game', 14, 'ru');
-  const en = live('video-game', 14, 'en');
+test('КЕЙС-10: `video-game/20` — ступень 3: имён нет, номер страницы есть, 127 ru и 129 en', { skip: NO_BUILD }, () => {
+  // 🔄 2026-09-25: `video-game/14` получила имена после роста каталога; ступень 3 на ОБОИХ языках — `video-game/20`.
+  const ru = live('video-game', 20, 'ru');
+  const en = live('video-game', 20, 'en');
   const dRu = hubMetaDesc(ru.title, 'ru', ru.facts);
   const dEn = hubMetaDesc(en.title, 'en', en.facts);
   assert.equal(namesIn(dRu), 0);
   assert.equal(namesIn(dEn), 0);
   assert.equal(chars(dRu), 127);
   assert.equal(chars(dEn), 129);
-  assert.match(dRu, /страница 14 из 21/);
-  assert.match(dEn, /page 14 of 21/);
+  assert.match(dRu, /страница 20 из 21/);
+  assert.match(dEn, /page 20 of 21/);
 });
 
 /** Все 89 страниц × 2 языка, собранные настоящей цепочкой, — материал КЕЙС-11 и КЕЙС-12. */
@@ -560,7 +565,7 @@ const allPages = () => {
   return out;
 };
 
-test('🔴 КЕЙС-11: 89 из 89 описаний различны на каждом языке, переполнений НОЛЬ, 155 · 121', { skip: NO_BUILD }, () => {
+test('🔴 КЕЙС-11: 89 из 89 описаний различны на каждом языке, переполнений НОЛЬ, 155 · 123', { skip: NO_BUILD }, () => {
   const rows = allPages();
   assert.equal(rows.length, 178, 'ожидались 89 страниц × 2 языка');
 
@@ -572,7 +577,8 @@ test('🔴 КЕЙС-11: 89 из 89 описаний различны на каж
 
   const lens = rows.map((r) => chars(r.desc));
   assert.equal(Math.max(...lens), 155);
-  assert.equal(Math.min(...lens), 121);
+  // 🔄 2026-09-25: самое короткое описание 121 → 123 — содержимое страниц сдвинул рост каталога (+9).
+  assert.equal(Math.min(...lens), 123);
 
   for (const lang of ['ru', 'en'] as const) {
     const side = rows.filter((r) => r.lang === lang);
@@ -598,9 +604,14 @@ test('🔴 КЕЙС-12: ступени 91 / 82 / 5, и третью занима
    * имён — самое слабое для поиска; если ступень 3 перевалит за десятую часть страниц, это повод
    * не правку константы делать, а пересматривать ориентир 155 (`plans/48`, `researches/57`).
    */
+  /*
+   * 🔄 Перемерено 2026-09-25: ступени **92 / 78 / 8 → 89 / 81 / 8**, сумма 178. Каталог вырос на 9 записей
+   * (фильмы +3, видеоигры +4, сериалы +2), и содержимое страниц сдвинулось; число страниц третьей ступени
+   * не выросло (8 из 178), но состав сменился — список ниже снят перебором всех описаний, поимённо.
+   */
   const rows = allPages();
-  assert.equal(rows.filter((r) => namesIn(r.desc) === 2).length, 92);
-  assert.equal(rows.filter((r) => namesIn(r.desc) === 1).length, 78);
+  assert.equal(rows.filter((r) => namesIn(r.desc) === 2).length, 89);
+  assert.equal(rows.filter((r) => namesIn(r.desc) === 1).length, 81);
   assert.equal(rows.filter((r) => namesIn(r.desc) === 0).length, 8);
 
   // Поимённо — иначе число держалось бы арифметикой, а не адресами: столько же ЛЮБЫХ страниц
@@ -609,12 +620,12 @@ test('🔴 КЕЙС-12: ступени 91 / 82 / 5, и третью занима
     rows.filter((r) => namesIn(r.desc) === 0).map((r) => r.where).sort(),
     [
       'movie/1 ru',
-      'movie/12 ru',
-      'movie/38 en',
-      'movie/42 en',
+      'movie/33 en',
       'video-game/1 ru',
-      'video-game/14 en',
-      'video-game/14 ru',
+      'video-game/15 en',
+      'video-game/17 en',
+      'video-game/20 en',
+      'video-game/20 ru',
       'video-game/4 ru',
     ],
   );

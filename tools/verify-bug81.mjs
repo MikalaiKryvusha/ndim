@@ -28,7 +28,9 @@
  *      индексации из `GOAL.md`).
  *   2. Покадровая rAF-трасса (метод EXP-0060): состояние строки на кадре 0 равно итоговому и
  *      НЕ меняется 240 кадров. До фикса трасса давала `[{f:0,v:null},{f:17,v:"4"}]`.
- *   3. Раскладка не прыгает: верхняя кромка блока `.feats` на кадре 0 и в конце совпадает.
+ *   3. Раскладка не прыгает: верхняя кромка блока `.faq` на кадре 0 и в конце совпадает.
+ *   🔄 2026-09-25 (`plans/106`): новая V1 главной — полоса чисел `.nums` (была `.stats`), блок под ней —
+ *      вопросы и ответы `.faq` (был `.feats`). Суть проверок та же, адреса — новой разметки.
  *   4. КОНТРОЛЬ САМОГО ПРИБОРА (обязателен по EXP-0082, иначе зелёное может быть от
  *      неисправности трассы): в отдельном заходе мы САМИ меняем текст строки через ~30 кадров
  *      и требуем, чтобы трасса это УВИДЕЛА. Не увидела — прибор слеп, и его зелёный ничего
@@ -87,11 +89,11 @@ const traceScript = (frames, mutateAtFrame) => `
     const seen = [];
     let f = 0;
     const value = () => {
-      const b = document.querySelector('.stats b');
+      const b = document.querySelector('.nums b');
       return b === null ? null : (b.textContent || '').replace(/\\s+/g, ' ').trim();
     };
     const featsTop = () => {
-      const el = document.querySelector('.feats');
+      const el = document.querySelector('.faq');
       return el === null ? null : Math.round(el.getBoundingClientRect().top);
     };
     const tick = () => {
@@ -99,7 +101,7 @@ const traceScript = (frames, mutateAtFrame) => `
       const last = seen[seen.length - 1];
       if (!last || last.v !== v) seen.push({ f, v, feats: featsTop() });
       if (${mutateAtFrame} > 0 && f === ${mutateAtFrame}) {
-        const b = document.querySelector('.stats b');
+        const b = document.querySelector('.nums b');
         if (b) b.textContent = 'КОНТРОЛЬ ПРИБОРА';
       }
       if (++f < ${frames}) requestAnimationFrame(tick);
@@ -122,7 +124,7 @@ try {
     const html = await raw.text();
     // Полоса чисел целиком обязана лежать в пререндере: ищем её по КЛАССУ, а не по фразе —
     // фраза меняется вместе с маркетингом, инвариант «числа в сыром HTML» не меняется никогда.
-    const strip = /<ul[^>]*class="[^"]*stats[^"]*"[\s\S]*?<\/ul>/.exec(html);
+    const strip = /<ul[^>]*class="[^"]*nums[^"]*"[\s\S]*?<\/ul>/.exec(html);
     check(strip !== null, 'полоса чисел витрины есть в СЫРОМ HTML (пререндер, до JS)');
     const rawNumbers = strip
       ? [...strip[0].matchAll(/<b[^>]*>\s*([\d\s  ]+)\s*<\/b>/g)].map((m) => Number(m[1].replace(/[\s  ]/g, '')))

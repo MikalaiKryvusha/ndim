@@ -294,27 +294,30 @@ try {
     });
 
     await step('NDIM-PUBLIC-003', 'Продающий интерактив отвечает на жест', async () => {
+      // 🔄 2026-09-25 (`plans/106`): тест на совместимость новой V1 — строки `#compat-rows [data-dim]`
+      // вместо `.demo .axis` демо V5. Стартует пустым: первая строка без оценки, жмём 9.
       await page.goto(`${BASE}/ru`, { waitUntil: 'domcontentloaded' });
       await rendered(page, 400);
-      const axis = page.locator('.demo .axis').first();
-      if ((await axis.count()) === 0) return { ok: false, detail: 'блока демо с измерениями на лендинге нет' };
-      const before = Number(await axis.locator('.val').innerText());
-      // Жать надо звезду, КОТОРАЯ НЕ ГОРИТ: нажатие на уже выбранную ничего не меняет, и первая
-      // редакция прибора красила исправное демо красным именно этим.
-      const target = before > 5 ? 2 : 9;
-      await axis.locator(`.stars button >> nth=${target - 1}`).click();
-      await page.waitForTimeout(500);
-      const after = Number(await axis.locator('.val').innerText());
+      const row = page.locator('#compat-rows [data-dim]').first();
+      if ((await row.count()) === 0) return { ok: false, detail: 'теста на совместимость на лендинге нет' };
+      const before = Number((await row.locator('.val').innerText()).trim() || 0);
+      // Жать надо звезду, КОТОРАЯ НЕ ГОРИТ: нажатие на уже выбранную снимает оценку.
+      const target = before === 9 ? 2 : 9;
+      await row.locator(`[data-star="${target}"]`).click();
+      await page.waitForTimeout(700);
+      const after = Number((await row.locator('.val').innerText()).trim() || 0);
+      const popup = await page.locator('.popup').count();
       await shot(page, '02-demo');
       return {
-        ok: after === target && after !== before,
-        detail: `оценка была ${before}, жали ${target}, стало ${after}`,
+        ok: after === target && after !== before && popup > 0,
+        detail: `оценка была ${before}, жали ${target}, стало ${after}; поп-ап самой сильной связи: ${popup > 0 ? 'есть' : 'нет'}`,
       };
     });
 
     await step('NDIM-PUBLIC-004', 'С лендинга внутрь без единой формы', async () => {
-      const door = page.locator('.demo a[href*="/profile"]').first();
-      if ((await door.count()) === 0) return { skip: true, detail: 'тропинки внутрь в демо-блоке нет (эпик plans/23)' };
+      // 🔄 2026-09-25 (`plans/106` Д5): мост «Смотреть больше» новой V1 сначала пишет оценку теста в NDim ID гостя.
+      const door = page.locator('.ndemo a.bridge').first();
+      if ((await door.count()) === 0) return { ok: false, detail: 'моста «Смотреть больше» в тесте на совместимость нет' };
       const href = await door.getAttribute('href');
       await door.click();
       await page.waitForURL(/\/profile/, { timeout: 20000 }).catch(() => {});

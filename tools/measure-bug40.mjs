@@ -64,7 +64,7 @@ for (const round of [1, 2]) {
           path: location.pathname,
           shield,
           // Приветствие лендинга видно, только если его ничем не накрыли.
-          landing: !shield && /Добро пожаловать|Welcome to/.test(document.body.innerText || ''),
+          landing: !shield && /Знакомства по интересам|Meet people who share/.test(document.body.innerText || ''),
           // Кольцо загрузки: карточка «Загрузка» (Loading.svelte) либо кольцо щита.
           // ⚠️ Щит лежит в разметке ВСЕГДА и прячется стилем, поэтому его кольцо нельзя
           // искать селектором — `querySelector` нашёл бы его и на погашенном щите.

@@ -23,7 +23,7 @@
    */
   import { onMount } from 'svelte';
   import { slide } from 'svelte/transition';
-  import { bridgeCrossed, bridgeLine } from '$lib/ui/handhold';
+  import { bridgeCarried, bridgeCrossed, bridgeLine } from '$lib/ui/handhold';
   import { lang as currentLang } from '$lib/ui/lang.svelte';
   import { MOTION } from '$lib/ui/motion';
 
@@ -37,8 +37,11 @@
    * это правильно, она принадлежит одному живому переходу, а не странице.
    */
   let crossed = $state(false);
+  // Уехали ли оценки демо в NDim ID (новая V1, `plans/106` Д5) — от этого зависит первая половина фразы.
+  let carried = $state(false);
   onMount(() => {
     crossed = bridgeCrossed();
+    carried = bridgeCarried() > 0;
   });
 
   /*
@@ -46,7 +49,7 @@
    * экрана список пуст по незнанию, а не по правде, и текст сменился бы у человека на глазах —
    * ровно то «на горячую», которое владелец запретил (`ideas/21` п. 10).
    */
-  const line = $derived(bridgeLine(lang, hasCards));
+  const line = $derived(bridgeLine(lang, hasCards, carried));
 </script>
 
 {#if crossed && ready}

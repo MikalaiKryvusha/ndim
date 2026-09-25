@@ -51,7 +51,11 @@
 					// щита (он поднимается на языковом лендинге). Считаем один раз — второе
 					// сравнение с тем же списком языков было бы второй копией списка в одном файле.
 					var langSeg = seg === 'ru' || seg === 'en' ? seg : null;
-					var l = langSeg !== null ? langSeg : localStorage.getItem('ndim-lang');
+					// Главная `/` — русская страница новой V1 (`ROOT_LANG` в `$lib/content/langs`,
+					// `plans/106`): язык атрибута обязан совпасть с её текстом, память и браузер
+					// здесь не спрашиваются. Совпадение копии стережёт юнит `langs.test.ts`.
+					var rootLang = location.pathname === '/' || location.pathname === '/index.html' ? 'ru' : null;
+					var l = langSeg !== null ? langSeg : rootLang !== null ? rootLang : localStorage.getItem('ndim-lang');
 					if (l !== 'ru' && l !== 'en') {
 						// Пустая память — спрашиваем браузер (интервью №024, В1 = А):
 						// просит русский, даём русский, иначе английский.

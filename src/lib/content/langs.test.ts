@@ -10,7 +10,9 @@
 import assert from 'node:assert/strict';
 import { test, afterEach } from 'node:test';
 
-import { langFromPath, langFromBrowser, swapLangInPath, isLang, LANGS, X_DEFAULT } from './langs.ts';
+import { readFileSync } from 'node:fs';
+
+import { langFromPath, langFromBrowser, swapLangInPath, isLang, LANGS, ROOT_LANG, X_DEFAULT } from './langs.ts';
 
 // ── АДРЕС ЗАДАЁТ ЯЗЫК ────────────────────────────────────────────────────────────────────────
 
@@ -119,4 +121,14 @@ test('битый или пустой navigator не роняет решение'
   assert.equal(langFromBrowser(), 'en');
   fakeNavigator(42, [null, 7]);
   assert.equal(langFromBrowser(), 'en');
+});
+
+// ── ЯЗЫК ГЛАВНОЙ: константа и её копия в инлайн-скрипте app.html (plans/106) ─────────────────
+
+test('язык главной — один из языков, и копия в app.html совпадает с ROOT_LANG', () => {
+  assert.ok(isLang(ROOT_LANG));
+  const html = readFileSync(new URL('../../app.html', import.meta.url), 'utf8');
+  const copy = /var rootLang = [^?]+\? '([a-z]+)' : null;/.exec(html);
+  assert.ok(copy, 'в app.html нет строки rootLang — язык главной атрибутом не ставится');
+  assert.equal(copy[1], ROOT_LANG, 'app.html ставит главной другой язык, чем её текст');
 });

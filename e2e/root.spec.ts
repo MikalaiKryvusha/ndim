@@ -8,9 +8,11 @@ import { test, expect } from '@playwright/test';
 // (`bugs/NEW_root_boot_shield_never_drops`). Свежий браузер без маркера этого не показывает —
 // поэтому смоуки и были зелёными.
 
+// 🔄 2026-09-25 (`plans/106`): на корне — новая V1 лендинга (№096 В6 = Б), страница гидрируется. Заголовок
+// сменился вместе с ней; щит, маркер и письмо — те же проверки: дверь до всякого JS осталась в корне.
 test('корень: главная отдаётся с содержанием, открыта поиску, щит без маркера не поднимается', async ({ page }) => {
 	await page.goto('/');
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText('NDim Space');
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Знакомства по интересам в Пространстве NDim Space');
 	await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(0);
 	await expect(page.locator('html')).not.toHaveAttribute('data-booting', '');
 	await expect(page.locator('#boot')).toBeHidden();
