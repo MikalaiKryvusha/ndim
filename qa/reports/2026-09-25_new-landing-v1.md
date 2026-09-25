@@ -30,6 +30,11 @@
     `--path /ru` (вывод — `test-results/new-landing-v1-stage/run-ru.json`);
   - 16:29 — `node tools/shoot-new-landing.mjs --base https://ndim-stage.web.app --out test-results/new-landing-v1-stage-frames`;
   - 16:30 — чтение PostHog: `hogql` «события `landing_view` · `demo_touch` · `guest_start`, `env = stage`, 15 минут».
+    *Поправка 2026-09-25 16:46: окно «с начала прогона» драйвер передавал строкой UTC без пояса, PostHog читал её в
+    +03:00 — фактическое окно было на три часа шире названного (класс `bugs/NEW_week_number_window_labelled_utc_is_moscow.md`).
+    Перечитано с явным поясом — окно 16:00–16:45 +03:00 (`toDateTime('2026-09-25 13:00:00', 'UTC')` …
+    `'13:45:00'`): ровно 6 событий — `demo_touch` → `landing_view` → `guest_start` с `/` (16:25:52–55, `entry = root`)
+    и с `/ru` (16:28:11–14, `entry = landing`). Вывод НЛ-19 не меняется.*
 - **Проверок:** 20 кейсов набора — пройдено 20, провалено 0. Руками на стенде и стейдже — 16 (НЛ-01, 02, 03, 06, 07,
   08, 09, 10, 12, 13, 14, 15, 16, 17, 19, 20); только e2e на собранном артефакте — 4 (НЛ-04 тема, НЛ-05 числа, НЛ-11
   ранний тап, НЛ-18 ссылка из письма).
