@@ -263,6 +263,44 @@ export function attemptSeed(): number {
 }
 
 /**
+ * ПОРЯДОК ПОПЫТКИ: первая вещь — `pool[seed mod n]`, остальные — перетасовка той же затравкой.
+ *
+ * Первую вещь до оживления страницы выбирает ранний встроенный скрипт (`testFirstEarlyScript`):
+ * ему хватает одного деления, алгоритм перетасовки в нём не повторяется. Поэтому карточка видна с
+ * первой отрисовки и после оживления остаётся той же вещью (находка 1 суда V4: прежде карточка
+ * стояла пустой до оживления — ≈0,45 с на медленном телефоне, без JS навсегда). Первая вещь по
+ * затравке — любая из пула, дюжина по-прежнему случайная (№098 В2 «*рандомом*»).
+ */
+export function attemptOrder(pool: readonly string[], seed: number): string[] {
+  if (pool.length === 0) return [];
+  const i = (seed >>> 0) % pool.length;
+  return [pool[i], ...shuffledIds([...pool.slice(0, i), ...pool.slice(i + 1)], seed)];
+}
+
+/** Где ранний скрипт оставляет затравку для оживлённой страницы (свойство `window`). */
+export const EARLY_SEED_KEY = '__ndimTestSeed';
+
+/**
+ * РАННИЙ ВСТРОЕННЫЙ СКРИПТ КАРТОЧКИ ТЕСТА — исполняется при разборе HTML, до первой отрисовки.
+ *
+ * Пререндер несёт текстовые лица всех `n` вещей пула (`.pre[data-i]`), видно лицо 0. Скрипт берёт
+ * затравку, кладёт её в `window[EARLY_SEED_KEY]` и стилем показывает лицо `seed mod n` — то же,
+ * что `attemptOrder` поставит первым. Пришёл по личной ссылке пары (`?pair=`) — его первая вещь
+ * известна только после чтения ссылки, и лица прячутся до оживления, как прежде.
+ * Без JS скрипта нет — видно лицо 0, карточка не пустая.
+ */
+export function testFirstEarlyScript(n: number): string {
+  const count = Math.max(1, Math.floor(n));
+  return (
+    `(function(){try{var h=document.head,st=document.createElement('style');` +
+    `if(/[?&]pair=/.test(location.search)){st.textContent='.qcard .pre,.qcard .prestars{visibility:hidden}';h.appendChild(st);return}` +
+    `var s=window.${EARLY_SEED_KEY};if(typeof s!=='number'){s=crypto.getRandomValues(new Uint32Array(1))[0];window.${EARLY_SEED_KEY}=s}` +
+    `st.textContent='.qcard .pre{display:none!important}.qcard .pre[data-i="'+(s%${count})+'"]{display:block!important}';` +
+    `h.appendChild(st)}catch(e){}})();`
+  );
+}
+
+/**
  * Подпись вида для ЛИЦА продукта — каноническая, а не сырое значение каталога.
  *
  * В поле `type` живёт грязь, замеренная шагом 0 `plans/48`: регистр вразнобой («фильм» и

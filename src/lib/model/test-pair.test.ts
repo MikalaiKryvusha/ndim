@@ -17,6 +17,7 @@ import {
   pairQueueIds,
   encodePairSet,
   decodePairSet,
+  poolMark,
   DIFFER_FROM,
   MAX_PAIR_ANSWERS,
   PAIR_SET_PARAM,
@@ -122,8 +123,8 @@ test('🔑 код набора в ссылке: туда и обратно — �
   const { answers } = firstAttempt(31337, 2);
   const fromPair = pairQueueIds(TEST_POOL, new Set(Object.keys(answers)));
   const code = encodePairSet(TEST_POOL, Object.keys(answers));
-  assert.equal(code.length, 12, 'символ на вещь');
-  assert.match(code, /^[0-9a-z]+$/, 'код — адресная строка без экранирования');
+  assert.equal(code.length, 3 + 1 + 12, 'метка пула, точка, символ на вещь');
+  assert.match(code, /^[0-9a-z]{3}\.[0-9a-z]+$/, 'код — адресная строка без экранирования');
   const decoded = decodePairSet(TEST_POOL, code);
   assert.ok(decoded !== null);
   assert.deepEqual(pairQueueIds(TEST_POOL, decoded), fromPair, 'код ссылки и пара дают разные очереди');
@@ -132,8 +133,19 @@ test('🔑 код набора в ссылке: туда и обратно — �
 test('код набора — внешние данные: чужие символы и номера вне пула выпадают, пусто — «подсказки нет»', () => {
   assert.equal(decodePairSet(TEST_POOL, null), null);
   assert.equal(decodePairSet(TEST_POOL, ''), null);
-  assert.equal(decodePairSet(TEST_POOL, '!!—z'), null, 'z = 35 — вне пула из 20');
-  assert.deepEqual([...(decodePairSet(TEST_POOL, '0!j') ?? [])], [TEST_POOL[0], TEST_POOL[19]]);
+  const mark = poolMark(TEST_POOL);
+  assert.equal(decodePairSet(TEST_POOL, `${mark}.!!—z`), null, 'z = 35 — вне пула из 20');
+  assert.deepEqual([...(decodePairSet(TEST_POOL, `${mark}.0!j`) ?? [])], [TEST_POOL[0], TEST_POOL[19]]);
+});
+
+test('🔑 код с меткой ДРУГОГО пула или без метки не подсказывает ничего — пул сменился между выкатами', () => {
+  const code = encodePairSet(TEST_POOL, [TEST_POOL[0], TEST_POOL[1]]);
+  assert.deepEqual([...(decodePairSet(TEST_POOL, code) ?? [])], [TEST_POOL[0], TEST_POOL[1]], 'свой пул — свой набор');
+  // Пул сменился: те же номера указали бы на другие вещи — код молчит.
+  const nextPool = [TEST_POOL[1], TEST_POOL[0], ...TEST_POOL.slice(2)];
+  assert.notEqual(poolMark(nextPool), poolMark(TEST_POOL), 'перестановка пула меняет метку');
+  assert.equal(decodePairSet(nextPool, code), null);
+  assert.equal(decodePairSet(TEST_POOL, code.slice(code.indexOf('.') + 1)), null, 'код без метки');
   assert.throws(() => encodePairSet(Array.from({ length: 37 }, (_, i) => `d${i}`), ['d0']), /длиннее 36/);
   assert.equal(PAIR_SET_PARAM, 'set');
 });
