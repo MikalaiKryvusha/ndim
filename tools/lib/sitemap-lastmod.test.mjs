@@ -1,7 +1,7 @@
 // Юниты правдивого `<lastmod>` (`tools/lib/sitemap-lastmod.mjs`, план `plans/NEW_sitemap_truthful_lastmod.md`, FORK Б).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 
 import { buildFileOf, lastmodViolations, pageFingerprint, parseLedger, RULES, SERVICE, significantParts, sitemapPaths, stampLastmod, stripByClass, w3cNow } from './sitemap-lastmod.mjs';
 
@@ -71,6 +71,21 @@ test('🔴 служебные классы стоят в НАСТОЯЩИХ ко
       const cut = stripByClass(source, tag, token);
       assert.ok(cut.length < source.length, `${file}: <${tag} class="${token}"> не найден или не закрыт — исключение молчит`);
     }
+  }
+});
+
+test('🔴 список компонентов служебного класса ЗАМКНУТ: новый компонент с тем же классом краснеет здесь', () => {
+  // Суд lastmod3 (2026-09-26): юнит выше стережёт только перечисленные файлы. Новый `<ul class="nums">` в другом
+  // компоненте молча вырезался бы из отпечатка, и его переименование никто бы не поймал (класс twins-missed, EXP-0333).
+  const svelte = readdirSync('src', { recursive: true })
+    .map((p) => `src/${String(p).replaceAll('\\', '/')}`)
+    .filter((p) => p.endsWith('.svelte'));
+  for (const [tag, token, files] of SERVICE) {
+    const found = svelte.filter((file) => {
+      const source = readFileSync(file, 'utf8');
+      return stripByClass(source, tag, token).length < source.length;
+    });
+    assert.deepEqual(found.sort(), [...files].sort(), `<${tag} class="${token}">: компоненты в src и список SERVICE разошлись`);
   }
 });
 
