@@ -1,8 +1,9 @@
 // Юниты правдивого `<lastmod>` (`tools/lib/sitemap-lastmod.mjs`, план `plans/NEW_sitemap_truthful_lastmod.md`, FORK Б).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
-import { buildFileOf, lastmodViolations, pageFingerprint, parseLedger, RULES, significantParts, sitemapPaths, stampLastmod, w3cNow } from './sitemap-lastmod.mjs';
+import { buildFileOf, lastmodViolations, pageFingerprint, parseLedger, RULES, SERVICE, significantParts, sitemapPaths, stampLastmod, stripByClass, w3cNow } from './sitemap-lastmod.mjs';
 
 /** Страница по образцу собранной карточки каталога: служебное подставляется параметрами. */
 function page({ hash = 'a1b2c3', css = 'svelte-d710dx', chunk = 'DrtlQxDa', nums = '95', text = 'Японская видеоигра 1998 года.', title = '1080° Snowboarding', ld = 'VideoGame', href = '/ru/catalog', year = '2026', build = '2195 · 22:44' } = {}) {
@@ -51,6 +52,29 @@ test('части отпечатка видны по отдельности: сл
   assert.ok(!p.text.includes('человек в Пространстве'), 'витрина главной исключена');
   assert.ok(!p.text.includes('__sveltekit'), 'скрипты сборки исключены');
   assert.ok(p.text.includes('Японская видеоигра 1998 года. Оценок: 3'), '&nbsp; раскрыт, пробелы схлопнуты');
+});
+
+test('🔴 апостроф в описании читается целиком: правка ПОСЛЕ апострофа меняет отпечаток (v2)', () => {
+  // Тело страницы одинаково — меняется только описание, и только после апострофа (`/en/dimension/parkland-04jpdbpx`).
+  const withDesc = (d) => page().replace(/<meta name="description" content="[^"]*"/, `<meta name="description" content="${d}"`);
+  assert.equal(significantParts(withDesc("Parkland's history")).description, "Parkland's history");
+  assert.notEqual(pageFingerprint(withDesc("Parkland's history")), pageFingerprint(withDesc("Parkland's story")));
+  const single = page().replace(/<meta name="description" content="[^"]*"/, `<meta name="description" content='A "quoted" word'`);
+  assert.equal(significantParts(single).description, 'A "quoted" word', 'в одинарных кавычках двойная — часть значения');
+});
+
+test('🔴 служебные классы стоят в НАСТОЯЩИХ компонентах: витрина главной и виджет версий вырезаются из исходника', () => {
+  // Фикстура `page()` несёт классы, которые написал автор юнита; здесь — те, что стоят в компонентах сейчас.
+  for (const [tag, token, file] of SERVICE) {
+    const source = readFileSync(file, 'utf8');
+    const cut = stripByClass(source, tag, token);
+    assert.ok(cut.length < source.length, `${file}: <${tag} class="${token}"> не найден или не закрыт — исключение молчит`);
+  }
+});
+
+test('имя атрибута с границей: data-href за href не читается', () => {
+  const html = page().replace('<a href="/ru/catalog"', '<a data-href="/x" href="/ru/catalog"');
+  assert.deepEqual(significantParts(html).links, ['/ru/catalog']);
 });
 
 test('адрес карты → файл сборки и пути из карты', () => {

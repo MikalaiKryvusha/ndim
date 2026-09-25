@@ -6,7 +6,9 @@
 // ⚠️ Прежний комментарий называл их «прод-заглушкой до миграции данных 2.0» — это перестало быть
 // правдой 12.07.2026, когда 2.0 выкатили. Это живые экраны продукта, закрытые по приватности.
 // Google игнорирует <priority> и <changefreq>, а <lastmod> учитывает только правдивый,
-// поэтому пишем один <loc> (researches/08 §4, KISS).
+// поэтому здесь пишем один <loc> (researches/08 §4, KISS). <lastmod> ставит ДВЕРЬ ВЫКАТА по реестру
+// отпечатков собранных страниц (`tools/lib/sitemap-lastmod.mjs`, шаг `stampSitemapLastmod` в
+// `tools/deploy.mjs`): правду о смене содержания видно только на собранной странице.
 import { SITE_ORIGIN } from '$lib/site';
 import { DOCS } from '$lib/content/docs';
 import { DIMS } from '$lib/content/dims-source';
