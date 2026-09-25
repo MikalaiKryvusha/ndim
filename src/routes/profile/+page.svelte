@@ -502,6 +502,7 @@
           // (`plans/105` Б2): какая дверь привела человека. Слово читается ДО того, как адрес ниже
           // срезает параметр. [TESTED: 2026-09-25 · ЕВ-01/02/04/06/07, адрес после входа без guest=; qa/reports/2026-09-25_guest-entry.md]
           // [TESTED: 2026-09-25 21:37 · ЕВ-08 «Начать заново» в новой вкладке — entry restart; qa/reports/2026-09-25_guest-entry-restart.md]
+          // [TESTED: 2026-09-25 21:54 · ЕВ-08н та же вкладка после лечения — entry restart; bugs/NEW_restart_guest_start_swallowed_in_same_tab.md]
           if (session === null) void track('guest_start', { entry: entryOf(new URLSearchParams(location.search).get('guest')) });
         }
         // Параметр одноразовый: F5 и закладка не должны нести его дальше (тот же приём,
@@ -612,7 +613,8 @@
    * Выход из сессии — конец визита гостя: шаг `guest_start` прежнего гостя отпускается, иначе во вкладке, прожившей
    * 7+ суток, шаг нового гостя молча съедался (`bugs/NEW_restart_guest_start_swallowed_in_same_tab.md`, выбор Менеджера — А).
    * [TESTED: 2026-09-25 21:54 · ЕВ-08н на сборке 385e376 под именем стейджа: та же вкладка, шаг прежнего гостя занят «1» —
-   *  после «Начать заново» один guest_start, entry restart (до лечения — 0); отчёт qa/reports/2026-09-25_restart-release-step.md]
+   *  после «Начать заново» один guest_start, entry restart (до лечения — 0); отчёт qa/reports/2026-09-25_restart-release-step.md;
+   *  баг bugs/NEW_restart_guest_start_swallowed_in_same_tab.md]
    */
   async function restartAsGuest() {
     await signOutUser();
@@ -1143,9 +1145,12 @@
         ru: 'Добро пожаловать в Пространство NDim',
         en: 'Welcome to NDim Space',
       },
-      doneBody: {
-        ru: 'Аккаунт создан. Ваши оценки и найденные связи на месте — Вы продолжаете с того же места, где остановились.',
-        en: 'Your account is created. Your ratings and relations are in place — you continue exactly where you stopped.',
+      doneBody: { ru: 'Аккаунт создан.', en: 'Your account is created.' },
+      // Вторая половина прежней строки — только тому, у кого оценки ЕСТЬ (`bugs/NEW_newcomer_welcome_claims_ratings_in_place.md`):
+      // новичку по ссылке и человеку, выбравшему на Г2 «Войти здесь без этих оценок», она лгала. Слова прежние, новых нет.
+      doneKept: {
+        ru: 'Ваши оценки и найденные связи на месте — Вы продолжаете с того же места, где остановились.',
+        en: 'Your ratings and relations are in place — you continue exactly where you stopped.',
       },
       doneNote: {
         ru: 'Вас по-прежнему не видит никто. Что и кому показать — решаете Вы сами, в разделе «Видимость».',
@@ -1784,7 +1789,11 @@
             <span class="guest-ava solid"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
             <p class="saved-badge">✓ {t.account.doneBadge[lang]}</p>
             <h2>{t.account.doneTitle[lang]}</h2>
-            <p class="acc-lead">{t.account.doneBody[lang]}</p>
+            <!-- «Оценки на месте» — только при оценках: судит то же число, что «Количество измерений» ниже. Пробел между
+                 половинами — внутри выражения: ведущий пробел в `{#if}` Svelte срезает («создан.Ваши» — кадр прогона 22:06).
+                 [TESTED: 2026-09-25 22:14 · стенд слота 3, ВС-11…ВС-14 и ВС-18 (новичок и апгрейд гостя, 390/1440 × обе
+                  темы) 79/79, кадры глазами, мутанты W1/W2 адресно; qa/reports/2026-09-25_newcomer-welcome-truth.md] -->
+            <p class="acc-lead">{t.account.doneBody[lang]}{ratedCount > 0 ? ` ${t.account.doneKept[lang]}` : ''}</p>
             <p class="hint">{t.account.doneNote[lang]}</p>
             <div class="guest-cta">
               <button type="button" class="btn" onclick={() => (guestCard = false)}>{t.account.close[lang]}</button>
