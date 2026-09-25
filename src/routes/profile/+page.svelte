@@ -65,11 +65,13 @@
     continueWithGoogle,
     emailInLink,
     emailShownForLink,
+    guestLetter,
     isLoginLink,
     linkFork,
     linkGoogle,
     onSignedInElsewhere,
     pendingIntent,
+    rememberedLinkEmail,
     sendLoginLink,
     signInWithGoogle,
     waitForSession,
@@ -301,8 +303,10 @@
    * вход по ссылке не начинается, пока он не выбрал дорогу. Ответ приходит через `answerFork`.
    */
   let fork = $state<LinkFork>(null);
-  let answerFork: ((choice: 'stay' | 'switch') => void) | null = null;
-  function askFork(question: NonNullable<LinkFork>): Promise<'stay' | 'switch'> {
+  // Ответы экранов: Б3 — «остаться» / «войти в аккаунт из письма»; Г2 — «войти здесь без этих оценок».
+  type ForkChoice = 'stay' | 'switch' | 'here';
+  let answerFork: ((choice: ForkChoice) => void) | null = null;
+  function askFork(question: NonNullable<LinkFork>): Promise<ForkChoice> {
     fork = question;
     return new Promise((resolve) => {
       answerFork = (choice) => {
@@ -637,11 +641,25 @@
      * из ссылки (№084 В1 = А).
      */
     let switched = false;
-    const question = linkFork(session, emailInLink());
-    if (question) {
+    /*
+     * 🔴 ЭКРАН Г2 «ТАМ ИЛИ ЗДЕСЬ БЕЗ ОЦЕНОК» (№096 В12 = Б) — тот же вопрос ДО входа, для письма гостя, открытого не там,
+     * где его просили. Одна дорога — «Войти здесь без этих оценок». Без сессии — обычный вход адресом из ссылки. При СВОЁМ
+     * госте этого браузера адрес привязывается к нему, и оценки этого гостя остаются (развилка плана, решение Менеджера
+     * 2026-09-25 с условиями): адрес из ссылки передаётся как названный человеком — он нажал кнопку на экране, который
+     * объяснил, что будет, — а шаг «идёт вход» называет адрес (защита №084 В1 = А от пересланной чужой ссылки).
+     */
+    let hereEmail: string | undefined;
+    const question = linkFork(session, emailInLink(), guestLetter(), rememberedLinkEmail());
+    if (question?.kind === 'guest-elsewhere') {
+      await askFork(question);
+      linkingDoor = true;
+      linkingEmail = question.link;
+      if (session?.isAnonymous) hereEmail = question.link ?? undefined;
+    } else if (question) {
       const choice = await askFork(question);
       if (choice === 'stay' && session) {
         replaceUrl('/profile');
+        signupStep = 'facts'; // шаг `linking` из начала функции не должен пережить выбор «остаться» (суд порции 1, п. 4)
         return session.uid;
       }
       // Дверь со спиннером — сразу: без мелькания оболочки приложения между вопросом и шагом «идёт вход».
@@ -708,7 +726,7 @@
       linkingEmail = emailShownForLink();
     }
 
-    const result = await completeLoginLink();
+    const result = await completeLoginLink(location.href, hereEmail);
     // Адрес возврата несёт почту (№084 В1) — стираем его сразу, вместе с одноразовым кодом.
     replaceUrl('/profile');
     linkingDoor = false;
@@ -1527,16 +1545,19 @@
   <SigninScreen
     {lang}
     step={fork
-      ? 'fork-account'
+      ? fork.kind === 'guest-elsewhere'
+        ? 'fork-guest'
+        : 'fork-account'
       : linkingDoor
         ? 'linking'
         : signupStep === 'choose' || signupStep === 'sending' || signupStep === 'sent'
           ? signupStep
           : 'doors'}
-    forkCurrent={fork?.current ?? ''}
+    forkCurrent={fork?.kind === 'other-account' ? fork.current : ''}
     forkLink={fork?.link ?? ''}
     onForkStay={() => answerFork?.('stay')}
     onForkSwitch={() => answerFork?.('switch')}
+    onForkHere={() => answerFork?.('here')}
     linkEmail={linkingEmail}
     bind:email={signupEmail}
     error={signupError}

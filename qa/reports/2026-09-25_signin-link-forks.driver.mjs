@@ -1,4 +1,5 @@
-// ДРАЙВЕР РУЧНОГО ПРОГОНА — набор `qa/suites/signin-link-forks.md`, порция 1 (экран Б3 + вкладка «письмо отправлено»).
+// ДРАЙВЕР РУЧНОГО ПРОГОНА — набор `qa/suites/signin-link-forks.md`: порция 1 (экран Б3 + вкладка «письмо отправлено»,
+// ВС-01…ВС-09) и порция 2 (экран Г2, ВС-10…ВС-15). Флаг `--portion1` останавливает прогон после ВС-09.
 // Стенд (`npm run stand` в этом рабочем месте). Письмо просится ДВЕРЬЮ ПРОДУКТА, ссылку отдаёт эмулятор Auth (`EXP-0045`),
 // «другой браузер» — отдельный контекст Playwright со своим хранилищем. Приёмы сняты с `tools/verify-signin-link-any-browser.mjs`.
 // Запуск из корня рабочего места: node qa/reports/2026-09-25_signin-link-forks.driver.mjs
@@ -133,6 +134,65 @@ async function b3Seen(page, current, link, lang = 'ru') {
   return { title, lede, stay: stay === s.stay(current), go: go === s.go(link), stayText: stay, goText: go };
 }
 
+// ─── Порция 2 (Г2): строки кадра Vg2.png и помощники гостя ───────────────────────────────────────────────────────────
+const G2 = {
+  ru: {
+    title: 'Оценки остались в другом браузере',
+    lede: 'Оценки, которые Вы поставили гостем, хранятся в браузере, где Вы их ставили. Откройте письмо в том браузере, и оценки перейдут в Ваш аккаунт в Пространстве NDim Space.',
+    here: 'Войти здесь без этих оценок',
+    note: 'Оценки, поставленные гостем в том браузере, в аккаунт, созданный здесь, не перейдут.',
+  },
+  en: {
+    title: 'Your ratings are still in the other browser',
+    lede: 'The ratings you gave as a guest are saved in the browser where you gave them. Open the email in that browser, and the ratings will carry over to your NDim Space account.',
+    here: 'Sign in here without those ratings',
+    note: 'The ratings you gave as a guest in that browser will not carry over to an account you create here.',
+  },
+};
+const FIRESTORE = `http://127.0.0.1:${PORTS.firestore}/v1/projects/${PROJECT}/databases/(default)/documents`;
+/** Документ базы стенда ПРАВАМИ ВЛАДЕЛЬЦА эмулятора (REST отдаёт через правила — `Bearer owner`, урок verify-account-delete). */
+const docExists = (path) => fetch(`${FIRESTORE}/${path}`, { headers: { Authorization: 'Bearer owner' } }).then((r) => r.ok);
+const dimsCount = (uid) =>
+  fetch(`${FIRESTORE}/points/${uid}/dims`, { headers: { Authorization: 'Bearer owner' } })
+    .then((r) => r.json())
+    .then((j) => (j.documents ?? []).length);
+
+/** Завести гостя в контексте и поставить ему одну оценку через продукт (приём `tools/smoke.mjs`, NDIM-DIMS-002). */
+async function guestWithRating(page) {
+  await page.goto(`${BASE}/profile?guest=1`);
+  await page.waitForTimeout(3000);
+  await page.goto(`${BASE}/dims?as=guest`, { waitUntil: 'domcontentloaded' });
+  const card = page.locator('article.dim').first();
+  await card.waitFor({ timeout: 20000 });
+  const dim = await card.getAttribute('data-dim');
+  await card.locator('.stars button[aria-label="7"]').click();
+  await card.locator('.countdown .now').click({ timeout: 5000 }).catch(() => {});
+  await page.waitForTimeout(2000);
+  const me = await whoAmI(page);
+  return { uid: me?.uid, dim, rated: me ? await docExists(`points/${me.uid}/dims/${dim}`) : false };
+}
+
+/** Гость просит письмо дверью «Сохранить мои результаты»; возвращает ссылку, как её собирает боевой обработчик. */
+async function guestSaveLetter(page, email) {
+  await page.goto(`${BASE}/profile?as=guest`);
+  await page.getByRole('button', { name: 'Сохранить мои результаты' }).first().click({ timeout: 30000 });
+  await page.waitForTimeout(800);
+  const mail = page.getByRole('button', { name: /почт/i }).first();
+  if (await mail.count()) await mail.click();
+  await page.locator('input[type="email"]').fill(email);
+  await page.getByRole('button', { name: /ссылк|Получить|Отправить/i }).first().click();
+  await page.getByText(SENT_GUEST).waitFor({ timeout: 30000 });
+  return linkFor(email);
+}
+
+/** Экран Г2 на странице — дословно по кадру. */
+async function g2Seen(page, lang = 'ru') {
+  const s = G2[lang];
+  const title = await page.getByText(s.title).waitFor({ timeout: 12000 }).then(() => true, () => false);
+  const here = (await page.locator('[data-fork="here"]').innerText({ timeout: 3000 }).catch(() => '')).trim();
+  return { title, lede: await text(page, s.lede), here: here === s.here, note: await text(page, s.note), hereText: here };
+}
+
 /** Ничего не вылезает за правый край окна (адрес без пробелов на 390). */
 const noOverflow = (page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
@@ -140,6 +200,9 @@ await mkdir(SHOTS, { recursive: true });
 const browser = await chromium.launch();
 try {
   console.log(`Стенд: ${BASE}`);
+  // `--portion2` — только кейсы Г2 (ВС-10…ВС-15): перепрогон после правки строк Г2 без повторения порции 1.
+  const ONLY2 = process.argv.includes('--portion2');
+  if (!ONLY2) {
 
   // ═══ ВС-01 · ВС-02 · Б3 показан, дорога «Остаться» (390, светлая) ════════════════════════════
   console.log('\nВС-01 · ВС-02 · вошёл Б, ссылка для А → экран Б3 → «Остаться»:');
@@ -327,6 +390,143 @@ try {
     check('ВС-09', 'вкладка стоит на шаге «Мы отправили Вам письмо», адрес тот же', (await text(page, SENT_GUEST)) && page.url() === url, page.url());
     await context.close();
   }
+
+  } // конец порции 1
+  if (process.argv.includes('--portion1')) throw Object.assign(new Error('порция 1 — стоп'), { stop: true });
+
+  // ═══ ВС-10 · ВС-11 · Г2 в чистом браузере → «Войти здесь без этих оценок» (390, светлая) ═══════════════════════
+  console.log('\nВС-10 · ВС-11 · гость с оценкой просит письмо; письмо открыто в чистом браузере:');
+  {
+    const A = `vs10-${stamp}@ndim.space`;
+    const one = await browserOf(browser);
+    const g = await guestWithRating(one.page);
+    check('ВС-10', 'подготовка: гость контекста 1 с оценкой в базе', Boolean(g.uid) && g.rated, `uid ${g.uid?.slice(0, 6)} · измерение ${g.dim}`);
+    const link = await guestSaveLetter(one.page, A);
+    check('ВС-10', 'ссылка несёт пометку «письмо гостя» from=guest', new URL(link).searchParams.get('from') === 'guest');
+    const two = await browserOf(browser);
+    await two.page.goto(link);
+    const seen = await g2Seen(two.page);
+    const before = await whoAmI(two.page);
+    await two.page.screenshot({ path: `${SHOTS}/vs10-g2-390-light.png` });
+    check('ВС-10', 'экран Г2 дословно по кадру: заголовок · текст · кнопка · строка под ней', seen.title && seen.lede && seen.here && seen.note, `кнопка «${seen.hereText}»`);
+    check('ВС-10', 'пока вопрос открыт, в контексте 2 сессии нет', before === null, describe(before));
+    check('ВС-10', 'ничего не вылезает за край на 390', await noOverflow(two.page));
+    await holdAuth(two.page, 2000);
+    await two.page.locator('[data-fork="here"]').click({ timeout: 5000 }).catch(() => {});
+    const spinner = await two.page.getByText(SPINNER).waitFor({ timeout: 8000 }).then(() => true, () => false);
+    const who = spinner && (await text(two.page, A));
+    await two.page.screenshot({ path: `${SHOTS}/vs11-here-spinner.png` });
+    await two.page.waitForTimeout(12000);
+    const me2 = await whoAmI(two.page);
+    const me1 = await whoAmI(one.page);
+    await two.page.screenshot({ path: `${SHOTS}/vs11-here-after.png`, fullPage: true });
+    check('ВС-11', 'шаг «идёт вход» называет адрес', spinner && who, `спиннер ${spinner} · адрес ${Boolean(who)}`);
+    check('ВС-11', 'в контексте 2 аккаунт адреса, не гость', me2?.email === A && !me2.anonymous, describe(me2));
+    check('ВС-11', 'у аккаунта контекста 2 оценок 0 (оценки гостя не переехали)', me2 ? (await dimsCount(me2.uid)) === 0 : false);
+    check('ВС-11', 'в контексте 1 тот же гость, его оценка в базе цела', me1?.anonymous === true && me1.uid === g.uid && (await docExists(`points/${g.uid}/dims/${g.dim}`)), describe(me1));
+    check('ВС-11', 'консоль контекста 2 чиста', two.errors.length === 0, two.errors.slice(0, 2).join(' | '));
+    await two.context.close();
+    await one.context.close();
+  }
+
+  // ═══ ВС-10 · экран Г2, остальные клетки ═══════════════════════════════════════════════════════════════════════
+  console.log('\nВС-10 · экран Г2, остальные клетки:');
+  for (const [w, h, theme] of [[390, 844, 'dark'], [1440, 900, 'light'], [1440, 900, 'dark']]) {
+    const A = `vs10c-${w}${theme}-${stamp}@ndim.space`;
+    const one = await browserOf(browser);
+    await guestWithRating(one.page);
+    const link = await guestSaveLetter(one.page, A);
+    const two = await browserOf(browser, { w, h, theme });
+    await two.page.goto(link);
+    const seen = await g2Seen(two.page);
+    const applied = await two.page.evaluate(() => document.documentElement.dataset.theme);
+    await two.page.screenshot({ path: `${SHOTS}/vs10-g2-${w}-${theme}.png` });
+    check('ВС-10', `Г2 · ${w} · ${theme}`, seen.title && seen.lede && seen.here && seen.note && applied === theme && (await noOverflow(two.page)), `тема ${applied}`);
+    await two.context.close();
+    await one.context.close();
+  }
+
+  // ═══ ВС-12 · Г2 при СВОЁМ госте второго браузера ═════════════════════════════════════════════════════════════
+  console.log('\nВС-12 · во втором браузере свой гость с оценкой; письмо гостя из первого:');
+  {
+    const A = `vs12-${stamp}@ndim.space`;
+    const one = await browserOf(browser);
+    const g1 = await guestWithRating(one.page);
+    const link = await guestSaveLetter(one.page, A);
+    const two = await browserOf(browser);
+    const g2 = await guestWithRating(two.page);
+    check('ВС-12', 'подготовка: два разных гостя, у обоих оценка', g1.rated && g2.rated && g1.uid !== g2.uid, `${g1.uid?.slice(0, 6)} · ${g2.uid?.slice(0, 6)}`);
+    await two.page.goto(link);
+    const seen = await g2Seen(two.page);
+    await two.page.screenshot({ path: `${SHOTS}/vs12-g2-own-guest.png` });
+    check('ВС-12', 'экран Г2 показан и своему гостю второго браузера', seen.title && seen.here);
+    await holdAuth(two.page, 2000);
+    await two.page.locator('[data-fork="here"]').click({ timeout: 5000 }).catch(() => {});
+    const spinner = await two.page.getByText(SPINNER).waitFor({ timeout: 8000 }).then(() => true, () => false);
+    const who = spinner && (await text(two.page, A));
+    await two.page.waitForTimeout(12000);
+    const me2 = await whoAmI(two.page);
+    const me1 = await whoAmI(one.page);
+    await two.page.screenshot({ path: `${SHOTS}/vs12-after.png`, fullPage: true });
+    check('ВС-12', 'шаг «идёт вход» называет адрес', spinner && who, `спиннер ${spinner} · адрес ${Boolean(who)}`);
+    check('ВС-12', 'гость второго браузера стал аккаунтом адреса — тот же uid', me2?.email === A && !me2.anonymous && me2.uid === g2.uid, describe(me2));
+    check('ВС-12', 'оценка гостя второго браузера цела в его аккаунте', await docExists(`points/${g2.uid}/dims/${g2.dim}`));
+    check('ВС-12', 'гость первого браузера цел, его оценка на месте', me1?.anonymous === true && me1.uid === g1.uid && (await docExists(`points/${g1.uid}/dims/${g1.dim}`)), describe(me1));
+    check('ВС-12', 'консоль контекста 2 чиста', two.errors.length === 0, two.errors.slice(0, 2).join(' | '));
+    await two.context.close();
+    await one.context.close();
+  }
+
+  // ═══ ВС-13 · КОНТРОЛЬ: письмо гостя там, где его просили ═══════════════════════════════════════════════════
+  console.log('\nВС-13 · контроль: письмо гостя во второй вкладке ТОГО ЖЕ браузера:');
+  {
+    const A = `vs13-${stamp}@ndim.space`;
+    const one = await browserOf(browser);
+    const g = await guestWithRating(one.page);
+    const link = await guestSaveLetter(one.page, A);
+    const tab2 = await one.context.newPage();
+    await tab2.goto(link);
+    const g2 = await tab2.getByText(G2.ru.title).waitFor({ timeout: 6000 }).then(() => true, () => false);
+    await tab2.getByText('Профиль сохранён').waitFor({ timeout: 20000 }).catch(() => {});
+    const me = await whoAmI(tab2);
+    check('ВС-13', 'экрана Г2 нет', !g2);
+    check('ВС-13', '«Профиль сохранён», тот же uid гостя, оценка цела', (await text(tab2, 'Профиль сохранён')) && me?.uid === g.uid && !me.anonymous && (await docExists(`points/${g.uid}/dims/${g.dim}`)), describe(me));
+    await one.context.close();
+  }
+
+  // ═══ ВС-14 · КОНТРОЛЬ: письмо двери входа без сессии ═════════════════════════════════════════════════════════
+  console.log('\nВС-14 · контроль: письмо двери входа (без гостя) в чистом браузере:');
+  {
+    const A = `vs14-${stamp}@ndim.space`;
+    const link = await letterFromDoor(browser, A);
+    const two = await browserOf(browser);
+    await two.page.goto(link);
+    const g2 = await two.page.getByText(G2.ru.title).waitFor({ timeout: 6000 }).then(() => true, () => false);
+    await two.page.waitForTimeout(8000);
+    const me = await whoAmI(two.page);
+    check('ВС-14', 'в ссылке нет пометки from=guest', new URL(link).searchParams.get('from') === null);
+    check('ВС-14', 'экрана Г2 нет, вход адресом', !g2 && me?.email === A, describe(me));
+    await two.context.close();
+  }
+
+  // ═══ ВС-15 · Г2 по-английски ═════════════════════════════════════════════════════════════════════════════════
+  console.log('\nВС-15 · экран Г2 по-английски:');
+  {
+    const A = `vs15-${stamp}@ndim.space`;
+    const one = await browserOf(browser);
+    await guestWithRating(one.page);
+    const link = await guestSaveLetter(one.page, A);
+    const two = await browserOf(browser, { lang: 'en' });
+    await two.page.goto(link);
+    const seen = await g2Seen(two.page, 'en');
+    const ru = await text(two.page, G2.ru.title);
+    await two.page.screenshot({ path: `${SHOTS}/vs15-g2-en.png` });
+    check('ВС-15', 'английские строки Г2 на месте, русских нет', seen.title && seen.lede && seen.here && seen.note && !ru, `кнопка «${seen.hereText}»`);
+    await two.context.close();
+    await one.context.close();
+  }
+} catch (e) {
+  if (!e.stop) throw e;
 } finally {
   await browser.close();
 }

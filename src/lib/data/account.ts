@@ -153,6 +153,28 @@ const PENDING_EMAIL_KEY = 'ndim-pending-email';
  */
 const LINK_EMAIL_PARAM = 'email';
 
+/**
+ * Пометка «ПИСЬМО ГОСТЯ» в адресе возврата (интервью №096 В12 = Б, экран Г2): письмо попросил гость дверью «Сохранить мои
+ * результаты». Пометка не несёт ни почты, ни личности — только факт «оценки остались у гостя в браузере, где просили».
+ * Имя параметра не `guest`: `?guest=` уже дверь гостя на `/profile`, и смешать их значило бы завести гостя из письма.
+ */
+const LINK_FROM_PARAM = 'from';
+const LINK_FROM_GUEST = 'guest';
+
+/** Несёт ли ссылка пометку «письмо гостя». */
+export function guestLetter(href: string = location.href): boolean {
+  try {
+    return new URL(href).searchParams.get(LINK_FROM_PARAM) === LINK_FROM_GUEST;
+  } catch {
+    return false;
+  }
+}
+
+/** Адрес, на который письмо просили В ЭТОМ браузере (`ndim-pending-email`), — или `null`, если просили не здесь. */
+export function rememberedLinkEmail(): string | null {
+  return localStorage.getItem(PENDING_EMAIL_KEY);
+}
+
 /** Почта из адреса ссылки — или `null`, если письмо старое и адреса не несёт. */
 export function emailInLink(href: string = location.href): string | null {
   try {
@@ -440,6 +462,9 @@ export async function sendLoginLink(
     // к адресу письма, чужой адрес Firebase отвергает (`tools/probe-link-email-binding.mjs`).
     const back = new URL(`${loginLinkOrigin()}${returnPath}`);
     back.searchParams.set(LINK_EMAIL_PARAM, email);
+    // Пометка «письмо гостя» (№096 В12 = Б) — ТОЛЬКО двери «Сохранить мои результаты»: сессия гостя и намерение `upgrade`.
+    // Дверь входа без сессии тоже шлёт `upgrade` (см. блок отказа ниже), но гостя у неё нет — и оценок, оставшихся где-то, тоже.
+    if (devAuth().currentUser?.isAnonymous === true && intent === 'upgrade') back.searchParams.set(LINK_FROM_PARAM, LINK_FROM_GUEST);
     await sendSignInLinkToEmail(devAuth(), email, {
       url: back.href,
       handleCodeInApp: true,
@@ -541,14 +566,36 @@ export function emailForLink(
  *  Б3 обе темы × 390/1440 и EN, обе дороги, контроли «тот же аккаунт» и «чистый браузер»); мутант «всегда null» — красные
  *  адресно; юниты account.test.ts 4 случая; отчёт qa/reports/2026-09-25_signin-link-forks.md]
  */
-export type LinkFork = { readonly kind: 'other-account'; readonly current: string; readonly link: string } | null;
+export type LinkFork =
+  | { readonly kind: 'other-account'; readonly current: string; readonly link: string }
+  | { readonly kind: 'guest-elsewhere'; readonly link: string | null }
+  | null;
 
-export function linkFork(user: Pick<User, 'isAnonymous' | 'email'> | null, linkEmail: string | null): LinkFork {
-  if (!user || user.isAnonymous) return null;
-  const current = user.email?.trim();
-  const link = linkEmail?.trim();
-  if (!current || !link) return null;
-  return current.toLowerCase() === link.toLowerCase() ? null : { kind: 'other-account', current, link };
+/*
+ * `guest-elsewhere` — экран Г2 «Там или здесь без оценок» (№096 В12 = Б): письмо попросил гость дверью «Сохранить мои
+ * результаты» (пометка `from=guest`), а открыто оно там, где его НЕ просили — в этом браузере нет памяти письма
+ * (`ndim-pending-email`). Оценки гостя живут в сессии того браузера; экран объясняет это и даёт вход здесь без них.
+ * Вошедший человек сюда не попадает: у него своя развилка — тот же адрес (тихий вход собой) или Б3.
+ * FORK: options <пометка в ссылке + нет памяти письма | uid гостя в ссылке | только пометка> · price of error <uid несёт
+ *   личность — запрещено №096 В12; «только пометка» показала бы Г2 и в браузере, где гость ставил оценки> · consulted
+ *   <Firebase «Passing State in Email Actions» — состояние едет в continueUrl; №096 В12 «без почты и личности»> → первое.
+ *   Решение плана одобрено Менеджером 2026-09-25.
+ * [NOT-TESTED: 2026-09-25 · порция 2 — юниты account.test.ts гигиена; ручной прогон — qa/suites/signin-link-forks.md ВС-10…]
+ */
+export function linkFork(
+  user: Pick<User, 'isAnonymous' | 'email'> | null,
+  linkEmail: string | null,
+  fromGuest = false,
+  remembered: string | null = null,
+): LinkFork {
+  const link = linkEmail?.trim() || null;
+  if (user && !user.isAnonymous) {
+    const current = user.email?.trim();
+    if (!current || !link) return null;
+    return current.toLowerCase() === link.toLowerCase() ? null : { kind: 'other-account', current, link };
+  }
+  if (fromGuest && !remembered) return { kind: 'guest-elsewhere', link };
+  return null;
 }
 
 /**
