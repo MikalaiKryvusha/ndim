@@ -308,8 +308,25 @@ export function savedStamp(by, at) {
  * строк-кандидатов обязано совпадать с числом разобранных вариантов у КАЖДОГО вопроса ВСЕХ живых
  * интервью.
  */
-const OPTION_START = /^\s*[-*]\s+\*\*(?<letter>[\p{Lu}])\)/u;
-const OPTION_FULL = /\*\*(?<letter>[\p{Lu}])\)\s*(?<label>[\s\S]*?)\*\*(?<rest>[\s\S]*)/u;
+// После буквы — «)» или «. » (форма «- **A. …**» — №092, 21 строка; найдена замером при лечении, тот же класс).
+// «. » или «.» сразу перед закрывающим «**» — форма «- **A.** Впишу…» (№092 В6, суд радиокнопок Н1).
+const OPTION_START = /^\s*[-*]\s+\*\*(?<letter>[\p{Lu}])(?:\)|\.(?:\s|\*\*))/u;
+/**
+ * 🔴 ВТОРАЯ ФОРМА ВАРИАНТА — АБЗАЦ: `**А) V1 «…».** текст`, продолжение — следующие строки без отступа до пустой строки
+ * (`bugs/NEW_review_page_options_without_radio.md`, S1). Интервью №097 и №098 несли варианты абзацами, разбор знал только
+ * пункт списка, вернул 0 вариантов — и страница нарисовала владельцу одно поле текста. Его слово 2026-09-25: «*какого хуя
+ * ты опять радиокнопки забыл сделать?*». Буква — любая заглавная, как у пункта списка, и сразу за ней «)».
+ */
+const OPTION_PARA = /^\*\*(?<letter>[\p{Lu}])(?:\)|\.(?:\s|\*\*))/u;
+const OPTION_FULL = /\*\*(?<letter>[\p{Lu}])(?:\)|\.(?=\s|\*\*))\s*(?<label>[\s\S]*?)\*\*(?<rest>[\s\S]*)/u;
+/**
+ * Строка, ПОХОЖАЯ на вариант, в любой форме: `- **А) …`, `**А) …`, `А) …`. Её счёт — `optionLines`: страж
+ * `verify-owner-reviews` (блок 5в) и предполётная проверка сверяют его с числом РАЗОБРАННЫХ вариантов. Прежде счёт вёлся
+ * по той же строгой регулярке, что и разбор, — неузнанная форма давала «0 из 0», и сверка молчала ровно тогда, когда
+ * терялись все варианты.
+ */
+// Точка без жирного («В. текст») не считается: в прозе так стоит инициал.
+const OPTION_LIKE = /^\s*(?:[-*]\s+)?(?:\*\*)?\s*[\p{Lu}]\)\s|^\s*(?:[-*]\s+)?\*\*[\p{Lu}]\.(?:\s|\*\*)/u;
 /** Продолжение пункта списка: отступ, не новый пункт, не пусто. */
 const LIST_CONT = /^\s{2,}\S/u;
 
@@ -367,6 +384,42 @@ export function lintSelfContained(parsed, text) {
 	return bad;
 }
 
+/**
+ * ВОПРОС С ВАРИАНТАМИ ОБЯЗАН ПОЛУЧИТЬ КНОПКИ — предполётная проверка (`bugs/NEW_review_page_options_without_radio.md`).
+ * Вопрос, ждущий ответа, в котором строк-вариантов не меньше двух, а разобрано меньше, чем их, страницу не поднимает:
+ * владелец иначе видит варианты текстом и одно поле ввода. Возвращает `[{ label, line, found, parsed }]`.
+ *
+ * @guard review-options-lost
+ * THREAT:         страница вычитки поднимается владельцу с вариантами, для которых нет кнопок выбора (2026-09-25, №098:
+ *                 варианты абзацами, разбор вернул 0, владелец ответил текстом — «*какого хуя ты опять радиокнопки забыл
+ *                 сделать?*»)
+ * PROVED-AGAINST: мутант M2 «счёт кандидатов строгий» (`OPTION_LIKE` снят) — юнит «предполёт: варианты неузнанной формы»
+ *                 красный; живой РК-03 — копия №098 с вариантами без «**» — `open` отказал кодом 1 и назвал «В1 … строк-вариантов 5,
+ *                 разобрано 0» (dev-1 2026-09-25 23:29 и 23:34)
+ * GAP:            вариант без «)» и без жирной точки («А —», «А:») счётом не видится; отвеченный вопрос не судится;
+ *                 вопрос с ОДНОЙ строкой-вариантом порог «≥ 2» не судит (№070 В2 — варианты картинками)
+ * ON-REAL-PATH:   `npm run review -- open` зовёт `preflight`; `queue` отказывает ставить такой документ (код 1); страница
+ *                 документа пачки `/doc?p=` отдаёт 409 «агент ещё чинит» — `batch` мимо проверки больше не ходит (суд Н2;
+ *                 живьём РК-03…РК-05 2026-09-25 23:56); блок 5в `verify-owner-reviews` судит тем же счётом все живые интервью
+ *                 (1196 строк-кандидатов, 0 расхождений на 2026-09-25)
+ * @param {{questions: Array}} parsed — результат `parseInterview`
+ */
+export function lintOptionsLost(parsed) {
+	const bad = [];
+	for (const q of parsed.questions ?? []) {
+		if (q.answered) continue;
+		const found = q.optionLines ?? 0;
+		if (found < 2 || q.options.length >= found) continue;
+		// Называется первая строка-вариант, которую разбор НЕ узнал; при смеси форм первая похожая могла быть узнанной.
+		const inBlock = (l, i) => i > q.startLine && (q.answerLine < 0 || i < q.answerLine) && OPTION_LIKE.test(l);
+		const lines = parsed.lines ?? [];
+		let first = lines.findIndex((l, i) => inBlock(l, i) && !OPTION_START.test(l) && !OPTION_PARA.test(l));
+		if (first < 0) first = lines.findIndex(inBlock);
+		bad.push({ label: q.label, line: first + 1, found, parsed: q.options.length, text: (parsed.lines?.[first] ?? '').trim().slice(0, 120) });
+	}
+	return bad;
+}
+
 export function parseInterview(relPath, text) {
 	const lines = text.split('\n');
 	const statusLine = lines.find((l) => /Статус[:\s*]/u.test(l) && /^[>|\s*#-]/u.test(l));
@@ -392,6 +445,12 @@ export function parseInterview(relPath, text) {
 				startLine: i,
 				answerLine: -1,
 				options: [],
+				// Две формы варианта копятся раздельно; какая станет кнопками — решается при закрытии вопроса (ниже).
+				listOptions: [],
+				paraOptions: [],
+				listLines: 0,
+				paraLines: 0,
+				looseLines: 0,
 				answer: '',
 				body: [],
 			};
@@ -408,19 +467,28 @@ export function parseInterview(relPath, text) {
 		}
 		if (!current) continue;
 
-		if (OPTION_START.test(line) && current.answerLine < 0) {
-			current.optionLines = (current.optionLines ?? 0) + 1;
-			// Собираем пункт ЦЕЛИКОМ: сам маркер плюс его продолжения с отступом. Жирный заголовок
-			// варианта запросто переносится на вторую строку — на этом контур уже обжёгся.
+		const listForm = OPTION_START.test(line);
+		const paraForm = !listForm && OPTION_PARA.test(line);
+		if (current.answerLine < 0) {
+			if (listForm) current.listLines += 1;
+			else if (paraForm) current.paraLines += 1;
+			else if (OPTION_LIKE.test(line)) current.looseLines += 1;
+		}
+		if ((listForm || paraForm) && current.answerLine < 0) {
+			// Собираем вариант ЦЕЛИКОМ: пункт списка — маркер плюс продолжения с отступом; абзац — все строки до пустой.
+			// Жирный заголовок варианта запросто переносится на вторую строку — на этом контур уже обжёгся.
 			let text = line;
 			for (let j = i + 1; j < lines.length; j++) {
-				if (!LIST_CONT.test(lines[j]) || OPTION_START.test(lines[j])) break;
-				if (/^\s*[-*]\s/u.test(lines[j])) break;
-				text += ' ' + lines[j].trim();
+				const next = lines[j];
+				if (OPTION_START.test(next) || OPTION_PARA.test(next) || ANSWER_FIELD.test(next)) break;
+				if (listForm) {
+					if (!LIST_CONT.test(next) || /^\s*[-*]\s/u.test(next)) break;
+				} else if (!next.trim() || /^#{1,6}\s/u.test(next) || /^\s*(-{3,}|\*{3,}|_{3,})\s*$/u.test(next)) break;
+				text += ' ' + next.trim();
 			}
 			const o = OPTION_FULL.exec(text);
 			if (o) {
-				current.options.push({
+				(listForm ? current.listOptions : current.paraOptions).push({
 					letter: o.groups.letter,
 					/*
 					 * 🔴 ТЕКСТ ВАРИАНТА НЕ РЕЖЕТСЯ. Здесь стояло `.slice(0, 300)` без причины и без
@@ -466,6 +534,19 @@ export function parseInterview(relPath, text) {
 	for (const q of questions) {
 		q.answer = q.answer.trim();
 		q.answered = q.answerLine >= 0 && q.answer.length > 0 && !q.counterQuestion;
+		/*
+		 * Кнопки — по СПИСКУ, если он есть: так агенты обходили дефект абзацев (№097 — описание вариантов абзацами и
+		 * короткий кликабельный список «- **А) русский**» ниже), и абзацы там — описание, а не второй набор кнопок.
+		 * Списка нет — кнопки по абзацам (№098). Счёт кандидатов `optionLines` ведётся по той же форме плюс строки
+		 * «А) …» без жирного: неузнанная форма даёт «0 из N», и сверка краснеет (`verify-owner-reviews` 5в, предполёт).
+		 */
+		q.options = q.listLines > 0 ? q.listOptions : q.paraOptions;
+		q.optionLines = (q.listLines > 0 ? q.listLines : q.paraLines) + q.looseLines;
+		delete q.listOptions;
+		delete q.paraOptions;
+		delete q.listLines;
+		delete q.paraLines;
+		delete q.looseLines;
 	}
 
 	// Две формы одной строки: `statusRaw` сохраняет markdown (её рендерит страница),
