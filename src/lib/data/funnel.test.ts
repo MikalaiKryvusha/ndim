@@ -29,7 +29,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { dayKey, shiftDayKey, probeMarked, PROBE_MARK, claimStep, entryOf, ANALYTICS_ENTRIES } from './funnel.ts';
+import { dayKey, shiftDayKey, probeMarked, PROBE_MARK, claimStep, entryOf, ANALYTICS_ENTRIES, landingTrackOptions } from './funnel.ts';
 
 /*
  * МЕСТО ВХОДА — слово двери в адресе `?guest=<слово>` (`plans/105` Б2, 2026-09-25).
@@ -216,5 +216,32 @@ describe('Один визит — один шаг каждого вида (сч�
       },
     } as unknown as Storage;
     assert.equal(claimStep('landing_view'), false);
+  });
+});
+
+/*
+ * ГЛАВНАЯ СЧИТАЕТ ТОЛЬКО В POSTHOG — слово владельца, интервью №078, В1 = Г (2026-09-09):
+ * «только аналитикой постхог, мы свою БД фаерстор не грузим запросами».
+ *
+ * Новая V1 главной (`plans/106`) поначалу звала на корне обычный `track()`, а он пишет ещё и свой счётчик в
+ * Firestore — решение владельца было нарушено молча (находка суда 2026-09-25). Здесь стерегутся две вещи:
+ *   · решение по входам — корень без своего счётчика, `/ru` и `/en` со счётчиком, как до новой V1;
+ *   · КАЖДЫЙ вызов `track` в компоненте главной идёт через это решение: новый шаг, дописанный голым
+ *     `track('…')`, на корне снова писал бы в Firestore, и поведенческий тест этого не увидел бы.
+ */
+describe('Главная: корень считает только в PostHog (№078 В1 = Г)', () => {
+  test('корень `/` — без своего счётчика; `/ru` и `/en` — со счётчиком', () => {
+    assert.equal(landingTrackOptions('root').ownCounter, false);
+    assert.equal(landingTrackOptions('landing').ownCounter, true);
+  });
+
+  test('🔑 каждый вызов `track` в компоненте главной несёт решение страницы', () => {
+    const файл = join(import.meta.dirname, '..', 'ui', 'landing', 'LandingV1.svelte');
+    const вызовы = [...readFileSync(файл, 'utf8').matchAll(/\btrack\(([^)]*)\)/g)].map((m) => m[1]);
+    // Контроль прибора: на главной два шага (`landing_view`, `demo_touch`) в трёх местах; ноль вызовов значил бы
+    // «смотрю не туда», а не «все вызовы честны».
+    assert.ok(вызовы.length >= 3, `найдено вызовов track ${вызовы.length} из ожидаемых ≥ 3 — сверка смотрит не туда`);
+    const голые = вызовы.filter((аргументы) => !/,\s*COUNT\s*$/.test(аргументы));
+    assert.deepEqual(голые, [], 'вызов track без решения страницы — на корне он снова пишет в Firestore');
   });
 });

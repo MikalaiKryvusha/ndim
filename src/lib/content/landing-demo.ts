@@ -9,8 +9,13 @@
  * демо, уезжает в NDim ID гостя под тем же id.
  *
  * `[AI]` Состав списка — предложение агента по голосам каталога боя (замер 2026-09-25 15:21, 5 153
- * записи): самые оцениваемые фильмы и сериалы плюс узнаваемые практики. Выбор — за владельцем
- * (интервью №097); меняется он ЗДЕСЬ, одной константой.
+ * записи): самые оцениваемые фильмы и сериалы плюс практики. Выбор — за владельцем (интервью №097);
+ * меняется он ЗДЕСЬ, одной константой.
+ * 🔴 Практику «Секс» (11 голосов — первая практика каталога по голосам) агент поначалу снял вкусом и поставил
+ * «Путешествия» (3 голоса) — это нарушало стоячее слово владельца о витрине: «*НУ И ЧТО, ЧТО СЕКС — люди
+ * любят, вот и показываем честно*» (главная V5, 2026-09-05, `PROJECT_HISTORY.md`) и №066 В2 = А. Витрину
+ * отбирают голоса людей; вид снимается только по инженерной причине. Исправлено 2026-09-25 по находке суда;
+ * оценки персонажей переехали с «Путешествий» на «Секс» без изменения чисел.
  *
  * 🔴 Модуль НЕ импортирует каталог (`EXP-0136`: универсальная загрузка утащила бы 17 МБ в бандл).
  * Названия, годы, NDSR и голоса — снимок записей каталога на дату выше; расхождение с живым
@@ -45,14 +50,14 @@ export const DEMO_ITEMS: readonly DemoItem[] = [
   { id: 'wPykOfIB7PRnIMwvHHho', slug: 'interstellar-wpykofib', kind: 'movie', title: { ru: 'Интерстеллар', en: 'Interstellar' }, year: '2014', rating: 9.2, votes: 10 },
   { id: 'ivGigNxl0Szdt4LXlz5h', slug: 'titanic-ivgignxl', kind: 'movie', title: { ru: 'Титаник', en: 'Titanic' }, year: '1997', rating: 9, votes: 8 },
   { id: 'KX10jyFBeXdj28dU4S3i', slug: 'game-of-thrones-kx10jyfb', kind: 'tv-series', title: { ru: 'Игра Престолов', en: 'Game of Thrones' }, year: '2011', rating: 9.1, votes: 8 },
-  { id: 'vPZ0wGPD0yTLKiMrSRkG', slug: 'travel-vpz0wgpd', kind: 'practice', title: { ru: 'Путешествия', en: 'Travel' }, year: null, rating: 8, votes: 3 },
+  { id: 'BDsOxBipIv04OwFlWuRv', slug: 'sex-bdsoxbip', kind: 'practice', title: { ru: 'Секс', en: 'Sex' }, year: null, rating: 9.4, votes: 11 },
   { id: 'mDnwq3epw5X4MokeMd9v', slug: 'reading-mdnwq3ep', kind: 'practice', title: { ru: 'Чтение', en: 'Reading' }, year: null, rating: 9.3, votes: 6 },
   { id: 'HW247wWXQMxb1aFFFdFJ', slug: 'board-gaming-hw247wwx', kind: 'practice', title: { ru: 'Настольные игры', en: 'Board Gaming' }, year: null, rating: 7.1, votes: 7 },
   { id: 'YSsMo1ODoVZ5o34IxZSX', slug: 'cycling-yssmo1od', kind: 'practice', title: { ru: 'Велоспорт', en: 'Cycling' }, year: null, rating: 8.5, votes: 6 },
 ];
 
 /** Короткие имена объектов для оценок персонажей — читаемость таблицы ниже, а не второй id. */
-const [HP, SHAWSHANK, MATRIX, INTERSTELLAR, TITANIC, GOT, TRAVEL, READING, BOARD, CYCLING] = DEMO_ITEMS.map((d) => d.id);
+const [HP, SHAWSHANK, MATRIX, INTERSTELLAR, TITANIC, GOT, SEX, READING, BOARD, CYCLING] = DEMO_ITEMS.map((d) => d.id);
 
 export type PersonaId = 'alice' | 'max' | 'nastya';
 
@@ -78,7 +83,7 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
     age: 27,
     color: '#7c5cff',
     angle: -90,
-    ratings: { [HP]: 10, [SHAWSHANK]: 8, [MATRIX]: 7, [INTERSTELLAR]: 10, [TITANIC]: 8, [GOT]: 6, [TRAVEL]: 9, [READING]: 10, [BOARD]: 7, [CYCLING]: 4 },
+    ratings: { [HP]: 10, [SHAWSHANK]: 8, [MATRIX]: 7, [INTERSTELLAR]: 10, [TITANIC]: 8, [GOT]: 6, [SEX]: 9, [READING]: 10, [BOARD]: 7, [CYCLING]: 4 },
     favorite: INTERSTELLAR,
     loves: [INTERSTELLAR, HP],
   },
@@ -98,7 +103,7 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
     age: 24,
     color: '#d6544f',
     angle: 152,
-    ratings: { [HP]: 5, [SHAWSHANK]: 6, [MATRIX]: 3, [INTERSTELLAR]: 4, [TITANIC]: 10, [GOT]: 10, [TRAVEL]: 8, [READING]: 5, [BOARD]: 8, [CYCLING]: 6 },
+    ratings: { [HP]: 5, [SHAWSHANK]: 6, [MATRIX]: 3, [INTERSTELLAR]: 4, [TITANIC]: 10, [GOT]: 10, [SEX]: 8, [READING]: 5, [BOARD]: 8, [CYCLING]: 6 },
     favorite: GOT,
     loves: [GOT, TITANIC],
   },

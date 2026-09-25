@@ -250,6 +250,25 @@ export function claimStep(step: FunnelStep): boolean {
 }
 
 /**
+ * Куда уходит шаг. По умолчанию — в PostHog И в свой счётчик `space/funnel/days`.
+ * `ownCounter: false` — только PostHog: так считает главная `ndimspace.app/` по слову владельца (интервью №078, В1 = Г):
+ * «*только аналитикой постхог, мы свою БД фаерстор не грузим запросами*».
+ */
+export interface TrackOptions {
+  readonly ownCounter?: boolean;
+}
+
+/**
+ * Как считает новая V1 главной (`LandingV1.svelte`): корень `/` — только PostHog (№078 В1 = Г, цитата выше);
+ * `/ru` и `/en` пишут и свой счётчик, как лендинг до новой V1. Решение одно на все шаги страницы — `landing_view`
+ * и `demo_touch` уходят одной дорогой, и юнит сверяет каждый вызов `track` в компоненте.
+ * [NOT-TESTED]
+ */
+export function landingTrackOptions(entry: 'root' | 'landing'): TrackOptions {
+  return { ownCounter: entry !== 'root' };
+}
+
+/**
  * Отмечает шаг воронки. Никогда не бросает и никогда не заставляет ждать: аналитика
  * не имеет права ломать или тормозить продукт. Повторный вызов того же шага в том же
  * визите ничего не делает; помеченный прогон прибора не делает ничего вовсе.
@@ -259,7 +278,7 @@ export function claimStep(step: FunnelStep): boolean {
  * [TESTED: 2026-09-25 · перехваченный guest_start несёт entry у шести дверей из семи (root · landing · catalog_card · signin ·
  *  test · direct); дверь restart живьём не пройдена; отчёт qa/reports/2026-09-25_guest-entry.md]
  */
-export async function track(step: FunnelStep, props: AnalyticsProps = {}): Promise<void> {
+export async function track(step: FunnelStep, props: AnalyticsProps = {}, options: TrackOptions = {}): Promise<void> {
   if (!claimStep(step)) return;
 
   /*
@@ -276,6 +295,8 @@ export async function track(step: FunnelStep, props: AnalyticsProps = {}): Promi
   void import('./analytics.ts')
     .then(({ capture }) => capture(step, props))
     .catch((error) => console.debug('Аналитика: шаг не отправлен', step, error));
+
+  if (options.ownCounter === false) return;
 
   try {
     const [{ db }, { doc, increment, setDoc }] = await Promise.all([

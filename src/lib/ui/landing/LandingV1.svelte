@@ -34,7 +34,7 @@
   } from '$lib/ui/compat-demo';
   import { markBridgeCrossed, popupCorner, strongestPeer } from '$lib/ui/handhold';
   import { saveTestRating } from '$lib/data/test-engine';
-  import { track, type AnalyticsEntry } from '$lib/data/funnel';
+  import { landingTrackOptions, track, type AnalyticsEntry } from '$lib/data/funnel';
   import { endBoot, hasSession } from '$lib/data/session';
   import { landingDims, landingPeople, landingRatings, landingRelations } from '$lib/data/metrics';
   import { num, votesUnit, type Lang } from '$lib/ui/format';
@@ -57,6 +57,8 @@
     landing: '/profile?guest=landing',
   } as const;
   const guestUrl = $derived(GUEST_DOOR[entry]);
+  /** Куда уходят шаги воронки этой страницы: на корне — только PostHog (№078 В1 = Г, `funnel.ts`). */
+  const COUNT = $derived(landingTrackOptions(entry));
 
   // ── Оценки человека в тесте. Пусто на старте: горит только поставленное им самим. ──
   let mine = $state<DemoRatings>({});
@@ -67,7 +69,7 @@
     if (!touched) {
       touched = true;
       // Второй шаг воронки: человек ПОТРОГАЛ тест. Считается один раз за визит.
-      void track('demo_touch');
+      void track('demo_touch', {}, COUNT);
     }
   }
 
@@ -138,7 +140,7 @@
       mine = replayQueue(mine, queue);
       queue.length = 0;
       touched = true;
-      void track('demo_touch');
+      void track('demo_touch', {}, COUNT);
     }
 
     // Ссылка из письма пришла на главную — уводим в профиль с кодом (боевой урок 2026-07-12).
@@ -155,7 +157,7 @@
       }
       endBoot();
       // Первый шаг воронки. Ничего персонального не пишет и ничего не ждёт.
-      void track('landing_view');
+      void track('landing_view', {}, COUNT);
     });
   });
 
