@@ -1781,9 +1781,10 @@
             <span class="guest-ava solid"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
             <p class="saved-badge">✓ {t.account.doneBadge[lang]}</p>
             <h2>{t.account.doneTitle[lang]}</h2>
-            <!-- «Оценки на месте» — только при оценках: судит то же число, что «Количество измерений» ниже.
+            <!-- «Оценки на месте» — только при оценках: судит то же число, что «Количество измерений» ниже. Пробел между
+                 половинами — внутри выражения: ведущий пробел в `{#if}` Svelte срезает («создан.Ваши» — кадр прогона 22:06).
                  [NOT-TESTED] -->
-            <p class="acc-lead">{t.account.doneBody[lang]}{#if ratedCount > 0} {t.account.doneKept[lang]}{/if}</p>
+            <p class="acc-lead">{t.account.doneBody[lang]}{ratedCount > 0 ? ` ${t.account.doneKept[lang]}` : ''}</p>
             <p class="hint">{t.account.doneNote[lang]}</p>
             <div class="guest-cta">
               <button type="button" class="btn" onclick={() => (guestCard = false)}>{t.account.close[lang]}</button>

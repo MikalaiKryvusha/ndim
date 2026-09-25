@@ -39,6 +39,7 @@ const SPINNER = 'Выполняем вход в Пространство NDim Sp
 // Карточка «Добро пожаловать»: вторая половина — только тому, у кого оценки есть (`bugs/NEW_newcomer_welcome_claims_ratings_in_place.md`).
 const WELCOME = 'Аккаунт создан.';
 const KEPT = 'Ваши оценки и найденные связи на месте';
+const FULL = `${WELCOME} ${KEPT}`; // целиком, С ПРОБЕЛОМ: прогон 22:06 видел «создан.Ваши» при зелёных подстроках
 const SENT_GUEST = 'Мы отправили Вам письмо';
 const SENT_DOOR = 'Письмо отправлено';
 
@@ -239,7 +240,7 @@ async function welcomeCells(browser, stamp) {
       const applied = await tab.evaluate(() => document.documentElement.dataset.theme);
       await tab.screenshot({ path: `${SHOTS}/vs18-upgrade-${cell}.png` });
       const me = await whoAmI(tab);
-      check('ВС-18', `апгрейд гостя с оценкой · ${cell}: «${WELCOME} ${KEPT}…»`, g.rated && me?.uid === g.uid && !me.anonymous && (await text(tab, WELCOME)) && (await text(tab, KEPT)) && applied === theme && (await noOverflow(tab)) && errors.length === 0, `${describe(me)} · тема ${applied} · консоль ${errors.length}`);
+      check('ВС-18', `апгрейд гостя с оценкой · ${cell}: «${WELCOME} ${KEPT}…»`, g.rated && me?.uid === g.uid && !me.anonymous && (await text(tab, FULL)) && applied === theme && (await noOverflow(tab)) && errors.length === 0, `${describe(me)} · тема ${applied} · консоль ${errors.length}`);
       await context.close();
     }
   }
@@ -530,7 +531,7 @@ try {
     check('ВС-12', 'шаг «идёт вход» называет адрес', spinner && who, `спиннер ${spinner} · адрес ${Boolean(who)}`);
     check('ВС-12', 'гость второго браузера стал аккаунтом адреса — тот же uid', me2?.email === A && !me2.anonymous && me2.uid === g2.uid, describe(me2));
     check('ВС-12', 'оценка гостя второго браузера цела в его аккаунте', await docExists(`points/${g2.uid}/dims/${g2.dim}`));
-    check('ВС-12', `карточка: «${WELCOME} ${KEPT}…» — оценки есть, строка правдива`, (await text(two.page, WELCOME)) && (await text(two.page, KEPT)));
+    check('ВС-12', `карточка: «${WELCOME} ${KEPT}…» — оценки есть, строка правдива`, await text(two.page, FULL));
     check('ВС-12', 'гость первого браузера цел, его оценка на месте', me1?.anonymous === true && me1.uid === g1.uid && (await docExists(`points/${g1.uid}/dims/${g1.dim}`)), describe(me1));
     check('ВС-12', 'консоль контекста 2 чиста', two.errors.length === 0, two.errors.slice(0, 2).join(' | '));
     await two.context.close();
@@ -554,7 +555,7 @@ try {
     // Оценки приезжают с экраном: карточка появляется раньше, вторая половина — когда экран прочитал оценки.
     await tab2.getByText(KEPT).waitFor({ timeout: 10000 }).catch(() => {});
     await tab2.screenshot({ path: `${SHOTS}/vs13-after.png`, fullPage: true });
-    check('ВС-13', `карточка: «${WELCOME} ${KEPT}…» — апгрейд гостя с оценкой`, (await text(tab2, WELCOME)) && (await text(tab2, KEPT)));
+    check('ВС-13', `карточка: «${WELCOME} ${KEPT}…» — апгрейд гостя с оценкой`, await text(tab2, FULL));
     await one.context.close();
   }
 
