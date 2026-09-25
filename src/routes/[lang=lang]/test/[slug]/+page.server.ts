@@ -15,17 +15,21 @@
 
 import { error } from '@sveltejs/kit';
 import { TESTS, TEST_SLUGS, CARD_CHROME, TEST_FOOT, type TestSlug, type TestCopy } from '$lib/content/test-copy';
-import { buildTestQueue, kindLabelFor, queueLengthFor, rowLabel, TEST_TARGET } from '$lib/content/test-set';
+import { kindLabelFor, poolQueue, rowLabel, TEST_TARGET } from '$lib/content/test-set';
+import { SENSITIVE_PRACTICES } from '$lib/content/landing-demo';
+import { landingV1 } from '$lib/content/landing-v1-copy';
+import { PUBLIC_PEOPLE_SNAPSHOT } from '$lib/content/landing-metric';
 import { DIMS } from '$lib/content/dims-source';
 import { LANGS, X_DEFAULT, type Lang } from '$lib/content/langs';
+import { num } from '$lib/ui/format';
 import { SITE_ORIGIN } from '$lib/site';
 
 export const prerender = true;
 
 /**
  * ТАКТ Б — ГИДРАТАЦИЯ ВКЛЮЧЕНА (`csr` по умолчанию): на странице живой движок оценки.
- * Содержание по-прежнему отдаётся сырым HTML пререндера (первая карточка очереди
- * детерминирована — `test-set.ts`), а Firebase в бандл страницы НЕ попадает: слой данных
+ * Содержание по-прежнему отдаётся сырым HTML пререндера (пул в порядке правила детерминирован —
+ * `test-set.ts`; случайную дюжину страница тянет только после оживления), а Firebase в бандл страницы НЕ попадает: слой данных
  * подгружает `$lib/data/test-engine.ts` динамически, в момент жеста (канон `funnel.ts`).
  * Хаб `/tests` остаётся без клиентского JS — движка там нет.
  */
@@ -48,18 +52,48 @@ export interface TestCard {
   label: string;
 }
 
+/** Числа Пространства для блока V4 «Друзья по интересам» — уже отформатированные на языке страницы. */
+export interface SpaceNumbers {
+  title: string;
+  items: { value: string; label: string }[];
+}
+
 export interface TestPageData {
   lang: Lang;
   slug: TestSlug;
   copy: TestCopy;
   chrome: (typeof CARD_CHROME)['ru'];
-  /** Очередь движка: набор + запас под «не знаю». Детерминирована (`test-set.ts`). */
+  /**
+   * Пул теста В ПОРЯДКЕ ПУЛА (`test-set.ts` → `TEST_POOL`, №098 В2). Детерминирован: это видит
+   * пререндер и первый проход гидратации. Случайную дюжину попытки страница тянет из него сама —
+   * в браузере, после оживления.
+   */
   queue: TestCard[];
   /** Длина набора обёртки — обещана текстами страницы («12 вещей»). */
   target: number;
+  /**
+   * Числа Пространства — снимок боя перед выкатом (`landing-metric.ts`), те же подписи, что у
+   * главной (`landing-v1-copy.ts` → `nums`). Только у «Теста на совместимость» (макет V4); только
+   * СЧЁТЧИКИ — ни людей, ни их оценок (№002 В4).
+   */
+  space: SpaceNumbers | null;
   foot: string;
   canonical: string;
   alternates: { hreflang: string; href: string }[];
+}
+
+function spaceNumbers(lang: Lang): SpaceNumbers {
+  const t = landingV1.nums;
+  const s = PUBLIC_PEOPLE_SNAPSHOT;
+  return {
+    title: t.title[lang],
+    items: [
+      { value: num(s.dims, lang), label: t.dims[lang] },
+      { value: num(s.ratings, lang), label: t.ratings[lang] },
+      { value: num(s.people, lang), label: t.people[lang] },
+      { value: num(s.relations, lang), label: t.relations[lang] },
+    ],
+  };
 }
 
 export function load({ params }: { params: { lang: string; slug: string } }): TestPageData {
@@ -74,7 +108,9 @@ export function load({ params }: { params: { lang: string; slug: string } }): Te
     slug,
     copy: TESTS[slug][lang],
     chrome: CARD_CHROME[lang],
-    queue: buildTestQueue(DIMS, queueLengthFor(slug)).map((e) => {
+    // Пул — общий для трёх обёрток (одна очередь движка, №026 В2 = Г); сенситивные — тот же
+    // список, что у теста главной (`SENSITIVE_PRACTICES`), он нужен запасному пути среза.
+    queue: poolQueue(DIMS, SENSITIVE_PRACTICES).map((e) => {
       // Вид берём КАНОНИЧЕСКИЙ, а не сырое поле каталога: там регистр вразнобой и невидимые
       // знаки (`plans/48` шаг 0). На карточке это прячет капитель, в строке — нет.
       const kind = kindLabelFor(e.kind, lang);
@@ -89,6 +125,7 @@ export function load({ params }: { params: { lang: string; slug: string } }): Te
       };
     }),
     target: TEST_TARGET[slug],
+    space: slug === 'compatibility' ? spaceNumbers(lang) : null,
     foot: TEST_FOOT[lang],
     canonical: href(lang),
     // Двусторонний hreflang с самоссылкой — без неё разметка игнорируется целиком
