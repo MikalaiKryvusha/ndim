@@ -38,6 +38,7 @@ import {
 	readMd,
 	parseMeta,
 	parseInterview,
+	lintOptionsLost,
 	lintSelfContained,
 	mdToHtml,
 	inline,
@@ -1533,7 +1534,26 @@ function armLock(server, docPath, url) {
  */
 function preflight(docPath) {
 	const text = readMd(docPath);
-	const bad = lintSelfContained(parseInterview(docPath, text), text);
+	const parsed = parseInterview(docPath, text);
+	/*
+	 * 🔴 ВАРИАНТЫ БЕЗ КНОПОК — отказ ПЕРВЫМ (`bugs/NEW_review_page_options_without_radio.md`, S1, 2026-09-25). Интервью №098
+	 * поднялось с вариантами абзацами, разбор их не узнал, и владелец увидел одно поле текста: «*какого хуя ты опять
+	 * радиокнопки забыл сделать?*». Разбор теперь знает обе формы; эта проверка ловит следующую неузнанную.
+	 */
+	const lost = lintOptionsLost(parsed);
+	if (lost.length) {
+		console.error('\n⛔ СТРАНИЦА НЕ ПОДНЯТА: у вопроса есть варианты, а кнопок выбора для них не будет.\n');
+		for (const b of lost) {
+			console.error(`   ${b.label} — ${relative(ROOT, docPath)}:${b.line} · строк-вариантов ${b.found}, разобрано ${b.parsed}`);
+			console.error(`      ${b.text}`);
+		}
+		console.error(
+			'\n   Лечение: вариант — пунктом списка «- **А) …**» или абзацем «**А) …**» с первой колонки;\n' +
+				'   буква и «)» стоят сразу за «**». Иначе владелец видит варианты текстом и одно поле ввода.\n',
+		);
+		return false;
+	}
+	const bad = lintSelfContained(parsed, text);
 	if (!bad.length) return true;
 	console.error('\n⛔ СТРАНИЦА НЕ ПОДНЯТА: вопрос отсылает за своим содержимым НАРУЖУ.\n');
 	for (const b of bad) {
