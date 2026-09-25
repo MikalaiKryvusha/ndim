@@ -162,6 +162,18 @@ test('🔴 проба node/cmd с обеими подстроками — не �
   assert.deepEqual(roots, [45756]);
 });
 
+test('🔴 без слова firebase — не мой: node со строкой «emulators:exec -c <мой конфиг> » и границей пути (суд bd195ef, J2)', () => {
+  // Форма живой приманки 46932 (прогон 2026-09-26 00:16): имя node.exe проходит, путь с границей есть, слова firebase
+  // перед emulators:exec нет. Стережёт именно слово firebase в якоре: без него эта строка стала бы «моей».
+  const procs = [
+    ...table(),
+    { pid: 304, ppid: 1, name: 'node.exe', cmd: `"C:\\Program Files\\nodejs\\node.exe" -e setTimeout(()=>{},900000) grep emulators:exec -c ${MY} `, created: 5 },
+  ];
+  const { mine, roots } = pickStandRoots(procs, MY);
+  assert.ok(!mine.includes(304), `без firebase не «мой»: ${mine}`);
+  assert.deepEqual(roots, [45756]);
+});
+
 test('🔴 не node/cmd — не мой, даже когда строка несёт якорь целиком: сессия агента с поручением (повторный суд, п. 1)', () => {
   const procs = [
     ...table(),
