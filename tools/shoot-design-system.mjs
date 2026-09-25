@@ -59,7 +59,7 @@ export const КОМПОНЕНТЫ = [
   { id: 'badge', имя: 'Бейдж состояния', слой: 'Атомы', адрес: '/profile?as=guest', селектор: 'header.bar .badge' },
   { id: 'avatar', имя: 'Аватар', слой: 'Атомы', адрес: '/profile', селектор: '.ava' },
   { id: 'stars', имя: 'Звёзды оценки', слой: 'Атомы', адрес: '/ru/catalog/movie', селектор: '.stars' },
-  { id: 'theme-toggle', имя: 'Переключатель темы', слой: 'Атомы', адрес: '/profile?as=none', селектор: '.signin-screen .ctl .th' },
+  { id: 'theme-toggle', имя: 'Переключатель темы', слой: 'Атомы', адрес: '/profile?as=none', селектор: '.signin-screen .ctl .theme' },
   { id: 'lang-toggle', имя: 'Переключатель языка', слой: 'Атомы', адрес: '/profile?as=none', селектор: '.signin-screen .ctl .lang' },
   { id: 'separator', имя: 'Разделитель «или»', слой: 'Атомы', адрес: '/profile?as=none', селектор: '.signin-screen .sep' },
   { id: 'nav-icons', имя: 'Иконки навигации (набор)', слой: 'Атомы', адрес: '/profile', селектор: 'nav.bnav' },

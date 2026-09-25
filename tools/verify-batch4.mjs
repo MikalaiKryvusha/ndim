@@ -237,7 +237,8 @@ try {
     for (let i = 0; i < 10 && !opened; i += 1) {
       await page.locator('header.bar .lang').click();
       await page.waitForTimeout(300);
-      opened = (await page.locator('header.bar .dd').count()) > 0;
+      // Выпадашка — родной <details> (`HeadControls`): `.dd` лежит в разметке всегда, судим ВИДИМОСТЬ.
+      opened = await page.locator('header.bar .dd').isVisible();
     }
     check('выпадашка открывается', opened);
     const ddBg = await page.locator('header.bar .dd').evaluate((el) => getComputedStyle(el).backgroundColor);
@@ -245,13 +246,13 @@ try {
 
     await page.mouse.click(200, 400); // тап мимо
     await page.waitForTimeout(200);
-    check('тап мимо закрывает', (await page.locator('header.bar .dd').count()) === 0);
+    check('тап мимо закрывает', !(await page.locator('header.bar .dd').isVisible()));
 
     await page.locator('header.bar .lang').click();
     await page.locator('header.bar .dd').waitFor({ timeout: 3000 });
     await page.keyboard.press('Escape');
     await page.waitForTimeout(200);
-    check('Esc закрывает', (await page.locator('header.bar .dd').count()) === 0);
+    check('Esc закрывает', !(await page.locator('header.bar .dd').isVisible()));
 
     await page.locator('header.bar .lang').click();
     await page.locator('header.bar .dd').waitFor({ timeout: 3000 });

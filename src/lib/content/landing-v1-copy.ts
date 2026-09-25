@@ -33,9 +33,6 @@ export const landingV1 = {
   },
   top: {
     signin: { ru: 'Войти', en: 'Sign in' },
-    lang: { ru: 'Язык', en: 'Language' },
-    themeDark: { ru: 'Тёмная тема', en: 'Dark theme' },
-    themeLight: { ru: 'Светлая тема', en: 'Light theme' },
   },
   hero: {
     kicker: { ru: 'Знакомства нового измерения', en: 'Meeting people in a new dimension' },
@@ -121,7 +118,6 @@ export const landingV1 = {
       { ru: 'Измерения', en: 'Dimensions' },
       { ru: 'Меню', en: 'Menu' },
     ] satisfies Bi[],
-    system: { ru: 'системный персонаж', en: 'system character' },
     commonality: { ru: 'Общность', en: 'Commonality' },
     proximity: { ru: 'Близость', en: 'Proximity' },
     similarity: { ru: 'Похожесть', en: 'Similarity' },

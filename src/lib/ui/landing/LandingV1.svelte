@@ -38,11 +38,10 @@
   import { endBoot, hasSession } from '$lib/data/session';
   import { landingDims, landingPeople, landingRatings, landingRelations } from '$lib/data/metrics';
   import { num, votesUnit, type Lang } from '$lib/ui/format';
-  import { theme, toggleTheme } from '$lib/ui/theme.svelte';
   import { MOTION } from '$lib/ui/motion';
   import { ready, readyEarlyScript } from '$lib/ui/ready';
   import Brand from '$lib/ui/Brand.svelte';
-  import Icon from '$lib/ui/Icon.svelte';
+  import HeadControls from '$lib/ui/HeadControls.svelte';
 
   let { lang, entry }: { lang: Lang; entry: Extract<AnalyticsEntry, 'root' | 'landing'> } = $props();
 
@@ -193,13 +192,8 @@
   <header class="top">
     <a class="brand" href={entry === 'root' ? '/' : `/${lang}`} aria-label="NDim Space"><Brand size={30} /><span>NDim Space</span></a>
     <span class="sp"></span>
-    <nav class="langs" aria-label={t.top.lang[lang]}>
-      <a class="pill" class:on={lang === 'ru'} href="/ru" hreflang="ru" lang="ru">RU</a>
-      <a class="pill" class:on={lang === 'en'} href="/en" hreflang="en" lang="en">EN</a>
-    </nav>
-    <button type="button" class="pill theme" onclick={toggleTheme} aria-label={theme() === 'dark' ? t.top.themeLight[lang] : t.top.themeDark[lang]}>
-      <Icon name={theme() === 'dark' ? 'sun' : 'moon'} size={13} />
-    </button>
+    <!-- Тема и язык — ОБЩАЯ пара всех шапок продукта (`HeadControls`); язык главной — АДРЕС (`/ru`, `/en`). -->
+    <HeadControls {lang} hrefFor={(code) => `/${code}`} />
     <a class="signin" href={APP_URL}>{t.top.signin[lang]}</a>
   </header>
 
@@ -218,7 +212,7 @@
           <figure class="port" class:mid={i === 1}>
             <img use:ready src={personaCard(id)} alt={p.name[lang]} width="480" height="640" />
             <span class="bub" style="animation-delay:{i * 0.6}s">{named(item(p.favorite))} <b>★&nbsp;10</b></span>
-            <figcaption class="nm">{p.name[lang]}, {p.age}</figcaption>
+            <figcaption class="cap">{p.name[lang]}, {p.age}</figcaption>
           </figure>
         {/each}
       </div>
@@ -348,7 +342,7 @@
             {@render phoneTop(t.howto.screens.relations[lang])}
             {#each ranked as { persona: p, r } (p.id)}
               <div class="rel">
-                <div class="who"><img use:ready src={personaFace(p.id)} alt="" width="34" height="34" /><b>{p.name[lang]}</b><span class="sys">{t.howto.system[lang]}</span></div>
+                <div class="who"><img use:ready src={personaFace(p.id)} alt="" width="34" height="34" /><b>{p.name[lang]}</b></div>
                 <div class="m3">
                   {#each [{ k: t.howto.commonality[lang], v: r?.commonality }, { k: t.howto.proximity[lang], v: r?.proximity }, { k: t.howto.similarity[lang], v: r?.similarity }] as m (m.k)}
                     <div><div class="k">{m.k}</div><div class="v">{pct(m.v)}</div><div class="bar2"><i style="width:{Math.max(0, Math.min(100, m.v ?? 0))}%"></i></div></div>
@@ -477,15 +471,12 @@
   .card { background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--card-shadow); }
   :global(:root[data-theme='dark']) .card { background: var(--panel); backdrop-filter: blur(10px); }
 
-  /* Шапка: знак и имя, язык, тема, тихий вход для своих (№009 В2: «чтобы те, кто пришёл логиниться, не искали») */
+  /* Шапка: знак и имя, тема и язык, вход для своих (№009 В2: «чтобы те, кто пришёл логиниться, не искали») */
   .top { display: flex; align-items: center; gap: 6px; padding: 14px; max-width: 1240px; margin: 0 auto; }
   .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--heading); font-size: 16px; white-space: nowrap; text-decoration: none; }
   .sp { flex: 1; }
-  .langs { display: flex; gap: 6px; }
-  .pill { font: inherit; font-size: 12px; padding: 5px 8px; border: 1px solid var(--edge); border-radius: 99px; color: var(--dim); background: var(--panel-solid); text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; }
-  .pill.on { color: var(--primary); border-color: var(--primary); font-weight: 700; }
-  .signin { font-size: 14px; font-weight: 700; color: var(--primary); text-decoration: none; padding: 7px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--panel-solid); }
-  :global(:root[data-theme='dark']) .signin { color: var(--accent); }
+  /* «Войти» — тот же элемент продукта, что `.enter` в шапке публичных страниц (`PublicBar.svelte`): залитая пилюля. */
+  .signin { flex: none; white-space: nowrap; padding: 0.4rem 0.9rem; border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-weight: 600; font-size: 0.85rem; text-decoration: none; }
 
   /* 1. Герой: три портрета 3:4, средний выше, у каждого пузырь «что я люблю» с настоящей оценкой */
   .hero { display: grid; gap: 16px; padding-top: 6px; }
@@ -496,10 +487,19 @@
   .port.mid { width: 35%; transform: translateY(-14px); }
   .port img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; border-radius: 18px; box-shadow: var(--card-shadow); display: block; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
   .port img:global(.ok) { opacity: 1; }
-  .nm { position: absolute; left: 8px; bottom: 8px; background: rgba(11, 20, 32, 0.78); color: #fff; font-weight: 800; font-size: 12.5px; padding: 3px 8px; border-radius: 9px; }
-  .bub { position: absolute; left: 50%; top: -26px; transform: translateX(-50%); z-index: 3; white-space: nowrap; font-size: 11.5px; font-weight: 700; background: var(--panel-solid); color: var(--heading); border: 1px solid var(--edge); border-radius: 12px; padding: 4px 8px; box-shadow: var(--card-shadow); animation: bob 3s ease-in-out infinite; }
+  /* Подпись портрета героя. Класс свой: прежний общий `.nm` делил имя с названием карточки «Измерений» в первом
+     телефоне, и названия ложились тёмными плашками на низ экрана (найдено владельцем в бою 2026-09-25). */
+  .cap { position: absolute; left: 8px; bottom: 8px; background: rgba(11, 20, 32, 0.78); color: #fff; font-weight: 800; font-size: 12.5px; padding: 3px 8px; border-radius: 9px; }
+  /* Сдвиг плашки по горизонтали — переменной `--bx`: его делят статичное положение и кадр `bob`, иначе анимация
+     возвращала бы центровку. На узком телефоне крайние плашки прижаты к внешним краям своих портретов: по центру
+     «Игра Престолов ★ 10» над Настей упиралась в край экрана шириной 360 (замер 2026-09-25). */
+  .bub { --bx: -50%; position: absolute; left: 50%; top: -26px; transform: translateX(var(--bx)); z-index: 3; white-space: nowrap; font-size: 11.5px; font-weight: 700; background: var(--panel-solid); color: var(--heading); border: 1px solid var(--edge); border-radius: 12px; padding: 4px 8px; box-shadow: var(--card-shadow); animation: bob 3s ease-in-out infinite; }
   .bub b { color: var(--star); }
-  @keyframes bob { 50% { transform: translateX(-50%) translateY(-3px); } }
+  @keyframes bob { 50% { transform: translateX(var(--bx)) translateY(-3px); } }
+  @media (max-width: 480px) {
+    .port:first-child .bub { left: -4px; --bx: 0%; }
+    .port:last-child .bub { left: auto; right: -4px; --bx: 0%; }
+  }
 
   /* 2. Тест на совместимость */
   .demo-h { text-align: center; margin: 34px 0 0; scroll-margin-top: 16px; }
@@ -604,7 +604,6 @@
   .rel .who img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
   .rel .who img:global(.ok) { opacity: 1; }
   .rel .who b { color: var(--heading); font-size: 14px; }
-  .sys { font-size: 9px; padding: 2px 6px; border-radius: 99px; background: var(--edge-soft); color: var(--dim); font-weight: 700; letter-spacing: 0.03em; }
   .m3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; text-align: center; }
   .m3 .k { font-size: 9.5px; color: var(--dim); }
   .m3 .v { font-size: 15px; font-weight: 800; color: var(--primary); }
@@ -630,6 +629,26 @@
   .faq details[open] summary::after { content: '−'; }
   .faq details p { margin: 8px 0 0; font-size: 14.5px; }
 
+  /* Раскрытие ответа — плавное (слово владельца 2026-09-25: «в блоках FAQ нихуя анимацию не сделали!»). Приём тот же,
+     что у «Истории версий» (`menu/about/+page.svelte`, bugs/56 и bugs/68): раскрывашкой управляет браузер, высоту и
+     прозрачность ведёт `::details-content` с `interpolate-size`; `overflow: hidden` держит отступ ответа ВНУТРИ
+     анимируемой коробки (с `clip` он добавлялся рывком в конце пути). Старый браузер просто не анимирует. */
+  @supports (interpolate-size: allow-keywords) and selector(::details-content) {
+    .faq details { interpolate-size: allow-keywords; }
+    .faq details::details-content {
+      block-size: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition:
+        block-size var(--motion-base) var(--motion-ease),
+        opacity var(--motion-base) var(--motion-ease),
+        content-visibility var(--motion-base) allow-discrete;
+    }
+    .faq details[open]::details-content { block-size: auto; opacity: 1; }
+  }
+  .faq summary::after { transition: transform var(--motion-base) var(--motion-ease); }
+  .faq details[open] summary::after { transform: rotate(180deg); }
+
   /* Финальный призыв и подвал */
   .final { text-align: center; padding: 34px 20px; border-radius: 22px; background: var(--plate); color: #dce9f7; overflow: hidden; }
   .final h2 { color: #fff; }
@@ -643,7 +662,6 @@
   @media (min-width: 900px) {
     .wrap { padding: 0 56px; }
     .top { padding: 18px 56px; gap: 10px; }
-    .pill { padding: 5px 9px; }
     .sec { padding: 56px 0; }
     h1 { font-size: 46px; }
     h2 { font-size: 32px; }
@@ -651,7 +669,7 @@
     .hero { grid-template-columns: 1fr 1.05fr; gap: 36px; align-items: center; padding-top: 24px; }
     .trio { gap: 16px; }
     .bub { font-size: 13.5px; padding: 6px 10px; top: -30px; }
-    .nm { font-size: 15px; }
+    .cap { font-size: 15px; }
     .demo-h { margin-top: 56px; }
     .ndemo { grid-template-columns: 1fr 1fr; gap: 32px; align-items: stretch; padding-top: 48px; }
     .mapcard { order: 0; }

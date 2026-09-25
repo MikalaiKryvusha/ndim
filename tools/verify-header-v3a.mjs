@@ -299,7 +299,8 @@ try {
       btn.type = 'button';
       btn.className = hash ? `badge ${hash}` : 'badge';
       btn.textContent = '◌ гость';
-      bar.insertBefore(btn, bar.querySelector('button'));
+      // Перед парой «тема + язык» — прямым ребёнком шапки, как в разметке `AppBar` (`.badge ~ .ctrls`).
+      bar.insertBefore(btn, bar.querySelector(':scope > .ctrls'));
       const computed = getComputedStyle(btn);
       return { border: computed.borderStyle, radius: computed.borderRadius };
     });

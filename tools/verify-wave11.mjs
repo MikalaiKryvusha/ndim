@@ -135,7 +135,9 @@ for (const width of [390, 1440]) {
 
   const state = async () => await page.evaluate(() => {
     const seg = [...document.querySelectorAll('.seg button')].find((b) => b.classList.contains('on') && /Тём|Свет|Dark|Light/.test(b.innerText));
-    const headerPath = document.querySelector('header.bar button.theme svg path')?.getAttribute('d')?.slice(0, 40) ?? null;
+    // В кнопке темы лежат ОБА значка, лишний прячет CSS (`HeadControls`) — берём видимый.
+    const shown = [...document.querySelectorAll('header.bar button.theme .ic')].find((el) => getComputedStyle(el).display !== 'none');
+    const headerPath = shown?.querySelector('svg path')?.getAttribute('d')?.slice(0, 40) ?? null;
     return {
       attr: document.documentElement.getAttribute('data-theme'),
       seg: seg?.innerText.trim() ?? null,

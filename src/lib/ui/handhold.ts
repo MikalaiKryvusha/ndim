@@ -137,21 +137,30 @@ export function bridgeLine(
           draft: true,
         };
   }
-  const lead = { ru: 'Это была демонстрация', en: 'That was a demonstration' }[lang];
-  return hasCards
-    ? {
-        lead,
-        tail: { ru: ' — вот Ваши настоящие связи.', en: ' — here are your real relations.' }[lang],
-        draft: false,
-      }
-    : {
-        lead,
-        tail: {
-          ru: ' — здесь будут Ваши настоящие связи.',
-          en: ' — your real relations will be here.',
-        }[lang],
-        draft: true,
-      };
+  /*
+   * 🔄 2026-09-25: прежняя пара макета а4 «Это была демонстрация — вот / здесь будут Ваши настоящие связи» снята.
+   * Рядом с тестом, где Макс, Алиса и Настя, «настоящие связи» говорят, что персонажи ненастоящие, — смысл, запрещённый
+   * владельцем: «*Только не пишем, что они вымышленные!*» (`design/new-landing-v1.html:12`) и в тот же день о бое:
+   * «*я ясно блять сказал на лендинге убрать нахуй упоминание, что это выдуманные персонажи!*». Сюда приходит тот,
+   * кто нажал «Смотреть больше» без звёзд или чья запись не уложилась в потолок моста (`compat-demo.ts`).
+   * `[AI]` Строки собраны из уже живых текстов продукта — ответ FAQ главной «Как найти людей, похожих на меня?» и
+   * ветка переноса выше; стоят на вычитке у владельца (`draft`).
+   */
+  if (hasCards) {
+    return {
+      lead: { ru: 'Ваши Связи', en: 'Your Relations' }[lang],
+      tail: { ru: ' — люди с наибольшей Похожестью на Вас.', en: ' — the people with the highest Similarity to you.' }[lang],
+      draft: true,
+    };
+  }
+  return {
+    lead: { ru: 'Оцените фильмы, сериалы, книги и игры, которые Вы любите', en: 'Rate the films, series, books and games you love' }[lang],
+    tail: {
+      ru: ', и в Связях Пространство NDim Space покажет людей с наибольшей Похожестью на Вас.',
+      en: ', and NDim Space will show the people with the highest Similarity to you in Relations.',
+    }[lang],
+    draft: true,
+  };
 }
 
 /**
