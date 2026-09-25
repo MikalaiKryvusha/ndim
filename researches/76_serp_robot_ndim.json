@@ -1,0 +1,211 @@
+{
+ "takenAt": "2026-09-25T16:53:59.196Z",
+ "rows": [
+  {
+   "url": "https://ndimspace.app/ru/test/compatibility",
+   "status": 200,
+   "final": "https://ndimspace.app/ru/test/compatibility",
+   "title": "Тест на совместимость для двоих — NDim Space",
+   "desc": "Честный тест на совместимость для двоих: вы оба оцениваете одни и те же фильмы, игры и привычки, а совпадения говорят сами за себя. Без регистрации и без выдуманных процентов.",
+   "h1": [
+    "Тест на совместимость"
+   ],
+   "h2n": 4,
+   "h3n": 0,
+   "h2": [
+    "Ваша анкета растёт",
+    "Позовите второго",
+    "Каким будет результат",
+    "Это не разовый тест"
+   ],
+   "chars": 2068,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 14,
+   "linksInt": 6,
+   "linksAll": 6,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://ndimspace.app/ru/test/love",
+   "status": 200,
+   "final": "https://ndimspace.app/ru/test/love",
+   "title": "Калькулятор любви — NDim Space",
+   "desc": "Честный калькулятор любви: вы оба отмечаете, что любите, а он считает настоящие совпадения — без случайных процентов и без регистрации.",
+   "h1": [
+    "Калькулятор любви"
+   ],
+   "h2n": 4,
+   "h3n": 0,
+   "h2": [
+    "Копятся искры",
+    "Позовите половинку",
+    "Ваш результат",
+    "Это не разовый тест"
+   ],
+   "chars": 1738,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 14,
+   "linksInt": 6,
+   "linksAll": 6,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://ndimspace.app/ru/test/personality",
+   "status": 200,
+   "final": "https://ndimspace.app/ru/test/personality",
+   "title": "Тест личности — NDim Space",
+   "desc": "Честный тест личности: вместо готового «типа» — живая анкета из Ваших настоящих ответов. Оцените знакомые фильмы, игры и привычки — без регистрации.",
+   "h1": [
+    "Тест личности"
+   ],
+   "h2n": 4,
+   "h3n": 0,
+   "h2": [
+    "Ваша анкета растёт",
+    "Сравниться с другом",
+    "Каким будет результат",
+    "Это не разовый тест"
+   ],
+   "chars": 2068,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 14,
+   "linksInt": 6,
+   "linksAll": 6,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://ndimspace.app/ru/tests",
+   "status": 200,
+   "final": "https://ndimspace.app/ru/tests",
+   "title": "Тесты — NDim Space",
+   "desc": "Тесты Пространства: тест на совместимость для двоих, тест личности и калькулятор любви — поверх одной живой анкеты, без регистрации и без выдуманных процентов.",
+   "h1": [
+    "Тесты"
+   ],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 926,
+   "ld": [],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 2,
+   "linksInt": 6,
+   "linksAll": 6,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://ndimspace.app/en/test/compatibility",
+   "status": 200,
+   "final": "https://ndimspace.app/en/test/compatibility",
+   "title": "Compatibility test for two — NDim Space",
+   "desc": "An honest compatibility test for two: you both rate the same movies, games and habits, and the matches speak for themselves. No sign-up and no made-up percentages.",
+   "h1": [
+    "Compatibility test"
+   ],
+   "h2n": 4,
+   "h3n": 0,
+   "h2": [
+    "Your profile is growing",
+    "Invite the second person",
+    "What the result looks like",
+    "This is not a one-time test"
+   ],
+   "chars": 2156,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 14,
+   "linksInt": 6,
+   "linksAll": 6,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://ndimspace.app/en/test/love",
+   "status": 200,
+   "final": "https://ndimspace.app/en/test/love",
+   "title": "Love calculator — NDim Space",
+   "desc": "An honest love calculator: you both mark what you love, and it counts your real matches — no random percentages and no sign-up.",
+   "h1": [
+    "Love calculator"
+   ],
+   "h2n": 4,
+   "h3n": 0,
+   "h2": [
+    "Sparks are adding up",
+    "Invite your other half",
+    "Your result",
+    "This is not a one-time test"
+   ],
+   "chars": 1867,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 14,
+   "linksInt": 6,
+   "linksAll": 6,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://ndimspace.app/en/test/personality",
+   "status": 200,
+   "final": "https://ndimspace.app/en/test/personality",
+   "title": "Personality test — NDim Space",
+   "desc": "An honest personality test: instead of a ready-made “type” — a living profile built from your real answers. Rate familiar movies, games and habits — no sign-up.",
+   "h1": [
+    "Personality test"
+   ],
+   "h2n": 4,
+   "h3n": 0,
+   "h2": [
+    "Your profile is growing",
+    "Compare with a friend",
+    "What the result looks like",
+    "This is not a one-time test"
+   ],
+   "chars": 2110,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 14,
+   "linksInt": 6,
+   "linksAll": 6,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://ndimspace.app/en/tests",
+   "status": 200,
+   "final": "https://ndimspace.app/en/tests",
+   "title": "Tests — NDim Space",
+   "desc": "NDim Space tests: a compatibility test for two, a personality test and a love calculator — on top of one living profile, with no sign-up and no made-up percentages.",
+   "h1": [
+    "Tests"
+   ],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 930,
+   "ld": [],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 2,
+   "linksInt": 6,
+   "linksAll": 6,
+   "dateMod": "",
+   "datePub": ""
+  }
+ ]
+}

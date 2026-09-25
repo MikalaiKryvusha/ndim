@@ -1,0 +1,1503 @@
+{
+ "takenAt": "2026-09-25T16:40:09.386Z",
+ "rows": [
+  {
+   "url": "https://geekcube.ru/tests/sovmestimost-dlya-par",
+   "status": 200,
+   "final": "https://geekcube.ru/tests/sovmestimost-dlya-par",
+   "title": "Тест на совместимость пары (для двоих) — 25 вопросов (онлайн)",
+   "desc": "Пройдите тест на совместимость пары онлайн и узнайте, насколько гармоничны ваши отношения. Оцените уровень доверия, взаимопонимания, эмоциональной близости и совместимости мужчины и женщины с подробным результатом. Бесплатно и без регистрации.",
+   "h1": [
+    "Тест на совместимость пары"
+   ],
+   "h2n": 4,
+   "h3n": 0,
+   "h2": [
+    "Зачем проходить тест на совместимость пары",
+    "Кому подойдет онлайн-тест на совместимость",
+    "Какая методика используется для оценки совместимости пары",
+    "FAQ: ответы на частые вопросы"
+   ],
+   "chars": 7996,
+   "ld": [
+    "Article",
+    "CommentAction",
+    "WebPage",
+    "ReadAction",
+    "ImageObject",
+    "BreadcrumbList",
+    "ListItem",
+    "WebSite",
+    "SearchAction",
+    "EntryPoint",
+    "PropertyValueSpecification",
+    "Person"
+   ],
+   "faqWord": true,
+   "inputs": 4,
+   "buttons": 4,
+   "linksInt": 15,
+   "linksAll": 15,
+   "dateMod": "2026-05-28T04:40:43+00:00",
+   "datePub": "2025-03-11T03:36:33+00:00"
+  },
+  {
+   "url": "https://testometrika.com/romance/compatibility-test/",
+   "status": 200,
+   "final": "https://testometrika.com/romance/compatibility-test/",
+   "title": "Тест на совместимость | Насколько светлое будущее у вашей пары?",
+   "desc": "Узнайте совместимость вашей пары прямо сейчас. Насколько крепкими будут ваши отношения. Тест на совместимость определит это!",
+   "h1": [
+    "Совместима ли ваша пара?"
+   ],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 3180,
+   "ld": [
+    "WebSite",
+    "SearchAction",
+    "Organization",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 2,
+   "buttons": 12,
+   "linksInt": 118,
+   "linksAll": 128,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://testometrika.com/romance/test-na-sovmestimost-dlya-dvoikh/",
+   "status": 200,
+   "final": "https://testometrika.com/romance/test-na-sovmestimost-dlya-dvoikh/",
+   "title": "Тест на совместимость для двоих: онлайн проверка пары",
+   "desc": "Тест на совместимость для двоих помогает оценить отношения пары, уровень эмоциональной близости, общие ценности, быт и финансы, стиль общения и совместный досуг. Результаты показывают сильные стороны союза и возможные точки напряжения, подсказывая, о чем важно поговорить вдвоем.",
+   "h1": [
+    "Тест на совместимость для двоих"
+   ],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 2922,
+   "ld": [
+    "WebSite",
+    "SearchAction",
+    "Organization",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 2,
+   "buttons": 12,
+   "linksInt": 118,
+   "linksAll": 128,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://quizpanda.com/ru/the-compatibility-quiz-is-your-partner-the-one-for-you/",
+   "status": 200,
+   "final": "https://quizpanda.com/ru/the-compatibility-quiz-is-your-partner-the-one-for-you/",
+   "title": "Тест: совместимость, твой ли это человек?",
+   "desc": "",
+   "h1": [
+    "Тест на совместимость: Твой партнер — тот самый человек?"
+   ],
+   "h2n": 5,
+   "h3n": 4,
+   "h2": [
+    "Тест на совместимость: Твой партнер — тот самый человек?",
+    "Итак, что вообще значит тот самый человек ?",
+    "В каких отношениях ты живешь: В своих или чужих?",
+    "Помни, все дело в связи, сострадании и преданности.",
+    "Готов раскрыть судьбу своих отношений?"
+   ],
+   "chars": 6032,
+   "ld": [
+    "Quiz",
+    "Thing",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 1,
+   "buttons": 0,
+   "linksInt": 1,
+   "linksAll": 1,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://soulmatescan.com/",
+   "status": 200,
+   "final": "https://soulmatescan.com/",
+   "title": "Первый тест на совместимость пары от ИИ - SoulmateScan",
+   "desc": "Узнайте: Кто абьюзер, а Кто РЭД флаг, Кто из вас больше любит, вероятность расставания и ещё 50+ выводов о вашей паре на основе ИИ-анализа!",
+   "h1": [
+    "ПРОЙДИТЕ ТЕСТ ОТ ИИ И УЗНАЙТЕ ПРАВДУ О ВАШИХ ОТНОШЕНИЯХ"
+   ],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 2815,
+   "ld": [
+    "WebSite",
+    "Organization",
+    "ImageObject"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 5,
+   "linksInt": 2,
+   "linksAll": 2,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://calculatorov.ru/rasschitat-sovmestimost/",
+   "status": 200,
+   "final": "https://calculatorov.ru/rasschitat-sovmestimost/",
+   "title": "Рассчитать совместимость",
+   "desc": "Проверьте уровень совместимости в любви, дружбе и бизнесе по дате рождения и имени. Быстрый онлайн-тест – оцените ваш союз.",
+   "h1": [
+    "Рассчитать совместимость"
+   ],
+   "h2n": 6,
+   "h3n": 3,
+   "h2": [
+    "Похожие калькуляторы и статьи",
+    "Как рассчитать совместимость с помощью нашего калькулятора",
+    "Как происходит расчет по дате рождения",
+    "Ключевые понятия для понимания результата",
+    "Что делать с результатом?",
+    "Часто задаваемые вопросы"
+   ],
+   "chars": 5974,
+   "ld": [
+    "Organization",
+    "ImageObject",
+    "WebSite",
+    "WebPage",
+    "Article",
+    "BreadcrumbList",
+    "ListItem",
+    "FAQPage",
+    "Question",
+    "Answer",
+    "WebApplication",
+    "Offer"
+   ],
+   "faqWord": true,
+   "inputs": 4,
+   "buttons": 4,
+   "linksInt": 32,
+   "linksAll": 34,
+   "dateMod": "2026-08-13T10:35:01Z",
+   "datePub": "2025-10-18T07:07:56Z"
+  },
+  {
+   "url": "https://pikuco.ru/tests/124173/",
+   "status": 200,
+   "final": "https://pikuco.ru/tests/124173/",
+   "title": "Тест на совместимость пары",
+   "desc": "Тест покажет насколько схожи ваши взгляди на жизнь. опубликовано 23.01.2025 20:30:51",
+   "h1": [],
+   "h2n": 0,
+   "h3n": 1,
+   "h2": [],
+   "chars": 1463,
+   "ld": [
+    "Article",
+    "WebPage",
+    "ImageObject",
+    "Person",
+    "Organization"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 4,
+   "linksInt": 42,
+   "linksAll": 48,
+   "dateMod": "+03:00",
+   "datePub": "23-01-2025T20:30:51+03:00"
+  },
+  {
+   "url": "https://loveplay.io/ru/quizzes/test-na-sovmestimost",
+   "status": 200,
+   "final": "https://loveplay.io/ru/quizzes/test-na-sovmestimost",
+   "title": "Бесплатный Тест на Совместимость Пар (3 мин) — Узнай Процент",
+   "desc": "Бесплатный тест на совместимость для пар! 12 вопросов, 3 минуты. Получите процент совместимости + персональные рекомендации. Уже прошли 14,523 пары.",
+   "h1": [
+    "Тест на Совместимость для Пар"
+   ],
+   "h2n": 4,
+   "h3n": 10,
+   "h2": [
+    "Что такое совместимость в отношениях и почему это важно",
+    "Ваш результат совместимости",
+    "Понимание ваших результатов совместимости",
+    "Похожие статьи"
+   ],
+   "chars": 8834,
+   "ld": [
+    "Quiz",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": true,
+   "inputs": 1,
+   "buttons": 7,
+   "linksInt": 16,
+   "linksAll": 20,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://slozhno.live/tests/dlya-pary-na-sovmestimost/",
+   "status": 200,
+   "final": "https://slozhno.live/tests/dlya-pary-na-sovmestimost/",
+   "title": "💑 Тест на совместимость для двоих: пара, парень, муж, отношения — Ясно",
+   "desc": "Пройдите психологический тест на совместимость для пары, двоих, парня и девушки 👩‍❤️‍👨 Узнайте, совместимы ли вы и подходите ли друг другу!",
+   "h1": [
+    "Тест на совместимость"
+   ],
+   "h2n": 5,
+   "h3n": 15,
+   "h2": [
+    "Авторы:",
+    "Авторы:",
+    "Пройти тест: Тест на совместимость",
+    "Другие тесты",
+    "Популярные материалы"
+   ],
+   "chars": 2952,
+   "ld": [],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 11,
+   "linksInt": 67,
+   "linksAll": 71,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://toolfox.ru/tools/complementarity-test",
+   "status": 200,
+   "final": "https://toolfox.ru/tools/complementarity-test",
+   "title": "Тест на совместимость пары: чем вы дополняете друг друга | ТулФокс",
+   "desc": "Узнайте, насколько хорошо вы дополняете друг друга 💑 20 вопросов ⚡ 8 категорий оценки ✓ Эмоциональная поддержка ✓ Общение и понимание ✓ Совместные интересы ✓ Жизненные ценности ✓ Разрешение конфликтов ✓ Планирование будущего ✓ Детальные результаты ✓ Практические рекомендации",
+   "h1": [
+    "Чем вы дополняете друг друга?"
+   ],
+   "h2n": 11,
+   "h3n": 15,
+   "h2": [
+    "Содержание",
+    "Тест на совместимость пары: чем вы дополняете друг друга",
+    "Тестирование пары",
+    "Факты о совместимости в парах",
+    "Уровни совместимости пары",
+    "Совместимость — не судьба",
+    "Как правильно пройти тест на совместимость",
+    "Примеры использования теста на совместимость",
+    "Частые вопросы о тесте на совместимость",
+    "Связанные тесты об отношениях",
+    "Комментарии"
+   ],
+   "chars": 12794,
+   "ld": [
+    "SoftwareApplication",
+    "Offer",
+    "Organization",
+    "Audience",
+    "Article",
+    "ImageObject",
+    "WebPage",
+    "Thing",
+    "FAQPage",
+    "Question",
+    "Answer",
+    "HowTo"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 14,
+   "linksInt": 37,
+   "linksAll": 37,
+   "dateMod": "2026-09-24",
+   "datePub": "2025-03-15"
+  },
+  {
+   "url": "https://lovetest.me/ru/",
+   "status": 200,
+   "final": "https://lovetest.me/ru/",
+   "title": "Тест на любовь: калькулятор любви по именам",
+   "desc": "Введите два имени — или имена и даты рождения — и узнайте процент любви от 0 до 100 %. Бесплатный тест на совместимость с разбором по знакам зодиака.",
+   "h1": [
+    "Сколько тут на самом деле любви ?"
+   ],
+   "h2n": 3,
+   "h3n": 0,
+   "h2": [
+    "Игры о любви",
+    "Вы влюблены или это просто дружба?",
+    "Частые вопросы"
+   ],
+   "chars": 2522,
+   "ld": [
+    "WebSite",
+    "WebApplication",
+    "Offer",
+    "FAQPage",
+    "Question",
+    "Answer"
+   ],
+   "faqWord": true,
+   "inputs": 4,
+   "buttons": 22,
+   "linksInt": 26,
+   "linksAll": 26,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://mylovematch.ru/",
+   "status": 200,
+   "final": "https://mylovematch.ru/",
+   "title": "LoveMatch — тест на совместимость пары онлайн бесплатно",
+   "desc": "Бесплатный онлайн-тест на совместимость пары на научной основе: привязанность, конфликты, языки любви, ценности и финансы. Проходите вдвоём с разных устройств и получайте персональные советы.",
+   "h1": [
+    "Тест на совместимость пары онлайн 💞"
+   ],
+   "h2n": 4,
+   "h3n": 0,
+   "h2": [
+    "Как это работает",
+    "Наука в основе 🔬",
+    "Что вы узнаете",
+    "Полезные статьи 📚"
+   ],
+   "chars": 1910,
+   "ld": [
+    "WebApplication",
+    "Offer",
+    "FAQPage",
+    "Question",
+    "Answer"
+   ],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 0,
+   "linksInt": 17,
+   "linksAll": 17,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://testsonline.net/love/test-na-sovmestimost-dlya-dvoih/",
+   "err": "fetch failed"
+  },
+  {
+   "url": "https://psi-test.ru/privat/sovmestim-pary.html",
+   "status": 200,
+   "final": "https://psi-test.ru/privat/sovmestim-pary.html",
+   "title": "Тест на совместимость пары - ЛП",
+   "desc": "психологический Тест на совместимость пары",
+   "h1": [],
+   "h2n": 0,
+   "h3n": 1,
+   "h2": [],
+   "chars": 606,
+   "ld": [],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 0,
+   "linksInt": 4,
+   "linksAll": 5,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://love.romanticcollection.ru/calculator/",
+   "err": "fetch failed"
+  },
+  {
+   "url": "https://ru.best-friend.me/",
+   "status": 200,
+   "final": "https://ru.best-friend.me/",
+   "title": "Тест на дружбу — Создай тест и проверь друзей онлайн",
+   "desc": "Тесты на дружбу, любовь и отношения. Пройдите эти веселые тесты, чтобы узнать, кто вам лучше всех подходит. Этот тест для друзей поможет вам прощупать почву и понять, подходит ли вам ваш партнер.",
+   "h1": [
+    "тест на дружбу"
+   ],
+   "h2n": 6,
+   "h3n": 5,
+   "h2": [
+    "Правила",
+    "Что такое тест на дружбу?",
+    "Как работает тест?",
+    "Почему стоит создать свой тест на дружбу?",
+    "Тест на лучшего друга",
+    "Часто задаваемые вопросы"
+   ],
+   "chars": 2029,
+   "ld": [
+    "FAQPage",
+    "Question",
+    "Answer"
+   ],
+   "faqWord": true,
+   "inputs": 1,
+   "buttons": 4,
+   "linksInt": 5,
+   "linksAll": 12,
+   "dateMod": "2025-01-05T00:00:00",
+   "datePub": "2022-06-17T00:00:00"
+  },
+  {
+   "url": "https://ru.quitsly.com/",
+   "status": 200,
+   "final": "https://ru.quitsly.com/",
+   "title": "Тест на дружбу 2026: Оцените вашу дружбу прямо сейчас!",
+   "desc": "Пройдите захватывающий Тест на дружбу и узнайте, насколько крепка ваша связь. Бесплатно и весело! Результаты ждут вас.",
+   "h1": [
+    "тест на дружбу 2026"
+   ],
+   "h2n": 1,
+   "h3n": 2,
+   "h2": [
+    "Популярный Тест на Дружбу 2026 Онлайн"
+   ],
+   "chars": 1464,
+   "ld": [
+    "Product",
+    "Brand",
+    "Review",
+    "Rating",
+    "AggregateRating",
+    "Offer",
+    "Organization"
+   ],
+   "faqWord": true,
+   "inputs": 1,
+   "buttons": 1,
+   "linksInt": 0,
+   "linksAll": 11,
+   "dateMod": "",
+   "datePub": "2024-08-24T03:37:40Z"
+  },
+  {
+   "url": "https://testdruzei.com/",
+   "status": 200,
+   "final": "https://testdruzei.com/",
+   "title": "Тест на дружбу: Насколько хорошо тебя знают друзья?",
+   "desc": "Создай свой тест на дружбу за минуту, отправь друзьям в WhatsApp и узнай, кто знает тебя лучше всех. Бесплатно и без регистрации.",
+   "h1": [
+    "Тест на дружбу"
+   ],
+   "h2n": 17,
+   "h3n": 18,
+   "h2": [
+    "Тест на дружбу: Откройте свою связь",
+    "Что такое тест на дружбу?",
+    "Преимущества тестов на дружбу",
+    "Типы тестов на дружбу и где их использовать",
+    "Тесты на дружбу в разных культурах",
+    "Сложный тест на дружбу или тест для лучших друзей? Как выбрать",
+    "Уровень сложности и фактор веселья",
+    "Как создать тест на дружбу: Пошагово",
+    "Технические шаги и обмен",
+    "Популярные платформы и особенности для тестов на дружбу",
+    "Важность обратной связи участников",
+    "Тесты на дружбу нового поколения"
+   ],
+   "chars": 25832,
+   "ld": [
+    "WebApplication",
+    "Offer"
+   ],
+   "faqWord": true,
+   "inputs": 53,
+   "buttons": 13,
+   "linksInt": 42,
+   "linksAll": 46,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://inparty.app/",
+   "status": 200,
+   "final": "https://inparty.app/",
+   "title": "Найти друзей и компанию - знакомства по интересам и чат в InParty",
+   "desc": "Сайт дружеских знакомств. Найди друга и подругу рядом — поговорить в чате, погулять или попутчика в путешествие, бесплатная регистрация!",
+   "h1": [
+    "Найди друзей рядом. Дружеские знакомства."
+   ],
+   "h2n": 6,
+   "h3n": 6,
+   "h2": [
+    "Отзывы пользователей",
+    "Все пользователи - настоящие",
+    "Найти компанию легко!",
+    "Смотри список событий и находи новых друзей",
+    "Есть вопрос или идея? Напишите в чате!",
+    "Читайте в нашем блоге"
+   ],
+   "chars": 4604,
+   "ld": [
+    "WebApplication",
+    "Offer",
+    "AggregateRating",
+    "Language",
+    "Organization"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 4,
+   "linksInt": 165,
+   "linksAll": 174,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://inparty.app/tags",
+   "status": 200,
+   "final": "https://inparty.app/tags",
+   "title": "Знакомства по интересам и чат — найти друзей и компанию в InParty",
+   "desc": "Список интересов и увлечений. Познакомиться или найти друзей рядом в приложении InParty.",
+   "h1": [
+    "Знакомства по интересам"
+   ],
+   "h2n": 2,
+   "h3n": 0,
+   "h2": [
+    "Темы для общения:",
+    "Интересные занятия:"
+   ],
+   "chars": 2007,
+   "ld": [
+    "WebApplication",
+    "Offer",
+    "AggregateRating",
+    "Language",
+    "Organization",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 4,
+   "linksInt": 90,
+   "linksAll": 98,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://inparty.app/moscow/progulyatsya-20",
+   "status": 200,
+   "final": "https://inparty.app/moscow/progulyatsya-20",
+   "title": "Найти компанию для прогулок в Москве - знакомства по интересам в InParty",
+   "desc": "Найди здесь с кем сходить прогуляться в Москве — поиск друзей рядом в приложении InParty",
+   "h1": [
+    "Компании для прогулок в Москве"
+   ],
+   "h2n": 1,
+   "h3n": 0,
+   "h2": [
+    "Социальная сеть InParty — найди друзей по интересам рядом с тобой."
+   ],
+   "chars": 3360,
+   "ld": [
+    "WebApplication",
+    "Offer",
+    "AggregateRating",
+    "Language",
+    "Organization",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 4,
+   "linksInt": 408,
+   "linksAll": 416,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://t-j.ru/adult-friends/",
+   "status": 200,
+   "final": "https://t-j.ru/adult-friends/",
+   "title": "Где найти друзей: 10 мест, где можно завести знакомства",
+   "desc": "Друзья делают жизнь лучше. Согласно исследованию, даже одна дружеская беседа снижает стресс. Идеи читателей Т⁠—⁠Ж, где можно завязать знакомства и найти близких по духу людей.",
+   "h1": [
+    "«Целая пачка друзей появилась»: где найти близких по духу людей"
+   ],
+   "h2n": 10,
+   "h3n": 0,
+   "h2": [
+    "🧑‍💻 В коливинге и коворкинге",
+    "💼 На работе",
+    "☕ В сервисах для знакомств",
+    "📚 На учебе",
+    "🙋 В волонтерских проектах",
+    "🧶 В тематических группах и чатах",
+    "🍃 На улице",
+    "💃 На танцах",
+    "👪 В семье",
+    "⛺ В походе"
+   ],
+   "chars": 34128,
+   "ld": [
+    "Article",
+    "CreativeWork",
+    "Person",
+    "ImageObject",
+    "Organization",
+    "WebPage",
+    "BreadcrumbList",
+    "ListItem",
+    "CreativeWorkSeries",
+    "AggregateRating",
+    "MobileApplication",
+    "Offer"
+   ],
+   "faqWord": false,
+   "inputs": 3,
+   "buttons": 38,
+   "linksInt": 170,
+   "linksAll": 176,
+   "dateMod": "2025-06-17T12:00:00+03:00",
+   "datePub": "2025-06-17T12:00:00+03:00"
+  },
+  {
+   "url": "https://t-j.ru/list/tinder-for-friends/",
+   "status": 200,
+   "final": "https://t-j.ru/list/tinder-for-friends/",
+   "title": "Приложения для поиска друзей в 2026: 5 сервисов для знакомства и общения по интересам",
+   "desc": "Где можно найти друзей для общения в интернете. Как найти друзей в интернете. Подборка приложений для поиска друзей по интересам.",
+   "h1": [
+    "Где искать друзей в интернете: 5 сервисов"
+   ],
+   "h2n": 5,
+   "h3n": 1,
+   "h2": [
+    "Invitor",
+    "Frienda",
+    "InParty",
+    "Random Coffee",
+    "Санек зовет"
+   ],
+   "chars": 25405,
+   "ld": [
+    "Article",
+    "CreativeWork",
+    "Person",
+    "ImageObject",
+    "Organization",
+    "WebPage",
+    "BreadcrumbList",
+    "ListItem",
+    "CreativeWorkSeries",
+    "AggregateRating",
+    "MobileApplication",
+    "Offer"
+   ],
+   "faqWord": false,
+   "inputs": 3,
+   "buttons": 42,
+   "linksInt": 127,
+   "linksAll": 147,
+   "dateMod": "2026-08-10T12:00:00+03:00",
+   "datePub": "2026-08-10T12:00:00+03:00"
+  },
+  {
+   "url": "https://lifehacker.ru/kak-najti-druzej/",
+   "status": 200,
+   "final": "https://lifehacker.ru/kak-najti-druzej/",
+   "title": "Как найти друзей в любом возрасте — Лайфхакер",
+   "desc": "Не сидите в одиночестве, надеясь на случайные знакомства. Действуйте. Лайфхакер поможет найти друзей в интернете и реальной жизни. А советы о том, как понравиться любому человеку и перестать стесняться, ещё больше упростят процесс поиска.",
+   "h1": [
+    "Как найти друзей в любом возрасте"
+   ],
+   "h2n": 3,
+   "h3n": 7,
+   "h2": [
+    "Простые советы, которые помогут вам завязать дружбу",
+    "Как найти друзей онлайн",
+    "Как найти друзей офлайн"
+   ],
+   "chars": 16387,
+   "ld": [
+    "Article",
+    "CommentAction",
+    "WebPage",
+    "ReadAction",
+    "ImageObject",
+    "BreadcrumbList",
+    "ListItem",
+    "WebSite",
+    "Organization",
+    "Person"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 160,
+   "linksInt": 129,
+   "linksAll": 146,
+   "dateMod": "2024-05-27T12:16:53+03:00",
+   "datePub": "2018-02-03T03:00:00+03:00"
+  },
+  {
+   "url": "https://lifehacker.ru/gde-naxodit-druzej/",
+   "status": 200,
+   "final": "https://lifehacker.ru/gde-naxodit-druzej/",
+   "title": "Где искать друзей во взрослом возрасте: 7 отличных идей от читателей Лайфхакера — Лайфхакер",
+   "desc": "Узнали у наших читателей, где можно найти друзей: например, в онлайн-играх, тематических сообществах, клубах по интересу и не только.",
+   "h1": [
+    "Где искать друзей во взрослом возрасте: 7 отличных идей от читателей Лайфхакера"
+   ],
+   "h2n": 7,
+   "h3n": 0,
+   "h2": [
+    "1. На работе",
+    "2. В клубах по интересам",
+    "3. На учебных курсах",
+    "4. На мероприятиях",
+    "5. В онлайн‑сообществах",
+    "6. В онлайн‑играх",
+    "7. С помощью сервисов для знакомств"
+   ],
+   "chars": 14703,
+   "ld": [
+    "Article",
+    "CommentAction",
+    "WebPage",
+    "ReadAction",
+    "ImageObject",
+    "BreadcrumbList",
+    "ListItem",
+    "WebSite",
+    "Organization",
+    "Person"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 121,
+   "linksInt": 70,
+   "linksAll": 82,
+   "dateMod": "2023-06-19T14:02:04+03:00",
+   "datePub": "2022-07-24T19:00:54+03:00"
+  },
+  {
+   "url": "https://vc.ru/luchshie/2742899-luchshie-sayty-znakomstv-dlya-druzhby",
+   "status": 200,
+   "final": "https://vc.ru/solve-captcha/luchshie/2742899-luchshie-sayty-znakomstv-dlya-druzhby",
+   "title": "CAPTCHA Verification",
+   "desc": "",
+   "h1": [],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 23,
+   "ld": [],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 0,
+   "linksInt": 0,
+   "linksAll": 0,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://dtf.ru/topraiting/3118146-luchshie-saity-znakomstv-po-interesam-top-10-reiting-2024",
+   "status": 200,
+   "final": "https://dtf.ru/topraiting/3118146-luchshie-saity-znakomstv-po-interesam-top-10-reiting-2024",
+   "title": "Лучшие сайты знакомств по интересам: топ-10, рейтинг 2024 — ТОП-10 Рейтинги на DTF",
+   "desc": "Мы собрали лучшие сайты знакомств по интересам, которые хорошо зарекомендовали себя для поиска единомышленников, друзей по интересам по реальным отзывам потребителей в 2024 году.",
+   "h1": [
+    "Лучшие сайты знакомств по интересам: топ-10, рейтинг 2024"
+   ],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 6015,
+   "ld": [
+    "BreadcrumbList",
+    "ListItem",
+    "Article",
+    "Person",
+    "ImageObject"
+   ],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 9,
+   "linksInt": 48,
+   "linksAll": 53,
+   "dateMod": "2025-03-23T11:19:53.000Z",
+   "datePub": "2024-10-26T15:12:39.000Z"
+  },
+  {
+   "url": "https://www.mahnem.ru/walk/",
+   "status": 200,
+   "final": "https://www.mahnem.ru/walk/",
+   "title": "Махнем! Друзья по интересам. Серьезные знакомства для прогулок и активного отдыха.",
+   "desc": "Найдите друзей по интересам для совместного времяпровождения. Серьезные знакомства и поиск компании для совместного отдыха.",
+   "h1": [
+    "Знакомства по интересам"
+   ],
+   "h2n": 1,
+   "h3n": 0,
+   "h2": [
+    "Топ объявлений"
+   ],
+   "chars": 2183,
+   "ld": [],
+   "faqWord": false,
+   "inputs": 7,
+   "buttons": 3,
+   "linksInt": 34,
+   "linksAll": 35,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://moidruzja.ru/",
+   "status": 200,
+   "final": "https://moidruzja.ru/",
+   "title": "Мои друзья — найди друзей по интересам в MAX | Бесплатный бот для дружбы",
+   "desc": "Мои друзья — бесплатный бот для поиска друзей по интересам в мессенджере MAX. Находи единомышленников, общайся, выполняй задания и получай бонусы. 20+ интересов, умный алгоритм, безопасное сообщество.",
+   "h1": [
+    "Найди друзей и отправляйся в приключение"
+   ],
+   "h2n": 5,
+   "h3n": 4,
+   "h2": [
+    "Многопользовательская игра с открытым миром",
+    "Виртуальный друг с AI",
+    "Создавай неограниченное количество виртуальных друзей",
+    "🛡️ Три уровня безопасности",
+    "О проекте"
+   ],
+   "chars": 3607,
+   "ld": [
+    "WebApplication",
+    "Offer",
+    "Person",
+    "AggregateRating",
+    "Organization",
+    "ContactPoint",
+    "FAQPage",
+    "Question",
+    "Answer",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 2,
+   "buttons": 25,
+   "linksInt": 18,
+   "linksAll": 27,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://random-coffee.ru/soobschestva",
+   "status": 200,
+   "final": "https://random-coffee.ru/soobschestva",
+   "title": "Группы по интересам — телеграм-бот для поиска тематических сообществ",
+   "desc": "Тематические сообщества в Random Coffee. Телеграм-бот для знакомств по интересам. Поиск друзей, менторов и бизнес-партнёров. Общение с людьми, с которыми можно созвониться или встретиться вживую.",
+   "h1": [
+    "Знакомства по интересам: сообщества RANDOM COFFEE"
+   ],
+   "h2n": 4,
+   "h3n": 0,
+   "h2": [
+    "Что такое тематические сообщества, и как работают встречи?",
+    "Кому это нужно?",
+    "Как работает RANDOM COFFEE?",
+    "Что говорят про Random Coffee?"
+   ],
+   "chars": 6780,
+   "ld": [
+    "FAQPage",
+    "Question",
+    "Answer"
+   ],
+   "faqWord": false,
+   "inputs": 1,
+   "buttons": 30,
+   "linksInt": 76,
+   "linksAll": 92,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://daily.afisha.ru/news/42250-v-rossii-poyavilos-mobilnoe-prilozhenie-dlya-poiska-druzey-po-interesam-i-sovmestimosti/",
+   "status": 200,
+   "final": "https://daily.afisha.ru/news/42250-v-rossii-poyavilos-mobilnoe-prilozhenie-dlya-poiska-druzey-po-interesam-i-sovmestimosti/",
+   "title": "В России появилось мобильное приложение для поиска друзей по интересам и совместимости - Афиша Daily",
+   "desc": "В России появилось мобильное приложение Realy, призванное помочь пользователям найти друзей по интересам. Об этом сообщил Inc.",
+   "h1": [
+    "В России появилось мобильное приложение для поиска друзей по интересам и совместимости"
+   ],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 4438,
+   "ld": [
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 1,
+   "linksInt": 44,
+   "linksAll": 48,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://kudago.com/msk/activity/dating/",
+   "err": "fetch failed"
+  },
+  {
+   "url": "https://loveplanet.ru/a-znakomstva/dlja-po_interesam",
+   "status": 200,
+   "final": "https://loveplanet.ru/a-znakomstva/dlja-po_interesam",
+   "title": "Знакомства по интересам, познакомиться по интересам – LovePlanet.ru",
+   "desc": "Популярный бесплатный сайт знакомств по интересам. Регистрируйтесь и начинайте знакомиться по интересам на сайте знакомств LovePlanet.ru.",
+   "h1": [
+    "Знакомства по интересам"
+   ],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 6412,
+   "ld": [
+    "WebSite",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 2,
+   "buttons": 0,
+   "linksInt": 537,
+   "linksAll": 542,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://similarminds.com/compatibility-bigfive.html",
+   "status": 200,
+   "final": "https://similarminds.com/compatibility-bigfive.html",
+   "title": "Big Five Compatibility Test - Romantic Compatibility and/or Friend Compatibility",
+   "desc": "",
+   "h1": [],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 975,
+   "ld": [],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 0,
+   "linksInt": 10,
+   "linksAll": 10,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://www.personality-quizzes.com/relationship-compatibility-test",
+   "status": 200,
+   "final": "https://www.personality-quizzes.com/relationship-compatibility-test",
+   "title": "Free Relationship Compatibility Test - Gottman Assessment",
+   "desc": "Find Your Relationship Compatibility Test. Gottman Marriage and Relationship Test. Improve Your Relationship. Gottman Assessment and Tests Backed By Science.",
+   "h1": [
+    "Relationship Compatibility Test"
+   ],
+   "h2n": 0,
+   "h3n": 6,
+   "h2": [],
+   "chars": 2713,
+   "ld": [
+    "WebSite",
+    "LocalBusiness",
+    "Organization"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 12,
+   "linksInt": 67,
+   "linksAll": 71,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://freudly.ai/tests/compatibility-test/",
+   "status": 200,
+   "final": "https://freudly.ai/tests/compatibility-test/",
+   "title": "Compatibility Test: Are We Compatible? Couple s Quiz - Freudly",
+   "desc": "Compatibility Test: Check relationship match with your partner. Free assessment with detailed compatibility score. Start now!",
+   "h1": [
+    "Compatibility Test"
+   ],
+   "h2n": 7,
+   "h3n": 0,
+   "h2": [
+    "How the Scales are Structured",
+    "Who Usually Takes This Test?",
+    "See How You Compare",
+    "Example Questions From the Test",
+    "Compatibility Test - Description and methodology of the test",
+    "What This Assessment Explores",
+    "Methodology and Scientific Basis"
+   ],
+   "chars": 13471,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 1,
+   "buttons": 9,
+   "linksInt": 237,
+   "linksAll": 242,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://www.buzzfeed.com/audreyworboys/love-compatibility-test",
+   "status": 200,
+   "final": "https://www.buzzfeed.com/audreyworboys/love-compatibility-test",
+   "title": "Compatibility Test: Discover Your Romantic Love Score",
+   "desc": "Discover your true love compatibility with this insightful test that reveals the strength of your romantic connection.",
+   "h1": [
+    "This Is An Accurate Love Compatibility Test — Take It"
+   ],
+   "h2n": 3,
+   "h3n": 1,
+   "h2": [
+    "So you have a new crush, and you can't stop thinking about them. You laugh at all their jokes, can't get enough of their smile, and miss them when they're not around... But are you two truly compatible? We're here to help you figure that out.",
+    "The truth is, there’s actually a lot more that goes into relationship compatibility than you might think. Personality traits, different life perspectives, and styles of communication all play a role in determining your fate with the people you date... And our super-accurate compatibility quiz takes all of those factors into account. If you want to know whether you and your special someone sound like a good fit, scroll down and get started.",
+    "Comments"
+   ],
+   "chars": 3043,
+   "ld": [
+    "Article",
+    "Organization",
+    "ImageObject",
+    "Person",
+    "Comment",
+    "Quiz",
+    "NewsMediaOrganization",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 8,
+   "linksInt": 108,
+   "linksAll": 114,
+   "dateMod": "2026-06-30T22:06:59.000Z",
+   "datePub": "2022-01-24T02:16:02.000Z"
+  },
+  {
+   "url": "https://enneagramuniverse.com/blog/free-compatibility-test-for-couples",
+   "status": 200,
+   "final": "https://enneagramuniverse.com/blog/free-compatibility-test-for-couples",
+   "title": "Free Compatibility Test for Couples: A Complete Guide to Understanding Your Match",
+   "desc": "Free compatibility test for couples explained, showing how relationship patterns, values, and communication styles shape long-term connection.",
+   "h1": [
+    "Free Compatibility Test for Couples: A Complete Guide to Understanding Your Match"
+   ],
+   "h2n": 11,
+   "h3n": 19,
+   "h2": [
+    "Your Quick Guide to Couples Compatibility Tests",
+    "So, You re Thinking About an Online Relationship Quiz?",
+    "Comparing the Most Popular Compatibility Frameworks",
+    "How to Turn Test Results Into Real Connection",
+    "What Makes a Good Compatibility Test Actually",
+    "Good",
+    "?",
+    "Using Your Results to Strengthen Your Bond",
+    "A Few Common Questions We Get About Compatibility Tests",
+    "Enneagram",
+    "Personality Type Indicator"
+   ],
+   "chars": 29271,
+   "ld": [
+    "Organization",
+    "WebSite",
+    "BlogPosting",
+    "WebPage",
+    "ImageObject"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 8,
+   "linksInt": 52,
+   "linksAll": 62,
+   "dateMod": "2025-06-22T16:31:42+00:40",
+   "datePub": ""
+  },
+  {
+   "url": "https://www.truity.com/test/love-styles-test",
+   "status": 200,
+   "final": "https://www.truity.com/test/love-styles-test",
+   "title": "7 Love Styles Test",
+   "desc": "This free quiz reveals how you prefer to give and receive love. The concept of love languages was created by couples counselor Dr. Gary Chapman, who observed that people differ in what sort of interactions make them feel loved. Dr. Chapman described 5 love languages, however our research on over 500,000 volunteers indicates there are actually seven distinct ways of showing",
+   "h1": [
+    "7 Love Styles Test"
+   ],
+   "h2n": 2,
+   "h3n": 1,
+   "h2": [
+    "Love Styles Test FAQ",
+    "Get Our Newsletter"
+   ],
+   "chars": 5881,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 25,
+   "buttons": 4,
+   "linksInt": 40,
+   "linksAll": 50,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://lovetesteronline.com/",
+   "status": 200,
+   "final": "https://lovetesteronline.com/",
+   "title": "Love Tester - Check Your Love Compatibility Online",
+   "desc": "Enter two names in Love Tester and get an instant love compatibility percentage. Compare name pairs, try fun matches, and enjoy the result as lighthearted entertainment.",
+   "h1": [
+    "Love Tester"
+   ],
+   "h2n": 3,
+   "h3n": 5,
+   "h2": [
+    "About Love Tester",
+    "Frequently Asked Questions",
+    "More Fun Games to Enjoy"
+   ],
+   "chars": 5827,
+   "ld": [
+    "VideoGame",
+    "AggregateRating",
+    "Organization",
+    "Offer",
+    "FAQPage",
+    "Question",
+    "Answer",
+    "BreadcrumbList",
+    "ListItem",
+    "WebSite"
+   ],
+   "faqWord": true,
+   "inputs": 1,
+   "buttons": 8,
+   "linksInt": 58,
+   "linksAll": 58,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://www.calculator.net/love-calculator.html",
+   "status": 200,
+   "final": "https://www.calculator.net/love-calculator.html",
+   "title": "Love Calculator",
+   "desc": "This free calculator evaluates compatibility based on two names, returning a score from 0% to 100%, with a higher score indicating a better match.",
+   "h1": [
+    "Love Calculator"
+   ],
+   "h2n": 1,
+   "h3n": 2,
+   "h2": [
+    "How accurate is this love calculator? see the examples:"
+   ],
+   "chars": 4200,
+   "ld": [],
+   "faqWord": false,
+   "inputs": 3,
+   "buttons": 0,
+   "linksInt": 33,
+   "linksAll": 33,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://www.goodrx.com/health-topic/mental-health/how-to-make-friends-as-an-adult",
+   "status": 403,
+   "final": "https://www.goodrx.com/health-topic/mental-health/how-to-make-friends-as-an-adult",
+   "title": "Access to this page has been denied",
+   "desc": "px-captcha",
+   "h1": [],
+   "h2n": 0,
+   "h3n": 0,
+   "h2": [],
+   "chars": 0,
+   "ld": [],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 0,
+   "linksInt": 0,
+   "linksAll": 0,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://www.headspace.com/articles/make-friends-as-adult",
+   "status": 200,
+   "final": "https://www.headspace.com/articles/make-friends-as-adult",
+   "title": "How to make friends as an adult - Headspace",
+   "desc": "“Do you, uh, come to this cycling studio often?”",
+   "h1": [
+    "How to make friends as an adult"
+   ],
+   "h2n": 1,
+   "h3n": 10,
+   "h2": [
+    "Meditation and mindfulness for any mind, any mood, any goal"
+   ],
+   "chars": 7152,
+   "ld": [
+    "NewsArticle",
+    "Person",
+    "BreadcrumbList",
+    "ListItem"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 18,
+   "linksInt": 126,
+   "linksAll": 149,
+   "dateMod": "2023-10-23T20:29:05.698Z",
+   "datePub": "2023-10-23T20:29:05.698Z"
+  },
+  {
+   "url": "https://drmarisagfranco.com/how-to-make-friends-as-an-adult/",
+   "status": 200,
+   "final": "https://drmarisagfranco.com/how-to-make-friends-as-an-adult/",
+   "title": "How to Make Friends as an Adult - Dr. Marisa G. Franco",
+   "desc": "How to Make Friends as an Adult: The science of how to make friends; stop assuming it happens organically and start assuming people like you.",
+   "h1": [],
+   "h2n": 2,
+   "h3n": 10,
+   "h2": [
+    "How to Make Friends as an Adult",
+    "RECENT BLOG"
+   ],
+   "chars": 8215,
+   "ld": [
+    "Article",
+    "WebPage",
+    "ReadAction",
+    "ImageObject",
+    "BreadcrumbList",
+    "ListItem",
+    "WebSite",
+    "SearchAction",
+    "EntryPoint",
+    "PropertyValueSpecification",
+    "Person"
+   ],
+   "faqWord": false,
+   "inputs": 0,
+   "buttons": 0,
+   "linksInt": 55,
+   "linksAll": 84,
+   "dateMod": "",
+   "datePub": "2022-10-28T15:06:17+00:00"
+  },
+  {
+   "url": "https://www.meetup.com/lp/friendship-and-socializing/",
+   "status": 200,
+   "final": "https://www.meetup.com/lp/friendship-and-socializing/",
+   "title": "Socialize and Make Friends with Common Interests | Meetup",
+   "desc": "Find Meetup events so you can do more of what matters to you. Or create your own group and meet people near you who share your interests.",
+   "h1": [
+    "Socialize and Make Friends with Common Interests"
+   ],
+   "h2n": 7,
+   "h3n": 7,
+   "h2": [
+    "Find and make friends",
+    "Join a group to make friends",
+    "Browse the most popular socializing and friendship topics",
+    "Popular social events",
+    "Upcoming online events",
+    "Frequently Asked Questions",
+    "Stories from Meetup members"
+   ],
+   "chars": 29871,
+   "ld": [
+    "Organization",
+    "Event",
+    "Place",
+    "PostalAddress",
+    "GeoCoordinates",
+    "VirtualLocation",
+    "FAQPage",
+    "Question",
+    "Answer"
+   ],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 17,
+   "linksInt": 69,
+   "linksAll": 83,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://friendmatch.com/",
+   "status": 200,
+   "final": "https://friendmatch.com/",
+   "title": "FriendMatch - Home",
+   "desc": "FriendMatch is just what it sounds like - a place to meet new friends. With FriendMatch, you can find new friendships from your own city or from around the world.",
+   "h1": [
+    "The World's Friend-Making Platform"
+   ],
+   "h2n": 20,
+   "h3n": 0,
+   "h2": [
+    "Find New Friends",
+    "Join our Community of Friend-Seekers",
+    "How it Works",
+    "About Us",
+    "Our Mission Vision",
+    "Frequently Asked Questions",
+    "What is FriendMatch?",
+    "Is FriendMatch a dating site?",
+    "Any tips for success with finding new friends online?",
+    "If I don t like the experience, how can I delete my account?",
+    "What kind of people are on FriendMatch?",
+    "What do I do if someone is spamming me or bugging me?"
+   ],
+   "chars": 12754,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 3,
+   "buttons": 18,
+   "linksInt": 38,
+   "linksAll": 45,
+   "dateMod": "",
+   "datePub": ""
+  },
+  {
+   "url": "https://bunchups.com.au/blog/best-apps-for-meeting-friends-with-similar-interests-what-actually-works",
+   "status": 200,
+   "final": "https://bunchups.com.au/blog/best-apps-for-meeting-friends-with-similar-interests-what-actually-works",
+   "title": "Best Apps for Meeting Friends With Similar Interests (What Actually Works) | Bunchups",
+   "desc": "Discover the best apps for meeting friends with similar interests and learn how to turn shared hobbies into real-life connections in Australia.",
+   "h1": [
+    "Best Apps for Meeting Friends With Similar Interests (What Actually Works)"
+   ],
+   "h2n": 8,
+   "h3n": 3,
+   "h2": [
+    "Why Shared Interests Lead to Better Friendships",
+    "What “Interest-Based” Apps Actually Mean",
+    "How to Use Interest-Based Apps Effectively",
+    "Safety Comfort When Meeting Through Shared Interests",
+    "Final Thoughts: Interests Create the Shortcut to Friendship",
+    "How the Bunchups Community Portal Works | Features Setup",
+    "The Bunchups Community Portal: How It Works and Who It s For",
+    "Best Apps for Meeting Friends With Similar Interests (What Actually Works)"
+   ],
+   "chars": 6097,
+   "ld": [
+    "BlogPosting",
+    "Person",
+    "Organization",
+    "ImageObject",
+    "WebPage",
+    "Thing"
+   ],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 0,
+   "linksInt": 26,
+   "linksAll": 40,
+   "dateMod": "2026-06-29T08:17:41.738Z",
+   "datePub": "2026-02-13T07:11:30.877Z"
+  },
+  {
+   "url": "https://socialself.com/blog/find-like-minded/",
+   "status": 200,
+   "final": "https://socialself.com/blog/find-like-minded/",
+   "title": "14 Tips to Find Like-Minded People (Who Understand You)",
+   "desc": "The complete guide to finding like-minded friends who share your interests. Learn how to find people who are like you that you have things in common with.",
+   "h1": [
+    "14 Tips to Find Like-Minded People (Who Understand You)",
+    ""
+   ],
+   "h2n": 42,
+   "h3n": 3,
+   "h2": [
+    "1. Get to know people around you on a deeper level",
+    "2. Go to meetup groups related to your interests",
+    "3. Skip loud bars, big parties, and clubs",
+    "4. Seek out groups for specific interests",
+    "5. Search for social events and communities",
+    "6. Seek out those you might have things in common with",
+    "7. Remind yourself that small talk is in fact important",
+    "8. Join an online community related to your interest",
+    "9. Use an app like Bumble BFF",
+    "10. Start a group related to your interest",
+    "11. Be involved in a project",
+    "12. Take any opportunity to meet people"
+   ],
+   "chars": 31922,
+   "ld": [
+    "WebSite",
+    "SearchAction",
+    "EntryPoint",
+    "Organization",
+    "ImageObject",
+    "WebPage",
+    "BreadcrumbList",
+    "ListItem",
+    "ReadAction",
+    "Person"
+   ],
+   "faqWord": false,
+   "inputs": 54,
+   "buttons": 6,
+   "linksInt": 130,
+   "linksAll": 138,
+   "dateMod": "2022-08-06",
+   "datePub": "2019-06-21"
+  },
+  {
+   "url": "https://www.16personalities.com/",
+   "status": 200,
+   "final": "https://www.16personalities.com/",
+   "title": "Free personality test, type descriptions, relationship and career advice | 16Personalities",
+   "desc": "Discover the world’s most popular personality test. Taken over one billion times in 45+ languages, our 10-minute test delivers accurate personality insights.",
+   "h1": [
+    "“It’s so incredible to finally be understood.”"
+   ],
+   "h2n": 4,
+   "h3n": 4,
+   "h2": [
+    "Understand others",
+    "Understand your team better",
+    "See what others have to say",
+    "Curious how accurate we are about you?"
+   ],
+   "chars": 2909,
+   "ld": [],
+   "faqWord": true,
+   "inputs": 0,
+   "buttons": 1,
+   "linksInt": 30,
+   "linksAll": 34,
+   "dateMod": "",
+   "datePub": ""
+  }
+ ]
+}
