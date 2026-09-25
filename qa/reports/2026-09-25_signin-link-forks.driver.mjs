@@ -574,10 +574,9 @@ try {
     const { context, page, errors } = await browserOf(browser, { w, h, theme: 'light' });
     await page.goto(`${BASE}/profile?as=none`);
     await page.locator('.hc .theme').waitFor({ timeout: 15000 }).catch(() => {});
-    // Касание ДО оживления страницы теряется: кнопка режима `live` переключает тему обработчиком Svelte (проба 20:55:26 в
-    // скретчпаде: сразу после загрузки — light → light, через 2 с — light → dark). Кейс судит касание человека по живой
-    // странице; окно до оживления — находка в отчёте, зона HeadControls.
-    await page.waitForTimeout(2000);
+    // Касание сразу, БЕЗ паузы: до правки ствола `2d4c374` касание до оживления страницы терялось (проба 20:55:26 —
+    // light → light), и кейс ждал 2 с; теперь кнопку до оживления оживляет делегированный обработчик `app.html` по
+    // `data-theme-toggle` — кейс судит самое раннее касание (слово Менеджера: «перегони без паузы»).
     const themeOf = () => page.evaluate(() => document.documentElement.dataset.theme);
     const t0 = await themeOf();
     await page.screenshot({ path: `${SHOTS}/vs17-signin-${w}-light.png` });
