@@ -147,7 +147,8 @@ try {
   say(`страница: ${БАЗА}/ru/test/${SLUG} · тема ${THEME} · ширина ${WIDTH}`);
 
   await page.goto(`${БАЗА}/ru/test/${SLUG}`, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('.qcard .starsrow .st', { timeout: 30000 });
+  // `data-live` — карточка ожила: до него видны мёртвые звёзды лица пререндера (b777e09).
+  await page.waitForSelector('.qcard[data-live] .starsrow .st', { timeout: 30000 });
 
   const applied = await page.evaluate(() => document.documentElement.dataset.theme ?? '(нет)');
   say(`тема применена: «${applied}»`);
