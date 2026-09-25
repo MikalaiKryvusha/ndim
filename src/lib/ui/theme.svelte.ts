@@ -34,6 +34,18 @@ function readFromDocument(): Theme {
 
 let current = $state<Theme>(readFromDocument());
 
+/*
+ * Тему может сменить и инлайн-слушатель `app.html` — касание кнопки темы ДО оживления страницы (2026-09-25,
+ * находка dev-1 ВС-17). Модуль к этой минуте уже прочитал документ, поэтому состояние догоняет атрибут
+ * наблюдателем: правда о теме одна — атрибут `data-theme`, состояние её зеркало.
+ */
+if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') {
+  new MutationObserver(() => {
+    const now = readFromDocument();
+    if (now !== current) current = now;
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+}
+
 /** Текущая тема. Читается в разметке — компонент перерисуется при смене. */
 export function theme(): Theme {
   return current;
@@ -55,7 +67,7 @@ export function setTheme(next: Theme): void {
   if (meta) meta.setAttribute('content', THEME_COLOR[next]);
 }
 
-/** Переключить на противоположную. */
+/** Переключить на противоположную — от темы ДОКУМЕНТА, а не от состояния: атрибут меняют двое (см. наблюдатель выше). */
 export function toggleTheme(): void {
-  setTheme(current === 'dark' ? 'light' : 'dark');
+  setTheme(readFromDocument() === 'dark' ? 'light' : 'dark');
 }

@@ -59,6 +59,34 @@ test('ранний тап: касание ДО гидратации горит �
 	await expect(titanic.locator('[data-star].on')).toHaveCount(7);
 });
 
+test('кнопка темы: касание ДО гидратации переключает ровно один раз, после гидратации — тоже один', async ({ page }) => {
+	// Находка dev-1 2026-09-25 (ВС-17): до оживления у кнопки общей пары не было обработчика, касание терялось.
+	// Теперь касание ловит делегированный слушатель `app.html`; оживлённую кнопку (`data-live`) он пропускает.
+	let release!: () => void;
+	const gate = new Promise<void>((r) => (release = r));
+	await page.route('**/_app/immutable/**/*.js', async (route) => {
+		await gate;
+		await route.continue();
+	});
+	await page.goto('/ru', { waitUntil: 'domcontentloaded' });
+	const html = page.locator('html');
+	const btn = page.locator('.hc button.theme');
+	await expect(html).toHaveAttribute('data-theme', 'light');
+	await expect(btn).not.toHaveAttribute('data-live', /.*/);
+	await btn.click();
+	await expect(html).toHaveAttribute('data-theme', 'dark');
+	release();
+	await expect(btn).toHaveAttribute('data-live', '');
+	await page.evaluate(() => {
+		const w = window as unknown as { __flips: number };
+		w.__flips = 0;
+		new MutationObserver(() => (w.__flips += 1)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+	});
+	await btn.click();
+	await expect(html).toHaveAttribute('data-theme', 'light');
+	expect(await page.evaluate(() => (window as unknown as { __flips: number }).__flips)).toBe(1);
+});
+
 test('мост: ссылка на гостя с местом входа, «Назад» с первого экрана продукта не возвращает на лендинг', async ({ page }) => {
 	await page.goto('/ru');
 	const bridge = page.getByRole('link', { name: 'Смотреть больше' });

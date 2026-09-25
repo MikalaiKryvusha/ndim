@@ -12,19 +12,19 @@
   без стрелочки в кнопке языка». Обе кнопки 34×34, радиус 10; выпадашка языка — непрозрачный фон
   (`bugs/23`), галочка у текущего языка (`bugs/39`: «как было в оригинальном NDim»).
 
-  🔴 РАБОТАЕТ И БЕЗ КЛИЕНТСКОГО JS — часть экранов объявлена `csr = false`:
+  🔴 РАБОТАЕТ ДО ОЖИВЛЕНИЯ СТРАНИЦЫ И БЕЗ КЛИЕНТСКОГО JS — часть экранов объявлена `csr = false`:
     · значок темы переключают СТИЛИ по `html[data-theme]`: оба значка лежат в разметке, лишний
       прячет CSS — значит, значок верен с первого кадра и без единого байта бандла;
-    · выпадашка языка — родной `<details>`: браузер открывает её сам.
-  Клиентский JS только добавляет удобства: закрытие тапом мимо и по Esc.
+    · касание кнопки темы ловит делегированный слушатель инлайн-скрипта `app.html` по атрибуту
+      `data-theme-toggle` — с первой строки страницы. Кнопка, которую оживил Svelte, помечена
+      `data-live`: её переключает общий `toggleTheme` (`theme.svelte.ts`, `bugs/53`), а инлайн-слушатель
+      её пропускает — одно касание, одно переключение. Прежде live-кнопка до оживления была мёртвой, и
+      касание первых секунд терялось (находка dev-1 2026-09-25, ВС-17);
+    · выпадашка языка — родной `<details>`: браузер открывает её сам, закрывает касанием мимо и Esc тот же
+      инлайн-слушатель `app.html` — одинаково на страницах с JS и без.
 
-  🔴 ДВА РЕЖИМА ТЕМЫ, и путать их нельзя:
-    · `live` (по умолчанию) — экраны с клиентским JS: кнопка зовёт общий `toggleTheme`
-      (`theme.svelte.ts`, `bugs/53`: одна правда на все переключатели). `id="theme-toggle"` здесь
-      НЕТ — иначе инлайн-скрипт `app.html` повесил бы второй обработчик, и один клик переключал бы
-      тему дважды, то есть не переключал бы вовсе;
-    · `static` — страницы `csr = false`: обработчик Svelte там мёртв, кнопку оживляет инлайн-скрипт
-      `app.html` по `id="theme-toggle"`.
+  `mode` решает только одно: ставить ли `id="theme-toggle"` — адрес кнопки для приборов страниц без JS
+  (`tools/verify-dim-page-header.mjs`). На экране пара одна, id не повторяется.
 
   ЯЗЫК — ДВА СПОСОБА СМЕНЫ:
     · `hrefFor(code)` — публичный адрес: язык = АДРЕС (`bugs/114`), пункт — ссылка с `hreflang`,
@@ -32,6 +32,7 @@
     · `onLang(code)` — экраны за стеной входа, где адрес языка не несёт: пункт — кнопка.
 -->
 <script lang="ts">
+  import { onMount } from 'svelte';
   import Icon from '$lib/ui/Icon.svelte';
   import { toggleTheme } from '$lib/ui/theme.svelte';
   import { LANGS, LANG_LABEL, type Lang } from '$lib/content/langs';
@@ -66,6 +67,12 @@
    */
   let wrap: HTMLDetailsElement | null = $state(null);
 
+  /** Кнопка оживлена Svelte — с этой минуты тему переключает `toggleTheme`, инлайн-слушатель `app.html` молчит. */
+  let live = $state(false);
+  onMount(() => {
+    live = true;
+  });
+
   function close() {
     if (wrap) wrap.open = false;
   }
@@ -76,25 +83,15 @@
   }
 </script>
 
-<!-- Тап МИМО выпадашки или Esc закрывает её — как у контекстных меню продукта. Именно pointerdown
-     вне пары, а не click на window: клик по самой кнопке закрыл бы меню тем же событием, которым
-     открыл (гонка, пойманная QA-прогоном `bugs/39`). -->
-<svelte:window
-  onpointerdown={(event) => {
-    if (wrap?.open && !(event.target instanceof Node && wrap.contains(event.target))) close();
-  }}
-  onkeydown={(event) => {
-    if (wrap?.open && event.key === 'Escape') close();
-  }}
-/>
-
 <div class="hc">
   <!-- Значок показывает ТЕКУЩУЮ тему (солнце = светлая), как строка «Тема» в «Меню». -->
   <button
     type="button"
     class="theme"
     id={mode === 'static' ? 'theme-toggle' : undefined}
-    onclick={mode === 'live' ? toggleTheme : undefined}
+    data-theme-toggle=""
+    data-live={live ? '' : undefined}
+    onclick={toggleTheme}
     title={t.theme}
     aria-label={t.theme}
   >
