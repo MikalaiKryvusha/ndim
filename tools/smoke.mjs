@@ -321,7 +321,8 @@ try {
       await rendered(page, 100);
       const fields = await page.locator('input[type="email"], input[type="password"]').count();
       await shot(page, '03-inside');
-      const guestDoor = (href ?? '').includes('guest=1');
+      // Дверь демо говорит словом `landing` — место входа гостя для аналитики (`plans/105` Б2).
+      const guestDoor = href === '/profile?guest=landing';
       return {
         ok: guestDoor && fields === 0,
         detail: guestDoor ? `полей ввода на пути: ${fields}` : `дверь ведёт в стену входа: ${href}`,

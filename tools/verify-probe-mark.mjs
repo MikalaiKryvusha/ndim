@@ -370,9 +370,11 @@ export function callSites(source, where = '') {
  * Доезжает ли шаг воронки до ВТОРОГО прибора. `track()` пересылает шаг в `capture()`
  * ПЕРЕМЕННОЙ (`capture(step)`), поэтому литеральных мест вызова у шести шагов нет вовсе —
  * и без этой проверки их отсутствие читалось бы как норма.
+ * 🆕 2026-09-25 (`plans/105` Б2): пересылка несёт вторым аргументом свойства шага (`capture(step, props)`,
+ * место входа у `guest_start`) — это та же пересылка; признак принимает обе формы.
  */
 export function forwardsStepsToAnalytics(funnelSource) {
-  return /capture\(\s*step\s*\)/.test(stripComments(funnelSource));
+  return /capture\(\s*step\s*(,\s*[A-Za-z_$][\w$]*\s*)?\)/.test(stripComments(funnelSource));
 }
 
 /**
@@ -688,7 +690,9 @@ const SELFTEST_CASES = [
     name: 'разбор пересылки: переменная — да, литерал соседнего вызова — не в счёт',
     run: () =>
       forwardsStepsToAnalytics('.then(({ capture }) => capture(step))') === true &&
-      forwardsStepsToAnalytics(".then(({ capture }) => capture('landing_view'))") === false,
+      forwardsStepsToAnalytics('.then(({ capture }) => capture(step, props))') === true &&
+      forwardsStepsToAnalytics(".then(({ capture }) => capture('landing_view'))") === false &&
+      forwardsStepsToAnalytics(".then(({ capture }) => capture('landing_view', props))") === false,
   },
   {
     /*

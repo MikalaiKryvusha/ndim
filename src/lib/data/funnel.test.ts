@@ -26,7 +26,55 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { dayKey, shiftDayKey, probeMarked, PROBE_MARK, claimStep } from './funnel.ts';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { dayKey, shiftDayKey, probeMarked, PROBE_MARK, claimStep, entryOf, ANALYTICS_ENTRIES } from './funnel.ts';
+
+/*
+ * МЕСТО ВХОДА — слово двери в адресе `?guest=<слово>` (`plans/105` Б2, 2026-09-25).
+ *
+ * Два инварианта, и оба про враньё ряда владельцу:
+ *   · слово вне союза читается как `direct`, а не теряется: иначе у части гостей места входа не
+ *     было бы вовсе, и число недели делило бы людей на корзины без одной, безымянной;
+ *   · каждая дверь в коде говорит словом ИЗ СОЮЗА. Дверь с опечаткой (`?guest=catalogcard`)
+ *     продукт не уронит — человек войдёт гостем, — но в ряд она молча запишет `direct`, и
+ *     приток с этой двери исчезнет из разреза. Ловит это только сверка кода с союзом.
+ */
+describe('Место входа — слово двери → союз мест входа', () => {
+  test('каждое слово союза читается как есть', () => {
+    for (const слово of ANALYTICS_ENTRIES) assert.equal(entryOf(слово), слово);
+  });
+
+  test('🔴 слово вне союза — прямой заход, а не пустота и не само слово', () => {
+    assert.equal(entryOf('1'), 'direct', 'старые ссылки `?guest=1` — прямой заход');
+    assert.equal(entryOf(null), 'direct');
+    assert.equal(entryOf(''), 'direct');
+    assert.equal(entryOf('matrix-1999-a1b2'), 'direct', 'слаг измерения не уезжает местом входа');
+    assert.equal(entryOf('LANDING'), 'direct', 'регистр не угадывается: союз закрыт буквально');
+  });
+
+  test('🔑 каждая дверь в гостя в коде говорит словом из союза', () => {
+    const корень = join(import.meta.dirname, '..', '..');
+    const файлы = (readdirSync(корень, { recursive: true }) as string[])
+      .filter((путь) => /\.(svelte|ts|js)$/.test(путь) && !/\.test\.ts$/.test(путь));
+    const слова = new Map<string, string>();
+    for (const путь of файлы) {
+      readFileSync(join(корень, путь), 'utf8').split('\n').forEach((строка, номер) => {
+        // Судится КОД, а не проза: комментарии цитируют прежний адрес `/profile?guest=1` как историю.
+        if (/^\s*(\*|\/\/|\/\*|<!--)/.test(строка)) return;
+        for (const найдено of строка.matchAll(/\/profile\?guest=([A-Za-z0-9_-]+)/g)) {
+          слова.set(`${путь}:${номер + 1}`, найдено[1]);
+        }
+      });
+    }
+    // Контроль прибора: дверей пять (главная, лендинг, карточка каталога, вход, «начать заново»),
+    // и ноль найденных значил бы «смотрю не туда», а не «все двери чисты».
+    assert.ok(слова.size >= 5, `найдено дверей ${слова.size} из ожидаемых ≥ 5 — сверка смотрит не туда`);
+    const чужие = [...слова].filter(([, слово]) => !(ANALYTICS_ENTRIES as readonly string[]).includes(слово));
+    assert.deepEqual(чужие, [], 'дверь говорит словом вне союза — в ряд она запишет `direct`');
+  });
+});
 
 /** Подмена веб-хранилища: в Node его нет, а `funnel.ts` берёт его глобалем в момент вызова. */
 function fakeStorage(): Storage {

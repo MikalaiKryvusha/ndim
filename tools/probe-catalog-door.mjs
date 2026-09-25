@@ -418,7 +418,8 @@ const run = async () => {
     await page.waitForTimeout(400);
 
     const href = await page.locator('[data-door-enter]').getAttribute('href');
-    check(href === '/profile?guest=1', '2а адрес двери стоит В ПРЕРЕНДЕРЕ и ведёт в гостя', String(href));
+    // Слово `catalog_card` — место входа гостя для аналитики (`plans/105` Б2, 2026-09-25).
+    check(href === '/profile?guest=catalog_card', '2а адрес двери стоит В ПРЕРЕНДЕРЕ и ведёт в гостя', String(href));
 
     await page.locator('[data-door-enter]').click();
     await page.waitForURL(/\/profile/, { timeout: 30000 }).catch(() => {});
@@ -517,7 +518,7 @@ const run = async () => {
     const plain = page.locator('[data-door-plain]');
     check(await plain.isVisible(), '6а с выключенным JS видна обычная дверь');
     const href = await plain.getAttribute('href');
-    check(href === '/profile?guest=1', '6б и она ведёт в гостя, а не в стену входа', String(href));
+    check(href === '/profile?guest=catalog_card', '6б и она ведёт в гостя, а не в стену входа', String(href));
     const panel = await page.locator('[data-door-panel]').isHidden();
     check(panel, '6в панель без JS не показывается');
     await context.close();

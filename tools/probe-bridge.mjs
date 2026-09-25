@@ -163,7 +163,8 @@ const run = async () => {
     const label = (await door.innerText()).trim();
     check(await door.isVisible(), 'Ш8-03а кнопка моста появилась после звёзд');
     check(tag === 'A', 'Ш8-03б это ССЫЛКА (средний клик и «в новой вкладке» живы)', `<${tag.toLowerCase()}>`);
-    check(href === '/profile?guest=1', 'Ш8-03в ведёт в гостевую дверь на ЛЮБОМ хосте', String(href));
+    // Слово `landing` — место входа гостя для аналитики (`plans/105` Б2, 2026-09-25).
+    check(href === '/profile?guest=landing', 'Ш8-03в ведёт в гостевую дверь на ЛЮБОМ хосте', String(href));
     check(!/гост/i.test(label), 'Ш8-03г на самой кнопке слова «гость» нет', `«${label}»`);
 
     const pop = page.locator('.demo .pop');

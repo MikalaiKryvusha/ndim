@@ -42,7 +42,12 @@
  * отдельным чанком `async-analytics-sdk`.
  */
 
-import { type FunnelStep, FUNNEL_STEPS, probeMarked } from './funnel.ts';
+import { type FunnelStep, FUNNEL_STEPS, probeMarked, ANALYTICS_ENTRIES, type AnalyticsEntry } from './funnel.ts';
+
+// Союз мест входа живёт в `funnel.ts` (разбор там же); отсюда он реэкспортируется, чтобы все, кто
+// судит свойства события, брали его по прежнему адресу.
+export { ANALYTICS_ENTRIES };
+export type { AnalyticsEntry };
 
 /**
  * Публичный ключ проекта — **не секрет по устройству**, ровно как веб-конфиг Firebase
@@ -244,11 +249,10 @@ export type AnalyticsProperty = (typeof ANALYTICS_PROPERTIES)[number];
  * Состав выведен из того, что продукт знает СЕГОДНЯ, а не из воображения: лендинг и дверь
  * карточки каталога — два живых входа воронки (`funnel.ts`: `landing_view`, `door_click`,
  * второй вход заведён `plans/74` по аудиту `bugs/202`), плюс прямой заход.
- * ⛔ Новое место входа добавляется СЮДА, а не приходит строкой из вызова.
+ * 🆕 2026-09-25 (`plans/105` Б2): союз переехал в `funnel.ts` и вырос до всех дверей в гостя
+ * (`root` · `signin` · `restart` · `test`); значение впервые едет живым вызовом — у `guest_start`.
+ * ⛔ Новое место входа добавляется ТАМ, а не приходит строкой из вызова.
  */
-export const ANALYTICS_ENTRIES = ['landing', 'catalog_card', 'direct'] as const;
-
-export type AnalyticsEntry = (typeof ANALYTICS_ENTRIES)[number];
 
 /*
  * ── НЕУДАЧНАЯ ПОПЫТКА ВХОДА (`signin_failed`) ─────────────────────────────────────────────────

@@ -633,6 +633,21 @@ describe('значения свойств — закрытые союзы (Д4 �
     assert.equal(propertyValueIsSafe('has_matches', 1), false);
   });
 
+  test('🆕 БЛЮДО: guest_start уезжает с местом входа (plans/105 Б2)', async () => {
+    const звонки: { event: string; props?: Record<string, unknown> | undefined }[] = [];
+    (globalThis as Record<string, unknown>).location = { hostname: 'ndimspace.app' };
+    (globalThis as Record<string, unknown>).sessionStorage = { getItem: () => null };
+    setAnalyticsClientForTests({ capture: (event, props) => звонки.push({ event, props }) });
+    try {
+      await capture('guest_start', { entry: 'root' });
+      assert.deepEqual(звонки, [{ event: 'guest_start', props: { entry: 'root', env: 'prod' } }]);
+    } finally {
+      setAnalyticsClientForTests(null);
+      delete (globalThis as Record<string, unknown>).location;
+      delete (globalThis as Record<string, unknown>).sessionStorage;
+    }
+  });
+
   test('🔑 каждое место входа союза признаётся — иначе союз молча сузился бы', () => {
     for (const место of ANALYTICS_ENTRIES) {
       assert.equal(propertyValueIsSafe('entry', место), true, `место входа «${место}» отбито своим же союзом`);

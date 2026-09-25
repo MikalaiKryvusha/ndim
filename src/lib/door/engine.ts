@@ -60,7 +60,9 @@ export async function rateFromDoor(lang: Lang, dimId: string, value: number): Pr
    * а не «после успеха»: касание засчитывается и тогда, когда запись оценки не удалась.
    */
   try {
-    return await saveTestRating(lang, dimId, value);
+    // Место входа `catalog_card`: гость, рождённый этим касанием, пришёл через карточку каталога, а не
+    // через тест (`plans/105` Б2). Профиль по адресу двери после касания видит живую сессию и молчит.
+    return await saveTestRating(lang, dimId, value, 'catalog_card');
   } finally {
     const { track } = await import('../data/funnel.ts');
     void track('door_click');

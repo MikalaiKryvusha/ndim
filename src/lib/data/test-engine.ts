@@ -13,6 +13,7 @@
  */
 
 import type { Lang } from '$lib/content/langs';
+import type { AnalyticsEntry } from './funnel.ts';
 
 /** `ensureSpaceExists` идемпотентен, но стоит чтение — платим им один раз на страницу. */
 let ensured = false;
@@ -41,8 +42,13 @@ export async function restoreMyRatings(): Promise<ReadonlyMap<string, number> | 
 /**
  * Сохраняет оценку; при отсутствии сессии сначала рождает гостя.
  * Возвращает uid — компоненту он нужен только как признак «сессия есть».
+ *
+ * `entry` — место входа рождённого гостя для аналитики (`plans/105` Б2). Функцию зовут ДВЕ двери:
+ * страницы теста (`test`, умолчание) и звезда карточки каталога (`catalog_card`, `door/engine.ts`) —
+ * там гость рождается касанием, и профиль по адресу двери уже видит живую сессию и молчит.
+ * [TESTED: 2026-09-25 · ЕВ-03 (карточка → catalog_card, одно событие) и ЕВ-05 (тест → test); отчёт qa/reports/2026-09-25_guest-entry.md]
  */
-export async function saveTestRating(lang: Lang, dimId: string, value: number): Promise<string> {
+export async function saveTestRating(lang: Lang, dimId: string, value: number, entry: AnalyticsEntry = 'test'): Promise<string> {
   const { currentSession, signInGuest, ensureSpaceExists, saveRating } = await import('./profile.ts');
 
   let uid = await currentSession();
@@ -59,8 +65,9 @@ export async function saveTestRating(lang: Lang, dimId: string, value: number): 
 
   if (created) {
     // Третий шаг воронки — как на экране «Профиль» (plans/03 этап 4). Не ждём и не роняем.
+    // Место входа — от зовущей двери: `test` у страниц теста, `catalog_card` у карточки (`plans/105` Б2).
     const { track } = await import('./funnel.ts');
-    void track('guest_start');
+    void track('guest_start', { entry });
   }
   return uid;
 }

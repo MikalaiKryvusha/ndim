@@ -71,7 +71,7 @@
     signInWithGoogle,
     waitForSession,
   } from '$lib/data/account';
-  import { track } from '$lib/data/funnel';
+  import { entryOf, track } from '$lib/data/funnel';
   import { EVERYONE, FRIENDS } from '$lib/model/visibility';
   import type { Audience, ProfileProperty } from '$lib/model/visibility';
   import { GUEST_TTL_DAYS, isRealDate, type Localized, type ProfileData } from '$lib/model/schema';
@@ -458,7 +458,10 @@
           await ensureSpaceExists(uid, lang);
           guest = true;
           guestCard = localStorage.getItem(GUEST_CARD_KEY) !== 'later';
-          if (session === null) void track('guest_start'); // третий шаг воронки (plans/03 этап 4)
+          // Третий шаг воронки (plans/03 этап 4). Место входа — слово двери в `?guest=<слово>`
+          // (`plans/105` Б2): какая дверь привела человека. Слово читается ДО того, как адрес ниже
+          // срезает параметр. [TESTED: 2026-09-25 · ЕВ-01/02/04/06/07, адрес после входа без guest=; qa/reports/2026-09-25_guest-entry.md]
+          if (session === null) void track('guest_start', { entry: entryOf(new URLSearchParams(location.search).get('guest')) });
         }
         // Параметр одноразовый: F5 и закладка не должны нести его дальше (тот же приём,
         // что очистка адреса в finishEmailLink). Остальные параметры (?db=, двери стенда)
@@ -555,19 +558,20 @@
     location.reload();
   }
 
-  /** Продолжить гостем — тот же путь, что с лендинга. */
+  /** Продолжить гостем — тот же путь, что с лендинга; слово `signin` — место входа (`plans/105` Б2). */
   async function continueAsGuest() {
-    location.href = '/profile?guest=1';
+    location.href = '/profile?guest=signin';
   }
 
   /**
    * «Начать заново» после истёкшей гостевой сессии (plans/63 шаг 5): мёртвую сессию
    * отпускаем (signOutUser чистит и кэш экранов — дыра приватности иначе), затем — тот же
    * путь, что с лендинга. Труд не переносится: его больше нет, об этом честно сказал экран.
+   * Слово `restart` — место входа (`plans/105` Б2): это вернувшийся человек, и ряд должен это видеть.
    */
   async function restartAsGuest() {
     await signOutUser();
-    location.href = '/profile?guest=1';
+    location.href = '/profile?guest=restart';
   }
 
   /** «Войти в аккаунт» после истёкшей сессии: отпустить мёртвого анонима и показать двери входа. */
