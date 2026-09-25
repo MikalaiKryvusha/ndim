@@ -20,6 +20,7 @@
  *
  * Запуск:  npm run stand:stop                 # найти и погасить стенд этого рабочего места
  *          node tools/stand-stop.mjs --dry-run # только напечатать, что было бы погашено
+ *          node tools/stand-stop.mjs --slot N  # стенд, поднятый `stand-launch.mjs --slot N` из этого же каталога
  */
 import { execSync } from 'node:child_process';
 import { existsSync, rmSync } from 'node:fs';
@@ -27,7 +28,7 @@ import { connect } from 'node:net';
 import { basename, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { portsFor, slotConfigName, slotOf } from './lib/stand-slot.mjs';
+import { portsFor, slotConfigName, slotOf, SLOTS } from './lib/stand-slot.mjs';
 
 const norm = (s) => String(s ?? '').replace(/\//g, '\\').toLowerCase();
 
@@ -89,9 +90,13 @@ async function main() {
     return 2;
   }
   const root = process.cwd();
-  const slot = slotOf(basename(root));
-  if (slot === null) {
-    console.error(`stand-stop: слот не выводится из имени рабочего места «${basename(root)}».`);
+  // Слот — ровно как у запуска (`stand-launch.mjs`): явный `--slot` или вывод из имени каталога.
+  const i = process.argv.indexOf('--slot');
+  const derived = slotOf(basename(root));
+  if (derived.note && i < 0) console.log(`⚠️  ${derived.note}`);
+  const slot = i >= 0 ? Number(process.argv[i + 1]) : derived.slot;
+  if (!SLOTS.includes(slot)) {
+    console.error(`stand-stop: слота ${slot} нет: разведены ${SLOTS.join(', ')}`);
     return 2;
   }
   const config = join(root, slotConfigName(slot));

@@ -43,6 +43,17 @@ test('стенд, поднятый `npm run stand`, гасится от npm-об
   assert.deepEqual(pickStandRoots(table({ viaNpm: true }), MY).roots, [45000]);
 });
 
+test('стенд, поднятый из Git Bash (`bash.exe "/c/…/npm" run stand` — форма живого прогона 23:00), гасится от этой обёртки', () => {
+  const procs = [
+    { pid: 900, ppid: 1, cmd: 'claude.exe' },
+    { pid: 41864, ppid: 900, cmd: '"C:\\Program Files\\Git\\usr\\bin\\bash.exe" "/c/Program Files/nodejs/npm" run stand' },
+    { pid: 41900, ppid: 41864, cmd: '"node" "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" run stand' },
+    { pid: 41950, ppid: 41900, cmd: 'node  tools/stand-launch.mjs' },
+    { pid: 42000, ppid: 41950, cmd: `"node" "…\\firebase.js" emulators:exec -c "${MY}"` },
+  ];
+  assert.deepEqual(pickStandRoots(procs, MY).roots, [41864]);
+});
+
 test('🔑 предки самой команды не гасятся, и `run stand:stop` — не запуск стенда', () => {
   const procs = [
     { pid: 10, ppid: 1, cmd: '"node" "…\\npm-cli.js" run stand:stop' },
