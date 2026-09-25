@@ -10,6 +10,8 @@
  *
  * Команды:
  *   node tools/review.mjs open  <документ.md>   поднять страницу, открыть браузер, позвать владельца
+ *   node tools/review.mjs close <документ.md>   закрыть живую страницу (отказ кодом 4, пока владелец пишет;
+ *                                               --force только с --owner-word "<дословно>")
  *   node tools/review.mjs render <документ.md>  снять страницу в файл (самодостаточный, офлайн)
  *   node tools/review.mjs list                  все интервью, ждущие владельца
  *   node tools/review.mjs queue <документ.md>   поставить в очередь (для автономных циклов)
@@ -21,9 +23,10 @@
  * Запуск: node tools/review.mjs · самотест: --selftest
  */
 
-import { createServer } from 'node:http';
+import { createServer, get as httpGet } from 'node:http';
 import { spawn, spawnSync } from 'node:child_process';
-import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync, createReadStream } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync, createReadStream, rmSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { join, relative, resolve, basename, dirname, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -45,6 +48,17 @@ import {
 	isQuiet,
 	selftest,
 	batchExitAfterDecision,
+	docRevision,
+	questionPrint,
+	lockPathOf,
+	readLock,
+	lockState,
+	closeVerdict,
+	mapDraft,
+	stablePort,
+	sameAsRecorded,
+	readDecision,
+	decisionPath as decisionPathOf,
 } from './lib/review-core.mjs';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -241,6 +255,16 @@ button:disabled{opacity:.5;cursor:default}
 .q.whole{border-style:dashed}
 .note.ok{border-color:var(--ok);color:var(--ok)}
 .note.bad{border-color:var(--bad);color:var(--bad)}
+/* ПЛАШКА «ЭТА СТРАНИЦА БОЛЬШЕ НЕ ПРИНИМАЕТ ОТВЕТЫ» (bugs/NEW_review_page_stale_tab_accepts_answers): перекрывает страницу
+   целиком, а сама страница под ней получает inert — ввод невозможен, а не только не советуется. */
+#gate{position:fixed;inset:0;background:rgba(10,12,16,.72);display:flex;align-items:flex-start;justify-content:center;
+	padding:48px 16px;z-index:60;overflow:auto}
+#gate .box{max-width:720px;width:100%;background:var(--card);color:var(--ink);border:2px solid var(--bad);
+	border-radius:14px;padding:18px 20px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+#gate.ok .box{border-color:var(--ok)}
+#gate .box b.head{display:block;font-size:1.1rem;margin-bottom:6px}
+#gate .box textarea{width:100%;margin-top:8px}
+#gate .box button{margin-top:10px;margin-right:8px}
 .art{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:20px 0}
 .art pre{max-height:420px}
 .hash{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;color:var(--dim);word-break:break-all}
@@ -395,8 +419,10 @@ function questionCard(q, bodyMd) {
 		? `<span class="when" title="${esc(q.savedAt)}">${esc(savedStamp(q.savedBy || BY, q.savedAt).replace(/^\*🕒 Сохранено /, '').replace(/\*$/, ''))}</span>`
 		: '';
 
+	// Отпечаток вопроса и его заголовок едут в разметку: черновик переносится в другую редакцию только на вопрос с тем же
+	// текстом, а заголовок нужен блоку «черновик прошлой редакции» (`mapDraft`, план `plans/NEW_review_contour_stale_tab.md`).
 	return `
-	<section class="q ${q.answered ? 'done' : 'open'}" data-q="${esc(q.label)}">
+	<section class="q ${q.answered ? 'done' : 'open'}" data-q="${esc(q.label)}" data-qh="${esc(questionPrint(q.title, bodyMd))}" data-title="${esc(q.title)}">
 		<div class="qhead">
 			<span class="tag ${q.answered ? 'ok' : 'open'}">${q.answered ? 'отвечено' : 'ждёт вас'}</span>
 			${when}
@@ -480,7 +506,7 @@ export function buildPage({ docPath, live }) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(meta.title)}</title>
 <style>${STYLE}</style></head>
-<body data-doc="${esc(relPath)}" data-kind="${esc(meta.kind)}">
+<body data-doc="${esc(relPath)}" data-kind="${esc(meta.kind)}" data-rev="${esc(docRevision(docPath))}">
 <div class="wrap">
 	<header class="top">
 		<h1>${esc(meta.title)}</h1>
@@ -569,11 +595,18 @@ document.addEventListener('click', (e) => {
 // жили ТОЛЬКО в DOM и умирали вместе со вкладкой. Теперь каждая правка тут же ложится
 // в браузер, а восстановление происходит само при следующем открытии той же страницы.
 const draftKey = 'ndim-review-draft:' + (document.body.dataset.doc || 'x');
+// Редакция документа, по которой собрана ЭТА страница (bugs/NEW_review_page_stale_tab_accepts_answers). Черновик хранит
+// её и отпечаток каждого вопроса: в другой редакции ответ встанет только на вопрос с тем же текстом.
+const myRev = document.body.dataset.rev || '';
+// Ответы на вопросы прошлой редакции, которых на этой странице нет: они живут в черновике, пока не записан ответ.
+let orphans = [];
 
 function snapshotDraft() {
-	const d = { q: {}, a: {}, comment: '' };
+	const d = { rev: myRev, q: {}, a: {}, comment: '', prev: orphans };
 	for (const sec of document.querySelectorAll('[data-q]')) {
 		d.q[sec.dataset.q] = {
+			qh: sec.dataset.qh || '',
+			title: sec.dataset.title || '',
 			choice: sec.querySelector('input[type=radio]:checked')?.value || '',
 			text: sec.querySelector('[data-text]')?.value || '',
 			comment: sec.querySelector('[data-comment]')?.value || '',
@@ -593,6 +626,15 @@ function saveDraft() {
 	try { localStorage.setItem(draftKey, JSON.stringify(snapshotDraft())); } catch (e) {}
 }
 
+// Правило переноса — одно на ядро и на страницу: исходник той же функции, что стерегут юниты tools/review-contour.test.mjs.
+${mapDraft.toString()}
+
+/** Ответ из черновика — одной строкой для человека: буква, текст, пометка. */
+function draftLine(rec) {
+	return [rec.choice ? 'выбор ' + rec.choice : '', rec.text || '', rec.comment ? 'пометка: ' + rec.comment : '']
+		.filter(Boolean).join(' · ');
+}
+
 function restoreDraft() {
 	let d = null;
 	try { d = JSON.parse(localStorage.getItem(draftKey) || 'null'); } catch (e) {}
@@ -603,14 +645,34 @@ function restoreDraft() {
 		const r = sec.querySelector('input[type=radio][value="' + value + '"]');
 		if (r && !r.checked) { r.checked = true; n++; }
 	};
-	for (const sec of document.querySelectorAll('[data-q]')) {
-		const rec = (d.q || {})[sec.dataset.q];
-		if (!rec) continue;
+	const sections = Array.from(document.querySelectorAll('[data-q]'));
+	const mapped = mapDraft(d, sections.map((s) => ({ label: s.dataset.q, qh: s.dataset.qh })), myRev);
+	for (const p of mapped.place) {
+		const sec = sections.find((s) => s.dataset.q === p.label);
+		if (!sec) continue;
+		const rec = p.rec;
 		pick(sec, rec.choice);
 		const t = sec.querySelector('[data-text]');
 		if (t && rec.text && !t.value) { t.value = rec.text; n++; }
 		const c = sec.querySelector('[data-comment]');
 		if (c && rec.comment && !c.value) { c.value = rec.comment; n++; }
+	}
+	// Ответы на вопросы, которых в этой редакции нет или которые переписаны, — не на чужие места, а блоком с текстом.
+	orphans = mapped.orphan.concat(Array.isArray(d.prev) ? d.prev : []);
+	if (orphans.length) {
+		// '\\n' — скрипт живёт в шаблонной строке: одиночная обратная косая черта стала бы настоящим переводом строки
+		// и разорвала бы строковый литерал страницы (поймано разбором встроенного скрипта до живого прогона).
+		const lines = orphans.map((o) => o.title + ' — ' + draftLine(o.rec)).join('\\n');
+		document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
+			'<div class="note" id="orphans"><b>Черновик прошлой редакции.</b> Агент изменил или убрал эти вопросы после того, ' +
+			'как Вы на них ответили. Ваши ответы на них — текстом, чтобы ничего не пропало: перенесите нужное в вопросы ниже ' +
+			'или скопируйте агенту в чат.<textarea id="orphansText" readonly rows="5" style="width:100%;margin-top:8px"></textarea>' +
+			'<div style="margin-top:6px"><button id="orphansCopy" type="button">Скопировать</button></div></div>');
+		document.getElementById('orphansText').value = lines;
+		document.getElementById('orphansCopy').addEventListener('click', async () => {
+			const ta = document.getElementById('orphansText');
+			try { await navigator.clipboard.writeText(ta.value); } catch (e) { ta.select(); }
+		});
 	}
 	for (const sec of document.querySelectorAll('[data-art]')) {
 		const rec = (d.a || {})[sec.dataset.art];
@@ -621,10 +683,13 @@ function restoreDraft() {
 	}
 	const dc = document.getElementById('docComment');
 	if (dc && d.comment && !dc.value) { dc.value = d.comment; n++; }
+	// Причину здесь не называем: черновик возвращается и после неудачной записи, и после смерти сервера до записи, и после
+	// «Открыть новую редакцию». Верно во всех трёх одно — черновик стирается только успешной записью, значит до записи
+	// эти ответы не дошли (прежнее «Прошлый раз записать не удалось» было неправдой в двух из трёх, кадр rs06 прогона).
 	if (n > 0) {
 		document.querySelector('.wrap').insertAdjacentHTML('afterbegin',
-			'<div class="note ok"><b>Восстановлен черновик.</b> Прошлый раз записать не удалось — ' +
-			'ваши отметки и тексты возвращены на места. Проверьте и нажмите «Сохранить».</div>');
+			'<div class="note ok"><b>Восстановлен черновик.</b> Ваши отметки и тексты, которые ещё не записаны, ' +
+			'возвращены на места. Проверьте и нажмите «Сохранить».</div>');
 	}
 }
 
@@ -638,7 +703,6 @@ restoreDraft();
 // узнаёт о беде в ту же секунду, а не через час письма в мёртвую страницу.
 // Раз в 10 секунд: один пустой ответ 204 не стоит ничего, а цена пропущенного удара —
 // потерянный час работы человека.
-let pulseLost = false;
 function pulseBanner(text, ok) {
 	let el = document.getElementById('pulseWarn');
 	if (!el) {
@@ -648,38 +712,145 @@ function pulseBanner(text, ok) {
 	el.className = ok ? 'note ok' : 'note';
 	el.innerHTML = text;
 }
-setInterval(async () => {
+// ── ПЛАШКА «ЭТА СТРАНИЦА БОЛЬШЕ НЕ ПРИНИМАЕТ ОТВЕТЫ» (bugs/NEW_review_page_stale_tab_accepts_answers, S1) ─────────
+// Слово владельца: «так какого хуя страницу переписали, новую блять открыли и старую ОСТАВИЛИ!!!! … вот я в сторой
+// блять и отвечал!». Прежняя плашка звала «Продолжайте писать» и ввод не блокировала — владелец и писал в страницу,
+// которая уже не могла записать. Теперь страница, которая не может записать ответ, перекрывает себя и становится inert:
+//   dead      — сервер молчит два пульса подряд;
+//   rewritten — сервер жив, но документ переписан: редакция на пульсе не та, что у страницы;
+//   closed    — агент закрыл страницу командой close;
+//   saved     — ЭТА страница записала ответ, сервер по правилу ушёл (только при своей записи — суд p3, п. 5);
+//   answered  — документ изменила запись ответа из другой вкладки после загрузки этой (пульс несёт момент последнего
+//               решения): «Агент изменил» было бы неправдой (суд p3, п. 4).
+// [TESTED: 2026-09-25 · ручной прогон набора qa/suites/review-stale-tab.md живым Chromium на стенде агента (dev-1):
+//   34/34 в 20:27 с головы 52d43c1 (с поправками суда p3), вывод и кадры прочитаны; мутанты А и Б краснеют адресно —
+//   qa/reports/2026-09-25_review-stale-tab.md; Chrome владельца с его старыми вкладками не проверен — ждёт первой
+//   страницы после мержа]
+let lastInput = 0;
+let savedOk = false;
+// Момент загрузки страницы: решение, записанное ПОЗЖЕ и не этой страницей, — «ответ уже записан», а не «агент изменил».
+const loadedAt = Date.now();
+let misses = 0;
+let gateKind = '';
+addEventListener('input', () => { lastInput = Date.now(); });
+addEventListener('change', () => { lastInput = Date.now(); });
+
+/** Сколько полей черновика заполнено — пульс несёт это серверу, чтобы close не закрыл страницу с несохранённым. */
+function draftFields() {
+	let n = document.querySelectorAll('input[type=radio]:checked').length;
+	for (const t of document.querySelectorAll('textarea[data-text], textarea[data-comment], #docComment'))
+		if (t.value.trim()) n++;
+	return n;
+}
+
+/** Ответы этой страницы — текстом для плашки: вопрос и то, что владелец отметил или написал. */
+function answersText() {
+	const d = snapshotDraft();
+	const lines = [];
+	for (const label in d.q) {
+		const rec = d.q[label];
+		const line = draftLine(rec);
+		if (line) lines.push((rec.title || label) + ' — ' + line);
+	}
+	if (d.comment) lines.push('Общий комментарий — ' + d.comment);
+	return lines.concat(orphans.map((o) => o.title + ' — ' + draftLine(o.rec))).join('\\n');
+}
+
+const GATE = {
+	dead: ['Сервер агента замолчал — эта страница больше не принимает ответы.',
+		'Всё, что Вы уже отметили и написали, сохранено в этом браузере. Когда агент поднимет страницу этого документа ' +
+		'заново, эта вкладка оживёт сама, и ответы останутся на местах. Если вкладка не ожила, а агент открыл новую, ' +
+		'скопируйте ответы ниже и вставьте их в новую страницу или отправьте агенту в чат.'],
+	rewritten: ['Документ переписан — эта страница больше не принимает ответы.',
+		'Агент изменил документ после того, как Вы открыли эту страницу. Откройте новую редакцию: ответы на вопросы, ' +
+		'которые не изменились, встанут на места сами, а ответы на изменённые вопросы будут показаны отдельным блоком.'],
+	closed: ['Агент закрыл эту страницу — она больше не принимает ответы.',
+		'Всё, что Вы отметили и написали, сохранено в этом браузере и вернётся на места, когда агент поднимет страницу ' +
+		'этого документа заново.'],
+	saved: ['Ответ записан — эта страница больше не принимает ответы.',
+		'Ответ лёг в документ, файл решения и архив. Если в документе остались вопросы, агент поднимет страницу заново, ' +
+		'и черновик вернётся на места.'],
+	answered: ['Ответ по этому документу уже записан — эта страница больше не принимает ответы.',
+		// Без «ответы — текстом ниже»: блок с ответами показывается, только когда на странице есть ответы, и у него своя
+		// подпись (кадр rs12 прогона 20:12: во второй вкладке ответов не было, а фраза обещала блок ниже).
+		'Ответ по документу записан после того, как Вы открыли эту страницу: из другой вкладки или другой страницы этого ' +
+		'документа. Откройте новую редакцию, чтобы увидеть записанный ответ.'],
+};
+
+function gate(kind) {
+	if (gateKind === kind) return;
+	gateKind = kind;
+	for (const el of document.querySelectorAll('.wrap, .bar')) el.inert = true;
+	let g = document.getElementById('gate');
+	if (!g) {
+		document.body.insertAdjacentHTML('beforeend', '<div id="gate" role="alertdialog" aria-live="assertive"></div>');
+		g = document.getElementById('gate');
+	}
+	g.className = kind === 'saved' ? 'ok' : '';
+	g.dataset.kind = kind;
+	const text = kind === 'saved' ? '' : answersText();
+	g.innerHTML = '<div class="box"><b class="head">' + GATE[kind][0] + '</b><p>' + GATE[kind][1] + '</p>' +
+		(kind === 'rewritten' || kind === 'answered' ? '<button id="gateReload" type="button" class="primary">Открыть новую редакцию</button>' : '') +
+		(text ? '<p>Ваши ответы этой страницы — текстом:</p><textarea id="gateText" readonly rows="8"></textarea>' +
+			'<button id="gateCopy" type="button">Скопировать</button><span id="gateMsg"></span>' : '') +
+		'</div>';
+	if (text) document.getElementById('gateText').value = text;
+	document.getElementById('gateReload')?.addEventListener('click', () => { saveDraft(); location.reload(); });
+	document.getElementById('gateCopy')?.addEventListener('click', async () => {
+		const ta = document.getElementById('gateText');
+		try { await navigator.clipboard.writeText(ta.value); } catch (e) { ta.select(); }
+		document.getElementById('gateMsg').textContent = ' скопировано';
+	});
+}
+
+function ungate() {
+	gateKind = '';
+	for (const el of document.querySelectorAll('.wrap, .bar')) el.inert = false;
+	document.getElementById('gate')?.remove();
+}
+
+// Пульс раз в 5 секунд и сразу при возврате на вкладку: скрытой вкладке Chrome урезает таймеры до раза в минуту, а
+// владелец, вернувшийся к странице, должен узнать правду ДО первого слова (донор — Unliminium, visibilitychange).
+// Два промаха подряд, а не один: краткий сбой не пугает плашкой. Пульс несёт состояние ввода — команда close читает
+// его из замка и не закрывает страницу, пока владелец пишет (KAIF 2.7: /alive?i&d&s).
+// urgent — стук при возврате на вкладку: владелец вот-вот начнёт писать, и решает ПЕРВЫЙ промах (на Windows отказ
+// соединения с закрытым портом localhost приходит лишь через ≈ 2 с — два промаха с паузой дали бы ≈ 5 с, замер
+// прогона 2026-09-25 РС-02). Случайный сбой снимет плашку сам: следующий успешный пульс её убирает.
+async function beat(urgent) {
+	const q = '/alive?doc=' + encodeURIComponent(document.body.dataset.doc || '') + '&rev=' + encodeURIComponent(myRev) +
+		'&i=' + (lastInput ? Date.now() - lastInput : -1) + '&d=' + draftFields() + '&s=' + (savedOk ? 1 : 0);
 	try {
-		const r = await fetch('/alive', { cache: 'no-store' });
+		const r = await fetch(q, { cache: 'no-store' });
 		if (!r.ok) throw new Error('bad status');
-		if (pulseLost) {
-			pulseLost = false;
+		let j = {};
+		try { j = await r.json(); } catch (e) {}
+		misses = 0;
+		if (j.closing) return gate('closed');
+		// После записи ответа документ меняется САМОЙ записью: своя запись — «записано»; чужая запись после загрузки этой
+		// страницы (пульс несёт момент последнего решения) — «ответ уже записан»; иначе документ переписал агент.
+		if (j.rev && myRev && j.rev !== myRev) {
+			if (savedOk) return gate('saved');
+			return gate(j.decidedAt && Date.parse(j.decidedAt) > loadedAt ? 'answered' : 'rewritten');
+		}
+		if (gateKind === 'dead') {
+			ungate();
 			pulseBanner('<b>Связь восстановлена.</b> Можно сохранять — ответы запишутся.', true);
 		}
 	} catch (e) {
-		if (pulseLost) return;
-		pulseLost = true;
-		// Сервер ушёл. Это беда ТОЛЬКО если на странице осталось, что записывать. Если все вопросы
-		// страницы уже отвечены (владелец нажал «Сохранить», сервер записал и по своему правилу
-		// завершился), пугать словом «замолчал» нельзя: 2026-09-05 владелец увидел эту плашку над
-		// полностью записанным документом и прочитал её как потерю ответов
-		// (bugs/NEW_review_batch_dies_after_first_answer). Считаем открытые вопросы по разметке.
-		const open = document.querySelectorAll('.q.open').length;
-		if (open === 0) {
-			pulseBanner(
-				'<b>Все ответы этой страницы записаны.</b> Агент их уже разбирает; страницу можно закрыть.',
-				true,
-			);
-			return;
-		}
-		pulseBanner(
-			'<b>Сервер агента замолчал.</b> Продолжайте писать — всё, что Вы уже отметили и написали, ' +
-			'сохранено в этом браузере и не потеряется. Но записать это сейчас нельзя: попросите ' +
-			'агента поднять страницу заново, и Ваши ответы вернутся на места сами.',
-			false,
-		);
+		misses++;
+		if (misses === 1 && !urgent) { setTimeout(beat, 1000); return; }
+		if (gateKind) return;
+		// Ответ ЭТОЙ страницы записан — сервер ушёл по правилу, это не беда (bugs/NEW_review_batch_dies_after_first_answer:
+		// плашка «замолчал» над записанным читалась как потеря). Только при своей записи (суд p3, п. 5): страница, которая
+		// ничего не записала, не вправе говорить «Ответ записан», даже если ждущих вопросов на ней нет.
+		if (savedOk) return gate('saved');
+		gate('dead');
 	}
-}, 10000);
+}
+setInterval(() => beat(false), 5000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') beat(true); });
+addEventListener('focus', () => { beat(true); });
+beat(false);
 
 const saveBtn = document.getElementById('save');
 if (saveBtn) saveBtn.addEventListener('click', async () => {
@@ -742,7 +913,8 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			// Какой документ отвечают — говорит сама страница: один сервер обслуживает всю пачку.
-			body: JSON.stringify({ doc: document.body.dataset.doc, answers, artifacts, comment }),
+			// Редакция страницы едет с ответом: сервер отвергнет ответ, собранный по другой редакции документа (S1).
+			body: JSON.stringify({ doc: document.body.dataset.doc, rev: myRev, answers, artifacts, comment }),
 		});
 		out = await res.json();
 	} catch (err) {
@@ -797,6 +969,7 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 		return;
 	}
 	if (out.ok) {
+		savedOk = true;
 		try { localStorage.removeItem(draftKey); } catch (e) {}
 		// РЕЖИМ ПАЧКИ: документ открыт со списка (адрес /doc?p=...), и после записи владельца ждёт
 		// СЛЕДУЮЩИЙ документ, а не закрытие вкладки. Возвращаем к списку — он пересобирается сервером
@@ -851,6 +1024,12 @@ if (saveBtn) saveBtn.addEventListener('click', async () => {
 			addEventListener('pagehide', () => { dying = true; clearTimeout(giveUp); }, { once: true });
 			window.close();
 		}, 2000);
+	} else if (out.stale) {
+		// Документ переписан, пока страница была открыта: ответ НЕ записан, и страница говорит это прямо — вместе с текстом
+		// ответов на плашке, чтобы ни одно слово владельца не пропало (S1).
+		saveBtn.disabled = false;
+		document.getElementById('status').textContent = 'НЕ ЗАПИСАНО: документ переписан — откройте новую редакцию';
+		gate('rewritten');
 	} else {
 		document.getElementById('status').textContent = 'ОШИБКА: ' + (out.error || 'неизвестно');
 		saveBtn.disabled = false;
@@ -1068,9 +1247,63 @@ function startServer({ docPath = null, index = null, onDecision = null }) {
 		 * бьётся, и сервер честно уходит.
 		 */
 		if (req.method === 'GET' && url.pathname === '/alive') {
-			server.lastBeat = Date.now();
-			res.writeHead(204);
-			return res.end();
+			// Проба живости из команды (`?ping=1`, суд p3, п. 1) — не сердцебиение вкладки: сервер ею не держится.
+			const ping = url.searchParams.get('ping') === '1';
+			if (!ping) server.lastBeat = Date.now();
+			/*
+			 * Пульс отвечает РЕДАКЦИЕЙ документа, который показывает страница, и признаком «агент закрыл страницу» —
+			 * страница с другой редакцией перекрывает себя плашкой (S1, `bugs/NEW_review_page_stale_tab_accepts_answers`).
+			 * Пульс же ПРИНОСИТ состояние ввода (мс с последнего ввода · заполненных полей · записано ли) — команда
+			 * close читает его из замка и не закрывает страницу, пока владелец пишет (KAIF 2.7, `/alive?i&d&s`).
+			 */
+			const rel = url.searchParams.get('doc');
+			const target = rel ? resolve(ROOT, rel) : docPath;
+			const rev = target && target.startsWith(ROOT) && existsSync(target) ? docRevision(target) : null;
+			// Состояние ввода — только из пульса СТРАНИЦЫ: он всегда несёт `i`. Пульс без него (страница-список пачки, проба
+			// живости из команды `?ping=1`) — не «печатал только что»: `Number(null)` дал бы 0, и close отказывал бы зря
+			// (суд p3, п. 8). Проба живости не держит сервер и сердцебиением вкладки не считается.
+			const iRaw = url.searchParams.get('i');
+			const i = iRaw === null ? NaN : Number(iRaw);
+			if (Number.isFinite(i)) {
+				server.input = {
+					lastInputAt: i >= 0 ? Date.now() - i : server.input?.lastInputAt ?? null,
+					draftFields: Number(url.searchParams.get('d')) || 0,
+					saved: url.searchParams.get('s') === '1',
+				};
+				server.onPulse?.();
+			}
+			// Момент последнего решения по документу: страница, чья редакция устарела из-за ЧУЖОЙ записи после её загрузки,
+			// говорит «ответ уже записан», а не «агент изменил документ» (суд p3, п. 4).
+			const decidedAt = rev ? readDecision(target)?.at ?? null : null;
+			res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+			return res.end(JSON.stringify({ ok: true, rev, closing: Boolean(server.closing), decidedAt }));
+		}
+
+		/*
+		 * ЗАКРЫТИЕ ЖИВОЙ СТРАНИЦЫ ВЛАДЕЛЬЦА — только своим сервером и только по токену из замка (KAIF 2.7 I46). Отказ 409 с
+		 * причиной, пока владелец печатал < 180 с, странице < 180 с или черновик не сохранён; `force` — только со словом
+		 * владельца, и оно ложится в лог. Страница узнаёт о закрытии ближайшим пульсом (`closing`) и гаснет плашкой.
+		 */
+		if (req.method === 'GET' && url.pathname === '/close') {
+			if (!server.closeToken || url.searchParams.get('token') !== server.closeToken) {
+				res.writeHead(403, { 'content-type': 'application/json; charset=utf-8' });
+				return res.end(JSON.stringify({ ok: false, reason: 'токен не тот — закрывает только команда, прочитавшая ЭТОТ замок' }));
+			}
+			const force = url.searchParams.get('force') === '1';
+			const word = (url.searchParams.get('word') || '').trim();
+			const verdict = closeVerdict({ startedAt: server.startedAt, ...(server.input || {}) });
+			if (!verdict.ok && !(force && word)) {
+				res.writeHead(409, { 'content-type': 'application/json; charset=utf-8' });
+				return res.end(JSON.stringify({ ok: false, reason: verdict.reason }));
+			}
+			if (!verdict.ok) console.log(`\n⚠️ ЗАКРЫТИЕ СИЛОЙ поверх отказа («${verdict.reason}») — слово владельца: «${word}»`);
+			server.closing = true;
+			res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+			res.end(JSON.stringify({ ok: true }));
+			console.log('\n🔒 Страницу закрыл агент командой close — жду пульса, чтобы вкладка узнала об этом, и ухожу.');
+			// Два пульса страницы (5 с каждый) — вкладка успевает получить `closing` и погасить себя своей плашкой.
+			setTimeout(() => server.close(() => process.exit(2)), 11_000).unref?.();
+			return;
 		}
 
 		if (req.method === 'GET' && url.pathname === '/') {
@@ -1109,6 +1342,33 @@ function startServer({ docPath = null, index = null, onDecision = null }) {
 					const target = got.doc ? resolve(ROOT, got.doc) : docPath;
 					if (!target || !target.startsWith(ROOT) || !existsSync(target))
 						throw new Error('документ не найден');
+
+					/*
+					 * 🔴 ОТВЕТ ЧУЖОЙ РЕДАКЦИИ НЕ ЗАПИСЫВАЕТСЯ (S1, `bugs/NEW_review_page_stale_tab_accepts_answers`). Страница,
+					 * собранная до правки документа, несёт номера вопросов СТАРОЙ редакции — записать их в новую значит
+					 * положить ответ владельца не на тот вопрос (№097: шесть вопросов против пяти). Нет редакции вовсе —
+					 * страница старой версии контура, отказ тот же. Зазор открыт и в поставляемом KAIF 2.7 (OW6 эпика 2.8).
+					 */
+					const nowRev = docRevision(target);
+					if (got.rev !== nowRev && got.rev && sameAsRecorded(readDecision(target), got)) {
+						res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+						res.end(JSON.stringify({ ok: true, duplicate: true, paths: { decision: decisionPathOf(target) } }));
+						console.log('\n↩️ Повтор уже записанного ответа — второй записи не делаю: ' + relative(ROOT, target));
+						if (onDecision) onDecision(target, server);
+						return;
+					}
+					if (got.rev !== nowRev) {
+						res.writeHead(409, { 'content-type': 'application/json; charset=utf-8' });
+						res.end(JSON.stringify({
+							ok: false,
+							stale: true,
+							error: got.rev
+								? 'документ переписан после того, как страница открылась — ответ НЕ записан; откройте новую редакцию'
+								: 'страница старой версии контура — ответ НЕ записан; обновите страницу',
+						}));
+						console.log(`\n⛔ Ответ отвергнут: редакция страницы ${got.rev || '(нет)'} ≠ редакции документа ${nowRev} — ${relative(ROOT, target)}`);
+						return;
+					}
 
 					// I3 — одобрение привязано к байтам тела. Сверяем показанный странице хеш с файлом
 					// ПРЯМО СЕЙЧАС: если текст успел измениться, владелец одобрял не то, что уйдёт.
@@ -1151,11 +1411,118 @@ function startServer({ docPath = null, index = null, onDecision = null }) {
 	return server;
 }
 
-/** Поднимает сервер на свободном порту и возвращает адрес. */
-async function listen(server) {
-	const port = Number(opt('--port', '0'));
-	await new Promise((r) => server.listen(port, '127.0.0.1', r));
+/**
+ * Поднимает сервер и возвращает адрес. Порт — по старшинству: явный `--port` (приборы) → ПОСТОЯННЫЙ порт документа
+ * (`stablePort`, донор Unliminium: тот же адрес после перезапуска — черновик и старая вкладка возвращаются) и его соседи
+ * +1…+20, когда он занят, — вслух → любой свободный.
+ */
+async function listen(server, preferred = 0) {
+	const tryPort = (p) =>
+		new Promise((ok, fail) => {
+			const onErr = (e) => { server.off('listening', onOk); fail(e); };
+			const onOk = () => { server.off('error', onErr); ok(); };
+			server.once('error', onErr);
+			server.once('listening', onOk);
+			server.listen(p, '127.0.0.1');
+		});
+	const explicit = opt('--port', null);
+	if (explicit !== null) await tryPort(Number(explicit));
+	else if (preferred) {
+		let up = false;
+		for (let k = 0; k <= 20 && !up; k++) {
+			try {
+				await tryPort(preferred + k);
+				up = true;
+				if (k)
+					console.log(`⚠️ Постоянный порт документа ${preferred} занят — страница на ${preferred + k}. Черновик прежней ` +
+						'вкладки этого документа сюда не переедет: он остаётся в её браузере, и её плашка покажет ответы текстом.');
+			} catch (e) {
+				if (e.code !== 'EADDRINUSE' && e.code !== 'EACCES') throw e;
+			}
+		}
+		if (!up) await tryPort(0);
+	} else await tryPort(0);
 	return `http://127.0.0.1:${server.address().port}/`;
+}
+
+/** Жив ли процесс (EPERM — жив под другим пользователем). */
+function pidAlive(pid) {
+	try {
+		process.kill(pid, 0);
+		return true;
+	} catch (e) {
+		return e.code === 'EPERM';
+	}
+}
+
+/**
+ * Жив ли замок СЕЙЧАС. Живой pid — ещё не наша страница: Windows переиспользует PID (суд p3, п. 1). Живой замок — тот,
+ * чей сервер за 1,5 с отвечает на пробу `/alive?ping=1` ответом нашего контура (в нём есть поле `rev`); проба не
+ * считается сердцебиением вкладки и состояние ввода не трогает.
+ */
+async function lockNow(held) {
+	const state = lockState(held, pidAlive);
+	if (state !== 'live') return state;
+	const r = await localGet(`${held.url}alive?ping=1`, 1500);
+	return r && r.status === 200 && r.json && 'rev' in r.json ? 'live' : 'stale';
+}
+
+/**
+ * GET к серверу страницы из КОМАНДЫ агента (`open`, `close`) — `node:http` без пула (`agent: false`), с потолком
+ * времени; отказ и тайм-аут — `null`. Не встроенный `fetch`: его сокет keep-alive, живой при `process.exit()`, роняет
+ * Node на Windows (`Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)`) — `close` выходил кодом 127 вместо 4
+ * (прогон драйвера 2026-09-25 19:57–20:04; пробы по журналу сессии — код 127 в 20:09:17 и 20:11:03, после лечения
+ * 20:12:07 — 4 · 4 · 4). Без пула сокет закрыт к моменту ответа, висеть при выходе нечему.
+ */
+function localGet(url, timeoutMs) {
+	return new Promise((ok) => {
+		const req = httpGet(url, { agent: false, timeout: timeoutMs }, (res) => {
+			let body = '';
+			res.setEncoding('utf8');
+			res.on('data', (c) => (body += c));
+			res.on('end', () => {
+				let json = null;
+				try {
+					json = JSON.parse(body);
+				} catch {}
+				ok({ status: res.statusCode, json });
+			});
+		});
+		req.on('timeout', () => req.destroy());
+		req.on('error', () => ok(null));
+	});
+}
+
+/**
+ * ЗАМОК «ОДИН ДОКУМЕНТ — ОДНО ОКНО» (KAIF 2.7 I29, Unliminium): pid · порт · адрес · документ · редакция при подъёме ·
+ * момент подъёма · токен закрытия · состояние ввода (его приносит пульс страницы). Живёт рядом с решениями, в git не
+ * едет (`.gitignore`). Снимается, когда ответ записан; после смерти процесса остаётся — его читает `open` («процесс мёртв»).
+ */
+function armLock(server, docPath, url) {
+	const lockFile = lockPathOf(docPath);
+	server.startedAt = new Date().toISOString();
+	server.closeToken = randomBytes(16).toString('hex');
+	const rev = docRevision(docPath);
+	const write = () => {
+		try {
+			mkdirSync(DECISIONS_DIR, { recursive: true });
+			writeFileSync(lockFile, JSON.stringify({
+				pid: process.pid,
+				port: server.address().port,
+				url,
+				doc: relative(ROOT, docPath).split('\\').join('/'),
+				rev,
+				startedAt: server.startedAt,
+				closeToken: server.closeToken,
+				...(server.input || {}),
+			}, null, '\t') + '\n', 'utf8');
+		} catch (e) {
+			console.log('⚠️ Замок страницы не записан: ' + e.message);
+		}
+	};
+	server.onPulse = write;
+	write();
+	return lockFile;
 }
 
 /** Открывает ОДИН документ: страница, браузер, сигнал, ожидание ответа. */
@@ -1245,19 +1612,63 @@ async function cmdOpen(docPath) {
 	if (!preflight(docPath)) return 1;
 	if (!preflightHasOpenQuestions(docPath)) return 1;
 	if (!preflightAssets(docPath)) return 1;
+
+	// Одно окно на документ: живая страница — второе окно не поднимается; агент говорит, где она, и чем её закрыть.
+	const held = readLock(lockPathOf(docPath));
+	const state = await lockNow(held);
+	if (state === 'live') {
+		console.log(`\nСтраница этого документа уже открыта: ${held.url} (pid ${held.pid}) — второе окно не поднимаю.`);
+		if (held.rev && held.rev !== docRevision(docPath))
+			console.log('Документ изменён после подъёма: открытая страница сама покажет владельцу «Документ переписан» ' +
+				'ближайшим пульсом (≤ 5 с) и откроет новую редакцию по его кнопке — на месте, в той же вкладке.');
+		console.log(`Закрыть её — только командой: node tools/review.mjs close ${relative(ROOT, docPath).split('\\').join('/')}`);
+		return 0;
+	}
+	if (state === 'stale')
+		console.log(`\nПрежняя страница этого документа (pid ${held.pid}) не работает — поднимаю на её же адресе, ` +
+			'чтобы её вкладка ожила, а черновик владельца вернулся на места.');
+
 	const server = startServer({
 		docPath,
-		// Сервер одного документа живёт ровно до записи решения: поднялся → записал → умер.
-		onDecision: (_, srv) => setTimeout(() => srv.close(() => process.exit(0)), 2500),
+		// Сервер одного документа живёт ровно до записи решения: поднялся → записал → снял замок → умер.
+		onDecision: (_, srv) =>
+			setTimeout(() => {
+				rmSync(lockPathOf(docPath), { force: true });
+				srv.close(() => process.exit(0));
+			}, 2500),
 	});
-	const url = await listen(server);
+	// Мёртвая страница поднимается на ПОРТУ ИЗ ЗАМКА — там живёт её вкладка (суд p3, п. 2: вывод говорил «на её же
+	// адресе», а слушал постоянный порт, и после занятого порта или явного --port это расходилось).
+	const url = await listen(server, state === 'stale' && held?.port ? held.port : stablePort(relative(ROOT, docPath)));
+	armLock(server, docPath, url);
 
 	const parsed = parseInterview(docPath, readMd(docPath));
 	const open = parsed.questions.filter((q) => !q.answered).length;
 	console.log(`\nСтраница поднята: ${url}`);
 	console.log(`Документ: ${relative(ROOT, docPath)} · ждут ответа: ${open}`);
 
-	if (!flag('--no-open')) openBrowser(url);
+	// ОДНО ОКНО НА ДОКУМЕНТ (суд p3, п. 3): после подъёма на прежнем адресе прежняя вкладка оживает сама — её пульс
+	// приходит за ≤ 5 с. Пришёл за 6 с — нового окна не открываем: у владельца было бы два окна одного документа.
+	let revived = false;
+	if (state === 'stale') {
+		revived = await new Promise((ok) => {
+			const prev = server.onPulse;
+			const timer = setTimeout(() => {
+				server.onPulse = prev;
+				ok(false);
+			}, 6000);
+			server.onPulse = () => {
+				prev?.();
+				clearTimeout(timer);
+				server.onPulse = prev;
+				ok(true);
+			};
+		});
+		console.log(revived
+			? 'Прежняя вкладка ожила на этом адресе — новое окно браузера не открываю.'
+			: 'Прежняя вкладка за 6 с не отозвалась — ' + (flag('--no-open') ? 'окно не открываю: --no-open.' : 'открываю окно.'));
+	}
+	if (!flag('--no-open') && !revived) openBrowser(url);
 
 	// I5 — сигнал ПОСЛЕ того, как страница поднята и открыта. Не раньше.
 	// Намеренно БЕЗ await: синтез речи занимает секунды, а сервер уже слушает — ждать его значило
@@ -1273,6 +1684,53 @@ async function cmdOpen(docPath) {
 	console.log(`\nЖду ответа ${waitPhrase()}. Ctrl+C — прекратить, документ не изменится.`);
 	watchIdle(server);
 	return url;
+}
+
+/**
+ * ЗАКРЫТЬ ЖИВУЮ СТРАНИЦУ ВЛАДЕЛЬЦА — единственная законная дверь (KAIF 2.7 I46; `bugs/NEW_review_page_stale_tab_accepts_answers`:
+ * агент дважды гасил процесс страницы №097, не узнав, пишет ли в ней владелец). Печатает адрес · pid · документ; просит СВОЙ
+ * сервер страницы закрыться по токену из замка; сервер отказывает (здесь — код 4), пока владелец печатал < 180 с, странице
+ * < 180 с или черновик не сохранён. `--force` — только со словом владельца `--owner-word "<дословно>"`, оно ложится в лог
+ * сервера. Процесс по pid из файла не убивается никогда; окно браузера не трогается — черновик остаётся в нём.
+ * [TESTED: 2026-09-25 · ручной прогон набора qa/suites/review-stale-tab.md живым Chromium на стенде агента (dev-1):
+ *   34/34 в 20:27 с головы 52d43c1 (с поправками суда p3), вывод и кадры прочитаны; мутанты А и Б краснеют адресно —
+ *   qa/reports/2026-09-25_review-stale-tab.md; Chrome владельца с его старыми вкладками не проверен — ждёт первой
+ *   страницы после мержа]
+ */
+async function cmdClose(docPath) {
+	// `--force` без слова владельца — ошибка вызова при ЛЮБОМ состоянии страницы: проверка стоит первой, чтобы отказ не
+	// зависел от того, жива ли страница (мутант «отказ снят» закрывал страницу раньше, и РС-09 молча отвечал «закрывать нечего»).
+	const force = flag('--force');
+	const word = opt('--owner-word', '') || '';
+	if (force && !word.trim()) {
+		console.error('⛔ --force только со словом владельца: --owner-word "<дословно>".');
+		return 1;
+	}
+	const held = readLock(lockPathOf(docPath));
+	const state = await lockNow(held);
+	if (state !== 'live') {
+		console.log(state === 'none'
+			? 'Страница этого документа не открыта — закрывать нечего.'
+			: `Страница этого документа не работает (сервер pid ${held.pid} не отвечает на ${held.url}) — закрывать нечего.`);
+		return 0;
+	}
+	console.log(`Страница: ${held.url} · pid ${held.pid} · ${held.doc} — сверь с той, о которой говорил владельцу.`);
+	let res;
+	try {
+		res = await localGet(`${held.url}close?token=${encodeURIComponent(held.closeToken)}` +
+			(force ? `&force=1&word=${encodeURIComponent(word)}` : ''), 5000);
+		if (!res) throw new Error('нет ответа за 5 с');
+	} catch (e) {
+		console.error(`⛔ Сервер страницы не ответил: ${e.message}`);
+		return 1;
+	}
+	const j = res.json || {};
+	if (res.status === 200) {
+		console.log(`closed ${held.doc} — вкладка погаснет своей плашкой ближайшим пульсом; черновик владельца остаётся в его браузере.`);
+		return 0;
+	}
+	console.log(`⛔ НЕ ЗАКРЫТО: ${j.reason || 'код ' + res.status}. Страницу держит владелец — дождись его ответа или спроси его в чате.`);
+	return 4;
 }
 
 /**
@@ -1598,6 +2056,9 @@ async function main() {
 			const r = cmdRender(docPath);
 			return r === 1 ? 1 : 0;
 		}
+		case 'close':
+			if (!docPath) return usage(), 1;
+			return await cmdClose(docPath);
 		case 'list':
 			cmdList();
 			return 0;
