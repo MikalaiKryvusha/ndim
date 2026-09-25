@@ -123,11 +123,20 @@ export async function readWeek(monday, fetchImpl = fetch) {
   const row = results[0];
   if (!row) throw new Error('HogQL не вернул строку — прибор не знает, что считал');
   const [fromUtcHogql, ...nums] = row;
-  if (String(fromUtcHogql) !== b.fromUtc) {
+  // Сравниваются МОМЕНТЫ, а не строки: HogQL печатает DateTime64 с дробью («2026-09-20 21:00:00.000000» — живой ответ
+  // боя 2026-09-25 16:50), и сверка строк дала ложный красный при верном окне.
+  const hogqlStart = utcInstant(fromUtcHogql);
+  if (Number.isNaN(hogqlStart) || hogqlStart !== b.start.getTime()) {
     throw new Error(`окно названо неверно: HogQL читает начало недели ${b.from} ${TZ} как ${fromUtcHogql} UTC, прибор ждал ${b.fromUtc} UTC`);
   }
   const [arrived, guests, rated5, relations, returned] = nums.map(Number);
   return { ...b, fromUtcHogql: String(fromUtcHogql), arrived, guests, rated5, relations, returned, backOpen: Date.now() < b.backEnd.getTime() };
+}
+
+/** `YYYY-MM-DD HH:MM:SS[.дробь]` в UTC → миллисекунды; не та форма — `NaN` (и контроль краснеет, а не молчит). */
+function utcInstant(s) {
+  const m = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})(\.\d+)?$/.exec(String(s ?? ''));
+  return m ? Date.parse(`${m[1]}T${m[2]}${m[3] ? m[3].slice(0, 4) : ''}Z`) : NaN;
 }
 
 /** Прошлый понедельник по МОСКОВСКОМУ календарю — неделя по умолчанию (в понедельник 00:30 по Москве прошлая неделя уже закрыта). */

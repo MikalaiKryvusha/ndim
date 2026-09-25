@@ -79,12 +79,17 @@ function fakeKeys() {
   process.env.POSTHOG_REGION = 'EU Cloud';
 }
 
-test('readWeek: HogQL подтвердил начало окна — числа прочитаны, границы ушли параметрами с поясом в тексте', async () => {
+// 🔴 ФИКСТУРА — ДОСЛОВНЫЙ ЖИВОЙ ОТВЕТ БОЯ, а не ожидание кода. Первая редакция отвечала «2026-09-20 21:00:00» — строкой,
+// которую прибор сам и ждал, и юнит был зелёным, пока живой прогон Менеджера (2026-09-25 16:50) не показал настоящий
+// ответ HogQL: DateTime64 с дробью «.000000». Сверка строк дала ложный красный при верном окне.
+const LIVE_FROM_UTC = '2026-09-20 21:00:00.000000';
+
+test('readWeek: HogQL подтвердил начало окна (живой ответ с дробью) — числа прочитаны, границы ушли параметрами', async () => {
   fakeKeys();
-  const { calls, fetchImpl } = stubPosthog(['2026-09-20 21:00:00', 160, 9, 3, 6, 0]);
+  const { calls, fetchImpl } = stubPosthog([LIVE_FROM_UTC, 160, 9, 3, 6, 0]);
   const w = await readWeek('2026-09-21', fetchImpl);
   assert.deepEqual([w.arrived, w.guests, w.rated5, w.relations, w.returned], [160, 9, 3, 6, 0]);
-  assert.equal(w.fromUtcHogql, '2026-09-20 21:00:00');
+  assert.equal(w.fromUtcHogql, LIVE_FROM_UTC);
   assert.equal(calls.length, 1);
   assert.deepEqual(calls[0].body.query.values, { from: '2026-09-21 00:00:00', to: '2026-09-28 00:00:00', back: '2026-10-05 00:00:00' });
   assert.ok(calls[0].body.query.query.includes(`toString(toTimeZone(toDateTime({from}, 'Europe/Moscow'), 'UTC')) AS from_utc`));
@@ -92,8 +97,15 @@ test('readWeek: HogQL подтвердил начало окна — числа 
 
 test('readWeek: HogQL прочитал начало окна не тем поясом — чтение краснеет, чисел нет (контроль пояса)', async () => {
   fakeKeys();
-  // Так ответил бы HogQL, если бы строка ушла без пояса в проект с поясом UTC: полночь осталась полночью.
-  const { fetchImpl } = stubPosthog(['2026-09-21 00:00:00', 160, 9, 3, 6, 0]);
+  // Так ответил бы HogQL, если бы строка ушла без пояса в проект с поясом UTC: полночь осталась полночью (та же форма
+  // DateTime64, что у живого ответа, — расхождение во времени, а не в формате).
+  const { fetchImpl } = stubPosthog(['2026-09-21 00:00:00.000000', 160, 9, 3, 6, 0]);
+  await assert.rejects(readWeek('2026-09-21', fetchImpl), /окно названо неверно/);
+});
+
+test('readWeek: ответ HogQL не той формы — контроль краснеет, а не проходит молча', async () => {
+  fakeKeys();
+  const { fetchImpl } = stubPosthog(['не дата', 160, 9, 3, 6, 0]);
   await assert.rejects(readWeek('2026-09-21', fetchImpl), /окно названо неверно/);
 });
 
