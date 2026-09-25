@@ -93,25 +93,44 @@ export const PAIR_SET_PARAM = 'set';
 const SET_DIGITS = 36;
 
 /**
- * Код набора первого для ссылки: номера вещей пула, по символу на вещь, в порядке пула
- * (12 вещей из 20 — 12 символов). Вещи вне пула в код не попадают.
+ * Метка пула в коде набора — три 36-ричных знака отпечатка списка вещей (FNV-1a).
+ *
+ * Код — НОМЕРА вещей в пуле: правка `TEST_POOL` (новые голоса в снимке каталога меняют пул —
+ * находка 4 суда V4) сдвинула бы номера у уже выданных ссылок, и второй человек до чтения пары
+ * увидел бы чужие вещи. С меткой старый код не подсказывает ничего — очередь ждёт пару, как у
+ * ссылки без `set=`.
+ */
+export function poolMark(poolIds: readonly string[]): string {
+  let h = 0x811c9dc5;
+  for (const ch of poolIds.join('\n')) {
+    h ^= ch.codePointAt(0) ?? 0;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return (h % SET_DIGITS ** 3).toString(SET_DIGITS).padStart(3, '0');
+}
+
+/**
+ * Код набора первого для ссылки: `<метка пула>.<номера>` — номера вещей пула, по символу на вещь, в
+ * порядке пула (12 вещей из 20 — 12 символов). Вещи вне пула в код не попадают.
  */
 export function encodePairSet(poolIds: readonly string[], rated: Iterable<string>): string {
   if (poolIds.length > SET_DIGITS) throw new Error(`пул ${poolIds.length} длиннее ${SET_DIGITS}: код набора не вместит`);
   const mine = new Set(rated);
-  return poolIds
-    .map((id, i) => (mine.has(id) ? i.toString(SET_DIGITS) : ''))
-    .join('');
+  const digits = poolIds.map((id, i) => (mine.has(id) ? i.toString(SET_DIGITS) : '')).join('');
+  return `${poolMark(poolIds)}.${digits}`;
 }
 
 /**
  * Набор первого из кода ссылки. Код — внешние данные (адресная строка): чужой символ и номер вне
- * пула молча выпадают. Пустой или отсутствующий код — `null` («подсказки нет»), а не пустой набор.
+ * пула молча выпадают. Пустой или отсутствующий код, код без метки или с меткой ДРУГОГО пула —
+ * `null` («подсказки нет»), а не пустой и не чужой набор.
  */
 export function decodePairSet(poolIds: readonly string[], code: string | null): Set<string> | null {
   if (code === null) return null;
+  const dot = code.indexOf('.');
+  if (dot < 0 || code.slice(0, dot).toLowerCase() !== poolMark(poolIds)) return null;
   const ids = new Set<string>();
-  for (const ch of code.toLowerCase()) {
+  for (const ch of code.slice(dot + 1).toLowerCase()) {
     const i = Number.parseInt(ch, SET_DIGITS);
     if (Number.isInteger(i) && i >= 0 && i < poolIds.length) ids.add(poolIds[i]);
   }
