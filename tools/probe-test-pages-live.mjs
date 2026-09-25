@@ -90,6 +90,10 @@ for (const cfg of CONFIGS) {
 
     // 4. У обёрток движок доступен сразу
     if (p.kind === 'wrap') {
+      // `data-live` — карточка ожила: с b777e09 до него видно лицо пререндера с мёртвыми звёздами.
+      // Не глотать: без оживления мёртвые звёзды лица тоже дали бы «11» — ложный зелёный.
+      const alive = await page.waitForSelector('.qcard[data-live]', { timeout: 30000 }).then(() => true, () => false);
+      check(alive, `${label} · карточка ожила`, `data-live=${alive}`);
       const stars = await page.locator('.starsrow .st').count();
       check(stars === 11, `${label} · звёзды 0…10 сразу`, `звёзд=${stars}`);
       const nameTxt = await page.locator('.qcard .name').first().innerText().catch(() => '');
