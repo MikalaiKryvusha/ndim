@@ -208,8 +208,8 @@ export const landingFaq: ReadonlyArray<{ group: Bi; items: ReadonlyArray<{ q: Bi
       {
         q: { ru: 'Как пройти тест на совместимость с другом?', en: 'How do I take the compatibility test with a friend?' },
         a: {
-          ru: 'Откройте тест на совместимость для двоих в разделе «Тесты», оцените звёздами 12 вещей — фильмы, сериалы, игры и привычки — и отправьте другу личную ссылку. Друг оценит эти 12 вещей, Вы и друг нажмёте «Сравнить ответы», и Пространство NDim Space покажет, в чём Вы с другом совпадаете.',
-          en: 'Open the compatibility test for two in the “Tests” section, rate 12 things with stars — films, series, games and habits — and send your friend your personal link. Your friend rates the same 12 things, you both press “Compare answers”, and NDim Space shows where you and your friend match.',
+          ru: 'Откройте тест на совместимость для двоих в разделе «Тесты», оцените звёздами 12 вещей — фильмы, сериалы и игры — и отправьте другу личную ссылку. Друг оценит эти 12 вещей и нажмёт «Сравнить ответы», Вы нажмёте «Проверить» под личной ссылкой, и Пространство NDim Space покажет, в чём Вы с другом совпадаете.',
+          en: 'Open the compatibility test for two in the “Tests” section, rate 12 things with stars — films, series and games — and send your friend your personal link. Your friend rates the same 12 things and presses “Compare answers”, you press “Check” under your personal link, and NDim Space shows where you and your friend match.',
         },
       },
       {

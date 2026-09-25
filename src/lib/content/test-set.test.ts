@@ -29,6 +29,8 @@ import {
   RATED_FACT_FROM,
 } from './test-set.ts';
 import { SENSITIVE_PRACTICES } from './landing-demo.ts';
+import { landingFaq } from './landing-v1-copy.ts';
+import { kindKeyOf, type KindKey } from './dim-kind.ts';
 import { TESTS, TEST_SLUGS } from './test-copy.ts';
 import type { DimPage } from './dims-source.ts';
 // Запасной срез каталога (лежит в git) — тот же файл, на котором собирается сайт без боевой
@@ -185,6 +187,70 @@ test('🔑 пул = правилу на каталоге сборки: подм�
   assert.deepEqual([...TEST_POOL], derivePool(catalog(), SENSITIVE_PRACTICES));
   const queue = poolQueue(catalog(), SENSITIVE_PRACTICES);
   assert.deepEqual(queue.map((e) => e.id), [...TEST_POOL], 'на полном каталоге очередь — пул целиком, в его порядке');
+});
+
+// ── Тексты о наборе называют только виды, которые есть в пуле (суд V4, находка 2) ─────────────
+//
+// Пул общий для трёх тестов. С №098 практик в нём нет, а «Тест личности» и FAQ главной ещё обещали
+// «фильмы, игры и привычки». Строка «о наборе» — та, что называет число вещей («12 вещей», «12 things»)
+// или «знакомые фильмы»; строки о каталоге целиком (там есть и книги, и практики) не судятся.
+
+const KIND_WORDS: ReadonlyArray<[readonly KindKey[], RegExp]> = [
+  [['practice'], /привычк\p{L}*|практик\p{L}*|habits?|practices?/iu],
+  [['novel', 'book'], /книг\p{L}*|роман\p{L}*|books?|novels?/iu],
+  [['music-artist'], /музык\p{L}*|music/iu],
+  [['video-game'], /(?<!\p{L})игр\p{L}*|games?/iu],
+  [['tv-series'], /сериал\p{L}*|series/iu],
+  [['movie'], /фильм\p{L}*|films?|movies?/iu],
+];
+const ABOUT_THE_SET = /(?<![\p{L}\d])\d{1,2}\s+(вещ\p{L}*|things)|знаком\p{L}*\s+фильм|familiar movies/iu;
+
+/** Строки копирайта с путём; шаг «lead + rest» — одной строкой, как его читает человек. */
+function copyStrings(node: unknown, path: string, out: Array<[string, string]> = []): Array<[string, string]> {
+  if (typeof node === 'string') out.push([path, node]);
+  else if (Array.isArray(node)) node.forEach((v, i) => copyStrings(v, `${path}[${i}]`, out));
+  else if (node && typeof node === 'object') {
+    const o = node as Record<string, unknown>;
+    if (typeof o.lead === 'string' && typeof o.rest === 'string') out.push([path, `${o.lead} ${o.rest}`]);
+    else for (const [k, v] of Object.entries(o)) copyStrings(v, `${path}.${k}`, out);
+  }
+  return out;
+}
+
+/** Виды, которых в пуле нет, найденные в строках о наборе. */
+function kindsNotInPool(poolKinds: ReadonlySet<KindKey>, lines: Array<[string, string]>): string[] {
+  const bad: string[] = [];
+  for (const [path, text] of lines) {
+    if (!ABOUT_THE_SET.test(text)) continue;
+    for (const [keys, re] of KIND_WORDS) {
+      if (keys.some((k) => poolKinds.has(k))) continue;
+      const hit = text.match(re);
+      if (hit) bad.push(`${path}: «${hit[0]}» — такого вида в пуле нет`);
+    }
+  }
+  return bad;
+}
+
+test('прибор видов: ловит «привычки» в строке о наборе и молчит о строке про каталог', () => {
+  const kinds = new Set<KindKey>(['movie', 'tv-series', 'video-game']);
+  assert.equal(kindsNotInPool(kinds, [['a', 'Оцените 12 вещей звёздами — фильмы, игры и привычки.']]).length, 1);
+  assert.equal(kindsNotInPool(kinds, [['b', 'Rate 12 things with stars — films, series, games and habits.']]).length, 1);
+  assert.equal(kindsNotInPool(kinds, [['c', 'каталог Пространства — фильмы, книги, сериалы, игры и практики']]).length, 0);
+  assert.equal(kindsNotInPool(kinds, [['d', 'Оцените 12 вещей — фильмы, сериалы и игры.']]).length, 0);
+});
+
+test('🔑 тексты тестов и FAQ главной о наборе называют только виды, которые есть в пуле', { skip: NO_CATALOG }, () => {
+  const byId = new Map(catalog().map((d) => [d.id, d]));
+  const poolKinds = new Set<KindKey>();
+  for (const id of TEST_POOL) {
+    const key = kindKeyOf(byId.get(id)?.type);
+    if (key !== null) poolKinds.add(key);
+  }
+  const lines = [...copyStrings(TESTS, 'TESTS'), ...copyStrings(landingFaq, 'landingFaq')];
+  const aboutSet = lines.filter(([, t]) => ABOUT_THE_SET.test(t));
+  // Выборка не пуста: иначе страж молча судил бы ноль строк.
+  assert.ok(aboutSet.length >= 6, `строк о наборе найдено ${aboutSet.length} — выборка сломалась`);
+  assert.deepEqual(kindsNotInPool(poolKinds, lines), []);
 });
 
 // ── Дюжина попытки: случайная, но воспроизводимая затравкой (№098 В2) ──────────────────────────
