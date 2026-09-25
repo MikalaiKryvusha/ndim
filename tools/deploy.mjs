@@ -29,6 +29,7 @@
  *   1. правила и индексы Firestore — ПЕРВЫМ шагом (см. ниже, почему);
  *   2. `npm run build` — С ОЧИСТКОЙ (`prebuild`), иначе уезжает смесь сборок: старый чанк ищет
  *      свой `globalThis.__sveltekit_<хеш>`, не находит и роняет приложение (`bugs/124`);
+ *   2а. правдивый `<lastmod>` карты сайта — реестр отпечатков контура (`tools/lib/sitemap-lastmod.mjs`);
  *   3. ПРОВЕРКА ЦЕЛОСТНОСТИ СБОРКИ до выката: во всей `build/` обязан быть РОВНО ОДИН хеш;
  *   4. выкат хостинга;
  *   5. 🔑 ЗАМЕР ПОПАДАНИЯ (П8): целевой контур отдаёт хеш ИМЕННО этой сборки, а соседний контур
@@ -52,6 +53,7 @@ import { appendFileSync, existsSync, readdirSync, readFileSync, statSync, writeF
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { CONTOURS, contourFromArgv } from './lib/contours.mjs';
+import { stampBuild } from './lib/sitemap-lastmod.mjs';
 
 /** Расписка стейджа — свидетель того, что ЭТОТ код уже проехал предрелизный рубеж. */
 const RECEIPT = '.kaif/stage-receipt.json';
@@ -194,6 +196,28 @@ function firebase(contour, title, only) {
  *
  * Возвращает единственный хеш — им же ниже судится, ТУДА ЛИ уехала сборка.
  */
+/**
+ * 🔑 ПРАВДИВЫЙ `<lastmod>` (`plans/NEW_sitemap_truthful_lastmod.md`, FORK Б — решение Менеджера 2026-09-25).
+ *
+ * Стоит ПОСЛЕ сборки и ДО проверки целостности и выката: штампует `build/sitemap.xml` по реестру отпечатков ТОГО
+ * контура, куда катим (`<сайт>/sitemap-lastmod.json`), и кладёт новый реестр рядом — он уезжает вместе со сборкой.
+ * Реестр не прочитался — карта уходит без `lastmod` целиком (правда), выкат не останавливается. Останавливают только
+ * страница карты, которой нет в сборке, и нарушение стража штампа: такую карту не катят.
+ * Повтор с `--skip-build` штампует ту же сборку заново — прежние `lastmod` снимаются, результат тот же.
+ */
+async function stampSitemapLastmod(contour) {
+	console.log('\n══ правдивый lastmod карты сайта ══');
+	try {
+		const s = await stampBuild({ site: contour.site });
+		console.log(
+			`   реестр ${contour.title}: ${s.why} · страниц ${s.pages} · с датой ${s.dated} (прежних ${s.kept}, изменились ${s.changed}, новых ${s.added}) · без даты ${s.undated} · момент ${s.now}`,
+		);
+	} catch (error) {
+		console.error(`\n🔴 lastmod: ${error?.message ?? error}\n   Карта с неправдой не катится — выкат остановлен.`);
+		process.exit(1);
+	}
+}
+
 function checkBuildIntegrity() {
 	console.log('\n══ целостность сборки: один хеш на всю папку ══');
 	const hashes = new Map();
@@ -610,6 +634,7 @@ async function main() {
 		}
 		run('сборка НАЧИСТО', 'npm run build');
 	}
+	await stampSitemapLastmod(CONTOUR);
 	const builtHash = checkBuildIntegrity();
 
 	// 🔑 К7: набор Smoke судит АРТЕФАКТ до выката. Красный набор останавливает дверь здесь — то есть
