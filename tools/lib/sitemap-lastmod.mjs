@@ -38,18 +38,28 @@
  *
  * ⚠️ `RULES` — версия этих правил. Правка правил меняет отпечатки ВСЕХ страниц без правки содержания; реестр другой версии
  * поэтому читается как «не прочитался» (дат нет в этот выкат), а не как «всё изменилось» (всем сегодня).
+ * История версий: v1 → v2 (2026-09-26) — атрибут читается до парной кавычки (`attr`), у страниц с апострофом в описании
+ * отпечаток сменился. Цена смены в этот момент — ноль дат: замер 2026-09-26 00:32:29 — реестры боя и стейджа (`v1`) по
+ * 10 517 страниц, с датой 0.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const RULES = 'sitemap-lastmod/v1';
+export const RULES = 'sitemap-lastmod/v2';
 export const LEDGER_FILE = 'sitemap-lastmod.json';
 
 const LD_RE = /<script\b[^>]*\btype\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
 const COPYRIGHT_RE = /©\s*\d{4}(?:\s*[–-]\s*\d{4})?/g;
-/** Служебные элементы — `[тег, класс]` (пункты 5 и 6 шапки). */
-const SERVICE = [['ul', 'nums'], ['div', 'vers']];
+/**
+ * Служебные элементы — `[тег, класс, компонент]` (пункты 5 и 6 шапки). Компонент назван, потому что пара «класс в
+ * компоненте ↔ класс здесь» стережётся юнитом по НАСТОЯЩЕМУ исходнику: переименованный класс иначе молча вернёт
+ * элемент в отпечаток, и `<lastmod>` сдвинется на каждом выкате.
+ */
+export const SERVICE = [
+  ['ul', 'nums', 'src/lib/ui/landing/LandingV1.svelte'],
+  ['div', 'vers', 'src/lib/ui/Versions.svelte'],
+];
 
 /** Вырезает каждый элемент `<tag class="… token …">` вместе с содержимым, считая вложенные одноимённые теги. */
 export function stripByClass(html, tag, token) {
@@ -85,9 +95,14 @@ function decode(text) {
 
 const squash = (text) => decode(text).replace(/\s+/g, ' ').trim();
 
+/**
+ * Значение атрибута ДО ПАРНОЙ кавычки: апостроф внутри двойных кавычек — часть значения (`content="Parkland's …"`).
+ * Прежняя форма обрывала значение на первой кавычке любого вида, и правка описания после апострофа не меняла отпечаток
+ * (9 из 147 страниц выборки, `/en/dimension/parkland-04jpdbpx`). Имя атрибута — с границей: `data-href` не `href`.
+ */
 function attr(tag, name) {
-  const m = tag.match(new RegExp(`\\b${name}\\s*=\\s*["']([^"']*)["']`, 'i'));
-  return m ? m[1] : null;
+  const m = tag.match(new RegExp(`(?<![\\w-])${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, 'i'));
+  return m ? (m[1] ?? m[2]) : null;
 }
 
 /** Значимое содержание страницы по Google — частями, чтобы юнит и разбор видели, что именно сравнивается. */
