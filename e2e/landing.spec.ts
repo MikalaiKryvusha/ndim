@@ -42,7 +42,9 @@ test('пререндер /ru: заголовок, тест на 10 объект�
 	// Объекты теста — настоящие измерения каталога: их id стоят в разметке (звезда уедет под этим id).
 	const { DEMO_ITEMS } = await import('../src/lib/content/landing-demo.ts');
 	for (const d of DEMO_ITEMS) expect(html, `нет строки «${d.title.ru}»`).toContain(`data-dim="${d.id}"`);
-	expect((html.match(/<summary[^>]*>/g) ?? []).length).toBe(12);
+	// Вопросы FAQ — это `<summary>` ПОСЛЕ шапки: в самой шапке свой `<summary>` — выпадашка языка общей пары (`HeadControls`).
+	const body = html.slice(html.indexOf('</header>'));
+	expect((body.match(/<summary[^>]*>/g) ?? []).length).toBe(12);
 	// Инлайн-скрипт app.html применяет тему до отрисовки; ранний тап ловится до гидратации (`plans/106` Д6).
 	expect(html).toContain('ndim-theme');
 	expect(html).toContain('__ndimDemoQ');
@@ -78,7 +80,8 @@ test('дефолт /ru: светлая тема, русский язык, заг
 
 test('тема: переключение в тёмную и сохранение после перезагрузки', async ({ page }, testInfo) => {
 	await page.goto('/ru');
-	await page.getByRole('button', { name: 'Тёмная тема' }).click();
+	// Кнопка темы — общая пара шапок (`HeadControls`): имя «Тема», значок показывает ТЕКУЩУЮ тему.
+	await page.getByRole('button', { name: 'Тема', exact: true }).click();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 	await expect(page.locator('body')).toHaveCSS('background-color', DARK_BG);
 	await page.screenshot({ path: testInfo.outputPath('landing-dark.png'), fullPage: true });
@@ -86,13 +89,16 @@ test('тема: переключение в тёмную и сохранение
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
 
-test('язык: EN — ссылкой на /en, RU — обратно на /ru', async ({ page }) => {
+test('язык: English — ссылкой из выпадашки на /en, Русский — обратно на /ru', async ({ page }) => {
 	await page.goto('/ru');
-	await page.getByRole('link', { name: 'EN', exact: true }).click();
+	// Язык — выпадашка общей пары шапок (`HeadControls`), пункты — ССЫЛКИ на адрес языка.
+	await page.getByLabel('Язык', { exact: true }).click();
+	await page.getByRole('menuitem', { name: 'English', exact: true }).click();
 	await expect(page).toHaveURL(/\/en$/);
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(EN_H1);
-	await page.getByRole('link', { name: 'RU', exact: true }).click();
+	await page.getByLabel('Language', { exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Русский', exact: true }).click();
 	await expect(page).toHaveURL(/\/ru$/);
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(RU_H1);
 });
@@ -100,7 +106,7 @@ test('язык: EN — ссылкой на /en, RU — обратно на /ru',
 test.describe('главная /: та же страница на русском, язык НЕ угадывается', () => {
 	test.use({ locale: 'en-US' });
 
-	test('англоязычный браузер с «en» в памяти видит на / русскую страницу и ссылку EN', async ({ page }) => {
+	test('англоязычный браузер с «en» в памяти видит на / русскую страницу и ссылку English', async ({ page }) => {
 		// №096 В6 = Б: «язык выбирается переключателем вверху»; №058 В1 = А — «молчаливое угадывание языка» не берём.
 		await page.addInitScript(() => {
 			try {
@@ -111,7 +117,8 @@ test.describe('главная /: та же страница на русском,
 		await expect(page).toHaveURL(/\/$/);
 		await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText(RU_H1);
-		await expect(page.getByRole('link', { name: 'EN', exact: true })).toHaveAttribute('href', '/en');
+		await page.getByLabel('Язык', { exact: true }).click();
+		await expect(page.getByRole('menuitem', { name: 'English', exact: true })).toHaveAttribute('href', '/en');
 	});
 
 	test('контроль прибора: тот же человек на /en видит английский', async ({ page }) => {
@@ -136,7 +143,7 @@ test('«Войти» ведёт на экран входа; подвал вед�
 	await expect(page.getByRole('link', { name: 'Войти', exact: true })).toHaveAttribute('href', '/profile');
 	await expect(page.getByRole('link', { name: 'Тест на совместимость', exact: true })).toHaveAttribute('href', '/ru/test/compatibility');
 	await expect(page.getByRole('link', { name: 'Калькулятор любви', exact: true })).toHaveAttribute('href', '/ru/test/love');
-	await page.getByRole('button', { name: 'Тёмная тема' }).click();
+	await page.getByRole('button', { name: 'Тема', exact: true }).click();
 	await page.waitForTimeout(500);
 	expect(errors).toEqual([]);
 });

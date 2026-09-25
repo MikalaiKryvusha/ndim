@@ -38,11 +38,10 @@
   import { endBoot, hasSession } from '$lib/data/session';
   import { landingDims, landingPeople, landingRatings, landingRelations } from '$lib/data/metrics';
   import { num, votesUnit, type Lang } from '$lib/ui/format';
-  import { theme, toggleTheme } from '$lib/ui/theme.svelte';
   import { MOTION } from '$lib/ui/motion';
   import { ready, readyEarlyScript } from '$lib/ui/ready';
   import Brand from '$lib/ui/Brand.svelte';
-  import Icon from '$lib/ui/Icon.svelte';
+  import HeadControls from '$lib/ui/HeadControls.svelte';
 
   let { lang, entry }: { lang: Lang; entry: Extract<AnalyticsEntry, 'root' | 'landing'> } = $props();
 
@@ -193,13 +192,8 @@
   <header class="top">
     <a class="brand" href={entry === 'root' ? '/' : `/${lang}`} aria-label="NDim Space"><Brand size={30} /><span>NDim Space</span></a>
     <span class="sp"></span>
-    <nav class="langs" aria-label={t.top.lang[lang]}>
-      <a class="pill" class:on={lang === 'ru'} href="/ru" hreflang="ru" lang="ru">RU</a>
-      <a class="pill" class:on={lang === 'en'} href="/en" hreflang="en" lang="en">EN</a>
-    </nav>
-    <button type="button" class="pill theme" onclick={toggleTheme} aria-label={theme() === 'dark' ? t.top.themeLight[lang] : t.top.themeDark[lang]}>
-      <Icon name={theme() === 'dark' ? 'sun' : 'moon'} size={13} />
-    </button>
+    <!-- Тема и язык — ОБЩАЯ пара всех шапок продукта (`HeadControls`); язык главной — АДРЕС (`/ru`, `/en`). -->
+    <HeadControls {lang} hrefFor={(code) => `/${code}`} />
     <a class="signin" href={APP_URL}>{t.top.signin[lang]}</a>
   </header>
 
@@ -477,15 +471,12 @@
   .card { background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--card-shadow); }
   :global(:root[data-theme='dark']) .card { background: var(--panel); backdrop-filter: blur(10px); }
 
-  /* Шапка: знак и имя, язык, тема, тихий вход для своих (№009 В2: «чтобы те, кто пришёл логиниться, не искали») */
+  /* Шапка: знак и имя, тема и язык, вход для своих (№009 В2: «чтобы те, кто пришёл логиниться, не искали») */
   .top { display: flex; align-items: center; gap: 6px; padding: 14px; max-width: 1240px; margin: 0 auto; }
   .brand { display: flex; align-items: center; gap: 9px; font-weight: 800; color: var(--heading); font-size: 16px; white-space: nowrap; text-decoration: none; }
   .sp { flex: 1; }
-  .langs { display: flex; gap: 6px; }
-  .pill { font: inherit; font-size: 12px; padding: 5px 8px; border: 1px solid var(--edge); border-radius: 99px; color: var(--dim); background: var(--panel-solid); text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; }
-  .pill.on { color: var(--primary); border-color: var(--primary); font-weight: 700; }
-  .signin { font-size: 14px; font-weight: 700; color: var(--primary); text-decoration: none; padding: 7px 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--panel-solid); }
-  :global(:root[data-theme='dark']) .signin { color: var(--accent); }
+  /* «Войти» — тот же элемент продукта, что `.enter` в шапке публичных страниц (`PublicBar.svelte`): залитая пилюля. */
+  .signin { flex: none; white-space: nowrap; padding: 0.4rem 0.9rem; border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-weight: 600; font-size: 0.85rem; text-decoration: none; }
 
   /* 1. Герой: три портрета 3:4, средний выше, у каждого пузырь «что я люблю» с настоящей оценкой */
   .hero { display: grid; gap: 16px; padding-top: 6px; }
@@ -671,7 +662,6 @@
   @media (min-width: 900px) {
     .wrap { padding: 0 56px; }
     .top { padding: 18px 56px; gap: 10px; }
-    .pill { padding: 5px 9px; }
     .sec { padding: 56px 0; }
     h1 { font-size: 46px; }
     h2 { font-size: 32px; }

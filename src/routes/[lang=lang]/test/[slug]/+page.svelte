@@ -24,11 +24,11 @@
 <script lang="ts">
   import { slide, fly } from 'svelte/transition';
   import type { TestPageData } from './+page.server';
-  import { LANGS, LANG_LABEL } from '$lib/content/langs';
+  import { LANGS } from '$lib/content/langs';
   import { RATED_FACT_FROM } from '$lib/content/test-set';
-  import Icon from '$lib/ui/Icon.svelte';
-  // Знак бренда — тот же компонент, что в шапке приложения: витрина не рисует своих логотипов.
-  import Brand from '$lib/ui/Brand.svelte';
+  // Шапка — ОБЩАЯ шапка публичных страниц: своей копии здесь больше нет (слово владельца
+  // 2026-09-25 о переключателях, которые «в разных местах разные»).
+  import PublicBar from '$lib/ui/PublicBar.svelte';
   import { GRADE_FACES } from '$lib/ui/emojiscale';
   import GradeFace from '$lib/ui/GradeFace.svelte';
   import { MOTION } from '$lib/ui/motion';
@@ -55,8 +55,6 @@
   /** Интерфейсные мелочи — те же слова, что на экране «Измерения» (жест один — язык один). */
   const UI = {
     ru: {
-      enter: 'Войти',
-      theme: 'Тема',
       saveNow: 'Сохранить сейчас',
       // Слово владельца (bugs/172): «кнопка [Сохранить] может стать, например, зелёной,
       // с текстом [Сохранено]». Та же формулировка, что на экране «Измерения».
@@ -94,8 +92,6 @@
       deletePair: 'Удалить пару и ссылку',
     },
     en: {
-      enter: 'Log in',
-      theme: 'Theme',
       saveNow: 'Save now',
       savedShort: 'Saved',
       savingIn: 'Saving in',
@@ -412,21 +408,8 @@
   <meta property="og:locale" content={data.lang === 'en' ? 'en_US' : 'ru_RU'} />
 </svelte:head>
 
-<!-- Шапка публичной страницы — тот же состав, что у страниц каталога (`bugs/114`). -->
-<header class="bar">
-  <a class="brand" href="/">
-    <Brand size={26} />
-    <span>NDim Space</span>
-  </a>
-  <a class="langsw" href="/{other}/test/{data.slug}" hreflang={other}>{LANG_LABEL[other]}</a>
-  <!-- Кнопка темы без клиентского JS: обработчик вешает инлайн-скрипт `app.html` по id,
-       значок переключают стили по `data-theme`. -->
-  <button type="button" id="theme-toggle" class="theme" title={ui.theme} aria-label={ui.theme}>
-    <span class="ic sun"><Icon name="sun" size={15} /></span>
-    <span class="ic moon"><Icon name="moon" size={15} /></span>
-  </button>
-  <a class="enter" href="/profile">{ui.enter}</a>
-</header>
+<!-- Шапка публичной страницы — та же, что у страниц каталога (`bugs/114`), одним компонентом. -->
+<PublicBar lang={data.lang} otherLang={other} otherHref="/{other}/test/{data.slug}" />
 
 <article class="test">
   <header>
@@ -668,70 +651,7 @@
 </article>
 
 <style>
-  /* Шапка — копия шапки страниц каталога: две публичные шапки одного продукта не должны
-     отличаться на глаз. */
-  .bar {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-height: 52px;
-    padding: 0 1rem;
-    background: var(--panel);
-    border-bottom: 1px solid var(--edge);
-  }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 700;
-    color: var(--heading);
-    text-decoration: none;
-  }
-  .langsw {
-    margin-left: auto;
-    padding: 0.4rem 0.7rem;
-    border-radius: 999px;
-    border: 1px solid var(--edge);
-    color: var(--dim);
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-decoration: none;
-  }
-  .theme {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    flex: none;
-    border-radius: 10px;
-    border: 1px solid var(--edge);
-    background: transparent;
-    color: var(--dim);
-    cursor: pointer;
-  }
-  .theme .ic {
-    display: inline-flex;
-  }
-  .theme .moon {
-    display: none;
-  }
-  :global(html[data-theme='dark']) .theme .sun {
-    display: none;
-  }
-  :global(html[data-theme='dark']) .theme .moon {
-    display: inline-flex;
-  }
-  .enter {
-    padding: 0.4rem 0.9rem;
-    border-radius: 999px;
-    background: var(--primary);
-    color: var(--primary-ink);
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-decoration: none;
-  }
+  /* Стили шапки живут в `PublicBar.svelte` вместе с самой шапкой. */
 
   .test {
     max-width: 46rem;

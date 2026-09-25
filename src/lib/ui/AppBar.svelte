@@ -21,11 +21,10 @@
   // Приборная строка с метриками (V4) — план на будущее, в шапку сейчас не входит.
   import { goto } from '$app/navigation';
   import Brand from '$lib/ui/Brand.svelte';
-  import Icon from '$lib/ui/Icon.svelte';
+  import HeadControls from '$lib/ui/HeadControls.svelte';
   import { observeBar } from '$lib/ui/barheight.svelte';
-  import { theme, toggleTheme } from '$lib/ui/theme.svelte';
   import { lang, setLang } from '$lib/ui/lang.svelte';
-  import { LANGS, LANG_LABEL, swapLangInPath } from '$lib/content/langs';
+  import { type Lang, swapLangInPath } from '$lib/content/langs';
 
   let {
     badge,
@@ -36,8 +35,6 @@
     badge?: string | undefined;
     onBadge?: (() => void) | undefined;
   } = $props();
-
-  let open = $state(false);
 
   /**
    * Шапка публикует свою высоту (`--bar-h` + общее число): от неё отсчитывают себя рельс
@@ -55,33 +52,19 @@
   // ровно это и увидел владелец: «переключаю тему через Settings, кнопка в хедере
   // не переключается соответственно».
 
-  // Атрибут `lang` документа и сохранение выбора делает общий модуль — здесь остаётся
-  // только закрыть выпадашку.
+  // Атрибут `lang` документа и сохранение выбора делает общий модуль, выпадашку закрывает
+  // сама пара `HeadControls`.
   //
   // 🔴 На ПУБЛИЧНОМ адресе (`/ru/menu/terms`) смена языка — это смена АДРЕСА (`plans/39`
   // шаг 2): у каждого языка своя страница, и подмена текста под старым адресом заставила бы
   // canonical и hreflang врать. За стеной входа адрес языка не несёт — там, как и раньше,
   // хватает памяти.
-  function pickLang(next: (typeof LANGS)[number]) {
-    open = false;
+  function pickLang(next: Lang) {
     setLang(next);
     const swapped = swapLangInPath(location.pathname, next);
     if (swapped && swapped !== location.pathname) void goto(swapped + location.search + location.hash);
   }
 </script>
-
-<!-- Тап МИМО выпадашки или Esc закрывает её — как у контекстных меню продукта.
-     Именно pointerdown вне .lang-wrap, а не click на window: клик по самой кнопке
-     делегируется Svelte и закрыл бы меню тем же событием, которым открыл (гонка
-     open→close за один клик — поймано QA-прогоном bugs/39). -->
-<svelte:window
-  onpointerdown={(event) => {
-    if (open && !(event.target instanceof Element && event.target.closest('.lang-wrap'))) open = false;
-  }}
-  onkeydown={(event) => {
-    if (open && event.key === 'Escape') open = false;
-  }}
-/>
 
 <header class="bar" bind:this={barEl}>
   <!-- Знак ведёт на «Профиль», а НЕ на «/» (bugs/61, слово владельца: «нажимаю на главное
@@ -95,32 +78,11 @@
   {#if badge}
     <button type="button" class="badge" onclick={onBadge}>◌ {badge}</button>
   {/if}
-  <!-- Значок показывает ТЕКУЩУЮ тему (солнце = светлая), как и строка «Тема» в «Меню»:
-       два переключателя одного продукта обязаны говорить об одном одинаково. Здесь
-       стояли глифы ☀/☾ — иконки bugs/17 до шапки не дошли. -->
-  <button type="button" class="theme" onclick={toggleTheme} title={lang() === 'ru' ? 'Тема' : 'Theme'} aria-label={lang() === 'ru' ? 'Тема' : 'Theme'}>
-    <Icon name={theme() === 'dark' ? 'moon' : 'sun'} size={15} />
-  </button>
-  <span class="lang-wrap">
-    <button
-      type="button"
-      class="lang"
-      aria-haspopup="menu"
-      aria-expanded={open}
-      onclick={() => (open = !open)}
-    >
-      {lang() === 'ru' ? 'Ru' : 'En'}
-    </button>
-    {#if open}
-      <div class="dd" role="menu">
-        {#each LANGS as code (code)}
-          <button type="button" role="menuitem" class:on={lang() === code} onclick={() => pickLang(code)}>
-            <span class="tick">{lang() === code ? '✓' : ''}</span>{LANG_LABEL[code]}
-          </button>
-        {/each}
-      </div>
-    {/if}
-  </span>
+  <!-- Тема и язык — ОБЩАЯ пара продукта (`HeadControls`): вид, размеры и поведение живут в одном
+       месте на все пять шапок (слово владельца 2026-09-25 о «велосипеде каждый раз»). -->
+  <div class="ctrls">
+    <HeadControls lang={lang()} onLang={pickLang} />
+  </div>
 </header>
 
 <style>
@@ -140,50 +102,9 @@
   }
   .wm { font-size: 15px; font-weight: 650; color: var(--heading); }
 
-  /* Пара контролов справа: тема + язык (bugs/39). */
-  /*
-   * Обе кнопки шапки — КВАДРАТНЫЕ и одинаковые (слово владельца 2026-07-27: «давай кнопки
-   * в хедере сделаем, как ты в макете нарисовал — квадратные и без стрелочки в кнопке
-   * языка»). Раньше они были разной ширины: у темы — иконка, у языка — текст со стрелкой
-   * «▾», и пара выглядела случайной. Стрелка убрана: выпадашка открывается тапом, а знак
-   * «▾» был последним юникод-глифом в шапке (родня bugs/17).
-   *
-   * Размер один на обе, содержимое центрируется флексом — не базовой линией текста.
-   */
-  .theme, .lang {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; padding: 0; flex: none;
-    font: inherit; line-height: 1; cursor: pointer;
-    color: var(--dim); background: transparent;
-    border: 1px solid var(--edge); border-radius: 10px;
-    transition: color 0.15s ease, border-color 0.15s ease;
-  }
-  .theme { margin-left: auto; }
-  .lang { font-size: 12px; font-weight: 700; }
-  @media (hover: hover) {
-    .theme:hover, .lang:hover { color: var(--primary); border-color: var(--primary); }
-  }
-
-  .lang-wrap { position: relative; display: inline-flex; }
-
-  /* Выпадашка — по канону контекстных меню продукта: непрозрачный фон (bugs/23). */
-  .dd {
-    position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 130px;
-    display: flex; flex-direction: column; padding: 4px;
-    background: var(--panel-solid, var(--panel)); border: 1px solid var(--edge); border-radius: 12px;
-    box-shadow: var(--card-shadow);
-  }
-  .dd button {
-    display: flex; align-items: center; gap: 7px;
-    font: inherit; font-size: 13px; text-align: left; cursor: pointer;
-    color: var(--text); background: transparent; border: 0; border-radius: 8px; padding: 8px 10px;
-    transition: background 0.15s ease;
-  }
-  @media (hover: hover) {
-    .dd button:hover { background: var(--edge-soft); }
-  }
-  .dd button.on { color: var(--heading); font-weight: 650; }
-  .tick { width: 14px; color: var(--primary); }
+  /* Пара «тема + язык» справа (bugs/39); её вид — в `HeadControls.svelte`. Здесь только место:
+     без бейджа гостя пару прижимает вправо она сама, с бейджем — бейдж. */
+  .ctrls { margin-left: auto; flex: none; }
 
   /* Гость = пунктир (не сохранён, невидим другим) — метафора утверждённого макета V1. */
   .badge {
@@ -191,7 +112,7 @@
     color: var(--accent); background: transparent;
     border: 1px dashed var(--accent); border-radius: 999px; padding: 4px 11px;
   }
-  .badge ~ .theme { margin-left: 0; }
+  .badge ~ .ctrls { margin-left: 0; }
 
   /* ── Десктоп: шапка ВО ВСЮ ШИРИНУ поверх рельса (макет V3-А, ideas/17) ──
      Шапка сама занимает первую строку сетки экрана на все её колонки — поэтому шести

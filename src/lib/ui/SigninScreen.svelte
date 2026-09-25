@@ -30,8 +30,8 @@
    * `GuestCard.svelte`). Русские строки — утверждённые (интервью №073 В1 = А) плюс его правки.
    */
   import Brand from './Brand.svelte';
+  import HeadControls from './HeadControls.svelte';
   import Icon from './Icon.svelte';
-  import { theme, toggleTheme } from './theme.svelte';
   import { setLang, type Lang } from './lang.svelte';
 
   let {
@@ -131,8 +131,6 @@
     },
     forkStay: { ru: (email: string) => `Остаться в аккаунте ${email}`, en: (email: string) => `Stay signed in to the ${email} account` },
     forkSwitch: { ru: (email: string) => `Войти в аккаунт ${email}`, en: (email: string) => `Sign in to the ${email} account` },
-    themeToDark: { ru: 'Тёмная', en: 'Dark' },
-    themeToLight: { ru: 'Светлая', en: 'Light' },
   } as const;
 </script>
 
@@ -169,21 +167,10 @@
 
   <!-- ПЕРЕКЛЮЧАТЕЛИ ЯЗЫКА И ТЕМЫ — вторая половина `bugs/19`: у карточки внутри приложения
        переключателя темы не было ВОВСЕ, а язык переключался локальной шапкой. Здесь оба
-       глобальные: `setLang` и общий источник темы (`bugs/53`). -->
+       глобальные: `setLang` и общий источник темы (`bugs/53`). Сама пара — общая на все шапки
+       продукта (`HeadControls.svelte`); адрес `/profile` языка не несёт, поэтому язык — кнопкой. -->
   <div class="ctl">
-    <div class="lang" role="group" aria-label="Язык / Language">
-      <button type="button" class:on={lang === 'ru'} onclick={() => setLang('ru')}>RU</button>
-      <button type="button" class:on={lang === 'en'} onclick={() => setLang('en')}>EN</button>
-    </div>
-    <button
-      type="button"
-      class="th"
-      onclick={toggleTheme}
-      aria-label={theme() === 'dark' ? t.themeToLight[lang] : t.themeToDark[lang]}
-    >
-      <Icon name={theme() === 'dark' ? 'sun' : 'moon'} size={15} />
-      <span>{theme() === 'dark' ? t.themeToLight[lang] : t.themeToDark[lang]}</span>
-    </button>
+    <HeadControls {lang} onLang={setLang} />
   </div>
 
   <main class="col">
@@ -312,31 +299,6 @@
     align-items: center;
     z-index: 2;
   }
-  .lang { display: flex; border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; }
-  .lang button {
-    font: inherit;
-    font-size: 13px;
-    padding: 6px 12px;
-    background: transparent;
-    color: var(--dim);
-    border: 0;
-    cursor: pointer;
-  }
-  .lang button.on { background: var(--primary); color: var(--primary-ink); }
-  .th {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font: inherit;
-    font-size: 13px;
-    padding: 6px 12px;
-    background: transparent;
-    color: var(--dim);
-    border: 1px solid var(--edge);
-    border-radius: 999px;
-    cursor: pointer;
-  }
-  .lang button:hover, .th:hover { color: var(--text); }
 
   .col { position: relative; z-index: 1; width: 100%; display: grid; place-items: center; }
   .inner { width: min(420px, 100%); text-align: center; display: grid; gap: 10px; justify-items: center; }

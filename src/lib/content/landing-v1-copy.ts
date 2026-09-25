@@ -33,9 +33,6 @@ export const landingV1 = {
   },
   top: {
     signin: { ru: 'Войти', en: 'Sign in' },
-    lang: { ru: 'Язык', en: 'Language' },
-    themeDark: { ru: 'Тёмная тема', en: 'Dark theme' },
-    themeLight: { ru: 'Светлая тема', en: 'Light theme' },
   },
   hero: {
     kicker: { ru: 'Знакомства нового измерения', en: 'Meeting people in a new dimension' },
