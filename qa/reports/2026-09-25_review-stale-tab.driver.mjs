@@ -4,7 +4,7 @@
 // документа, как у агента в жизни. Кадры: test-results/review-stale-tab/ — смотрятся глазами после прогона.
 // Запуск из корня рабочего места: node qa/reports/2026-09-25_review-stale-tab.driver.mjs   (≈ 5 мин: РС-10 ждёт 180 с тишины)
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, rmSync, existsSync, readdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 
@@ -45,9 +45,9 @@ const V1 = HEAD + Q(1, 'Три практики рядом с «Сексом» �
 const V2 = HEAD + Q(1, 'На каком языке открывается сайт?', 'Язык главной страницы.', 'Русский', 'Английский')
   + Q(2, 'Новые русские строки главной — принимаете?', 'Строки ВТОРОЙ редакции, по ключевым запросам.', 'Да', 'Нет');
 
-/** Поднять страницу фикстуры так, как это делает агент: без --port. Отдаёт процесс, адрес и весь вывод. */
-async function openPage() {
-  const child = spawn(process.execPath, ['tools/review.mjs', 'open', REL, '--no-open', '--no-signal'], { cwd: ROOT });
+/** Поднять страницу фикстуры так, как это делает агент: без --port (или с `extra`). Отдаёт процесс, адрес и весь вывод. */
+async function openPage(extra = []) {
+  const child = spawn(process.execPath, ['tools/review.mjs', 'open', REL, '--no-open', '--no-signal', ...extra], { cwd: ROOT });
   let out = '';
   child.stdout.on('data', (d) => (out += d));
   child.stderr.on('data', (d) => (out += d));
@@ -59,6 +59,16 @@ async function openPage() {
     await sleep(100);
   }
   return { child, url: null, out: () => out };
+}
+
+/** Дождаться строки в выводе процесса страницы (до `ms`). */
+async function waitOut(p, re, ms) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) {
+    if (re.test(p.out())) return true;
+    await sleep(200);
+  }
+  return false;
 }
 
 /** Команда `review close` отдельным процессом — как её зовёт агент. */
@@ -117,6 +127,8 @@ try {
   kids.push(p3.child);
   check('РС-03', p3.url === p1.url, 'тот же адрес — постоянный порт документа', `${p1.url} → ${p3.url}` + (p3.url ? '' : ` · код ${p3.child.exitCode} · вывод: ${p3.out().replace(/\s+/g, ' ').slice(0, 300)}`));
   check('РС-03', /поднимаю на её же адресе/.test(p3.out()), 'вывод называет, что прежняя страница мертва и адрес тот же');
+  // Одно окно на документ (суд p3, п. 3): вкладка ожила — `open` второго окна не открывает (драйвер с --no-open судит строку).
+  check('РС-03', await waitOut(p3, /Прежняя вкладка ожила на этом адресе — новое окно браузера не открываю/, 9000), 'вывод: прежняя вкладка ожила — нового окна не открываю');
   const revived = await page.waitForSelector('#gate', { state: 'detached', timeout: 15000 }).then(() => true, () => false);
   check('РС-03', revived && (await page.locator('body').innerText()).includes('Связь восстановлена'), 'старая вкладка ожила сама: плашка снята, «Связь восстановлена»');
   check('РС-03', await page.locator('[data-q="В2"] input[value="А"]').isChecked() && (await page.locator('[data-q="В2"] [data-text]').inputValue()).includes('без угадывания'), 'отметки владельца на местах');
@@ -168,8 +180,12 @@ try {
   p2.child.kill('SIGKILL');
   await gateWithin(page, 'dead', 15000);
   writeFileSync(FIXTURE, V1, 'utf8');
+  // Windows переиспользует PID (суд p3, п. 1): замок мёртвой страницы получает pid ЖИВОГО чужого процесса — самого драйвера.
+  // Живой pid — ещё не живая страница: `open` обязан спросить сервер и подняться, а не ответить «уже открыта».
+  writeFileSync(LOCK, JSON.stringify({ ...JSON.parse(readFileSync(LOCK, 'utf8')), pid: process.pid }, null, '\t'), 'utf8');
   const p7 = await openPage();
   kids.push(p7.child);
+  check('РС-07', Boolean(p7.url) && /не работает/.test(p7.out()), 'замок с живым ЧУЖИМ pid (переиспользован) не принят за живую страницу — поднята заново', p7.url || p7.out().replace(/\s+/g, ' ').slice(0, 200));
   const t7 = await gateWithin(page, 'rewritten', 15000);
   check('РС-07', p7.url === p1.url && t7 !== null, 'старая вкладка на том же адресе НЕ принимает ответы молча — «Документ переписан»', t7 !== null ? `${t7.toFixed(1)} с после подъёма` : 'плашки нет');
 
@@ -181,6 +197,8 @@ try {
   await sleep(6000); // пульс донёс состояние ввода до замка
   const c8 = closeCmd();
   check('РС-08', c8.code === 4 && /НЕ ЗАКРЫТО/.test(c8.out) && /pid \d+/.test(c8.out), 'отказ кодом 4 с причиной, печать адреса и pid', c8.out.split('\n').filter((l) => /НЕ ЗАКРЫТО|Страница:/.test(l)).join(' ¦ '));
+  // Причины называются все (суд p3, п. 7): владелец печатал 6 с назад — это слово обязано стоять в отказе рядом с возрастом.
+  check('РС-08', /владелец печатал \d+ с назад/.test(c8.out), 'в отказе названо «владелец печатал N с назад»');
   // Закрытая страница уходит через 11 с после `close` (плашка успевает дойти до вкладки) — судить сразу значит судить на
   // материале, где упасть нечему (мутант «отказ снят» прошёл эту строку зелёным, заход Б 18:37).
   await sleep(12000);
@@ -191,13 +209,21 @@ try {
   // ═══ РС-10 · close при тишине — закрывает, вкладка гаснет ═══════════════════════════════════════════════
   // `--quick` (прогоны мутантов) пропускает кейс: ему нужны 185 с тишины, а мутанты стерегут РС-01…РС-09.
   if (!process.argv.includes('--quick')) {
-  console.log('\nРС-10 · close после 180 с тишины при пустом черновике:');
+  console.log('\nРС-10 · close на СТАРОЙ странице: печатал — отказ; после 180 с тишины при пустом черновике — закрывает:');
+  console.log('  … жду 185 с: странице больше 180 с');
+  await sleep(185000);
+  // Суд p3, п. 7: отказ «печатал» на старой странице — один, без возраста страницы рядом (РС-08 видел его в паре).
+  await page.locator('[data-q="В2"] [data-text]').fill('печатаю на старой странице');
+  await sleep(6000); // пульс донёс ввод до замка
+  const c10a = closeCmd();
+  check('РС-10', c10a.code === 4 && /владелец печатал \d+ с назад/.test(c10a.out) && !/странице \d+ с/.test(c10a.out), 'на старой странице ввод сам по себе даёт отказ кодом 4 «печатал»', c10a.out.split('\n').find((l) => /НЕ ЗАКРЫТО|closed/.test(l)) || '');
   await page.evaluate(() => {
     for (const r of document.querySelectorAll('input[type=radio]')) r.checked = false;
     for (const t of document.querySelectorAll('textarea')) t.value = '';
   }); // без событий ввода: черновик пуст, а «последний ввод» остаётся тем, что был
-  console.log('  … жду 185 с тишины');
+  console.log('  … жду 185 с тишины после ввода');
   await sleep(185000);
+  // Команда close сперва пробует сервер `/alive?ping=1` (п. 1); проба без `i` не «печатал только что» (п. 8) — иначе здесь отказ.
   const c10 = closeCmd();
   check('РС-10', c10.code === 0 && /closed interviews\/interview_998_stale_tab_fixture\.md/.test(c10.out), '«closed <док>», код 0', c10.out.split('\n').find((l) => /closed|НЕ ЗАКРЫТО/.test(l)) || '');
   const t10 = await gateWithin(page, 'closed', 15000);
@@ -207,19 +233,53 @@ try {
   check('РС-10', gone, 'процесс страницы ушёл сам');
   } else p7.child.kill('SIGKILL');
 
-  // ═══ Кадры плашки на телефоне и в тёмной теме ══════════════════════════════════════════════════════════
+  await ctx.close(); // старые вкладки ушли: дальше каждый кейс знает, какие вкладки у него есть
+
+  // ═══ РС-13 · подъём на порту ИЗ ЗАМКА; ожившая вкладка — без нового окна (суд p3, п. 2 и п. 3) · 390 тёмная ══════
+  console.log('\nРС-13 · страница на явном порту убита → подъём без --port: порт из замка, прежняя вкладка оживает сама:');
+  const P13 = Number(new URL(p1.url).port) + 7; // не постоянный порт документа — иначе п. 2 не отличить от прежнего поведения
   const dark = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
   const pd = await dark.newPage();
-  const pp = await openPage();
+  const pp = await openPage(['--port', String(P13)]);
   kids.push(pp.child);
   if (pp.url) {
-  await pd.goto(pp.url);
-  await pd.locator('[data-q="В1"] input[value="А"]').check();
-  pp.child.kill('SIGKILL');
-  await gateWithin(pd, 'dead', 15000);
-  await pd.screenshot({ path: join(SHOTS, 'rs01-dead-390-dark.png') });
-  }
+    await pd.goto(pp.url);
+    await pd.locator('[data-q="В1"] input[value="А"]').check();
+    pp.child.kill('SIGKILL');
+    await gateWithin(pd, 'dead', 15000);
+    await pd.screenshot({ path: join(SHOTS, 'rs01-dead-390-dark.png') });
+    const pr = await openPage();
+    kids.push(pr.child);
+    check('РС-13', pr.url === pp.url, 'подъём без --port встал на порт из замка, а не на постоянный порт документа', `${pp.url} → ${pr.url}`);
+    const revivedLine = await waitOut(pr, /Прежняя вкладка ожила на этом адресе — новое окно браузера не открываю/, 9000);
+    check('РС-13', revivedLine && !/открываю окно/.test(pr.out()), 'прежняя вкладка ожила — нового окна нет');
+    check('РС-13', await pd.waitForSelector('#gate', { state: 'detached', timeout: 10000 }).then(() => true, () => false), 'в самой вкладке плашка снята');
+    pr.child.kill('SIGKILL');
+  } else check('РС-13', false, 'страница на явном порту поднята', pp.out().replace(/\s+/g, ' ').slice(0, 200));
   await dark.close();
+  await sleep(1000);
+
+  // Контроль к п. 3: замок мёртвый, вкладки нет — пульса за 6 с не будет, и `open` говорит, что открыл бы окно.
+  const pc = await openPage();
+  kids.push(pc.child);
+  check('РС-13', await waitOut(pc, /Прежняя вкладка за 6 с не отозвалась — окно не открываю: --no-open\./, 9000), 'контроль: вкладки нет — «не отозвалась», окно открылось бы');
+
+  // ═══ РС-12 · ответ записан из другой вкладки — «ответ уже записан», а не «агент изменил» (суд p3, п. 4) ══════════
+  console.log('\nРС-12 · две вкладки одного документа, ответ записан в первой:');
+  const two = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const tabA = await two.newPage();
+  const tabB = await two.newPage();
+  await tabA.goto(pc.url);
+  await tabB.goto(pc.url);
+  await tabA.locator('[data-q="В1"] input[value="А"]').check();
+  await tabA.locator('#save').click();
+  await tabA.waitForFunction(() => document.body.innerText.includes('Записано'), null, { timeout: 10000 }).catch(() => {});
+  // Сервер одного документа уходит через 2,5 с после записи — вкладка Б узнаёт правду сразу, возвратом на неё.
+  await tabB.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  const t12 = await gateWithin(tabB, 'answered', 4000);
+  check('РС-12', t12 !== null, 'вторая вкладка: «Ответ по этому документу уже записан», а не «Документ переписан»', t12 !== null ? `${t12.toFixed(1)} с` : `плашка: ${await tabB.locator('#gate').getAttribute('data-kind').catch(() => 'нет')}`);
+  await tabB.screenshot({ path: join(SHOTS, 'rs12-answered-1440.png') });
+  await two.close();
 } finally {
   for (const k of kids) { try { k.kill('SIGKILL'); } catch {} }
   await browser.close();

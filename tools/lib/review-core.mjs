@@ -127,17 +127,19 @@ export const CLOSE_QUIET_MS = 180_000;
  *   · владелец печатал меньше порога назад;
  *   · в черновике есть заполненные поля, а сохранения не было.
  * Состояние ввода страница сама присылает пульсом (`/alive?i&d&s`), сервер держит его в замке.
+ * Причины называются ВСЕ сразу, через «; » (суд p3, п. 7): первая-и-единственная прятала остальные — отказ «печатал»
+ * на молодой странице не был виден никогда.
  */
 export function closeVerdict({ startedAt, lastInputAt = null, draftFields = 0, saved = false } = {}, now = Date.now()) {
 	const secs = (ms) => Math.round(ms / 1000);
 	const born = Date.parse(startedAt);
+	const reasons = [];
 	if (Number.isFinite(born) && now - born < CLOSE_QUIET_MS)
-		return { ok: false, reason: `странице ${secs(now - born)} с — меньше ${secs(CLOSE_QUIET_MS)} с; владелец мог только начать читать` };
+		reasons.push(`странице ${secs(now - born)} с — меньше ${secs(CLOSE_QUIET_MS)} с, владелец мог только начать читать`);
 	if (lastInputAt && now - lastInputAt < CLOSE_QUIET_MS)
-		return { ok: false, reason: `владелец печатал ${secs(now - lastInputAt)} с назад — меньше ${secs(CLOSE_QUIET_MS)} с` };
-	if (draftFields > 0 && !saved)
-		return { ok: false, reason: `в черновике заполнено полей: ${draftFields}, сохранения не было` };
-	return { ok: true, reason: '' };
+		reasons.push(`владелец печатал ${secs(now - lastInputAt)} с назад — меньше ${secs(CLOSE_QUIET_MS)} с`);
+	if (draftFields > 0 && !saved) reasons.push(`в черновике заполнено полей: ${draftFields}, сохранения не было`);
+	return { ok: reasons.length === 0, reason: reasons.join('; ') };
 }
 
 /**
@@ -164,7 +166,10 @@ export function mapDraft(draft, questions, rev) {
 	for (var label in q) {
 		var rec = q[label];
 		if (!rec || !(rec.choice || rec.text || rec.comment)) continue;
-		var target = rec.qh ? byPrint[rec.qh] : sameRev || !draft.rev ? (byLabel[label] ? label : undefined) : undefined;
+		// Без отпечатка — по номеру только при ТОЙ ЖЕ редакции; черновик без редакции вовсе (её не знает никто) — в прошлую
+		// редакцию текстом (суд p3, п. 6: прежнее условие «или редакции нет» переносило такой черновик по номеру вопреки этому
+		// тексту).
+		var target = rec.qh ? byPrint[rec.qh] : sameRev ? (byLabel[label] ? label : undefined) : undefined;
 		if (target) place.push({ label: target, rec: rec });
 		else orphan.push({ label: label, title: rec.title || label, rec: rec });
 	}

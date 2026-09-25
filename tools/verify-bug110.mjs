@@ -144,6 +144,13 @@ try {
 		localStorage.getItem('ndim-review-draft:' + document.body.dataset.doc));
 	check(draftAfterSave === null, 'черновик стёрт после успешной записи');
 	await page.screenshot({ path: join(SHOTS, '1-control-saved.png') });
+	// Замок снимает САМ сервер через 2,5 с после записи и уходит (plans/NEW_review_contour_stale_tab.md). Судится ДО
+	// уборки стража (суд p3, п. 9): прежде процесс убивался сразу после «Записано», и уборка в конце прятала, снял ли
+	// замок сервер.
+	const lockFile = join(ROOT, 'interviews', 'decisions', 'interview_999_bug110_fixture.lock');
+	const exited1 = await Promise.race([new Promise((r) => child.on('exit', () => r(true))), sleep(8000).then(() => child.exitCode !== null)]);
+	check(!existsSync(lockFile), 'замок снят САМИМ сервером после записи — до уборки стража');
+	check(exited1, 'сервер ушёл сам после записи: «записал → снял замок → ушёл»');
 	try { child.kill(); } catch {}
 
 	// ── 2. ДЕФЕКТ 2: мёртвый сервер — страница говорит правду, а не «Записываю…» ─

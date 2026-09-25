@@ -719,13 +719,17 @@ function pulseBanner(text, ok) {
 //   dead      — сервер молчит два пульса подряд;
 //   rewritten — сервер жив, но документ переписан: редакция на пульсе не та, что у страницы;
 //   closed    — агент закрыл страницу командой close;
-//   saved     — ответ записан, сервер по правилу ушёл.
+//   saved     — ЭТА страница записала ответ, сервер по правилу ушёл (только при своей записи — суд p3, п. 5);
+//   answered  — документ изменила запись ответа из другой вкладки после загрузки этой (пульс несёт момент последнего
+//               решения): «Агент изменил» было бы неправдой (суд p3, п. 4).
 // [TESTED: 2026-09-25 · ручной прогон набора qa/suites/review-stale-tab.md живым Chromium на стенде агента (dev-1):
 //   25/25 в 18:48, вывод команд и кадры прочитаны; мутанты А и Б краснеют адресно —
 //   qa/reports/2026-09-25_review-stale-tab.md; Chrome владельца с его старыми вкладками не проверен — ждёт первой
 //   страницы после мержа]
 let lastInput = 0;
 let savedOk = false;
+// Момент загрузки страницы: решение, записанное ПОЗЖЕ и не этой страницей, — «ответ уже записан», а не «агент изменил».
+const loadedAt = Date.now();
 let misses = 0;
 let gateKind = '';
 addEventListener('input', () => { lastInput = Date.now(); });
@@ -766,6 +770,9 @@ const GATE = {
 	saved: ['Ответ записан — эта страница больше не принимает ответы.',
 		'Ответ лёг в документ, файл решения и архив. Если в документе остались вопросы, агент поднимет страницу заново, ' +
 		'и черновик вернётся на места.'],
+	answered: ['Ответ по этому документу уже записан — эта страница больше не принимает ответы.',
+		'Ответ по документу записан после того, как Вы открыли эту страницу: из другой вкладки или другой страницы этого ' +
+		'документа. Откройте новую редакцию, чтобы увидеть записанный ответ; ответы этой страницы — текстом ниже.'],
 };
 
 function gate(kind) {
@@ -781,7 +788,7 @@ function gate(kind) {
 	g.dataset.kind = kind;
 	const text = kind === 'saved' ? '' : answersText();
 	g.innerHTML = '<div class="box"><b class="head">' + GATE[kind][0] + '</b><p>' + GATE[kind][1] + '</p>' +
-		(kind === 'rewritten' ? '<button id="gateReload" type="button" class="primary">Открыть новую редакцию</button>' : '') +
+		(kind === 'rewritten' || kind === 'answered' ? '<button id="gateReload" type="button" class="primary">Открыть новую редакцию</button>' : '') +
 		(text ? '<p>Ваши ответы этой страницы — текстом:</p><textarea id="gateText" readonly rows="8"></textarea>' +
 			'<button id="gateCopy" type="button">Скопировать</button><span id="gateMsg"></span>' : '') +
 		'</div>';
@@ -817,8 +824,12 @@ async function beat(urgent) {
 		try { j = await r.json(); } catch (e) {}
 		misses = 0;
 		if (j.closing) return gate('closed');
-		// После записи ответа документ меняется САМОЙ записью — это не «переписан агентом», а «записано».
-		if (j.rev && myRev && j.rev !== myRev) return gate(savedOk ? 'saved' : 'rewritten');
+		// После записи ответа документ меняется САМОЙ записью: своя запись — «записано»; чужая запись после загрузки этой
+		// страницы (пульс несёт момент последнего решения) — «ответ уже записан»; иначе документ переписал агент.
+		if (j.rev && myRev && j.rev !== myRev) {
+			if (savedOk) return gate('saved');
+			return gate(j.decidedAt && Date.parse(j.decidedAt) > loadedAt ? 'answered' : 'rewritten');
+		}
 		if (gateKind === 'dead') {
 			ungate();
 			pulseBanner('<b>Связь восстановлена.</b> Можно сохранять — ответы запишутся.', true);
@@ -827,9 +838,10 @@ async function beat(urgent) {
 		misses++;
 		if (misses === 1 && !urgent) { setTimeout(beat, 1000); return; }
 		if (gateKind) return;
-		// Ответ уже записан (или на странице нечего записывать) — сервер ушёл по правилу, это не беда
-		// (bugs/NEW_review_batch_dies_after_first_answer: плашка «замолчал» над записанным читалась как потеря).
-		if (savedOk || document.querySelectorAll('.q.open').length === 0) return gate('saved');
+		// Ответ ЭТОЙ страницы записан — сервер ушёл по правилу, это не беда (bugs/NEW_review_batch_dies_after_first_answer:
+		// плашка «замолчал» над записанным читалась как потеря). Только при своей записи (суд p3, п. 5): страница, которая
+		// ничего не записала, не вправе говорить «Ответ записан», даже если ждущих вопросов на ней нет.
+		if (savedOk) return gate('saved');
 		gate('dead');
 	}
 }
@@ -1233,7 +1245,9 @@ function startServer({ docPath = null, index = null, onDecision = null }) {
 		 * бьётся, и сервер честно уходит.
 		 */
 		if (req.method === 'GET' && url.pathname === '/alive') {
-			server.lastBeat = Date.now();
+			// Проба живости из команды (`?ping=1`, суд p3, п. 1) — не сердцебиение вкладки: сервер ею не держится.
+			const ping = url.searchParams.get('ping') === '1';
+			if (!ping) server.lastBeat = Date.now();
 			/*
 			 * Пульс отвечает РЕДАКЦИЕЙ документа, который показывает страница, и признаком «агент закрыл страницу» —
 			 * страница с другой редакцией перекрывает себя плашкой (S1, `bugs/NEW_review_page_stale_tab_accepts_answers`).
@@ -1243,7 +1257,11 @@ function startServer({ docPath = null, index = null, onDecision = null }) {
 			const rel = url.searchParams.get('doc');
 			const target = rel ? resolve(ROOT, rel) : docPath;
 			const rev = target && target.startsWith(ROOT) && existsSync(target) ? docRevision(target) : null;
-			const i = Number(url.searchParams.get('i'));
+			// Состояние ввода — только из пульса СТРАНИЦЫ: он всегда несёт `i`. Пульс без него (страница-список пачки, проба
+			// живости из команды `?ping=1`) — не «печатал только что»: `Number(null)` дал бы 0, и close отказывал бы зря
+			// (суд p3, п. 8). Проба живости не держит сервер и сердцебием вкладки не считается.
+			const iRaw = url.searchParams.get('i');
+			const i = iRaw === null ? NaN : Number(iRaw);
 			if (Number.isFinite(i)) {
 				server.input = {
 					lastInputAt: i >= 0 ? Date.now() - i : server.input?.lastInputAt ?? null,
@@ -1252,8 +1270,11 @@ function startServer({ docPath = null, index = null, onDecision = null }) {
 				};
 				server.onPulse?.();
 			}
+			// Момент последнего решения по документу: страница, чья редакция устарела из-за ЧУЖОЙ записи после её загрузки,
+			// говорит «ответ уже записан», а не «агент изменил документ» (суд p3, п. 4).
+			const decidedAt = rev ? readDecision(target)?.at ?? null : null;
 			res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
-			return res.end(JSON.stringify({ ok: true, rev, closing: Boolean(server.closing) }));
+			return res.end(JSON.stringify({ ok: true, rev, closing: Boolean(server.closing), decidedAt }));
 		}
 
 		/*
@@ -1433,6 +1454,23 @@ function pidAlive(pid) {
 }
 
 /**
+ * Жив ли замок СЕЙЧАС. Живой pid — ещё не наша страница: Windows переиспользует PID (суд p3, п. 1). Живой замок — тот,
+ * чей сервер за 1,5 с отвечает на пробу `/alive?ping=1` ответом нашего контура (в нём есть поле `rev`); проба не
+ * считается сердцебиением вкладки и состояние ввода не трогает.
+ */
+async function lockNow(held) {
+	const state = lockState(held, pidAlive);
+	if (state !== 'live') return state;
+	try {
+		const r = await fetch(`${held.url}alive?ping=1`, { cache: 'no-store', signal: AbortSignal.timeout(1500) });
+		const j = r.ok ? await r.json().catch(() => null) : null;
+		return j && 'rev' in j ? 'live' : 'stale';
+	} catch {
+		return 'stale';
+	}
+}
+
+/**
  * ЗАМОК «ОДИН ДОКУМЕНТ — ОДНО ОКНО» (KAIF 2.7 I29, Unliminium): pid · порт · адрес · документ · редакция при подъёме ·
  * момент подъёма · токен закрытия · состояние ввода (его приносит пульс страницы). Живёт рядом с решениями, в git не
  * едет (`.gitignore`). Снимается, когда ответ записан; после смерти процесса остаётся — его читает `open` («процесс мёртв»).
@@ -1554,7 +1592,7 @@ async function cmdOpen(docPath) {
 
 	// Одно окно на документ: живая страница — второе окно не поднимается; агент говорит, где она, и чем её закрыть.
 	const held = readLock(lockPathOf(docPath));
-	const state = lockState(held, pidAlive);
+	const state = await lockNow(held);
 	if (state === 'live') {
 		console.log(`\nСтраница этого документа уже открыта: ${held.url} (pid ${held.pid}) — второе окно не поднимаю.`);
 		if (held.rev && held.rev !== docRevision(docPath))
@@ -1576,7 +1614,9 @@ async function cmdOpen(docPath) {
 				srv.close(() => process.exit(0));
 			}, 2500),
 	});
-	const url = await listen(server, stablePort(relative(ROOT, docPath)));
+	// Мёртвая страница поднимается на ПОРТУ ИЗ ЗАМКА — там живёт её вкладка (суд p3, п. 2: вывод говорил «на её же
+	// адресе», а слушал постоянный порт, и после занятого порта или явного --port это расходилось).
+	const url = await listen(server, state === 'stale' && held?.port ? held.port : stablePort(relative(ROOT, docPath)));
 	armLock(server, docPath, url);
 
 	const parsed = parseInterview(docPath, readMd(docPath));
@@ -1584,7 +1624,28 @@ async function cmdOpen(docPath) {
 	console.log(`\nСтраница поднята: ${url}`);
 	console.log(`Документ: ${relative(ROOT, docPath)} · ждут ответа: ${open}`);
 
-	if (!flag('--no-open')) openBrowser(url);
+	// ОДНО ОКНО НА ДОКУМЕНТ (суд p3, п. 3): после подъёма на прежнем адресе прежняя вкладка оживает сама — её пульс
+	// приходит за ≤ 5 с. Пришёл за 6 с — нового окна не открываем: у владельца было бы два окна одного документа.
+	let revived = false;
+	if (state === 'stale') {
+		revived = await new Promise((ok) => {
+			const prev = server.onPulse;
+			const timer = setTimeout(() => {
+				server.onPulse = prev;
+				ok(false);
+			}, 6000);
+			server.onPulse = () => {
+				prev?.();
+				clearTimeout(timer);
+				server.onPulse = prev;
+				ok(true);
+			};
+		});
+		console.log(revived
+			? 'Прежняя вкладка ожила на этом адресе — новое окно браузера не открываю.'
+			: 'Прежняя вкладка за 6 с не отозвалась — ' + (flag('--no-open') ? 'окно не открываю: --no-open.' : 'открываю окно.'));
+	}
+	if (!flag('--no-open') && !revived) openBrowser(url);
 
 	// I5 — сигнал ПОСЛЕ того, как страница поднята и открыта. Не раньше.
 	// Намеренно БЕЗ await: синтез речи занимает секунды, а сервер уже слушает — ждать его значило
@@ -1623,11 +1684,11 @@ async function cmdClose(docPath) {
 		return 1;
 	}
 	const held = readLock(lockPathOf(docPath));
-	const state = lockState(held, pidAlive);
+	const state = await lockNow(held);
 	if (state !== 'live') {
 		console.log(state === 'none'
 			? 'Страница этого документа не открыта — закрывать нечего.'
-			: `Страница этого документа не работает (pid ${held.pid} не отвечает) — закрывать нечего; адрес в замке: ${held.url}`);
+			: `Страница этого документа не работает (сервер pid ${held.pid} не отвечает на ${held.url}) — закрывать нечего.`);
 		return 0;
 	}
 	console.log(`Страница: ${held.url} · pid ${held.pid} · ${held.doc} — сверь с той, о которой говорил владельцу.`);

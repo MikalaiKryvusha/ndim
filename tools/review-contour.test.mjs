@@ -69,6 +69,10 @@ test('закрытие живой страницы: отказ, пока стр�
   assert.match(closeVerdict({ startedAt: old, lastInputAt: now - 30_000 }, now).reason, /печатал 30 с назад/);
   assert.equal(closeVerdict({ startedAt: old, draftFields: 2, saved: false }, now).ok, false);
   assert.match(closeVerdict({ startedAt: old, draftFields: 2 }, now).reason, /полей: 2/);
+  // Все причины разом (суд p3, п. 7): молодая страница, в которой печатали и не сохранили, называет все три.
+  const all = closeVerdict({ startedAt: new Date(now - 60_000).toISOString(), lastInputAt: now - 5_000, draftFields: 1 }, now);
+  assert.equal(all.ok, false);
+  assert.match(all.reason, /странице 60 с.*; владелец печатал 5 с назад.*; в черновике заполнено полей: 1/);
   // Граница: тишина дольше порога, черновик пуст или сохранён — закрыть можно.
   assert.equal(closeVerdict({ startedAt: old, lastInputAt: now - CLOSE_QUIET_MS - 1, draftFields: 0 }, now).ok, true);
   assert.equal(closeVerdict({ startedAt: old, draftFields: 3, saved: true }, now).ok, true);
@@ -112,11 +116,15 @@ test('пустые записи черновика не переносятся �
   assert.ok(!m.orphan.some((o) => o.label === 'В4'));
 });
 
-test('та же редакция — всё на своих местах; черновик старой страницы без отпечатков — по номеру', () => {
+test('та же редакция — всё на своих местах; черновик без отпечатков — по номеру только при той же редакции, без редакции — в прошлую', () => {
   const same = mapDraft({ rev: NEW_REV, q: { 'В1': { qh: qLang, choice: 'Б' } } }, newQuestions, NEW_REV);
   assert.deepEqual(same.place.map((p) => p.label), ['В1']);
-  const legacy = mapDraft({ q: { 'В2': { choice: 'А' } } }, newQuestions, NEW_REV);
+  const legacy = mapDraft({ rev: NEW_REV, q: { 'В2': { choice: 'А' } } }, newQuestions, NEW_REV);
   assert.deepEqual(legacy.place.map((p) => p.label), ['В2']);
+  // Черновик вовсе без редакции (её не знает никто): по номеру НЕ садится — текстом в прошлую редакцию (суд p3, п. 6).
+  const unknown = mapDraft({ q: { 'В2': { choice: 'А' } } }, newQuestions, NEW_REV);
+  assert.equal(unknown.place.length, 0);
+  assert.deepEqual(unknown.orphan.map((o) => o.label), ['В2']);
 });
 
 test('черновик ДРУГОЙ редакции без отпечатков по номеру не переносится — только в прошлую редакцию', () => {

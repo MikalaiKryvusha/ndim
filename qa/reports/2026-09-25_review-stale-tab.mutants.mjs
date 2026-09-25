@@ -21,10 +21,11 @@ const RUNS = [
   {
     key: 'B',
     name: 'Б: сверка редакции на пульсе снята · отказ close снят',
-    expectRed: ['РС-05 плашка «переписан»', 'РС-07 «Документ переписан»', 'РС-08 отказ кодом 4', 'РС-08 страница жива через 12 с'],
-    expectGreen: ['РС-01', 'РС-02', 'РС-03', 'РС-04', 'РС-05 409 stale', 'РС-09'],
+    expectRed: ['РС-05 плашка «переписан»', 'РС-07 «Документ переписан»', 'РС-08 отказ кодом 4', 'РС-08 страница жива через 12 с',
+      'РС-12 «ответ уже записан»'],
+    expectGreen: ['РС-01', 'РС-02', 'РС-03', 'РС-04', 'РС-05 409 stale', 'РС-07 чужой pid', 'РС-08 «печатал»', 'РС-09', 'РС-13'],
     edits: [
-      ['tools/review.mjs', "if (j.rev && myRev && j.rev !== myRev) return gate(savedOk ? 'saved' : 'rewritten');", 'if (false) return;'],
+      ['tools/review.mjs', 'if (j.rev && myRev && j.rev !== myRev) {', 'if (false) {'],
       ['tools/review.mjs', 'if (!verdict.ok && !(force && word)) {', 'if (false) {'],
     ],
   },
