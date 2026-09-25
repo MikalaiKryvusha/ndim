@@ -1,64 +1,93 @@
 /**
- * СТРАЖ «SVELTE СЪЕЛ ПРОБЕЛ» — блок разметки, чьё содержимое начинается пробелом, склеивает слова.
+ * СТРАЖ «SVELTE СЪЕЛ ПРОБЕЛ» — пробел на границе блока разметки склеивает слова.
  *
- * Два случая одного класса на одном экране (`src/routes/profile/+page.svelte`):
- *   1. год слипался с названием у `rated-name` — лечение неразрывным пробелом (комментарий там же);
- *   2. 2026-09-25: `{t.account.doneBody[lang]}{#if ratedCount > 0} {t.account.doneKept[lang]}{/if}` — Svelte срезал
- *      ведущий пробел в `{#if}`, и карточка говорила «Аккаунт создан.Ваши оценки…» (кадр прогона
- *      `qa/reports/2026-09-25_newcomer-welcome-truth.md`). Проверки по двум подстрокам текста были зелёными.
- * Суд карточки новичка: «*урок в EXPERIENCE или страж (предпочти страж, если дёшево)*» — дёшево: чтение исходников.
+ * @guard svelte-block-space
+ * THREAT:         пробел, стоящий у самой границы блока Svelte (`{#if …} текст`, `текст {/if}`), при компиляции
+ *                 срезается, и на экране слова слипаются — «Аккаунт создан.Ваши оценки…» (2026-09-25, карточка
+ *                 «Добро пожаловать», `qa/reports/2026-09-25_newcomer-welcome-truth.md`); проверки по подстрокам текста
+ *                 такое не видят
+ * PROVED-AGAINST: мутант «вернуть форму до лечения `{#if ratedCount > 0} {t.account.doneKept[lang]}{/if}`» в
+ *                 `src/routes/profile/+page.svelte` — страж красный ровно на :1796 (dev-1 2026-09-25 22:33:31; судья
+ *                 карточки повторил); синтетика ниже — каждый вид по отдельности: пробел, два пробела, таб, зеркальный
+ *                 пробел перед `{/if}`, теги `{:then}` · `{:catch}` · `{#snippet}`, `}` в строке условия
+ * GAP:            перенос строки + текст у границы блока Svelte 5 тоже срезает (судья: 5.56.4), но многострочный блок —
+ *                 обычная вёрстка, и почти всегда содержимое начинается элементом — такой случай страж НЕ судит;
+ *                 пробел на границе ЭЛЕМЕНТА (случай `rated-name` — год слипался с названием) не судит; судит исходник,
+ *                 а не скомпилированный вывод
+ * ON-REAL-PATH:   `npm test` в воротах сдачи и в team-ci — на каждом дереве перед заявкой
  *
- * Что судится: открывающий тег блока `{#if …}` · `{:else if …}` · `{:else}` · `{#each …}` · `{#key …}`, за которым В ТОЙ ЖЕ
- * строке стоит обычный пробел и затем содержимое. Пробел, который должен дожить до экрана, ставится внутри выражения
- * (`{x ? ` ${y}` : ''}`) или неразрывным `&nbsp;`. Тег читается со счётом фигурных скобок: деструктуризация
- * `{#each list as { a, b } (a.id)}` — один тег, а не два (регулярка по `[^}]*` ошибалась ровно здесь).
- *
- * ⚠️ Граница: судится только начало БЛОКА. Пробел на границе ЭЛЕМЕНТА (случай 1) страж не видит — там лечение
- * неразрывным пробелом уже стоит, а общего правила «пробел у тега элемента» у Svelte нет: внутри текста он живёт.
+ * Лечение, если страж краснеет: пробел, который должен дожить до экрана, ставится внутрь выражения
+ * (`{x ? ` ${y}` : ''}`) или неразрывным `&nbsp;`.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const OPENERS = ['{#if ', '{:else if ', '{:else}', '{#each ', '{#key '];
+const OPENERS = ['{#if ', '{:else if ', '{:else}', '{#each ', '{#key ', '{#await ', '{:then', '{:catch', '{#snippet '];
+const CLOSERS = ['{/if}', '{/each}', '{/key}', '{/await}', '{/snippet}', '{:else', '{:then', '{:catch'];
 
-/** Места, где тег блока в той же строке сразу продолжен обычным пробелом и содержимым: «строка: текст строки». */
-export function blockLeadingSpaces(source: string): number[] {
-  const hits: number[] = [];
-  for (let i = 0; i < source.length; i++) {
-    if (source[i] !== '{' || !OPENERS.some((o) => source.startsWith(o, i))) continue;
-    let depth = 0;
-    let end = -1;
-    for (let j = i; j < source.length; j++) {
-      if (source[j] === '{') depth += 1;
-      else if (source[j] === '}') {
-        depth -= 1;
-        if (depth === 0) { end = j; break; }
-      } else if (source[j] === '\n' && depth > 0 && j - i > 400) break; // незакрытый тег — не блок разметки
+/** Конец тега, начатого на `{` в позиции `i`: счёт скобок, строки в кавычках пропускаются. `-1` — тег не закрыт. */
+function tagEnd(source: string, i: number): number {
+  let depth = 0;
+  let quote = '';
+  for (let j = i; j < source.length && j - i < 2000; j++) {
+    const c = source[j];
+    if (quote) {
+      if (c === '\\') j += 1;
+      else if (c === quote) quote = '';
+      continue;
     }
-    if (end < 0) continue;
-    const after = source.slice(end + 1, end + 3);
-    if (after[0] === ' ' && after[1] !== undefined && !/\s/.test(after[1])) {
-      hits.push(source.slice(0, end).split('\n').length);
+    if (c === '"' || c === "'" || c === '`') quote = c;
+    else if (c === '{') depth += 1;
+    else if (c === '}' && --depth === 0) return j;
+  }
+  return -1;
+}
+
+const lineOf = (source: string, index: number) => source.slice(0, index).split('\n').length;
+
+/** Строки, где у границы блока в той же строке стоит пробел или таб рядом с содержимым. */
+export function blockEdgeSpaces(source: string): number[] {
+  const hits = new Set<number>();
+  for (let i = 0; i < source.length; i++) {
+    if (source[i] !== '{') continue;
+    if (OPENERS.some((o) => source.startsWith(o, i))) {
+      const end = tagEnd(source, i);
+      if (end >= 0 && /^[ \t]+\S/.test(source.slice(end + 1).split('\n')[0])) hits.add(lineOf(source, end));
+    }
+    if (CLOSERS.some((c) => source.startsWith(c, i))) {
+      const before = source.slice(0, i).split('\n').at(-1) ?? '';
+      if (/\S[ \t]+$/.test(before)) hits.add(lineOf(source, i));
     }
   }
-  return hits;
+  return [...hits].sort((a, b) => a - b);
 }
 
 test('🔑 КОНТРОЛЬ: ведущий пробел в {#if} ловится — ровно форма дефекта карточки 2026-09-25', () => {
-  assert.deepEqual(blockLeadingSpaces('<p>{a}{#if n > 0} {b}{/if}</p>'), [1]);
-  assert.deepEqual(blockLeadingSpaces('<p>{a}{:else} текст{/if}</p>'), [1]);
+  assert.deepEqual(blockEdgeSpaces('<p>{a}{#if n > 0} {b}{/if}</p>'), [1]);
+  assert.deepEqual(blockEdgeSpaces('<p>{a}{:else} текст{/if}</p>'), [1]);
 });
 
-test('контроль: деструктуризация в {#each} — один тег; перенос строки и пробел внутри выражения — не дефект', () => {
-  assert.deepEqual(blockLeadingSpaces('{#each ranked as { persona: p, r } (p.id)}\n  <li>{p}</li>\n{/each}'), []);
-  assert.deepEqual(blockLeadingSpaces('<p>{a}{n > 0 ? ` ${b}` : \'\'}</p>'), []);
-  assert.deepEqual(blockLeadingSpaces('{#if x}\n  <b>текст</b>\n{/if}'), []);
-  assert.deepEqual(blockLeadingSpaces('{#if x}<span>&nbsp;({y})</span>{/if}'), []);
+test('контроль судьи: два пробела, таб, зеркальный пробел перед {/if}, теги {:then} · {:catch} · {#snippet}, `}` в строке', () => {
+  assert.deepEqual(blockEdgeSpaces('<p>{a}{#if x}  {b}{/if}</p>'), [1], 'два пробела');
+  assert.deepEqual(blockEdgeSpaces('<p>{a}{#if x}\t{b}{/if}</p>'), [1], 'таб');
+  assert.deepEqual(blockEdgeSpaces('<p>{#if x}{b} {/if}{a}</p>'), [1], 'зеркальный: пробел перед {/if}');
+  assert.deepEqual(blockEdgeSpaces('{#await p}…{:then v} {v}{/await}'), [1], '{:then}');
+  assert.deepEqual(blockEdgeSpaces('{#await p}{:catch e} {e}{/await}'), [1], '{:catch}');
+  assert.deepEqual(blockEdgeSpaces('{#snippet row(x)} {x}{/snippet}'), [1], '{#snippet}');
+  assert.deepEqual(blockEdgeSpaces("<p>{#if s === '}'} {b}{/if}</p>"), [1], '`}` в строке условия не сбивает счёт');
 });
 
-test('🔴 во всех .svelte проекта ни один блок не начинается обычным пробелом перед содержимым', () => {
+test('контроль: деструктуризация в {#each}, перенос строки, пробел внутри выражения и &nbsp; — не дефект', () => {
+  assert.deepEqual(blockEdgeSpaces('{#each ranked as { persona: p, r } (p.id)}\n  <li>{p}</li>\n{/each}'), []);
+  assert.deepEqual(blockEdgeSpaces('<p>{a}{n > 0 ? ` ${b}` : \'\'}</p>'), []);
+  assert.deepEqual(blockEdgeSpaces('{#if x}\n  <b>текст</b>\n{/if}'), []);
+  assert.deepEqual(blockEdgeSpaces('{#if x}<span>&nbsp;({y})</span>{/if}'), []);
+  assert.deepEqual(blockEdgeSpaces('  {:else}\n    <p>т</p>'), []);
+});
+
+test('🔴 во всех .svelte проекта у границ блоков нет пробела рядом с содержимым', () => {
   const walk = (dir: string): string[] =>
     readdirSync(dir).flatMap((name) => {
       const full = join(dir, name);
@@ -67,7 +96,7 @@ test('🔴 во всех .svelte проекта ни один блок не на
   const found: string[] = [];
   for (const file of walk('src').filter((f) => f.endsWith('.svelte'))) {
     const src = readFileSync(file, 'utf8');
-    for (const line of blockLeadingSpaces(src)) found.push(`${file}:${line}: ${src.split('\n')[line - 1].trim().slice(0, 120)}`);
+    for (const line of blockEdgeSpaces(src)) found.push(`${file}:${line}: ${src.split('\n')[line - 1].trim().slice(0, 120)}`);
   }
-  assert.deepEqual(found, [], `пробел в начале блока Svelte срежет — поставьте его внутрь выражения или &nbsp;:\n${found.join('\n')}`);
+  assert.deepEqual(found, [], `пробел у границы блока Svelte срежет — поставьте его внутрь выражения или &nbsp;:\n${found.join('\n')}`);
 });
