@@ -111,7 +111,8 @@
   const quoted = (text: string) => (lang === 'ru' ? `«${text}»` : `“${text}”`);
   /** Название объекта: работы — в кавычках языка, практики — просто словом. */
   const named = (d: DemoItem) => (d.kind === 'practice' ? d.title[lang] : quoted(d.title[lang]));
-  const pct = (v: number | null | undefined) => (v === null || v === undefined ? '—' : `${v} %`);
+  /** Процент: в русском — через неразрывный пробел («80 %»), в английском — слитно («80%»). */
+  const pct = (v: number | null | undefined) => (v === null || v === undefined ? '—' : lang === 'ru' ? `${v} %` : `${v}%`);
 
   // ── Мост внутрь: оценки теста уезжают в NDim ID гостя, затем переход без записи в истории ──
   let busy = $state(false);

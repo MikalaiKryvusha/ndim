@@ -35,8 +35,22 @@ export async function run() {
   loadEnv();
   mkdirSync(OUT, { recursive: true });
   const startedIso = new Date(Date.now() - 60_000).toISOString();
-  const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  /*
+   * Приходит ЧЕЛОВЕКОМ: SDK PostHog отсеивает роботов, а голый headless — робот по трём признакам
+   * (`navigator.webdriver` · user agent · `userAgentData`). Первый прогон 2026-09-25 без маскировки дал «событий 0» —
+   * прибор, а не продукт (тот же урок у удалённой пробы главной, `probe-root-landing-view-live.mjs`).
+   */
+  const HUMAN_UA =
+    'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36';
+  const browser = await chromium.launch({ args: ['--disable-blink-features=AutomationControlled'] });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, userAgent: HUMAN_UA, isMobile: true, hasTouch: true });
+  await ctx.addInitScript(() => {
+    try {
+      Object.defineProperty(navigator, 'userAgentData', { get: () => undefined });
+    } catch {
+      /* пусть будет как есть */
+    }
+  });
   const page = await ctx.newPage();
   const errors = [];
   let uid = null;
