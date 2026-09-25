@@ -29,7 +29,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { dayKey, shiftDayKey, probeMarked, PROBE_MARK, claimStep, entryOf, ANALYTICS_ENTRIES, landingTrackOptions } from './funnel.ts';
+import { dayKey, shiftDayKey, probeMarked, PROBE_MARK, claimStep, releaseStep, entryOf, ANALYTICS_ENTRIES, landingTrackOptions } from './funnel.ts';
 
 /*
  * МЕСТО ВХОДА — слово двери в адресе `?guest=<слово>` (`plans/105` Б2, 2026-09-25).
@@ -216,6 +216,46 @@ describe('Один визит — один шаг каждого вида (сч�
       },
     } as unknown as Storage;
     assert.equal(claimStep('landing_view'), false);
+  });
+});
+
+/*
+ * ВИЗИТ КОНЧИЛСЯ, ВКЛАДКА ОСТАЛАСЬ — `bugs/NEW_restart_guest_start_swallowed_in_same_tab.md`.
+ * «Начать заново» рождает нового гостя той же вкладкой; вкладка 7+ суток держала шаг прежнего, и событие съедалось.
+ */
+describe('Отпущенный шаг — «Начать заново» рождает нового гостя той же вкладкой', () => {
+  test('🔴 отпущенный guest_start занимается снова — новый гость засчитан', () => {
+    withStorage();
+    assert.equal(claimStep('guest_start'), true);
+    assert.equal(claimStep('guest_start'), false);
+    releaseStep('guest_start');
+    assert.equal(claimStep('guest_start'), true);
+  });
+
+  test('отпускается ровно названный шаг — соседние по-прежнему заняты', () => {
+    withStorage();
+    claimStep('guest_start');
+    claimStep('landing_view');
+    releaseStep('guest_start');
+    assert.equal(claimStep('landing_view'), false);
+  });
+
+  test('🔑 хранилище недоступно — отпускание ничего не роняет', () => {
+    (globalThis as { sessionStorage?: Storage }).sessionStorage = {
+      removeItem() {
+        throw new Error('хранилище заблокировано');
+      },
+    } as unknown as Storage;
+    assert.doesNotThrow(() => releaseStep('guest_start'));
+  });
+
+  test('🔴 проводка: «Начать заново» отпускает guest_start после выхода и ДО ухода на дверь restart', () => {
+    const src = readFileSync('src/routes/profile/+page.svelte', 'utf8');
+    const body = src.slice(src.indexOf('async function restartAsGuest()'), src.indexOf("location.href = '/profile?guest=restart'"));
+    assert.ok(body.length > 0, 'функция restartAsGuest и её дверь найдены');
+    const out = body.indexOf('await signOutUser()');
+    const release = body.indexOf("releaseStep('guest_start')");
+    assert.ok(out >= 0 && release > out, 'releaseStep стоит после signOutUser и до location.href');
   });
 });
 
