@@ -18,7 +18,9 @@ const PORTS = portsFor(slotOf(basename(process.cwd())).slot);
 const BASE = process.env.PROBE_BASE ?? `http://localhost:${PORTS.dev}`;
 const AUTH = `http://127.0.0.1:${PORTS.auth}`;
 const PROJECT = 'demo-ndim-dev';
-const SHOTS = 'test-results/signin-link-forks';
+// Мутанты пишут кадры в СВОЮ папку (`SHOTS_DIR`, задаёт `…mutants.mjs`): иначе кадры мутанта затирали кадры прогона —
+// так было 2026-09-25 22:14–22:18 с `vs18-*` (суд карточки новичка, п. 1).
+const SHOTS = process.env.SHOTS_DIR ?? 'test-results/signin-link-forks';
 const stamp = Date.now();
 // Строки экрана Б3 — те, что человек ОБЯЗАН увидеть (RU — кадр Vb3.png дословно; EN — черновик после §7Б).
 const B3 = {
@@ -552,7 +554,9 @@ try {
     const me = await whoAmI(tab2);
     check('ВС-13', 'экрана Г2 нет', !g2);
     check('ВС-13', '«Профиль сохранён», тот же uid гостя, оценка цела', (await text(tab2, 'Профиль сохранён')) && me?.uid === g.uid && !me.anonymous && (await docExists(`points/${g.uid}/dims/${g.dim}`)), describe(me));
-    // Оценки приезжают с экраном: карточка появляется раньше, вторая половина — когда экран прочитал оценки.
+    // Карточка стоит внутри `{:else if data}`, а `ratedCount` берётся из того же `data` — фраза появляется одним рендером с
+    // карточкой; ожидание — лишь запас на приход экрана. *(Поправка суда: прежде здесь стояло «карточка появляется раньше,
+    // вторая половина — когда экран прочитал оценки», шире шаблона.)*
     await tab2.getByText(KEPT).waitFor({ timeout: 10000 }).catch(() => {});
     await tab2.screenshot({ path: `${SHOTS}/vs13-after.png`, fullPage: true });
     check('ВС-13', `карточка: «${WELCOME} ${KEPT}…» — апгрейд гостя с оценкой`, await text(tab2, FULL));
