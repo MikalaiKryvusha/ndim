@@ -91,6 +91,8 @@ D:\work\ai_sandbox\ndim\
 ├── src/lib/content/catalog-source.ts  # 🔴 ТОЛЬКО ДЛЯ СБОРКИ: тянет каталог 17 МБ, зовётся лишь из
 │                                      #   `+page.server.ts` (EXP-0136 — универсальный load уносит всё)
 ├── src/lib/ui/PublicBar.svelte  # шапка ПУБЛИЧНОЙ страницы — одна на каталог, хабы и «Тесты»
+├── src/lib/ui/HeadControls.svelte # ОДНА пара «тема + язык» для всех шапок (AppBar, PublicBar, вход, главная);
+│                                #   работает до оживления и без JS — слушатель в src/app.html (2026-09-25)
 ├── src/lib/ui/CatalogHub.svelte # разметка хаба V3 «Рейтинг» — одна на оба маршрута хаба
 ├── src/lib/content/docs.ts      # ★ ГЕНЕРИРУЕТСЯ (`node tools/extract-docs.mjs`) — тексты владельца из 1.x
 ├── src/app.html                 # HTML-оболочка (lang=ru, theme-color, скрипт темы до отрисовки)
