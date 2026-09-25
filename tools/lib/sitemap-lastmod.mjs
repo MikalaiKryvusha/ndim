@@ -210,6 +210,9 @@ export async function readLedger(site, fetchImpl = fetch) {
 /**
  * Шаг двери выката: отпечатки собранных страниц карты → реестр контура → штамп `build/sitemap.xml` и новый реестр
  * рядом. Бросает, если страницы карты нет в сборке или страж штампа нашёл нарушение: такую карту не катят.
+ * [TESTED: 2026-09-25 22:51 · настоящая сборка, 10461 страница карты, реестр подан локально: без реестра — без lastmod;
+ *  пересборка без правок — 0 сменившихся отпечатков; правка одной фразы — lastmod ровно у /ru/menu/privacy; повторный
+ *  штамп тот же; qa/reports/2026-09-25_sitemap-lastmod.md. Живьём на стейдже двумя выкатами — не пройдено, ждёт двери]
  */
 export async function stampBuild({ buildDir = 'build', site, now = w3cNow(), fetchImpl = fetch }) {
   const mapFile = join(buildDir, 'sitemap.xml');
