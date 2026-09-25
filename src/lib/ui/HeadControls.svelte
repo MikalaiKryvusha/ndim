@@ -207,6 +207,17 @@
     border-radius: 12px;
     box-shadow: var(--card-shadow);
   }
+  /* Появление выпадашки — анимацией (планка владельца «анимации обязательны везде», `bugs/05–07`):
+     короткий сдвиг сверху и проявление, токены движения продукта — при «уменьшить движение» они 0. */
+  .lang-wrap[open] > .dd {
+    animation: hc-dd-in var(--motion-fast) var(--motion-ease);
+  }
+  @keyframes hc-dd-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
   .it {
     display: flex;
     align-items: center;
