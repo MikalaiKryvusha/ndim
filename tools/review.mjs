@@ -23,7 +23,7 @@
  * Запуск: node tools/review.mjs · самотест: --selftest
  */
 
-import { createServer } from 'node:http';
+import { createServer, get as httpGet } from 'node:http';
 import { spawn, spawnSync } from 'node:child_process';
 import { writeFileSync, mkdirSync, readFileSync, existsSync, readdirSync, statSync, createReadStream, rmSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
@@ -1461,13 +1461,33 @@ function pidAlive(pid) {
 async function lockNow(held) {
 	const state = lockState(held, pidAlive);
 	if (state !== 'live') return state;
-	try {
-		const r = await fetch(`${held.url}alive?ping=1`, { cache: 'no-store', signal: AbortSignal.timeout(1500) });
-		const j = r.ok ? await r.json().catch(() => null) : null;
-		return j && 'rev' in j ? 'live' : 'stale';
-	} catch {
-		return 'stale';
-	}
+	const r = await localGet(`${held.url}alive?ping=1`, 1500);
+	return r && r.status === 200 && r.json && 'rev' in r.json ? 'live' : 'stale';
+}
+
+/**
+ * GET к серверу страницы из КОМАНДЫ агента (`open`, `close`) — `node:http` без пула (`agent: false`), с потолком
+ * времени; отказ и тайм-аут — `null`. Не встроенный `fetch`: его сокет keep-alive, живой при `process.exit()`, роняет
+ * Node на Windows (`Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)`) — `close` выходил кодом 127 вместо 4
+ * (прогон драйвера 2026-09-25 20:04, проба 20:13). Без пула сокет закрыт к моменту ответа, висеть при выходе нечему.
+ */
+function localGet(url, timeoutMs) {
+	return new Promise((ok) => {
+		const req = httpGet(url, { agent: false, timeout: timeoutMs }, (res) => {
+			let body = '';
+			res.setEncoding('utf8');
+			res.on('data', (c) => (body += c));
+			res.on('end', () => {
+				let json = null;
+				try {
+					json = JSON.parse(body);
+				} catch {}
+				ok({ status: res.statusCode, json });
+			});
+		});
+		req.on('timeout', () => req.destroy());
+		req.on('error', () => ok(null));
+	});
 }
 
 /**
@@ -1694,14 +1714,15 @@ async function cmdClose(docPath) {
 	console.log(`Страница: ${held.url} · pid ${held.pid} · ${held.doc} — сверь с той, о которой говорил владельцу.`);
 	let res;
 	try {
-		res = await fetch(`${held.url}close?token=${encodeURIComponent(held.closeToken)}` +
-			(force ? `&force=1&word=${encodeURIComponent(word)}` : ''));
+		res = await localGet(`${held.url}close?token=${encodeURIComponent(held.closeToken)}` +
+			(force ? `&force=1&word=${encodeURIComponent(word)}` : ''), 5000);
+		if (!res) throw new Error('нет ответа за 5 с');
 	} catch (e) {
 		console.error(`⛔ Сервер страницы не ответил: ${e.message}`);
 		return 1;
 	}
-	const j = await res.json().catch(() => ({}));
-	if (res.ok) {
+	const j = res.json || {};
+	if (res.status === 200) {
 		console.log(`closed ${held.doc} — вкладка погаснет своей плашкой ближайшим пульсом; черновик владельца остаётся в его браузере.`);
 		return 0;
 	}
