@@ -76,6 +76,8 @@ async function measure(width, theme) {
   const page = await ctx.newPage();
   await page.goto(door(`${BASE}/ru/test/${SLUG}`), { waitUntil: 'networkidle', timeout: 60000 });
 
+  // `data-live` — карточка ожила: до него видны мёртвые звёзды лица пререндера (b777e09).
+  await page.waitForSelector('.qcard[data-live]', { timeout: 30000 });
   // Набираем строки в панель тем же жестом, что и человек: звезда → «Сохранить сейчас».
   let done = 0;
   for (let i = 0; i < 8 && done < 5; i++) {
