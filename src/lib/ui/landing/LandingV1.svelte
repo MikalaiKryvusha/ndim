@@ -212,7 +212,7 @@
           <figure class="port" class:mid={i === 1}>
             <img use:ready src={personaCard(id)} alt={p.name[lang]} width="480" height="640" />
             <span class="bub" style="animation-delay:{i * 0.6}s">{named(item(p.favorite))} <b>★&nbsp;10</b></span>
-            <figcaption class="nm">{p.name[lang]}, {p.age}</figcaption>
+            <figcaption class="cap">{p.name[lang]}, {p.age}</figcaption>
           </figure>
         {/each}
       </div>
@@ -342,7 +342,7 @@
             {@render phoneTop(t.howto.screens.relations[lang])}
             {#each ranked as { persona: p, r } (p.id)}
               <div class="rel">
-                <div class="who"><img use:ready src={personaFace(p.id)} alt="" width="34" height="34" /><b>{p.name[lang]}</b><span class="sys">{t.howto.system[lang]}</span></div>
+                <div class="who"><img use:ready src={personaFace(p.id)} alt="" width="34" height="34" /><b>{p.name[lang]}</b></div>
                 <div class="m3">
                   {#each [{ k: t.howto.commonality[lang], v: r?.commonality }, { k: t.howto.proximity[lang], v: r?.proximity }, { k: t.howto.similarity[lang], v: r?.similarity }] as m (m.k)}
                     <div><div class="k">{m.k}</div><div class="v">{pct(m.v)}</div><div class="bar2"><i style="width:{Math.max(0, Math.min(100, m.v ?? 0))}%"></i></div></div>
@@ -487,10 +487,19 @@
   .port.mid { width: 35%; transform: translateY(-14px); }
   .port img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; border-radius: 18px; box-shadow: var(--card-shadow); display: block; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
   .port img:global(.ok) { opacity: 1; }
-  .nm { position: absolute; left: 8px; bottom: 8px; background: rgba(11, 20, 32, 0.78); color: #fff; font-weight: 800; font-size: 12.5px; padding: 3px 8px; border-radius: 9px; }
-  .bub { position: absolute; left: 50%; top: -26px; transform: translateX(-50%); z-index: 3; white-space: nowrap; font-size: 11.5px; font-weight: 700; background: var(--panel-solid); color: var(--heading); border: 1px solid var(--edge); border-radius: 12px; padding: 4px 8px; box-shadow: var(--card-shadow); animation: bob 3s ease-in-out infinite; }
+  /* Подпись портрета героя. Класс свой: прежний общий `.nm` делил имя с названием карточки «Измерений» в первом
+     телефоне, и названия ложились тёмными плашками на низ экрана (найдено владельцем в бою 2026-09-25). */
+  .cap { position: absolute; left: 8px; bottom: 8px; background: rgba(11, 20, 32, 0.78); color: #fff; font-weight: 800; font-size: 12.5px; padding: 3px 8px; border-radius: 9px; }
+  /* Сдвиг плашки по горизонтали — переменной `--bx`: его делят статичное положение и кадр `bob`, иначе анимация
+     возвращала бы центровку. На узком телефоне крайние плашки прижаты к внешним краям своих портретов: по центру
+     «Игра Престолов ★ 10» над Настей упиралась в край экрана шириной 360 (замер 2026-09-25). */
+  .bub { --bx: -50%; position: absolute; left: 50%; top: -26px; transform: translateX(var(--bx)); z-index: 3; white-space: nowrap; font-size: 11.5px; font-weight: 700; background: var(--panel-solid); color: var(--heading); border: 1px solid var(--edge); border-radius: 12px; padding: 4px 8px; box-shadow: var(--card-shadow); animation: bob 3s ease-in-out infinite; }
   .bub b { color: var(--star); }
-  @keyframes bob { 50% { transform: translateX(-50%) translateY(-3px); } }
+  @keyframes bob { 50% { transform: translateX(var(--bx)) translateY(-3px); } }
+  @media (max-width: 480px) {
+    .port:first-child .bub { left: -4px; --bx: 0%; }
+    .port:last-child .bub { left: auto; right: -4px; --bx: 0%; }
+  }
 
   /* 2. Тест на совместимость */
   .demo-h { text-align: center; margin: 34px 0 0; scroll-margin-top: 16px; }
@@ -595,7 +604,6 @@
   .rel .who img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
   .rel .who img:global(.ok) { opacity: 1; }
   .rel .who b { color: var(--heading); font-size: 14px; }
-  .sys { font-size: 9px; padding: 2px 6px; border-radius: 99px; background: var(--edge-soft); color: var(--dim); font-weight: 700; letter-spacing: 0.03em; }
   .m3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; text-align: center; }
   .m3 .k { font-size: 9.5px; color: var(--dim); }
   .m3 .v { font-size: 15px; font-weight: 800; color: var(--primary); }
@@ -621,6 +629,26 @@
   .faq details[open] summary::after { content: '−'; }
   .faq details p { margin: 8px 0 0; font-size: 14.5px; }
 
+  /* Раскрытие ответа — плавное (слово владельца 2026-09-25: «в блоках FAQ нихуя анимацию не сделали!»). Приём тот же,
+     что у «Истории версий» (`menu/about/+page.svelte`, bugs/56 и bugs/68): раскрывашкой управляет браузер, высоту и
+     прозрачность ведёт `::details-content` с `interpolate-size`; `overflow: hidden` держит отступ ответа ВНУТРИ
+     анимируемой коробки (с `clip` он добавлялся рывком в конце пути). Старый браузер просто не анимирует. */
+  @supports (interpolate-size: allow-keywords) and selector(::details-content) {
+    .faq details { interpolate-size: allow-keywords; }
+    .faq details::details-content {
+      block-size: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition:
+        block-size var(--motion-base) var(--motion-ease),
+        opacity var(--motion-base) var(--motion-ease),
+        content-visibility var(--motion-base) allow-discrete;
+    }
+    .faq details[open]::details-content { block-size: auto; opacity: 1; }
+  }
+  .faq summary::after { transition: transform var(--motion-base) var(--motion-ease); }
+  .faq details[open] summary::after { transform: rotate(180deg); }
+
   /* Финальный призыв и подвал */
   .final { text-align: center; padding: 34px 20px; border-radius: 22px; background: var(--plate); color: #dce9f7; overflow: hidden; }
   .final h2 { color: #fff; }
@@ -641,7 +669,7 @@
     .hero { grid-template-columns: 1fr 1.05fr; gap: 36px; align-items: center; padding-top: 24px; }
     .trio { gap: 16px; }
     .bub { font-size: 13.5px; padding: 6px 10px; top: -30px; }
-    .nm { font-size: 15px; }
+    .cap { font-size: 15px; }
     .demo-h { margin-top: 56px; }
     .ndemo { grid-template-columns: 1fr 1fr; gap: 32px; align-items: stretch; padding-top: 48px; }
     .mapcard { order: 0; }

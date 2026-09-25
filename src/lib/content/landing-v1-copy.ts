@@ -118,7 +118,6 @@ export const landingV1 = {
       { ru: 'Измерения', en: 'Dimensions' },
       { ru: 'Меню', en: 'Menu' },
     ] satisfies Bi[],
-    system: { ru: 'системный персонаж', en: 'system character' },
     commonality: { ru: 'Общность', en: 'Commonality' },
     proximity: { ru: 'Близость', en: 'Proximity' },
     similarity: { ru: 'Похожесть', en: 'Similarity' },
