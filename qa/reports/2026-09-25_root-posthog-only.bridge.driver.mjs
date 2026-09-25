@@ -1,4 +1,4 @@
-// Разовый сценарий прогона 2026-09-25 ≈16:58 +03:00 (мост «Секс» 9 + «Матрица» 10 в NDim ID гостя), приложен без изменений. Стенд поднят. Запуск: node <этот файл>
+// Разовый сценарий прогона 2026-09-25 16:57:41 +03:00 (мост «Секс» 9 + «Матрица» 10 в NDim ID гостя), приложен без изменений. Стенд поднят. Запуск: node <этот файл>
 import { chromium } from 'file:///D:/work/ai_sandbox/ndim/node_modules/@playwright/test/index.mjs';
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
