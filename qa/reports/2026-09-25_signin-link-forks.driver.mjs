@@ -1,10 +1,12 @@
 // ДРАЙВЕР РУЧНОГО ПРОГОНА — набор `qa/suites/signin-link-forks.md`: порция 1 (экран Б3 + вкладка «письмо отправлено»,
-// ВС-01…ВС-09) и порция 2 (экран Г2, ВС-10…ВС-15). Флаг `--portion1` останавливает прогон после ВС-09.
+// ВС-01…ВС-09) и порция 2 (экран Г2, ВС-10…ВС-15; граница Б3 по использованной ссылке — ВС-16). Флаг `--portion1`
+// останавливает прогон после ВС-09, `--portion2` гоняет только ВС-10…ВС-16. Мутанты — `…signin-link-forks.mutants.mjs`.
 // Стенд (`npm run stand` в этом рабочем месте). Письмо просится ДВЕРЬЮ ПРОДУКТА, ссылку отдаёт эмулятор Auth (`EXP-0045`),
 // «другой браузер» — отдельный контекст Playwright со своим хранилищем. Приёмы сняты с `tools/verify-signin-link-any-browser.mjs`.
 // Запуск из корня рабочего места: node qa/reports/2026-09-25_signin-link-forks.driver.mjs
 // Кадры: test-results/signin-link-forks/ — смотрятся глазами после прогона.
 import { mkdir } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import { basename } from 'node:path';
 import { chromium } from '@playwright/test';
 import { portsFor, slotOf } from '../../tools/lib/stand-slot.mjs';
@@ -197,6 +199,11 @@ async function g2Seen(page, lang = 'ru') {
 const noOverflow = (page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
 await mkdir(SHOTS, { recursive: true });
+// Голова и чистота дерева печатаются первыми (суд порции 1, п. 7): кадры и числа прогона принадлежат НАЗВАННОЙ голове, а
+// не грязной копии. Грязное дерево не останавливает прогон (мутанты правят файлы продукта), но называется вслух.
+const git = (args) => spawnSync('git', args, { encoding: 'utf8' }).stdout.trim();
+const dirty = git(['status', '--porcelain', '--untracked-files=no']);
+console.log(`Голова: ${git(['rev-parse', '--short', 'HEAD'])} · дерево ${dirty ? `ГРЯЗНОЕ (${dirty.split('\n').length} файл.)` : 'чистое'}`);
 const browser = await chromium.launch();
 try {
   console.log(`Стенд: ${BASE}`);
@@ -524,6 +531,39 @@ try {
     check('ВС-15', 'английские строки Г2 на месте, русских нет', seen.title && seen.lede && seen.here && seen.note && !ru, `кнопка «${seen.hereText}»`);
     await two.context.close();
     await one.context.close();
+  }
+
+  // ═══ ВС-16 · ГРАНИЦА (суд порции 1, п. 5): Б3 → «Войти в аккаунт А» по УЖЕ ИСПОЛЬЗОВАННОЙ ссылке ══════════════════
+  // Аккаунт Б отпускается ДО попытки входа по ссылке. Сверить код заранее можно (`checkActionCode` код не тратит —
+  // `bugs/233`, проба 09:49, строка 1б), но вошедшему некуда показать причину без нового элемента экрана — это решение
+  // UX владельца. Поэтому граница названа и проверяется здесь: человек не остаётся гостем и не видит чужого профиля,
+  // дверь входа называет причину и зовёт запросить новое письмо.
+  console.log('\nВС-16 · граница: Б3 → «Войти в аккаунт А» по использованной ссылке:');
+  {
+    const B = `vs16-b-${stamp}@ndim.space`;
+    const A = `vs16-a-${stamp}@ndim.space`;
+    const { context, page } = await browserOf(browser);
+    await signInHere(browser, page, B);
+    const link = await letterFromDoor(browser, A);
+    const spent = await browserOf(browser); // ссылку тратит другой браузер: там входит А
+    await spent.page.goto(link);
+    await spent.page.waitForTimeout(9000);
+    const usedBy = await whoAmI(spent.page);
+    await spent.context.close();
+    check('ВС-16', 'подготовка: ссылка уже использована в другом браузере (там вошёл А)', usedBy?.email === A, describe(usedBy));
+    await page.goto(link);
+    const seen = await b3Seen(page, B, A);
+    check('ВС-16', 'экран Б3 показан и по использованной ссылке (вопрос — до входа)', seen.title && seen.go);
+    await page.locator('[data-fork="switch"]').click({ timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(8000);
+    const me = await whoAmI(page);
+    const reason = await text(page, 'Ссылка больше не действует. Пожалуйста, запросите новую.');
+    const guestCard = await text(page, 'Сейчас Вы гость');
+    await page.screenshot({ path: `${SHOTS}/vs16-used-link-switch.png`, fullPage: true });
+    check('ВС-16', 'аккаунт Б отпущен, гостя не заведено — сессии нет', me === null, describe(me));
+    check('ВС-16', 'дверь входа называет причину: «Ссылка больше не действует…»', reason);
+    check('ВС-16', 'гостевой карточки нет', !guestCard);
+    await context.close();
   }
 } catch (e) {
   if (!e.stop) throw e;
