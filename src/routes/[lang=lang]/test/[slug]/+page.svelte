@@ -33,7 +33,7 @@
   import { slide, fly } from 'svelte/transition';
   import type { TestPageData } from './+page.server';
   import { LANGS } from '$lib/content/langs';
-  import { RATED_FACT_FROM, attemptSeed, shuffledIds } from '$lib/content/test-set';
+  import { EARLY_SEED_KEY, RATED_FACT_FROM, attemptOrder, attemptSeed, testFirstEarlyScript } from '$lib/content/test-set';
   import { peopleUnit, unitRu } from '$lib/ui/format';
   // Шапка — ОБЩАЯ шапка публичных страниц: своей копии здесь больше нет (слово владельца
   // 2026-09-25 о переключателях, которые «в разных местах разные»).
@@ -162,10 +162,10 @@
   // ── Очередь попытки (№098 В2): пул → случайная дюжина; второму человеку пары — вещи первого ──
   //
   // 🔑 ПРЕРЕНДЕР И ГИДРАТАЦИЯ СХОДЯТСЯ ПО ПОСТРОЕНИЮ. `data.queue` — пул В ПОРЯДКЕ ПРАВИЛА, его видят и
-  // пререндер, и первый проход гидратации. Случайная затравка берётся только в `onMount` — после
-  // оживления; до этого карточка держит место и невидима (`.qcard.asleep`), а с оживлением влетает
-  // уже своей вещью. Кнопки звёзд до гидратации не работают и так — невидимая карточка не зовёт
-  // жать мёртвое.
+  // пререндер, и первый проход гидратации. Порядок попытки строится только в `onMount` — после
+  // оживления; до этого карточка показывает лицо своей первой вещи, выбранное ранним скриптом той
+  // же затравкой (`testFirstEarlyScript` → `attemptOrder`), и живая карточка встаёт на его место.
+  // Пришёл по личной ссылке пары — лица спрятаны до оживления: его первая вещь — из ссылки.
 
   /** Все вещи пула — порядок пула; по нему строятся результат и код набора в ссылке. */
   const poolIds = $derived(data.queue.map((e) => e.id));
@@ -401,7 +401,9 @@
       pairFromUrl = true;
       hintIds = decodePairSet(poolIds, params.get(PAIR_SET_PARAM));
     } else {
-      order = shuffledIds(poolIds, attemptSeed());
+      // Затравку уже взял ранний скрипт карточки — берём ту же: первая вещь не сменится под глазами.
+      const early = (window as unknown as Record<string, unknown>)[EARLY_SEED_KEY];
+      order = attemptOrder(poolIds, typeof early === 'number' ? early : attemptSeed());
     }
     alive = true;
   });
@@ -529,9 +531,34 @@
 
   <!-- Движок и растущая анкета рядом — «зеркало» (V4-половина каркаса). -->
   <div class="two">
-    <!-- `asleep` — до оживления карточка держит место и невидима: вещь попытки тянется в `onMount`. -->
-    <section class="qcard" class:asleep={!alive} aria-label={c.h1}>
-      {#if current !== null}
+    <section class="qcard" aria-label={c.h1}>
+      {#if !alive}
+        <!--
+          ДО ОЖИВЛЕНИЯ — лица всех вещей пула, видно одно. Ранний скрипт выбирает его затравкой при
+          разборе HTML, до первой отрисовки; `onMount` берёт ту же затравку (`attemptOrder`), и живая
+          карточка встаёт той же вещью. Кнопки звёзд до оживления мёртвые и так — это их вид, не жест.
+        -->
+        {@html `<script>${testFirstEarlyScript(data.queue.length)}</script>`}
+        {#each data.queue as e, i (e.id)}
+          <div class="pre" data-i={i}>
+            <p class="kind">{e.kind}</p>
+            <p class="name">{e.name}</p>
+            <p class="meta">
+              {e.year}{#if e.rates >= RATED_FACT_FROM}<span class="rby">
+                  {e.year === '' ? '' : ' · '}{ui.ratedBy} {e.rates}</span>{/if}
+            </p>
+          </div>
+        {/each}
+        <div class="prestars">
+          <div class="starsrow" role="group">
+            {#each Array(11) as _, value (value)}
+              <button type="button" class="st" aria-label={String(value)}><i>☆</i><b>{value}</b></button>
+            {/each}
+          </div>
+          <p class="scale"><span>{data.chrome.scale0}</span><span>{data.chrome.scale10}</span></p>
+          <button type="button" class="skip">{data.chrome.skip}</button>
+        </div>
+      {:else if current !== null}
         <!--
           Состояние жеста этой карточки одним объектом (близнец bugs/172): либо идёт отсчёт
           (`pending`), либо оценка уже сохранена и объект вот-вот сменится (`saved`). Вид у двух
@@ -549,8 +576,9 @@
             : saved?.dimId === current.id
               ? { value: saved.value, left: 0, done: true }
               : null}
-        <!-- Ключ несёт и оживление: с ним карточка влетает своей вещью, даже если та совпала с первой вещью пула. -->
-        {#key `${alive}:${current.id}`}
+        <!-- Влёт — только при смене вещи. Переходы Svelte 5 локальны: с веткой оживления карточка рождается без
+             влёта и встаёт на место лица пререндера (прогон ПК-01в…03в, контроль прибора ПК-07). -->
+        {#key current.id}
           <div in:fly={{ x: 32, duration: MOTION.base }}>
             <p class="kind">{current.kind}</p>
             <p class="name">{current.name}</p>
@@ -912,10 +940,10 @@
     border-radius: 16px;
     box-shadow: var(--card-shadow);
   }
-  /* До оживления вещь попытки ещё не выбрана (случайность — только в `onMount`): карточка держит
-     место и невидима, раскладка не прыгает. С оживлением содержимое влетает по `{#key}`. */
-  .qcard.asleep > :global(*) {
-    visibility: hidden;
+  /* До оживления видно одно лицо пререндера: без JS — лицо 0, с JS — выбранное ранним скриптом
+     (его стиль с `!important` перебивает это правило). */
+  .pre:not([data-i='0']) {
+    display: none;
   }
   .qcard .kind {
     margin: 0;

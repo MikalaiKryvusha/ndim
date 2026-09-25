@@ -12,9 +12,13 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { runInNewContext } from 'node:vm';
 
 import {
+  attemptOrder,
   buildTestQueue,
+  EARLY_SEED_KEY,
+  testFirstEarlyScript,
   derivePool,
   isSensitive,
   kindLabelFor,
@@ -266,6 +270,60 @@ test('🔑 дюжина — 12 разных вещей пула, воспрои�
   const input = [...TEST_POOL];
   shuffledIds(input, 1);
   assert.deepEqual(input, [...TEST_POOL], 'перетасовка портит свой вход');
+});
+
+// ── Первая карточка видна с первой отрисовки (находка 1 суда V4) ────────────────────────────────
+
+/** Исполняет ранний скрипт в песочнице: что он вставил стилем и какую затравку оставил. */
+function runEarly(n: number, search: string, random: number): { css: string[]; seed: unknown } {
+  const css: string[] = [];
+  const win: Record<string, unknown> = {};
+  const ctx = {
+    window: win,
+    location: { search },
+    crypto: { getRandomValues: (a: Uint32Array) => { a[0] = random; return a; } },
+    document: {
+      head: { appendChild: (el: { textContent: string }) => css.push(el.textContent) },
+      createElement: () => ({ textContent: '' }),
+    },
+  };
+  runInNewContext(testFirstEarlyScript(n), ctx);
+  return { css, seed: win[EARLY_SEED_KEY] };
+}
+
+test('🔑 порядок попытки: первая вещь — pool[seed mod n], весь порядок — перестановка пула', () => {
+  for (const seed of [0, 7, 19, 20, 12345, 4294967295]) {
+    const order = attemptOrder(TEST_POOL, seed);
+    assert.equal(order[0], TEST_POOL[seed % TEST_POOL.length], `затравка ${seed}`);
+    assert.deepEqual([...order].sort(), [...TEST_POOL].sort(), 'порядок — перестановка пула');
+    assert.deepEqual(order, attemptOrder(TEST_POOL, seed), 'затравка воспроизводит порядок');
+  }
+  // Первой может встать ЛЮБАЯ вещь пула — дюжина случайна целиком, а не «Гарри Поттер + 11».
+  const firsts = new Set(Array.from({ length: TEST_POOL.length }, (_, k) => attemptOrder(TEST_POOL, k)[0]));
+  assert.equal(firsts.size, TEST_POOL.length);
+  assert.deepEqual(attemptOrder([], 5), []);
+});
+
+test('🔑 ранний скрипт показывает лицо ТОЙ ЖЕ вещи, что оживлённая страница ставит первой', () => {
+  for (const random of [0, 5, 12345, 4294967295]) {
+    const { css, seed } = runEarly(TEST_POOL.length, '', random);
+    assert.equal(seed, random, 'затравка передана странице');
+    const i = random % TEST_POOL.length;
+    assert.equal(css.length, 1);
+    assert.ok(css[0].includes(`.qcard .pre[data-i="${i}"]{display:block!important}`), css[0]);
+    assert.equal(TEST_POOL[i], attemptOrder(TEST_POOL, seed as number)[0], 'лицо = первая вещь попытки');
+  }
+});
+
+test('ранний скрипт по ссылке пары прячет лица и затравку не берёт', () => {
+  const { css, seed } = runEarly(TEST_POOL.length, '?pair=abcdefghijklmnopqrstuv&set=abc', 5);
+  assert.equal(seed, undefined);
+  assert.deepEqual(css, ['.qcard .pre,.qcard .prestars{visibility:hidden}']);
+});
+
+test('ранний скрипт не падает без crypto: карточка остаётся на лице 0', () => {
+  const ctx = { window: {}, location: { search: '' }, document: { head: { appendChild: () => assert.fail('стиль без затравки') }, createElement: () => ({ textContent: '' }) } };
+  runInNewContext(testFirstEarlyScript(20), ctx);
 });
 
 test('разные затравки дают разные дюжины — «рандомом они выносятся в дюжину»', () => {
