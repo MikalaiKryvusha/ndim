@@ -78,3 +78,68 @@ test('стенда нет — гасить нечего', () => {
   const procs = table().filter((p) => !String(p.cmd).includes('slot3'));
   assert.deepEqual(pickStandRoots(procs, MY), { mine: [], roots: [] });
 });
+
+// ── Суд stand:stop (37f502f): пять правок, каждая со своим юнитом ────────────────────────────────────────────────────
+
+test('🔴 редактор, открытый на firebase.json, — НЕ мой: taskkill убил бы несохранённую работу (суд, п. 1)', () => {
+  const procs = [
+    ...table(),
+    { pid: 200, ppid: 1, cmd: `"C:\Program Files\Notepad++\notepad++.exe" "${MY}"` },
+    { pid: 201, ppid: 1, cmd: `"C:\Users\krinik\AppData\Local\Programs\Microsoft VS Code\Code.exe" "${MY}"` },
+  ];
+  const { mine, roots } = pickStandRoots(procs, MY);
+  assert.ok(!mine.includes(200) && !mine.includes(201), `редакторы не «мои»: ${mine}`);
+  assert.deepEqual(roots, [45756]);
+});
+
+test('🔴 повтор PID: сирота emulators:exec, PID её мёртвого родителя занят чужим stand-launch, — чужой корень не выбран (суд, п. 2)', () => {
+  const procs = [
+    { pid: 700, ppid: 1, cmd: 'node  tools/stand-launch.mjs', created: 2000 }, // родился ПОЗЖЕ сироты — не её родитель
+    { pid: 701, ppid: 700, cmd: `"node" "…\firebase.js" emulators:exec -c "${MANAGER}"`, created: 2100 },
+    { pid: 800, ppid: 700, cmd: `"node" "…\firebase.js" emulators:exec -c "${MY}"`, created: 1000 },
+  ];
+  assert.deepEqual(pickStandRoots(procs, MY).roots, [800], 'корень — сама сирота');
+  // Контроль: настоящий родитель (создан раньше) по-прежнему поднимает к корню.
+  procs[0].created = 500;
+  assert.deepEqual(pickStandRoots(procs, MY).roots, [700]);
+});
+
+test('цикл ppid не вешает обход (суд, п. 3)', { timeout: 2000 }, () => {
+  const procs = [
+    { pid: 900, ppid: 901, cmd: 'node  tools/stand-launch.mjs' },
+    { pid: 901, ppid: 900, cmd: 'node  tools/stand-launch.mjs' },
+    { pid: 902, ppid: 900, cmd: `"node" "…\firebase.js" emulators:exec -c "${MY}"` },
+    { pid: 903, ppid: 902, cmd: `"node" "…\firebase.js" emulators:exec -c "${MY}"` },
+  ];
+  const { roots } = pickStandRoots(procs, MY);
+  assert.equal(roots.length, 1, `один корень: ${roots}`);
+  // Два корня, и предки одного из них — цикл: проверка «корень внутри дерева другого» обязана остановиться.
+  // (Первый прогон мутанта «без seen в inside()» остался зелёным: при одном корне inside() не зовётся вовсе.)
+  const twoRoots = [
+    { pid: 910, ppid: 911, cmd: 'x.exe' },
+    { pid: 911, ppid: 910, cmd: 'x.exe' },
+    { pid: 912, ppid: 910, cmd: `"node" "…\\firebase.js" emulators:exec -c "${MY}"` },
+    { pid: 950, ppid: 1, cmd: `"node" "…\\firebase.js" emulators:exec -c "${MY}"` },
+  ];
+  assert.deepEqual(pickStandRoots(twoRoots, MY).roots, [912, 950]);
+});
+
+test('🔴 `npm run stand:stop` в предках — не запуск стенда: подъём останавливается под ним (суд, п. 4)', () => {
+  const procs = [
+    { pid: 10, ppid: 1, cmd: '"node" "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run stand:stop' },
+    { pid: 11, ppid: 10, cmd: `"node" "…\firebase.js" emulators:exec -c "${MY}"` },
+  ];
+  // self не передан: защищает ТОЛЬКО упреждение шаблона (?=\s|"|$), а не защита предков команды.
+  assert.deepEqual(pickStandRoots(procs, MY).roots, [11]);
+});
+
+test('🔴 корень внутри дерева другого корня вторым не называется (суд, п. 4)', () => {
+  const procs = [
+    { pid: 1, ppid: 0, cmd: 'bash.exe' },
+    { pid: 2, ppid: 1, cmd: 'node  tools/stand-launch.mjs' },
+    { pid: 3, ppid: 2, cmd: `"node" "…\firebase.js" emulators:exec -c "${MY}"` },
+    { pid: 4, ppid: 3, cmd: 'java -jar cloud-firestore-emulator.jar' },
+    { pid: 5, ppid: 4, cmd: `"node" "…\firebase.js" emulators:exec -c "${MY}"` }, // подъём от 5 упирается в java → корень 5
+  ];
+  assert.deepEqual(pickStandRoots(procs, MY).roots, [2], 'только верхний корень 2; корень 5 — внутри его дерева');
+});
