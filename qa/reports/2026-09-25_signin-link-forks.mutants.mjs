@@ -2,7 +2,7 @@
 // (суд порции 1, п. 6: мутант файлом рядом с драйвером, а не в скретчпаде сессии). Адресаты названы ДО прогона и печатаются
 // перед каждым заходом; файлы продукта восстанавливаются побайтово в finally. Нужен поднятый стенд рабочего места (vite dev
 // перечитывает правленые модули сам — пауза 4 с перед драйвером).
-// Запуск из корня рабочего места: node qa/reports/2026-09-25_signin-link-forks.mutants.mjs [P1|G2]   (без ключа — оба)
+// Запуск из корня рабочего места: node qa/reports/2026-09-25_signin-link-forks.mutants.mjs [P1|G2|W1|W2]   (без ключа — все)
 import { readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
@@ -39,6 +39,23 @@ const RUNS = [
     edits: [
       ['src/lib/data/account.ts', "  if (fromGuest && !remembered) return { kind: 'guest-elsewhere', link };", '  if (false) return null;'],
     ],
+  },
+  // Карточка «Добро пожаловать» (`bugs/NEW_newcomer_welcome_claims_ratings_in_place.md`) — только ВС-18 (`--welcome`).
+  {
+    key: 'W1',
+    name: 'карточка: «Ваши оценки… на месте» ВСЕГДА (условие снято — прежняя ложь новичку)',
+    flag: '--welcome',
+    expectRed: ['ВС-18 новичок × 4 клетки'],
+    expectGreen: ['ВС-18 апгрейд гостя × 4 клетки'],
+    edits: [['src/routes/profile/+page.svelte', '{ratedCount > 0 ? ` ${t.account.doneKept[lang]}`', '{true ? ` ${t.account.doneKept[lang]}`']],
+  },
+  {
+    key: 'W2',
+    name: 'карточка: «Ваши оценки… на месте» НИКОГДА (у апгрейда гостя с оценкой строка пропала)',
+    flag: '--welcome',
+    expectRed: ['ВС-18 апгрейд гостя × 4 клетки'],
+    expectGreen: ['ВС-18 новичок × 4 клетки'],
+    edits: [['src/routes/profile/+page.svelte', '{ratedCount > 0 ? ` ${t.account.doneKept[lang]}`', '{false ? ` ${t.account.doneKept[lang]}`']],
   },
 ];
 
