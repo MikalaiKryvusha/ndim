@@ -9,9 +9,10 @@
  *   1. слот — из имени рабочего места (`lib/stand-slot.mjs`), конфиг — `<корень>\firebase.slot<N>.json` (у слота 0 —
  *      `<корень>\firebase.json`);
  *   2. процессы Windows (`Win32_Process`: pid · родитель · командная строка);
- *   3. «мои» — процессы `emulators:exec`, чья командная строка несёт путь МОЕГО конфига (регистр и вид косой черты не
- *      важны). Редактор, открытый на том же `firebase.json`, «моим» не считается (суд stand:stop, п. 1);
- *      родитель принимается, только если создан раньше ребёнка (повтор PID, п. 2);
+ *   3. «мои» — исполняемые node/cmd, чья строка несёт якорь «`firebase emulators:exec -c <МОЙ конфиг>`» с границей пути
+ *      (регистр и вид косой черты не важны). Редактор, открытый на том же `firebase.json`, проба-поиск с обеими
+ *      подстроками и сессия агента с поручением в строке «моими» не считаются (суд stand:stop, п. 1; повторный, п. 1);
+ *      родитель принимается, только если обе даты создания известны и он создан раньше ребёнка (повтор PID, п. 2);
  *   4. корень дерева — самый верхний предок «моего» процесса, чья строка — запуск стенда (`stand-launch.mjs`,
  *      `emulators:exec`, `npm … run stand`). Строка `node tools/stand-launch.mjs` сама по себе чья угодно: путь у неё
  *      относительный — поэтому её предок «мой» только через потомка с моим конфигом;
@@ -34,18 +35,32 @@ import { portsFor, slotConfigName, slotOf, SLOTS } from './lib/stand-slot.mjs';
 
 const norm = (s) => String(s ?? '').replace(/\//g, '\\').toLowerCase();
 
+/**
+ * ЯКОРЬ ЗАПУСКА ЭМУЛЯТОРОВ (повторный суд stand:stop, п. 1): слово `firebase` (или `firebase.js` / `firebase.cmd`), сразу
+ * `emulators:exec -c` и ПУТЬ С ГРАНИЦЕЙ. Подстроки «emulators:exec» и пути где угодно в строке мало: проба-поиск другого
+ * агента, `bash -c "…grep 'emulators:exec -c <путь>'"` или сессия агента с поручением в строке запуска несут обе подстроки,
+ * и `taskkill /T /F` погасил бы их деревья; `…\firebase.jsonc` — не мой конфиг.
+ */
+const EMU_EXEC = String.raw`firebase(?:\.js|\.cmd)?"?\s+emulators:exec`;
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const emulatorsOf = (config) => new RegExp(`${EMU_EXEC}\\s+-c\\s+"?${escapeRe(norm(config))}"?(?=\\s|$)`, 'i');
+
+/** Процессы, которые запускают стенд: только исполняемые node/cmd — PowerShell, bash и сессии агентов не бывают «моими». */
+const EXE_OK = /^(?:node|cmd)\.exe$/i;
+
 /** Строка процесса — запуск стенда (и потому поднимается к корню). `run stand:stop` — НЕ запуск стенда. */
-const LAUNCHER = /stand-launch\.mjs|emulators:exec|\brun\s+stand(?=\s|"|$)/i;
+const LAUNCHER = new RegExp(String.raw`stand-launch\.mjs|${EMU_EXEC}|\brun\s+stand(?=\s|"|$)`, 'i');
 
 /**
  * Родитель процесса — только если он создан РАНЬШЕ ребёнка (суд stand:stop, п. 2). Windows переиспользует PID: у сироты
  * `emulators:exec` PID её мёртвого родителя может занять чужой `stand-launch`, и подъём к корню выбрал бы ЧУЖОЕ дерево.
- * Время создания неизвестно (фикстура без него) — родитель принимается по `ppid`, как прежде.
+ * 🔴 Даты создания нет у родителя или ребёнка — родителя НЕТ (повторный суд, п. 2): тогда гасится только поддерево
+ * самого `emulators:exec`, без подъёма.
  */
 function parentOf(byPid, p) {
   const parent = byPid.get(p?.ppid);
   if (!parent || parent.pid === p.pid) return undefined;
-  if (Number.isFinite(parent.created) && Number.isFinite(p.created) && parent.created > p.created) return undefined;
+  if (!Number.isFinite(parent.created) || !Number.isFinite(p.created) || parent.created > p.created) return undefined;
   return parent;
 }
 
@@ -55,45 +70,45 @@ function parentOf(byPid, p) {
  */
 export function pickStandRoots(procs, config, self = null) {
   const byPid = new Map(procs.map((p) => [p.pid, p]));
-  const needle = norm(config);
-  // 🔴 «Мой» — путь МОЕГО конфига И запуск эмуляторов (суд stand:stop, п. 1). Одного пути мало: Notepad++ или VS Code,
-  // открытые на firebase.json, несут тот же путь в строке, и `taskkill /T /F` убил бы редактор с несохранённой работой.
-  const mine = procs.filter((p) => norm(p.cmd).includes(needle) && /emulators:exec/i.test(p.cmd ?? '')).map((p) => p.pid);
+  const anchor = emulatorsOf(config);
+  // 🔴 «Мой» — запуск эмуляторов С МОИМ конфигом по якорю (повторный суд, п. 1) и исполняемый node/cmd. Редактор,
+  // открытый на firebase.json (первый суд, п. 1), и проба-поиск с обеими подстроками «моими» не бывают.
+  const mine = procs
+    .filter((p) => anchor.test(norm(p.cmd)) && (p.name === undefined || EXE_OK.test(p.name)))
+    .map((p) => p.pid);
+  // Все обходы вверх ограничены числом процессов (повторный суд, п. 4): цикл ppid не вешает команду по построению.
+  const limit = procs.length;
   const protectedPids = new Set();
-  for (let p = byPid.get(self); p && !protectedPids.has(p.pid); p = parentOf(byPid, p)) protectedPids.add(p.pid);
+  for (let p = byPid.get(self), n = 0; p && n < limit; p = parentOf(byPid, p), n++) protectedPids.add(p.pid);
   const roots = new Set();
   for (const pid of mine) {
     let top = pid;
-    const seen = new Set([pid]);
-    for (let p = parentOf(byPid, byPid.get(pid)); p && !seen.has(p.pid) && LAUNCHER.test(p.cmd ?? ''); p = parentOf(byPid, p)) {
-      seen.add(p.pid);
+    for (let p = parentOf(byPid, byPid.get(pid)), n = 0; p && n < limit && LAUNCHER.test(p.cmd ?? ''); p = parentOf(byPid, p), n++) {
       top = p.pid;
     }
     if (!protectedPids.has(top)) roots.add(top);
   }
-  // Корень, лежащий внутри дерева другого корня, гасится вместе с ним — вторым не называется. `seen` — против цикла ppid
-  // (суд, п. 3: без него обход зависал).
+  // Корень, лежащий внутри дерева другого корня, гасится вместе с ним — вторым не называется. Два корня внутри друг
+  // друга бывают только в цикле ppid (равные даты создания) — тогда остаётся меньший pid, а не ни один.
   const inside = (pid, root) => {
-    const seen = new Set();
-    for (let p = parentOf(byPid, byPid.get(pid)); p && !seen.has(p.pid); p = parentOf(byPid, p)) {
+    for (let p = parentOf(byPid, byPid.get(pid)), n = 0; p && n < limit; p = parentOf(byPid, p), n++) {
       if (p.pid === root) return true;
-      seen.add(p.pid);
     }
     return false;
   };
-  const top = [...roots].filter((r) => ![...roots].some((o) => o !== r && inside(r, o)));
+  const top = [...roots].filter((r) => ![...roots].some((o) => o !== r && inside(r, o) && (!inside(o, r) || o < r)));
   return { mine, roots: top.sort((a, b) => a - b) };
 }
 
 /** Процессы Windows одной командой; `created` — момент создания в мс (PowerShell 5.1 отдаёт дату как «/Date(мс)/»). */
 function processTable() {
-  const ps = 'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine,CreationDate | ConvertTo-Json -Compress';
+  const ps = 'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine,CreationDate | ConvertTo-Json -Compress';
   const raw = execSync(`powershell -NoProfile -Command "${ps}"`, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   const ms = (d) => {
     const m = /Date\((\d+)/.exec(String(d ?? ''));
     return m ? Number(m[1]) : Date.parse(d ?? '');
   };
-  return JSON.parse(raw).map((p) => ({ pid: p.ProcessId, ppid: p.ParentProcessId, cmd: p.CommandLine ?? '', created: ms(p.CreationDate) }));
+  return JSON.parse(raw).map((p) => ({ pid: p.ProcessId, ppid: p.ParentProcessId, name: p.Name ?? '', cmd: p.CommandLine ?? '', created: ms(p.CreationDate) }));
 }
 
 function listens(port, ms = 400) {
