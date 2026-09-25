@@ -86,9 +86,11 @@
     send: { ru: 'Получить ссылку для входа', en: 'Get a sign-in link' },
     sending: { ru: 'Отправляем…', en: 'Sending…' },
     sentTitle: { ru: 'Письмо отправлено', en: 'The email is on its way' },
+    // Интервью №096, В13 = А (2026-09-25 08:42): «на этом устройстве» убрано — вход по ссылке работает в любом
+    // браузере с 2026-09-13 (`bugs/233`). Русская строка — дословно вариант А владельца; английская — те же слова сняты.
     sentNote: {
-      ru: 'Откройте письмо на этом устройстве и нажмите ссылку — она откроет Вам вход в Пространство NDim Space.',
-      en: 'Open the email on this device and tap the link — it opens your way into NDim Space.',
+      ru: 'Откройте письмо и нажмите ссылку — она откроет Вам вход в Пространство NDim Space.',
+      en: 'Open the email and tap the link — it opens your way into NDim Space.',
     },
     /*
      * ШАГ «ИДЁТ ВХОД» — макет V1 «Шаг двери» (`design/signin-progress-mockups.html`), выбран
