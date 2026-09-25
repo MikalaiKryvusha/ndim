@@ -76,7 +76,9 @@ for (const run of RUNS) {
       mutated.set(f, readFileSync(f));
     }
     await new Promise((ok) => setTimeout(ok, 4000));
-    const r = spawnSync(process.execPath, ['qa/reports/2026-09-25_signin-link-forks.driver.mjs', run.flag], { encoding: 'utf8', timeout: 900000 });
+    // Кадры мутанта — в свою папку: кадры настоящего прогона не затираются (суд карточки новичка, п. 1).
+    const env = { ...process.env, SHOTS_DIR: `test-results/signin-link-forks-mutant-${run.key}` };
+    const r = spawnSync(process.execPath, ['qa/reports/2026-09-25_signin-link-forks.driver.mjs', run.flag], { encoding: 'utf8', timeout: 900000, env });
     process.stdout.write(r.stdout.split('\n').filter((l) => /❌|✅|Итог|Голова/.test(l)).join('\n') + '\n');
     if (r.stderr) process.stdout.write('stderr: ' + r.stderr.split('\n').slice(0, 6).join(' | ') + '\n');
   } finally {
