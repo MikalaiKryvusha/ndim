@@ -63,13 +63,17 @@
   import {
     completeLoginLink,
     continueWithGoogle,
+    emailInLink,
     emailShownForLink,
     isLoginLink,
+    linkFork,
     linkGoogle,
+    onSignedInElsewhere,
     pendingIntent,
     sendLoginLink,
     signInWithGoogle,
     waitForSession,
+    type LinkFork,
   } from '$lib/data/account';
   import { entryOf, track } from '$lib/data/funnel';
   import { EVERYONE, FRIENDS } from '$lib/model/visibility';
@@ -290,6 +294,38 @@
   let linkingEmail = $state<string | null>(null);
   let signupEmail = $state('');
   let signupError = $state('');
+
+  /*
+   * ЭКРАН Б3 «СПРОСИТЬ ДО ПРОФИЛЯ» — интервью №096 В11 = В (`bugs/233`, `plans/NEW_signin_link_forks_b3_g2.md`).
+   * Пока `fork` не пуст, дверь входа показывает вопрос с двумя адресами, а `finishEmailLink` ждёт ответа человека:
+   * вход по ссылке не начинается, пока он не выбрал дорогу. Ответ приходит через `answerFork`.
+   */
+  let fork = $state<LinkFork>(null);
+  let answerFork: ((choice: 'stay' | 'switch') => void) | null = null;
+  function askFork(question: NonNullable<LinkFork>): Promise<'stay' | 'switch'> {
+    fork = question;
+    return new Promise((resolve) => {
+      answerFork = (choice) => {
+        fork = null;
+        answerFork = null;
+        resolve(choice);
+      };
+    });
+  }
+
+  /*
+   * ВКЛАДКА «МЫ ОТПРАВИЛИ ВАМ ПИСЬМО» УХОДИТ В ПРОФИЛЬ САМА, когда ссылку открыли в соседней вкладке того же браузера
+   * (`bugs/233`: строка гостя «Эту страницу можно не закрывать — она откроет Ваш профиль сама» не исполнялась,
+   * подтверждено живьём 2026-09-25 09:53). Сигнал — `onIdTokenChanged` (развилка и опора на исходник SDK — у
+   * `onSignedInElsewhere`). Полная перезагрузка, а не смена состояния: память вкладки — кэш экранов и лица —
+   * принадлежала гостю или никому (`cache.ts` → «ПРИВАТНОСТЬ»), и профиль читается заново уже от имени вошедшего.
+   * [TESTED: 2026-09-25 17:32 · стенд dev-1, ВС-07/ВС-08 pass, контроль ВС-09 pass, мутант — красные адресно;
+   *  отчёт qa/reports/2026-09-25_signin-link-forks.md]
+   */
+  $effect(() => {
+    if (signupStep !== 'sent') return;
+    return onSignedInElsewhere(() => location.replace('/profile'));
+  });
 
   /**
    * Человек вошёл в дверь «У меня уже есть аккаунт» — то есть его НАМЕРЕНИЕ `signin`.
@@ -591,6 +627,31 @@
     const session = await waitForSession();
 
     /*
+     * 🔴 ЭКРАН Б3 «СПРОСИТЬ ДО ПРОФИЛЯ» — ДО ВСЯКОГО ВХОДА (интервью №096 В11 = В).
+     *
+     * В браузере вошёл один аккаунт, а ссылка из письма несёт адрес другого. Прежде (Б1) вошедший молча оставался
+     * собой: его адрес предъявлялся Firebase, не подходил, и на экране не менялось ничего. Теперь человек видит оба
+     * адреса и выбирает сам. «Остаться» — адрес из строки браузера стирается, профиль прежний, код ссылки не
+     * тратится. «Войти» — прежний аккаунт отпускается тем же `signOutUser()`, что гость у двери «У меня уже есть
+     * аккаунт» (он же чистит кэш экранов и лица), и дальше путь человека без сессии: шаг «идёт вход» называет адрес
+     * из ссылки (№084 В1 = А).
+     */
+    let switched = false;
+    const question = linkFork(session, emailInLink());
+    if (question) {
+      const choice = await askFork(question);
+      if (choice === 'stay' && session) {
+        replaceUrl('/profile');
+        return session.uid;
+      }
+      // Дверь со спиннером — сразу: без мелькания оболочки приложения между вопросом и шагом «идёт вход».
+      linkingDoor = true;
+      linkingEmail = question.link;
+      await signOutUser();
+      switched = true;
+    }
+
+    /*
      * 🔴 ГОСТЕВУЮ КАРТОЧКУ ПОКАЗЫВАЕМ ТОЛЬКО ТОМУ, КТО И ПРАВДА ГОСТЬ (`bugs/233`).
      *
      * Здесь стояло безусловное `guest = true; guestCard = true` ДО всякой проверки — то есть
@@ -602,7 +663,7 @@
      * Теперь вошедший человек во время разбора ссылки видит свой обычный профиль, а карточка
      * поднимается только там, где ей и место: у гостя и у того, у кого сессии нет вовсе.
      */
-    const signedInPerson = session !== null && !session.isAnonymous;
+    const signedInPerson = session !== null && !session.isAnonymous && !switched;
     if (!signedInPerson) {
       guest = true;
       guestCard = true;
@@ -636,8 +697,10 @@
      * Поймано состязательной проверкой 01.08.2026, живьём не воспроизводилось.
      */
     const intent = pendingIntent();
-    const released = intent === 'signin' && session?.isAnonymous === true;
-    if (released) await signOutUser();
+    const releasedGuest = intent === 'signin' && session?.isAnonymous === true;
+    if (releasedGuest) await signOutUser();
+    // Отпущенная сессия — гостя у двери «У меня уже есть аккаунт» или вошедшего, выбравшего на экране Б3 «Войти».
+    const released = releasedGuest || switched;
 
     // Сессии нет (новый браузер, дверь входа) — вход идёт на двери входа со спиннером.
     if (session === null || released) {
@@ -1456,18 +1519,24 @@
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.2z" /><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.7-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" /><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z" /><path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z" /></svg>
 {/snippet}
 
-{#if stand === 'signedout' || linkingDoor}
+{#if stand === 'signedout' || linkingDoor || fork}
   <!-- ⛔ ОБОЛОЧКА ПРИЛОЖЕНИЯ СЮДА НЕ ЗАХОДИТ. Человек не вошёл — значит он не внутри продукта,
        и показывать ему табы, рельс и нижнюю панель приложения было ровно тем, на что владелец
        жаловался в `bugs/19`. Экран занимает окно целиком и несёт собственные переключатели
-       языка и темы. -->
+       языка и темы. Экран Б3 (`fork`) стоит здесь же: вопрос задаётся ПРЕЖДЕ профиля (№096 В11 = В). -->
   <SigninScreen
     {lang}
-    step={linkingDoor
-      ? 'linking'
-      : signupStep === 'choose' || signupStep === 'sending' || signupStep === 'sent'
-        ? signupStep
-        : 'doors'}
+    step={fork
+      ? 'fork-account'
+      : linkingDoor
+        ? 'linking'
+        : signupStep === 'choose' || signupStep === 'sending' || signupStep === 'sent'
+          ? signupStep
+          : 'doors'}
+    forkCurrent={fork?.current ?? ''}
+    forkLink={fork?.link ?? ''}
+    onForkStay={() => answerFork?.('stay')}
+    onForkSwitch={() => answerFork?.('switch')}
     linkEmail={linkingEmail}
     bind:email={signupEmail}
     error={signupError}

@@ -18,7 +18,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { emailForLink, emailInLink } from './account.ts';
+import { emailForLink, emailInLink, linkFork } from './account.ts';
 
 /** Человек, который уже вошёл своей почтой. */
 const signedIn = (email: string) => ({ isAnonymous: false, email });
@@ -110,4 +110,33 @@ test('порядок источников именно такой, а не «к�
 
   const onlySession = emailForLink(signedIn('tretiy@ndim.space'), null);
   assert.equal(onlySession, 'tretiy@ndim.space');
+});
+
+/*
+ * ─── РАЗВИЛКА ДО ВХОДА ПО ССЫЛКЕ — экран Б3 «Спросить до профиля» (№096 В11 = В, `bugs/233`) ───
+ * Стережёт: вопрос задаётся ровно тогда, когда в браузере вошёл ДРУГОЙ аккаунт, и не задаётся самому себе.
+ */
+
+test('🔴 Б3: вошёл nikolai, ссылка для maria — вопрос называет оба адреса', () => {
+  assert.deepEqual(linkFork(signedIn('nikolai@example.com'), 'maria@example.com'), {
+    kind: 'other-account',
+    current: 'nikolai@example.com',
+    link: 'maria@example.com',
+  });
+});
+
+test('тот же аккаунт — вопроса нет: регистр и пробелы адреса не делают его другим', () => {
+  assert.equal(linkFork(signedIn('nikolai@example.com'), 'nikolai@example.com'), null);
+  assert.equal(linkFork(signedIn('Nikolai@Example.com'), ' nikolai@example.com '), null);
+});
+
+test('гость и пустая сессия — не Б3: их путь другой', () => {
+  assert.equal(linkFork(guest, 'maria@example.com'), null);
+  assert.equal(linkFork(null, 'maria@example.com'), null);
+});
+
+test('старое письмо без адреса и вошедший без адреса — прежнее поведение, без вопроса', () => {
+  assert.equal(linkFork(signedIn('nikolai@example.com'), null), null);
+  assert.equal(linkFork(signedIn('nikolai@example.com'), '   '), null);
+  assert.equal(linkFork({ isAnonymous: false, email: null }, 'maria@example.com'), null);
 });

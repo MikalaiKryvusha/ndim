@@ -39,23 +39,36 @@
     step,
     email = $bindable(''),
     linkEmail = null,
+    forkCurrent = '',
+    forkLink = '',
     error,
     onGoogle,
     onEmailDoor,
     onGuest,
     onSendLink,
+    onForkStay = () => {},
+    onForkSwitch = () => {},
   }: {
     lang: Lang;
-    /** Шаг двери почты: `doors` — три двери; дальше форма и её состояния; `linking` — идёт вход по ссылке. */
-    step: 'doors' | 'choose' | 'sending' | 'sent' | 'linking';
+    /**
+     * Шаг двери почты: `doors` — три двери; дальше форма и её состояния; `linking` — идёт вход по ссылке;
+     * `fork-account` — экран Б3 «Спросить до профиля» (№096 В11 = В): ссылка из письма для другого адреса.
+     */
+    step: 'doors' | 'choose' | 'sending' | 'sent' | 'linking' | 'fork-account';
     email?: string;
     /** Адрес, в чей аккаунт идёт вход по ссылке, — строка шага `linking` (№084 В1 = А). */
     linkEmail?: string | null;
+    /** Экран Б3: адрес аккаунта, в котором человек сейчас, и адрес, который несёт ссылка из письма. */
+    forkCurrent?: string;
+    forkLink?: string;
     error?: string;
     onGoogle: () => void;
     onEmailDoor: () => void;
     onGuest: () => void;
     onSendLink: () => void;
+    /** Экран Б3: «Остаться в аккаунте …» и «Войти в аккаунт …». */
+    onForkStay?: () => void;
+    onForkSwitch?: () => void;
   } = $props();
 
   const t = {
@@ -102,6 +115,22 @@
       ru: 'Вы входите в аккаунт с адресом электронной почты',
       en: 'You are signing in to the account with the email address',
     },
+    /*
+     * ЭКРАН Б3 «СПРОСИТЬ ДО ПРОФИЛЯ» — интервью №096 В11 = В (2026-09-25 08:42), кадр
+     * `test-results/owner-reviews/interview-085/Vb3.png` (макет `design/signin-link-forks-mockups.html`, вариант b3).
+     * Русские строки — дословно с утверждённого кадра, адреса подставляются. EN — [AI] черновик агента по портрету
+     * голоса (раздел 0, шесть запретов), поправленный независимым проходом §7Б (кальки «from the email», «opens the
+     * account», порядок «the account X» заменены английской фразой от смысла); ждёт вычитки владельцем — список
+     * «строки на вычитку» в отчёте прогона. Адрес стоит посреди английской фразы, поэтому строки — функции.
+     */
+    forkAccountTitle: { ru: 'Ссылка из письма для другого адреса', en: 'The link in the email is for a different address' },
+    forkAccountLede: {
+      ru: (current: string, link: string) => `Сейчас Вы в аккаунте ${current}. Ссылка из письма открывает аккаунт ${link}.`,
+      en: (current: string, link: string) =>
+        `You are currently signed in to the ${current} account. The link in the email signs you in to the ${link} account.`,
+    },
+    forkStay: { ru: (email: string) => `Остаться в аккаунте ${email}`, en: (email: string) => `Stay signed in to the ${email} account` },
+    forkSwitch: { ru: (email: string) => `Войти в аккаунт ${email}`, en: (email: string) => `Sign in to the ${email} account` },
     themeToDark: { ru: 'Тёмная', en: 'Dark' },
     themeToLight: { ru: 'Светлая', en: 'Light' },
   } as const;
@@ -161,9 +190,11 @@
     <div class="inner">
       <span class="mark"><Brand size={46} /></span>
       <p class="eyebrow">{t.eyebrow[lang]}</p>
-      <h1>{t.title[lang]}</h1>
+      <h1>{step === 'fork-account' ? t.forkAccountTitle[lang] : t.title[lang]}</h1>
       <!-- В макете V1 «Шаг двери» подзаголовка нет: пока идёт вход, звать оценивать не к чему. -->
-      {#if step !== 'linking'}<p class="lede">{t.lede[lang]}</p>{/if}
+      {#if step === 'fork-account'}
+        <p class="lede fork">{t.forkAccountLede[lang](forkCurrent, forkLink)}</p>
+      {:else if step !== 'linking'}<p class="lede">{t.lede[lang]}</p>{/if}
 
       <div class="doors">
         {#if step === 'doors'}
@@ -201,6 +232,11 @@
             <p class="status">{t.linking[lang]}</p>
             {#if linkEmail}<p class="who">{t.linkingWho[lang]} <b>{linkEmail}</b></p>{/if}
           </div>
+        {:else if step === 'fork-account'}
+          <!-- Две дороги кадра Б3: первая — остаться собой (основная), вторая — войти в аккаунт из письма.
+               `data-fork` — устойчивый крючок приборов, как `data-door="guest"`: кнопку не ищут по тексту. -->
+          <button type="button" class="d primary fork" data-fork="stay" onclick={onForkStay}>{t.forkStay[lang](forkCurrent)}</button>
+          <button type="button" class="d ghost fork" data-fork="switch" onclick={onForkSwitch}>{t.forkSwitch[lang](forkLink)}</button>
         {:else if step === 'sent'}
           <p class="sent"><Icon name="envelope" size={16} /> {t.sentTitle[lang]}</p>
           <p class="note">{t.sentNote[lang]}</p>
@@ -339,6 +375,9 @@
      его показывать, оставляя обычный перенос по ширине там, где строка всё равно не влезла. */
   .d.guest { white-space: pre-line; }
   .d.ghost { background: transparent; border-color: var(--ghost-brd); color: var(--ghost-ink); }
+  /* Экран Б3 несёт адреса почты в строке и в кнопках: адрес без пробелов переносится в любом месте, а не
+     вылезает за край на 390 px и не обрезается — тот же приём, что у строки адреса `.who`. */
+  .fork { overflow-wrap: anywhere; }
   .d:hover:not(:disabled) { filter: brightness(1.06); }
   .d.ghost:hover:not(:disabled) { background: var(--ghost-bg-hover); }
   .d:disabled { opacity: 0.6; cursor: default; }
