@@ -53,7 +53,7 @@ export const landingV1 = {
     /** `[AI]` новая строка — на вычитке (№097). */
     how: {
       ru: 'Оцените звёздами фильмы, сериалы и практики, которые Вы знаете, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы. Практики — это занятия, которые люди любят: секс, чтение, настольные игры и велоспорт.',
-      en: 'Rate the films, TV series and practices you know with stars, and NDim Space will show which of Liam, Emma and Mia thinks the same way you do. Practices are activities people love: sex, reading, board gaming and cycling.',
+      en: 'Use the stars to rate the films, TV series and practices you know, and NDim Space will show you which of Liam, Emma and Mia thinks the same way you do. Practices are activities people love: sex, reading, board gaming and cycling.',
     },
     me: { ru: 'Я', en: 'Me' },
     popLead: { ru: ' — Ваша самая сильная связь: ', en: ' is your strongest connection: ' },
