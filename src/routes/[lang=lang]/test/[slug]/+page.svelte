@@ -34,7 +34,7 @@
   import type { TestPageData } from './+page.server';
   import { LANGS } from '$lib/content/langs';
   import { RATED_FACT_FROM, attemptSeed, shuffledIds } from '$lib/content/test-set';
-  import { peopleUnit } from '$lib/ui/format';
+  import { peopleUnit, unitRu } from '$lib/ui/format';
   // Шапка — ОБЩАЯ шапка публичных страниц: своей копии здесь больше нет (слово владельца
   // 2026-09-25 о переключателях, которые «в разных местах разные»).
   import PublicBar from '$lib/ui/PublicBar.svelte';
@@ -99,7 +99,7 @@
       resultTitle: 'Ваши совпадения',
       resultCap: 'Результат видите только вы двое — ссылка есть лишь у вас.',
       seeBelow: 'Результат готов — он ниже, в блоке совпадений.',
-      matchesLabel: 'совпадений',
+      matchesLabel: (n: number) => unitRu(n, ['совпадение', 'совпадения', 'совпадений']),
       tensLine: (m: number) => `Общих «десяток»: ${m}`,
       bothGave: (v: number, name: string) => `Вы оба поставили ${v} — ${name}`,
       closeRow: (name: string, a: number, b: number) => `Вы рядом в «${name}»: ${a} и ${b}`,
@@ -134,7 +134,7 @@
       resultTitle: 'Your matches',
       resultCap: 'Only the two of you can see this — the link belongs to you alone.',
       seeBelow: 'The result is ready — see the matches block below.',
-      matchesLabel: 'matches',
+      matchesLabel: (n: number) => (n === 1 ? 'match' : 'matches'),
       tensLine: (m: number) => `Shared “tens”: ${m}`,
       bothGave: (v: number, name: string) => `You both gave ${v} — ${name}`,
       closeRow: (name: string, a: number, b: number) => `You are close on “${name}”: ${a} and ${b}`,
@@ -682,7 +682,7 @@
         <p class="cap">{ui.resultCap}</p>
         {#if data.slug === 'love'}
           <!-- Счёт совпадений-фактов — форма результата любви (№028, В3 = А). -->
-          <p class="bigcount"><span class="n">{liveFacts.exact.length}</span> <span>{ui.matchesLabel}</span></p>
+          <p class="bigcount"><span class="n">{liveFacts.exact.length}</span> <span>{ui.matchesLabel(liveFacts.exact.length)}</span></p>
           <p class="subcount">{ui.tensLine(liveFacts.tens.length)}</p>
         {/if}
         {#if liveFacts.compared === 0}
