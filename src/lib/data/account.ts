@@ -153,6 +153,28 @@ const PENDING_EMAIL_KEY = 'ndim-pending-email';
  */
 const LINK_EMAIL_PARAM = 'email';
 
+/**
+ * Пометка «ПИСЬМО ГОСТЯ» в адресе возврата (интервью №096 В12 = Б, экран Г2): письмо попросил гость дверью «Сохранить мои
+ * результаты». Пометка не несёт ни почты, ни личности — только факт «оценки остались у гостя в браузере, где просили».
+ * Имя параметра не `guest`: `?guest=` уже дверь гостя на `/profile`, и смешать их значило бы завести гостя из письма.
+ */
+const LINK_FROM_PARAM = 'from';
+const LINK_FROM_GUEST = 'guest';
+
+/** Несёт ли ссылка пометку «письмо гостя». */
+export function guestLetter(href: string = location.href): boolean {
+  try {
+    return new URL(href).searchParams.get(LINK_FROM_PARAM) === LINK_FROM_GUEST;
+  } catch {
+    return false;
+  }
+}
+
+/** Адрес, на который письмо просили В ЭТОМ браузере (`ndim-pending-email`), — или `null`, если просили не здесь. */
+export function rememberedLinkEmail(): string | null {
+  return localStorage.getItem(PENDING_EMAIL_KEY);
+}
+
 /** Почта из адреса ссылки — или `null`, если письмо старое и адреса не несёт. */
 export function emailInLink(href: string = location.href): string | null {
   try {
@@ -440,6 +462,9 @@ export async function sendLoginLink(
     // к адресу письма, чужой адрес Firebase отвергает (`tools/probe-link-email-binding.mjs`).
     const back = new URL(`${loginLinkOrigin()}${returnPath}`);
     back.searchParams.set(LINK_EMAIL_PARAM, email);
+    // Пометка «письмо гостя» (№096 В12 = Б) — ТОЛЬКО двери «Сохранить мои результаты»: сессия гостя и намерение `upgrade`.
+    // Дверь входа без сессии тоже шлёт `upgrade` (см. блок отказа ниже), но гостя у неё нет — и оценок, оставшихся где-то, тоже.
+    if (devAuth().currentUser?.isAnonymous === true && intent === 'upgrade') back.searchParams.set(LINK_FROM_PARAM, LINK_FROM_GUEST);
     await sendSignInLinkToEmail(devAuth(), email, {
       url: back.href,
       handleCodeInApp: true,
@@ -487,11 +512,17 @@ export function isLoginLink(href: string = location.href): boolean {
  *      Решение владельца — интервью №084 В1 = А, 2026-09-13; прежний запрет снят им же после
  *      проверки: подменённый адрес Firebase отвергает, цена «пересланная чужая ссылка» названа ему
  *      до ответа, защита — строка с адресом на экране «идёт вход».
- *      ⚠️ При живой сессии адрес из ссылки НЕ берётся, и это сознательно. «В браузере вошёл другой
- *      аккаунт» владелец решил экраном Б3 (№096 В11 = В): его задаёт {@link linkFork} ДО этой функции,
+ *      ⚠️ Сама функция при живой сессии адрес из ссылки НЕ берёт, и это сознательно. «В браузере вошёл
+ *      другой аккаунт» владелец решил экраном Б3 (№096 В11 = В): его задаёт {@link linkFork} ДО этой функции,
  *      и сюда вошедший с чужой ссылкой доходит, только выбрав «Войти в аккаунт …» — уже без сессии.
- *      «Гость в новом браузере» (№096 В12 = Б, экран Г2) — вторая порция `plans/NEW_signin_link_forks_b3_g2.md`.
- *      *(Поправка 2026-09-25: прежде здесь стояло «развилки владельца без ответа» — ответ дан 2026-09-25 08:42.)*
+ *      🔑 Одно исключение, и оно в вызывающем: экран Г2 «Гость в новом браузере» (№096 В12 = Б). При
+ *      СВОЁМ госте этого браузера, после кнопки «Войти здесь без этих оценок», экран передаёт адрес из
+ *      ссылки источником 1 — как названный человеком (`profile/+page.svelte`, `hereEmail`), и адрес
+ *      привязывается к этому гостю. `[AI]` Это расширение №084 В1 = А на сессию гостя — решение плана
+ *      `plans/NEW_signin_link_forks_b3_g2.md`, одобрено Менеджером 2026-09-25 с условиями; слова владельца
+ *      о госте с чужой ссылкой нет. Защита та же, что у источника 4: шаг «идёт вход» называет адрес.
+ *      *(Поправка 2026-09-25: прежде здесь стояло «развилки владельца без ответа» — ответ дан 2026-09-25 08:42;
+ *      затем «Г2 — вторая порция» и «при живой сессии не берётся» без исключения Г2 — поправлено судом Г2.)*
  *
  * ⚠️ Аноним сюда не попадает намеренно: у гостя почты нет вовсе, а если бы и была — гость это
  * не «человек, который уже вошёл», а временная сессия. Его путь — привязка (`linkWithCredential`).
@@ -541,14 +572,39 @@ export function emailForLink(
  *  Б3 обе темы × 390/1440 и EN, обе дороги, контроли «тот же аккаунт» и «чистый браузер»); мутант «всегда null» — красные
  *  адресно; юниты account.test.ts 4 случая; отчёт qa/reports/2026-09-25_signin-link-forks.md]
  */
-export type LinkFork = { readonly kind: 'other-account'; readonly current: string; readonly link: string } | null;
+export type LinkFork =
+  | { readonly kind: 'other-account'; readonly current: string; readonly link: string }
+  | { readonly kind: 'guest-elsewhere'; readonly link: string | null }
+  | null;
 
-export function linkFork(user: Pick<User, 'isAnonymous' | 'email'> | null, linkEmail: string | null): LinkFork {
-  if (!user || user.isAnonymous) return null;
-  const current = user.email?.trim();
-  const link = linkEmail?.trim();
-  if (!current || !link) return null;
-  return current.toLowerCase() === link.toLowerCase() ? null : { kind: 'other-account', current, link };
+/*
+ * `guest-elsewhere` — экран Г2 «Там или здесь без оценок» (№096 В12 = Б): письмо попросил гость дверью «Сохранить мои
+ * результаты» (пометка `from=guest`), а открыто оно там, где его НЕ просили — в этом браузере нет памяти письма
+ * (`ndim-pending-email`). Оценки гостя живут в сессии того браузера; экран объясняет это и даёт вход здесь без них.
+ * Вошедший человек сюда не попадает: у него своя развилка — тот же адрес (тихий вход собой) или Б3.
+ * FORK: options <пометка в ссылке + нет памяти письма | uid гостя в ссылке | только пометка> · price of error <uid несёт
+ *   личность — запрещено №096 В12; «только пометка» показала бы Г2 и в браузере, где гость ставил оценки> · consulted
+ *   <Firebase «Passing State in Email Actions» — состояние едет в continueUrl; №096 В12 «без почты и личности»> → первое.
+ *   Решение плана одобрено Менеджером 2026-09-25.
+ * [TESTED: 2026-09-25 19:28 · ручной прогон на стенде dev-1 (слот 3) с головы 8390510, набор qa/suites/signin-link-forks.md
+ *   ВС-10…ВС-15 pass: Г2 дословно по кадру в обеих темах × 390/1440 и по-английски, «Войти здесь» — аккаунт адреса без
+ *   оценок гостя, свой гость второго браузера привязан со своими оценками; контроли ВС-13/ВС-14 без Г2; мутант «ветка Г2
+ *   снята» — 10 красных; кадры прочитаны — qa/reports/2026-09-25_signin-link-forks-g2.md; юниты account.test.ts — гигиена]
+ */
+export function linkFork(
+  user: Pick<User, 'isAnonymous' | 'email'> | null,
+  linkEmail: string | null,
+  fromGuest = false,
+  remembered: string | null = null,
+): LinkFork {
+  const link = linkEmail?.trim() || null;
+  if (user && !user.isAnonymous) {
+    const current = user.email?.trim();
+    if (!current || !link) return null;
+    return current.toLowerCase() === link.toLowerCase() ? null : { kind: 'other-account', current, link };
+  }
+  if (fromGuest && !remembered) return { kind: 'guest-elsewhere', link };
+  return null;
 }
 
 /**
@@ -613,8 +669,12 @@ export async function completeLoginLink(
   /**
    * Почта, названная САМИМ человеком, когда в этом браузере её взять неоткуда.
    *
-   * Адрес из самой ссылки сюда НЕ передаётся — его берёт `emailForLink` (источник 4) и только
-   * у человека без сессии (интервью №084 В1 = А).
+   * Без сессии адрес из самой ссылки сюда не передаётся — его берёт `emailForLink` (источник 4,
+   * интервью №084 В1 = А). Исключение одно — экран Г2 (№096 В12 = Б): при госте этого браузера,
+   * после кнопки «Войти здесь без этих оценок», экран передаёт СЮДА адрес из ссылки как названный
+   * человеком (`hereEmail` в `profile/+page.svelte`). `[AI]` Расширение №084 В1 = А на сессию гостя —
+   * решение плана `plans/NEW_signin_link_forks_b3_g2.md`, одобрено Менеджером 2026-09-25; см. источник 4
+   * у {@link emailForLink}.
    */
   emailFromHuman?: string,
 ): Promise<LinkResult> {
