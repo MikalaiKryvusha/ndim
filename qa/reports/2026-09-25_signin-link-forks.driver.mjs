@@ -565,6 +565,37 @@ try {
     check('ВС-16', 'гостевой карточки нет', !guestCard);
     await context.close();
   }
+
+  // ═══ ВС-17 · пара «тема + язык» (HeadControls ствола) на экране входа — после конфликта cherry-pick код экрана новый ══
+  // Слово Менеджера: кадры 390/1440 × обе темы с новой парой, переключатель темы — ровно один раз за касание, выпадашка
+  // языка открывается. Экран — двери входа без сессии (`?as=none`).
+  console.log('\nВС-17 · экран входа: пара «тема + язык»:');
+  for (const [w, h] of [[390, 844], [1440, 900]]) {
+    const { context, page, errors } = await browserOf(browser, { w, h, theme: 'light' });
+    await page.goto(`${BASE}/profile?as=none`);
+    await page.locator('.hc .theme').waitFor({ timeout: 15000 }).catch(() => {});
+    const themeOf = () => page.evaluate(() => document.documentElement.dataset.theme);
+    const t0 = await themeOf();
+    await page.screenshot({ path: `${SHOTS}/vs17-signin-${w}-light.png` });
+    await page.locator('.hc .theme').click({ timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(600); // двойной обработчик переключил бы тему обратно за это время
+    const t1 = await themeOf();
+    await page.screenshot({ path: `${SHOTS}/vs17-signin-${w}-dark.png` });
+    check('ВС-17', `${w}: одно касание — тема сменилась ровно один раз`, t0 === 'light' && t1 === 'dark', `${t0} → ${t1}`);
+    await page.locator('.hc summary.lang').click({ timeout: 5000 }).catch(() => {});
+    const ddOpen = await page.locator('.hc .dd').isVisible().catch(() => false);
+    const items = await page.locator('.hc .dd [role="menuitem"]').count().catch(() => 0);
+    await page.screenshot({ path: `${SHOTS}/vs17-signin-${w}-lang-open.png` });
+    check('ВС-17', `${w}: выпадашка языка открылась, в ней языки`, ddOpen && items >= 2, `пунктов ${items}`);
+    const ruTitle = await text(page, 'Войдите в Пространство NDim Space');
+    await page.locator('.hc .dd [role="menuitem"][lang="en"]').click({ timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(800);
+    const enTitle = await text(page, 'Sign in to NDim Space');
+    const ruGone = !(await text(page, 'Войдите в Пространство NDim Space'));
+    check('ВС-17', `${w}: выбор EN переключил экран`, ruTitle && enTitle && ruGone, `ru ${ruTitle} · en ${enTitle} · ru ушёл ${ruGone}`);
+    check('ВС-17', `${w}: консоль чиста`, errors.length === 0, errors.slice(0, 2).join(' | '));
+    await context.close();
+  }
 } catch (e) {
   if (!e.stop) throw e;
 } finally {
