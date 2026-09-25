@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDim Space — «Тест на совместимость для двоих»: четыре макета страницы</title>
+<!-- ─────────────────────────────────────────────────────────────────────────
+     ЧЕТЫРЕ МАКЕТА СТРАНИЦЫ «ТЕСТ НА СОВМЕСТИМОСТЬ ДЛЯ ДВОИХ» — переделка
+     `/ru/test/compatibility` (адрес сохраняется). План 107 «Страницы под запросы
+     людей», фаза 2; разведка — `researches/76_people_query_pages_serp.md` §8, «Страница 1».
+
+     V1 «Дело сверху, руководство под делом»
+     V2 «Образец результата первым»            (донор — soulmatescan, разведка §6 п.2)
+     V3 «Три шага и оба со своих устройств»    (доноры — best-friend.me, mylovematch, §6 п.3 и п.6)
+     V4 «От пары к людям Пространства»         (вакансия Кинопоиска, §0 и §8)
+
+     ВЁРСТКА — КОД ПРОДУКТА: шапка — `PublicBar.svelte` + общая пара `HeadControls.svelte`
+     (квадраты 34×34 «☀» и «Ru», пилюля «Войти»); строки теста — `.srow` главной
+     (`LandingV1.svelte`) со звёздами 0–10 и цифрами страницы теста (`.st`); приглашение,
+     карточка результата, строки фактов, частые вопросы — `test/[slug]/+page.svelte`;
+     блок чисел — `.nums` главной; раскрытие вопросов — `::details-content` главной.
+
+     ДАННЫЕ — НАСТОЯЩИЕ: 12 вещей и «уже оценили: N» — первые 12 карточек очереди из сборки
+     2026-09-25 21:35 (`build/ru/test/compatibility.html`, порядок `test-set.ts`: rates ↓);
+     счётчики V4 — снимок боя `src/lib/content/landing-metric.ts` (takenAt 2026-09-25);
+     виды строк результата — `pairFacts` (`src/lib/model/test-pair.ts`): совпадение a = b,
+     рядом |a − b| = 1, по-разному |a − b| ≥ 4. «Вы и Аня» — пример, подписан словом «пример».
+
+     ДОМ СТИЛЯ: `.picker button[data-v]` · `#width` · `#theme` · `#stage[data-w]`.
+     Съёмка: node tools/shoot-mockups.mjs design/compat-test-page-mockups.html
+───────────────────────────────────────────────────────────────────────── -->
+<style>
+  :root {
+    --bg: #f6f8fb; --panel: #ffffff; --panel-solid: #ffffff;
+    --edge: #e6eef7; --edge-soft: #eef4fa;
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #1f7fc9; --star: #e8a516;
+    --glow: transparent;
+    --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
+    --ghost-brd: rgba(20,103,214,.35); --ghost-ink: #1a63c4;
+    --card-shadow: 0 16px 40px rgba(29,50,71,.08);
+    --up: #0ea578; --ok: #0a7f5c; --ok-ink: #ffffff;
+    --star-off: #cfdbe8;
+    --hero-wash: radial-gradient(ellipse at 50% 0%, rgba(20,103,214,.10), transparent 64%);
+    --motion-fast: 140ms; --motion-base: 240ms; --motion-ease: cubic-bezier(.33,1,.68,1);
+    --sheet: #ffffff; --sheet-edge: #e3e9f3; --muted: #8a97ab;
+  }
+  :root[data-theme="dark"] {
+    --bg: #060b14; --panel: rgba(10,21,38,.78); --panel-solid: #091322;
+    --edge: rgba(77,159,255,.22); --edge-soft: rgba(77,159,255,.14);
+    --primary: #1467d6; --primary-ink: #ffffff; --accent: #3fd9ff; --star: #ffc93d;
+    --glow: var(--star);
+    --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
+    --ghost-brd: rgba(63,217,255,.45); --ghost-ink: #a8e2ff;
+    --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
+    --up: #34d399; --ok: #34d399; --ok-ink: #052e22;
+    --star-off: #2a3b55;
+    --hero-wash: radial-gradient(ellipse at 50% 0%, rgba(31,168,201,.18), transparent 64%);
+    --sheet: #0e1626; --sheet-edge: #1c2942; --muted: #6c7f9c;
+  }
+  @media (prefers-reduced-motion: reduce) { :root { --motion-fast: 0ms; --motion-base: 0ms; } }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.55;
+    background: var(--bg); color: var(--text); padding: 120px 16px 60px; }
+  @media (min-width: 900px) { body { padding-top: 84px; } }
+  code { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: .92em; }
+
+  /* ── Панель выбора и записка владельцу (дом стиля макетов) ── */
+  .picker { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap; padding: 10px 14px; background: var(--sheet); border-bottom: 1px solid var(--sheet-edge);
+    font-size: 13px; color: var(--text); }
+  .picker b { color: var(--heading); margin-right: 4px; }
+  .picker button { font: inherit; cursor: pointer; padding: 6px 11px; border-radius: 9px;
+    border: 1px solid var(--sheet-edge); background: var(--bg); color: var(--text); }
+  .picker button.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+  .picker .sp { flex: 1; }
+  .scene { max-width: 980px; margin: 0 auto 22px; padding: 14px 16px; border-radius: 12px; background: var(--sheet);
+    border: 1px solid var(--sheet-edge); font-size: 13px; line-height: 1.6; }
+  .scene p + p { margin-top: 8px; }
+  .scene b { color: var(--heading); }
+  .scene ul { margin: 4px 0 0 18px; }
+  .scene li { margin: 2px 0; }
+  .scene .cost { color: var(--muted); }
+
+  #stage { margin: 0 auto; }
+  #stage[data-w="390"]  { max-width: 390px; }
+  #stage[data-w="1440"] { max-width: 1280px; }
+  .variant { visibility: hidden; height: 0; overflow: hidden; }
+  .variant.active { visibility: visible; height: auto; overflow: visible; }
+  .caption { margin: 0 auto 8px; font-size: 12px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .12em; font-weight: 700; }
+
+  /* Рамка страницы: у публичных страниц нет рельса — шапка и колонна (PublicBar + article.test). */
+  .page { border-radius: 16px; border: 1px solid var(--edge); background: var(--bg); background-image: var(--hero-wash);
+    background-repeat: no-repeat; box-shadow: var(--card-shadow); overflow: hidden; color: var(--text); }
+
+  /* ── Шапка публичной страницы — PublicBar.svelte + HeadControls.svelte ── */
+  .bar { display: flex; align-items: center; gap: .6rem; min-height: 52px; padding: 0 1rem;
+    background: var(--panel); border-bottom: 1px solid var(--edge); }
+  .bar .brandlink { display: flex; align-items: center; gap: .5rem; font-weight: 700; color: var(--heading); }
+  .bar .hc { margin-left: auto; display: flex; align-items: center; gap: 9px; flex: none; }
+  .bar .sq { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; color: var(--dim);
+    background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 10px; font-size: 12px; font-weight: 700; }
+  .bar .sq svg { width: 15px; height: 15px; fill: currentColor; }
+  :root[data-theme="light"] .bar .sq .moon { display: none; }
+  :root[data-theme="dark"]  .bar .sq .sun { display: none; }
+  .bar .enter { padding: .4rem .9rem; border-radius: 999px; background: var(--primary); color: var(--primary-ink);
+    font-weight: 600; font-size: .85rem; }
+  .brand { overflow: visible; display: block; }
+  .brand .halo { display: none; }
+  :root[data-theme="dark"] .brand .halo { display: initial; }
+
+  /* ── Колонна страницы теста — test/[slug]/+page.svelte ── */
+  .test { padding: 1.5rem 1rem 3.5rem; }
+  #stage[data-w="1440"] .test { max-width: 64rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  h1 { margin: 0; font-size: 1.5rem; line-height: 1.18; color: var(--heading); font-weight: 750; }
+  #stage[data-w="1440"] h1 { font-size: 2.1rem; }
+  .sub { margin: .5rem 0 0; font-size: .95rem; line-height: 1.55; color: var(--dim); }
+  #stage[data-w="1440"] .sub { max-width: 46rem; font-size: 1rem; }
+  .lede { display: flex; flex-wrap: wrap; gap: .35rem .8rem; margin: .6rem 0 0; font-size: .78rem; color: var(--faint); }
+  .lede i { font-style: normal; color: var(--ok); }
+  .block { margin-top: 1rem; }
+  .two { display: grid; gap: .9rem; margin-top: 1rem; }
+  .side { display: grid; gap: .9rem; align-content: start; }
+  #stage[data-w="1440"] .two { align-items: start; }
+
+  /* ── Тест: строки главной (.srow) со звёздами 0–10 страницы теста (.st) ── */
+  .play { background: var(--panel); border: 1px solid var(--edge); border-radius: 16px; box-shadow: var(--card-shadow); padding: 4px 0 6px; }
+  .play-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 14px 0; }
+  .play-head .ph-t { font-size: .8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+  .play-head .ph-p { font-size: .78rem; font-weight: 600; color: var(--dim); white-space: nowrap; }
+  .play-head .ph-p b { color: var(--heading); }
+  .hint { padding: 2px 14px 6px; font-size: .74rem; color: var(--faint); }
+  .rows { display: flex; flex-direction: column; }
+  .srow { padding: 8px 12px 6px; }
+  .srow + .srow { border-top: 1px solid var(--edge-soft); }
+  .srow .t { color: var(--heading); font-weight: 700; font-size: 14.5px; line-height: 1.3; overflow-wrap: anywhere; }
+  .srow .kind { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-right: 6px; }
+  .srow .yr { color: var(--dim); font-weight: 500; }
+  .srow .rby { color: var(--faint); font-weight: 500; font-size: 12px; white-space: nowrap; }
+  /* Десктоп: двенадцать строк теста — в две колонны на всю ширину, приглашение и пример — парой под тестом.
+     Одной колонной тест уходил на 950 px вниз, и справа от него стояло пустое поле (кадр V1-1440, первый заход). */
+  #stage[data-w="1440"] .two.wide { grid-template-columns: 1fr; }
+  #stage[data-w="1440"] .two.wide .rows { display: grid; grid-template-columns: 1fr 1fr; }
+  #stage[data-w="1440"] .two.wide .srow { border-top: 1px solid var(--edge-soft); }
+  #stage[data-w="1440"] .two.wide .srow:nth-child(-n+2) { border-top: 0; }
+  #stage[data-w="1440"] .two.wide .srow:nth-child(odd) { border-right: 1px solid var(--edge-soft); }
+  #stage[data-w="1440"] .two.wide .side { grid-template-columns: 1fr 1fr; align-items: start; }
+  /* V2: образец слева сверху, приглашение под ним, тест справа во всю высоту; на телефоне — образец, тест, приглашение. */
+  #stage[data-w="1440"] .two.flip { grid-template-columns: 1fr 1.25fr; grid-template-areas: "s t" "i t"; grid-template-rows: auto 1fr; }
+  #stage[data-w="1440"] .two.flip > .sample { grid-area: s; }
+  #stage[data-w="1440"] .two.flip > .play { grid-area: t; }
+  #stage[data-w="1440"] .two.flip > .invite { grid-area: i; }
+  /* V2 на телефоне: образец компактнее, чтобы первая строка теста осталась в первом экране 390×844. */
+  #stage[data-w="390"] #v2 .legend, #stage[data-w="390"] #v2 .sample h2.sh { display: none; }
+  #stage[data-w="390"] #v2 .sample .facts li { padding: .3rem 0; }
+  .starsrow { display: flex; gap: 2px; margin-top: 3px; }
+  .st { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; background: none; border: 0;
+    cursor: pointer; border-radius: 9px; padding: 3px 0; font: inherit; transition: background .15s ease, transform .12s ease; }
+  @media (hover: hover) { .st:hover { background: var(--edge-soft); transform: translateY(-2px); } }
+  .st i { font-style: normal; font-size: 20px; line-height: 1; color: color-mix(in srgb, var(--faint) 55%, transparent);
+    transition: color .15s ease, transform .15s ease, filter .15s ease; }
+  .st b { font-size: 10px; font-weight: 600; color: var(--faint); transition: color .15s ease; }
+  .st.fill i, .st.fill b { color: #f5a524; }
+  .st.peak i { color: #ffc247; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--glow) 45%, transparent)); transform: scale(1.12); }
+  .st.peak b { color: #ffc247; }
+  .st.zero i, .st.zero b { color: var(--faint); }
+  .st.zero i { transform: scale(1.08); }
+
+  /* ── Приглашение второго — .invite страницы теста ── */
+  .invite { padding: .9rem 1rem; border: 1.5px dashed var(--accent); border-radius: 16px; }
+  .invite h2 { margin: 0 0 .45rem; font-size: .95rem; color: var(--heading); }
+  .invite p { margin: 0; font-size: .85rem; line-height: 1.5; }
+  .invite .fine { margin-top: .5rem; font-size: .73rem; color: var(--faint); }
+
+  /* ── Карточка результата — .result/.pair страницы теста ── */
+  .sample h2.sh { margin: 0 0 .45rem; font-size: 1.05rem; color: var(--heading); }
+  .pair { padding: .95rem 1rem; background: var(--panel); border: 1px solid var(--edge); border-radius: 16px; box-shadow: var(--card-shadow); }
+  .pair .cap { margin: 0 0 .4rem; font-size: .78rem; color: var(--faint); }
+  .bigcount { display: flex; align-items: baseline; gap: .5rem; }
+  .bigcount .n { font-size: 2.1rem; font-weight: 800; line-height: 1; color: var(--heading); }
+  .bigcount span:last-child { color: var(--text); font-weight: 600; }
+  .subcount { margin: .15rem 0 .4rem; font-size: .8rem; color: var(--dim); }
+  .facts { list-style: none; }
+  .facts li { display: flex; gap: .55rem; align-items: flex-start; padding: .4rem 0; font-size: .87rem; line-height: 1.45; }
+  .facts li + li { border-top: 1px dashed var(--edge); }
+  .facts .ic { flex: none; width: 1.3rem; text-align: center; }
+  .rfoot { margin-top: .5rem; font-size: .8rem; color: var(--dim); }
+  .legend { margin-top: .6rem; padding-top: .55rem; border-top: 1px solid var(--edge-soft); display: grid; gap: .2rem;
+    font-size: .76rem; color: var(--dim); line-height: 1.45; }
+
+  /* ── Руководство под делом ── */
+  .guide { margin-top: 2.2rem; }
+  #stage[data-w="1440"] .guide { max-width: 46rem; }
+  .guide h2 { margin: 1.9rem 0 .6rem; font-size: 1.28rem; line-height: 1.25; color: var(--heading); font-weight: 750; }
+  .guide > section:first-child h2 { margin-top: 0; }
+  #stage[data-w="1440"] .guide h2 { font-size: 1.45rem; }
+  .guide p { margin: 0 0 .75rem; font-size: .95rem; line-height: 1.68; }
+  #stage[data-w="1440"] .guide p { font-size: 1rem; }
+  .guide b { color: var(--heading); }
+  .guide ol { margin: 0 0 .9rem; padding: 0; list-style: none; counter-reset: s; display: grid; gap: .55rem; }
+  .guide ol li { counter-increment: s; display: flex; gap: .7rem; align-items: flex-start; font-size: .95rem; line-height: 1.6; }
+  .guide ol li::before { content: counter(s); flex: none; display: grid; place-items: center; width: 24px; height: 24px; margin-top: 1px;
+    border-radius: 999px; background: var(--primary); color: var(--primary-ink); font-size: .75rem; font-weight: 700; }
+  .guide ul.kinds { list-style: none; margin: 0 0 .9rem; display: grid; gap: .45rem; }
+  .guide ul.kinds li { display: flex; gap: .6rem; align-items: flex-start; font-size: .95rem; line-height: 1.6; }
+  .guide ul.kinds .ic { flex: none; width: 1.4rem; text-align: center; }
+  .updated { margin-top: 1rem; font-size: .78rem; color: var(--faint); }
+
+  /* ── Частые вопросы: плавное раскрытие, приём главной (::details-content) ── */
+  .faq { margin-top: .3rem; }
+  .faq details { border-bottom: 1px solid var(--edge); padding: 13px 2px; }
+  .faq details:first-of-type { border-top: 1px solid var(--edge); }
+  .faq summary { cursor: pointer; color: var(--heading); font-weight: 700; font-size: .95rem; list-style: none;
+    display: flex; justify-content: space-between; gap: 12px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; color: var(--dim); font-size: 20px; line-height: 1; transition: transform var(--motion-base) var(--motion-ease); }
+  .faq details[open] summary::after { content: '−'; transform: rotate(180deg); }
+  .faq details p { margin: 8px 0 0; font-size: .92rem; line-height: 1.62; }
+  @supports (interpolate-size: allow-keywords) and selector(::details-content) {
+    .faq details { interpolate-size: allow-keywords; }
+    .faq details::details-content { block-size: 0; overflow: hidden; opacity: 0;
+      transition: block-size var(--motion-base) var(--motion-ease), opacity var(--motion-base) var(--motion-ease),
+        content-visibility var(--motion-base) allow-discrete; }
+    .faq details[open]::details-content { block-size: auto; opacity: 1; }
+  }
+
+  .cross { display: flex; flex-direction: column; gap: .4rem; margin-top: 1.6rem; }
+  .cross .cross-t { font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--dim); }
+  .cross a { font-size: .9rem; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .foot { margin-top: 1.6rem; padding-top: .8rem; border-top: 1px solid var(--edge); font-size: .78rem; line-height: 1.55; color: var(--faint); }
+
+  /* ── V3: три шага первым экраном ── */
+  .both { display: flex; align-items: center; gap: .6rem; margin-top: .8rem; padding: .6rem .8rem; border-radius: 12px;
+    background: color-mix(in srgb, var(--primary) 8%, transparent); border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); }
+  :root[data-theme="dark"] .both { background: color-mix(in srgb, var(--accent) 8%, transparent); border-color: color-mix(in srgb, var(--accent) 28%, transparent); }
+  .both svg { flex: none; width: 22px; height: 22px; fill: var(--primary); }
+  :root[data-theme="dark"] .both svg { fill: var(--accent); }
+  .both b { display: block; color: var(--heading); font-size: .95rem; }
+  .both span { font-size: .82rem; color: var(--dim); }
+  .steps3 { margin-top: 1rem; }
+  .steps3 h2 { margin: 0 0 .6rem; font-size: 1.05rem; color: var(--heading); }
+  .steps3 .grid { display: grid; gap: .6rem; }
+  #stage[data-w="1440"] .steps3 .grid { grid-template-columns: repeat(3, 1fr); }
+  .step { display: flex; flex-direction: column; gap: .45rem; padding: .85rem .9rem; background: var(--panel); border: 1px solid var(--edge);
+    border-radius: 16px; box-shadow: var(--card-shadow); }
+  .step .top { display: flex; align-items: center; gap: .55rem; }
+  .step .n { display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 999px; background: var(--primary);
+    color: var(--primary-ink); font-size: .8rem; font-weight: 700; }
+  .step .top b { font-size: 1rem; color: var(--heading); }
+  .step p { font-size: .85rem; line-height: 1.5; }
+  .step .mini { margin-top: auto; padding-top: .45rem; border-top: 1px dashed var(--edge); }
+  .step .mini .starsrow { margin: 0; }
+  .step .mini .st { cursor: default; padding: 1px 0; }
+  .step .mini .st i { font-size: 15px; }
+  .step .mini .st b { font-size: 9px; }
+  .share { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+  .share code { flex: 1; min-width: 0; overflow-wrap: anywhere; padding: .35rem .6rem; background: var(--edge-soft); border-radius: 8px; font-size: .72rem; color: var(--text); }
+  .share .copy { flex: none; padding: .35rem .8rem; border: 1px solid var(--edge); border-radius: 999px; background: transparent; color: var(--dim);
+    font: inherit; font-size: .78rem; font-weight: 600; }
+  .step .mini .facts li { padding: 0; font-size: .82rem; }
+
+  /* ── V4: мост от пары к людям Пространства ── */
+  .bridgebox { margin-top: 1.3rem; padding: 1.1rem 1rem 1.2rem; border-radius: 18px; background: var(--panel);
+    border: 1px solid var(--edge); box-shadow: var(--card-shadow); background-image: var(--hero-wash); }
+  #stage[data-w="1440"] .bridgebox { padding: 1.5rem 1.6rem 1.6rem; }
+  .kicker { font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; font-weight: 700; color: var(--primary); }
+  :root[data-theme="dark"] .kicker { color: var(--accent); }
+  .bridgebox h2 { margin: .35rem 0 .5rem; font-size: 1.3rem; line-height: 1.22; color: var(--heading); font-weight: 800; }
+  #stage[data-w="1440"] .bridgebox h2 { font-size: 1.6rem; max-width: 40rem; }
+  .bridgebox > p { font-size: .92rem; line-height: 1.62; }
+  #stage[data-w="1440"] .bridgebox > p { max-width: 46rem; font-size: 1rem; }
+  .nums-card { margin-top: .9rem; background: var(--panel-solid); border: 1px solid var(--edge); border-radius: 16px; }
+  :root[data-theme="dark"] .nums-card { background: var(--panel); }
+  .nums-title { font-size: 12px; font-weight: 700; color: var(--up); letter-spacing: .08em; text-transform: uppercase; display: flex;
+    align-items: center; gap: 7px; padding: 12px 14px 0; }
+  .nums-title::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--up);
+    box-shadow: 0 0 0 4px rgba(14,165,120,.18); animation: beat 2s infinite; }
+  @keyframes beat { 50% { box-shadow: 0 0 0 7px rgba(14,165,120,.06); } }
+  .nums { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 10px; padding: 12px 14px 14px; list-style: none; }
+  #stage[data-w="1440"] .nums { grid-template-columns: repeat(4, 1fr); }
+  .nums b { display: block; font-size: 24px; font-weight: 800; color: var(--heading); font-variant-numeric: tabular-nums; }
+  .nums span { font-size: 12.5px; color: var(--dim); line-height: 1.3; }
+  .rated-t { margin-top: 1rem; font-size: .85rem; font-weight: 600; color: var(--heading); }
+  .rated { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-top: .5rem; }
+  .rated li { padding: 5px 10px; border-radius: 10px; background: var(--edge-soft); font-size: .78rem; line-height: 1.35; color: var(--text); }
+  .rated li b { color: var(--heading); }
+  .go { display: flex; flex-wrap: wrap; gap: 16px 26px; margin-top: 1.3rem; align-items: center; }
+  .bridge { position: relative; display: inline-flex; align-items: center; justify-content: center; padding: 13px 22px; border-radius: 14px;
+    background: var(--primary); color: #fff; font-weight: 800; font-size: 15px; isolation: isolate; text-align: center; }
+  .bridge::before, .bridge::after { content: ''; position: absolute; inset: 0; border-radius: 14px; border: 2px solid var(--primary); z-index: -1;
+    animation: wave 2.4s ease-out infinite; }
+  .bridge::after { animation-delay: 1.2s; }
+  /* Волна уже, чем на главной: там кнопка стоит одна, здесь рядом вторая, и широкая волна ложилась на неё (кадр V4-1440). */
+  @keyframes wave { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.06, 1.3); opacity: 0; } }
+  .ghostbtn { padding: 12px 18px; border-radius: 14px; border: 1px solid var(--ghost-brd); color: var(--ghost-ink); font-weight: 700; font-size: 14.5px; }
+  #stage[data-w="390"] .go .bridge, #stage[data-w="390"] .go .ghostbtn { width: 100%; }
+  #stage[data-w="390"] .go .ghostbtn { text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <b>Тест на совместимость для двоих</b>
+  <button data-v="1" class="active">V1 Дело сверху, руководство под делом</button>
+  <button data-v="2">V2 Образец результата первым</button>
+  <button data-v="3">V3 Три шага, оба со своих устройств</button>
+  <button data-v="4">V4 От пары к людям Пространства</button>
+  <span class="sp"></span>
+  <button id="width">390 ↔ 1440</button>
+  <button id="theme">тема</button>
+</div>
+
+<div class="scene">
+  <p><b>Что это.</b> Страница «Тест на совместимость для двоих» — переделка нашей страницы
+  <code>/ru/test/compatibility</code>, адрес остаётся тем же. Заказ — «чиним приток юзеров».</p>
+  <p><b>Спрос.</b> «тест на совместимость» — 62 467 показов в месяц; внутри: «для двоих» 16 508 · «пары» 7 504 ·
+  «мужчины и женщины» 4 980 · «бесплатно» 3 473 · «онлайн» 3 357 · «отвечают оба» 1 125 · «без регистрации» 105
+  (Вордстат 2026-08-14; разведка «Страницы под запросы людей», <code>researches/76</code> §2.1). Наша страница в индексе,
+  и за три месяца Google показал её ноль раз: на ней 2 068 знаков при медиане лидеров около 6 000, подзаголовки словами
+  жеста («Ваша анкета растёт») и ни одной ссылки из каталога (там же, §5).</p>
+  <p><b>Общее у всех четырёх.</b> Заголовок — дословно словами уточнения «для двоих». Тест — первым делом на экране
+  телефона. Под тестом — текст разделами, подзаголовки и вопросы словами уточнений. Двенадцать вещей — настоящий набор
+  сборки 25 сентября (самые оценённые вещи каталога) с настоящими «уже оценили: N». Результат — вещи и две оценки,
+  ровно как считает код. Число совпадений над строками результата — новое для этой страницы; на странице «Калькулятор
+  любви» оно уже живёт, разведка называет его разрешённым числом (§5.2). Тест нарисован строками главной, как в заказе;
+  в бою сегодня тест показывает одну карточку за раз — выбор формы тоже за Вами.</p>
+  <p><b>Чем различаются.</b></p>
+  <ul>
+    <li><b>V1 «Дело сверху, руководство под делом»</b> — заголовок, факты, сразу строки со звёздами (на десктопе —
+      двумя колоннами); под тестом приглашение и пример результата; ниже полный текст: пять разделов и восемь частых
+      вопросов.
+      <span class="cost">Цена: образец результата на телефоне — только после двенадцати строк теста.</span></li>
+    <li><b>V2 «Образец результата первым»</b> — карточка «Вы и Аня» с числом совпадений стоит над тестом (на
+      десктопе — слева от теста); текст под делом короче. <span class="cost">Цена: первая строка теста на телефоне
+      стоит у самого низа первого экрана (827 px при высоте экрана 844); текста под делом втрое меньше, чем в V1.</span></li>
+    <li><b>V3 «Три шага, оба со своих устройств»</b> — строка «Каждый отвечает со своего телефона» и три карточки шагов
+      с кусочками настоящего интерфейса, потом тест. <span class="cost">Цена: первая строка теста на телефоне уходит
+      на второй экран (1 043 px).</span></li>
+    <li><b>V4 «От пары к людям Пространства»</b> — тест и результат пары, под ними блок «В Пространстве NDim Space есть
+      и другие люди с похожими оценками»: живые числа Пространства и «уже оценили» у вещей теста, кнопка к людям.
+      <span class="cost">Цена: ещё один крупный блок до текста; числа Пространства пока скромные — 95 человек.</span></li>
+  </ul>
+  <p><b>Объём текста под делом</b> (разделы и частые вопросы, знаки глазами робота): V1 — 6 179 · V2 — 2 461 ·
+  V3 — 3 617 · V4 — 6 053 и ещё 1 251 в блоке-мосте. Сегодня на всей странице 2 068, медиана лидеров — 5 974.</p>
+  <p><b>Сознательно не показано.</b> Чисел похожести на странице нет — закон «числа похожести наружу не отдаём»
+  (№018 В4, №023). В V4 нет ни людей, ни их оценок — только счётчики (№002 В4). Разметка для поисковиков и ссылки из
+  каталога на эту страницу — фаза разработки плана «Страницы под запросы людей», в вид страницы они не входят.</p>
+  <p><b>Тексты на странице — черновик агента на Вашу вычитку</b> (фаза «Тексты» того же плана); написаны по шести
+  запретам портрета и словами запросов.</p>
+</div>
+
+<div id="stage" data-w="390">
+
+  <!-- ═══════ V1 «Дело сверху, руководство под делом» ═══════ -->
+  <div class="variant active" id="v1">
+    <p class="caption">V1 · Дело сверху, руководство под делом</p>
+    <div class="page">
+      <div data-use="bar"></div>
+      <article class="test">
+        <h1>Тест на совместимость для двоих</h1>
+        <p class="sub">Вы и второй человек оцениваете одинаковые 12 вещей — фильмы, книги, сериалы и привычки — звёздами
+        от 0 до 10. Каждый отвечает со своего телефона. Результат называет вещи, в которых ваши оценки совпали, и вещи,
+        которые вы видите по-разному.</p>
+        <div data-use="facts"></div>
+        <div class="two wide">
+          <div data-use="test"></div>
+          <div class="side">
+            <div data-use="invite"></div>
+            <div data-use="sample"></div>
+          </div>
+        </div>
+        <div class="guide">
+          <div data-use="t-how"></div>
+          <div data-use="t-result"></div>
+          <div data-use="t-why"></div>
+          <div data-use="t-online"></div>
+          <section>
+            <div data-use="t-faq-h"></div>
+            <div class="faq" data-faq="f1,f2,f3,f4,f5,f10,f6,f7"></div>
+          </section>
+          <div data-use="cross"></div>
+        </div>
+        <div data-use="foot"></div>
+      </article>
+    </div>
+  </div>
+
+  <!-- ═══════ V2 «Образец результата первым» ═══════ -->
+  <div class="variant" id="v2">
+    <p class="caption">V2 · Образец результата первым</p>
+    <div class="page">
+      <div data-use="bar"></div>
+      <article class="test">
+        <h1>Тест на совместимость для двоих</h1>
+        <p class="sub">Каждый отвечает со своего телефона.</p>
+        <div data-use="facts"></div>
+        <div class="two flip">
+          <div data-use="sample-first"></div>
+          <div data-use="test"></div>
+          <div data-use="invite"></div>
+        </div>
+        <div class="guide">
+          <div data-use="t-how-short"></div>
+          <div data-use="t-why-short"></div>
+          <div data-use="t-online-short"></div>
+          <section>
+            <div data-use="t-faq-h"></div>
+            <div class="faq" data-faq="f1,f3,f4,f5,f6"></div>
+          </section>
+          <div data-use="cross"></div>
+        </div>
+        <div data-use="foot"></div>
+      </article>
+    </div>
+  </div>
+
+  <!-- ═══════ V3 «Три шага и оба со своих устройств» ═══════ -->
+  <div class="variant" id="v3">
+    <p class="caption">V3 · Три шага, оба со своих устройств</p>
+    <div class="page">
+      <div data-use="bar"></div>
+      <article class="test">
+        <h1>Тест на совместимость для двоих</h1>
+        <div class="both">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/><path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/></svg>
+          <div><b>Каждый отвечает со своего телефона</b><span>Вы оцениваете вещи у себя, второй человек оценивает у себя — по личной ссылке.</span></div>
+        </div>
+        <div data-use="facts"></div>
+        <section class="steps3">
+          <h2>Как пройти тест на совместимость вдвоём</h2>
+          <div class="grid">
+            <div class="step">
+              <div class="top"><span class="n">1</span><b>Оцените</b></div>
+              <p>12 вещей звёздами от 0 до 10: фильмы, книги, сериалы и привычки. Около трёх минут.</p>
+              <div class="mini" data-use="mini-stars"></div>
+            </div>
+            <div class="step">
+              <div class="top"><span class="n">2</span><b>Отправьте ссылку</b></div>
+              <p>Нажмите «Создать личную ссылку» и отправьте ссылку второму. Второй оценивает двенадцать вещей теста на своём телефоне.</p>
+              <div class="mini"><p class="share"><code>ndimspace.app/ru/test/compatibility?pair=…</code><span class="copy">Скопировать</span></p></div>
+            </div>
+            <div class="step">
+              <div class="top"><span class="n">3</span><b>Смотрите совпадения</b></div>
+              <p>Результат называет вещи, в которых вы совпали, и вещи, которые вы видите по-разному. Результат видите только вы двое.</p>
+              <div class="mini"><ul class="facts"><li><span class="ic">⭐</span><span>Вы оба поставили 10 — Побег из Шоушенка · Фильм, 1994</span></li></ul></div>
+            </div>
+          </div>
+        </section>
+        <div class="two wide">
+          <div data-use="test"></div>
+          <div class="side">
+            <div data-use="invite"></div>
+            <div data-use="sample"></div>
+          </div>
+        </div>
+        <div class="guide">
+          <div data-use="t-result"></div>
+          <div data-use="t-why-short"></div>
+          <div data-use="t-online"></div>
+          <section>
+            <div data-use="t-faq-h"></div>
+            <div class="faq" data-faq="f1,f3,f4,f5,f6,f7"></div>
+          </section>
+          <div data-use="cross"></div>
+        </div>
+        <div data-use="foot"></div>
+      </article>
+    </div>
+  </div>
+
+  <!-- ═══════ V4 «От пары к людям Пространства» ═══════ -->
+  <div class="variant" id="v4">
+    <p class="caption">V4 · От пары к людям Пространства</p>
+    <div class="page">
+      <div data-use="bar"></div>
+      <article class="test">
+        <h1>Тест на совместимость для двоих</h1>
+        <p class="sub">Вы и второй человек оцениваете одинаковые 12 вещей, каждый со своего телефона. Результат называет
+        вещи, в которых вы совпали. После теста Пространство NDim Space ищет по Вашим оценкам и других людей, похожих на Вас.</p>
+        <div data-use="facts"></div>
+        <div class="two wide">
+          <div data-use="test"></div>
+          <div class="side">
+            <div data-use="invite"></div>
+            <div data-use="sample"></div>
+          </div>
+        </div>
+        <section class="bridgebox">
+          <p class="kicker">После теста</p>
+          <h2>В Пространстве NDim Space есть и другие люди с похожими оценками</h2>
+          <p>Ваши оценки теста уже лежат в Вашем NDim ID — анкете, где собраны все вещи, которые Вы оценили, вместе с
+          Вашими оценками. По этой анкете Пространство NDim Space ищет людей, чьи оценки похожи на Ваши, и собирает самых
+          похожих в разделе «Связи». Каждая новая оценка вещи каталога добавляет Пространству данных для подбора людей.</p>
+          <div class="nums-card">
+            <p class="nums-title">Пространство NDim Space в числах</p>
+            <ul class="nums">
+              <li><b>5 153</b><span>объектов человеческой культуры</span></li>
+              <li><b>4 077</b><span>оценок поставлено</span></li>
+              <li><b>95</b><span>человек в Пространстве</span></li>
+              <li><b>2 368</b><span>связей рассчитано</span></li>
+            </ul>
+          </div>
+          <p class="rated-t">Вещи этого теста уже оценили люди Пространства NDim Space:</p>
+          <ul class="rated" data-use="rated"></ul>
+          <div class="go">
+            <span class="bridge">Найти людей с похожими оценками</span>
+            <span class="ghostbtn">Сохранить мою анкету</span>
+          </div>
+        </section>
+        <div class="guide">
+          <div data-use="t-how"></div>
+          <div data-use="t-result"></div>
+          <div data-use="t-why"></div>
+          <div data-use="t-online"></div>
+          <section>
+            <div data-use="t-faq-h"></div>
+            <div class="faq" data-faq="f1,f2,f3,f4,f5,f6,f9"></div>
+          </section>
+          <div data-use="cross"></div>
+        </div>
+        <div data-use="foot"></div>
+      </article>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════ ТЕКСТЫ СТРАНИЦЫ — черновик агента на вычитку владельцу ═══════════════ -->
+
+<template id="t-how"><section>
+  <h2>Как пройти тест на совместимость вдвоём</h2>
+  <p>Тест на совместимость для двоих в Пространстве NDim Space проходится в три шага. Каждый из двоих делает свою часть
+  сам, на своём телефоне или компьютере.</p>
+  <ol>
+    <li><span><b>Оцените 12 вещей</b> звёздами от 0 до 10. Ноль значит «совсем не моё», десять — «это про меня». Вещь,
+    которую Вы не знаете, пропустите: результат сравнивает вещи, которые оценили вы оба.</span></li>
+    <li><span><b>Отправьте личную ссылку второму.</b> Нажмите «Создать личную ссылку» и отправьте ссылку в мессенджере,
+    в письме, где Вам удобно. Второй человек открывает ссылку у себя и оценивает двенадцать вещей теста.</span></li>
+    <li><span><b>Смотрите совпадения.</b> Второй нажимает «Сравнить ответы», и результат появляется у вас обоих:
+    совпадения, близкие оценки и вещи, которые вы видите по-разному.</span></li>
+  </ol>
+  <p>Весь тест занимает около трёх минут. Оценки второго человека Вы видите после того, как оценили оба, — поэтому каждая
+  оценка остаётся собственным ответом человека.</p>
+  <p>Сравниться можно с несколькими людьми. Ваши оценки остаются в Вашей анкете, и для каждого нового человека
+  создаётся своя личная ссылка: одна ссылка — одна пара.</p>
+  <p>Двенадцать вещей теста — самые оценённые вещи каталога Пространства NDim Space: «Гарри Поттер и философский камень»
+  — фильм 2001 года и роман 1997 года, «Побег из Шоушенка», «Матрица», «Доктор Хаус», «Гладиатор», «Пираты Карибского
+  моря: На краю света» и ещё пять. Самые оценённые вещи чаще других знакомы обоим, и двоим есть что сравнить.</p>
+</section></template>
+
+<template id="t-how-short"><section>
+  <h2>Как пройти тест на совместимость вдвоём</h2>
+  <p>Оцените 12 вещей звёздами от 0 до 10 и отправьте личную ссылку второму человеку. Второй открывает ссылку на своём
+  телефоне, оценивает двенадцать вещей теста и нажимает «Сравнить ответы». Результат появляется у вас обоих — такой,
+  как в примере наверху страницы. Весь тест занимает около трёх минут.</p>
+</section></template>
+
+<template id="t-result"><section>
+  <h2>Что показывает результат теста на совместимость</h2>
+  <p>Результат теста на совместимость называет вещи. Каждая строка результата — одна вещь и две оценки: Ваша и оценка
+  второго человека. Строки результата бывают трёх видов.</p>
+  <ul class="kinds">
+    <li><span class="ic">⭐</span><span><b>Совпадение</b> — вы оба оценили вещь одинаково. Пример: «Вы оба
+    поставили 10 — Побег из Шоушенка · Фильм, 1994».</span></li>
+    <li><span class="ic">🤝</span><span><b>Рядом</b> — ваши оценки отличаются на одну звезду. Пример: «Вы рядом
+    в „Доктор Хаус · Телесериал, 2004“: 7 и 8».</span></li>
+    <li><span class="ic">💬</span><span><b>По-разному</b> — ваши оценки расходятся на четыре звезды и больше. Пример:
+    «„Гарри Поттер и Тайная комната · Роман, 1998“ вы видите по-разному (8 и 2) — будет о чём поговорить».</span></li>
+  </ul>
+  <p>Над строками стоит число совпадений и число общих «десяток» — вещей, которым вы оба поставили 10. Под строками —
+  сколько вещей оценили вы оба. Каждую строку результата можно проверить: вещь названа, обе оценки стоят рядом.</p>
+  <p>Результат видите только вы двое. Кнопка «Удалить пару и ссылку» удаляет пару вместе с ответами обоих.</p>
+</section></template>
+
+<template id="t-why"><section>
+  <h2>Почему совпадение оценок говорит о совместимости пары</h2>
+  <p>Оценка вещи — это короткий ответ человека на вопрос: насколько эта вещь про меня? Фильм, книга, сериал, привычка —
+  каждая вещь несёт свой мир: свой юмор, своих героев, свой темп, свои ценности. Высокая оценка говорит: этот мир мне
+  близок.</p>
+  <p>Одно совпадение двух людей бывает случайным. Совпадения по многим вещам складываются в рисунок — общий юмор, общие
+  любимые истории, общий взгляд на то, что важно. Такой рисунок и есть совместимость двух людей по вкусам.</p>
+  <p>Расхождения работают на пару тоже. Вещь, которую вы видите по-разному, — готовая тема для разговора: почему
+  «Матрица» у Вас на 10 и у второго на 3?</p>
+  <p>По этому принципу Пространство NDim Space ищет похожих людей — по всем оценкам человека сразу. Каждая вещь каталога —
+  Измерение Пространства, и оценка человека задаёт его место на этом Измерении. Сходство двух людей Пространство
+  измеряет двумя мерами. Общность показывает, насколько совпадают интересы двоих: сколько вещей оценили оба. Близость
+  показывает, насколько похожи их оценки общих вещей. Общность, умноженная на Близость, называется Похожестью. По
+  Похожести Пространство NDim Space подбирает каждому человеку его Связи — самых похожих на него людей.</p>
+</section></template>
+
+<template id="t-why-short"><section>
+  <h2>Почему совпадение оценок говорит о совместимости пары</h2>
+  <p>Оценка вещи — это короткий ответ человека на вопрос: насколько эта вещь про меня? Каждая вещь несёт свой мир: юмор,
+  героев, темп, ценности. Совпадения двух людей по многим вещам складываются в рисунок — общий юмор, общие любимые
+  истории, общий взгляд на то, что важно. Такой рисунок и есть совместимость двух людей по вкусам.</p>
+  <p>По этому принципу Пространство NDim Space ищет похожих людей по всем оценкам человека сразу и собирает самых
+  похожих в раздел «Связи».</p>
+</section></template>
+
+<template id="t-online"><section>
+  <h2>Тест на совместимость онлайн и бесплатно</h2>
+  <p>Тест на совместимость проходится онлайн, прямо на этой странице, в браузере телефона или компьютера. Тест
+  бесплатный целиком: оценки, личная ссылка и результат пары. Второй человек отвечает с любого устройства, где есть
+  браузер, — личная ссылка открывает тест прямо там.</p>
+  <p>Тест проходится без регистрации: первая оценка сразу создаёт Вашу гостевую анкету. Гостевая анкета хранится 7 дней.
+  Кнопка «Сохранить мою анкету» сохраняет анкету за Вами: Вы входите в Пространство NDim Space, и все оценки остаются
+  с Вами.</p>
+  <p>Ваша анкета называется NDim ID — это все вещи, которые Вы оценили, вместе с Вашими оценками. Каждая оценка теста
+  уже лежит в Вашем NDim ID. По NDim ID Пространство NDim Space находит Вам людей с похожими оценками — Ваши Связи.</p>
+</section></template>
+
+<template id="t-online-short"><section>
+  <h2>Тест на совместимость онлайн и бесплатно</h2>
+  <p>Тест на совместимость проходится онлайн, прямо на этой странице, бесплатно и без регистрации: первая оценка сразу
+  создаёт Вашу гостевую анкету. Гостевая анкета хранится 7 дней, кнопка «Сохранить мою анкету» сохраняет её за Вами.
+  Ваша анкета называется NDim ID: в ней все вещи, которые Вы оценили, и по ней Пространство NDim Space находит Вам людей
+  с похожими оценками.</p>
+</section></template>
+
+<template id="t-faq-h"><h2>Частые вопросы о тесте на совместимость</h2></template>
+
+<template id="f1"><details open><summary>Тест на совместимость для двоих — отвечают оба?</summary>
+  <p>Да, отвечают оба. Каждый из двоих оценивает вещи сам, со своего телефона или компьютера. Первый человек оценивает
+  12 вещей и отправляет личную ссылку, второй открывает ссылку и оценивает двенадцать вещей теста. Результат строится
+  по оценкам обоих.</p></details></template>
+<template id="f2"><details><summary>Как пройти тест на совместимость пары онлайн?</summary>
+  <p>Оцените 12 вещей на этой странице, нажмите «Создать личную ссылку» и отправьте ссылку второму. Второй оценивает
+  вещи теста у себя и нажимает «Сравнить ответы» — результат появляется у вас обоих.</p></details></template>
+<template id="f3"><details><summary>Тест на совместимость — бесплатно?</summary>
+  <p>Да. Тест на совместимость в Пространстве NDim Space бесплатный: оценки, личная ссылка и результат пары.</p></details></template>
+<template id="f4"><details><summary>Можно пройти тест без регистрации?</summary>
+  <p>Да. Первая оценка создаёт гостевую анкету, и тест проходится до результата. Гостевая анкета хранится 7 дней,
+  кнопка «Сохранить мою анкету» сохраняет её за Вами.</p></details></template>
+<template id="f5"><details><summary>Подходит ли тест на совместимость мужчины и женщины?</summary>
+  <p>Да. Тест подходит мужчине и женщине, паре, двум друзьям, двум подругам — любым двоим. Вещи теста одинаковы для
+  обоих, и результат показывает совпадения двух людей.</p></details></template>
+<template id="f6"><details><summary>Кто видит мои ответы?</summary>
+  <p>Результат видите только вы двое. Второй человек видит Ваши оценки по вещам этого теста, которые оценили вы оба,
+  и только после того, как каждый нажал кнопку сам. Остальная Ваша анкета видна так, как решите Вы.</p></details></template>
+<template id="f7"><details><summary>Что делать, если я не знаю фильм или книгу из теста?</summary>
+  <p>Пропустите эту вещь. Результат сравнивает вещи, которые оценили вы оба, поэтому пропущенная вещь просто остаётся
+  за рамками сравнения.</p></details></template>
+<template id="f10"><details><summary>Можно пройти тест на совместимость с другом?</summary>
+  <p>Да. Вы оцениваете 12 вещей и отправляете другу личную ссылку. Друг оценивает вещи теста у себя, и результат
+  показывает, в каких фильмах, книгах и сериалах ваши вкусы совпали.</p></details></template>
+<template id="f9"><details><summary>Как найти людей с похожими оценками?</summary>
+  <p>Продолжайте оценивать вещи каталога Пространства NDim Space и сохраните свою анкету. Пространство ищет людей
+  с похожими оценками по всей Вашей анкете и собирает самых похожих в разделе «Связи». Каждая новая оценка добавляет
+  данных для подбора.</p></details></template>
+
+<script>
+  /* Первые 12 карточек очереди теста из сборки 2026-09-25 (build/ru/test/compatibility.html). */
+  const ITEMS = [
+    { k: 'Фильм', n: 'Гарри Поттер и философский камень', y: '2001', r: 14 },
+    { k: 'Фильм', n: 'Побег из Шоушенка', y: '1994', r: 12 },
+    { k: 'Роман', n: 'Гарри Поттер и философский камень', y: '1997', r: 11 },
+    { k: 'Практика', n: 'Секс', y: '', r: 11 },
+    { k: 'Фильм', n: 'Матрица', y: '1999', r: 11 },
+    { k: 'Телесериал', n: 'Доктор Хаус', y: '2004', r: 11 },
+    { k: 'Фильм', n: 'Пираты Карибского моря: На краю света', y: '2007', r: 11 },
+    { k: 'Роман', n: 'Гарри Поттер и Тайная комната', y: '1998', r: 11 },
+    { k: 'Фильм', n: 'Гладиатор', y: '2000', r: 10 },
+    { k: 'Фильм', n: 'Гарри Поттер и Дары Смерти. Часть 2', y: '2011', r: 10 },
+    { k: 'Фильм', n: 'Гарри Поттер и Кубок огня', y: '2005', r: 10 },
+    { k: 'Фильм', n: 'Гарри Поттер и узник Азкабана', y: '2004', r: 10 },
+  ];
+  const label = (it) => it.n + ' · ' + [it.k, it.y].filter(Boolean).join(', ');
+
+  const starsHTML = (val) => Array.from({ length: 11 }, (_, v) => {
+    const fill = val !== null && v <= val && val !== 0;
+    const cls = ['st', fill ? 'fill' : '', val === v && val !== 0 ? 'peak' : '', val === 0 && v === 0 ? 'zero' : ''].filter(Boolean).join(' ');
+    return `<button type="button" class="${cls}" data-v="${v}" aria-label="${v}"><i>${val !== null && v <= val ? '★' : '☆'}</i><b>${v}</b></button>`;
+  }).join('');
+
+  const rowHTML = (it, i, val) => `<div class="srow" data-i="${i}"><div class="t"><span class="kind">${it.k}</span>${it.n}${it.y ? `<span class="yr">&nbsp;(${it.y})</span>` : ''}<span class="rby"> · уже оценили: ${it.r}</span></div>
+    <div class="starsrow" role="group" aria-label="${it.n}">${starsHTML(val)}</div></div>`;
+
+  const TEST = () => `<section class="play" aria-label="Тест на совместимость для двоих">
+    <div class="play-head"><span class="ph-t">Ваши оценки</span><span class="ph-p">Оценено <b data-done>1</b> из 12</span></div>
+    <p class="hint">0 — совсем не моё · 10 — это про меня</p>
+    <div class="rows">${ITEMS.map((it, i) => rowHTML(it, i, i === 0 ? 9 : null)).join('')}</div></section>`;
+
+  const FACTS = `<p class="lede"><span><i>✓</i> без регистрации</span><span><i>✓</i> 12 вещей · ~3 минуты</span><span><i>✓</i> бесплатно</span><span><i>✓</i> отвечают оба</span></p>`;
+
+  const INVITE = `<section class="invite"><h2>Позовите второго</h2>
+    <p>Когда Вы оцените 12 вещей, здесь появится кнопка «Создать личную ссылку». Отправьте ссылку второму человеку: второй
+    откроет ссылку на своём телефоне и оценит двенадцать вещей теста.</p>
+    <p class="fine">Результат видите только вы двое: ссылка личная, и её получает тот, кому Вы её отправите.</p></section>`;
+
+  const SAMPLE_ROWS = `<ul class="facts">
+    <li><span class="ic">⭐</span><span>Вы оба поставили 10 — Побег из Шоушенка · Фильм, 1994</span></li>
+    <li><span class="ic">⭐</span><span>Вы оба поставили 9 — Гладиатор · Фильм, 2000</span></li>
+    <li><span class="ic">⭐</span><span>Вы оба поставили 8 — Матрица · Фильм, 1999</span></li>
+    <li><span class="ic">🤝</span><span>Вы рядом в «Доктор Хаус · Телесериал, 2004»: 7 и 8</span></li>
+    <li><span class="ic">💬</span><span>«Гарри Поттер и Тайная комната · Роман, 1998» вы видите по-разному (8 и 2) — будет о чём поговорить</span></li>
+  </ul>`;
+  const SAMPLE_HEAD = `<p class="cap">Вы и Аня · пример результата</p>
+    <p class="bigcount"><span class="n">3</span> <span>совпадения</span></p>
+    <p class="subcount">Общих «десяток»: 1</p>`;
+  const SAMPLE = `<section class="sample"><h2 class="sh">Так выглядит результат</h2><div class="pair">${SAMPLE_HEAD}${SAMPLE_ROWS}
+    <p class="rfoot">Сравнили вещей: 12.</p></div></section>`;
+  const SAMPLE_FIRST = `<section class="sample"><h2 class="sh">Так выглядит результат теста</h2><div class="pair">${SAMPLE_HEAD}${SAMPLE_ROWS}
+    <p class="rfoot">Сравнили вещей: 12.</p>
+    <div class="legend"><span>⭐ Совпадение — одинаковая оценка</span><span>🤝 Рядом — разница в одну звезду</span><span>💬 По-разному — разница в четыре звезды и больше</span></div></div></section>`;
+
+  const MINI_STARS = `<div class="starsrow" aria-hidden="true">${starsHTML(8)}</div>`;
+  const RATED = ITEMS.map((it) => `<li>${label(it)} — <b>${it.r}</b>&nbsp;человек</li>`).join('');
+
+  const CROSS = `<nav class="cross" aria-label="Другие тесты"><span class="cross-t">Другие тесты Пространства NDim Space</span>
+    <a href="#">Тест личности →</a><a href="#">Калькулятор любви →</a><a href="#">Все тесты →</a></nav>`;
+  const FOOT = `<p class="foot">Пространство NDim Space — поиск похожих людей по математической близости оценок.<br>Страница обновлена 25 сентября 2026 года.</p>`;
+
+  const MOON = '<path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>';
+  const SUN = '<path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8"/>';
+  let seq = 0;
+  const brand = (size) => {
+    const g = 'bg' + (seq += 1), h = 'bh' + seq;
+    return `<svg class="brand" width="${size}" height="${size}" viewBox="0 0 96 96" aria-hidden="true"><defs>
+      <linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="30" y1="26" x2="68" y2="70"><stop offset="0" stop-color="#4d9fff"/><stop offset="1" stop-color="#3fd9ff"/></linearGradient>
+      <filter id="${h}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter></defs>
+      <rect class="halo" width="96" height="96" rx="22" fill="rgba(63, 217, 255, 0.3)" filter="url(#${h})"/>
+      <rect width="96" height="96" rx="22" fill="#060b14"/>
+      <g stroke="url(#${g})" stroke-width="6.7" fill="none"><line x1="36.5" y1="29" x2="30" y2="66"/><line x1="36.5" y1="29" x2="59.5" y2="66"/><line x1="59.5" y1="66" x2="66" y2="29"/></g>
+      <g fill="url(#${g})"><circle cx="36.5" cy="29" r="9.3"/><circle cx="30" cy="66" r="9.3"/><circle cx="59.5" cy="66" r="9.3"/><circle cx="66" cy="29" r="9.3"/></g></svg>`;
+  };
+  const BAR = () => `<header class="bar"><span class="brandlink">${brand(26)}<span>NDim Space</span></span>
+    <span class="hc"><span class="sq" title="Тема"><svg class="sun" viewBox="0 0 16 16">${SUN}</svg><svg class="moon" viewBox="0 0 16 16">${MOON}</svg></span><span class="sq" title="Язык">Ru</span></span>
+    <span class="enter">Войти</span></header>`;
+
+  const PARTS = { bar: BAR, facts: () => FACTS, test: TEST, invite: () => INVITE, sample: () => SAMPLE,
+    'sample-first': () => SAMPLE_FIRST, 'mini-stars': () => MINI_STARS, rated: () => RATED, cross: () => CROSS, foot: () => FOOT };
+
+  document.querySelectorAll('[data-use]').forEach((el) => {
+    const key = el.dataset.use;
+    const html = PARTS[key] ? PARTS[key]() : document.getElementById(key).innerHTML;
+    if (el.tagName === 'UL' || el.classList.contains('mini')) { el.innerHTML = html; el.removeAttribute('data-use'); }
+    else el.outerHTML = html;
+  });
+  document.querySelectorAll('[data-faq]').forEach((el) => {
+    el.innerHTML = el.dataset.faq.split(',').map((id) => document.getElementById(id).innerHTML).join('');
+  });
+
+  /* Жест звезды в макете: касание красит звёзды до выбранной, счётчик «Оценено N из 12» живой. */
+  document.addEventListener('click', (e) => {
+    const st = e.target.closest('.play .st');
+    if (!st) return;
+    const row = st.closest('.srow');
+    const v = Number(st.dataset.v);
+    row.querySelector('.starsrow').innerHTML = starsHTML(v);
+    row.dataset.val = v;
+    const play = row.closest('.play');
+    const done = [...play.querySelectorAll('.srow')].filter((r, i) => r.dataset.val !== undefined || i === 0).length;
+    play.querySelector('[data-done]').textContent = done;
+  });
+
+  const stage = document.getElementById('stage');
+  document.querySelectorAll('.picker button[data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('.picker button[data-v]').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.variant').forEach((v) => v.classList.toggle('active', v.id === 'v' + b.dataset.v));
+  }));
+  document.getElementById('width').addEventListener('click', () => { stage.dataset.w = stage.dataset.w === '390' ? '1440' : '390'; });
+  document.getElementById('theme').addEventListener('click', () => {
+    const el = document.documentElement; el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+  });
+</script>
+</body>
+</html>
