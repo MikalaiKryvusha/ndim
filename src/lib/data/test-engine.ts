@@ -72,6 +72,41 @@ export async function saveTestRating(lang: Lang, dimId: string, value: number, e
   return uid;
 }
 
+/**
+ * Оценки моста главной ОДНИМ пакетом (`saveRatingsBatch`): при отсутствии сессии рождает гостя и пишет его корень
+ * вместе с оценками, без чтения корня и без цепочки записей. Возвращает число сохранённых оценок (все или ни одной —
+ * пакет атомарен). `guest_start` с местом входа — ровно один, как у `saveTestRating`.
+ * [NOT-TESTED]
+ */
+export async function saveTestRatings(
+  lang: Lang,
+  ratings: ReadonlyArray<readonly [string, number]>,
+  entry: AnalyticsEntry = 'test',
+): Promise<number> {
+  if (ratings.length === 0) return 0;
+  const { currentSession, signInGuest, ensureSpaceExists, saveRatingsBatch } = await import('./profile.ts');
+
+  let uid = await currentSession();
+  let created = false;
+  if (uid === null) {
+    uid = await signInGuest();
+    created = true;
+  }
+  if (created) {
+    await saveRatingsBatch(uid, ratings, { newRoot: lang });
+  } else {
+    if (!ensured) await ensureSpaceExists(uid, lang);
+    await saveRatingsBatch(uid, ratings);
+  }
+  ensured = true;
+
+  if (created) {
+    const { track } = await import('./funnel.ts');
+    void track('guest_start', { entry });
+  }
+  return ratings.length;
+}
+
 /** Убирает оценку (строка панели-зеркала). Без сессии убирать нечего. */
 export async function removeTestRating(dimId: string): Promise<void> {
   const { currentSession, removeRating } = await import('./profile.ts');
