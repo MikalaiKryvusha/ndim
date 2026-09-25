@@ -52,8 +52,8 @@ export const landingV1 = {
     h2Accent: { ru: 'Максом, Алисой и Настей', en: 'Liam, Emma and Mia' },
     /** `[AI]` новая строка — на вычитке (№097). */
     how: {
-      ru: 'Оцените звёздами фильмы, сериалы и практики, которые Вы знаете, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы. Практики — это занятия, которые люди любят: секс, чтение, настольные игры и велоспорт.',
-      en: 'Rate the films, TV series and practices you know with stars, and NDim Space will show which of Liam, Emma and Mia thinks the same way you do. Practices are activities people love: sex, reading, board gaming and cycling.',
+      ru: 'Оцените звёздами фильмы, сериалы и практики, которые Вы знаете, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы. Практики — это то, чем люди занимаются: секс, настольные игры, употребление алкогольных напитков и чтение.',
+      en: 'Use the stars to rate the films, TV series and practices you know, and NDim Space will show you which of Liam, Emma and Mia thinks the same way you do. Practices are things people do: sex, board gaming, alcohol consumption and reading.',
     },
     me: { ru: 'Я', en: 'Me' },
     popLead: { ru: ' — Ваша самая сильная связь: ', en: ' is your strongest connection: ' },
@@ -79,8 +79,8 @@ export const landingV1 = {
   persona: {
     alice: { ru: 'Алиса любит фантастику и истории о волшебстве.', en: 'Emma loves science fiction and stories about magic.' },
     max: {
-      ru: 'Макс оценил пять из десяти фильмов, сериалов и практик: «Матрицу», «Интерстеллар», «Игру Престолов», настольные игры и велоспорт.',
-      en: 'Liam rated five of the ten films, TV series and practices: The Matrix, Interstellar, Game of Thrones, board gaming and cycling.',
+      ru: 'Макс оценил пять из десяти фильмов, сериалов и практик: «Матрицу», «Интерстеллар», «Игру Престолов», настольные игры и употребление алкогольных напитков.',
+      en: 'Liam rated five of the ten films, TV series and practices: “The Matrix”, “Interstellar”, “Game of Thrones”, board gaming and alcohol consumption.',
     },
     nastya: { ru: 'Настя любит сериалы и истории о большой любви.', en: 'Mia loves TV series and great love stories.' },
   } satisfies Record<PersonaId, Bi>,

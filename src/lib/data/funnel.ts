@@ -262,7 +262,8 @@ export interface TrackOptions {
  * Как считает новая V1 главной (`LandingV1.svelte`): корень `/` — только PostHog (№078 В1 = Г, цитата выше);
  * `/ru` и `/en` пишут и свой счётчик, как лендинг до новой V1. Решение одно на все шаги страницы — `landing_view`
  * и `demo_touch` уходят одной дорогой, и юнит сверяет каждый вызов `track` в компоненте.
- * [NOT-TESTED]
+ * [TESTED: 2026-09-25 · стенд, ручной прогон: корень — шаги засчитаны, счётчик Firestore не тронут; /ru — +1 и +1;
+ *  отчёт qa/reports/2026-09-25_root-posthog-only.md]
  */
 export function landingTrackOptions(entry: 'root' | 'landing'): TrackOptions {
   return { ownCounter: entry !== 'root' };
