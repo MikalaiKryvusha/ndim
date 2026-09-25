@@ -204,7 +204,8 @@ try {
     const { ctx, sent, servedCount } = await contextOf();
     const page = await ctx.newPage();
     await page.goto(`${BASE}/ru/test/love`, { waitUntil: 'domcontentloaded' });
-    const stars = page.locator('.qcard .starsrow .st');
+    // `data-live` — карточка ожила: с b777e09 до него видны мёртвые звёзды лица пререндера.
+    const stars = page.locator('.qcard[data-live] .starsrow .st');
     await stars.first().waitFor({ state: 'visible', timeout: 30000 });
     await stars.nth(7).click();
     const now = page.locator('.qcard .countdown .now');
