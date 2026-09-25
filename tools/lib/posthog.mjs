@@ -13,8 +13,34 @@
  */
 import { loadEnv } from './env.mjs';
 
+/**
+ * ГРАНИЦА ВРЕМЕНИ БЕЗ ПОЯСА — ОТКАЗ ДО СЕТИ (`bugs/NEW_week_number_window_labelled_utc_is_moscow.md`).
+ * HogQL читает строку без пояса в поясе ПРОЕКТА (+03:00), а не в UTC: «*Date literals parse in your project's timezone,
+ * not UTC … For an absolute instant, pass the timezone explicitly*» (posthog.com/docs/sql/expressions). 2026-09-25 класс
+ * встретился дважды за день: окно прибора числа недели, подписанное «(UTC)», и окно драйвера прогона главной V1
+ * (`qa/reports/2026-09-25_new-landing-v1.stage-driver.mjs`, UTC-строка без пояса → окно на 3 ч шире). Поэтому дорога
+ * запроса одна на все приборы и не пропускает `toDateTime({параметр})` и `toDateTime('литерал')` без второго аргумента:
+ * пишите `toDateTime({since}, 'UTC')` или `toDateTime({from}, 'Europe/Moscow')`.
+ * FORK: options <помощник как есть | Date → UTC-строка в значениях | отказ запросу с голой границей> · price of error
+ *   <молча смещённое окно у следующего прибора | не лечит: пояс живёт в тексте запроса, не в значении | ложный отказ
+ *   законному запросу в поясе проекта — лечится явным поясом проекта> · consulted <документация PostHog, выше>.
+ * GAP: столбцы (`toDateTime(timestamp)`), `toDate('…')`, `toStartOfDay(…)` без пояса не судятся — только границы-значения.
+ * [NOT-TESTED: 2026-09-25 · юнит tools/lib/posthog.test.mjs — гигиена; ручной прогон отказа — отчёт
+ *  qa/reports/2026-09-25_week-number-tz.md]
+ */
+const BARE_TIME = /toDateTime\(\s*(\{\w+\}|'[^']*')\s*\)/g;
+
+/** Границы времени без пояса в тексте запроса — пустой список значит «все границы названы с поясом». */
+export function bareTimeBounds(query) {
+  return query.match(BARE_TIME) ?? [];
+}
+
 /** Выполняет HogQL и отдаёт `{ columns, results }`. Значения идут параметрами (`{name}` в тексте запроса). */
 export async function hogql(query, values = {}, fetchImpl = fetch) {
+  const bare = bareTimeBounds(query);
+  if (bare.length) {
+    throw new Error(`граница времени без пояса: ${bare.join(' · ')} — HogQL прочтёт её в поясе проекта (+03:00), а не в UTC; назовите пояс вторым аргументом, например toDateTime({since}, 'UTC')`);
+  }
   loadEnv();
   const id = process.env.POSTHOG_PROJECT_ID;
   const key = process.env.POSTHOG_NDIM_SPACE_PERSONAL_API_KEY;
