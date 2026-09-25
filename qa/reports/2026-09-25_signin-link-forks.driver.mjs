@@ -35,6 +35,9 @@ const B3 = {
   },
 };
 const SPINNER = 'Выполняем вход в Пространство NDim Space';
+// Карточка «Добро пожаловать»: вторая половина — только тому, у кого оценки есть (`bugs/NEW_newcomer_welcome_claims_ratings_in_place.md`).
+const WELCOME = 'Аккаунт создан.';
+const KEPT = 'Ваши оценки и найденные связи на месте';
 const SENT_GUEST = 'Мы отправили Вам письмо';
 const SENT_DOOR = 'Письмо отправлено';
 
@@ -431,6 +434,7 @@ try {
     check('ВС-11', 'в контексте 2 аккаунт адреса, не гость', me2?.email === A && !me2.anonymous, describe(me2));
     check('ВС-11', 'у аккаунта контекста 2 оценок 0 (оценки гостя не переехали)', me2 ? (await dimsCount(me2.uid)) === 0 : false);
     check('ВС-11', 'в контексте 1 тот же гость, его оценка в базе цела', me1?.anonymous === true && me1.uid === g.uid && (await docExists(`points/${g.uid}/dims/${g.dim}`)), describe(me1));
+    check('ВС-11', `карточка: «${WELCOME}» — и НЕ «${KEPT}» (оценок 0)`, (await text(two.page, WELCOME)) && !(await text(two.page, KEPT)));
     check('ВС-11', 'консоль контекста 2 чиста', two.errors.length === 0, two.errors.slice(0, 2).join(' | '));
     await two.context.close();
     await one.context.close();
@@ -478,6 +482,7 @@ try {
     check('ВС-12', 'шаг «идёт вход» называет адрес', spinner && who, `спиннер ${spinner} · адрес ${Boolean(who)}`);
     check('ВС-12', 'гость второго браузера стал аккаунтом адреса — тот же uid', me2?.email === A && !me2.anonymous && me2.uid === g2.uid, describe(me2));
     check('ВС-12', 'оценка гостя второго браузера цела в его аккаунте', await docExists(`points/${g2.uid}/dims/${g2.dim}`));
+    check('ВС-12', `карточка: «${WELCOME} ${KEPT}…» — оценки есть, строка правдива`, (await text(two.page, WELCOME)) && (await text(two.page, KEPT)));
     check('ВС-12', 'гость первого браузера цел, его оценка на месте', me1?.anonymous === true && me1.uid === g1.uid && (await docExists(`points/${g1.uid}/dims/${g1.dim}`)), describe(me1));
     check('ВС-12', 'консоль контекста 2 чиста', two.errors.length === 0, two.errors.slice(0, 2).join(' | '));
     await two.context.close();
@@ -498,6 +503,10 @@ try {
     const me = await whoAmI(tab2);
     check('ВС-13', 'экрана Г2 нет', !g2);
     check('ВС-13', '«Профиль сохранён», тот же uid гостя, оценка цела', (await text(tab2, 'Профиль сохранён')) && me?.uid === g.uid && !me.anonymous && (await docExists(`points/${g.uid}/dims/${g.dim}`)), describe(me));
+    // Оценки приезжают с экраном: карточка появляется раньше, вторая половина — когда экран прочитал оценки.
+    await tab2.getByText(KEPT).waitFor({ timeout: 10000 }).catch(() => {});
+    await tab2.screenshot({ path: `${SHOTS}/vs13-after.png`, fullPage: true });
+    check('ВС-13', `карточка: «${WELCOME} ${KEPT}…» — апгрейд гостя с оценкой`, (await text(tab2, WELCOME)) && (await text(tab2, KEPT)));
     await one.context.close();
   }
 
@@ -513,6 +522,8 @@ try {
     const me = await whoAmI(two.page);
     check('ВС-14', 'в ссылке нет пометки from=guest', new URL(link).searchParams.get('from') === null);
     check('ВС-14', 'экрана Г2 нет, вход адресом', !g2 && me?.email === A, describe(me));
+    await two.page.screenshot({ path: `${SHOTS}/vs14-after.png`, fullPage: true });
+    check('ВС-14', `карточка новичка: «${WELCOME}» — и НЕ «${KEPT}» (путь bugs/NEW_newcomer_welcome…, К6)`, (await text(two.page, WELCOME)) && !(await text(two.page, KEPT)));
     await two.context.close();
   }
 

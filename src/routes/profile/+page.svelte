@@ -1137,9 +1137,12 @@
         ru: 'Добро пожаловать в Пространство NDim',
         en: 'Welcome to NDim Space',
       },
-      doneBody: {
-        ru: 'Аккаунт создан. Ваши оценки и найденные связи на месте — Вы продолжаете с того же места, где остановились.',
-        en: 'Your account is created. Your ratings and relations are in place — you continue exactly where you stopped.',
+      doneBody: { ru: 'Аккаунт создан.', en: 'Your account is created.' },
+      // Вторая половина прежней строки — только тому, у кого оценки ЕСТЬ (`bugs/NEW_newcomer_welcome_claims_ratings_in_place.md`):
+      // новичку по ссылке и человеку, выбравшему на Г2 «Войти здесь без этих оценок», она лгала. Слова прежние, новых нет.
+      doneKept: {
+        ru: 'Ваши оценки и найденные связи на месте — Вы продолжаете с того же места, где остановились.',
+        en: 'Your ratings and relations are in place — you continue exactly where you stopped.',
       },
       doneNote: {
         ru: 'Вас по-прежнему не видит никто. Что и кому показать — решаете Вы сами, в разделе «Видимость».',
@@ -1778,7 +1781,9 @@
             <span class="guest-ava solid"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.6" r="4.4" /><path d="M12 13.6c-4.9 0-8.6 3.1-8.6 7.4h17.2c0-4.3-3.7-7.4-8.6-7.4z" /></svg></span>
             <p class="saved-badge">✓ {t.account.doneBadge[lang]}</p>
             <h2>{t.account.doneTitle[lang]}</h2>
-            <p class="acc-lead">{t.account.doneBody[lang]}</p>
+            <!-- «Оценки на месте» — только при оценках: судит то же число, что «Количество измерений» ниже.
+                 [NOT-TESTED] -->
+            <p class="acc-lead">{t.account.doneBody[lang]}{#if ratedCount > 0} {t.account.doneKept[lang]}{/if}</p>
             <p class="hint">{t.account.doneNote[lang]}</p>
             <div class="guest-cta">
               <button type="button" class="btn" onclick={() => (guestCard = false)}>{t.account.close[lang]}</button>
