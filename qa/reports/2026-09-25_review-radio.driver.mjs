@@ -4,11 +4,14 @@
 // владельцу ничего не открывается. Кадры: test-results/review-radio/ — смотрятся глазами после прогона.
 //   РК-01 · копия №098: кнопки у В1 (5) и В2 (4), подписи — тексты вариантов-абзацев;
 //   РК-02 · копия №097: кнопки по короткому списку (3 у В1), без дублей букв от абзацев-описаний;
-//   РК-03 · контроль: варианты без «**» (неузнанная форма) — `open` отказывает кодом 1 и называет вопрос и строку.
+//   РК-03 · контроль: варианты без «**» (неузнанная форма) — `open` отказывает кодом 1 и называет вопрос и строку;
+//   РК-04 · та же копия в очередь не встаёт (`queue`, временный файл очереди) — код 1;
+//   РК-05 · страница документа пачки `/doc?p=`: сломанная — 409 «агент ещё чинит», исправная — 200 и кнопки (суд, Н2).
 // Запуск из корня рабочего места: node qa/reports/2026-09-25_review-radio.driver.mjs
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { chromium } from 'playwright';
 
 const ROOT = process.cwd();
@@ -16,6 +19,8 @@ const NAME = 'interview_997_radio_fixture';
 const REL = `interviews/${NAME}.md`;
 const FIXTURE = join(ROOT, REL);
 const DECISIONS = join(ROOT, 'interviews', 'decisions');
+const BROKEN_REL = 'interviews/interview_996_radio_broken_fixture.md';
+const BROKEN = join(ROOT, BROKEN_REL);
 const SHOTS = join(ROOT, 'test-results', 'review-radio');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -69,6 +74,7 @@ async function stop(p) {
 
 function cleanup() {
   rmSync(FIXTURE, { force: true });
+  rmSync(BROKEN, { force: true });
   rmSync(join(DECISIONS, `${NAME}.lock`), { force: true });
   rmSync(join(DECISIONS, `${NAME}.decision.json`), { force: true });
   const arch = join(DECISIONS, 'archive');
@@ -135,6 +141,30 @@ try {
   const refused = p.url === null && p.code === 1 && /СТРАНИЦА НЕ ПОДНЯТА: у вопроса есть варианты/.test(p.out());
   check('РК-03', refused, 'open отказал кодом 1 с причиной «у вопроса есть варианты»', `код ${p.code} · ${p.out().split('\n').find((l) => /В1 —/.test(l))?.trim() ?? ''}`);
   check('РК-03', /В1 — interviews[\\/]interview_997_radio_fixture\.md:\d+ · строк-вариантов 5, разобрано 0/.test(p.out()), 'названы вопрос, строка и счёт');
+  await stop(p);
+
+  // Суд радиокнопок, Н2: пачка строит страницу через /doc?p= мимо preflight, очередь ставила без проверки.
+  console.log('\nРК-04 · очередь: сломанная копия в очередь не встаёт (временный файл очереди, живая не трогается):');
+  const tmpQ = join(tmpdir(), `radio-queue-${Date.now()}.json`);
+  const r4 = spawnSync(process.execPath, ['tools/review.mjs', 'queue', REL, '--queue', tmpQ], { cwd: ROOT, encoding: 'utf8' });
+  const o4 = (r4.stdout || '') + (r4.stderr || '');
+  check('РК-04', r4.status === 1 && /НЕ В ОЧЕРЕДЬ/.test(o4), 'queue отказал кодом 1 и назвал причину', `код ${r4.status} · ${o4.split('\n').find((l) => /НЕ В ОЧЕРЕДЬ|В очередь/.test(l))?.trim() ?? ''}`);
+  check('РК-04', !existsSync(tmpQ) || !readFileSync(tmpQ, 'utf8').includes(NAME), 'документ в очередь не записан');
+  rmSync(tmpQ, { force: true });
+
+  console.log('\nРК-05 · страница документа пачки /doc?p=: сломанная — отказ с причиной, исправная — кнопки:');
+  writeFileSync(BROKEN, broken, 'utf8');
+  writeFileSync(FIXTURE, waitingCopy('interviews/interview_098_compat_test_page_for_two.md'), 'utf8');
+  p = await openPage();
+  if (p.url) {
+    const bad = await fetch(`${p.url}doc?p=${encodeURIComponent(BROKEN_REL)}`);
+    const badText = await bad.text();
+    check('РК-05', bad.status === 409 && /агент ещё чинит/.test(badText) && /В1 — строка \d+: строк-вариантов 5, разобрано 0/.test(badText), 'сломанная: 409 и страница «агент ещё чинит» с вопросом и строкой', `HTTP ${bad.status}`);
+    const good = await fetch(`${p.url}doc?p=${encodeURIComponent(REL)}`);
+    const goodText = await good.text();
+    const radiosB1 = (goodText.match(/name="ch-В1"/g) ?? []).length;
+    check('РК-05', good.status === 200 && radiosB1 === 5, 'исправная: 200 и пять кнопок у В1', `HTTP ${good.status} · кнопок ${radiosB1}`);
+  } else check('РК-05', false, 'страница для маршрута /doc поднята', p.out().split('\n').filter(Boolean).slice(-2).join(' | '));
   await stop(p);
 } finally {
   await stop(p);

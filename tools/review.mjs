@@ -1328,6 +1328,19 @@ function startServer({ docPath = null, index = null, onDecision = null }) {
 				res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
 				return res.end('нет такого документа');
 			}
+			// Страница документа пачки проходит ту же проверку кнопок, что `open` (суд радиокнопок, Н2): вместо страницы без
+			// кнопок владелец видит, почему документа пока нет, а агент — вопрос и строку.
+			const lost = lintOptionsLost(parseInterview(p, readMd(p)));
+			if (lost.length) {
+				const rel = relative(ROOT, p).split('\\').join('/');
+				res.writeHead(409, { 'content-type': 'text/html; charset=utf-8' });
+				return res.end(
+					`<!doctype html><meta charset="utf-8"><title>Документ не готов</title><body style="font:16px system-ui;max-width:640px;margin:40px auto;padding:0 16px">` +
+						`<h1 style="font-size:20px">Этот документ агент ещё чинит</h1><p>У вопроса есть варианты ответа, а кнопок выбора для них страница не собрала. Агенту: ${esc(rel)}</p><ul>` +
+						lost.map((b) => `<li>${esc(b.label)} — строка ${b.line}: строк-вариантов ${b.found}, разобрано ${b.parsed}</li>`).join('') +
+						`</ul><p><a href="/">← к списку документов</a></p></body>`,
+				);
+			}
 			res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
 			return res.end(buildPage({ docPath: p, live: true }));
 		}
@@ -1870,6 +1883,15 @@ function cmdQueue(docPath) {
 	const q = readQueuePruned();
 	if (q.items.some((i) => i.doc === rel)) {
 		console.log(`Уже в очереди: ${rel} (всего накоплено: ${q.items.length})`);
+		return q.items.length;
+	}
+	// 🔴 Вопрос с вариантами без кнопок в очередь не встаёт (суд радиокнопок, Н2): пачка строит страницу через `/doc?p=`
+	// мимо `preflight`, и владелец получил бы ровно тот дефект, который `open` уже отказывает.
+	const lost = lintOptionsLost(parseInterview(docPath, readMd(docPath)));
+	if (lost.length) {
+		console.error(`⛔ НЕ В ОЧЕРЕДЬ: ${rel} — у вопроса есть варианты, а кнопок выбора для них не будет.`);
+		for (const b of lost) console.error(`   ${b.label} — ${rel}:${b.line} · строк-вариантов ${b.found}, разобрано ${b.parsed}`);
+		process.exitCode = 1;
 		return q.items.length;
 	}
 	const item = { doc: rel, поставлен: new Date().toISOString() };

@@ -309,15 +309,16 @@ export function savedStamp(by, at) {
  * интервью.
  */
 // После буквы — «)» или «. » (форма «- **A. …**» — №092, 21 строка; найдена замером при лечении, тот же класс).
-const OPTION_START = /^\s*[-*]\s+\*\*(?<letter>[\p{Lu}])(?:\)|\.\s)/u;
+// «. » или «.» сразу перед закрывающим «**» — форма «- **A.** Впишу…» (№092 В6, суд радиокнопок Н1).
+const OPTION_START = /^\s*[-*]\s+\*\*(?<letter>[\p{Lu}])(?:\)|\.(?:\s|\*\*))/u;
 /**
  * 🔴 ВТОРАЯ ФОРМА ВАРИАНТА — АБЗАЦ: `**А) V1 «…».** текст`, продолжение — следующие строки без отступа до пустой строки
  * (`bugs/NEW_review_page_options_without_radio.md`, S1). Интервью №097 и №098 несли варианты абзацами, разбор знал только
  * пункт списка, вернул 0 вариантов — и страница нарисовала владельцу одно поле текста. Его слово 2026-09-25: «*какого хуя
  * ты опять радиокнопки забыл сделать?*». Буква — любая заглавная, как у пункта списка, и сразу за ней «)».
  */
-const OPTION_PARA = /^\*\*(?<letter>[\p{Lu}])(?:\)|\.\s)/u;
-const OPTION_FULL = /\*\*(?<letter>[\p{Lu}])(?:\)|\.(?=\s))\s*(?<label>[\s\S]*?)\*\*(?<rest>[\s\S]*)/u;
+const OPTION_PARA = /^\*\*(?<letter>[\p{Lu}])(?:\)|\.(?:\s|\*\*))/u;
+const OPTION_FULL = /\*\*(?<letter>[\p{Lu}])(?:\)|\.(?=\s|\*\*))\s*(?<label>[\s\S]*?)\*\*(?<rest>[\s\S]*)/u;
 /**
  * Строка, ПОХОЖАЯ на вариант, в любой форме: `- **А) …`, `**А) …`, `А) …`. Её счёт — `optionLines`: страж
  * `verify-owner-reviews` (блок 5в) и предполётная проверка сверяют его с числом РАЗОБРАННЫХ вариантов. Прежде счёт вёлся
@@ -325,7 +326,7 @@ const OPTION_FULL = /\*\*(?<letter>[\p{Lu}])(?:\)|\.(?=\s))\s*(?<label>[\s\S]*?)
  * терялись все варианты.
  */
 // Точка без жирного («В. текст») не считается: в прозе так стоит инициал.
-const OPTION_LIKE = /^\s*(?:[-*]\s+)?(?:\*\*)?\s*[\p{Lu}]\)\s|^\s*(?:[-*]\s+)?\*\*[\p{Lu}]\.\s/u;
+const OPTION_LIKE = /^\s*(?:[-*]\s+)?(?:\*\*)?\s*[\p{Lu}]\)\s|^\s*(?:[-*]\s+)?\*\*[\p{Lu}]\.(?:\s|\*\*)/u;
 /** Продолжение пункта списка: отступ, не новый пункт, не пусто. */
 const LIST_CONT = /^\s{2,}\S/u;
 
@@ -406,7 +407,11 @@ export function lintOptionsLost(parsed) {
 		if (q.answered) continue;
 		const found = q.optionLines ?? 0;
 		if (found < 2 || q.options.length >= found) continue;
-		const first = (parsed.lines ?? []).findIndex((l, i) => i > q.startLine && OPTION_LIKE.test(l));
+		// Называется первая строка-вариант, которую разбор НЕ узнал; при смеси форм первая похожая могла быть узнанной.
+		const inBlock = (l, i) => i > q.startLine && (q.answerLine < 0 || i < q.answerLine) && OPTION_LIKE.test(l);
+		const lines = parsed.lines ?? [];
+		let first = lines.findIndex((l, i) => inBlock(l, i) && !OPTION_START.test(l) && !OPTION_PARA.test(l));
+		if (first < 0) first = lines.findIndex(inBlock);
 		bad.push({ label: q.label, line: first + 1, found, parsed: q.options.length, text: (parsed.lines?.[first] ?? '').trim().slice(0, 120) });
 	}
 	return bad;
