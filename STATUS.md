@@ -41,7 +41,8 @@
 `bugs/NEW_google_impressions_collapsed_14_sept.md`.
 
 **Сделано 2026-09-25 утром.** Б2 плана 105 — место входа у `guest_start` от каждой двери (`root` · `landing` ·
-`catalog_card` · `signin` · `restart` · `test` · `direct`), ручной прогон 0 провалов — `qa/reports/2026-09-25_guest-entry.md`;
+`catalog_card` · `signin` · `restart` · `test` · `direct`), ручной прогон шести дверей 0 провалов (`restart` живьём не
+пройден) — `qa/reports/2026-09-25_guest-entry.md`;
 в бой уедет с ближайшим выкатом. Вне задачи заведён `bugs/NEW_e2e_demo_bridge_flaky_on_mobile.md`.
 
 **Дальше.** 1) Дорожка Б плана 105: Б4 по развилке, Б3 вместе с решением «строка или SDK» фазы 2. 2) Фаза 1 закрыта → операционный план фазы 2 (V1 на главной;

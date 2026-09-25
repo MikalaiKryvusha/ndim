@@ -256,7 +256,8 @@ export function claimStep(step: FunnelStep): boolean {
  *
  * `props` уезжают ТОЛЬКО в PostHog (сегодня — `entry` у `guest_start`, `plans/105` Б2); своя воронка
  * по-прежнему пишет одно число на шаг, её правила Firestore разрешают ровно +1 к счётчику.
- * [TESTED: 2026-09-25 · перехваченный guest_start несёт entry у всех семи дверей; отчёт qa/reports/2026-09-25_guest-entry.md]
+ * [TESTED: 2026-09-25 · перехваченный guest_start несёт entry у шести дверей из семи (root · landing · catalog_card · signin ·
+ *  test · direct); дверь restart живьём не пройдена; отчёт qa/reports/2026-09-25_guest-entry.md]
  */
 export async function track(step: FunnelStep, props: AnalyticsProps = {}): Promise<void> {
   if (!claimStep(step)) return;

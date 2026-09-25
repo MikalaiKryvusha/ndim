@@ -45,7 +45,7 @@
  * · Он НЕ судит `e2e/` (Playwright ходит по локальному preview) и не судит порядок вызова
  *   внутри файла — «метка до первого goto» держится формой помощника, а не грепом.
  * · Пара 4 видит только ЛИТЕРАЛЬНОЕ имя в вызове. Имя, собранное переменной, ей не по зубам —
- *   и это не пробел, а устройство: единственная такая пересылка в проекте (`capture(step)`
+ *   и это не пробел, а устройство: единственная такая пересылка в проекте (`capture(step, props)`
  *   внутри `track()`) проверяется отдельным, ТРЕТЬИМ условием пары, потому что её исчезновение
  *   не убирает ни одного литерала и потому невидимо для обеих сторон сверки.
  * · Пара 4 доказывает, что вызов СТОИТ В КОДЕ, и не доказывает, что событие ДОЕХАЛО до
@@ -71,7 +71,7 @@ const SRC = join(ROOT, 'src');
  *   · `analytics.ts` — дом самой `capture()`. Её объявление и разбор в шапке местом вызова
  *     не являются;
  *   · `funnel.ts` — ТРАНСПОРТ, а не место вызова: он пересылает шаг переменной
- *     (`capture(step)`), и эта пересылка проверяется отдельным, третьим условием пары.
+ *     (`capture(step, props)`), и эта пересылка проверяется отдельным, третьим условием пары.
  * Тесты исключены как класс: они зовут события заведомо негодными именами — это их работа.
  */
 function srcFilesWithCalls(dir = SRC) {
@@ -368,13 +368,14 @@ export function callSites(source, where = '') {
 
 /**
  * Доезжает ли шаг воронки до ВТОРОГО прибора. `track()` пересылает шаг в `capture()`
- * ПЕРЕМЕННОЙ (`capture(step)`), поэтому литеральных мест вызова у шести шагов нет вовсе —
+ * ПЕРЕМЕННОЙ (`capture(step, props)`), поэтому литеральных мест вызова у шести шагов нет вовсе —
  * и без этой проверки их отсутствие читалось бы как норма.
- * 🆕 2026-09-25 (`plans/105` Б2): пересылка несёт вторым аргументом свойства шага (`capture(step, props)`,
- * место входа у `guest_start`) — это та же пересылка; признак принимает обе формы.
+ * 🆕 2026-09-25 (`plans/105` Б2): пересылка обязана нести вторым аргументом свойства шага — `capture(step, props)`
+ * (место входа у `guest_start`). Форма `capture(step)` теперь КРАСНАЯ: она молча выбрасывает свойства, и суд
+ * `/fable-judge` 2026-09-25 показал, что такая мутация была зелёной везде — юниты и этот страж её не видели.
  */
 export function forwardsStepsToAnalytics(funnelSource) {
-  return /capture\(\s*step\s*(,\s*[A-Za-z_$][\w$]*\s*)?\)/.test(stripComments(funnelSource));
+  return /capture\(\s*step\s*,\s*props\s*\)/.test(stripComments(funnelSource));
 }
 
 /**
@@ -385,7 +386,7 @@ export function forwardsStepsToAnalytics(funnelSource) {
  * @param {string[]} ownEvents события белого списка, объявленные литералами
  * @param {string[]} steps шаги воронки
  * @param {{fn: string, name: string, where: string}[]} sites найденные места вызова
- * @param {boolean} forwards есть ли переброска `capture(step)` внутри `track()`
+ * @param {boolean} forwards есть ли переброска `capture(step, props)` внутри `track()`
  */
 export function eventCallSiteFaults(ownEvents, steps, sites, forwards) {
   const faults = [];
@@ -427,7 +428,7 @@ export function eventCallSiteFaults(ownEvents, steps, sites, forwards) {
   }
   if (!forwards) {
     faults.push(
-      'переброска шага во второй прибор (capture(step) внутри track()) НЕ НАЙДЕНА — ' +
+      'переброска шага во второй прибор (capture(step, props) внутри track()) НЕ НАЙДЕНА — ' +
         'шаги воронки перестанут доезжать до PostHog ЦЕЛИКОМ, и ни один литерал этого не покажет',
     );
   }
@@ -689,8 +690,9 @@ const SELFTEST_CASES = [
   {
     name: 'разбор пересылки: переменная — да, литерал соседнего вызова — не в счёт',
     run: () =>
-      forwardsStepsToAnalytics('.then(({ capture }) => capture(step))') === true &&
       forwardsStepsToAnalytics('.then(({ capture }) => capture(step, props))') === true &&
+      // свойства выброшены — красный (мутация М4 суда 2026-09-25)
+      forwardsStepsToAnalytics('.then(({ capture }) => capture(step))') === false &&
       forwardsStepsToAnalytics(".then(({ capture }) => capture('landing_view'))") === false &&
       forwardsStepsToAnalytics(".then(({ capture }) => capture('landing_view', props))") === false,
   },
