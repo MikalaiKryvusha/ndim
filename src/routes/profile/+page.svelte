@@ -502,6 +502,7 @@
           // (`plans/105` Б2): какая дверь привела человека. Слово читается ДО того, как адрес ниже
           // срезает параметр. [TESTED: 2026-09-25 · ЕВ-01/02/04/06/07, адрес после входа без guest=; qa/reports/2026-09-25_guest-entry.md]
           // [TESTED: 2026-09-25 21:37 · ЕВ-08 «Начать заново» в новой вкладке — entry restart; qa/reports/2026-09-25_guest-entry-restart.md]
+          // [TESTED: 2026-09-25 21:54 · ЕВ-08н та же вкладка после лечения — entry restart; bugs/NEW_restart_guest_start_swallowed_in_same_tab.md]
           if (session === null) void track('guest_start', { entry: entryOf(new URLSearchParams(location.search).get('guest')) });
         }
         // Параметр одноразовый: F5 и закладка не должны нести его дальше (тот же приём,
@@ -612,7 +613,8 @@
    * Выход из сессии — конец визита гостя: шаг `guest_start` прежнего гостя отпускается, иначе во вкладке, прожившей
    * 7+ суток, шаг нового гостя молча съедался (`bugs/NEW_restart_guest_start_swallowed_in_same_tab.md`, выбор Менеджера — А).
    * [TESTED: 2026-09-25 21:54 · ЕВ-08н на сборке 385e376 под именем стейджа: та же вкладка, шаг прежнего гостя занят «1» —
-   *  после «Начать заново» один guest_start, entry restart (до лечения — 0); отчёт qa/reports/2026-09-25_restart-release-step.md]
+   *  после «Начать заново» один guest_start, entry restart (до лечения — 0); отчёт qa/reports/2026-09-25_restart-release-step.md;
+   *  баг bugs/NEW_restart_guest_start_swallowed_in_same_tab.md]
    */
   async function restartAsGuest() {
     await signOutUser();
