@@ -52,8 +52,8 @@ export const landingV1 = {
     h2Accent: { ru: 'Максом, Алисой и Настей', en: 'Liam, Emma and Mia' },
     /** `[AI]` новая строка — на вычитке (№097). */
     how: {
-      ru: 'Оцените звёздами фильмы, сериалы и практики, которые Вы знаете, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы. Практики — это то, чем люди занимаются: секс, настольные игры, употребление алкогольных напитков и чтение.',
-      en: 'Use the stars to rate the films, TV series and practices you know, and NDim Space will show you which of Liam, Emma and Mia thinks the same way you do. Practices are things people do: sex, board gaming, alcohol consumption and reading.',
+      ru: 'Тест на совместимость проходится без регистрации: оцените звёздами фильмы, сериалы и практики, которые Вы знаете, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы. Практики — это то, чем люди занимаются: настольные игры, чтение, велоспорт и медитация. По Вашим оценкам Пространство NDim Space находит Вам друзей по интересам и людей для новых знакомств и общения.',
+      en: 'Use the stars to rate the films, TV series and practices you know, and NDim Space will show you which of Liam, Emma and Mia thinks the same way you do. Practices are things people do: board gaming, reading, cycling and meditation.',
     },
     me: { ru: 'Я', en: 'Me' },
     popLead: { ru: ' — Ваша самая сильная связь: ', en: ' is your strongest connection: ' },
@@ -79,8 +79,8 @@ export const landingV1 = {
   persona: {
     alice: { ru: 'Алиса любит фантастику и истории о волшебстве.', en: 'Emma loves science fiction and stories about magic.' },
     max: {
-      ru: 'Макс оценил пять из десяти фильмов, сериалов и практик: «Матрицу», «Интерстеллар», «Игру Престолов», настольные игры и употребление алкогольных напитков.',
-      en: 'Liam rated five of the ten films, TV series and practices: “The Matrix”, “Interstellar”, “Game of Thrones”, board gaming and alcohol consumption.',
+      ru: 'Макс оценил пять из десяти фильмов, сериалов и практик: «Матрицу», «Интерстеллар», «Игру Престолов», настольные игры и велоспорт.',
+      en: 'Liam rated five of the ten films, TV series and practices: “The Matrix”, “Interstellar”, “Game of Thrones”, board gaming and cycling.',
     },
     nastya: { ru: 'Настя любит сериалы и истории о большой любви.', en: 'Mia loves TV series and great love stories.' },
   } satisfies Record<PersonaId, Bi>,
@@ -205,7 +205,7 @@ export const landingFaq: ReadonlyArray<{ group: Bi; items: ReadonlyArray<{ q: Bi
       {
         q: { ru: 'Как работает тест на совместимость?', en: 'How does the compatibility test work?' },
         a: {
-          ru: 'Тест на совместимость сравнивает Ваши оценки с оценками других людей по общим фильмам, сериалам, книгам, играм и практикам, и Пространство NDim Space считает по этим оценкам Похожесть. На главной странице Вы оцениваете звёздами десять фильмов, сериалов и практик и сразу видите Похожесть с Максом, Алисой и Настей: кто из Макса, Алисы и Насти думает так же, как и Вы.',
+          ru: 'В тесте на совместимость Пространство NDim Space сравнивает Ваши оценки фильмов, сериалов, книг, игр и практик с оценками других людей и считает по этим оценкам Похожесть. На главной странице Вы проходите тест на совместимость без регистрации: оцениваете звёздами фильмы, сериалы и практики, которые Вы знаете, и сразу видите, кто из Макса, Алисы и Насти думает так же, как и Вы. Внутри Пространства NDim Space Ваши оценки сравниваются с оценками людей Пространства NDim Space, и в Связях Вы находите друзей по интересам и людей для новых знакомств.',
           en: "The compatibility test compares your ratings with other people's ratings of the films, TV series, books, games and practices you have both rated, and NDim Space works out your Similarity from those ratings. On the home page you rate ten films, TV series and practices with stars and straight away see your Similarity with Liam, Emma and Mia: which of Liam, Emma and Mia thinks the same way you do.",
         },
       },

@@ -12,18 +12,16 @@
  * · фильмы и сериал — пять вещей с утверждённого владельцем макета новой V1 («Гарри Поттер и философский камень»,
  *   «Матрица», «Интерстеллар», «Игра Престолов», «Титаник») и «Побег из Шоушенка», второй фильм каталога по голосам
  *   (`[AI]` — добавлен агентом до десяти);
- * · практики — четыре самые оцениваемые по голосам людей Пространства, при равных голосах выше NDim Space Rating:
- *   «Секс» 11 · «Настольные игры» 7 · «Употребление алкогольных напитков» 7 · «Чтение» 6 (NDSR 9,3; «Велоспорт» и
- *   «Курение» — тоже по 6, NDSR 8,5 и 3,3).
- * 🔴 ОТБОР ПРАКТИК — ГОЛОСАМИ ЛЮДЕЙ, НЕ ВКУСОМ АГЕНТА. Слово владельца о витрине, 2026-09-05, дословно: «*Про секс я
- * уже отвечал — ДА, ТАК ПОЛУЧАЕТСЯ ПО ГОЛОСАМ ЛЮДЕЙ, ТАК И ПОКАЗЫВАЕМ. НУ И ЧТО, ЧТО СЕКС — СЕКС это хорошо, люди
- * любят, вот и показываем честно.*» (память проекта `show-catalog-honestly`; главная V5 в `PROJECT_HISTORY.md`) и
- * №066 В2 = А. Агент дважды подменял отбор вкусом — «Путешествия» (3 голоса) вместо «Секса» и «Велоспорт» (6) вместо
- * «Употребления алкогольных напитков» (7); оба раза нашёл суд 2026-09-25. Снять практику можно только по инженерной
- * причине, записанной здесь. Оценки персонажей переезжали на новую строку без изменения чисел — кроме одной: Макс
- * ставил «Велоспорту» 10, а «Употреблению алкогольных напитков» ставит 8, чтобы «Любит:» (два объекта с высшими
- * оценками) правдиво называл «Матрицу» (10) и «Игру Престолов» (9); пример теста «Матрица 9 → Макс 40 %» от этого не
- * меняется — в нём участвует одна «Матрица» (находка независимой проверки 2026-09-25).
+ * · практики — «добрые и одобряемые», по голосам людей Пространства, при равных голосах выше NDim Space Rating:
+ *   «Настольные игры» 7 · «Чтение» 6 (NDSR 9,3) · «Велоспорт» 6 (8,5) · «Медитация» 4 (9,0; выше «Программирования» и
+ *   «Садоводства» с теми же 4 голосами).
+ * 🔴 СЛОВО ВЛАДЕЛЬЦА О ПРАКТИКАХ ТЕСТА (интервью №097, 2026-09-25 ≈17:52): «*давай уберем сенситив темы, оставим добрые
+ *   и одобряемые*». Сенситивные практики из верха по голосам — «Секс» 11, «Употребление алкогольных напитков» 7,
+ *   «Курение» 6 — в тест на главной не ставятся. Это слово свежее его слова о витрине каталога («ДА, ТАК ПОЛУЧАЕТСЯ ПО
+ *   ГОЛОСАМ ЛЮДЕЙ, ТАК И ПОКАЗЫВАЕМ», 2026-09-05) и касается ТЕСТА на главной; витрина каталога живёт по прежнему слову.
+ *   Среди добрых практик отбор — голосами людей, не вкусом агента: вкус агента дважды подменял голоса в этот же день.
+ * Оценки персонажей `[AI]`: Макс ставит «Велоспорту» 8, чтобы «Любит:» (два объекта с высшими оценками) правдиво
+ * называл «Матрицу» (10) и «Игру Престолов» (9); пример теста «Матрица 9 → Макс 40 %» от этого не меняется.
  *
  * 🔴 Модуль НЕ импортирует каталог (`EXP-0136`: универсальная загрузка утащила бы 17 МБ в бандл).
  * Названия, годы, NDSR и голоса — снимок записей каталога на дату выше; расхождение с живым
@@ -58,14 +56,23 @@ export const DEMO_ITEMS: readonly DemoItem[] = [
   { id: 'wPykOfIB7PRnIMwvHHho', slug: 'interstellar-wpykofib', kind: 'movie', title: { ru: 'Интерстеллар', en: 'Interstellar' }, year: '2014', rating: 9.2, votes: 10 },
   { id: 'ivGigNxl0Szdt4LXlz5h', slug: 'titanic-ivgignxl', kind: 'movie', title: { ru: 'Титаник', en: 'Titanic' }, year: '1997', rating: 9, votes: 8 },
   { id: 'KX10jyFBeXdj28dU4S3i', slug: 'game-of-thrones-kx10jyfb', kind: 'tv-series', title: { ru: 'Игра Престолов', en: 'Game of Thrones' }, year: '2011', rating: 9.1, votes: 8 },
-  { id: 'BDsOxBipIv04OwFlWuRv', slug: 'sex-bdsoxbip', kind: 'practice', title: { ru: 'Секс', en: 'Sex' }, year: null, rating: 9.4, votes: 11 },
   { id: 'HW247wWXQMxb1aFFFdFJ', slug: 'board-gaming-hw247wwx', kind: 'practice', title: { ru: 'Настольные игры', en: 'Board Gaming' }, year: null, rating: 7.1, votes: 7 },
-  { id: 'FBvganYvQcCGOQCrR7ky', slug: 'alcohol-consumption-fbvganyv', kind: 'practice', title: { ru: 'Употребление алкогольных напитков', en: 'Alcohol Consumption' }, year: null, rating: 5.7, votes: 7 },
   { id: 'mDnwq3epw5X4MokeMd9v', slug: 'reading-mdnwq3ep', kind: 'practice', title: { ru: 'Чтение', en: 'Reading' }, year: null, rating: 9.3, votes: 6 },
+  { id: 'YSsMo1ODoVZ5o34IxZSX', slug: 'cycling-yssmo1od', kind: 'practice', title: { ru: 'Велоспорт', en: 'Cycling' }, year: null, rating: 8.5, votes: 6 },
+  { id: '12qpAUyKAPjzG54IZM2h', slug: 'meditation-12qpauyk', kind: 'practice', title: { ru: 'Медитация', en: 'Meditation' }, year: null, rating: 9, votes: 4 },
 ];
 
+/**
+ * Практики, которые НЕ ставятся в тест на главной: слово владельца (интервью №097, 2026-09-25 ≈17:52) — «*давай уберем
+ * сенситив темы, оставим добрые и одобряемые*». Состав списка — `[AI]` по мандату этого слова: три сенситивные практики
+ * из верха каталога по голосам — «Секс» (11), «Употребление алкогольных напитков» (7), «Курение» (6). Юнит
+ * `landing-demo.test.ts` сверяет: практики теста = самые оцениваемые практики каталога БЕЗ этих, при равных голосах —
+ * по NDim Space Rating; так подмена голосов вкусом агента краснеет сама.
+ */
+export const SENSITIVE_PRACTICES: readonly string[] = ['BDsOxBipIv04OwFlWuRv', 'FBvganYvQcCGOQCrR7ky', 'itpS5fEWNcPCd4P0An5W'];
+
 /** Короткие имена объектов для оценок персонажей — читаемость таблицы ниже, а не второй id. */
-const [HP, SHAWSHANK, MATRIX, INTERSTELLAR, TITANIC, GOT, SEX, BOARD, ALCOHOL, READING] = DEMO_ITEMS.map((d) => d.id);
+const [HP, SHAWSHANK, MATRIX, INTERSTELLAR, TITANIC, GOT, BOARD, READING, CYCLING, MEDITATION] = DEMO_ITEMS.map((d) => d.id);
 
 export type PersonaId = 'alice' | 'max' | 'nastya';
 
@@ -91,7 +98,7 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
     age: 27,
     color: '#7c5cff',
     angle: -90,
-    ratings: { [HP]: 10, [SHAWSHANK]: 8, [MATRIX]: 7, [INTERSTELLAR]: 10, [TITANIC]: 8, [GOT]: 6, [SEX]: 9, [READING]: 10, [BOARD]: 7, [ALCOHOL]: 4 },
+    ratings: { [HP]: 10, [SHAWSHANK]: 8, [MATRIX]: 7, [INTERSTELLAR]: 10, [TITANIC]: 8, [GOT]: 6, [BOARD]: 7, [READING]: 10, [CYCLING]: 4, [MEDITATION]: 9 },
     favorite: INTERSTELLAR,
     loves: [INTERSTELLAR, HP],
   },
@@ -101,7 +108,7 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
     age: 31,
     color: '#0ea578',
     angle: 28,
-    ratings: { [MATRIX]: 10, [INTERSTELLAR]: 8, [GOT]: 9, [BOARD]: 9, [ALCOHOL]: 8 },
+    ratings: { [MATRIX]: 10, [INTERSTELLAR]: 8, [GOT]: 9, [BOARD]: 9, [CYCLING]: 8 },
     favorite: MATRIX,
     loves: [MATRIX, GOT],
   },
@@ -111,7 +118,7 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
     age: 24,
     color: '#d6544f',
     angle: 152,
-    ratings: { [HP]: 5, [SHAWSHANK]: 6, [MATRIX]: 3, [INTERSTELLAR]: 4, [TITANIC]: 10, [GOT]: 10, [SEX]: 8, [READING]: 5, [BOARD]: 8, [ALCOHOL]: 6 },
+    ratings: { [HP]: 5, [SHAWSHANK]: 6, [MATRIX]: 3, [INTERSTELLAR]: 4, [TITANIC]: 10, [GOT]: 10, [BOARD]: 8, [READING]: 5, [CYCLING]: 6, [MEDITATION]: 8 },
     favorite: GOT,
     loves: [GOT, TITANIC],
   },
