@@ -278,6 +278,9 @@ export function landingTrackOptions(entry: 'root' | 'landing'): TrackOptions {
  * по-прежнему пишет одно число на шаг, её правила Firestore разрешают ровно +1 к счётчику.
  * [TESTED: 2026-09-25 · перехваченный guest_start несёт entry у шести дверей из семи (root · landing · catalog_card · signin ·
  *  test · direct); дверь restart живьём не пройдена; отчёт qa/reports/2026-09-25_guest-entry.md]
+ * [TESTED: 2026-09-25 21:37 · дверь restart — ЕВ-08, истёкший гость вернулся в НОВОЙ вкладке: один guest_start, entry
+ *  restart, env stage; в ТОЙ ЖЕ вкладке шаг уже занят визитом и событие не уходит (ЕВ-08н,
+ *  bugs/NEW_restart_guest_start_swallowed_in_same_tab.md); отчёт qa/reports/2026-09-25_guest-entry-restart.md]
  */
 export async function track(step: FunnelStep, props: AnalyticsProps = {}, options: TrackOptions = {}): Promise<void> {
   if (!claimStep(step)) return;

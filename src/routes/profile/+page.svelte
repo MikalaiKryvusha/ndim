@@ -501,6 +501,7 @@
           // Третий шаг воронки (plans/03 этап 4). Место входа — слово двери в `?guest=<слово>`
           // (`plans/105` Б2): какая дверь привела человека. Слово читается ДО того, как адрес ниже
           // срезает параметр. [TESTED: 2026-09-25 · ЕВ-01/02/04/06/07, адрес после входа без guest=; qa/reports/2026-09-25_guest-entry.md]
+          // [TESTED: 2026-09-25 21:37 · ЕВ-08 «Начать заново» в новой вкладке — entry restart; qa/reports/2026-09-25_guest-entry-restart.md]
           if (session === null) void track('guest_start', { entry: entryOf(new URLSearchParams(location.search).get('guest')) });
         }
         // Параметр одноразовый: F5 и закладка не должны нести его дальше (тот же приём,
