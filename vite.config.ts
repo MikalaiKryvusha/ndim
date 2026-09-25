@@ -108,7 +108,11 @@ export default defineConfig({
     // Порт слота и громкий отказ при занятом порту — см. блок «СЛОТ РАБОЧЕГО МЕСТА» выше.
     port: STAND.dev,
     strictPort: true,
-    watch: { ignored: ['**/build/**', '**/.svelte-kit/output/**'] },
+    // `.claude/worktrees` — копии веток судей и исполнителей ПОД корнем проекта. 2026-09-26 сборка судьи
+    // там сменила свой `.svelte-kit/tsconfig.json`, vite стенда принял это за свой tsconfig, сбросил кэш
+    // зависимостей — и страницы стенда получили 504 «Outdated Optimize Dep» на firebase_*: оценка теста
+    // «не сохранилась» на ровном месте (qa/reports/2026-09-26_test-first-card.md).
+    watch: { ignored: ['**/build/**', '**/.svelte-kit/output/**', '**/.claude/worktrees/**'] },
   },
 
   // Тот же слот для собранного сайта. Это адрес, на который смотрят e2e роли
