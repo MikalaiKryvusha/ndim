@@ -115,9 +115,29 @@ export function bridgeLine(
    * чьи оценки уехали, «Это была демонстрация» больше не правда — его оценки теперь настоящие.
    * `[AI]` Строка `carried` НОВАЯ и стоит на вычитке у владельца (интервью №097).
    */
-  const lead = carried
-    ? { ru: 'Ваши оценки из теста на совместимость сохранены', en: 'Your ratings from the compatibility test are saved' }[lang]
-    : { ru: 'Это была демонстрация', en: 'That was a demonstration' }[lang];
+  /*
+   * Поправлено независимой проверкой §7Б 2026-09-25: рядом с новым началом «настоящие связи» намекало, что
+   * Макс, Алиса и Настя ненастоящие (скрытый контраст, смысл запрещённого «вымышленные»), а «здесь будут» —
+   * обещание. Для переноса фраза своя целиком.
+   */
+  if (carried) {
+    const lead = { ru: 'Ваши оценки из теста на совместимость сохранены в Вашем профиле', en: 'Your ratings from the compatibility test are saved in your profile' }[lang];
+    return hasCards
+      ? {
+          lead,
+          tail: { ru: ' — вот Ваши Связи: люди с наибольшей Похожестью на Вас.', en: ' — here are your Relations: the people with the highest Similarity to you.' }[lang],
+          draft: true,
+        }
+      : {
+          lead,
+          tail: {
+            ru: '. Пространство NDim Space рассчитывает Связи по Вашим оценкам, и рассчитанные Связи показываются на этом экране.',
+            en: '. NDim Space works out Relations from your ratings, and the Relations it works out appear on this screen.',
+          }[lang],
+          draft: true,
+        };
+  }
+  const lead = { ru: 'Это была демонстрация', en: 'That was a demonstration' }[lang];
   return hasCards
     ? {
         lead,

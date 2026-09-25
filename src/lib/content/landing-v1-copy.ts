@@ -6,8 +6,10 @@
  * строка выдачи — вариант А (№096 В15); 12 вопросов и ответов — №096 В16 = А. Правка любой строки идёт
  * ЧЕРЕЗ ВЫЧИТКУ ВЛАДЕЛЬЦА, а не здесь.
  *
- * `[AI]` НОВЫЕ СТРОКИ RU (написаны по портрету `AUTHOR_STYLOMETRY.md`, на вычитке в интервью №097):
- *   · `demoHow` — демо стало десятью фильмами, сериалами и увлечениями (№096 В14); прежняя строка
+ * `[AI]` НОВЫЕ СТРОКИ RU (написаны по портрету `AUTHOR_STYLOMETRY.md`, поправлены независимой проверкой §7Б
+ *   2026-09-25 — «практики» по слову каталога вместо «увлечения», противоречие ответов FAQ снято; на вычитке в
+ *   интервью №097):
+ *   · `demo.how` — демо стало десятью фильмами, сериалами и практиками (№096 В14); прежняя строка
  *     называла «пять фильмов и сериалов»;
  *   · строка Макса — прежняя называла «три из пяти»;
  *   · ответ FAQ «Как работает тест на совместимость?» — прежний называл «пять фильмов и сериалов».
@@ -26,7 +28,7 @@ export const landingV1 = {
     title: { ru: 'Знакомства по интересам — Пространство NDim Space', en: 'Meet people who share your interests — NDim Space' },
     desc: {
       ru: 'Знакомства по интересам и тест на совместимость. Оцените любимые фильмы, сериалы, книги и игры, и Пространство NDim Space найдёт Вам людей, похожих на Вас.',
-      en: 'Meet people who share your interests and take the compatibility test. Rate the films, series, books and games you love, and NDim Space finds you people who are like you.',
+      en: 'Meet people who share your interests and take the compatibility test. Rate the films, TV series, books and games you love, and NDim Space will find people like you.',
     },
   },
   top: {
@@ -36,12 +38,12 @@ export const landingV1 = {
     themeLight: { ru: 'Светлая тема', en: 'Light theme' },
   },
   hero: {
-    kicker: { ru: 'Знакомства нового измерения', en: 'New Dimension Connections' },
+    kicker: { ru: 'Знакомства нового измерения', en: 'Meeting people in a new dimension' },
     h1Lead: { ru: 'Знакомства по интересам в ', en: 'Meet people who share your interests in ' },
     h1Accent: { ru: 'Пространстве NDim Space', en: 'NDim Space' },
     lede: {
       ru: 'Оцените Ваши любимые фильмы, сериалы, книги и игры, и Пространство NDim Space найдёт Вам людей, похожих на Вас. Знакомиться, находить друзей и общаться по интересам в Пространстве NDim Space — бесплатно.',
-      en: 'Rate your favourite films, series, books and games, and NDim Space finds you people who are like you. Meeting people, making friends and talking about shared interests in NDim Space is free.',
+      en: 'Rate your favourite films, TV series, books and games, and NDim Space will find people like you. Meeting people, making friends and talking about shared interests in NDim Space is free.',
     },
     down: { ru: 'Пройти тест на совместимость ↓', en: 'Take the compatibility test ↓' },
   },
@@ -50,8 +52,8 @@ export const landingV1 = {
     h2Accent: { ru: 'Максом, Алисой и Настей', en: 'Liam, Emma and Mia' },
     /** `[AI]` новая строка — на вычитке (№097). */
     how: {
-      ru: 'Оцените звёздами фильмы, сериалы и увлечения, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы.',
-      en: 'Rate the films, series and pastimes with stars, and NDim Space shows which of Liam, Emma and Mia thinks the same way you do.',
+      ru: 'Оцените звёздами фильмы, сериалы и практики, которые Вы знаете, и Пространство NDim Space покажет, кто из Макса, Алисы и Насти думает так же, как и Вы. Практики — это занятия, которые люди любят: путешествия, чтение, настольные игры и велоспорт.',
+      en: 'Rate the films, TV series and practices you know with stars, and NDim Space will show which of Liam, Emma and Mia thinks the same way you do. Practices are activities people love: travel, reading, board gaming and cycling.',
     },
     me: { ru: 'Я', en: 'Me' },
     popLead: { ru: ' — Ваша самая сильная связь: ', en: ' is your strongest connection: ' },
@@ -65,22 +67,22 @@ export const landingV1 = {
     h2: { ru: 'Ваша Похожесть с Максом, Алисой и Настей', en: 'Your Similarity with Liam, Emma and Mia' },
     sub: {
       ru: 'Похожесть показывает, насколько Вы похожи с другим человеком. В Связях Пространство NDim Space показывает людей с наибольшей Похожестью на Вас.',
-      en: 'Similarity shows how alike you are with another person. In Relations, NDim Space shows the people with the highest Similarity to you.',
+      en: 'Similarity shows how alike you and another person are. In Relations, NDim Space shows the people with the highest Similarity to you.',
     },
     loves: { ru: 'Любит: ', en: 'Loves: ' },
     storyBrand: { ru: 'Пространство NDim Space', en: 'NDim Space' },
     storyLead: { ru: 'Моя самая сильная связь — ', en: 'My strongest connection is ' },
     storySim: { ru: ': Похожесть ', en: ': Similarity ' },
-    storyCaption: { ru: 'Карточка для сторис', en: 'Card for stories' },
+    storyCaption: { ru: 'Карточка для сторис', en: 'Story card' },
   },
   /** Строки характера персонажей. `[AI]` строка Макса новая — на вычитке (№097). */
   persona: {
     alice: { ru: 'Алиса любит фантастику и истории о волшебстве.', en: 'Emma loves science fiction and stories about magic.' },
     max: {
-      ru: 'Макс оценил пять из десяти фильмов, сериалов и увлечений: «Матрицу», «Интерстеллар», «Игру престолов», настольные игры и велоспорт.',
-      en: 'Liam rated five of the ten films, series and pastimes: The Matrix, Interstellar, Game of Thrones, board gaming and cycling.',
+      ru: 'Макс оценил пять из десяти фильмов, сериалов и практик: «Матрицу», «Интерстеллар», «Игру Престолов», настольные игры и велоспорт.',
+      en: 'Liam rated five of the ten films, TV series and practices: The Matrix, Interstellar, Game of Thrones, board gaming and cycling.',
     },
-    nastya: { ru: 'Настя любит сериалы и истории о большой любви.', en: 'Mia loves TV series and stories about great love.' },
+    nastya: { ru: 'Настя любит сериалы и истории о большой любви.', en: 'Mia loves TV series and great love stories.' },
   } satisfies Record<PersonaId, Bi>,
   howto: {
     kicker: { ru: 'Как найти своих людей', en: 'How to find your people' },
@@ -91,7 +93,7 @@ export const landingV1 = {
     },
     lede: {
       ru: 'Здесь Вы найдёте людей, действительно похожих на Вас. Забудьте о бесконечных свайпах — мы подберём тех, с кем у Вас настоящая совместимость.',
-      en: 'Here you will find people who are genuinely like you. Forget endless swiping — we find those you are truly compatible with.',
+      en: 'Here you will find people who are genuinely like you. Forget endless swiping — we find the people you are truly compatible with.',
     },
     steps: [
       {
@@ -137,7 +139,7 @@ export const landingV1 = {
       ru: 'В Пространстве NDim Space Вы найдёте людей, действительно похожих на Вас.',
       en: 'In NDim Space you will find people who are genuinely like you.',
     },
-    go: { ru: 'Оцените, чтобы найти людей, кто думает, как Вы', en: 'Rate it to find people who think like you' },
+    go: { ru: 'Оцените, чтобы найти людей, кто думает, как Вы', en: 'Rate the things you love to find people who think like you' },
   },
   foot: {
     line: {
@@ -151,7 +153,7 @@ export const landingV1 = {
       catalog: { ru: 'Каталог', en: 'Catalog' },
       manual: { ru: 'Руководство', en: 'User guide' },
       about: { ru: 'О проекте', en: 'About' },
-      author: { ru: 'Об авторе', en: 'The author' },
+      author: { ru: 'Об авторе', en: 'About the author' },
       terms: { ru: 'Условия', en: 'Terms' },
       privacy: { ru: 'Политика', en: 'Privacy' },
     },
@@ -192,7 +194,7 @@ export const landingFaq: ReadonlyArray<{ group: Bi; items: ReadonlyArray<{ q: Bi
         q: { ru: 'Что видно в карточке человека в Связях?', en: "What do I see on a person's card in Relations?" },
         a: {
           ru: 'В карточке человека в Связях видны Похожесть с Вами и то, что человек открыл в своём профиле: имя, фото, пол, дату рождения и текст «О себе».',
-          en: "A person's card in Relations shows their Similarity with you and what the person has opened in their profile: name, photo, gender, date of birth and the “About me” text.",
+          en: "A person's card in Relations shows their Similarity with you and what the person has made visible in their profile: name, photo, gender, date of birth and the “About me” text.",
         },
       },
     ],
@@ -203,8 +205,8 @@ export const landingFaq: ReadonlyArray<{ group: Bi; items: ReadonlyArray<{ q: Bi
       {
         q: { ru: 'Как работает тест на совместимость?', en: 'How does the compatibility test work?' },
         a: {
-          ru: 'Тест на совместимость сравнивает Ваши оценки с оценками других людей по общим фильмам, сериалам и увлечениям и считает Похожесть. На главной странице Вы оцениваете фильмы, сериалы и увлечения и сразу видите Похожесть с Максом, Алисой и Настей: кто из них думает так же, как и Вы.',
-          en: 'The compatibility test compares your ratings with the ratings of other people on the films, series and pastimes you share, and works out the Similarity. On the main page you rate films, series and pastimes and see your Similarity with Liam, Emma and Mia straight away: which of them thinks the same way you do.',
+          ru: 'Тест на совместимость сравнивает Ваши оценки с оценками других людей по общим фильмам, сериалам, книгам, играм и практикам, и Пространство NDim Space считает по этим оценкам Похожесть. На главной странице Вы оцениваете звёздами десять фильмов, сериалов и практик и сразу видите Похожесть с Максом, Алисой и Настей: кто из Макса, Алисы и Насти думает так же, как и Вы.',
+          en: "The compatibility test compares your ratings with other people's ratings of the films, TV series, books, games and practices you have both rated, and NDim Space works out your Similarity from those ratings. On the home page you rate ten films, TV series and practices with stars and straight away see your Similarity with Liam, Emma and Mia: which of Liam, Emma and Mia thinks the same way you do.",
         },
       },
       {
@@ -218,7 +220,7 @@ export const landingFaq: ReadonlyArray<{ group: Bi; items: ReadonlyArray<{ q: Bi
         q: { ru: 'Как считается Похожесть?', en: 'How is Similarity calculated?' },
         a: {
           ru: 'Похожесть — это близость, умноженная на общность. Близость — насколько одинаково Вы и другой человек оценили общие вещи. Общность — насколько широко Ваши описания пересекаются.',
-          en: 'Similarity is proximity multiplied by commonality. Proximity is how alike you and another person rated the things you share. Commonality is how widely your descriptions overlap.',
+          en: 'Similarity is proximity multiplied by commonality. Proximity is how similarly you and another person rated the things you share. Commonality is how widely your descriptions overlap.',
         },
       },
     ],
@@ -230,14 +232,14 @@ export const landingFaq: ReadonlyArray<{ group: Bi; items: ReadonlyArray<{ q: Bi
         q: { ru: 'Сколько стоит Пространство NDim Space?', en: 'How much does NDim Space cost?' },
         a: {
           ru: 'Пространство NDim Space работает бесплатно для всех людей по всему Миру.',
-          en: 'NDim Space is free for all people all over the World.',
+          en: 'NDim Space is free for everyone all over the world.',
         },
       },
       {
         q: { ru: 'Нужна ли регистрация?', en: 'Do I need to sign up?' },
         a: {
           ru: 'Пространством NDim Space Вы пользуетесь гостем без регистрации: тест на совместимость проходится прямо на главной странице. Гостевой аккаунт живёт 7 дней с момента создания. Аккаунт, привязанный к Google или к Вашей почте, сохраняет Ваши оценки и Связи на любом устройстве.',
-          en: 'You use NDim Space as a guest without signing up: the compatibility test is taken right on the main page. A guest account lives for 7 days from the moment it is created. An account linked to Google or to your email keeps your ratings and Relations on any device.',
+          en: 'You can use NDim Space as a guest without signing up: you take the compatibility test right on the home page. A guest account lasts 7 days from the moment it is created. An account linked to Google or to your email keeps your ratings and Relations on any device.',
         },
       },
       {
