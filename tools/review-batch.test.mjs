@@ -41,11 +41,17 @@ function cleanup() {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Тело ответа — как у страницы документа пачки: с 2026-09-25 она несёт редакцию документа (`<body data-rev>`), и сервер
+// отвергает ответ без неё (`bugs/NEW_review_page_stale_tab_accepts_answers`). Редакция берётся тем же путём, что у
+// страницы, — из разметки, которую отдаёт сервер пачки, а не вычисляется тестом сам.
 async function decide(url, relDoc, choice) {
+	const page = await fetch(`${url}doc?p=${encodeURIComponent(relDoc)}`).then((r) => r.text());
+	const rev = /<body[^>]*\sdata-rev="([^"]+)"/u.exec(page)?.[1];
+	assert.ok(rev, `страница документа пачки не несёт редакцию (data-rev): ${relDoc}`);
 	const res = await fetch(`${url}decision`, {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({ doc: relDoc, by: 'тест пачки', answers: { В1: { choice, text: '', comment: '' } }, artifacts: {}, comment: '' }),
+		body: JSON.stringify({ doc: relDoc, rev, by: 'тест пачки', answers: { В1: { choice, text: '', comment: '' } }, artifacts: {}, comment: '' }),
 	});
 	return res.json();
 }
@@ -82,12 +88,24 @@ test('пачка живёт после первого ответа и закры
 		}
 		assert.ok(url, `сервер пачки не поднялся за 10 с:\n${out}`);
 
+		// 0 · контроль: ответ без редакции (страница старой версии контура) НЕ записывается и сервер не гасит
+		const legacy = await fetch(`${url}decision`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ doc: relA, by: 'тест пачки', answers: { В1: { choice: 'Б', text: '', comment: '' } }, artifacts: {}, comment: '' }),
+		});
+		assert.equal(legacy.status, 409, 'ответ без редакции обязан получить отказ 409');
+		assert.equal((await legacy.json()).stale, true, 'отказ назван stale');
+		assert.doesNotMatch(readFileSync(a, 'utf8'), /\*\*Ответ:\*\* \*\*Б\*\*/u, 'ответ без редакции в md не лёг');
+
 		// 1 · первый документ отвечен → записан → СЕРВЕР ЖИВ (раньше здесь он умирал)
 		const first = await decide(url, relA, 'А');
 		assert.equal(first.ok, true, `первый ответ не записан: ${JSON.stringify(first)}`);
 		await wait(3000); // прежняя редакция гасила сервер через 2,5 с — ждём дольше её таймера
-		const alive = await fetch(`${url}alive`).then((r) => r.status).catch(() => 'мёртв');
-		assert.equal(alive, 204, 'после первого ответа сервер пачки обязан жить: остался второй документ');
+		// Пульс с 2026-09-25 отвечает 200 и JSON (редакция документа и признак закрытия — их читает страница), прежде 204:
+		// судится «сервер ответил успехом», мёртвый сервер по-прежнему даёт отказ соединения.
+		const alive = await fetch(`${url}alive`).then((r) => (r.ok ? 'жив' : r.status)).catch(() => 'мёртв');
+		assert.equal(alive, 'жив', 'после первого ответа сервер пачки обязан жить: остался второй документ');
 		assert.match(readFileSync(a, 'utf8'), /\*\*Ответ:\*\* \*\*А\*\*/u, 'ответ по первому документу лёг в md');
 		const index = await fetch(url).then((r) => r.text());
 		assert.match(index, /отвечено/u, 'список пачки показывает первый документ отвеченным');

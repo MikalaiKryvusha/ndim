@@ -225,6 +225,10 @@ try {
 	const decisions = join(ROOT, 'interviews', 'decisions');
 	const dec = join(decisions, 'interview_999_bug110_fixture.decision.json');
 	if (existsSync(dec)) rmSync(dec);
+	// Замок страницы (plans/NEW_review_contour_stale_tab.md) — тоже наш след: убитый прогоном сервер оставляет его
+	// «мёртвым», чтобы следующий подъём встал на прежний адрес; фикстуре он не нужен.
+	const lock = join(decisions, 'interview_999_bug110_fixture.lock');
+	if (existsSync(lock)) rmSync(lock);
 	// 🔴 Архив — тоже наш след. Первая редакция стража его не убирала, и после четырёх прогонов
 	// в `interviews/decisions/archive/` осталось четыре записи фикстуры (правило класса bugs/103:
 	// база и артефакты общие, страж обязан возвращать их в исходное состояние).
@@ -237,6 +241,7 @@ try {
 }
 
 check(!existsSync(FIXTURE), 'след убран: фикстура удалена');
+check(!existsSync(join(ROOT, 'interviews', 'decisions', 'interview_999_bug110_fixture.lock')), 'след убран: замок страницы фикстуры снят');
 check(
 	readdirSync(join(ROOT, 'interviews', 'decisions', 'archive')).every(
 		(n) => !n.startsWith('interview_999_bug110_fixture'),
