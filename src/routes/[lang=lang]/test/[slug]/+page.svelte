@@ -402,7 +402,10 @@
       hintIds = decodePairSet(poolIds, params.get(PAIR_SET_PARAM));
     } else {
       // Затравку уже взял ранний скрипт карточки — берём ту же: первая вещь не сменится под глазами.
-      const early = (window as unknown as Record<string, unknown>)[EARLY_SEED_KEY];
+      const w = window as unknown as Record<string, unknown>;
+      const early = w[EARLY_SEED_KEY];
+      // Затравка — на одну попытку: следующая страница теста без перезагрузки берёт свежую (суд, О2).
+      delete w[EARLY_SEED_KEY];
       order = attemptOrder(poolIds, typeof early === 'number' ? early : attemptSeed());
     }
     alive = true;

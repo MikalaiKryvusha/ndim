@@ -52,6 +52,9 @@ for (let n = 1; n <= 3; n++) {
   await page.evaluate(() => {
     const w = window;
     w.__probe = [];
+    // Метки на узлах пререндера: переживут оживление, только если корень не перерисован (гидратация сошлась).
+    document.querySelector('h1').__mark = 1;
+    document.querySelector('.qcard').__mark = 1;
     new MutationObserver(() => {
       const live = document.querySelector('.qcard > div:not(.pre):not(.prestars) .name');
       if (!live || w.__probe.length) return;
@@ -68,12 +71,41 @@ for (let n = 1; n <= 3; n++) {
   await page.screenshot({ path: `${OUT}/pk0${n}-after.png` });
   check(`ПК-0${n}б`, liveName === before[0]?.name, `после оживления «${liveName}»`);
   check(`ПК-0${n}в`, probe.length === 2 && Math.abs(probe[0] - probe[1]) < 1, `коробка живой карточки x: ${probe.map((v) => v.toFixed(1)).join(' → ')} (влёт дал бы сдвиг до 32)`);
-  const hyd = errors.filter((e) => /hydrat|mismatch/i.test(e));
-  check(`ПК-0${n}г`, hyd.length === 0, `предупреждений гидратации: ${hyd.length}${hyd.length ? ' — ' + hyd[0] : ''}`);
+  const marks = await page.evaluate(() => [document.querySelector('h1').__mark, document.querySelector('.qcard').__mark]);
+  const seedLeft = await page.evaluate(() => '__ndimTestSeed' in window);
+  check(`ПК-0${n}г`, marks[0] === 1 && marks[1] === 1 && errors.length === 0, `узлы пререндера пережили оживление: h1 ${marks[0] === 1}, карточка ${marks[1] === 1}; ошибок консоли ${errors.length}`);
+  check(`ПК-0${n}д`, !seedLeft, `затравка раннего скрипта стёрта после чтения: ${!seedLeft}`);
   firsts.push(liveName);
   await ctx.close();
 }
 console.log(`INFO первые вещи трёх заходов: ${firsts.map((f) => `«${f}»`).join(', ')}`);
+
+// ПК-08 — «Тест личности» → «Все тесты» → «Тест на совместимость» ССЫЛКАМИ, без перезагрузки: у каждой
+// новой страницы теста своя затравка (суд, О2). Без правки все три пары совпали бы: затравка жила в window.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  const live = async () => (await page.waitForSelector('.qcard[data-live] .name'), (await page.textContent('.qcard[data-live] .name'))?.trim() ?? '');
+  await page.goto(BASE + '/ru/test/personality');
+  let personal = await live();
+  await page.evaluate(() => { window.__sameDoc = 1; });
+  const pairs = [];
+  for (let k = 0; k < 3; k++) {
+    await page.click('a[href="/ru/tests"]');
+    await page.waitForURL('**/ru/tests');
+    await page.click('a[href="/ru/test/compatibility"]');
+    await page.waitForURL('**/ru/test/compatibility');
+    pairs.push([personal, await live()]);
+    await page.click('a[href="/ru/tests"]');
+    await page.waitForURL('**/ru/tests');
+    await page.click('a[href="/ru/test/personality"]');
+    await page.waitForURL('**/ru/test/personality');
+    personal = await live();
+  }
+  const sameDoc = await page.evaluate(() => window.__sameDoc === 1);
+  check('ПК-08', sameDoc && pairs.some(([p, c]) => p !== c), `переходы без перезагрузки: ${sameDoc}; личность → совместимость: ${pairs.map(([p, c]) => `«${p}» → «${c}»`).join('; ')}`);
+  await ctx.close();
+}
 
 // ПК-04 — без JS: видно лицо 0, не пустая карточка.
 {

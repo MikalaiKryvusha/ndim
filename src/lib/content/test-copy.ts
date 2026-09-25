@@ -397,6 +397,7 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
       sub: 'Не готовый «тип личности», а живая анкета: факты о Вашем вкусе, которые растут с каждой оценкой.',
       facts: ['без регистрации', '12 вещей · ~3 минуты', 'бесплатно'],
       steps: [
+        // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; на вычитку владельцу.
         { lead: 'Оцените 12 вещей', rest: 'звёздами — настоящие фильмы, сериалы и игры.' },
         { lead: 'Смотрите, как собирается анкета', rest: '— факт за фактом, после каждой оценки.' },
         { lead: 'Сравнитесь с другом', rest: '— по личной ссылке, когда захотите.' },
@@ -430,6 +431,7 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
       hubLine: 'Живая анкета вместо готового «типа»: факты о Вашем вкусе, растущие с каждой оценкой.',
       hubCta: 'Пройти',
       metaTitle: 'Тест личности — NDim Space',
+      // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; на вычитку владельцу.
       metaDesc: 'Честный тест личности: вместо готового «типа» — живая анкета из Ваших настоящих ответов. Оцените знакомые фильмы, сериалы и игры — без регистрации.',
     },
     en: {
@@ -438,6 +440,7 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
       sub: 'Not a ready-made “personality type” — a living profile: facts about your taste that grow with every rating.',
       facts: ['no sign-up', '12 things · ~3 minutes', 'free'],
       steps: [
+        // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; на вычитку владельцу.
         { lead: 'Rate 12 things', rest: 'with stars — real movies, series and games.' },
         { lead: 'Watch your profile take shape', rest: '— fact by fact, after every rating.' },
         { lead: 'Compare with a friend', rest: '— by a personal link, whenever you like.' },
@@ -471,6 +474,7 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
       hubLine: 'A living profile instead of a ready-made “type”: facts about your taste, growing with every rating.',
       hubCta: 'Take the test',
       metaTitle: 'Personality test — NDim Space',
+      // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; на вычитку владельцу.
       metaDesc: 'An honest personality test: instead of a ready-made “type” — a living profile built from your real answers. Rate familiar movies, series and games — no sign-up.',
     },
   },
