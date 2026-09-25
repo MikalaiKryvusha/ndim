@@ -63,12 +63,14 @@ test('🔴 апостроф в описании читается целиком:
   assert.equal(significantParts(single).description, 'A "quoted" word', 'в одинарных кавычках двойная — часть значения');
 });
 
-test('🔴 служебные классы стоят в НАСТОЯЩИХ компонентах: витрина главной и виджет версий вырезаются из исходника', () => {
+test('🔴 служебные классы стоят в НАСТОЯЩИХ компонентах: числа главной и «Теста на совместимость», виджет версий', () => {
   // Фикстура `page()` несёт классы, которые написал автор юнита; здесь — те, что стоят в компонентах сейчас.
-  for (const [tag, token, file] of SERVICE) {
-    const source = readFileSync(file, 'utf8');
-    const cut = stripByClass(source, tag, token);
-    assert.ok(cut.length < source.length, `${file}: <${tag} class="${token}"> не найден или не закрыт — исключение молчит`);
+  for (const [tag, token, files] of SERVICE) {
+    for (const file of files) {
+      const source = readFileSync(file, 'utf8');
+      const cut = stripByClass(source, tag, token);
+      assert.ok(cut.length < source.length, `${file}: <${tag} class="${token}"> не найден или не закрыт — исключение молчит`);
+    }
   }
 });
 
