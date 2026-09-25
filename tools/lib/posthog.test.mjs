@@ -2,7 +2,7 @@
  * ЮНИТЫ ДОРОГИ ЗАПРОСА HogQL (`tools/lib/posthog.mjs`): граница времени без пояса отказывается ДО сети.
  *
  * Сети не касаются: `fetch` — заглушка, которая считает вызовы. Прогон: `node --test tools/lib/posthog.test.mjs` ·
- * `npm run test:tools`. Повод — `bugs/NEW_week_number_window_labelled_utc_is_moscow.md` и близнец в драйвере прогона
+ * `npm run test:tools`. Повод — `bugs/NEW_DONE_week_number_window_labelled_utc_is_moscow.md` и близнец в драйвере прогона
  * главной V1 (строка его запроса процитирована ниже дословно).
  */
 import { test } from 'node:test';

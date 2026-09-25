@@ -14,7 +14,7 @@
 import { loadEnv } from './env.mjs';
 
 /**
- * ГРАНИЦА ВРЕМЕНИ БЕЗ ПОЯСА — ОТКАЗ ДО СЕТИ (`bugs/NEW_week_number_window_labelled_utc_is_moscow.md`).
+ * ГРАНИЦА ВРЕМЕНИ БЕЗ ПОЯСА — ОТКАЗ ДО СЕТИ (`bugs/NEW_DONE_week_number_window_labelled_utc_is_moscow.md`).
  * HogQL читает строку без пояса в поясе ПРОЕКТА (+03:00), а не в UTC: «*Date literals parse in your project's timezone,
  * not UTC … For an absolute instant, pass the timezone explicitly*» (posthog.com/docs/sql/expressions). 2026-09-25 класс
  * встретился дважды за день: окно прибора числа недели, подписанное «(UTC)», и окно драйвера прогона главной V1
@@ -25,7 +25,9 @@ import { loadEnv } from './env.mjs';
  *   <молча смещённое окно у следующего прибора | не лечит: пояс живёт в тексте запроса, не в значении | ложный отказ
  *   законному запросу в поясе проекта — лечится явным поясом проекта> · consulted <документация PostHog, выше>.
  * GAP: столбцы (`toDateTime(timestamp)`), `toDate('…')`, `toStartOfDay(…)` без пояса не судятся — только границы-значения.
- * [NOT-TESTED: 2026-09-25 · юнит tools/lib/posthog.test.mjs — гигиена; ручной прогон отказа — отчёт
+ * [TESTED: 2026-09-25 · отказ — ручной прогон dev-1 16:48: дословный запрос драйвера через hogql() с fetch, считающим
+ *  вызовы, → отказ «граница времени без пояса: toDateTime({since})», обращений в сеть 0; пропуск — запрос прибора числа
+ *  недели с явным поясом прошёл дорогу и дошёл до PostHog в прогоне МЕНЕДЖЕРА на бою 16:52 (голова d6bdf3e); отчёт
  *  qa/reports/2026-09-25_week-number-tz.md]
  */
 const BARE_TIME = /toDateTime\(\s*(\{\w+\}|'[^']*')\s*\)/g;
