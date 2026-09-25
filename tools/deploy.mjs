@@ -126,6 +126,41 @@ function run(title, command) {
 }
 
 /**
+ * ЖИВАЯ ПРОВЕРКА ПОСЛЕ ВЫПУСКА — с одним повтором через паузу (инцидент 2026-09-25 18:27).
+ *
+ * Шаг «заголовки кеширования» упал сразу после выпуска версии в бой, не напечатав ни одной проверки; повтор через ≈1 мин
+ * — 12/0 (`qa/reports/2026-09-25_new-landing-v1-release.md`). Дверь остановилась ДО смоука под сессией: версия стояла в
+ * бою непроверенной, пока шаги не прогнали руками. Живые проверки ходят по адресу, который в первые секунды после
+ * выпуска может ещё отдавать прежнее, — поэтому провал повторяется ОДИН раз через `pauseMs`; второй провал останавливает
+ * выкат, как `run`. Настоящий дефект так не прячется: он красный и на повторе; оба захода печатаются вслух.
+ * Исполнитель, пауза и выход приходят аргументами — юнит `deploy.test.mjs` зовёт функцию без сети и без выката.
+ * [NOT-TESTED]
+ */
+export function runLive(title, command, { exec = (c) => execSync(c, { stdio: 'inherit' }), pause = sleepSync, pauseMs = 20_000, fail = () => process.exit(1) } = {}) {
+	console.log(`\n══ ${title} ══\n$ ${command}`);
+	for (let attempt = 1; attempt <= 2; attempt += 1) {
+		try {
+			exec(command);
+			if (attempt > 1) console.log(`  ✅ повтор прошёл: первый заход упал, второй зелёный — «${title}» пройден`);
+			return true;
+		} catch {
+			if (attempt === 1) {
+				console.error(`\n⚠️ «${title}» упал; повтор через ${Math.round(pauseMs / 1000)} с — адрес мог ещё отдавать прежнюю версию`);
+				pause(pauseMs);
+			}
+		}
+	}
+	console.error(`\n🔴 ШАГ ПРОВАЛЕН: ${title} — и на повторе. Выкат остановлен.`);
+	fail();
+	return false;
+}
+
+/** Синхронная пауза без занятого цикла: живые шаги двери идут `execSync` подряд. */
+function sleepSync(ms) {
+	Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
  * Выкат Firebase в НАЗВАННЫЙ контур: команда собирается из реестра и проверяется стоп-правилом.
  *
  * 🔴 КОНТУР ПРИХОДИТ ПАРАМЕТРОМ, А НЕ ИЗ ОБЛАСТИ ВИДИМОСТИ, и это оплачено боем 2026-08-29:
@@ -626,19 +661,19 @@ async function main() {
 	}
 	console.log('  ✅ сборка легла в заявленный контур, соседний не тронут');
 
-	run('заголовки кеширования (bugs/124)', `node tools/verify-prod-cache.mjs --base ${CONTOUR.site}`);
+	runLive('заголовки кеширования (bugs/124)', `node tools/verify-prod-cache.mjs --base ${CONTOUR.site}`);
 	/*
 	 * Переадресации проверяются В ЖИВОМ контуре, хотя `verify-contour-parity` уже сверил конфигурации.
 	 * Это не дубль: там сверяются НАМЕРЕНИЯ (два файла), здесь — ПОВЕДЕНИЕ (что реально отдаёт хостинг).
 	 * `bugs/133` жил ровно в промежутке между ними — конфигурация стейджа была честной сама по себе,
 	 * а вести себя как бой контур не мог.
 	 */
-	run('переадресации живы (bugs/133)', `node tools/verify-prod-lang-redirects.mjs --base ${CONTOUR.site}`);
+	runLive('переадресации живы (bugs/133)', `node tools/verify-prod-lang-redirects.mjs --base ${CONTOUR.site}`);
 	if (CONTOUR.name === 'stage') {
 		run('стейдж закрыт от роботов (П6)', 'node tools/verify-stage-noindex.mjs');
 	}
-	run('🔑 СМОУК ПОД СЕССИЕЙ — вход и все экраны', `node tools/verify-prod-signed-in.mjs --base ${CONTOUR.site}`);
-	run('публичный смоук гостем', `node tools/verify-prod-b4.mjs --base ${CONTOUR.site}`);
+	runLive('🔑 СМОУК ПОД СЕССИЕЙ — вход и все экраны', `node tools/verify-prod-signed-in.mjs --base ${CONTOUR.site}`);
+	runLive('публичный смоук гостем', `node tools/verify-prod-b4.mjs --base ${CONTOUR.site}`);
 
 	/*
 	 * РАСПИСКА СТЕЙДЖА пишется ТОЛЬКО здесь — то есть только после того, как все проверки прошли:

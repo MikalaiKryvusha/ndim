@@ -156,3 +156,39 @@ test('🔴 БОЕВОЙ СЛУЧАЙ 2026-08-29: ни одна функция в
 			'передай их аргументом (боевой случай 2026-08-29, ReferenceError на живом выкате)',
 	);
 });
+
+/* ── Живая проверка после выпуска: один повтор через паузу (инцидент 2026-09-25 18:27) ──────────────────────── */
+
+/*
+ * Шаг «заголовки кеширования» упал сразу после выпуска, повтор через минуту — 12/0; дверь же остановилась до смоука
+ * под сессией, и версия стояла в бою непроверенной. Стерегутся обе половины обещания `runLive`: мгновенный сбой
+ * НЕ останавливает выкат (повтор зелёный), настоящий дефект ОСТАНАВЛИВАЕТ (красный и на повторе), и пауза перед
+ * повтором действительно берётся. Исполнитель, пауза и выход подменены — сети и выката нет; дверь — дочерним процессом.
+ */
+const runLiveВНоде = (сценарий) => {
+	const r = вНоде(`
+		const { runLive } = await import(${JSON.stringify(ДВЕРЬ_URL)});
+		const calls = []; const pauses = []; let failed = 0;
+		const script = ${JSON.stringify(сценарий)};
+		const ok = runLive('проба', 'x', {
+			exec: () => { const i = calls.length; calls.push(i); if (script[i] === 'fail') throw new Error('красный'); },
+			pause: (ms) => pauses.push(ms), pauseMs: 7, fail: () => { failed += 1; },
+		});
+		console.log('ИТОГ ' + JSON.stringify({ ok, calls: calls.length, pauses, failed }));
+	`);
+	const строка = `${r.stdout}`.split('\n').find((l) => l.startsWith('ИТОГ '));
+	assert.ok(строка, `дочерний процесс не напечатал итог: ${r.stdout}${r.stderr}`);
+	return JSON.parse(строка.slice(5));
+};
+
+test('живая проверка: зелёная с первого раза — без паузы и без повтора', () => {
+	assert.deepEqual(runLiveВНоде(['ok']), { ok: true, calls: 1, pauses: [], failed: 0 });
+});
+
+test('живая проверка: мгновенный сбой после выпуска — пауза, повтор зелёный, выкат НЕ остановлен', () => {
+	assert.deepEqual(runLiveВНоде(['fail', 'ok']), { ok: true, calls: 2, pauses: [7], failed: 0 });
+});
+
+test('🔴 живая проверка: настоящий дефект красный и на повторе — выкат ОСТАНОВЛЕН', () => {
+	assert.deepEqual(runLiveВНоде(['fail', 'fail']), { ok: false, calls: 2, pauses: [7], failed: 1 });
+});
