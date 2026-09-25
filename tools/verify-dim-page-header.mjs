@@ -68,11 +68,16 @@ try {
   check('второй клик вернул прежнюю тему', (await themeOf()) === before, `${await themeOf()}`);
 
   // ── Язык — ссылкой, и она ведёт на парный адрес ────────────────────────────
+  // Ссылка живёт пунктом выпадашки общей пары (`HeadControls`, родной <details>): открываем НАЖАТИЕМ,
+  // как человек, — на странице без JS выпадашку открывает сам браузер.
   console.log('\n— переключатель языка —');
-  const langHref = await page.locator('header.bar a.langsw').getAttribute('href');
+  await page.locator('header.bar summary.lang').click();
+  const other = page.locator('header.bar .dd a[hreflang="en"]');
+  check('выпадашка языка открылась нажатием', await other.isVisible());
+  const langHref = await other.getAttribute('href');
   check('переключатель языка — ССЫЛКА', typeof langHref === 'string' && langHref.startsWith('/en/dimension/'),
     `${langHref}`);
-  await page.locator('header.bar a.langsw').click();
+  await other.click();
   await page.waitForLoadState('domcontentloaded');
   check('переход даёт английскую страницу',
     (await page.evaluate(() => document.documentElement.getAttribute('lang'))) === 'en');
