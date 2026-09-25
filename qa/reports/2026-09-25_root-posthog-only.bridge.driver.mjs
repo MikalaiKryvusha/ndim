@@ -1,0 +1,22 @@
+// Разовый сценарий прогона 2026-09-25 ≈16:58 +03:00 (мост «Секс» 9 + «Матрица» 10 в NDim ID гостя), приложен без изменений. Стенд поднят. Запуск: node <этот файл>
+import { chromium } from 'file:///D:/work/ai_sandbox/ndim/node_modules/@playwright/test/index.mjs';
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+const p = await ctx.newPage();
+let uid = null;
+p.on('response', async (r) => { if (/accounts:signUp/.test(r.url())) { try { uid = (await r.json()).localId; } catch {} } });
+await p.goto('http://localhost:5173/?as=guest', { waitUntil: 'load' });
+await p.waitForFunction(() => window.__ndimDemoLive === true);
+const rows = p.locator('#compat-rows [data-dim]');
+await rows.nth(6).locator('[data-star="9"]').click();
+await rows.nth(2).locator('[data-star="10"]').click();
+const t0 = Date.now();
+await p.getByRole('link', { name: /Смотреть больше/ }).click();
+await p.waitForURL('**/profile*', { waitUntil: 'commit', timeout: 30000 });
+console.log('мост, мс', Date.now() - t0, 'адрес', new URL(p.url()).pathname + new URL(p.url()).search, 'uid', uid);
+await p.waitForTimeout(2500);
+await p.screenshot({ path: 'D:/work/ai_sandbox/ndim/test-results/root-posthog-only/profile-after-bridge.png' });
+const res = await fetch(`http://127.0.0.1:8181/v1/projects/demo-ndim-dev/databases/(default)/documents/points/${uid}/dims`, { headers: { Authorization: 'Bearer owner' } });
+const docs = (await res.json()).documents ?? [];
+console.log('в NDim ID гостя:', JSON.stringify(docs.map((d) => [d.name.split('/').pop(), d.fields?.value?.integerValue])));
+await b.close();
