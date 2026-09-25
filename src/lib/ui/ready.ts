@@ -75,3 +75,18 @@ export function ready(node: Graphic) {
     },
   };
 }
+
+/**
+ * ДВОЙНИК ПРИЁМА ДО ОЖИВЛЕНИЯ СТРАНИЦЫ — для графики ПЕРВОГО экрана пререндеренной страницы.
+ *
+ * Действие `ready` вешается гидрацией, то есть после загрузки и разбора JS. Портреты героя главной приезжают раньше
+ * (ярус 1: прелоад) и до оживления стоят прозрачными. Замер 2026-09-25 на боевой главной (телефонная сеть 1,6 Мбит/с,
+ * задержка 150 мс, процессор ×4, метка прибора): портреты загружены к 1,4–1,6 с, страница ожила к 1,8–1,9 с, портреты
+ * видны к 2,0–2,2 с — готовая картинка ждала скрипт ≈0,6 с. Строка ниже встаёт СРАЗУ за контейнером картинок
+ * (`{@html '<script>…</script>'}`, приём `EARLY_TAP_SCRIPT` главной) и вешает тот же класс `ok` тем же правилом:
+ * загружена — сразу, нет — по `load` или `error`. Гидрация затем зовёт `ready`, и тот видит `complete` — повтор
+ * безвреден. Без `import`, без стрелочных функций — старые встроенные браузеры соцсетей тоже её исполнят.
+ * [NOT-TESTED]
+ */
+export const readyEarlyScript = (containerId: string): string =>
+  `(function(){try{var r=document.getElementById(${JSON.stringify(containerId)});if(!r)return;var im=r.getElementsByTagName('img');for(var i=0;i<im.length;i++){(function(x){var ok=function(){x.classList.add('ok')};if(x.complete&&x.naturalWidth>0)ok();else{x.addEventListener('load',ok);x.addEventListener('error',ok)}})(im[i])}}catch(e){}})();`;

@@ -40,7 +40,7 @@
   import { num, votesUnit, type Lang } from '$lib/ui/format';
   import { theme, toggleTheme } from '$lib/ui/theme.svelte';
   import { MOTION } from '$lib/ui/motion';
-  import { ready } from '$lib/ui/ready';
+  import { ready, readyEarlyScript } from '$lib/ui/ready';
   import Brand from '$lib/ui/Brand.svelte';
   import Icon from '$lib/ui/Icon.svelte';
 
@@ -212,7 +212,7 @@
         <p class="lede">{t.hero.lede[lang]}</p>
         <a class="down" href="#demo">{t.hero.down[lang]}</a>
       </div>
-      <div class="trio">
+      <div class="trio" id="hero-trio">
         {#each heroOrder as id, i (id)}
           {@const p = persona(id)}
           <figure class="port" class:mid={i === 1}>
@@ -222,6 +222,8 @@
           </figure>
         {/each}
       </div>
+      <!-- Портреты первого экрана проявляются, как только загружены, не дожидаясь оживления страницы (ready.ts). -->
+      {@html `<script>${readyEarlyScript('hero-trio')}</script>`}
     </section>
 
     <!-- 2. Тест на совместимость: звёзды, карта, мост внутрь -->
