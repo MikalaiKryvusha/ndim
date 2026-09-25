@@ -101,3 +101,5 @@ static/door/
 .kaif/update-rehearsal.json
 .kaif/voice-marker.json
 .kaif/contour-window/
+# Замок страницы вычитки «один документ — одно окно» (plans/NEW_review_contour_stale_tab.md): состояние процесса, не артефакт
+interviews/decisions/*.lock

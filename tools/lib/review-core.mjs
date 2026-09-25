@@ -53,6 +53,146 @@ export function bodyHash(path) {
 	return textHash(readFileSync(path, 'utf8'));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// РЕДАКЦИЯ, ЗАМОК, ЗАКРЫТИЕ, ПЕРЕНОС ЧЕРНОВИКА — старая вкладка не принимает ответы в пустоту
+// (`bugs/NEW_review_page_stale_tab_accepts_answers.md`, S1; план `plans/NEW_review_contour_stale_tab.md`).
+//
+// Повод — слово владельца 2026-09-25: «так какого хуя страницу переписали, новую блять открыли и старую ОСТАВИЛИ!!!!
+// баг нахуцй! вот я в сторой блять и отвечал!». Образец — поставляемый контур KAIF 2.7 (замок «один документ — одно
+// окно», прежний порт первым, `--close` с отказом — `_interactive-contour-spec.md` §5); зазор, открытый и там, —
+// сверка РЕДАКЦИИ — закрывается здесь (агент KAIF: OW6 эпика 2.8).
+// [TESTED: 2026-09-25 · ручной прогон набора qa/suites/review-stale-tab.md живым Chromium на стенде агента (dev-1):
+//   34/34 в 20:27 с головы 52d43c1 (с поправками суда p3), вывод и кадры прочитаны; мутанты А и Б краснеют адресно —
+//   qa/reports/2026-09-25_review-stale-tab.md; Chrome владельца с его старыми вкладками не проверен — ждёт первой
+//   страницы после мержа; юниты tools/review-contour.test.mjs — гигиена]
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Редакция документа — короткий хеш его текста при той же нормализации, что у I3. Меняется при любой правке. */
+export function docRevision(path) {
+	return bodyHash(path).slice(0, 16);
+}
+
+/**
+ * Отпечаток вопроса (заголовок БЕЗ номера + тело): черновик переносится только на вопрос с ТЕМ ЖЕ текстом. Номер снят
+ * намеренно — вопрос, который при переписывании документа только сменил номер («В2. Язык?» → «В1. Язык?»), остаётся
+ * тем же вопросом, и ответ владельца встаёт на его новое место.
+ */
+export function questionPrint(title, body) {
+	const bare = String(title).replace(/^[\p{Lu}]{1,2}\d+\s*[.．)]\s*/u, '');
+	return textHash(bare + '\n' + String(body)).slice(0, 12);
+}
+
+/** Где лежит замок страницы документа: рядом с решениями, имя производно от имени документа (как у решения, I2). */
+export function lockPathOf(docPath) {
+	return join(DECISIONS_DIR, basename(docPath).replace(/\.md$/u, '') + '.lock');
+}
+
+/** Прочитать замок; нечитаемый — как нет (сломанный файл не должен запирать документ навсегда). */
+export function readLock(path) {
+	try {
+		return JSON.parse(readFileSync(path, 'utf8'));
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Состояние замка: `none` — страницы не было · `live` — процесс страницы жив (второе окно НЕ поднимается) ·
+ * `stale` — процесс умер, но замок помнит ПОРТ: новая страница встаёт на него первым — тот же адрес, тот же
+ * origin браузера, и черновик старой вкладки и сама вкладка возвращаются (KAIF 2.7, I29 / issue #64 истока).
+ * `isAlive(pid)` приходит доводом — функция чистая и проверяется `node --test`.
+ */
+export function lockState(lock, isAlive) {
+	if (!lock || !Number.isInteger(lock.pid)) return 'none';
+	return isAlive(lock.pid) ? 'live' : 'stale';
+}
+
+/**
+ * ПОСТОЯННЫЙ ПОРТ ДОКУМЕНТА — донор Unliminium (`tools/interview-page.mjs:1107-1122`, их bugs/65): порт входит в origin
+ * браузера, а черновик владельца привязан к origin. Случайный порт при каждом подъёме (прежнее поведение) уводил новую
+ * страницу на другой адрес — черновик оставался в старом origin, и старая вкладка к новому серверу не возвращалась.
+ * Ключ — путь документа относительно корня (одинаков из любого рабочего места); диапазон 20000–35999 ниже эфемерных.
+ */
+export function stablePort(key) {
+	const h = createHash('sha1').update(String(key).split('\\').join('/'), 'utf8').digest();
+	return 20000 + (h.readUInt32BE(0) % 16000);
+}
+
+/** Порог тишины: живую страницу владельца агент закрывает, только если он не печатал столько (KAIF 2.7: 180 с). */
+export const CLOSE_QUIET_MS = 180_000;
+
+/**
+ * Можно ли закрыть живую страницу владельца (`review close`). Отказ — с причиной словами:
+ *   · странице меньше порога — владелец мог только открыть её и начать читать;
+ *   · владелец печатал меньше порога назад;
+ *   · в черновике есть заполненные поля, а сохранения не было.
+ * Состояние ввода страница сама присылает пульсом (`/alive?i&d&s`), сервер держит его в замке.
+ * Причины называются ВСЕ сразу, через «; » (суд p3, п. 7): первая-и-единственная прятала остальные — отказ «печатал»
+ * на молодой странице не был виден никогда.
+ */
+export function closeVerdict({ startedAt, lastInputAt = null, draftFields = 0, saved = false } = {}, now = Date.now()) {
+	const secs = (ms) => Math.round(ms / 1000);
+	const born = Date.parse(startedAt);
+	const reasons = [];
+	if (Number.isFinite(born) && now - born < CLOSE_QUIET_MS)
+		reasons.push(`странице ${secs(now - born)} с — меньше ${secs(CLOSE_QUIET_MS)} с, владелец мог только начать читать`);
+	if (lastInputAt && now - lastInputAt < CLOSE_QUIET_MS)
+		reasons.push(`владелец печатал ${secs(now - lastInputAt)} с назад — меньше ${secs(CLOSE_QUIET_MS)} с`);
+	if (draftFields > 0 && !saved) reasons.push(`в черновике заполнено полей: ${draftFields}, сохранения не было`);
+	return { ok: reasons.length === 0, reason: reasons.join('; ') };
+}
+
+/**
+ * ПЕРЕНОС ЧЕРНОВИКА В ДРУГУЮ РЕДАКЦИЮ. Ответ ставится на место только у вопроса с ТЕМ ЖЕ отпечатком (текстом) —
+ * даже если номер у него сменился; ответ на вопрос, которого в новой редакции нет или который переписан, уходит в
+ * «черновик прошлой редакции» и показывается владельцу текстом — не пропадает молча и не переезжает на чужой вопрос
+ * с тем же номером (ровно так №097 разошёлся бы: шесть вопросов против пяти).
+ * Черновик без отпечатков (старая версия страницы) переносится по номеру — только если редакция та же.
+ *
+ * ⚠️ Функция едет в страницу исходником (`mapDraft.toString()` внутри шаблонной строки) — поэтому в её теле нет
+ * ни обратных кавычек, ни знака доллара с фигурной скобкой.
+ */
+export function mapDraft(draft, questions, rev) {
+	var place = [];
+	var orphan = [];
+	var byPrint = {};
+	var byLabel = {};
+	for (var i = 0; i < questions.length; i++) {
+		byPrint[questions[i].qh] = questions[i].label;
+		byLabel[questions[i].label] = true;
+	}
+	var q = (draft && draft.q) || {};
+	var sameRev = draft && draft.rev === rev;
+	for (var label in q) {
+		var rec = q[label];
+		if (!rec || !(rec.choice || rec.text || rec.comment)) continue;
+		// Без отпечатка — по номеру только при ТОЙ ЖЕ редакции; черновик без редакции вовсе (её не знает никто) — в прошлую
+		// редакцию текстом (суд p3, п. 6: прежнее условие «или редакции нет» переносило такой черновик по номеру вопреки этому
+		// тексту).
+		var target = rec.qh ? byPrint[rec.qh] : sameRev ? (byLabel[label] ? label : undefined) : undefined;
+		if (target) place.push({ label: target, rec: rec });
+		else orphan.push({ label: label, title: rec.title || label, rec: rec });
+	}
+	return { place: place, orphan: orphan };
+}
+
+/**
+ * ПОВТОР УЖЕ ЗАПИСАННОГО ОТВЕТА — не «документ переписан». Запись ответа сама меняет документ (ответ ложится в md), и
+ * «Повторить» после потерянного ответа сервера (`bugs/122`: сервер записал и ушёл раньше ответа) пришёл бы с прежней
+ * редакцией. Если последнее решение уже несёт ровно эти ответы и этот комментарий — это тот же ответ, и сервер говорит
+ * «записано», а не отказ.
+ */
+export function sameAsRecorded(prev, got) {
+	if (!prev) return false;
+	const answers = got.answers || {};
+	const labels = Object.keys(answers);
+	if (!labels.length && !(got.comment || '').trim()) return false;
+	const same = (a, b) => (a?.choice || '') === (b?.choice || '') && (a?.text || '') === (b?.text || '') && (a?.comment || '') === (b?.comment || '');
+	if (!labels.every((l) => same(answers[l], (prev.answers || {})[l]))) return false;
+	if ((got.comment || '').trim() && (prev.comment || '') !== got.comment) return false;
+	return !Object.keys(got.artifacts || {}).length;
+}
+
 /** Чтение markdown с нормализацией переводов строк (для разбора, не для хеша). */
 export function readMd(path) {
 	return readFileSync(path, 'utf8').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
