@@ -20,11 +20,14 @@
        · №043 В1 (2026-08-21): выбран «Мостик демонстрации», где «персонажи с пилюлями,
          крестик убирает»;
        · №010 Р2 (2026-08-01) о метке гостя: «в карточках связи мелко в шапке синей
-         пилюлей» — форма метки в карточке Связей, взятая для А и Б.
+         пилюлей»; 2026-08-21 по `design/guest-phase5-mockups.html` (секция B) он утвердил
+         форму V4 «С подсказкой» (`plans/22:697`) — А и Б повторяют её: слово строчными, ⓘ,
+         пояснение по тапу. На кадрах того же набора Алиса, Макс и Настя уже стояли в Связях
+         с пилюлей «системный персонаж» (`.pill.sys`).
      Макеты показывают, КАК персонаж подписан в Связях; выбор — его.
 
-       А «Системный персонаж»   — пилюля его словом 1 августа, рядом с именем.
-       Б «Персонаж NDim Space»  — пилюля со знаком бренда: персонаж продукта.
+       А «системный персонаж»   — пилюля его словом 1 августа, рядом с именем.
+       Б «персонаж NDim Space»  — пилюля со знаком бренда: персонаж продукта.
        В «Строка под именем»    — без пилюли: строка «Персонаж Пространства NDim Space
                                   · встречает новых людей» под именем.
        Г «Отдельный блок»       — живые люди отдельно, ниже — блок «Персонажи
@@ -55,6 +58,7 @@
     --primary: #1467d6; --primary-ink: #ffffff; --accent: #1f7fc9;
     --heading: #12263c; --text: #33506e; --dim: #6a819a; --faint: #90a4bb;
     --glow-strong: transparent;
+    --ghost-ink: #1a63c4; --pill-bg: rgba(20, 103, 214, 0.08);
     --card-shadow: 0 16px 40px rgba(29,50,71,.08);
     --sheet: #ffffff; --sheet-edge: #e3e9f3; --muted: #8a97ab;
   }
@@ -64,6 +68,7 @@
     --primary: #1467d6; --primary-ink: #ffffff; --accent: #3fd9ff;
     --heading: #eef6ff; --text: #dce9f7; --dim: #8299b1; --faint: #6d84a0;
     --glow-strong: #3fd9ff;
+    --ghost-ink: #a8e2ff; --pill-bg: rgba(63, 217, 255, 0.1);
     --card-shadow: 0 0 0 1px rgba(63,217,255,.06), 0 24px 60px rgba(2,8,20,.6);
     --sheet: #0e1626; --sheet-edge: #1c2942; --muted: #6c7f9c;
   }
@@ -158,15 +163,19 @@
   .lv3 b { color: #1298bd; text-shadow: 0 0 14px color-mix(in srgb, var(--glow-strong) 45%, transparent); }
   .lv3 .mini i { background: linear-gradient(90deg, var(--primary), #1fa8c9); }
 
-  /* ── Подписи персонажа — предмет выбора ── */
-  /* А: пунктирная пилюля — родня бейджа гостя AppBar (пунктир = не человек со своим аккаунтом). */
-  .cp-sys { font-size: 11.5px; font-weight: 600; color: var(--accent); border: 1px dashed var(--accent);
-    border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
-  /* Б: сплошная пилюля со знаком бренда — родня `.tbadge` «Измерений». */
-  .cp-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600;
-    color: color-mix(in srgb, var(--primary) 78%, var(--heading)); background: color-mix(in srgb, var(--primary) 12%, transparent);
-    border-radius: 999px; padding: 2px 9px 2px 4px; white-space: nowrap; }
-  .cp-brand svg { width: 16px; height: 16px; flex: none; }
+  /* ── Подписи персонажа — предмет выбора ──
+     Форма пилюли — УТВЕРЖДЁННАЯ владельцем метка гостя в карточке Связей: V4 «С подсказкой»
+     (`design/guest-phase5-mockups.html`, секция B, `.pill.ask`; `plans/22:697`) — слово строчными и ⓘ,
+     тап раскрывает пояснение `.hintbox` внутри карточки. `plans/23:152`: «Пилюля «системный персонаж» —
+     тот же механизм, что пилюля «аноним»… Строить как одно, а не как два». */
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 500; line-height: 1.3;
+    border-radius: 999px; padding: 2px 9px; white-space: nowrap; background: var(--pill-bg); color: var(--ghost-ink); }
+  .pill .ih { display: inline-flex; }
+  .pill .ih svg { width: 11px; height: 11px; fill: currentColor; }
+  .pill .bm { display: inline-flex; margin-left: -5px; }
+  .pill .bm svg { width: 15px; height: 15px; }
+  .hintbox { margin-top: 10px; padding: 9px 12px; border-radius: 10px; background: var(--edge-soft);
+    color: var(--text); font-size: 12.5px; line-height: 1.5; }
   /* В: строка под именем, без пилюли. */
   .cline { font-size: 12.5px; line-height: 1.4; color: var(--dim); }
   .cline .mk { display: inline-block; vertical-align: -3px; margin-right: 4px; }
@@ -189,8 +198,8 @@
 
 <div class="picker">
   <b>Персонаж в Связях</b>
-  <button data-v="a" class="active">А «Системный персонаж»</button>
-  <button data-v="b">Б «Персонаж NDim Space»</button>
+  <button data-v="a" class="active">А «системный персонаж»</button>
+  <button data-v="b">Б «персонаж NDim Space»</button>
   <button data-v="c">В Строка под именем</button>
   <button data-v="d">Г Отдельный блок</button>
   <span class="sp"></span>
@@ -209,17 +218,17 @@
 
   <!-- ═══════ А «Системный персонаж» ═══════ -->
   <div class="variant active" id="a">
-    <p class="caption">А · пилюля «Системный персонаж» — слово владельца 1 августа</p>
+    <p class="caption">А · пилюля «системный персонаж» — слово владельца 1 августа; у Алисы пояснение раскрыто тапом</p>
     <div class="app">__BAR__<div class="shell">__RAIL__<main class="body">__HEAD__
-      __CARD_alice_sys__ __CARD_max_sys__ __CARD_nastya_sys__ __CARD_olga__
+      __CARD_alice_sys_open__ __CARD_max_sys__ __CARD_nastya_sys__ __CARD_olga__
     </main></div>__NAV__</div>
   </div>
 
   <!-- ═══════ Б «Персонаж NDim Space» ═══════ -->
   <div class="variant" id="b">
-    <p class="caption">Б · пилюля «Персонаж NDim Space» со знаком бренда</p>
+    <p class="caption">Б · пилюля «персонаж NDim Space» со знаком бренда; у Алисы пояснение раскрыто тапом</p>
     <div class="app">__BAR__<div class="shell">__RAIL__<main class="body">__HEAD__
-      __CARD_alice_brand__ __CARD_max_brand__ __CARD_nastya_brand__ __CARD_olga__
+      __CARD_alice_brand_open__ __CARD_max_brand__ __CARD_nastya_brand__ __CARD_olga__
     </main></div>__NAV__</div>
   </div>
 
@@ -247,10 +256,11 @@
 
 <div class="why">
   <p><b>А «Системный персонаж».</b> Слово владельца 1 августа дословно: «честные пилюли, что это системный персонаж»;
-    21 августа он выбрал мостик, где «персонажи с пилюлями, крестик убирает». Пилюля стоит мелко в шапке карточки —
-    форма его метки гостя в Связях; пунктир — родня бейджа гостя в шапке продукта. <span class="cost">Цена: 25 сентября слова «системный персонаж» на главной
+    21 августа он выбрал мостик, где «персонажи с пилюлями, крестик убирает». Форма пилюли — его утверждённая метка
+    гостя в Связях, V4 «С подсказкой»: слово строчными, ⓘ, тап раскрывает пояснение. <span class="cost">Цена: 25 сентября слова «системный персонаж» на главной
     владелец вернул дефектом как синоним «вымышленных».</span></p>
-  <p><b>Б «Персонаж NDim Space».</b> Пилюля называет, чей это персонаж: персонаж продукта, со знаком бренда.
+  <p><b>Б «Персонаж NDim Space».</b> Та же утверждённая форма пилюли; слово называет, чей это персонаж: персонаж
+    продукта, со знаком бренда.
     <span class="cost">Цена: слово «персонаж» стоит и здесь — оно и есть честная пометка.</span></p>
   <p><b>В Строка под именем.</b> Пилюли нет; строка под именем говорит, кто это и что он делает в Пространстве.
     <span class="cost">Цена: строка тише пилюли — в длинном списке её легче пропустить.</span></p>
@@ -292,26 +302,35 @@
     nastya: { name: 'Настя', face: '../static/img/personas/nastya_face.webp', s: 28, p: 42, c: 67 },
     olga:   { name: 'Ольга', face: null, s: 6, p: 65, c: 9 },
   };
+  const INFO = '<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>';
+  const ih = `<span class="ih"><svg viewBox="0 0 16 16">${INFO}</svg></span>`;
+  // Слово пилюли — предмет выбора; форма — утверждённая V4 «С подсказкой» (строчными, ⓘ, пояснение по тапу).
   const LABEL = {
     none: () => '',
-    sys: () => '<span class="cp-sys">Системный персонаж</span>',
-    brand: () => `<span class="cp-brand">${brand(16)}Персонаж NDim Space</span>`,
+    sys: () => `<span class="pill">системный персонаж ${ih}</span>`,
+    brand: () => `<span class="pill"><span class="bm">${brand(15)}</span>персонаж NDim Space ${ih}</span>`,
   };
-  const card = (key, label) => {
+  // Пояснение по тапу — `[AI]`, на выбор и вычитку владельцу; первое предложение повторяет слово пилюли.
+  const HINT = {
+    sys: 'Алиса — системный персонаж Пространства NDim Space. Алиса встречает новых людей в Пространстве NDim Space, и Пространство NDim Space считает Похожесть с Алисой по Вашим оценкам и оценкам Алисы. Крестик убирает Алису из Ваших Связей.',
+    brand: 'Алиса — персонаж Пространства NDim Space. Алиса встречает новых людей в Пространстве NDim Space, и Пространство NDim Space считает Похожесть с Алисой по Вашим оценкам и оценкам Алисы. Крестик убирает Алису из Ваших Связей.',
+  };
+  const card = (key, label, open) => {
     const x = PEOPLE[key];
     const ava = x.face ? `<span class="ava"><img src="${x.face}" alt=""></span>` : `<span class="ava">${x.name[0]}</span>`;
     const line = label === 'line'
       ? `<span class="cline"><span class="mk">${brand(14)}</span>Персонаж Пространства NDim Space · встречает новых людей</span>` : '';
     const pill = label === 'line' ? '' : LABEL[label]();
     const rm = x.face ? '<span class="rm" title="Убрать из Связей" aria-label="Убрать из Связей">✕</span>' : '';
+    const hint = open && HINT[label] ? `<p class="hintbox">${HINT[label]}</p>` : '';
     return `<div class="card"><div class="head">${ava}<div class="who"><span class="nm"><b>${x.name}</b>${pill}</span>${line}</div>${rm}</div>
-      <div class="trio">${cell('Похожесть', x.s)}${cell('Близость', x.p)}${cell('Общность', x.c)}</div></div>`;
+      <div class="trio">${cell('Похожесть', x.s)}${cell('Близость', x.p)}${cell('Общность', x.c)}</div>${hint}</div>`;
   };
 
   document.querySelectorAll('.app').forEach((s) => {
     s.innerHTML = s.innerHTML
       .replace(/__BAR__/g, () => BAR()).replaceAll('__RAIL__', RAIL).replaceAll('__NAV__', NAV).replaceAll('__HEAD__', HEAD)
-      .replace(/__CARD_(alice|max|nastya|olga)(?:_(sys|brand|line))?__/g, (_, k, l) => card(k, k === 'olga' ? 'none' : (l ?? 'none')));
+      .replace(/__CARD_(alice|max|nastya|olga)(?:_(sys|brand|line))?(_open)?__/g, (_, k, l, o) => card(k, k === 'olga' ? 'none' : (l ?? 'none'), Boolean(o)));
   });
 
   const stage = document.getElementById('stage');
