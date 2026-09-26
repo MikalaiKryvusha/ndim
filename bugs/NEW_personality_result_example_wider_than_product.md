@@ -1,7 +1,7 @@
 # Bug NEW — «Тест личности»: пример результата обещает то, чего страница не показывает
 
 **Статус:** 🔴 OPEN · **Тяжесть:** S2 — стоячая неправда на лице продукта, в бою с 2026-08-14 · **Когда/контекст:**
-2026-09-26 (сообщение Менеджеру пришло до 00:25:08), нашёл dev-1 — третий §7Б черновика отрицаний страниц тестов (`interviews/NEW_test_pages_negations.md`),
+2026-09-26 (сообщение Менеджеру пришло до 00:25:08), нашёл dev-1 — третий §7Б черновика отрицаний страниц тестов (`interviews/interview_102_test_pages_negations.md`),
 проверено Менеджером чтением `main` `bf3a3f1`.
 
 ## Симптом
@@ -31,5 +31,5 @@
 
 ## Ссылки
 
-`interviews/NEW_test_pages_negations.md` · `bugs/NEW_personality_faq_privacy_claim_false.md` (тот же тест, S2) ·
+`interviews/interview_102_test_pages_negations.md` · `bugs/NEW_personality_faq_privacy_claim_false.md` (тот же тест, S2) ·
 `plans/107` фаза 4.
