@@ -10,7 +10,7 @@
 > и Настя в Связях гостя» (фаза 4 метаэпика plans/104), без кода*») · **Родитель:** `plans/104` → фаза 4 «Связи не пусты
 > и вход без стены» · **Статус:** 🔬 разведка собрана 2026-09-26: локальная часть проверена механически (27 адресов,
 > 26 сошлись дословно, 27-й — перенос цитаты на соседнюю строку); индустрия — §3 · **Исходящее:** развилки владельцу —
-> черновик `interviews/NEW_characters_in_relations.md`; метаплан `plans/108_EPIC_characters_in_relations.md`.
+> черновик `interviews/interview_104_characters_in_relations.md`; метаплан `plans/108_EPIC_characters_in_relations.md`.
 
 ## 0. Вывод вперёд
 
@@ -239,7 +239,7 @@ until it was painful*» — https://www.cnbc.com/2018/01/02/airbnb-from-1400-gue
 
 ## 6. Развилки владельцу
 
-Черновик — `interviews/NEW_characters_in_relations.md`; макеты — `design/characters-relations-mockups.html`.
+Черновик — `interviews/interview_104_characters_in_relations.md`; макеты — `design/characters-relations-mockups.html`.
 
 1. **В1 — подпись и место.** Прежний ответ — пилюля «системный персонаж» (№010 Р6, №043 В1); 25 сентября «системный
    персонаж» на главной назван дефектом. Варианты: А «системный персонаж» · Б «персонаж NDim Space» · В строка под
