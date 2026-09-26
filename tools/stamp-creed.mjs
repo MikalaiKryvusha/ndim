@@ -61,6 +61,8 @@ const DOCS = [
   'KAIF_FRAMEWORK.md',
   'AUTHOR_STYLOMETRY.md',
   'README.md',
+  // Файл домашних правил — ярус 4 таксономии, создан обновлением KAIF 2.8 (2026-09-26).
+  'HOUSE_RULES.md',
   // Локальные канон-документы команды worktree (ideas/40, plans/66 шаг 1.4).
   'NDIM_WORKTREE_DEV_TEAM_MANIFEST.md',
   'NDIM_WORKTREE_DEV_TEAM_STATUS.md',
