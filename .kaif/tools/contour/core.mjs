@@ -528,12 +528,20 @@ function inline(s) {
     .replace(/(^|[^*\p{L}\d])\*([^*]+)\*(?!\*)/gu, '$1<em>$2</em>')
     .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 }
+// LOCAL REMEDIATION (NDim Space, 2026-09-26; ticket to the origin — see bugs/KAIF/20): consecutive non-blank lines are ONE
+// paragraph (CommonMark soft wrap), an indented line continues its list item, consecutive `>` lines are one quoted paragraph.
+// The shipped renderer emitted a <p> per LINE: a hard-wrapped document fell apart line by line, and bold that crossed the
+// wrap stayed as raw ** — on an option label the page self-check then refused to open (16 of the project's 105 interviews).
 export function renderMd(md) {
   const src = normalize(md).split('\n');
   const out = [];
   let inFence = false, fenceBuf = [], listOpen = false, quoteOpen = false, tableBuf = [];
-  const closeList = () => { if (listOpen) { out.push('</ul>'); listOpen = false; } };
-  const closeQuote = () => { if (quoteOpen) { out.push('</blockquote>'); quoteOpen = false; } };
+  let para = [], item = null, qpara = [];
+  const flushPara = () => { if (para.length) { out.push('<p>' + inline(escapeHtml(para.join('\n'))) + '</p>'); para = []; } };
+  const flushItem = () => { if (item) { out.push('<li>' + inline(escapeHtml(item.join('\n'))) + '</li>'); item = null; } };
+  const flushQuotePara = () => { if (qpara.length) { out.push('<p>' + inline(escapeHtml(qpara.join('\n'))) + '</p>'); qpara = []; } };
+  const closeList = () => { flushItem(); if (listOpen) { out.push('</ul>'); listOpen = false; } };
+  const closeQuote = () => { flushQuotePara(); if (quoteOpen) { out.push('</blockquote>'); quoteOpen = false; } };
   const flushTable = () => {
     if (!tableBuf.length) return;
     const rows = tableBuf.map((r) => r.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map((c) => c.trim()));
@@ -549,25 +557,32 @@ export function renderMd(md) {
   for (const raw of src) {
     if (/^\s*```/.test(raw)) {
       if (inFence) { out.push('<pre><code>' + escapeHtml(fenceBuf.join('\n')) + '</code></pre>'); fenceBuf = []; }
+      else { flushPara(); flushItem(); flushQuotePara(); }
       inFence = !inFence;
       continue;
     }
     if (inFence) { fenceBuf.push(raw); continue; } // inside fenced, comments are content (I24)
     const line = raw.replace(/<!--[\s\S]*?-->/g, '').replace(/[ \t]+$/, ''); // I24: comments outside code are cut
-    if (/^\s*\|.*\|\s*$/.test(line)) { closeList(); closeQuote(); tableBuf.push(line); continue; }
+    if (/^\s*\|.*\|\s*$/.test(line)) { flushPara(); closeList(); closeQuote(); tableBuf.push(line); continue; }
     flushTable();
     const h = line.match(/^(#{1,6})\s+(.*)$/);
-    if (h) { closeList(); closeQuote(); out.push('<h' + h[1].length + '>' + inline(escapeHtml(h[2])) + '</h' + h[1].length + '>'); continue; }
-    if (/^---+\s*$/.test(line)) { closeList(); closeQuote(); out.push('<hr>'); continue; }
+    if (h) { flushPara(); closeList(); closeQuote(); out.push('<h' + h[1].length + '>' + inline(escapeHtml(h[2])) + '</h' + h[1].length + '>'); continue; }
+    if (/^---+\s*$/.test(line)) { flushPara(); closeList(); closeQuote(); out.push('<hr>'); continue; }
     const q = line.match(/^>\s?(.*)$/);
-    if (q) { closeList(); if (!quoteOpen) { out.push('<blockquote>'); quoteOpen = true; } out.push('<p>' + inline(escapeHtml(q[1])) + '</p>'); continue; }
+    if (q) {
+      flushPara(); closeList();
+      if (!quoteOpen) { out.push('<blockquote>'); quoteOpen = true; }
+      if (q[1].trim()) qpara.push(q[1]); else flushQuotePara(); // an empty `>` line ends the quoted paragraph
+      continue;
+    }
     closeQuote();
     const li = line.match(/^\s*[-*+]\s+(.*)$/);
-    if (li) { if (!listOpen) { out.push('<ul>'); listOpen = true; } out.push('<li>' + inline(escapeHtml(li[1])) + '</li>'); continue; }
+    if (li) { flushPara(); flushItem(); if (!listOpen) { out.push('<ul>'); listOpen = true; } item = [li[1]]; continue; }
+    if (item && /^\s{2,}\S/.test(line)) { item.push(line.trim()); continue; } // the wrapped tail of a list item
     closeList();
-    if (line.trim()) out.push('<p>' + inline(escapeHtml(line)) + '</p>');
+    if (line.trim()) para.push(line.trim()); else flushPara();
   }
-  flushTable(); closeList(); closeQuote();
+  flushTable(); flushPara(); closeList(); closeQuote();
   return out.join('\n');
 }
 

@@ -67,5 +67,12 @@
   ],
   "canonArtifacts": [],
   "projectName": "NDim Space",
+  "contour": {
+    "ownerName": "Николай Кривуша",
+    "callName": "Николай",
+    "spokenProjectName": "Эндим Спейс",
+    "quietFrom": "23:00",
+    "quietTo": "09:00"
+  },
   "build": "106b97d7715c"
 }
