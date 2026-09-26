@@ -105,9 +105,11 @@ const RU: CatalogCopy = {
   similar: 'Похожие по каталогу',
   enter: 'Войти',
   theme: 'Тема',
+  // Принято владельцем — интервью №102, В1 = А (2026-09-26). Те же слова — в `TEST_FOOT` (`test-copy.ts`)
+  // и на карточке объекта.
   foot:
-    'NDim Space — честный поиск похожих людей по математической близости. ' +
-    'Бесплатно, без рекламы и без подписок.',
+    'Пространство NDim Space находит людей, похожих на Вас: математически сравнивает Ваши оценки ' +
+    'с оценками других людей. Пространство NDim Space бесплатно.',
 };
 
 const EN: CatalogCopy = {
@@ -136,9 +138,10 @@ const EN: CatalogCopy = {
   similar: 'Similar in the catalog',
   enter: 'Log in',
   theme: 'Theme',
+  // Принято владельцем — интервью №102, В1 = А (2026-09-26).
   foot:
-    'NDim Space — an honest search for similar people by mathematical proximity. ' +
-    'Free, no ads, no subscriptions.',
+    'NDim Space finds people similar to you by mathematically comparing your ratings with ' +
+    'other people’s ratings. NDim Space is free.',
 };
 
 export const CATALOG_COPY: Record<Lang, CatalogCopy> = { ru: RU, en: EN };

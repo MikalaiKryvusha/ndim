@@ -242,11 +242,11 @@
        * Ниже — ОБЩИЕ строки публичных поверхностей, а не тексты двери. Подвал живёт одинаковым
        * на карточке, хабах каталога (`catalog-copy.ts`) и «Тесте» (`test-copy.ts`) и приехал
        * задолго до двери (коммит `cf6efdd`, 10 222 страницы каталога). Правится он вместе с
-       * теми поверхностями, а не здесь поодиночке.
+       * теми поверхностями, а не здесь поодиночке. Принято владельцем — интервью №102, В1 = А (2026-09-26).
        */
       foot:
-        'NDim Space — честный поиск похожих людей по математической близости. ' +
-        'Бесплатно, без рекламы и без подписок.',
+        'Пространство NDim Space находит людей, похожих на Вас: математически сравнивает Ваши оценки ' +
+        'с оценками других людей. Пространство NDim Space бесплатно.',
       otherLang: 'Читать по-английски',
     },
     en: {
@@ -295,9 +295,10 @@
       ackText:
         'There are many people in NDim Space — it will help you find those who share your views.',
       enter: 'Enter the Space',
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26).
       foot:
-        'NDim Space — an honest search for similar people by mathematical proximity. ' +
-        'Free, no ads, no subscriptions.',
+        'NDim Space finds people similar to you by mathematically comparing your ratings with ' +
+        'other people’s ratings. NDim Space is free.',
       otherLang: 'Читать по-русски',
     },
   } as const;
