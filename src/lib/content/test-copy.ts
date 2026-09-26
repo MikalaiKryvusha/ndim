@@ -126,10 +126,13 @@ export const CARD_CHROME: L<{ scale0: string; scale10: string; skip: string }> =
   },
 };
 
-/** Подпись Пространства внизу каждой страницы семейства. */
+/**
+ * Подпись Пространства внизу каждой страницы семейства. Принято владельцем — интервью №102, В1 = А (2026-09-26),
+ * строки 1–2; те же слова — в подвале каталога (`catalog-copy.ts`) и карточки объекта.
+ */
 export const TEST_FOOT: L<string> = {
-  ru: 'NDim Space — честный поиск похожих людей по математической близости. Бесплатно, без рекламы и без подписок.',
-  en: 'NDim Space — honest search for similar people through mathematical closeness. Free, with no ads and no subscriptions.',
+  ru: 'Пространство NDim Space находит людей, похожих на Вас: математически сравнивает Ваши оценки с оценками других людей. Пространство NDim Space бесплатно.',
+  en: 'NDim Space finds people similar to you by mathematically comparing your ratings with other people’s ratings. NDim Space is free.',
 };
 
 export const TESTS: Record<TestSlug, L<TestCopy>> = {
@@ -384,7 +387,8 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
     ru: {
       badge: 'Для одного',
       h1: 'Тест личности',
-      sub: 'Не готовый «тип личности», а живая анкета: факты о Вашем вкусе, которые растут с каждой оценкой.',
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26).
+      sub: 'Тест личности собирает Вашу живую анкету: каждая Ваша оценка добавляет в анкету факт о Вашем вкусе.',
       facts: ['без регистрации', '12 вещей · ~3 минуты', 'бесплатно'],
       steps: [
         // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет. «настоящие» снято по
@@ -400,36 +404,42 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
       inviteBody: 'После Ваших оценок здесь появится личная ссылка — отправьте её, и вы увидите совпадения.',
       inviteNote: 'Результат сравнения увидите только вы двое.',
       resultTitle: 'Каким будет результат',
-      resultCaption: 'пример результата',
+      // Принято владельцем — интервью №103, В1 = А (2026-09-26). Пример — в форме живых строк пары: значки и
+      // слова `ui.bothGave`, `ui.closeRow`, `ui.differRow`, подпись вещи `rowLabel`, вещи из пула теста.
+      resultCaption: 'Вы и друг · пример результата',
       resultRows: [
-        { icon: '⭐', text: 'Ваша первая десятка — Warcraft III' },
-        { icon: '🎬', text: 'Кино и сериалы Вы цените: «Пацаны» 8, «Особое мнение» 7' },
-        { icon: '👥', text: 'Эти вещи вместе с Вами оценили ещё 9 человек Пространства' },
+        { icon: '⭐', text: 'Вы оба поставили 10 — Титаник · Фильм, 1997' },
+        { icon: '🤝', text: 'Вы рядом в «Игра Престолов · Телесериал, 2011»: 8 и 9' },
+        { icon: '💬', text: '«Аватар · Фильм, 2009» вы видите по-разному (9 и 4) — будет о чём поговорить' },
       ],
-      resultFoot: 'Анкета живая: дозаполните её — и результат вырастет вместе с ней.',
-      keepTitle: 'Это не разовый тест',
-      keepBody: 'Каждая Ваша оценка уже собирается в анкету — Ваш NDim ID. Она живёт и растёт вместе с Вами, а Пространство ищет по ней людей, которые совпадают с Вами по-настоящему. Гостевая анкета хранится 7 дней.',
+      resultFoot: 'Сравнили вещей: 12.',
+      // Заголовок — интервью №102, текст — интервью №103: принято владельцем, В1 = А (2026-09-26).
+      keepTitle: 'Ваша анкета — Ваш NDim ID',
+      keepBody: 'Каждая Ваша оценка ложится в Ваш NDim ID — Вашу анкету. По этой анкете Пространство NDim Space ищет людей, чьи оценки похожи на Ваши, и собирает самых похожих людей в разделе «Связи». Гостевая анкета хранится 7 дней с момента создания.',
       keepCta: 'Сохранить мою анкету',
       keepGhost: 'Продолжить гостем',
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26). Ответ о приватности называет, что открывается
+      // другу и что видят люди в Связях (`bugs/NEW_personality_faq_privacy_claim_false.md`).
       faq: [
-        { q: 'Почему результат — не «тип личности»?', a: 'Готовые типы звучат приятно, но их нельзя проверить. Мы показываем проверяемое: Ваши настоящие ответы и то, как они совпадают с ответами других людей.' },
-        { q: 'Мои ответы кто-нибудь увидит?', a: 'Оценки приватны: их не видит никто, кроме Вас. Люди в Пространстве видят итог математики — насколько вы похожи, — а не Ваши ответы.' },
-        { q: 'Это бесплатно?', a: 'Да. Без рекламы, без подписок и без покупок.' },
+        { q: 'Почему результат — не «тип личности»?', a: 'Тест личности в Пространстве NDim Space собирает Ваши оценки вещей в Вашу анкету: вещи, которые Вы оценили, и Ваша оценка каждой вещи. Каждая Ваша оценка вещи этого теста стоит в панели «Ваша анкета растёт» рядом с вещью, и кнопка ✕ рядом с оценкой убирает эту оценку. По личной ссылке Вы сравниваете свои оценки вещей этого теста с оценками друга: друг оценивает вещи этого теста, которые оценили Вы, и строки результата называют вещи, в которых ваши оценки совпали, стоят рядом (разница в одну звезду) или расходятся на четыре звезды и больше. По Вашей анкете Пространство NDim Space ищет людей, чьи оценки похожи на Ваши.' },
+        { q: 'Мои ответы кто-нибудь увидит?', a: 'Весь список Ваших оценок видите только Вы. Когда Вы сравниваетесь с другом по личной ссылке, другу открываются Ваши оценки вещей Теста личности — оценки, которые стоят в панели «Ваша анкета растёт» в момент, когда Вы создаёте личную ссылку или нажимаете «Сравнить ответы»; кнопка «Удалить пару и ссылку» под результатом убирает эти оценки у друга. Строки результата показывают другу Ваши оценки вещей, которые оценили вы оба и в которых ваши оценки совпали, стоят рядом (разница в одну звезду) или расходятся на четыре звезды и больше. Люди Пространства NDim Space, у которых Вы стоите в Связях (Связи — список самых похожих на них людей), видят в Связях итог математики: насколько Вы похожи на каждого из них (Похожесть, Близость, Общность), сколько вещей Вы оценили, сколько вещей вы оба оценили, диаметр Вашего пространства, диаметр общего пространства и расстояние между вами. Ваше пространство — вещи, которые Вы оценили. Общее пространство — вещи, которые оценили и Вы, и человек, у которого Вы стоите в Связях. Расстояние между вами измеряется в звёздах и показывает итоговую разницу между Вашими оценками и оценками человека, у которого Вы стоите в Связях, по вещам общего пространства. Расстояние между вами равно нулю, когда ваши оценки совпали у каждой вещи общего пространства. Диаметр пространства измеряется в звёздах и показывает максимально возможное расстояние между двумя людьми по вещам пространства. Например, человек, который поставил каждой вещи Вашего пространства максимальную оценку в 10 звёзд, и человек, который поставил каждой вещи Вашего пространства минимальную оценку в 0 звёзд, стоят друг от друга по вещам Вашего пространства на расстоянии, равном диаметру Вашего пространства. Пространство NDim Space считает диаметр пространства только по числу вещей пространства, поэтому диаметр Вашего пространства и диаметр общего пространства говорят человеку, у которого Вы стоите в Связях, только о числе вещей Вашего пространства и о числе вещей общего пространства. Расстояние между вами равно диаметру общего пространства, когда у каждой вещи общего пространства один из вас поставил 10 звёзд и другой из вас поставил 0 звёзд. В Связях расстояние между вами стоит и в процентах от диаметра общего пространства. Люди, у которых Вы стоите в Связях, видят в Связях и дату и время последнего обновления Вашего NDim ID — анкеты, в которую собирается каждая Ваша оценка.' },
+        { q: 'Это бесплатно?', a: 'Да. Тест личности бесплатен, как и всё Пространство NDim Space.' },
       ],
       crossLinks: [
         { text: 'Проверить вас двоих — тест на совместимость', slug: 'compatibility' },
         { text: 'Поиграть вдвоём — калькулятор любви', slug: 'love' },
       ],
-      hubLine: 'Живая анкета вместо готового «типа»: факты о Вашем вкусе, растущие с каждой оценкой.',
+      hubLine: 'Живая анкета: каждая Ваша оценка добавляет в анкету факт о Вашем вкусе.',
       hubCta: 'Пройти',
       metaTitle: 'Тест личности — NDim Space',
-      // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; на вычитку владельцу.
-      metaDesc: 'Честный тест личности: вместо готового «типа» — живая анкета из Ваших настоящих ответов. Оцените знакомые фильмы, сериалы и игры — без регистрации.',
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26).
+      metaDesc: 'Тест личности в Пространстве NDim Space: живая анкета из Ваших оценок, которая растёт с каждой оценкой. Оцените знакомые фильмы, сериалы и игры — без регистрации.',
     },
     en: {
       badge: 'For one',
       h1: 'Personality test',
-      sub: 'Not a ready-made “personality type” — a living profile: facts about your taste that grow with every rating.',
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26).
+      sub: 'The personality test builds your living profile: every rating you give adds a fact about your taste to your profile.',
       facts: ['no sign-up', '12 things · ~3 minutes', 'free'],
       steps: [
         // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; «real» снято вместе с
@@ -444,31 +454,34 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
       inviteBody: 'After your ratings, a personal link will appear here — send it, and you will see your matches.',
       inviteNote: 'Only the two of you will see the comparison.',
       resultTitle: 'What the result looks like',
-      resultCaption: 'sample result',
+      // Принято владельцем — интервью №103, В1 = А (2026-09-26).
+      resultCaption: 'You and a friend · sample result',
       resultRows: [
-        { icon: '⭐', text: 'Your first 10 — Warcraft III' },
-        { icon: '🎬', text: 'You value series and movies: “The Boys” 8, “Minority Report” 7' },
-        { icon: '👥', text: '9 more people in NDim Space rated the same things' },
+        { icon: '⭐', text: 'You both gave 10 — Titanic · Movie, 1997' },
+        { icon: '🤝', text: 'You are close on “Game of Thrones · TV series, 2011”: 8 and 9' },
+        { icon: '💬', text: 'You see “Avatar · Movie, 2009” differently (9 and 4) — something to talk about' },
       ],
-      resultFoot: 'The profile is alive: keep filling it in, and the result grows with it.',
-      keepTitle: 'This is not a one-time test',
-      keepBody: 'Every rating you give is already building your profile — your NDim ID. It lives and grows with you, and NDim Space uses it to find people who truly match you. A guest profile is kept for 7 days.',
+      resultFoot: 'Things compared: 12.',
+      // Заголовок — интервью №102, текст — интервью №103: принято владельцем, В1 = А (2026-09-26).
+      keepTitle: 'Your profile is your NDim ID',
+      keepBody: 'Every rating you give goes into your NDim ID — your profile. NDim Space uses this profile to look for people whose ratings are close to yours, and gathers the most similar people in the “Relations” section. A guest profile is kept for 7 days from the moment it is created.',
       keepCta: 'Save my profile',
       keepGhost: 'Continue as a guest',
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26).
       faq: [
-        { q: 'Why isn’t the result a “personality type”?', a: 'Ready-made types sound pleasant, but they can’t be checked. We show what can be: your real answers and how they match other people’s.' },
-        { q: 'Will anyone see my answers?', a: 'Ratings are private: nobody sees them but you. People in NDim Space see the outcome of the math — how similar you are — never your answers.' },
-        { q: 'Is it free?', a: 'Yes. No ads, no subscriptions, no purchases.' },
+        { q: 'Why isn’t the result a “personality type”?', a: 'The personality test in NDim Space collects your ratings of things into your profile: the things you rated and your rating of each thing. Each of your ratings of this test’s things appears in the “Your profile is growing” panel next to the rated thing, and the ✕ button next to a rating removes that rating. Through a personal link you compare your ratings of this test’s things with a friend’s ratings: your friend rates the things of this test that you rated, and the result lines name the things where your ratings match, are one star apart, or differ by four stars or more. NDim Space uses your profile to look for people whose ratings are close to yours.' },
+        { q: 'Will anyone see my answers?', a: 'Only you see the full list of your ratings. When you compare with a friend through a personal link, the friend gets your ratings of this test’s things — the ratings that are in the “Your profile is growing” panel at the moment you create the personal link or press “Compare answers”; the “Delete the pair and the link” button under the result removes these ratings for the friend. The result lines show the friend your ratings of the things you both rated where your ratings match, are one star apart, or differ by four stars or more. People in NDim Space who have you in their Relations (their list of the people most similar to them) see the outcome of the math in their Relations: how similar you are to each of them (Similarity, Proximity, Commonality), how many things you have rated, how many things you have both rated, the diameter of your space, the diameter of your common space and the distance between you. Your space is made up of the things you have rated. Your common space is made up of the things that both you and the person who has you in their Relations have rated. The distance between you is measured in stars and shows the overall difference, across the things in your common space, between your ratings and the ratings of the person who has you in their Relations. The distance between you is zero when your ratings match on each thing in your common space. The diameter of a space is measured in stars and shows the largest possible distance between two people across the things in the space. For example, a person who gave each thing in your space the maximum rating of 10 stars and a person who gave each thing in your space the minimum rating of 0 stars are, across the things in your space, at a distance from each other equal to the diameter of your space. NDim Space calculates the diameter of a space only from the number of things in the space, so the diameter of your space and the diameter of your common space tell the person who has you in their Relations only how many things are in your space and how many things are in your common space. The distance between you equals the diameter of your common space when, on each thing in your common space, one of you gave 10 stars and the other gave 0 stars. In Relations, the distance between you also appears as a percentage of the diameter of your common space. People who have you in their Relations also see in their Relations when your NDim ID — the profile that collects every rating you give — was last updated.' },
+        { q: 'Is it free?', a: 'Yes. The personality test is free, like all of NDim Space.' },
       ],
       crossLinks: [
         { text: 'Check the two of you — the compatibility test', slug: 'compatibility' },
         { text: 'Play together — the love calculator', slug: 'love' },
       ],
-      hubLine: 'A living profile instead of a ready-made “type”: facts about your taste, growing with every rating.',
+      hubLine: 'A living profile: every rating you give adds a fact about your taste to your profile.',
       hubCta: 'Take the test',
       metaTitle: 'Personality test — NDim Space',
-      // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; на вычитку владельцу.
-      metaDesc: 'An honest personality test: instead of a ready-made “type” — a living profile built from your real answers. Rate familiar movies, series and games — no sign-up.',
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26).
+      metaDesc: 'The NDim Space personality test: a living profile that is built from your ratings and grows with every rating. Rate familiar movies, series and games — no sign-up.',
     },
   },
 
@@ -476,86 +489,95 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
     ru: {
       badge: 'Для пары · 2 минуты',
       h1: 'Калькулятор любви',
-      sub: 'Считает не случайный процент, а настоящие совпадения: вы оба отмечаете, что любите, — а дальше говорят цифры, которым можно верить.',
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26). «Настоящие совпадения» — слово владельца
+      // (интервью №071, В2).
+      sub: 'Калькулятор любви считает ваши настоящие совпадения: каждый из вас оценивает 7 вещей одного набора, и калькулятор любви показывает вещи, которым вы оба поставили одинаковую оценку.',
       facts: ['7 вещей · ~2 минуты', 'без регистрации'],
       steps: [
         { lead: 'Отметьте 7 вещей', rest: '— только звёзды.' },
-        { lead: 'Ссылку — половинке', rest: '— она проходит те же 7.' },
-        { lead: 'Считаем совпадения', rest: '— настоящие, не выдуманные.' },
+        // Второй шаг — №103, третий — №102 (оба В1 = А, 2026-09-26): половинка оценивает вещи первого (`pairQueueIds`).
+        { lead: 'Ссылку — половинке', rest: '— половинка оценит 7 вещей из тех, что оценили Вы.' },
+        { lead: 'Считаем совпадения', rest: '— по вещам, которые вы оба оценили.' },
       ],
       mirrorTitle: 'Копятся искры',
       mirrorEmpty: 'Отметьте первую вещь — искры начнут копиться здесь.',
       inviteTitle: 'Позовите половинку',
       inviteBody: 'Отметьте свои 7 вещей — и здесь появится личная ссылка для второго.',
-      inviteNote: 'Результат увидите только вы двое: ссылка личная, в поиске её нет.',
+      inviteNote: 'Результат увидите только вы двое: ссылка личная и закрыта от поисковиков.',
       resultTitle: 'Ваш результат',
       resultCaption: 'Вы и Максим · пример результата',
       // Форма результата — СЧЁТ совпадений-фактов (интервью №028, В3 = А): число есть,
       // но это счёт фактов, а не процент похожести.
-      resultCount: { n: '12', label: 'совпадений', sub: 'из них 5 общих «десяток»' },
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26). Пример — в форме живого результата пары:
+      // `ui.matchesLabel`, `ui.tensLine`, `ui.bothGave`, подпись вещи `rowLabel`, `ui.comparedLine`; вещи —
+      // из пула теста.
+      resultCount: { n: '3', label: 'совпадения', sub: 'Общих «десяток»: 2' },
       resultRows: [
-        { icon: '♥', text: 'Вы оба поставили 10 — «Дом Дракона»' },
-        { icon: '♥', text: 'Оба выросли на Worms' },
-        { icon: '♥', text: 'Оба слушаете Twenty One Pilots' },
+        { icon: '⭐', text: 'Вы оба поставили 10 — Побег из Шоушенка · Фильм, 1994' },
+        { icon: '⭐', text: 'Вы оба поставили 10 — Матрица · Фильм, 1999' },
+        { icon: '⭐', text: 'Вы оба поставили 9 — Доктор Хаус · Телесериал, 2004' },
       ],
-      resultFoot: 'Счёт честный: мы считаем совпадения, а не выдумываем процент.',
-      keepTitle: 'Это не разовый тест',
+      resultFoot: 'Сравнили вещей: 7.',
+      keepTitle: 'Ваша анкета — Ваш NDim ID',
       keepBody: 'Каждая Ваша оценка уже собирается в анкету — Ваш NDim ID. Она живёт и растёт вместе с Вами. Гостевая анкета хранится 7 дней.',
       keepCta: 'Сохранить мою анкету',
       keepGhost: 'Продолжить гостем',
       faq: [
-        { q: 'Где процент любви?', a: 'Проценты интернет-калькуляторов случайны — их не проверить. Наш счёт проверяется: столько-то настоящих совпадений по вещам, которые вы оба отметили.' },
-        { q: 'Это бесплатно?', a: 'Да. Без рекламы, без подписок и без покупок.' },
+        { q: 'Где процент любви?', a: 'Результат калькулятора любви в Пространстве NDim Space — счёт совпадений: число вещей, которым вы оба поставили одинаковую оценку. Общие «десятки» — вещи, которым вы оба поставили 10. Каждое совпадение стоит в результате строкой с вашей общей оценкой: «Вы оба поставили 10 — Побег из Шоушенка · Фильм, 1994». Ниже счёта результат показывает и вещи, в которых ваши оценки стоят рядом (разница в одну звезду) или расходятся на четыре звезды и больше.' },
+        { q: 'Это бесплатно?', a: 'Да. Калькулятор любви бесплатен, как и всё Пространство NDim Space.' },
       ],
       crossLinks: [
         { text: 'Хотите глубже? Пройдите тест на совместимость', slug: 'compatibility' },
         { text: 'Узнать больше о себе — тест личности', slug: 'personality' },
       ],
-      hubLine: 'Считает настоящие совпадения, а не случайный процент.',
+      hubLine: 'Калькулятор любви считает ваши настоящие совпадения: вещи, которым вы оба поставили одинаковую оценку.',
       hubCta: 'Посчитать',
       metaTitle: 'Калькулятор любви — NDim Space',
-      metaDesc: 'Честный калькулятор любви: вы оба отмечаете, что любите, а он считает настоящие совпадения — без случайных процентов и без регистрации.',
+      metaDesc: 'Калькулятор любви в Пространстве NDim Space: вы оба оцениваете 7 вещей, и калькулятор любви считает ваши настоящие совпадения. Без регистрации.',
     },
     en: {
       badge: 'For a couple · 2 minutes',
       h1: 'Love calculator',
-      sub: 'It counts real matches, not a random percentage: you both mark what you love — and then the numbers speak for themselves.',
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26).
+      sub: 'The love calculator counts your real matches: each of you rates 7 things from the same set, and the love calculator shows the things you both gave the same rating.',
       facts: ['7 things · ~2 minutes', 'no sign-up'],
       steps: [
         { lead: 'Mark 7 things', rest: '— just stars.' },
-        { lead: 'Send the link to your other half', rest: '— they mark the same 7.' },
-        { lead: 'We count the matches', rest: '— real ones, not made up.' },
+        // Второй шаг — №103, третий — №102 (оба В1 = А, 2026-09-26).
+        { lead: 'Send the link to your other half', rest: '— your other half rates 7 of the things you rated.' },
+        { lead: 'We count the matches', rest: '— on the things you both rated.' },
       ],
       mirrorTitle: 'Sparks are adding up',
       mirrorEmpty: 'Mark the first thing — the sparks will start adding up here.',
       inviteTitle: 'Invite your other half',
       inviteBody: 'Mark your 7 things — a personal link for the second person will appear here.',
-      inviteNote: 'Only the two of you will see the result: the link is private and never appears in search.',
+      inviteNote: 'Only the two of you will see the result: the link is personal and hidden from search engines.',
       resultTitle: 'Your result',
       resultCaption: 'You and Max · sample result',
-      resultCount: { n: '12', label: 'matches', sub: 'including 5 shared “tens”' },
+      // Принято владельцем — интервью №102, В1 = А (2026-09-26).
+      resultCount: { n: '3', label: 'matches', sub: 'Shared “tens”: 2' },
       resultRows: [
-        { icon: '♥', text: 'You both gave a 10 — House of the Dragon' },
-        { icon: '♥', text: 'You both grew up on Worms' },
-        { icon: '♥', text: 'You both listen to Twenty One Pilots' },
+        { icon: '⭐', text: 'You both gave 10 — The Shawshank Redemption · Movie, 1994' },
+        { icon: '⭐', text: 'You both gave 10 — The Matrix · Movie, 1999' },
+        { icon: '⭐', text: 'You both gave 9 — House M.D. · TV series, 2004' },
       ],
-      resultFoot: 'The count is honest: we count matches, we don’t invent a percentage.',
-      keepTitle: 'This is not a one-time test',
+      resultFoot: 'Things compared: 7.',
+      keepTitle: 'Your profile is your NDim ID',
       keepBody: 'Every rating you give is already building your profile — your NDim ID. It lives and grows with you. A guest profile is kept for 7 days.',
       keepCta: 'Save my profile',
       keepGhost: 'Continue as a guest',
       faq: [
-        { q: 'Where is the love percentage?', a: 'Percentages in online calculators are random — there is no way to check them. Our count can be checked: this many real matches on the things you both marked.' },
-        { q: 'Is it free?', a: 'Yes. No ads, no subscriptions, no purchases.' },
+        { q: 'Where is the love percentage?', a: 'The result of the love calculator in NDim Space is a count of matches: the number of things you both gave the same rating. Shared “tens” are the things you both gave 10. Every match appears in the result as a line with the rating you both gave: “You both gave 10 — The Shawshank Redemption · Movie, 1994”. Below the count, the result also shows the things where your ratings are one star apart or differ by four stars or more.' },
+        { q: 'Is it free?', a: 'Yes. The love calculator is free, like all of NDim Space.' },
       ],
       crossLinks: [
         { text: 'Want to go deeper? Take the compatibility test', slug: 'compatibility' },
         { text: 'Learn more about yourself — the personality test', slug: 'personality' },
       ],
-      hubLine: 'It counts real matches, not a random percentage.',
+      hubLine: 'The love calculator counts your real matches: the things you both gave the same rating.',
       hubCta: 'Count it',
       metaTitle: 'Love calculator — NDim Space',
-      metaDesc: 'An honest love calculator: you both mark what you love, and it counts your real matches — no random percentages and no sign-up.',
+      metaDesc: 'The NDim Space love calculator: you both rate 7 things, and the love calculator counts your real matches. No sign-up.',
     },
   },
 };
@@ -569,20 +591,22 @@ export const HUB: L<{
   metaTitle: string;
   metaDesc: string;
 }> = {
+  // Подзаголовок, строка над подвалом и описание для поиска обоих языков — принято владельцем, интервью №103,
+  // В1 = А (2026-09-26).
   ru: {
     h1: 'Тесты',
-    sub: 'Все тесты Пространства работают поверх одной живой анкеты: пройдёте один — второй начнётся уже с середины.',
+    sub: 'Все тесты Пространства NDim Space собирают Ваши оценки в Ваш NDim ID.',
     oneLine: 'Одна анкета на все тесты: каждая оценка зачтётся в любом из них.',
-    honesty: 'Без регистрации. Без выдуманных процентов. Бесплатно и без рекламы — как и всё Пространство.',
+    honesty: 'Без регистрации.',
     metaTitle: 'Тесты — NDim Space',
-    metaDesc: 'Тесты Пространства: тест на совместимость для двоих, тест личности и калькулятор любви — поверх одной живой анкеты, без регистрации и без выдуманных процентов.',
+    metaDesc: 'Тесты Пространства NDim Space: тест на совместимость для двоих, тест личности и калькулятор любви — одна анкета на все тесты, без регистрации.',
   },
   en: {
     h1: 'Tests',
-    sub: 'All NDim Space tests run on top of one living profile: finish one, and the next starts halfway done.',
+    sub: 'All NDim Space tests collect your ratings in your NDim ID.',
     oneLine: 'One profile for all tests: every rating counts in any of them.',
-    honesty: 'No sign-up. No made-up percentages. Free and ad-free — like all of NDim Space.',
+    honesty: 'No sign-up.',
     metaTitle: 'Tests — NDim Space',
-    metaDesc: 'NDim Space tests: a compatibility test for two, a personality test and a love calculator — on top of one living profile, with no sign-up and no made-up percentages.',
+    metaDesc: 'NDim Space tests: a compatibility test for two, a personality test and a love calculator — one profile for all tests, with no sign-up.',
   },
 };
