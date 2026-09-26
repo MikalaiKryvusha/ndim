@@ -47,14 +47,12 @@ export interface TestFact { icon: string; text: string }
 /**
  * ТЕКСТ ПОД ДЕЛОМ — разделы страницы «Тест на совместимость» (макет V4, интервью №098 В1 = Г).
  * Блок раздела: абзац · нумерованные шаги (жирное начало + продолжение) · виды строк результата
- * (значок + жирное имя + продолжение) · абзац о пуле теста, где СПИСОК вещей подставляет страница
- * из очереди сборки (список живёт в `test-set.ts`, а не набирается текстом второй раз).
+ * (значок + жирное имя + продолжение). Абзац о пуле теста снят (интервью №100, В1 = В).
  */
 export type GuideBlock =
   | { kind: 'p'; text: string }
   | { kind: 'ol'; items: TestStep[] }
-  | { kind: 'kinds'; items: { icon: string; lead: string; rest: string }[] }
-  | { kind: 'pool'; lead: string; tail: string };
+  | { kind: 'kinds'; items: { icon: string; lead: string; rest: string }[] };
 export interface GuideSection { h2: string; blocks: GuideBlock[] }
 
 /** Блок «После теста — Друзья по интересам в Пространстве NDim Space» (макет V4). */
@@ -148,7 +146,7 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
    *   · пример «по-разному»: «Гарри Поттер и Тайная комната · Роман, 1998» → «Гарри Поттер и
    *     философский камень · Фильм, 2001» (романа в пуле нет, фильм есть);
    *   · абзац о первых двенадцати вещах (список самых оценённых подряд, с «Сексом» и шестью «Гарри
-   *     Поттерами») переписан под пул — `[AI]`, на вычитку владельцу; список вещей подставляет страница;
+   *     Поттерами») снят словом владельца — интервью №100, В1 = В («*тупорылые объяснения-оправдания*»);
    *   · `metaDesc` собран из строк V4 (в макете его нет; прежний нёс «Честный…» и «без выдуманных
    *     процентов» — форму оправдания, снятую словом владельца 2026-08-28).
    * Подпись страницы (`TEST_FOOT`) НЕ тронута сознательно: она общая с хабом тестов и с 10 222
@@ -206,12 +204,8 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
             },
             { kind: 'p', text: 'Весь тест занимает около трёх минут. Оценки второго человека Вы видите после того, как оценили оба, — поэтому каждая оценка остаётся собственным ответом человека.' },
             { kind: 'p', text: 'Сравниться можно с несколькими людьми. Ваши оценки остаются в Вашей анкете. Чтобы сравниться со следующим человеком, откройте страницу теста заново и нажмите «Создать личную ссылку»: одна ссылка — одна пара.' },
-            {
-              // [AI] Переписан под пул (№098 В2) — на вычитку владельцу; список вещей подставляет страница.
-              kind: 'pool',
-              lead: 'Двенадцать вещей теста Пространство NDim Space выбирает случайно из 20 вещей каталога. Эти 20 вещей — самые оценённые вещи каталога Пространства NDim Space с NDim Space Rating от 8 и выше, по одной вещи от каждой серии:',
-              tail: 'Второй человек пары оценивает те же вещи, которые оценил первый человек. Самые оценённые вещи чаще других знакомы обоим, и двоим есть что сравнить.',
-            },
+            // Абзац о пуле теста снят словом владельца (интервью №100, В1 = В, 2026-09-26): «*этот текст
+            // целиком - класс, который мне не нравится - тупорылые объяснения-оправдания*».
           ],
         },
         {
@@ -325,11 +319,6 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
             },
             { kind: 'p', text: 'The whole test takes about three minutes. You see the other person’s ratings once both of you have rated — so every rating stays each person’s own answer.' },
             { kind: 'p', text: 'You can compare with several people. Your ratings stay in your profile. To compare with the next person, open the test page again and press “Create a personal link”: one link — one pair.' },
-            {
-              kind: 'pool',
-              lead: 'NDim Space picks the 12 things of the test at random from 20 things of the catalog. These 20 things are the most-rated things of the NDim Space catalog with an NDim Space Rating of 8 or higher, one thing per series:',
-              tail: 'The second person of a pair rates the same things the first person rated. The most-rated things are the ones both people are most likely to know, so the two of you have something to compare.',
-            },
           ],
         },
         {
@@ -397,8 +386,10 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
       sub: 'Не готовый «тип личности», а живая анкета: факты о Вашем вкусе, которые растут с каждой оценкой.',
       facts: ['без регистрации', '12 вещей · ~3 минуты', 'бесплатно'],
       steps: [
-        // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; на вычитку владельцу.
-        { lead: 'Оцените 12 вещей', rest: 'звёздами — настоящие фильмы, сериалы и игры.' },
+        // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет. «настоящие» снято по
+        // вопросу владельца №100 В4 «*слово "настоящие" - это кейворд?*» — замер Вордстата: только «как найти
+        // настоящих друзей / девушку / парня / любовь», о фильмах и играх слово не ищут. На вычитку владельцу.
+        { lead: 'Оцените 12 вещей', rest: 'звёздами — фильмы, сериалы и игры.' },
         { lead: 'Смотрите, как собирается анкета', rest: '— факт за фактом, после каждой оценки.' },
         { lead: 'Сравнитесь с другом', rest: '— по личной ссылке, когда захотите.' },
       ],
@@ -440,8 +431,9 @@ export const TESTS: Record<TestSlug, L<TestCopy>> = {
       sub: 'Not a ready-made “personality type” — a living profile: facts about your taste that grow with every rating.',
       facts: ['no sign-up', '12 things · ~3 minutes', 'free'],
       steps: [
-        // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; на вычитку владельцу.
-        { lead: 'Rate 12 things', rest: 'with stars — real movies, series and games.' },
+        // [AI] 2026-09-26 (`b878d9b`): «привычки» → «сериалы» — в пуле №098 практик нет; «real» снято вместе с
+        // русским «настоящие» (№100 В4). На вычитку владельцу.
+        { lead: 'Rate 12 things', rest: 'with stars — movies, series and games.' },
         { lead: 'Watch your profile take shape', rest: '— fact by fact, after every rating.' },
         { lead: 'Compare with a friend', rest: '— by a personal link, whenever you like.' },
       ],

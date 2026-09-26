@@ -13,6 +13,8 @@
  * (`2869bbd`: `set=<метка>.<номера>`) и вид карточки без JS после «первая карточка видна» (`b777e09`).
  */
 import { chromium } from '@playwright/test';
+// Размер пула — из кода продукта, а не числом в сценарии: пул менялся (20 → 24, №100 В2).
+import { POOL_SIZE as POOL } from '../../src/lib/content/test-set.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 const arg = (name, fallback) => {
@@ -115,6 +117,8 @@ async function readQueueBySkipping(page, limit = 25) {
 
 const hp = (arr) => arr.filter((n) => /Гарри Поттер|Harry Potter/.test(n)).length;
 const hasSex = (arr) => arr.some((n) => /^Секс\b|^Sex\b/.test(n));
+// Вещи, которых может не знать типовой американец (№100 В2): прежние пять фильмов СССР и России пула.
+const localOnly = (arr) => arr.filter((n) => /Мимино|Ирония судьбы|Брат 2|Операция «Ы»|Иван Васильевич|Mimino|Irony of Fate|Brother 2|Operation|Ivan Vasilievich/.test(n));
 
 const overflowX = (page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 
@@ -202,9 +206,10 @@ try {
       const q = await readQueueBySkipping(g.page);
       note(`  · заход ${k + 1}: очередь ${q.length}; дюжина: ${q.slice(0, 12).join(' | ')}`);
       dozens.push(q);
-      check(q.length === 20, `заход ${k + 1} · очередь — весь пул (20), дюжина + запас 8`, `${q.length}`);
+      check(q.length === POOL, `заход ${k + 1} · очередь — весь пул (${POOL}), дюжина + запас ${POOL - 12}`, `${q.length}`);
       check(new Set(q).size === q.length, `заход ${k + 1} · вещи не повторяются`);
       check(!hasSex(q), `заход ${k + 1} · 🔑 в пуле нет «Секса»`);
+      check(localOnly(q).length === 0, `заход ${k + 1} · 🔑 в пуле нет фильмов СССР и России (№100 В2)`, localOnly(q).join(' | '));
       check(hp(q) <= 1, `заход ${k + 1} · 🔑 не больше одного «Гарри Поттера» во всей очереди`, `${hp(q)}`);
       const drained = await g.page.locator('.qcard .drained').innerText().catch(() => '');
       check(drained.includes('Это всё'), `заход ${k + 1} · после запаса — «Это всё: очередь пройдена целиком»`);
@@ -262,13 +267,15 @@ try {
           const faqCount = await g.page.locator('.faq.v4 details').count();
           check(faqCount === 9, `${tag} · девять частых вопросов`, `${faqCount}`);
           const rated = await g.page.locator('.keep.after .rated li').count();
-          check(rated === 20, `${tag} · «N человек» у 20 вещей пула`, `${rated}`);
+          check(rated === POOL, `${tag} · «N человек» у ${POOL} вещей пула`, `${rated}`);
           const nums = await g.page.locator('.keep.after .nums li').allInnerTexts();
           note(`  · ${tag} числа: ${nums.map((t) => t.replaceAll('\n', ' ')).join(' · ')}`);
           const findHref = await g.page.locator('.keep.after .bridge').getAttribute('href');
           check(findHref === '/profile?guest=test', `${tag} · «Найти друзей» ведёт дверью гостя test`, findHref ?? '');
           const text = await g.page.locator('article.test').innerText();
           check(!/Никаких процентов|No percentages|Бесплатно, без рекламы и без подписок/.test(text.replace(/NDim Space — честный[^\n]*/g, '')) , `${tag} · запрещённых строк нет (кроме общей подписи TEST_FOOT)`);
+          // Абзац о пуле снят словом владельца (№100 В1 = В) — ни на одном языке его нет.
+          check(!/выбирает случайно из|picks the 12 things of the test at random/.test(text), `${tag} · абзаца о пуле нет (№100 В1)`);
           check(g.errors.length === 0, `${tag} · консоль чиста`, g.errors.slice(0, 2).join(' | '));
           await g.ctx.close();
         }
