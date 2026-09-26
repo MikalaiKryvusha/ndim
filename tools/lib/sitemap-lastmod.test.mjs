@@ -6,7 +6,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { buildFileOf, lastmodViolations, pageFingerprint, parseLedger, RULES, SERVICE, significantParts, sitemapPaths, stampLastmod, stripByClass, w3cNow } from './sitemap-lastmod.mjs';
 
 /** Страница по образцу собранной карточки каталога: служебное подставляется параметрами. */
-function page({ hash = 'a1b2c3', css = 'svelte-d710dx', chunk = 'DrtlQxDa', nums = '95', text = 'Японская видеоигра 1998 года.', title = '1080° Snowboarding', ld = 'VideoGame', href = '/ru/catalog', year = '2026', build = '2195 · 22:44' } = {}) {
+function page({ hash = 'a1b2c3', css = 'svelte-d710dx', chunk = 'DrtlQxDa', nums = '95', text = 'Японская видеоигра 1998 года.', title = '1080° Snowboarding', ld = 'VideoGame', href = '/ru/catalog', year = '2026', build = '2195 · 22:44', foot = 'NDim Space — честный поиск похожих людей по математической близости.' } = {}) {
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8" />
 <link href="../../_app/immutable/assets/0.${chunk}.css" rel="stylesheet">
 <link rel="modulepreload" href="../../_app/immutable/entry/start.${chunk}.js">
@@ -19,7 +19,7 @@ function page({ hash = 'a1b2c3', css = 'svelte-d710dx', chunk = 'DrtlQxDa', nums
 <h1 class="${css}">${title}</h1><p class="${css}">${text}&nbsp;Оценок: 3</p>
 <ul class="nums ${css}"><!--[--><li class="${css}"><b class="${css}">${nums}</b><span>человек в Пространстве</span></li><!--]--></ul>
 <section class="card ${css}"><div class="vers ${css}"><div class="ver ${css}"><span class="k">Приложение</span><span class="t">Собрано ${build}</span></div><div class="ver"><span>Сервер синхронизации</span></div></div><p>После версий</p></section>
-<a href="${href}" class="${css}">Каталог</a><footer>© ${year} NDim Space</footer><!--]--></main></div>
+<a href="${href}" class="${css}">Каталог</a><p class="foot ${css}">${foot}</p><footer>© ${year} NDim Space</footer><!--]--></main></div>
 <script>{ __sveltekit_${hash} = { base: new URL("../..", location).pathname.slice(0, -1) }; import("../../_app/immutable/entry/start.${chunk}.js"); }</script>
 </body></html>`;
 }
@@ -34,6 +34,14 @@ test('🔴 виджет версий (номер и время сборки) в�
   const p = significantParts(page());
   assert.ok(!p.text.includes('Собрано') && !p.text.includes('Сервер синхронизации'), 'виджет версий исключён');
   assert.ok(p.text.includes('После версий'), 'содержимое после виджета не съедено');
+});
+
+test('🔴 сквозной подвал <p class=\"foot\"> вырезан: правка его текста (№102) не меняет отпечаток, текст рядом цел (v3)', () => {
+  const a = pageFingerprint(page());
+  const b = pageFingerprint(page({ foot: 'Пространство NDim Space находит людей, похожих на Вас. Пространство NDim Space бесплатно.' }));
+  assert.equal(a, b, 'подвал — служебный');
+  assert.ok(!significantParts(page()).text.includes('честный поиск'), 'текст подвала исключён');
+  assert.ok(significantParts(page()).text.includes('Каталог'), 'ссылка перед подвалом цела');
 });
 
 test('🔴 значимое меняет отпечаток: основной текст · JSON-LD · ссылка · заголовок', () => {

@@ -34,20 +34,29 @@
  *      дали разный отпечаток ровно у `/ru/menu/about` и `/en/menu/about`);
  *   7. год копирайта `© 2026` — Google прямо называет его незначимым (на страницах карты его сегодня нет — правило на
  *      будущее);
+ *   9. сквозной подвал `<p class="foot">` — одна строка на 10 494 страницах каталога, хабах, тестах и «Тестах»
+ *      (`CatalogHub.svelte`, `catalog/`, `dimension/[slug]/`, `test/[slug]/`, `tests/`). Правка его текста (интервью
+ *      №102, 2026-09-26) иначе дала бы новую дату ВСЕМ страницам при неизменном их содержании. `[AI]` FORK: исключить ·
+ *      оставить в отпечатке · цена ошибки: оставить — `lastmod` «всем сегодня» на правке шаблона, и Google перестаёт
+ *      верить датам карты; исключить — правка подвала никогда не двигает дату · consulted: Google Search Central,
+ *      «Build and submit a sitemap»: `lastmod` — «*the last significant update … an update to the main content, the
+ *      structured data, or links on the page … however an update to the copyright date is not*». Главная несёт свой
+ *      `<footer class="foot">` со ссылками — он остаётся в отпечатке (тег другой).
  *   8. пробелы — схлопываются; сущности `&nbsp;` · `&amp;` и числовые — раскрываются.
- * Элементы 5 и 6 вырезаются по классу со счётом вложенности одноимённых тегов (внутри `.vers` — вложенные `<div>`).
+ * Элементы 5, 6 и 9 вырезаются по классу со счётом вложенности одноимённых тегов (внутри `.vers` — вложенные `<div>`).
  *
  * ⚠️ `RULES` — версия этих правил. Правка правил меняет отпечатки ВСЕХ страниц без правки содержания; реестр другой версии
  * поэтому читается как «не прочитался» (дат нет в этот выкат), а не как «всё изменилось» (всем сегодня).
  * История версий: v1 → v2 (2026-09-26) — атрибут читается до парной кавычки (`attr`), у страниц с апострофом в описании
  * отпечаток сменился. Цена смены в этот момент — ноль дат: замер 2026-09-26 00:32:29 — реестры боя и стейджа (`v1`) по
- * 10 517 страниц, с датой 0.
+ * 10 517 страниц, с датой 0. v2 → v3 (2026-09-26) — сквозной подвал `<p class="foot">` вырезан (пункт 9); реестр боя
+ * `v2` засеян выкатом 2026-09-26 ≈09:30 без дат (первый выкат — без засева), цена смены — снова ноль дат.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const RULES = 'sitemap-lastmod/v2';
+export const RULES = 'sitemap-lastmod/v3';
 export const LEDGER_FILE = 'sitemap-lastmod.json';
 
 const LD_RE = /<script\b[^>]*\btype\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
@@ -60,6 +69,13 @@ const COPYRIGHT_RE = /©\s*\d{4}(?:\s*[–-]\s*\d{4})?/g;
 export const SERVICE = [
   ['ul', 'nums', ['src/lib/ui/landing/LandingV1.svelte', 'src/routes/[lang=lang]/test/[slug]/+page.svelte']],
   ['div', 'vers', ['src/lib/ui/Versions.svelte']],
+  ['p', 'foot', [
+    'src/lib/ui/CatalogHub.svelte',
+    'src/routes/[lang=lang]/catalog/+page.svelte',
+    'src/routes/[lang=lang]/dimension/[slug]/+page.svelte',
+    'src/routes/[lang=lang]/test/[slug]/+page.svelte',
+    'src/routes/[lang=lang]/tests/+page.svelte',
+  ]],
 ];
 
 /** Вырезает каждый элемент `<tag class="… token …">` вместе с содержимым, считая вложенные одноимённые теги. */
