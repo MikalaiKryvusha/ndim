@@ -3,7 +3,7 @@
 > **Создан:** 2026-09-26 10:16 +03:00 (dev-1, Opus 5.5) · **Родитель:** постановки Менеджера `ndim-b3` 2026-09-26 —
 > внедрение ответов владельца №102 В1 = А (страница, 09:58) и №103 В1 = А (страница, 10:01) ·
 > `interviews/interview_102_test_pages_negations.md` · `interviews/interview_103_test_pages_nearby.md` ·
-> `bugs/NEW_personality_faq_privacy_claim_false.md` · `bugs/NEW_personality_result_example_wider_than_product.md` ·
+> `bugs/NEW_DONE_personality_faq_privacy_claim_false.md` · `bugs/NEW_DONE_personality_result_example_wider_than_product.md` ·
 > **Статус:** ✅ сборка — pass; стейдж и бой — за Менеджером · **Исходящее:** —
 
 ## Карточка прогона
