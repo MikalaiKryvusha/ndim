@@ -73,7 +73,7 @@ function main() {
 			console.error(`   сейчас в файле: ${v.current}`);
 			console.error('   Покажите владельцу новую редакцию — прежнее одобрение аннулировано.');
 		} else {
-			console.error(`   Показать владельцу: node tools/review.mjs open ${doc}`);
+			console.error(`   Показать владельцу: npm run review -- ${doc}`);
 		}
 		return 1;
 	}

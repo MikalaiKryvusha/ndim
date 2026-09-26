@@ -12,6 +12,7 @@ import { join } from 'node:path';
 
 import { translateArgs, voiceEnv, docsToLint, outwardRefs } from './contour.mjs';
 import { renderMd } from '../.kaif/tools/contour/core.mjs';
+import { buildPage } from '../.kaif/tools/contour/review.mjs';
 
 const doc = (questionLine, { answered = false } = {}) => [
   '# Интервью №996 — проверочное', '',
@@ -99,6 +100,16 @@ test('🔴 рендер готовой страницы: строки с пер�
   assert.doesNotMatch(li, /\*\*|<p>/, li);
   const q = renderMd('> **Тема:** строка\n> продолжение\n>\n> новый абзац');
   assert.equal((q.match(/<p>/g) || []).length, 2, q);
+});
+
+test('🔴 страница несёт местную починку радиокнопки: клик того же нажатия гасится (баг владельца на №106, bugs/KAIF/23)', () => {
+  // Поведение судит живой кейс К11 драйвера `qa/reports/2026-09-26_shipped-review-page.driver.mjs` (на поставке — красный).
+  // Здесь — ворота: обновление KAIF, вернувшее страницу без починки, краснеет в `npm run test:tools`, а не у владельца.
+  withDocs({ 'q.md': doc('Формула: похожесть = близость × общность.') }, (dir) => {
+    const html = buildPage(process.cwd(), join(dir, 'q.md')).html;
+    assert.match(html, /ptrUntil=Date\.now\(\)\+800/, 'pointerdown ставит окно гашения клика');
+    assert.match(html, /addEventListener\('click',function\(e\)\{if\(Date\.now\(\)>ptrUntil\)return;[\s\S]{0,200}e\.preventDefault\(\)\},true\)/, 'клик того же нажатия гасится на фазе захвата');
+  });
 });
 
 test('🔴 живой отказ: `--check` вопроса со ссылкой наружу — код 3 ДО генератора; чистый документ проходит к генератору', () => {

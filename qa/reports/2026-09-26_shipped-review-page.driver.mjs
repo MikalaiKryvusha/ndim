@@ -135,6 +135,29 @@ async function main() {
     }
     check('К4 консоль чиста', errors.length === 0, errors.length ? errors.join(' | ') : 'ошибок 0');
 
+    // К11 — выбор снимается повторным нажатием (контракт P3; баг владельца на интервью №106: «Не снимаются радиокнопки
+    // повторным тапом»): мышью по кружку — ставит и снимает; по тексту подписи — только ставит; пальцем — ставит и снимает;
+    // «Пробел» с клавиатуры — ставит (родное поведение не сломано)
+    {
+      const tctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, hasTouch: true });
+      const tp = await tctx.newPage();
+      await tp.goto(url); await tp.waitForSelector('#save');
+      const r1 = tp.locator('input[type=radio][name$=":В1"]').first();
+      const lab1 = tp.locator('label.opt').filter({ has: tp.locator('input[type=radio][name$=":В1"]') }).first().locator('div');
+      const seen = [];
+      await r1.click(); seen.push(await r1.isChecked());      // ставит
+      await r1.click(); seen.push(await r1.isChecked());      // снимает
+      await lab1.click(); seen.push(await lab1.isVisible() && await r1.isChecked()); // подпись ставит
+      await lab1.click(); seen.push(await r1.isChecked());    // подпись не снимает
+      await r1.tap(); seen.push(await r1.isChecked());        // палец снимает
+      await r1.tap(); seen.push(await r1.isChecked());        // палец ставит
+      await r1.click(); seen.push(await r1.isChecked());      // снять перед клавиатурой
+      await r1.focus(); await tp.keyboard.press('Space'); seen.push(await r1.isChecked()); // «Пробел» ставит
+      const want = [true, false, true, true, false, true, false, true];
+      check('К11 выбор снимается повторным нажатием', JSON.stringify(seen) === JSON.stringify(want), 'наблюдено ' + JSON.stringify(seen) + ' · ждали ' + JSON.stringify(want));
+      await tctx.close();
+    }
+
     // К5 — ответ по одному: В1 кнопкой → страница остаётся, «осталось 2», ожидатель будит агента кодом 0
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     const page = await ctx.newPage();

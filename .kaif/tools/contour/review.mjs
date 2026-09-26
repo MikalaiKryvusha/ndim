@@ -840,9 +840,15 @@ function pageShell(cfg, { title, kind, heading, main, questions, artifacts = [],
     // P3: a radio cleared by a second click; activation taken over on pointerdown (no native double click)
     "document.addEventListener('pointerdown',function(e){var lab=e.target&&e.target.closest?e.target.closest('label.opt'):null;",
     " if(!lab)return;var inp=lab.querySelector('input[type=radio]');if(!inp||inp.disabled)return;",
-    " e.preventDefault();var was=inp.checked;",
+    " e.preventDefault();var was=inp.checked;ptrUntil=Date.now()+800;",
     " if(e.target===inp){inp.checked=!was}else if(!was){inp.checked=true}",
     " lastInput=Date.now();saveDraft(inp);pulseSoon()});",
+    // LOCAL REMEDIATION (NDim Space 2026-09-26, the owner's word on interview 106: «Не снимаются радиокнопки повторным тапом»;
+    // ticket bugs/KAIF/23): the native click that FOLLOWS the taken-over pointerdown re-checked the radio the pointerdown had just
+    // cleared. The click of that same press is cancelled — a cancelled radio click restores the pre-click state, i.e. the one the
+    // pointerdown set; a keyboard click (no pointerdown before it) keeps the native behaviour.
+    "var ptrUntil=0;document.addEventListener('click',function(e){if(Date.now()>ptrUntil)return;var lab=e.target&&e.target.closest?e.target.closest('label.opt'):null;",
+    " if(!lab)return;ptrUntil=0;e.preventDefault()},true);",
     "document.addEventListener('input',function(e){if(e.target&&e.target.hasAttribute&&e.target.hasAttribute('data-draft')){lastInput=Date.now();saveDraft(e.target);pulseSoon()}});",
     // LP (#66, found by the live run): the lock learned of typing only at the next 15-s pulse — a `--close` three seconds
     // after the first keystroke found "no input" and closed the page. The first keystroke after a pause pulses within a second.
