@@ -22,6 +22,7 @@ import {
   testFirstEarlyScript,
   derivePool,
   isLocalOnly,
+  LEGEND_IDS,
   isSensitive,
   kindLabelFor,
   poolQueue,
@@ -116,11 +117,12 @@ test('на запасном срезе очередь пула всё равно
   }
 });
 
-// ── Пул теста: две дюжины вещей, одна от серии, без сенситивных тем и без «только для своих» ─────
+// ── Пул теста: только легенды (№101 В1), одна от серии, без сенситивных тем и без «только для своих» ─
 //    (№098 В2, №100 В2)
 
-test('🔑 пул — 24 разных id, и в нём НИ ОДНОЙ сенситивной практики из списка главной', () => {
-  assert.equal(POOL_SIZE, 24, 'пул — «две дюжины» (№100 В2)');
+test('🔑 пул — разные id по числу легенд, и в нём НИ ОДНОЙ сенситивной практики из списка главной', () => {
+  assert.equal(POOL_SIZE, LEGEND_IDS.length, 'размер пула — число легенд (№101 В1)');
+  assert.ok(POOL_SIZE >= 20, 'пул не меньше «двух десятков» (№098 В2, №100 В2)');
   assert.equal(TEST_POOL.length, POOL_SIZE, 'константа пула — размера правила');
   assert.equal(new Set(TEST_POOL).size, TEST_POOL.length, 'id пула повторяются');
   for (const id of SENSITIVE_PRACTICES) {
@@ -153,7 +155,7 @@ test('правило пула на синтетике: сенситивная п
     d('gump', 'Форрест Гамп', 10, 7.6),
     d('leon', 'Леон', 10, 9.2),
   ];
-  assert.deepEqual(derivePool(dims, ['sex'], 20), ['hp1', 'leon']);
+  assert.deepEqual(derivePool(dims, ['sex'], 20, POOL_MIN_RATING, null), ['hp1', 'leon']);
   assert.ok(isSensitive(dims[3], []), 'тег «наркомания» — сенситивная тема');
   assert.ok(!isSensitive(d('lock', 'Lock, Stock and Two Smoking Barrels', 7, 8.4, ['кино', 'crime']), []),
     'название с «Smoking» — кино, а не курение: судятся теги');
@@ -169,8 +171,23 @@ test('правило пула на синтетике: вещь «только �
     d('gent', 'Джентльмены удачи', 11, ['кино', 'советское кино', 'soviet cinema']), // по тегу страны
     d('leon', 'Леон', 10, ['кино', 'crime']),
   ];
-  assert.deepEqual(derivePool(dims, [], 24), ['leon']);
+  assert.deepEqual(derivePool(dims, [], 24, POOL_MIN_RATING, null), ['leon']);
   assert.ok(isLocalOnly(dims[0]) && isLocalOnly(dims[1]) && !isLocalOnly(dims[2]));
+});
+
+test('правило пула на синтетике: вещь не из списка легенд не идёт в пул, даже самая оценённая (№101 В1)', () => {
+  const d = (id: string, title: string, rates: number): DimPage => ({
+    id, slug: id, title: { ru: title, en: title }, description: { ru: '', en: '' },
+    type: { ru: 'Телесериал', en: 'TV series' }, author: { ru: '', en: '' }, year: '1997', tags: [], rates, rating: 9,
+  });
+  const dims = [d('N2j5G2RXhMY7u7JsnnWA', 'Южный Парк', 30), d('ivGigNxl0Szdt4LXlz5h', 'Титаник', 8)];
+  assert.deepEqual(derivePool(dims, [], 24), ['ivGigNxl0Szdt4LXlz5h'], 'по умолчанию — только легенды');
+  assert.deepEqual(derivePool(dims, [], 24, POOL_MIN_RATING, null), ['N2j5G2RXhMY7u7JsnnWA', 'ivGigNxl0Szdt4LXlz5h']);
+});
+
+test('🔑 в пуле только легенды и нет «Южного Парка» (№101 В1: «бумеры его не знают»)', () => {
+  for (const id of TEST_POOL) assert.ok(LEGEND_IDS.includes(id), `не легенда в пуле: ${id}`);
+  assert.ok(!TEST_POOL.includes('N2j5G2RXhMY7u7JsnnWA'), '«Южный Парк» в пуле');
 });
 
 test('🔑 в пуле ни одной вещи «только для своих» (№100 В2: «типовой американец не знает мимино»)', { skip: NO_CATALOG }, () => {
