@@ -64,10 +64,27 @@
     ]
   },
   "_kaif_report": "Разрешение на ОДНУ команду доставки тикета о дефекте KAIF в исток (node .kaif/kaif-core.mjs report <тикет>). Слово владельца: интервью №075, В4 = А (2026-09-04) — «разрешить агенту одну команду без Вашего клика». Опирается на его же правило от 2026-08-14: «все баги, которые ИИ агенты находят при работе с KAIF — без участия человека рапортуются агентом в KAIF github». Живёт в ОБЩЕМ settings.json, а не в settings.local.json: тот в .gitignore, и шести рабочим местам ролей он не достаётся — сессия роли упиралась бы в запрос к владельцу. Разрешена только подкоманда report; всё остальное у машинерии KAIF разрешено локально и сюда сознательно не поднято.",
+  "_ci_guard": "Управление GitHub Actions (выключить/включить/посмотреть workflow и прогоны) и чтение сайтов Firebase — без запроса. Слово владельца 2026-09-27, после того как классификатор режима авто отказал агенту выключить автовыкат архива ndim-old (любой push в его main выкатывал 1.x на сайт ndim-space, где живёт 2.0): «нужно чтобы ты такие команды выполнял без просьбы». Сознательно НЕ разрешён `gh workflow run` — он запускает выкат, а не останавливает его.",
   "permissions": {
     "allow": [
       "Bash(node .kaif/kaif-core.mjs report:*)",
-      "PowerShell(node .kaif/kaif-core.mjs report:*)"
+      "PowerShell(node .kaif/kaif-core.mjs report:*)",
+      "Bash(gh workflow disable:*)",
+      "PowerShell(gh workflow disable:*)",
+      "Bash(gh workflow enable:*)",
+      "PowerShell(gh workflow enable:*)",
+      "Bash(gh workflow list:*)",
+      "PowerShell(gh workflow list:*)",
+      "Bash(gh workflow view:*)",
+      "PowerShell(gh workflow view:*)",
+      "Bash(gh run list:*)",
+      "PowerShell(gh run list:*)",
+      "Bash(gh run view:*)",
+      "PowerShell(gh run view:*)",
+      "Bash(npx firebase hosting:sites:list:*)",
+      "PowerShell(npx firebase hosting:sites:list:*)",
+      "Bash(npx firebase hosting:channel:list:*)",
+      "PowerShell(npx firebase hosting:channel:list:*)"
     ]
   }
 }
