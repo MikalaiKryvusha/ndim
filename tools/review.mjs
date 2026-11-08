@@ -68,7 +68,7 @@ const BY = opt('--by', process.env.NDIM_OWNER || 'Николай Кривуша'
  * 2026-08-01: «голос нужно поприятнее, есть соседний проект KLAS — там есть голосовой контур,
  * можно позаимствовать»):
  *
- *   1. **Silero v5 ru** — `F:\KLAS\tools\voice-say.mjs` (локально, офлайн, CPU; голоса `aidar`,
+ *   1. **Silero v5 ru** — `F:\krinik_tts\voice-say.mjs` (локально, офлайн, CPU; голоса `aidar`,
  *      `baya`, `kseniya`, `xenia`, `eugene`). Звучит по-человечески, а не роботом.
  *      Умолчание `eugene` — **выбор владельца** слепым прослушиванием пяти образцов на одном
  *      материале (интервью №011, В1 = Д). Менять его может только он.
@@ -101,7 +101,7 @@ const stamp = (d = new Date()) =>
 
 const VOICE = opt('--voice', process.env.NDIM_VOICE || 'eugene');
 const SAPI_VOICE = process.env.NDIM_SAPI_VOICE || 'Microsoft Irina Desktop';
-const VOICE_TOOL = opt('--voice-tool', process.env.NDIM_VOICE_TOOL || 'F:\\KLAS\\tools\\voice-say.mjs');
+const VOICE_TOOL = opt('--voice-tool', process.env.NDIM_VOICE_TOOL || 'F:\\krinik_tts\\voice-say.mjs');
 /**
  * МЕРА 1 — «ТЕРПЕНИЕ БЕСКОНЕЧНО» (`bugs/110`).
  *
