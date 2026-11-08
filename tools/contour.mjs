@@ -9,7 +9,7 @@
  *
  *   1. ГОЛОС ЕВГЕНИЯ. Готовая страница зовёт богатый голос через окружение (`KAIF_VOICE_TOOL`,
  *      `KAIF_VOICE`). Обёртка ставит их, когда окружение молчит: тракт Silero соседнего проекта KLAS
- *      (`F:\KLAS\tools\voice-say.mjs`, путь переопределяет `NDIM_VOICE_TOOL`) и голос `eugene` — выбор
+ *      (`F:\krinik_tts\voice-say.mjs`, путь переопределяет `NDIM_VOICE_TOOL`) и голос `eugene` — выбор
  *      владельца слепым прослушиванием (интервью №011, В1 = Д). Интерфейс тракта совпадает с готовым:
  *      `node <тракт> <фраза> --play --voice <голос>`.
  *   2. ВОПРОС НЕ ОТСЫЛАЕТ НАРУЖУ. Слово владельца 2026-08-15: «*Пиши прямо в вопросе то, что
@@ -45,7 +45,7 @@ import { parseInterview, lintSelfContained } from './lib/review-core.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const GENERATOR = resolve(ROOT, '.kaif/tools/contour/review.mjs');
-const KLAS_VOICE_TOOL = 'F:\\KLAS\\tools\\voice-say.mjs'; // машинный ресурс соседнего проекта, не путь внутри NDim
+const KLAS_VOICE_TOOL = 'F:\\krinik_tts\\voice-say.mjs'; // машинный ресурс соседнего проекта, не путь внутри NDim
 const OWNER_VOICE = 'eugene';                              // интервью №011, В1 = Д — менять может только владелец
 const EXIT_REFUSED = 3;                                    // тот же код, что у предполёта генератора
 
