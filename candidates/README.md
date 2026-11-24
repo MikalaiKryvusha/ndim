@@ -912,6 +912,10 @@ node tools/scout-wikidata-candidates.mjs --year 2026 --min-sitelinks 12
 
 # 2б. ПРИЁМКА ОПИСАНИЙ — объём, строение и заимствование. Гонится ДО выгрузки
 node tools/check-candidate-descriptions.mjs candidates/batches/01_2026_films.json
+# 2в. АКАДЕМИЧЕСКИЙ РУССКИЙ — candidates/RUSSIAN_STYLE.md, без стилометрического ядра
+node tools/check-candidate-russian.mjs candidates/batches/01_2026_films.json
+node tools/check-owner-classes.mjs candidates/batches/01_2026_films.json
+node tools/measure-grammar-agreement.mjs candidates/batches/01_2026_films.json
 
 # 3. Выгрузка в очередь. СУХОЙ ПРОГОН ПО УМОЛЧАНИЮ — пишет только с --apply
 node tools/seed-dim-candidates.mjs candidates/batches/01_2026_films.json
