@@ -1766,6 +1766,30 @@ export async function runCycle() {
   return written;
 }
 
+const CYCLE_TIMEOUT_MS = Number(process.env.SYNC_CYCLE_TIMEOUT_SECONDS ?? 600) * 1000;
+
+/**
+ * Ограничивает время цикла. При превышении вызывает аварийное завершение: снять только
+ * cycleInFlight нельзя, потому что старый цикл продолжил бы менять кэш параллельно с новым.
+ */
+export async function runCycleWithWatchdog(cycle, { timeoutMs, onTimeout }) {
+  let timer;
+  try {
+    return await Promise.race([
+      cycle(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          const error = new Error(`цикл сервера синхронизации не завершился за ${timeoutMs} мс`);
+          onTimeout(error);
+          reject(error);
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ── Точка входа ──────────────────────────────────────────────────────────────
 // Срабатывает только при прямом запуске файла. При импорте (тесты) модуль лишь
 // отдаёт runCycle и ничего не запускает — иначе тест поднял бы вечную службу.
@@ -1822,7 +1846,16 @@ if (runDirectly) {
       }
       cycleInFlight = true;
       try {
-        await runCycle();
+        await runCycleWithWatchdog(runCycle, {
+          timeoutMs: CYCLE_TIMEOUT_MS,
+          onTimeout: (error) => {
+            console.error(
+              `[sync ${new Date().toISOString()}] ${error.message} — ` +
+                'аварийный выход для перезапуска PM2',
+            );
+            process.exit(1);
+          },
+        });
       } catch (error) {
         log(`ошибка цикла: ${error.message}`);
       } finally {
